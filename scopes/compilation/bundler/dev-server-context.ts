@@ -55,4 +55,8 @@ export interface DevServerContext extends ExecutionContext {
    * title of the page.
    */
   title?: string;
+
+  port?: number;
+
+  exposes?: Record<string, string>;
 }

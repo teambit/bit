@@ -6,6 +6,8 @@ import { ComponentServer } from './component-server';
 import { DevServer } from './dev-server';
 import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
+import { getExposes } from './get-exposes';
+import { selectPort } from './select-port';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
@@ -56,6 +58,8 @@ export class DevServerService implements EnvService<ComponentServer> {
       acc[envId] = [context];
       return acc;
     }, {});
+    const portRange = [3300, 3400];
+    const usedPorts: number[] = [];
 
     const servers = await Promise.all(
       Object.entries(byOriginalEnv).map(async ([id, contextList]) => {
@@ -64,10 +68,15 @@ export class DevServerService implements EnvService<ComponentServer> {
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         this.enrichContextWithComponentsAndRelatedContext(mainContext, additionalContexts);
         const envDevServerContext = await this.buildEnvServerContext(mainContext);
-        const envDevServer: DevServer = envDevServerContext.envRuntime.env.getEnvDevServer(envDevServerContext);
+        const envDevServer: DevServer = envDevServerContext.envRuntime.env.getDevServer(envDevServerContext);
+        const port = await selectPort(portRange, usedPorts);
+        usedPorts.push(port);
+        envDevServerContext.port = port;
 
         // TODO: consider change this to a new class called EnvServer
-        return new ComponentServer(this.pubsub, envDevServerContext, [3300, 3400], envDevServer);
+        const componentServer = new ComponentServer(this.pubsub, envDevServerContext, portRange, envDevServer);
+        componentServer.port = port;
+        return componentServer;
       })
     );
 
@@ -99,10 +108,13 @@ export class DevServerService implements EnvService<ComponentServer> {
    * builds the execution context for the dev server.
    */
   private async buildEnvServerContext(context: ExecutionContext): Promise<DevServerContext> {
+    const entry = await getEntry(context, this.runtimeSlot);
+    const exposes = await getExposes(context, this.runtimeSlot);
     return Object.assign(context, {
-      entry: await getEntry(context, this.runtimeSlot),
+      entry,
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,
+      exposes,
     });
   }
 }

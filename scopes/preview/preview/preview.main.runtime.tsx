@@ -1,4 +1,5 @@
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { Compiler } from '@teambit/compiler';
+import { BuilderAspect, BuilderMain, BuildContext } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
@@ -24,6 +25,7 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { RuntimeComponents } from './runtime-components';
 import { PreviewStartPlugin } from './preview.start-plugin';
+import { computeExposes } from './compute-exposes';
 
 const noopResult = {
   results: [],
@@ -56,6 +58,8 @@ export class PreviewMain {
     private ui: UiMain,
 
     private envs: EnvsMain,
+
+    private workspace: Workspace,
 
     private aspectLoader: AspectLoaderMain,
 
@@ -241,6 +245,25 @@ export class PreviewMain {
     this.previewSlot.register(previewDef);
   }
 
+  async computeExposesFromExecutionContext(
+    context: ExecutionContext
+    // context: BuildContext
+  ): Promise<Record<string, string>> {
+    const defs = this.getDefs();
+    const components = context.components;
+    const compiler = context.envRuntime.env.getCompiler();
+    const allExposes = {};
+    const promises = components.map(async (component) => {
+      const componentModulePath = this.workspace.componentModulePath(component);
+      const exposes = await computeExposes(componentModulePath, defs, component, compiler);
+      Object.assign(allExposes, exposes);
+      return undefined;
+    });
+    await Promise.all(promises);
+
+    return allExposes;
+  }
+
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
@@ -280,6 +303,7 @@ export class PreviewMain {
       previewSlot,
       uiMain,
       envs,
+      workspace,
       aspectLoader,
       config,
       bundlingStrategySlot,
@@ -293,6 +317,7 @@ export class PreviewMain {
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),
+        exposes: preview.computeExposesFromExecutionContext.bind(preview),
       },
     ]);
 

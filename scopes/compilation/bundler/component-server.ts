@@ -14,9 +14,6 @@ export class ComponentServer {
   // why is this here
   errors?: Error[];
   constructor(
-    /**
-     * browser runtime slot
-     */
     private pubsub: PubsubMain,
 
     /**
@@ -48,9 +45,13 @@ export class ComponentServer {
     return this._port;
   }
 
+  set port(port: number) {
+    this._port = port;
+  }
+
   _port: number;
   async listen() {
-    const port = await selectPort(this.portRange);
+    const port = this.port ?? (await selectPort(this.portRange));
     this._port = port;
     const server = await this.devServer.listen(port);
     const address = server.address();

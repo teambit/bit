@@ -209,7 +209,7 @@ export default function (isEnvProduction = false): Configuration {
             // MDX support (move to the mdx aspect and extend from there)
             {
               test: /\.mdx?$/,
-              exclude: [/node_modules/],
+              // exclude: [/node_modules/],
               use: [
                 {
                   loader: require.resolve('babel-loader'),

@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
-import { merge, omit } from 'lodash';
+import { camelCase, merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
@@ -21,13 +21,21 @@ import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import { ReactMainConfig } from './react.main.runtime';
-import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
-import basePreviewConfigFactory from './webpack/webpack.config.base.preview';
-import basePreviewProdConfigFactory from './webpack/webpack.config.base.preview.prod';
-import envPreviewProdConfigFactory from './webpack/webpack.config.env.base.preview';
-import componentPreviewProdConfigFactory from './webpack/webpack.config.component.preview.prod';
-import componentPreviewBaseConfigFactory from './webpack/webpack.config.component.base.preview';
-import componentPreviewDevConfigFactory from './webpack/webpack.config.component.preview.dev';
+
+// webpack configs for both components and envs
+import basePreviewConfigFactory from './webpack/webpack.config.base';
+import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
+
+// webpack configs for envs only
+// import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import envPreviewBaseConfigFactory from './webpack/webpack.config.env.base';
+import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+
+// webpack configs for components only
+import componentPreviewBaseConfigFactory from './webpack/webpack.config.component.base';
+import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
+import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -161,9 +169,8 @@ export class ReactEnv implements Environment {
    * get the default react webpack config.
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components, true);
-
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
+    // const fileMapPath = this.writeFileMap(context.components, true);
+    // return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
   }
 
   getDevEnvId(id?: string) {
@@ -181,11 +188,47 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getEnvDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     console.log('context.entry', context.entry);
-    const defaultConfig = this.getDevWebpackConfig(context);
+    const baseConfig = basePreviewConfigFactory(false);
+    const mfName = camelCase(`${context.id.toString()}_MF`);
+    // TODO: take the port dynamically
+    const port = context.port;
+
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'localhost', port);
+    const envDevConfig = envPreviewDevConfigFactory(context.id);
+
+    const fileMapPath = this.writeFileMap(context.components, true);
+
+    const componentBaseConfig = componentPreviewBaseConfigFactory(mfName, context.exposes);
+    const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const defaultConfig = this.getDevWebpackConfig(context);
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      const merged = configMutator.merge([
+        baseConfig,
+        envBaseConfig,
+        envDevConfig,
+        componentBaseConfig,
+        componentDevConfig,
+      ]);
+      const allMfInstances = merged.raw.plugins?.filter(
+        (plugin) => plugin.constructor.name === 'ModuleFederationPlugin'
+      );
+      if (!allMfInstances || allMfInstances?.length < 2) {
+        return merged;
+      }
+      const mergedMfConfig = allMfInstances.reduce((acc, curr) => {
+        // @ts-ignore
+        return Object.assign(acc, curr._options);
+      }, {});
+      // @ts-ignore
+      allMfInstances[0]._options = mergedMfConfig;
+      const mutatedPlugins = merged.raw.plugins?.filter(
+        (plugin) => plugin.constructor.name !== 'ModuleFederationPlugin'
+      );
+      mutatedPlugins?.push(allMfInstances[0]);
+      merged.raw.plugins = mutatedPlugins;
+      return merged;
     };
 
     return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
@@ -194,14 +237,36 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getComponentsDevServers(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
-    const defaultConfig = this.getDevWebpackConfig(context);
-    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
-    };
+  // getEnvDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  //   console.log('context.entry', context.entry);
+  //   const baseConfig = basePreviewConfigFactory(false);
+  //   const envBaseConfig = envPreviewBaseConfigFactory();
+  //   const envDevConfig = envPreviewDevConfigFactory(context.id);
+  //   // const defaultConfig = this.getDevWebpackConfig(context);
+  //   const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+  //     return configMutator.merge([baseConfig, envBaseConfig, envDevConfig]);
+  //   };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
-  }
+  //   return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+  // }
+
+  /**
+   * returns and configures the React component dev server.
+   */
+  // getComponentsDevServers(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  //   // const defaultConfig = this.getDevWebpackConfig(context);
+  //   const fileMapPath = this.writeFileMap(context.components, true);
+  //   const mfName = camelCase(`${context.id.toString()}_MF`);
+  //   const baseConfig = basePreviewConfigFactory(false);
+
+  //   const componentBaseConfig = componentPreviewBaseConfigFactory(mfName);
+  //   const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+  //   const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+  //     return configMutator.merge([baseConfig, componentBaseConfig, componentDevConfig]);
+  //   };
+
+  //   return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+  // }
 
   async getEnvBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(true);

@@ -5,11 +5,12 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { join } from 'path';
 import { BuildContext } from '@teambit/builder';
 import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
-import { camelCase } from 'lodash';
 import fs from 'fs-extra';
 import { BundlingStrategy } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewTask } from '../preview.task';
+import { normalizeMfName } from '../normalize-mf-name';
+import { computeExposes } from '../compute-exposes';
 
 export class ComponentBundlingStrategy implements BundlingStrategy {
   name = 'component';
@@ -36,30 +37,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     defs: PreviewDefinition[],
     context: BuildContext
   ): Promise<Record<string, string>> {
-    const compIdCamel = normalizeMfName(capsule.component.id.fullName);
-    const compiler: Compiler = context.env.getCompiler(context);
-    const mainFile = capsule.component.state._consumer.mainFile;
-    const mainFilePath = join(capsule.path, compiler.getDistPathBySrcPath(mainFile));
-    const exposes = {
-      [`./${compIdCamel}`]: mainFilePath,
-    };
-
-    const moduleMapsPromise = defs.map(async (previewDef) => {
-      const moduleMap = await previewDef.getModuleMap([capsule.component]);
-      const paths = this.getPathsFromMap(capsule, moduleMap, context);
-      paths.toArray().map(([, files], index) => {
-        files.map((filePath) => {
-          Object.assign(exposes, {
-            [`./${compIdCamel}_${previewDef.prefix}_${index}`]: filePath,
-          });
-          return undefined;
-        });
-        return undefined;
-      });
-    });
-
-    await Promise.all(moduleMapsPromise);
-    return exposes;
+    return computeExposes(capsule.path, defs, capsule.component, context.env.getCompiler());
   }
 
   async writeEmptyEntryFile(capsule: Capsule): Promise<string> {
@@ -106,7 +84,3 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 // defaultEposes: './index'
 // import ('uiButton')
 // }),
-
-function normalizeMfName(componentId: string): string {
-  return camelCase(componentId);
-}
