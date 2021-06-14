@@ -1,12 +1,11 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
-import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
-import { Link } from '@teambit/base-ui.routing.link';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
-
+import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import { Menu as UseBoxMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
@@ -72,12 +71,15 @@ function VersionRelatedDropdowns({ component }: { component: ComponentModel }) {
   return (
     <>
       {versionList.length > 0 && (
-        <ImportAction
-          componentName={component.id.name}
-          bitLink={component.id.toString({ ignoreVersion: isLatestVersion })}
-          Link={(props) => <Link {...props} />}
-          packageLink={`${component.packageName}${packageVersion}`}
-          registryName={component.packageName.split('/')[0]}
+        <UseBoxDropdown
+          Menu={() => (
+            <UseBoxMenu
+              componentName={component.id.name}
+              bitLink={component.id.toString({ ignoreVersion: isLatestVersion })}
+              packageLink={`${component.packageName}${packageVersion}`}
+              registryName={component.packageName.split('/')[0]}
+            />
+          )}
         />
       )}
       <VersionDropdown versions={versionList} currentVersion={component.version} />

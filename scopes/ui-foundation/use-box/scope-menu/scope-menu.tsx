@@ -12,14 +12,14 @@ export type MenuProps = {
   scopeName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Menu({ scopeName }: MenuProps) {
+export function Menu({ scopeName, ...rest }: MenuProps) {
   const [active, setActive] = useState<string | undefined>(undefined);
   if (active === 'import') {
     return <BitInfo prevTab={active} setActive={() => setActive(undefined)} />;
   }
 
   return (
-    <div>
+    <div {...rest}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon of="terminal" />
