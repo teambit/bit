@@ -181,7 +181,7 @@ jobs:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t --build-arg BIT_VERSION=`npm show @teambit/bit version` bitcli/bit-server:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
       - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit-server:latest
