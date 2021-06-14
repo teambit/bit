@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { ComponentContext, ComponentModel } from '@teambit/component';
+import { ComponentContext } from '@teambit/component';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 
