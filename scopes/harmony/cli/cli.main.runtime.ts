@@ -2,8 +2,6 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
-
-import { flatten } from 'ramda';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
@@ -54,7 +52,7 @@ export class CLIMain {
    * list of all registered commands. (legacy and new).
    */
   get commands(): CommandList {
-    return flatten(this.commandsSlot.values());
+    return this.commandsSlot.values().flat();
   }
 
   /**

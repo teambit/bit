@@ -1,4 +1,5 @@
-import { countBy, forEachObjIndexed, prop, sortBy, uniq } from 'ramda';
+import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
+import { countBy, property, sortBy, uniq } from 'lodash';
 import semver from 'semver';
 import { intersect, parseRange } from 'semver-intersect';
 
@@ -321,7 +322,7 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
 // }
 
 function getSortedRangesCombination(ranges: SemverVersion[]): CombinationWithTotal[] {
-  const counts = countBy((item) => item)(ranges);
+  const counts = countBy(ranges, (item) => item);
   const uniqRanges = uniq(ranges);
   const rangesCombinations = arrayCombinations<SemverVersion>(uniqRanges);
   const countMultipleRanges = (items: SemverVersion[]): number => {
@@ -339,8 +340,7 @@ function getSortedRangesCombination(ranges: SemverVersion[]): CombinationWithTot
     };
   });
 
-  const sortByTotal = sortBy(prop('total'));
-  const sortedByTotal = sortByTotal(rangesCombinationsWithTotalCount).reverse();
+  const sortedByTotal = sortBy(rangesCombinationsWithTotalCount, property('total')).reverse();
   return sortedByTotal;
 }
 
@@ -367,7 +367,7 @@ function getLifecycleType(indexItems: PackageNameIndexComponentItem[]): Dependen
  * @returns {MostCommonVersion}
  */
 function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
-  const counts = countBy((item) => item)(versions);
+  const counts = countBy(versions, (item) => item);
   const result: MostCommonVersion = {
     version: '0.0.0',
     count: 0,

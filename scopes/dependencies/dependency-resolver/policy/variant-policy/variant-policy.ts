@@ -1,4 +1,4 @@
-import { uniqWith } from 'ramda';
+import { uniqWith } from 'lodash';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
@@ -117,8 +117,8 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
 }
 
 function uniqEntries(entries: Array<VariantPolicyEntry>): Array<VariantPolicyEntry> {
-  const uniq = uniqWith((entry1: VariantPolicyEntry, entry2: VariantPolicyEntry) => {
+  const uniq = uniqWith(entries, (entry1: VariantPolicyEntry, entry2: VariantPolicyEntry) => {
     return entry1.dependencyId === entry2.dependencyId && entry1.lifecycleType === entry2.lifecycleType;
-  }, entries);
+  });
   return uniq;
 }
