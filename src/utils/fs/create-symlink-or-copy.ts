@@ -56,14 +56,14 @@ Original error: ${err}`);
   function link() {
     logger.trace(`createSymlinkOrCopy, link()`);
     try {
-      hardLinkOrJunction(srcPath);
+      hardLinkOrJunctionByFsExtra(srcPath);
       logger.trace(`createSymlinkOrCopy, link() successfully created the link`);
     } catch (err) {
       if (err.code === 'EXDEV') {
         logger.trace(`createSymlinkOrCopy, link() found EXDEV error, trying fs native`);
         // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
         // only when using fs-extra. it doesn't happen with "fs".
-        fsNative.symlinkSync(srcPath, destPath);
+        hardLinkOrJunctionByFsNative(srcPath);
         return;
       }
       if (err.code !== 'ENOENT') {
@@ -76,7 +76,7 @@ Original error: ${err}`);
       if (IS_WINDOWS) {
         logger.trace(`createSymlinkOrCopy, link() changing the path to be absolute on Windows`);
         const srcAbsolute = path.join(destPath, '..', srcPath);
-        hardLinkOrJunction(srcAbsolute);
+        hardLinkOrJunctionByFsExtra(srcAbsolute);
         return;
       }
       // on linux, you can always create symlink, regardless the relative-path.
@@ -84,14 +84,28 @@ Original error: ${err}`);
     }
   }
 
-  function hardLinkOrJunction(src: PathOsBased) {
+  function hardLinkOrJunctionByFsExtra(src: PathOsBased) {
     try {
       fs.linkSync(src, destPath);
     } catch (err) {
       if (err.code === 'EPERM') {
-        logger.trace(`createSymlinkOrCopy, hardLinkOrJunction() using Junction option`);
+        logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsExtra() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
         fs.symlinkSync(srcPath, destPath, 'junction');
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  function hardLinkOrJunctionByFsNative(src: PathOsBased) {
+    try {
+      fsNative.linkSync(src, destPath);
+    } catch (err) {
+      if (err.code === 'EPERM' || err.code === 'EXDEV') {
+        logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsNative() using Junction option`);
+        // it's a directory. use 'junction', it works on both Linux and Win
+        fsNative.symlinkSync(srcPath, destPath, 'junction');
       } else {
         throw err;
       }

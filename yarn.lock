@@ -505,6 +505,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-module-imports@npm:^7.0.0":
+  version: 7.14.5
+  resolution: "@babel/helper-module-imports@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-module-imports%2F-%2Fhelper-module-imports-7.14.5.tgz"
+  dependencies:
+    "@babel/types": ^7.14.5
+  checksum: b98279908698a50a22634e683924cb25eb93edf1bf28ac65691dfa82d7a1a4dae4e6b12b8ef9f9a50171ca484620bce544f270873c53505d8a45364c5b665c0c
+  languageName: node
+  linkType: hard
+
 "@babel/helper-module-imports@npm:^7.10.4, @babel/helper-module-imports@npm:^7.12.1, @babel/helper-module-imports@npm:^7.13.12":
   version: 7.13.12
   resolution: "@babel/helper-module-imports@npm:7.13.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-module-imports%2F-%2Fhelper-module-imports-7.13.12.tgz"
@@ -654,6 +663,13 @@ __metadata:
   version: 7.12.11
   resolution: "@babel/helper-validator-identifier@npm:7.12.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-validator-identifier%2F-%2Fhelper-validator-identifier-7.12.11.tgz"
   checksum: e604c6bf890704fc46c1ae13bf23afb242b810224ec3403bba67cdbf0d8dabfec4b82123d6dfb18135a0ee3f7f79218583c819363ebb5e04a0a49d8418db7fce
+  languageName: node
+  linkType: hard
+
+"@babel/helper-validator-identifier@npm:^7.14.5":
+  version: 7.14.5
+  resolution: "@babel/helper-validator-identifier@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-validator-identifier%2F-%2Fhelper-validator-identifier-7.14.5.tgz"
+  checksum: 6366bceab4498785defc083a1bd96344f788d90a1aa7a6f18d6813c1d3d134640bfc05690453c0b79bbfc820472cf5b29110dfddaca1f8e2763dfe1bd5df0b88
   languageName: node
   linkType: hard
 
@@ -2353,6 +2369,16 @@ __metadata:
     lodash: ^4.17.19
     to-fast-properties: ^2.0.0
   checksum: 4ffe8178e262ba6fdc179075bcaab642a41efc4e0cfcbc48dc26bcf1a8bd46470b1a135467c637c60a5a3ff7c36a402b765b5c33ea5286ea07de79b81329f799
+  languageName: node
+  linkType: hard
+
+"@babel/types@npm:^7.14.5":
+  version: 7.14.5
+  resolution: "@babel/types@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Ftypes%2F-%2Ftypes-7.14.5.tgz"
+  dependencies:
+    "@babel/helper-validator-identifier": ^7.14.5
+    to-fast-properties: ^2.0.0
+  checksum: 7c1ab6e8bdf438d44236034cab10f7d0f1971179bc405dca26733a9b89dd87dd692dc49a238a7495075bc41a9a17fb6f08b4d1da45ea6ddcce1e5c8593574aea
   languageName: node
   linkType: hard
 
@@ -4744,6 +4770,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.elements.icon@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@teambit/base-ui.elements.icon@npm:0.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.2.tgz"
+  dependencies:
+    classnames: ^2.2.6
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 2c2c93a8976f0896c28cf76bed9927596e050c1258dbee5cf844f3e4a02ad5acadefa7515dfe355bde192a44ce3b2b2b261b8fa1d439365e5e2e5b0cfa009b3f
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.elements.icon@npm:0.6.3":
   version: 0.6.3
   resolution: "@teambit/base-ui.elements.icon@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.3.tgz"
@@ -5096,6 +5134,18 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 76f3cf0cf23b1e9a94c18cefa6aad875c9ec14a8fefacb71dcb0d13bcde10fdcc1ba3c48f3c318306951ecb0f8065cfc88ef8ab8256804d1f39ad5813e7e91cf
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.styles.flex-center@npm:0.0.2":
+  version: 0.0.2
+  resolution: "@teambit/base-ui.styles.flex-center@npm:0.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.styles.flex-center%2F-%2Fbase-ui.styles.flex-center-0.0.2.tgz"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 917eee46948e22144cc5d663be69892711848beb0d15c4d87ed9ecc1d93a6a192ae4469c6a939d959ec2f781e76873c83c1f93754c1f5a9a232c03b549bb1531
   languageName: node
   linkType: hard
 
@@ -5819,6 +5869,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.utils.composer@npm:0.0.5":
+  version: 0.0.5
+  resolution: "@teambit/base-ui.utils.composer@npm:0.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.composer%2F-%2Fbase-ui.utils.composer-0.0.5.tgz"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 708fd6ff73ad6c9c14492cc095c3ce3791ad4c5c7e2d3ff0021e07203c3b5fe6416993c7cd200abc0fb6b927ab5da91470aac370a5902a9e1a97e266a67e8294
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.utils.is-browser@npm:0.0.1":
   version: 0.0.1
   resolution: "@teambit/base-ui.utils.is-browser@npm:0.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.is-browser%2F-%2Fbase-ui.utils.is-browser-0.0.1.tgz"
@@ -5916,6 +5978,24 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 6d95aa3eca0020fe03bbfe66ff04af13a8d720c97427c347eb2e2f8044ebeb73e1fc727626cbbea999968647619e834146a2a52151497a02752cdfaca99a846a
+  languageName: node
+  linkType: hard
+
+"@teambit/design.ui.icon-button@npm:0.0.17":
+  version: 0.0.17
+  resolution: "@teambit/design.ui.icon-button@npm:0.0.17::__archiveUrl=https%3A%2F%2Fnode.bit.dev%2F%40teambit%2Fdesign.ui.icon-button%2F-%2F%40teambit-design.ui.icon-button-0.0.17.tgz"
+  dependencies:
+    "@teambit/base-ui.elements.icon": 0.6.2
+    "@teambit/base-ui.input.button": 0.7.1
+    "@testing-library/react": 11.2.2
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 126b5e4fb3332b742fb5e174350988eb8e4a3593c6cd7d36d798842898d4a19b4c50c593e7c325bce37e6e1c072eba3dc4a543430618008ff7e0956c1050bd13
   languageName: node
   linkType: hard
 
@@ -6777,9 +6857,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.93, @teambit/legacy@npm:1.0.93::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.93.tgz":
-  version: 1.0.93
-  resolution: "@teambit/legacy@npm:1.0.93::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.93.tgz"
+"@teambit/legacy@npm:1.0.98, @teambit/legacy@npm:1.0.98::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.98.tgz":
+  version: 1.0.98
+  resolution: "@teambit/legacy@npm:1.0.98::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.98.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6813,6 +6893,7 @@ __metadata:
     fs-extra: 9.1.0
     gitconfig: 2.0.8
     glob: 7.1.6
+    globby: 11.0.1
     graphlib: 2.1.8
     graphql-request: 3.4.0
     graphviz: 0.0.9
@@ -6901,7 +6982,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 30fe01ec1336fd0837ad3ad6da4374796e3c15e79cdf64fefeac90cb0bf5be222faa136d8c89303c8ea62c03a89854bf2958552bf5ae5f5c2d717b48d2b4fcc6
+  checksum: b3057de22adbd66e33b08fd3de4b2ca4ba6dc029c43a02ccceaffa7c0e2e7d4d2cb1fbb1f6a3d9c5ffe1d92a4d946fb65c8e990f41e2a039b57dec5a35b7eb44
   languageName: node
   linkType: hard
 
@@ -6974,6 +7055,7 @@ __metadata:
     "@teambit/base-ui.routing.native-nav-link": 0.0.2
     "@teambit/base-ui.routing.nav-link": 0.1.0
     "@teambit/base-ui.routing.routing-provider": 0.0.2
+    "@teambit/base-ui.styles.flex-center": 0.0.2
     "@teambit/base-ui.surfaces.background": 0.6.3
     "@teambit/base-ui.surfaces.card": 0.7.0
     "@teambit/base-ui.surfaces.split-pane.hover-splitter": 0.7.4
@@ -6990,6 +7072,7 @@ __metadata:
     "@teambit/base-ui.theme.fonts.roboto": 0.6.10
     "@teambit/base-ui.theme.sizes": 0.6.10
     "@teambit/base-ui.theme.theme-provider": 0.6.13
+    "@teambit/base-ui.utils.composer": 0.0.5
     "@teambit/base-ui.utils.popper-js.ignore-popper-size": 0.6.11
     "@teambit/base-ui.utils.popper-js.resize-to-match-reference": 0.6.11
     "@teambit/base-ui.utils.string.affix": 0.6.10
@@ -6997,6 +7080,7 @@ __metadata:
     "@teambit/base-ui.utils.time-ago": 0.6.10
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.5
+    "@teambit/design.ui.icon-button": 0.0.17
     "@teambit/documenter.code.react-playground": 3.0.11
     "@teambit/documenter.routing.external-link": 3.0.12
     "@teambit/documenter.theme.theme-compositions": 2.0.3
@@ -7035,7 +7119,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 0.6.0
     "@teambit/evangelist.surfaces.tooltip": 0.6.0
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.93
+    "@teambit/legacy": 1.0.98
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7083,7 +7167,7 @@ __metadata:
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
     "@types/puppeteer": 3.0.5
-    "@types/react": 17.0.8
+    "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7128,6 +7212,7 @@ __metadata:
     babel-jest: 26.6.3
     babel-loader: 8.2.2
     babel-plugin-named-asset-import: 0.3.7
+    babel-plugin-ramda: 2.0.0
     babel-plugin-transform-typescript-metadata: 0.3.1
     babel-preset-jest: 26.6.2
     babel-preset-react-app: 10.0.0
@@ -7331,6 +7416,7 @@ __metadata:
     react-docgen: 5.3.1
     react-docgen-typescript: 1.21.0
     react-dom: 16.14.0
+    react-error-boundary: ^3.0.0
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
     react-native-web: ^0.16.0
@@ -7429,7 +7515,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.93
+    "@teambit/legacy": 1.0.98
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8611,14 +8697,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:17.0.8":
-  version: 17.0.8
-  resolution: "@types/react@npm:17.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.8.tgz"
+"@types/react@npm:^17.0.8":
+  version: 17.0.11
+  resolution: "@types/react@npm:17.0.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.11.tgz"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
+  checksum: 89e80ee8e08988abca0266e5e131f57b2e18f326bebfa0ed0a06b0bca29621a5a8202d617254a053f659b9c18090c52cae0aa475a6c6036b8858030f1d448e47
   languageName: node
   linkType: hard
 
@@ -11928,6 +12014,16 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 05d9222c33c248e6402589dfa1e007389605376d47d5c51224a3f4a0371a38e41039584968d6e061916dd221943d4f11f317fb187460fca87e446ee8bf73cfc8
+  languageName: node
+  linkType: hard
+
+"babel-plugin-ramda@npm:2.0.0":
+  version: 2.0.0
+  resolution: "babel-plugin-ramda@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbabel-plugin-ramda%2F-%2Fbabel-plugin-ramda-2.0.0.tgz"
+  dependencies:
+    "@babel/helper-module-imports": ^7.0.0
+    ramda: "*"
+  checksum: 9715530ee08bef43575dd3e1f6b1870b5c377f2dd66ba7f10fb380ccd0b781d348603ec9dee8a800c02bb39d2ed9b186132d9c9d49d0e9f2a9301452283ce5a2
   languageName: node
   linkType: hard
 
@@ -16364,6 +16460,12 @@ __metadata:
   checksum: c1c2b8b65f9c91b0f9d75f0debaa7ec5b35c266c2cac5de412c1a6de86d4cbae04ae44e510378cb14d032d0645a36925d0186f8bb7367bcc629db256b743a001
   languageName: node
   linkType: hard
+
+"error-fallback-dda211@workspace:scopes/react/ui/error-fallback":
+  version: 0.0.0-use.local
+  resolution: "error-fallback-dda211@workspace:scopes/react/ui/error-fallback"
+  languageName: unknown
+  linkType: soft
 
 "error-page-0389d1@workspace:scopes/design/ui/error-page":
   version: 0.0.0-use.local
@@ -27731,7 +27833,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ramda@npm:0.27.1, ramda@npm:^0.27.0, ramda@npm:^0.27.1":
+"ramda@npm:*, ramda@npm:0.27.1, ramda@npm:^0.27.0, ramda@npm:^0.27.1":
   version: 0.27.1
   resolution: "ramda@npm:0.27.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Framda%2F-%2Framda-0.27.1.tgz"
   checksum: 31a0c0ef739b2525d7615f84cbb5d3cb89ee0c795469b711f729ea1d8df0dccc3cd75d3717a1e9742d42315ce86435680b7c87743eb7618111c60c144a5b8059
@@ -27924,7 +28026,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.14.0":
+"react-dom@npm:16.14.0, react-dom@npm:^16.13.1":
   version: 16.14.0
   resolution: "react-dom@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.14.0.tgz"
   dependencies:
@@ -27945,6 +28047,17 @@ __metadata:
     classnames: ^2.2.5
     prop-types: ^15.6.0
   checksum: 94d3d5f0e7fd5920894915f069e393d55b46de114570a613ca56bd1f46bb5fc8dc9dbd1a254d8e09153e8261589122d1c725f722b37d454da883d0ffcc1a68bf
+  languageName: node
+  linkType: hard
+
+"react-error-boundary@npm:^3.0.0":
+  version: 3.1.3
+  resolution: "react-error-boundary@npm:3.1.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-error-boundary%2F-%2Freact-error-boundary-3.1.3.tgz"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+  peerDependencies:
+    react: ">=16.13.1"
+  checksum: 0a05af404aa054c54d7bc65a1814810093bf136c3ad4b3576a51d8509ee8fc302adfb66405da501fc01e839db557dd0d994b487e651897e36293907bb61458cf
   languageName: node
   linkType: hard
 
@@ -28233,7 +28346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:16.14.0":
+"react@npm:16.14.0, react@npm:^16.13.1":
   version: 16.14.0
   resolution: "react@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact%2F-%2Freact-16.14.0.tgz"
   dependencies:

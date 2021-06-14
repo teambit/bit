@@ -97,6 +97,8 @@ export class NodeMain {
     });
   }
 
+  overrideMounter = this.react.overrideMounter.bind(this.react);
+
   /**
    * create a new composition of the node environment.
    */

@@ -275,17 +275,19 @@ export class ReactEnv implements Environment {
    */
   getBuildPipe(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ): BuildTask[] {
-    return [this.getCompilerTask(tsconfig, compilerOptions), this.tester.task];
+    return [this.getCompilerTask(tsconfig, compilerOptions, tsModule), this.tester.task];
   }
 
   private getCompilerTask(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions));
+    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions, tsModule));
   }
 
   async __getDescriptor() {

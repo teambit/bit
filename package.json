@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.95",
+  "version": "1.0.98",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -153,6 +153,7 @@
     "firstline": "2.0.2",
     "fs-extra": "9.1.0",
     "glob": "7.1.6",
+    "globby": "11.0.1",
     "graphlib": "2.1.8",
     "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
@@ -273,6 +274,7 @@
     "@typescript-eslint/parser": "4.15.1",
     "@typescript-eslint/typescript-estree": "4.15.1",
     "babel-eslint": "9.0.0",
+    "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
     "chai": "4.3.0",
     "chai-arrays": "1.1.0",
