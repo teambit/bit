@@ -4,14 +4,14 @@ import { runCLI } from 'jest';
 
 export class JestWorker {
   private onTestCompleteCb: any;
-  private shouldRunTestSuite: any;
+  private shouldRunTestSuiteHook: (specFile: string) => Promise<boolean>;
 
-  onTestComplete(onTestComplete) {
+  onTestComplete(onTestComplete: any) {
     this.onTestCompleteCb = onTestComplete;
   }
 
-  registerIsModified(shouldRunTestSuite) {
-    this.shouldRunTestSuite = shouldRunTestSuite;
+  registerIsModified(shouldRunTestSuite: (specFile: string) => Promise<boolean>) {
+    this.shouldRunTestSuiteHook = shouldRunTestSuite;
   }
 
   watch(jestConfigPath: string, testFiles: string[], rootPath: string): Promise<void> {
@@ -40,8 +40,7 @@ export class JestWorker {
             {
               specFiles: testFiles,
               shouldRunTestSuite: async (specFile: string) => {
-                if (!this.shouldRunTestSuite) return true;
-                return this.shouldRunTestSuite(specFile);
+                return this.shouldRunTestSuiteHook(specFile);
               },
               onComplete: (results) => {
                 if (!this.onTestCompleteCb) return;
