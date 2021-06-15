@@ -280,9 +280,10 @@ export class PkgMain {
     if (!latestVersion) {
       throw new BitError('can not get manifest for component without versions');
     }
+    const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
     const distTags = {
-      // dev: 1.0.0-dev.3
       latest: latestVersion,
+      ...preReleaseLatestTags,
     };
 
     const versions = await this.getAllSnapsManifests(component);
