@@ -88,7 +88,7 @@
         "@teambit/base-ui.utils.time-ago": "0.6.10",
         "@teambit/capsule": "0.0.12",
         "@teambit/component.instructions.exporting-components": "0.0.5",
-        "@teambit/design.ui.icon-button": "0.1.0",
+        "@teambit/design.ui.icon-button": "0.2.1",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.12",
         "@teambit/documenter.theme.theme-compositions": "3.0.14",
@@ -316,7 +316,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.98",
+        "@teambit/legacy": "1.0.99",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -428,7 +428,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.98"
+            "@teambit/legacy": "1.0.99"
           }
         }
       },
@@ -591,7 +591,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.98",
+            "@teambit/legacy": "1.0.99",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
