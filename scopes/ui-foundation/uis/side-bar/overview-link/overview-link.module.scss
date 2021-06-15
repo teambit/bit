@@ -9,7 +9,7 @@
     align-items: center;
     padding: 9px 8px;
     text-decoration: none;
-    color: var(--highlighted-text);
+    color: var(--bit-text-color-heavy);
     margin-bottom: 8px;
     .icon {
       color: var(--bit-text-color-light);
@@ -17,10 +17,10 @@
   }
   .active {
     background-color: var(--bit-accent-color);
-    color: var(--cta-button-text);
+    color: var(--bit-text-on-accent);
     font-weight: unset;
     .icon {
-      color: var(--cta-button-text);
+      color: var(--bit-text-on-accent);
     }
     &:hover {
       background-color: var(--bit-accent-heavy);
