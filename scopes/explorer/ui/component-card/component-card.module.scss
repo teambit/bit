@@ -1,6 +1,6 @@
 .componentCardLink {
   text-decoration: none;
-  color: var(--text-highlight);
+  color: var(--bit-text-color-heavy);
 }
 .bottom {
   display: flex;
@@ -16,7 +16,7 @@
     }
     .size {
       font-size: 11px;
-      color: var(--text-muted, #6c707c);
+      color: var(--bit-text-color-light, #6c707c);
       vertical-align: middle;
     }
   }

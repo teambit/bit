@@ -10,7 +10,7 @@
     padding: 0;
     right: 0;
     // top: 43px;
-    font-size: var(--p-xs);
+    font-size: var(--bit-p-xs);
     border-radius: 6px;
   }
 }
@@ -18,7 +18,7 @@
 .title {
   padding: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--bit-border-color-lightest);
   margin-bottom: 8px;
 }
 
@@ -33,15 +33,15 @@
   height: 36px;
   padding: 0 24px;
   text-decoration: none;
-  color: var(--text-highlight);
+  color: var(--bit-text-color-heavy);
   &:hover {
-    background-color: var(--bg-topping-highlight);
+    background-color: var(--bit-bg-color-highlight);
   }
   &:last-child {
     margin-bottom: 8px;
   }
   &.currentVersion {
-    background: var(--muted-color);
+    background: var(--bit-accent-bg);
   }
   .version {
     margin-right: 16px;
@@ -61,7 +61,7 @@
   border-radius: 6px;
   user-select: none;
   transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--separator-color);
+  border: 1px solid var(--bit-border-color);
   > span {
     display: none;
   }
@@ -79,14 +79,14 @@
     display: unset;
   }
   &:hover {
-    background-color: var(--bg-dent);
+    background-color: var(--bit-bg-heavy);
   }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
-    background-color: var(--bg-color);
-    color: var(--base-color);
+    background-color: var(--bit-bg-color);
+    color: var(--bit-accent-color);
     &:hover {
-      background-color: var(--bg-color);
+      background-color: var(--bit-bg-color);
     }
   }
 }

@@ -15,15 +15,15 @@
 
   &:hover:not(.active) {
     > div {
-      background-color: var(--bg-dent);
+      background-color: var(--bit-bg-heavy);
     }
   }
 
   &.active {
-    color: var(--base-color);
+    color: var(--bit-accent-color);
 
     &:after {
-      background-color: var(--base-color);
+      background-color: var(--bit-accent-color);
       height: 4px;
     }
   }

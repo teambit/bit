@@ -12,18 +12,18 @@
     color: var(--highlighted-text);
     margin-bottom: 8px;
     .icon {
-      color: var(--text-muted);
+      color: var(--bit-text-color-light);
     }
   }
   .active {
-    background-color: var(--base-color);
+    background-color: var(--bit-accent-color);
     color: var(--cta-button-text);
     font-weight: unset;
     .icon {
       color: var(--cta-button-text);
     }
     &:hover {
-      background-color: var(--base-highlight);
+      background-color: var(--bit-accent-heavy);
     }
   }
 }

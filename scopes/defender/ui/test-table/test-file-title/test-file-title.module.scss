@@ -6,7 +6,7 @@
 }
 
 .testFile {
-  font-size: var(--p-xl);
+  font-size: var(--bit-p-xl);
   padding: 12px 0;
 }
 
@@ -37,10 +37,10 @@
   display: flex;
   align-items: center;
   margin-right: 16px;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   .icon {
     margin-right: 8px;
-    font-size: var(--p-xxs);
+    font-size: var(--bit-p-xxs);
     color: #878c9a;
   }
 }

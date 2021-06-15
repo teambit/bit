@@ -20,8 +20,8 @@
 
 .keycap {
   text-transform: uppercase;
-  background-color: var(--bg-dent);
-  color: var(--text-muted);
+  background-color: var(--bit-bg-dent);
+  color: var(--bit-text-color-light);
   border-radius: 3px;
   min-width: 1.7em;
   padding: 0 0.4em;
@@ -49,6 +49,6 @@
 //   vertical-align: middle;
 //   text-transform: uppercase;
 
-//   background: var(--bg-topping-highlight);
-//   box-shadow: var(--shadow-raised-low);
+//   background: var(--bit-bg-color-highlight);
+//   box-shadow: var(--bit-shadow-raised-low);
 // }

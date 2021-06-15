@@ -13,15 +13,15 @@
   color: #878c9a; //TODO
   transition: color 300ms ease-in-out;
   &:hover {
-    color: var(--text-highlight);
+    color: var(--bit-text-color-heavy);
   }
 
   &.disabled {
-    color: var(--text-muted);
+    color: var(--bit-text-color-light);
   }
 
   &.active {
-    color: var(--text-highlight);
+    color: var(--bit-text-color-heavy);
 
     &:before {
       content: '';
@@ -30,7 +30,7 @@
       left: 0;
       right: 0;
 
-      background-color: var(--base-color);
+      background-color: var(--bit-accent-color);
       height: 3px;
       border-radius: 2px;
 

@@ -13,7 +13,7 @@
   padding: 0 8px;
   padding-left: 32px;
   font-size: inherit;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   text-decoration: none;
   color: inherit;
 
@@ -27,7 +27,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--base-color);
+    color: var(--bit-accent-color);
     margin-right: 5px;
   }
 }
@@ -39,6 +39,6 @@
   min-width: 0;
   font-size: 14px;
   &:hover {
-    background: var(--bg-topping-highlight);
+    background: var(--bit-bg-color-highlight);
   }
 }

@@ -1,9 +1,9 @@
 .row {
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  color: var(--text-muted);
+  color: var(--bit-text-color-light);
   margin-bottom: 25px;
   .users {
     display: flex;

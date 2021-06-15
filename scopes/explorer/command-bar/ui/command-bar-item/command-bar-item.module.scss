@@ -10,12 +10,12 @@
   cursor: pointer;
 
   &:hover {
-    background-color: var(--bg-topping-highlight);
+    background-color: var(--bit-bg-color-highlight);
   }
 
   &.active,
   &.active:hover {
-    background-color: var(--muted-color);
+    background-color: var(--bit-accent-bg);
   }
 }
 

@@ -8,16 +8,16 @@
   border-radius: 0.5em;
 
   &:hover {
-    background-color: var(--bg-dent);
+    background-color: var(--bit-bg-heavy);
   }
 
   &.active {
-    color: var(--base-color);
-    background-color: var(--border-color);
+    color: var(--bit-accent-color);
+    background-color: var(--bit-border-color-lightest);
   }
 
   &:focus {
-    box-shadow: 0 0 0 0.125em var(--muted-color);
+    box-shadow: 0 0 0 0.125em var(--bit-accent-bg);
     outline: none;
   }
 
