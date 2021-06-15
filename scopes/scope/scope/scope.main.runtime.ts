@@ -269,6 +269,8 @@ export class ScopeMain implements ComponentFactory {
 
   private parseLocalAspect(localAspects: string[]) {
     const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
+    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
     const existsDirPaths = dirPaths.filter((path) => existsSync(path));
     return existsDirPaths;
   }
