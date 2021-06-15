@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
@@ -37,7 +36,7 @@ import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import { compact, slice, uniqBy } from 'lodash';
+import { compact, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';

@@ -35,7 +35,7 @@ export interface Command {
   group?: Group | string;
 
   /**
-   * should a command be exposed to the user (by bit --help).
+   * should a command be exposed to the user (by bit help).
    * e.g. experimental commands or commands created for the ssh communication should not be exposed
    */
   private?: boolean;

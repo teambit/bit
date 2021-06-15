@@ -15,8 +15,8 @@ export interface LegacyCommand {
   migration?: boolean;
   internal?: boolean; // used for serialize the error it returns
   remoteOp?: boolean; // Used for adding the token option globally
-  group?: Group; // for grouping in the "bit --help" page
-  shortDescription?: string; // for the "bit --help" page.
+  group?: Group; // for grouping in the "bit help" page
+  shortDescription?: string; // for the "bit help" page.
 
   action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any>;
 
