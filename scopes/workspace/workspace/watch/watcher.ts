@@ -1,5 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import { dirname } from 'path';
+import { difference } from 'lodash';
 import { ComponentID } from '@teambit/component';
 
 import { BitId } from '@teambit/legacy-bit-id';
@@ -13,7 +14,6 @@ import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
-import R from 'ramda';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 
 import { WorkspaceAspect } from '../';
@@ -114,15 +114,15 @@ export class Watcher {
     const previewsTrackDirs = { ...this.trackDirs };
     await this.workspace._reloadConsumer();
     await this.setTrackDirs();
-    const newDirs: string[] = R.difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
-    const removedDirs: string[] = R.difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
+    const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
+    const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       this.fsWatcher.add(newDirs);
       const addResults = await mapSeries(newDirs, (dir) =>
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], false)
       );
-      results.push(...R.flatten(addResults));
+      results.push(...addResults.flat());
     }
     if (removedDirs.length) {
       await this.fsWatcher.unwatch(removedDirs);
