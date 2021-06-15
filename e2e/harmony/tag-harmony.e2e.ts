@@ -341,4 +341,28 @@ describe('tag components on Harmony', function () {
       });
     });
   });
+  describe('soft-tag pre-release', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateComponents(3);
+      tagOutput = helper.command.softTag('--all --pre-release dev');
+    });
+    it('should save the pre-release name in the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      const nextVersion = bitMap.comp1.nextVersion;
+      expect(nextVersion.version).to.equal('prerelease');
+      expect(nextVersion.preRelease).to.equal('dev');
+    });
+    describe('persist the soft-tag', () => {
+      before(() => {
+        tagOutput = helper.command.persistTagWithoutBuild();
+      });
+      it('should use the data in the .bitmap file and tag as a pre-release version', () => {
+        expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
+      });
+    });
+  });
 });

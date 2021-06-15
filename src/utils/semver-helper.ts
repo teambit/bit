@@ -8,7 +8,7 @@ export function isStrReleaseType(str: string): boolean {
 }
 
 export function isReleaseTypeSupported(str: string): boolean {
-  const supportedReleaseTypes = ['patch', 'minor', 'major'];
+  const supportedReleaseTypes = ['patch', 'minor', 'major', 'prerelease'];
   return supportedReleaseTypes.includes(str);
 }
 

@@ -88,7 +88,9 @@ async function setFutureVersions(
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         componentToTag.version = modelComponent.getVersionToAdd(
           exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion
+          exactVersionOrReleaseType.exactVersion,
+          undefined,
+          componentToTag.componentMap?.nextVersion?.preRelease
         );
       } else {
         componentToTag.version = isAutoTag
@@ -297,7 +299,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
