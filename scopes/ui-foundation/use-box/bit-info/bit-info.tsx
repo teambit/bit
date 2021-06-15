@@ -15,7 +15,7 @@ export type BitInfoProps = {
 export function BitInfo({ setActive, prevTab, ...rest }: BitInfoProps) {
   return (
     <div {...rest}>
-      <Back setActive={setActive} prevTab={prevTab} />
+      <Back onClick={() => setActive(prevTab)} />
       <TabContent
         bottom={
           <Link external href={links.installBit} className={linkStyles}>

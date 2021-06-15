@@ -1,23 +1,16 @@
-.dropdown {
-  height: 100%;
-  > div {
-    height: 100%;
-    display: flex;
-    align-items: center;
-  }
-}
+@import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+
 .menu {
   padding: 0;
-  right: 0;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs, 14px);
   border-radius: 6px;
   width: 400px;
 }
 
 .placeholder {
-  color: #37b26c;
-  border: 1px solid #37b26c;
-  background-color: white;
+  color: #37b26c; // use accent here
+  border: 1px solid #37b26c; // use accent here
+  background-color: var(--bit-bg-color, #ffffff);
   cursor: pointer;
   box-sizing: border-box;
   display: flex;
@@ -28,12 +21,11 @@
   user-select: none;
   transition: background-color 300ms, color 300ms ease-in-out;
   &:hover {
-    background-color: var(--bg-dent);
-    color: white;
-    background-color: #2e945a;
-    border-color: #2e945a;
+    color: var(--bit-bg-color, #ffffff);
+    background-color: #2e945a; // use accent here
+    border-color: #2e945a; // use accent here
   }
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: $br-md) {
     padding: 0 8px;
     .content {
       display: none;
@@ -46,9 +38,9 @@
   }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
-    color: white;
-    background-color: #2e945a;
-    border-color: #2e945a;
+    color: var(--bit-bg-color, #ffffff);
+    background-color: #2e945a; // use accent here
+    border-color: #2e945a; // use accent here
   }
   > div {
     padding: 0 6px;

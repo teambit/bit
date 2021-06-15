@@ -1,5 +1,5 @@
 .back {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   padding: 15px 24px;
   > div {
     display: flex;

@@ -7,17 +7,15 @@ import { Import } from './import';
 import styles from './menu.module.scss';
 import { Tabs } from './tabs';
 
-// export type TabOptions = "registry" | "import" | "install";
-
 export type MenuProps = {
   /**
    * package link to be copied
    */
-  packageLink: string;
+  packageName: string;
   /**
    * import link to be copied
    */
-  bitLink: string;
+  componentId: string;
   /**
    * registry link to be copied
    */
@@ -28,12 +26,14 @@ export type MenuProps = {
   componentName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Menu({ packageLink, bitLink, registryName, componentName }: MenuProps) {
+export function Menu({ packageName, componentId, registryName, componentName }: MenuProps) {
   const [activeTab, setActiveTab] = useState('bit');
   const [activeRegistry, setActiveRegistry] = useState<string | undefined>(undefined);
+
   if (activeRegistry === 'import') {
     return <BitInfo prevTab={activeTab} setActive={() => setActiveRegistry(undefined)} />;
   }
+
   if (activeRegistry === 'install') {
     return (
       <Registry
@@ -44,6 +44,7 @@ export function Menu({ packageLink, bitLink, registryName, componentName }: Menu
       />
     );
   }
+
   return (
     <div>
       <div className={styles.top}>
@@ -55,9 +56,9 @@ export function Menu({ packageLink, bitLink, registryName, componentName }: Menu
       <Tabs activeTab={activeTab} onClick={setActiveTab} />
       {(activeTab === 'bit' || !activeTab) && (
         <Import
-          // componentName={componentName}
-          componentId={bitLink}
-          packageName={packageLink}
+          componentName={componentName}
+          componentId={componentId}
+          packageName={packageName}
           back={() => setActiveRegistry('import')}
         />
       )}
@@ -65,7 +66,7 @@ export function Menu({ packageLink, bitLink, registryName, componentName }: Menu
         <Install
           componentName={componentName}
           registryName={registryName}
-          copyString={`npm i ${packageLink}`}
+          copyString={`npm i ${packageName}`}
           packageManager="npm"
           back={() => setActiveRegistry('install')}
         />
@@ -74,7 +75,7 @@ export function Menu({ packageLink, bitLink, registryName, componentName }: Menu
         <Install
           componentName={componentName}
           registryName={registryName}
-          copyString={`yarn add ${packageLink}`}
+          copyString={`yarn add ${packageName}`}
           packageManager="yarn"
           back={() => setActiveRegistry('install')}
         />

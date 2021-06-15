@@ -1,30 +1,29 @@
 import React, { useState, ComponentType } from 'react';
 import classNames from 'classnames';
-import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
+import { Dropdown, DropdownProps } from '@teambit/evangelist.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './dropdown.module.scss';
 
 export type UseBoxDropdownProps = {
-  Menu?: ComponentType;
+  Menu: ComponentType;
   containerClass?: string;
   defaultActiveOption?: string;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & Omit<DropdownProps, 'placeholder'>;
 
 export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
-  const [activeTab, setActiveTab] = useState(0);
-  if (!Menu) return null;
+  const [key, setKey] = useState(0);
   return (
-    <div className={classNames(styles.dropdown, className)} {...rest}>
-      <Dropdown
-        onChange={(_e, open) => open && setActiveTab((x) => x + 1)} // to reset menu to initial state when toggling
-        dropClass={styles.menu}
-        placeholder={<Placeholder />}
-        clickToggles={false}
-        clickPlaceholderToggles={true}
-      >
-        <Menu key={activeTab} />
-      </Dropdown>
-    </div>
+    <Dropdown
+      className={classNames(className)}
+      {...rest}
+      onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+      dropClass={styles.menu}
+      placeholder={<Placeholder />}
+      clickToggles={false}
+      clickPlaceholderToggles={true}
+    >
+      <Menu key={key} />
+    </Dropdown>
   );
 }
 

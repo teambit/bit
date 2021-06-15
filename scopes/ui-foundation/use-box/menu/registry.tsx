@@ -18,7 +18,7 @@ export type RegistryProps = {
 export function Registry({ registryName, copyString, setActive, prevTab }: RegistryProps) {
   return (
     <div>
-      <Back setActive={setActive} prevTab={prevTab} />
+      <Back onClick={() => setActive(prevTab)} />
       <TabContent
         bottom={
           <Link external href={links.scopedRegistry} className={linkStyles}>

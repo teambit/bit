@@ -7,7 +7,7 @@
   user-select: none;
   cursor: pointer;
   &.active {
-    border-bottom: 3px solid var(--base-color);
+    border-bottom: 3px solid var(--bit-accent-color, #6c5ce7);
     cursor: unset;
   }
 }

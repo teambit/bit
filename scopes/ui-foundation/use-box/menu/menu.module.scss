@@ -1,6 +1,6 @@
 .top {
   padding: 15px 24px;
-  color: var(--text-color);
+  color: var(--bit-text-color, #414141);
 }
 
 .title {
@@ -11,9 +11,9 @@
   margin-bottom: 12px;
   > span {
     &:first-child {
-      color: var(--text-highlight);
+      color: var(--bit-text-color-heavy, #2b2b2b);
       font-weight: bold;
-      margin-right: 7px;
+      margin-right: 8px;
     }
   }
 }
@@ -26,7 +26,7 @@
     > span {
       &:first-child {
         margin-right: 8px;
-        font-size: var(--p-md);
+        font-size: var(--bit-p-md, 16px);
       }
     }
   }
@@ -36,7 +36,7 @@
   display: flex;
   padding: 0 24px;
   line-height: 14px;
-  border-bottom: 1px solid var(--border-color, #ededed);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   .yarnTab {
     color: #2c8ebb;
     font-size: 16px;

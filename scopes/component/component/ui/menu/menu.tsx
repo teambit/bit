@@ -72,11 +72,13 @@ function VersionRelatedDropdowns({ component }: { component: ComponentModel }) {
     <>
       {versionList.length > 0 && (
         <UseBoxDropdown
+          position="bottom-end"
+          className={styles.useBox}
           Menu={() => (
             <UseBoxMenu
               componentName={component.id.name}
-              bitLink={component.id.toString({ ignoreVersion: isLatestVersion })}
-              packageLink={`${component.packageName}${packageVersion}`}
+              componentId={component.id.toString({ ignoreVersion: isLatestVersion })}
+              packageName={`${component.packageName}${packageVersion}`}
               registryName={component.packageName.split('/')[0]}
             />
           )}

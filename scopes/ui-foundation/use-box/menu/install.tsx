@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './menu.module.scss';
 
@@ -13,7 +13,7 @@ export type InstallProps = {
   back: () => void;
   registryName: string;
   packageManager: string;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & TabContentProps;
 
 export function Install({ componentName, copyString, back, registryName, packageManager, ...rest }: InstallProps) {
   return (
@@ -31,7 +31,7 @@ export function Install({ componentName, copyString, back, registryName, package
         </div>
       }
     >
-      <div>{`Install ${componentName} with a ${packageManager}`}</div>
+      <div>{`Install ${componentName} with ${packageManager}`}</div>
       <CopyBox>{copyString}</CopyBox>
     </TabContent>
   );
