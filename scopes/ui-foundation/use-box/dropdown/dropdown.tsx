@@ -7,7 +7,6 @@ import styles from './dropdown.module.scss';
 export type UseBoxDropdownProps = {
   Menu: ComponentType;
   containerClass?: string;
-  defaultActiveOption?: string;
 } & Omit<DropdownProps, 'placeholder'>;
 
 export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
