@@ -1,6 +1,5 @@
-import { ReleaseType, valid, prerelease, maxSatisfying } from 'semver';
+import { ReleaseType, valid, maxSatisfying } from 'semver';
 import { InvalidVersion } from '@teambit/component-version';
-import GeneralError from '../error/general-error';
 
 export function isStrReleaseType(str: string): boolean {
   const releaseTypes = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
