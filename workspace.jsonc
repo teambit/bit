@@ -88,7 +88,7 @@
         "@teambit/base-ui.utils.time-ago": "0.6.10",
         "@teambit/capsule": "0.0.12",
         "@teambit/component.instructions.exporting-components": "0.0.5",
-        "@teambit/design.ui.icon-button": "0.1.0",
+        "@teambit/design.ui.icon-button": "0.2.1",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.12",
         "@teambit/documenter.theme.theme-compositions": "3.0.14",
