@@ -17,10 +17,10 @@
   }
   .active {
     background-color: var(--bit-accent-color);
-    color: var(--bit-text-on-accent);
+    color: var(--bit-text-on-accent, #ffffff);
     font-weight: unset;
     .icon {
-      color: var(--bit-text-on-accent);
+      color: var(--bit-text-on-accent, #ffffff);
     }
     &:hover {
       background-color: var(--bit-accent-heavy);
