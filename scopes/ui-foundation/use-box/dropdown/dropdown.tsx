@@ -7,7 +7,6 @@ import styles from './dropdown.module.scss';
 export type UseBoxDropdownProps = {
   Menu?: ComponentType;
   containerClass?: string;
-  defaultActiveOption?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
