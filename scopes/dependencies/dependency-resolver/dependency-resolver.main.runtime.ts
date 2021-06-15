@@ -26,7 +26,6 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
-import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -276,7 +275,7 @@ export class DependencyResolverMain {
   }
 
   private getDependencyListFactory(): DependencyListFactory {
-    const factories = flatten(this.dependencyFactorySlot.values());
+    const factories = this.dependencyFactorySlot.values().flat();
     const factoriesMap = factories.reduce((acc, factory) => {
       acc[factory.type] = factory;
       return acc;
@@ -411,11 +410,11 @@ export class DependencyResolverMain {
   }
 
   private getPreInstallSubscribers(): PreInstallSubscriberList {
-    return flatten(this.preInstallSlot.values());
+    return this.preInstallSlot.values().flat();
   }
 
   private getPostInstallSubscribers(): PostInstallSubscriberList {
-    return flatten(this.postInstallSlot.values());
+    return this.postInstallSlot.values().flat();
   }
 
   /**
