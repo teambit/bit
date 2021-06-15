@@ -132,6 +132,18 @@ export default class BitId {
   }
 
   /**
+   * examples:
+   * 1.0.0 => null
+   * 1.0.0-dev.1 => ['dev', 1]
+   * 1.0.0-dev.1.alpha.2 => ['dev', 1, 'alpha', 2]
+   * 1.0.0-0 => [0]
+   */
+  getVersionPreReleaseData(): null | readonly string[] {
+    if (!this.version) return null;
+    return semver.prerelease(this.version);
+  }
+
+  /**
    * Get a string id and return a string without the version part
    * @param {string} id
    * @return {string} id - id without version

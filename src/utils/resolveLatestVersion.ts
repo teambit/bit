@@ -30,7 +30,7 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
   }
   const allVersionsWithoutNullForId = compact(allVersionsForId);
 
-  const maxVersion = semver.maxSatisfying<string>(allVersionsWithoutNullForId, '*');
+  const maxVersion = semver.maxSatisfying<string>(allVersionsWithoutNullForId, '*', { includePrerelease: true });
   if (!maxVersion) {
     throw new Error(
       `semver was not able to find the highest version among the following: ${allVersionsWithoutNullForId.join(', ')}`
