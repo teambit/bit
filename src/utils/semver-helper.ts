@@ -23,7 +23,6 @@ export function validateVersion(version: string | undefined): string | undefined
     // it also changes to a valid string (e.g. from v1.0.0 to 1.0.0)
     const validVersion = valid(version);
     if (!validVersion) throw new InvalidVersion(version);
-    if (prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
     return validVersion;
   }
   return undefined;

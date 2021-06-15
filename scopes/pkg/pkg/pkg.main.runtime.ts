@@ -281,6 +281,7 @@ export class PkgMain {
       throw new BitError('can not get manifest for component without versions');
     }
     const distTags = {
+      // dev: 1.0.0-dev.3
       latest: latestVersion,
     };
 
