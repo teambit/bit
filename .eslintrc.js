@@ -46,6 +46,7 @@ module.exports = {
       { functions: false, classes: true, variables: true, typedefs: true },
     ],
     '@typescript-eslint/return-await': 'error',
+    'no-return-await': 'off',
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off',

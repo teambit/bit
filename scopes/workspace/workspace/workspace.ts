@@ -992,14 +992,14 @@ export class Workspace implements ComponentFactory {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
-        return extensionEntry.stringId;
+        return extensionEntry.stringId as string;
       }
 
       const id = await this.resolveComponentId(extensionEntry.extensionId);
       // return this.resolveComponentId(extensionEntry.extensionId);
       return id.toString();
     });
-    const extensionsIds = await Promise.all(extensionsIdsP);
+    const extensionsIds: string[] = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
