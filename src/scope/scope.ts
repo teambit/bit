@@ -206,7 +206,7 @@ export default class Scope {
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
     const versions = readDirSyncIgnoreDsStore(componentFullPath);
-    const latestVersion = semver.maxSatisfying(versions, '*');
+    const latestVersion = semver.maxSatisfying(versions, '*', { includePrerelease: true });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return pathLib.join(relativePath, latestVersion!);
   }

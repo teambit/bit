@@ -24,12 +24,12 @@ describe('getLatestVersionNumber', () => {
     const result = resolveLatestVersion(bitIds, idWithNoVersion);
     expect(result).to.deep.equal(idWithNoVersion);
   });
-  it('should throw when using a pre-release tag', () => {
+  it('should work with a pre-release tag', () => {
     const anotherId = new BitId({ scope: 'foo', name: 'is-type' });
     const idWithPreRelease = new BitId({ scope: 'foo', name: 'is-type', version: '3.0.0-dev.1' });
     const bitIds = new BitIds(idWithPreRelease);
-    const func = () => resolveLatestVersion(bitIds, anotherId);
-    expect(func).to.throw('semver was not able to find the highest version among the following: 3.0.0-dev.1');
+    const result = resolveLatestVersion(bitIds, anotherId);
+    expect(result).to.deep.equal(idWithPreRelease);
   });
   it('should return the id from the bitIds array if it is there with a version', () => {
     const bitIds = new BitIds(idWithVersion1);

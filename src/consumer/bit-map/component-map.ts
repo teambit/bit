@@ -27,7 +27,8 @@ export type ComponentMapFile = {
 };
 
 export type NextVersion = {
-  version: 'patch' | 'minor' | 'major' | string;
+  version: 'patch' | 'minor' | 'major' | 'prerelease' | string;
+  preRelease?: string;
   message?: string;
   username?: string;
   email?: string;
