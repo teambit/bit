@@ -14,7 +14,6 @@ export const UseBoxExample = () => {
       <div style={styles}>
         <UseBoxDropdown
           position="bottom-end"
-          defaultActiveOption="bit"
           Menu={() => (
             <Menu
               packageName="@teambit/design.ui.input.radio"
