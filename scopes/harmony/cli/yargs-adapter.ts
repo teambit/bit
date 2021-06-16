@@ -26,8 +26,9 @@ export class YargsAdapter implements CommandModule {
     // a workaround to get a flag syntax such as "--all [version]" work with yargs.
     const flags = Object.keys(argv).reduce((acc, current) => {
       if (current === '_' || current === '$0' || current === '--') return acc;
-      const flagName = current.split(' ')[0];
-      acc[flagName] = argv[current];
+      // const flagName = current.split(' ')[0];
+      const val = typeof argv[current] === 'string' && !argv[current] ? true : argv[current];
+      acc[current] = val;
       return acc;
     }, {});
     this.commanderCommand._packageManagerArgs = (argv['--'] || []) as string[];
