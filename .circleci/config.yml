@@ -1583,16 +1583,6 @@ workflows:
   #           - windows_set_ssh_key
   #           - windows_bvm_install
   #           - windows_build_bvm
-
-  server_docker_build:
-    jobs:
-      - checkout_code
-      - docker_build:
-          requires:
-            - checkout_code
-      - server_docker_build:
-          requires:
-            - docker_build
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
