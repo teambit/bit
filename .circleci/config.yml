@@ -1592,7 +1592,6 @@ workflows:
             - checkout_code
       - server_docker_build:
           requires:
-            - harmony_deploy_approval_job
             - docker_build
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
