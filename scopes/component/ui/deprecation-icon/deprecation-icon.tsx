@@ -20,7 +20,7 @@ export function DeprecationIcon({ component, className, ...rest }: DeprecationIc
       content={<div className={styles.deprectaedTooltipContent}>Deprecated</div>}
     >
       <div>
-        <Icon {...rest} of="note-deprecated" className={classnames(themedText, colorPalette.consider, className)} />
+        <Icon {...rest} of="note-deprecated" className={classnames(themedText, colorPalette.warning, className)} />
       </div>
     </Tooltip>
   );

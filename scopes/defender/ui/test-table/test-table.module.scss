@@ -1,5 +1,5 @@
 .testBlock {
-  border-bottom: 1px solid var(--bit-border-color-lightest, var(--bit-border-color-lightest, #f6f6f6));
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   &.open {
     border-bottom: none;
     > .row > span {
