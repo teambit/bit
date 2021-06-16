@@ -48,30 +48,30 @@ This will make your to fetch the cli container from dockerhub with the specifice
 
 The scope name is defined by the folder name of the containing scope (`remote-scope` by default).
 This name is then later used for setting it up in the `workspace.jsonc` file.
-In case you want to change it you can pass the build arg called `SCOPE_PATH` like `--build-arg SCOPE_PATH=/home/root/custom-remote-scope`
+In case you want to change it you can pass the build arg called `SCOPE_PATH` like `--build-arg SCOPE_PATH=/root/custom-remote-scope`
 
 ### Using volume to make sure data is persisted
 
 In order to persist the scope data, you want the scope folder to be live outside the container in the host machine.
 You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so:
-`docker run -it -v {scope-path-on-host}:/home/root/remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
+`docker run -it -v {scope-path-on-host}:/root/remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
 
 _Usually it's better to use volumes then bind mounts, or even handle the mounts by an orchestrator like kubernetees but this topics is out of the scope in this guide_
 
 ### Combining scope volume with scope name/location
 
 When combining change of the scope name/location and volume you have to make sure the location provided in the `SCOPE_PATH` in the build arg is matching the target in the volume:
-`docker run -it -v {scope-path-on-host}:/home/root/custom-remote-scope -build-arg SCOPE_PATH=/home/root/custom-remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
-See the `/home/root/custom-remote-scope` is used both in the `-v` arg after the `:` and as the `SCOPE_PATH` value.
+`docker run -it -v {scope-path-on-host}:/root/custom-remote-scope -build-arg SCOPE_PATH=/root/custom-remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
+See the `/root/custom-remote-scope` is used both in the `-v` arg after the `:` and as the `SCOPE_PATH` value.
 
 ### Watch bit server logs on host machine
 
 Since the `bit start` command at the moment can't be run as detached, you will need a way to run it as the main command and to monitor the logs at the same time.
 In order to do so, we will connect the logs dir on the container to a dir in the host using [bind mounts](https://docs.docker.com/storage/bind-mounts/).
 In order to watch the bit logs, you will need to mount the logs directory in the host machine. like this:
-`docker run -it -v {logs-dir-on-host}:/home/root/Library/Caches/Bit/logs -p {host-port}:3000 bitcli/bit-server:latest`
-An example with actual values (use `/home/root/bit-server-docker-logs` for logs on host and port 5000 on host):
-`docker run -it -v /home/root/bit-server-docker-logs:/home/root/Library/Caches/Bit/logs -p 5000:3000 bitcli/bit-server:latest`
+`docker run -it -v {logs-dir-on-host}:/root/Library/Caches/Bit/logs -p {host-port}:3000 bitcli/bit-server:latest`
+An example with actual values (use `/root/bit-server-docker-logs` for logs on host and port 5000 on host):
+`docker run -it -v /root/bit-server-docker-logs:/root/Library/Caches/Bit/logs -p 5000:3000 bitcli/bit-server:latest`
 
 _In most cases it make sense to use [tmpfs-mounts](https://docs.docker.com/storage/tmpfs/) for this, but this as well is out of the scope for this guide_
 
