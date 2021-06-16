@@ -8,27 +8,19 @@ export default class Isolate implements LegacyCommand {
   alias = '';
   opts = [
     ['d', 'directory [directory] ', 'path to store isolated component'],
-    ['w', 'write-bit-dependencies [boolean] ', 'write bit components dependencies to package.json file'],
-    ['l', 'npm-links [boolean]', 'point dependencies link files to npm package'],
-    ['s', 'skip-npm-install [boolean]', 'do not install npm package dependencies'],
-    ['', 'install-peer-dependencies [boolean]', 'install peer npm package dependencies'],
+    ['w', 'write-bit-dependencies ', 'write bit components dependencies to package.json file'],
+    ['l', 'npm-links', 'point dependencies link files to npm package'],
+    ['s', 'skip-npm-install', 'do not install npm package dependencies'],
+    ['', 'install-peer-dependencies', 'install peer npm package dependencies'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'no-package-json [boolean]', 'do not generate package.json for the isolated component'],
-    ['o', 'override [boolean]', 'override existing isolated component'],
-    [
-      '',
-      'save-dependencies-as-components [boolean]',
-      'import the dependencies as bit components instead of as npm packages',
-    ],
-    [
-      '',
-      'exclude-registry-prefix [boolean]',
-      "exclude the registry prefix from the component's name in the package.json",
-    ],
-    ['v', 'verbose [boolean]', 'print more logs'],
-    ['', 'silent-client-result [boolean]', 'print environment install result'],
-    ['', 'use-capsule [boolean]', 'use capsule with fs-container'],
+    ['', 'no-package-json', 'do not generate package.json for the isolated component'],
+    ['o', 'override', 'override existing isolated component'],
+    ['', 'save-dependencies-as-components', 'import the dependencies as bit components instead of as npm packages'],
+    ['', 'exclude-registry-prefix', "exclude the registry prefix from the component's name in the package.json"],
+    ['v', 'verbose', 'print more logs'],
+    ['', 'silent-client-result', 'print environment install result'],
+    ['', 'use-capsule', 'use capsule with fs-container'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;

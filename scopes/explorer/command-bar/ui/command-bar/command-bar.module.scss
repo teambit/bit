@@ -9,12 +9,12 @@
   left: 50%;
   transform: translate(-50%, 0);
   width: 643px;
-  border: 1px solid var(--separator-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   max-width: 90%;
 
   overflow: hidden; // enforce border-radius
 
-  color: var(--text-highlight, #2b2b2b);
+  color: var(--bit-text-color-heavy, #2b2b2b);
   box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.32);
 
   &.visible {
@@ -39,6 +39,6 @@
 
   &:not(:empty) {
     margin-bottom: 8px;
-    border-top: solid 1px var(--separator-color);
+    border-top: solid 1px var(--bit-border-color, #babec9);
   }
 }

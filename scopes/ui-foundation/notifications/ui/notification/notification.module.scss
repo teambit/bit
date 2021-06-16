@@ -15,8 +15,8 @@ $animationTime: 300ms;
   transition: all $animationTime, max-height $animationTime / 2 ease-out;
 
   animation: enter $animationTime forwards;
-  box-shadow: var(--shadow-faint);
-  background: var(--bg-tooltip, white);
+  box-shadow: var(--bit-shadow-faint);
+  background: var(--bit-bg-tooltip, white);
 
   &.dismissing {
     animation: exit $animationTime forwards;

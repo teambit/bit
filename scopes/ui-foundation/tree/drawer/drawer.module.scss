@@ -7,7 +7,7 @@
   flex-direction: column;
 }
 .drawerName {
-  font-size: var(--p-xxs);
+  font-size: var(--bit-p-xxs, 12px);
   height: 32px;
   flex: none;
   display: flex;
@@ -21,8 +21,8 @@
   border-bottom: 1px solid #ededed;
   transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
-    border-color: var(--bg-topping-highlight);
-    background: var(--bg-topping-highlight);
+    border-color: var(--bit-bg-color-highlight);
+    background: var(--bit-bg-color-highlight);
     .link {
       visibility: visible;
       opacity: 1;
@@ -30,11 +30,11 @@
   }
   .arrow {
     display: inline-block;
-    font-size: var(--p-xs);
+    font-size: var(--bit-p-xs);
     line-height: inherit;
     transition: all 300ms;
     margin-right: 10px;
-    color: var(--text-muted);
+    color: var(--bit-text-color-light, #6c707c);
     &.collapsed {
       transform: rotate(-0.25turn);
     }
@@ -62,9 +62,9 @@
 //   visibility: hidden;
 //   opacity: 0;
 //   transition: opacity 300ms, visibility 300ms ease-in-out;
-//   color: var(--text-muted);
+//   color: var(--bit-text-color-light, #6c707c);
 //   &:hover {
-//     color: var(--text-highlight);
+//     color: var(--bit-text-color-heavy);
 //   }
 // }
 

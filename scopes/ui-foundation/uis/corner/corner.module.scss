@@ -5,7 +5,7 @@ $topbarHeight: 56px;
   align-items: center;
   justify-content: space-between;
   height: $topbarHeight;
-  background: var(--border-color);
+  background: var(--bit-border-color-lightest, #ededed);
   padding: 10px;
   user-select: none;
   box-sizing: border-box;
@@ -22,13 +22,13 @@ $topbarHeight: 56px;
     flex: 1;
     min-width: 0;
     text-decoration: none;
-    color: var(--text-highlight);
+    color: var(--bit-text-color-heavy);
     transition: color 300ms ease-in-out;
     &:active {
-      color: var(--text-highlight);
+      color: var(--bit-text-color-heavy);
     }
     &:hover {
-      color: var(--base-color);
+      color: var(--bit-accent-color, #6c5ce7);
     }
     > span {
       overflow: hidden;
@@ -48,10 +48,10 @@ $topbarHeight: 56px;
   }
   .icon {
     cursor: pointer;
-    color: var(--text-muted);
+    color: var(--bit-text-color-light, #6c707c);
     transition: color 300ms ease-in-out;
     &:hover {
-      color: var(--text-highlight);
+      color: var(--bit-text-color-heavy);
     }
   }
 }

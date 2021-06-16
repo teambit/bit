@@ -4,7 +4,7 @@ import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-para
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
-type Props = {
+export type OrgAvatarProps = {
   account: AccountObj;
   size: number;
   imageSize?: number;
@@ -13,7 +13,7 @@ type Props = {
   imgClassName?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export class OrgAvatar extends PureComponent<Props> {
+export class OrgAvatar extends PureComponent<OrgAvatarProps> {
   render() {
     const { account, size, imageSize = size, fontSize = size * 0.35, className, imgClassName, ...rest } = this.props;
 

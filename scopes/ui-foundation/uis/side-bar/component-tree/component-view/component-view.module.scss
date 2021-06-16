@@ -7,7 +7,7 @@
   justify-content: space-between;
   padding-right: 8px;
   font-size: inherit;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
 
   //TODO - move to a link component
   text-decoration: none;
@@ -17,14 +17,14 @@
   border-left: 0px solid transparent;
 
   &:hover {
-    background: var(--bg-topping-highlight);
+    background: var(--bit-bg-color-highlight);
     .envIcon {
       filter: grayscale(0);
     }
   }
 
   &.active {
-    background: var(--muted-color);
+    background: var(--bit-accent-bg, #eceaff);
     .envIcon {
       filter: grayscale(0);
     }
@@ -74,9 +74,9 @@
 }
 
 .componentEnvTooltip {
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   .componentEnvTitle {
-    font-size: var(--p-xxs);
+    font-size: var(--bit-p-xxs, 12px);
     color: #c9c3f6;
     font-weight: bold;
     margin-bottom: 4px;
