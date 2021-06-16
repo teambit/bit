@@ -9,10 +9,10 @@
 .codeTabDrawer {
   > div:first-child {
     border: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
   > div:last-child {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--bit-border-color-lightest);
   }
 }
 

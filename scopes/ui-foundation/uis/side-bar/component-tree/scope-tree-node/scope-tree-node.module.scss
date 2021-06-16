@@ -10,9 +10,9 @@
   font-weight: bold;
   font-size: inherit;
   padding-right: 8px;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   &:hover {
-    background: var(--bg-topping-highlight);
+    background: var(--bit-bg-color-highlight);
   }
 
   .arrow {
@@ -20,7 +20,7 @@
     line-height: inherit;
     transition: all 300ms;
     margin-right: 10px;
-    color: var(--text-muted);
+    color: var(--bit-text-color-light);
     &.collapsed {
       transform: rotate(-0.25turn);
     }
@@ -43,5 +43,5 @@
 .componentTree {
   overflow: hidden;
   transition: max-height 400ms ease-in-out;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
 }

@@ -8,6 +8,8 @@
   outline: none;
 
   &::placeholder {
-    color: var(--text-placeholder-color, #babec9);
+    // TODO - reenable when using @teambit/documenter.theme.theme-context > 4.0.1 or @teambit/base-ui.theme.theme-provider > 1.0.1
+    // color: var(--bit-text-inactive, #babec9);
+    color: #babec9;
   }
 }

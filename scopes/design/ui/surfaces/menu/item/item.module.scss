@@ -3,28 +3,28 @@
   align-items: center;
   padding: 8px;
   text-decoration: none;
-  color: var(--highlighted-text);
+  color: var(--bit-text-color-heavy);
 
   .icon {
-    color: var(--text-muted);
+    color: var(--bit-text-color-light);
     margin-right: 0.76em;
     font-size: 1.15em;
   }
 }
 
 .interactive:hover {
-  background: var(--bg-topping-highlight);
+  background: var(--bit-bg-color-highlight);
   cursor: pointer;
 }
 
 .active {
-  background: var(--muted-color);
+  background: var(--bit-accent-bg);
 
   &:hover {
-    background: var(--muted-color);
+    background: var(--bit-accent-bg);
   }
 
   .icon {
-    color: var(--base-color);
+    color: var(--bit-accent-color);
   }
 }

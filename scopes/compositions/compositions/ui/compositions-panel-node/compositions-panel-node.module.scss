@@ -1,8 +1,8 @@
 .linkWrapper {
-  background-color: var(--base-color);
+  background-color: var(--bit-accent-color);
   &.active {
     display: flex;
-    background-color: var(--base-color);
+    background-color: var(--bit-accent-color);
     height: 40px;
   }
 }

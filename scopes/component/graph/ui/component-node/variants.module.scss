@@ -10,7 +10,7 @@ $borderLabelHeight: 20px;
   border-top-width: 20px;
 
   border-radius: 10px;
-  box-shadow: 0px 0px 0px 2px #d0f1de, var(--shadow-hover-medium);
+  box-shadow: 0px 0px 0px 2px #d0f1de, var(--bit-shadow-hover-medium);
 
   &:before {
     content: 'Current component';
