@@ -1,0 +1,57 @@
+.top {
+  padding: 15px 24px;
+  color: var(--bit-text-color, #414141);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  font-size: var(--p-xs);
+  font-weight: bold;
+  margin-bottom: 12px;
+  > span {
+    &:first-child {
+      color: var(--bit-text-color-heavy, #2b2b2b);
+      font-weight: bold;
+      margin-right: 8px;
+    }
+  }
+}
+
+.installLink {
+  justify-content: space-between;
+  > div {
+    display: flex;
+    align-items: center;
+    > span {
+      &:first-child {
+        margin-right: 8px;
+        font-size: var(--bit-p-md, 16px);
+      }
+    }
+  }
+}
+
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  line-height: 14px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  .yarnTab {
+    color: #2c8ebb;
+    font-size: 16px;
+    padding-bottom: 6px;
+  }
+  .npmTab {
+    color: #c7363a;
+  }
+}
+
+.importContent {
+  > div {
+    margin: 12px 0;
+  }
+  > div:nth-child(2) {
+    margin-bottom: 24px;
+  }
+}
