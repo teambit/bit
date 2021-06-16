@@ -29,6 +29,7 @@ export type UpdateDepsOptions = {
   username?: string;
   email?: string;
   push?: boolean;
+  skipNewScopeValidation?: boolean;
 };
 
 export type DepUpdateItemRaw = {
@@ -75,6 +76,7 @@ export class UpdateDependenciesMain {
     updateDepsOptions: UpdateDepsOptions
   ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
+    await this.validateScopeIsNew();
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
     await this.updateFutureVersion();
@@ -116,6 +118,19 @@ export class UpdateDependenciesMain {
 
   registerOnPostUpdateDependencies(fn: OnPostUpdateDependencies) {
     this.onPostUpdateDependenciesSlot.register(fn);
+  }
+
+  private async validateScopeIsNew() {
+    if (this.updateDepsOptions.skipNewScopeValidation) {
+      return;
+    }
+    const ids = await this.scope.listIds();
+    if (ids.length) {
+      // it means this scope is a real remote scope with components, not just cache
+      throw new Error(`unable to run update-dependencies command on an existing scope "${this.scope.name}".
+please create a new scope (bit init --bare) and run it from there.
+to bypass this error, use --skip-new-scope-validation flag (not recommended. it could corrupt the components irreversibly)`);
+    }
   }
 
   private async triggerOnPostUpdateDependencies() {
