@@ -38,11 +38,13 @@ export class YargsAdapter implements CommandModule {
 
   private optionsToBuilder(command: Command) {
     const option = command.options.reduce((acc, [alias, opt, desc]) => {
-      acc[opt] = {
+      const optName = opt.split(' ')[0];
+      acc[optName] = {
         alias,
         describe: desc,
         group: STANDARD_GROUP,
-        type: opt.includes(' ') ? undefined : 'boolean',
+        type: opt.includes(' ') ? 'string' : 'boolean',
+        requiresArg: opt.includes('<'),
       };
       return acc;
     }, {});

@@ -11,7 +11,7 @@ export default class Undeprecate implements LegacyCommand {
   group: Group = 'collaborate';
   description = 'undeprecate a deprecated component (local/remote)';
   alias = '';
-  opts = [['r', 'remote [boolean]', 'undeprecate a component from a remote scope']] as CommandOptions;
+  opts = [['r', 'remote', 'undeprecate a component from a remote scope']] as CommandOptions;
   loader = true;
   migration = true;
   skipWorkspace = true;
