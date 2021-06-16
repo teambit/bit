@@ -12,7 +12,7 @@ export default class CiUpdate implements LegacyCommand {
   alias = '';
   loader = true;
   opts = [
-    // ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
+    // ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['d', 'directory [file]', 'directory to run ci-update'],
     ['k', 'keep', 'keep test environment after run (default false)'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],

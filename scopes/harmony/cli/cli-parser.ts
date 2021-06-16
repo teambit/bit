@@ -32,6 +32,7 @@ export class CLIParser {
     this.setHelpMiddleware();
     this.handleCommandFailure();
     this.configureCompletion();
+    yargs.strict(); // don't allow non-exist flags and non-exist commands
 
     yargs
       // .recommendCommands() // don't use it, it brings the global help of yargs, we have a custom one

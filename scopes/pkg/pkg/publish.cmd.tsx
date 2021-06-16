@@ -10,9 +10,9 @@ export class PublishCmd implements Command {
   name = 'publish <componentId>';
   description = 'publish components to npm (npm publish)';
   options = [
-    ['d', 'dry-run [boolean]', 'npm publish --dry-run'],
+    ['d', 'dry-run', 'npm publish --dry-run'],
     ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
-    ['j', 'json [boolean]', 'return the output as JSON'],
+    ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
   alias = '';
