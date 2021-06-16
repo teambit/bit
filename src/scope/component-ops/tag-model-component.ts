@@ -74,7 +74,8 @@ async function setFutureVersions(
   exactVersion: string | null | undefined,
   persist: boolean,
   autoTagIds: BitIds,
-  incrementBy?: number
+  incrementBy?: number,
+  preRelease?: string
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -87,12 +88,14 @@ async function setFutureVersions(
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         componentToTag.version = modelComponent.getVersionToAdd(
           exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion
+          exactVersionOrReleaseType.exactVersion,
+          undefined,
+          componentToTag.componentMap?.nextVersion?.preRelease
         );
       } else {
         componentToTag.version = isAutoTag
-          ? modelComponent.getVersionToAdd('patch', undefined, incrementBy) // auto-tag always bumped as patch
-          : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy);
+          ? modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease) // auto-tag always bumped as patch
+          : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
       }
     })
   );
@@ -171,6 +174,7 @@ export default async function tagModelComponent({
   message,
   exactVersion,
   releaseType,
+  preRelease,
   force,
   consumer,
   ignoreNewestVersion = false,
@@ -278,7 +282,16 @@ export default async function tagModelComponent({
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
-    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist, autoTagIds, incrementBy);
+    : await setFutureVersions(
+        allComponentsToTag,
+        scope,
+        releaseType,
+        exactVersion,
+        persist,
+        autoTagIds,
+        incrementBy,
+        preRelease
+      );
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
@@ -286,7 +299,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);

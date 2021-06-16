@@ -4770,18 +4770,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.elements.icon@npm:0.6.2":
-  version: 0.6.2
-  resolution: "@teambit/base-ui.elements.icon@npm:0.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.2.tgz"
-  dependencies:
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 2c2c93a8976f0896c28cf76bed9927596e050c1258dbee5cf844f3e4a02ad5acadefa7515dfe355bde192a44ce3b2b2b261b8fa1d439365e5e2e5b0cfa009b3f
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.elements.icon@npm:0.6.3":
   version: 0.6.3
   resolution: "@teambit/base-ui.elements.icon@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.3.tgz"
@@ -5981,20 +5969,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/design.ui.icon-button@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@teambit/design.ui.icon-button@npm:0.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.icon-button%2F-%2Fdesign.ui.icon-button-0.1.0.tgz"
+"@teambit/design.ui.icon-button@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@teambit/design.ui.icon-button@npm:0.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.icon-button%2F-%2Fdesign.ui.icon-button-0.2.1.tgz"
   dependencies:
-    "@teambit/base-ui.elements.icon": 0.6.2
+    "@teambit/base-ui.elements.icon": 0.6.11
     "@teambit/base-ui.input.button": 0.7.1
     classnames: ^2.2.6
     core-js: ^3.0.0
-    react: ^16.13.1
-    react-dom: ^16.13.1
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 0f3e34008dd2c06891bdfb327b7ce3789fc73bf511374507e23c93073d685e8fde3eb0367c82cde91175f407f3631af2dfcc3f5da8385f5f9615f02f9f1d955b
+  checksum: fd4c559e4991239845deda961db3d580a422ced0755af8f640da0a96a26bf01c3480db3aacadf74ce1b29ec1702561615a1dda7d72fa8c9f17c351eac9d60861
   languageName: node
   linkType: hard
 
@@ -6856,9 +6842,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.98, @teambit/legacy@npm:1.0.98::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.98.tgz":
-  version: 1.0.98
-  resolution: "@teambit/legacy@npm:1.0.98::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.98.tgz"
+"@teambit/legacy@npm:1.0.99, @teambit/legacy@npm:1.0.99::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.99.tgz":
+  version: 1.0.99
+  resolution: "@teambit/legacy@npm:1.0.99::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.99.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6981,7 +6967,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: b3057de22adbd66e33b08fd3de4b2ca4ba6dc029c43a02ccceaffa7c0e2e7d4d2cb1fbb1f6a3d9c5ffe1d92a4d946fb65c8e990f41e2a039b57dec5a35b7eb44
+  checksum: d942c0c98acc20b2fa0a2314bf231bc47070f77e963bd834e812807c9b357fc124b61c5d13cfb9acac0994be01dee3ff481cd411b5a55bbcbb418d6cb74299a5
   languageName: node
   linkType: hard
 
@@ -7079,7 +7065,7 @@ __metadata:
     "@teambit/base-ui.utils.time-ago": 0.6.10
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.5
-    "@teambit/design.ui.icon-button": 0.1.0
+    "@teambit/design.ui.icon-button": 0.2.1
     "@teambit/documenter.code.react-playground": 3.0.11
     "@teambit/documenter.routing.external-link": 3.0.12
     "@teambit/documenter.theme.theme-compositions": 2.0.3
@@ -7118,7 +7104,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 0.6.0
     "@teambit/evangelist.surfaces.tooltip": 0.6.0
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.98
+    "@teambit/legacy": 1.0.99
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7514,7 +7500,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.98
+    "@teambit/legacy": 1.0.99
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -28025,7 +28011,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.14.0, react-dom@npm:^16.13.1":
+"react-dom@npm:16.14.0":
   version: 16.14.0
   resolution: "react-dom@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.14.0.tgz"
   dependencies:
@@ -28345,7 +28331,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:16.14.0, react@npm:^16.13.1":
+"react@npm:16.14.0":
   version: 16.14.0
   resolution: "react@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact%2F-%2Freact-16.14.0.tgz"
   dependencies:

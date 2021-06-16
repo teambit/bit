@@ -13,7 +13,7 @@ export class Version {
   }
 
   resolve(availableVersion: string[]) {
-    const getLatest = () => semver.maxSatisfying(availableVersion, '*');
+    const getLatest = () => semver.maxSatisfying(availableVersion, '*', { includePrerelease: true });
 
     if (this.latest) return getLatest();
     return this.versionNum;
