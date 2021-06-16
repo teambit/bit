@@ -7,5 +7,5 @@
 
 .bottom {
   padding: 8px 0;
-  border-top: 1px solid var(--bit-border-color-lightest);
+  border-top: 1px solid var(--bit-border-color-lightest, #ededed);
 }

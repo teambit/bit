@@ -21,7 +21,7 @@
 }
 
 .testTable {
-  border: 1px solid var(--bit-border-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   border-left: none;
   border-top-right-radius: 9px;
   border-bottom-right-radius: 9px;
@@ -52,9 +52,9 @@
 }
 
 .heading {
-  font-size: var(--bit-p-xxs);
+  font-size: var(--bit-p-xxs, 12px);
   font-weight: bold;
-  color: var(--bit-text-color-light);
+  color: var(--bit-text-color-light, #6c707c);
   text-transform: uppercase;
 }
 
@@ -135,7 +135,7 @@
   white-space: nowrap;
   > span {
     &:first-child {
-      color: var(--bit-text-color-light);
+      color: var(--bit-text-color-light, #6c707c);
       margin-right: 8px;
     }
   }

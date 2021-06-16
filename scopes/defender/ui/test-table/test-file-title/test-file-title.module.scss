@@ -6,7 +6,7 @@
 }
 
 .testFile {
-  font-size: var(--bit-p-xl);
+  font-size: var(--bit-p-xl, 20px);
   padding: 12px 0;
 }
 
@@ -40,7 +40,7 @@
   font-size: var(--bit-p-xs);
   .icon {
     margin-right: 8px;
-    font-size: var(--bit-p-xxs);
+    font-size: var(--bit-p-xxs, 12px);
     color: #878c9a;
   }
 }

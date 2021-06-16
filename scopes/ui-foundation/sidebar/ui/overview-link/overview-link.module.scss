@@ -12,18 +12,18 @@
     color: var(--bit-text-color-heavy);
     margin-bottom: 8px;
     .icon {
-      color: var(--bit-text-color-light);
+      color: var(--bit-text-color-light, #6c707c);
     }
   }
   .active {
-    background-color: var(--bit-accent-color);
+    background-color: var(--bit-accent-color, #6c5ce7);
     color: var(--bit-text-on-accent, #ffffff);
     font-weight: unset;
     .icon {
       color: var(--bit-text-on-accent, #ffffff);
     }
     &:hover {
-      background-color: var(--bit-accent-heavy);
+      background-color: var(--bit-accent-heavy, #5d4aec);
     }
   }
 }

@@ -24,11 +24,11 @@
     color: white;
     padding: 3px 8px;
     margin-right: 23px;
-    background-color: var(--bit-text-color);
+    background-color: var(--bit-text-color, #414141);
     border-radius: 6px;
   }
   .hiddenContributorsCount {
-    color: var(--bit-accent-heavy);
+    color: var(--bit-accent-heavy, #5d4aec);
     font-size: 14px;
     padding-left: 8px;
   }

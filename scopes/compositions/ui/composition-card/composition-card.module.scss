@@ -3,7 +3,7 @@
   min-height: 122px;
   min-width: 199px;
 
-  background-color: var(--bit-bg-color);
+  background-color: var(--bit-bg-color, #ffffff);
 
   box-shadow: var(--bit-shadow-raised-low);
 
@@ -30,7 +30,7 @@
 }
 
 .title {
-  border-top: 1px solid var(--bit-border-color-lightest);
+  border-top: 1px solid var(--bit-border-color-lightest, #ededed);
   padding: 8px 16px;
   font-size: 0.875em;
   display: flex;

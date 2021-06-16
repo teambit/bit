@@ -20,7 +20,7 @@
     line-height: inherit;
     transition: all 300ms;
     margin-right: 10px;
-    color: var(--bit-text-color-light);
+    color: var(--bit-text-color-light, #6c707c);
     &.collapsed {
       transform: rotate(-0.25turn);
     }

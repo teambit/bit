@@ -15,7 +15,7 @@
   width: unset;
 
   border-radius: 5px;
-  border: solid 1px var(--bit-border-color-lightest);
+  border: solid 1px var(--bit-border-color-lightest, #ededed);
   background: var(--bit-bg-dent, #f6f6f6);
 }
 

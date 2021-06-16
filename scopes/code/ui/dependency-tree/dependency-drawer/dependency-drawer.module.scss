@@ -27,7 +27,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--bit-accent-color);
+    color: var(--bit-accent-color, #6c5ce7);
     margin-right: 5px;
   }
 }

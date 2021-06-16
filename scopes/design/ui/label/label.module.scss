@@ -1,7 +1,7 @@
 .label {
   display: inline-block;
-  color: var(--bit-accent-heavy);
-  background: var(--bit-accent-bg);
+  color: var(--bit-accent-heavy, #5d4aec);
+  background: var(--bit-accent-bg, #eceaff);
 
   padding: 8px 16px;
   border-radius: 7px;

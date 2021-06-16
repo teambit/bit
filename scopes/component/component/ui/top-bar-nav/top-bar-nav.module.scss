@@ -20,10 +20,10 @@
   }
 
   &.active {
-    color: var(--bit-accent-color);
+    color: var(--bit-accent-color, #6c5ce7);
 
     &:after {
-      background-color: var(--bit-accent-color);
+      background-color: var(--bit-accent-color, #6c5ce7);
       height: 4px;
     }
   }

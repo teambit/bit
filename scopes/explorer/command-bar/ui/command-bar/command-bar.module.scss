@@ -9,7 +9,7 @@
   left: 50%;
   transform: translate(-50%, 0);
   width: 643px;
-  border: 1px solid var(--bit-border-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   max-width: 90%;
 
   overflow: hidden; // enforce border-radius
@@ -39,6 +39,6 @@
 
   &:not(:empty) {
     margin-bottom: 8px;
-    border-top: solid 1px var(--bit-border-color);
+    border-top: solid 1px var(--bit-border-color, #babec9);
   }
 }

@@ -25,10 +25,10 @@
   font-size: 16px;
   transition: background-color 300ms ease-in-out;
   [data-open='true'] & {
-    background-color: var(--bit-bg-color);
-    color: var(--bit-accent-color);
+    background-color: var(--bit-bg-color, #ffffff);
+    color: var(--bit-accent-color, #6c5ce7);
     &:hover {
-      background-color: var(--bit-bg-color);
+      background-color: var(--bit-bg-color, #ffffff);
     }
   }
   &:hover {
@@ -41,7 +41,7 @@
 
 .menuBlock {
   padding: 16px 0 10px 0;
-  border-bottom: 1px solid var(--bit-border-color-lightest);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   &:last-child {
     border-bottom: none;
   }
@@ -66,6 +66,6 @@
   height: 36px;
   padding: 0 16px;
   &:hover {
-    background-color: var(--bit-accent-bg);
+    background-color: var(--bit-accent-bg, #eceaff);
   }
 }
