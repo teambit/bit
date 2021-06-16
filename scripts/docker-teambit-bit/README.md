@@ -10,7 +10,7 @@ _This dockers are not dealing with legacy bit (pre-harmony) for legacy bit pleas
 
 ## Using from dockerhub
 
-The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hub.docker.com/repository/docker/bitcli/bit) and [Dockerfile-bit-server](https://hub.docker.com/repository/docker/bitcli/bit-server)
+The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hub.docker.com/r/bitcli/bit) and [Dockerfile-bit-server](https://hub.docker.com/r/bitcli/bit-server)
 
 ## Building locally
 
