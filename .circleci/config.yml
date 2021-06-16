@@ -1584,6 +1584,10 @@ workflows:
   #           - windows_bvm_install
   #           - windows_build_bvm
 
+  server_docker_build:
+    jobs:
+      - server_docker_build:
+          type: approval
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
