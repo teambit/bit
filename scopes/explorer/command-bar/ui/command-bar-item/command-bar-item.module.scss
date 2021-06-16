@@ -15,7 +15,7 @@
 
   &.active,
   &.active:hover {
-    background-color: var(--bit-accent-bg);
+    background-color: var(--bit-accent-bg, #eceaff);
   }
 }
 

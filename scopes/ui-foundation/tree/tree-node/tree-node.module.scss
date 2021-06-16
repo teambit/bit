@@ -21,7 +21,7 @@
   }
 
   &.active {
-    background: var(--bit-accent-bg);
+    background: var(--bit-accent-bg, #eceaff);
     // .right {
     // 	.componentIcon {
     // 		color: $w10;

@@ -24,7 +24,7 @@
   }
 
   &.active {
-    background: var(--bit-accent-bg);
+    background: var(--bit-accent-bg, #eceaff);
     .envIcon {
       filter: grayscale(0);
     }
@@ -76,7 +76,7 @@
 .componentEnvTooltip {
   font-size: var(--bit-p-xs);
   .componentEnvTitle {
-    font-size: var(--bit-p-xxs);
+    font-size: var(--bit-p-xxs, 12px);
     color: #c9c3f6;
     font-weight: bold;
     margin-bottom: 4px;

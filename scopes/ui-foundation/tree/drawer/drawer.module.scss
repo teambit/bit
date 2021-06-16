@@ -7,7 +7,7 @@
   flex-direction: column;
 }
 .drawerName {
-  font-size: var(--bit-p-xxs);
+  font-size: var(--bit-p-xxs, 12px);
   height: 32px;
   flex: none;
   display: flex;
@@ -34,7 +34,7 @@
     line-height: inherit;
     transition: all 300ms;
     margin-right: 10px;
-    color: var(--bit-text-color-light);
+    color: var(--bit-text-color-light, #6c707c);
     &.collapsed {
       transform: rotate(-0.25turn);
     }
@@ -62,7 +62,7 @@
 //   visibility: hidden;
 //   opacity: 0;
 //   transition: opacity 300ms, visibility 300ms ease-in-out;
-//   color: var(--bit-text-color-light);
+//   color: var(--bit-text-color-light, #6c707c);
 //   &:hover {
 //     color: var(--bit-text-color-heavy);
 //   }

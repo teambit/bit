@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    border-right: 1px solid var(--bit-border-color-lightest);
+    border-right: 1px solid var(--bit-border-color-lightest, #ededed);
     padding-right: 22px;
     padding-left: 10px;
     padding-top: 24px;
@@ -34,7 +34,7 @@
   margin-bottom: 45px;
   max-width: 700px;
   .versionTitle {
-    color: var(--bit-accent-color);
+    color: var(--bit-accent-color, #6c5ce7);
     font-weight: unset;
     margin-bottom: 10px;
   }
@@ -52,7 +52,7 @@
 .emptyMessage {
   font-size: 15px;
   font-style: italic;
-  color: var(--bit-text-color-light);
+  color: var(--bit-text-color-light, #6c707c);
 }
 
 .placeholder {

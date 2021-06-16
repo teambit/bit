@@ -3,7 +3,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  color: var(--bit-text-color-light);
+  color: var(--bit-text-color-light, #6c707c);
   margin-bottom: 25px;
   .users {
     display: flex;

@@ -10,7 +10,7 @@
 }
 .title {
   margin-bottom: 25px;
-  font-size: var(--bit-h-xs);
+  font-size: var(--bit-h-xs, 26px);
 }
 .separator {
   margin-bottom: 41px;

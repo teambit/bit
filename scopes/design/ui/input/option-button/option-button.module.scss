@@ -12,12 +12,12 @@
   }
 
   &.active {
-    color: var(--bit-accent-color);
-    background-color: var(--bit-border-color-lightest);
+    color: var(--bit-accent-color, #6c5ce7);
+    background-color: var(--bit-border-color-lightest, #ededed);
   }
 
   &:focus {
-    box-shadow: 0 0 0 0.125em var(--bit-accent-bg);
+    box-shadow: 0 0 0 0.125em var(--bit-accent-bg, #eceaff);
     outline: none;
   }
 

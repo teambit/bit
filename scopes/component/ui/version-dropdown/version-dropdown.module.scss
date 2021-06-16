@@ -18,7 +18,7 @@
 .title {
   padding: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--bit-border-color-lightest);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   margin-bottom: 8px;
 }
 
@@ -41,7 +41,7 @@
     margin-bottom: 8px;
   }
   &.currentVersion {
-    background: var(--bit-accent-bg);
+    background: var(--bit-accent-bg, #eceaff);
   }
   .version {
     margin-right: 16px;
@@ -61,7 +61,7 @@
   border-radius: 6px;
   user-select: none;
   transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--bit-border-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   > span {
     display: none;
   }
@@ -83,10 +83,10 @@
   }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
-    background-color: var(--bit-bg-color);
-    color: var(--bit-accent-color);
+    background-color: var(--bit-bg-color, #ffffff);
+    color: var(--bit-accent-color, #6c5ce7);
     &:hover {
-      background-color: var(--bit-bg-color);
+      background-color: var(--bit-bg-color, #ffffff);
     }
   }
 }

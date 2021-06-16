@@ -14,7 +14,7 @@
   }
 
   &.mainHeadingStyles {
-    border-bottom: 1px solid var(--bit-border-color-lightest);
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
     padding-bottom: 8px;
   }
 

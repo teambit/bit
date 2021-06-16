@@ -17,7 +17,7 @@
   }
 
   &.disabled {
-    color: var(--bit-text-color-light);
+    color: var(--bit-text-color-light, #6c707c);
   }
 
   &.active {
@@ -30,7 +30,7 @@
       left: 0;
       right: 0;
 
-      background-color: var(--bit-accent-color);
+      background-color: var(--bit-accent-color, #6c5ce7);
       height: 3px;
       border-radius: 2px;
 

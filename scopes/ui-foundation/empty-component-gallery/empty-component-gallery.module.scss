@@ -15,7 +15,7 @@
 }
 
 .title {
-  font-size: var(--bit-p-xxl);
+  font-size: var(--bit-p-xxl, 24px);
   margin-bottom: 32px;
 
   > span:last-child {
@@ -24,7 +24,7 @@
 }
 
 .purpleLink {
-  color: var(--bit-accent-heavy);
+  color: var(--bit-accent-heavy, #5d4aec);
   text-decoration: none;
   cursor: pointer;
   display: inline-flex;
@@ -42,7 +42,7 @@
   font-size: var(--bit-p-xs);
 
   .purpleLink {
-    color: var(--bit-accent-heavy);
+    color: var(--bit-accent-heavy, #5d4aec);
     text-decoration: underline;
     cursor: pointer;
   }
