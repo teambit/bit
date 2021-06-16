@@ -3,7 +3,7 @@ USER root
 
 RUN npm i @teambit/bvm -g
 RUN bvm upgrade
-ENV PATH=$PATH:/home/root/bin
+ENV PATH=$PATH:/root/bin
 
 # increase node process memory
 ENV NODE_OPTIONS=--max_old_space_size=4096
