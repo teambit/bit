@@ -210,7 +210,7 @@ jobs:
       # prod registry
       - run: npm config set @bit:registry https://node.bit.dev
       - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
-      - run: echo "always-auth=true" >> ~/.npmrc
+      # - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
       # run: 'npm config set @bit:registry https://node-stg.bit.dev'
