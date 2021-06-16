@@ -1,6 +1,6 @@
 ARG BIT_VERSION=latest
 FROM bitcli/bit:${BIT_VERSION}
-ARG SCOPE_PATH=/home/user/remote-scope
+ARG SCOPE_PATH=/home/root/remote-scope
 WORKDIR ${SCOPE_PATH}
 RUN bit init --bare
 CMD bit start
