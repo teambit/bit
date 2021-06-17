@@ -191,8 +191,10 @@ export class WorkspaceComponentLoader {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
-      this.logger.error(`failed loading component ${id.toString()}`, err);
       if (this.isComponentNotExistsError(err)) {
+        this.logger.debug(
+          `failed loading component "${id.toString()}" from the workspace due to "${err.name}" error\n${err.message}`
+        );
         return undefined;
       }
       throw err;
