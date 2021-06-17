@@ -6807,9 +6807,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.100, @teambit/legacy@npm:1.0.100::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.100.tgz":
-  version: 1.0.100
-  resolution: "@teambit/legacy@npm:1.0.100::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.100.tgz"
+"@teambit/legacy@npm:1.0.101":
+  version: 1.0.101
+  resolution: "@teambit/legacy@npm:1.0.101"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6932,7 +6932,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 7ecbab657e11a706a0d6b7e3c7e65c706d2a42e3a25df057921f849e778921ad650b7262fe3827dc728ea6f28229b9f66e90cffe93dc2e3c3783e9d85c3b6e4e
+  checksum: 549ce8f7489b8371e91e9aa02481f9f5e62d0c0e33dd85bb6b401eaea8a03b1d0dd59f3f01a33a965a8cb0091aa28a62973421f62ce81fa7762144a58de939c4
   languageName: node
   linkType: hard
 
@@ -7031,6 +7031,7 @@ __metadata:
     "@teambit/component.instructions.exporting-components": 0.0.5
     "@teambit/design.ui.icon-button": 1.0.1
     "@teambit/documenter.code.react-playground": 4.0.1
+    "@teambit/documenter.content.documentation-links": 4.0.1
     "@teambit/documenter.routing.external-link": 4.0.0
     "@teambit/documenter.theme.theme-compositions": 2.0.3
     "@teambit/documenter.theme.theme-context": 3.0.14
@@ -7039,6 +7040,7 @@ __metadata:
     "@teambit/documenter.ui.bold": 4.0.1
     "@teambit/documenter.ui.code-snippet": 4.0.1
     "@teambit/documenter.ui.consumable-link": 4.0.1
+    "@teambit/documenter.ui.copy-box": 4.0.1
     "@teambit/documenter.ui.heading": 4.0.1
     "@teambit/documenter.ui.highlighted-text": 4.0.1
     "@teambit/documenter.ui.image": 4.0.0
@@ -7068,7 +7070,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.1
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.100
+    "@teambit/legacy": 1.0.101
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7464,7 +7466,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.100
+    "@teambit/legacy": 1.0.101
   bin:
     bit: bin/bit.js
   languageName: unknown
