@@ -46,10 +46,9 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     private taskSlot: TaskSlot,
 
     /**
-     * for now, it can be either "getBuildPipe" or "getDeployPipe".
      * a method with such name should be implemented on the env in order to run the pipe tasks.
      */
-    private pipeNameOnEnv: string,
+    private pipeNameOnEnv: 'getBuildPipe' | 'getTagPipe' | 'getSnapPipe',
 
     /**
      * pipe name to display on the console during the execution

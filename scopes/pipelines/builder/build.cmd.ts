@@ -29,6 +29,11 @@ export class BuilderCmd implements Command {
 specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
     ],
     ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
+    [
+      '',
+      'list-tasks <string>',
+      'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}

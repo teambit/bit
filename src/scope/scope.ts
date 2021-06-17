@@ -106,6 +106,7 @@ export type OnTagOpts = {
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
   skipTests?: boolean;
+  isSnap?: boolean;
 };
 export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 

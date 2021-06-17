@@ -41,12 +41,14 @@ export class BuilderMain {
     private envs: EnvsMain,
     private workspace: Workspace,
     private buildService: BuilderService,
-    private deployService: BuilderService,
+    private tagService: BuilderService,
+    private snapService: BuilderService,
     private scope: ScopeMain,
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
-    private deployTaskSlot: TaskSlot,
+    private tagTaskSlot: TaskSlot,
+    private snapTaskSlot: TaskSlot,
     private storageResolversSlot: StorageResolverSlot
   ) {}
 
@@ -85,7 +87,7 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const { throwOnError, forceDeploy, disableDeployPipeline } = options;
+    const { throwOnError, forceDeploy, disableDeployPipeline, isSnap } = options;
     const envsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
@@ -95,7 +97,9 @@ export class BuilderMain {
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
     if (forceDeploy || (!disableDeployPipeline && !envsExecutionResults.hasErrors())) {
-      const deployEnvsExecutionResults = await this.deploy(components, isolateOptions);
+      const deployEnvsExecutionResults = isSnap
+        ? await this.runSnapTasks(components, isolateOptions)
+        : await this.runTagTasks(components, isolateOptions);
       if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
@@ -193,9 +197,16 @@ export class BuilderMain {
     return buildResult;
   }
 
-  async deploy(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async runTagTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.deployService, { seedersOnly: isolateOptions?.seedersOnly });
+    const buildResult = await envs.runOnce(this.tagService, { seedersOnly: isolateOptions?.seedersOnly });
+
+    return buildResult;
+  }
+
+  async runSnapTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+    const envs = await this.envs.createEnvironment(components);
+    const buildResult = await envs.runOnce(this.snapService, { seedersOnly: isolateOptions?.seedersOnly });
 
     return buildResult;
   }
@@ -210,15 +221,37 @@ export class BuilderMain {
   }
 
   /**
-   * deploy task that doesn't get executed on `bit build`, only on `bit tag --persist'.
-   * the deploy-pipeline is running once the build-pipeline has completed.
+   * @deprecated use registerTagTasks or registerSnapTasks
    */
   registerDeployTasks(tasks: BuildTask[]) {
-    this.deployTaskSlot.register(tasks);
+    this.tagTaskSlot.register(tasks);
     return this;
   }
 
-  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];
+  /**
+   * tag tasks that don't get executed on `bit build`, only on `bit tag'.
+   * this pipeline is running once the build-pipeline has completed.
+   */
+  registerTagTasks(tasks: BuildTask[]) {
+    this.tagTaskSlot.register(tasks);
+    return this;
+  }
+
+  /**
+   * tag tasks that don't get executed on `bit build`, only on `bit snap'.
+   * this pipeline is running once the build-pipeline has completed.
+   */
+  registerSnapTasks(tasks: BuildTask[]) {
+    this.snapTaskSlot.register(tasks);
+    return this;
+  }
+
+  static slots = [
+    Slot.withType<BuildTask>(),
+    Slot.withType<StorageResolver>(),
+    Slot.withType<BuildTask>(),
+    Slot.withType<BuildTask>(),
+  ];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -245,7 +278,12 @@ export class BuilderMain {
       GraphqlMain
     ],
     config,
-    [buildTaskSlot, storageResolversSlot, deployTaskSlot]: [TaskSlot, StorageResolverSlot, TaskSlot]
+    [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
+      TaskSlot,
+      StorageResolverSlot,
+      TaskSlot,
+      TaskSlot
+    ]
   ) {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
@@ -259,12 +297,13 @@ export class BuilderMain {
       scope
     );
     envs.registerService(buildService);
-    const deployService = new BuilderService(
+    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
+    const snapService = new BuilderService(
       isolator,
       logger,
-      deployTaskSlot,
-      'getDeployPipe',
-      'deploy',
+      snapTaskSlot,
+      'getSnapPipe',
+      'snap',
       artifactFactory,
       scope
     );
@@ -272,12 +311,14 @@ export class BuilderMain {
       envs,
       workspace,
       buildService,
-      deployService,
+      tagService,
+      snapService,
       scope,
       isolator,
       aspectLoader,
       buildTaskSlot,
-      deployTaskSlot,
+      tagTaskSlot,
+      snapTaskSlot,
       storageResolversSlot
     );
 

@@ -313,7 +313,7 @@ export default async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
-    const onTagOpts = { disableDeployPipeline, throwOnError: true, forceDeploy, skipTests };
+    const onTagOpts = { disableDeployPipeline, throwOnError: true, forceDeploy, skipTests, isSnap };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
       func(allComponentsToTag, onTagOpts)
     );
