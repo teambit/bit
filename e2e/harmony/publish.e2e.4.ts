@@ -166,15 +166,4 @@ describe('publish functionality', function () {
       expect(output).to.have.string('npm ERR! Invalid name: "invalid/name/comp1"');
     });
   });
-  describe('publish during snap', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.fixtures.populateComponents(1);
-      npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
-    });
-    it('builder should not show any error because it should not publish', () => {
-      const output = helper.command.build();
-      expect(output).to.not.have.string('npm ERR!');
-    });
-  });
 });
