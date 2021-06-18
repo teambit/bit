@@ -87,7 +87,7 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const { throwOnError, forceDeploy, disableDeployPipeline, isSnap } = options;
+    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap } = options;
     const envsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
@@ -96,7 +96,7 @@ export class BuilderMain {
     if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
-    if (forceDeploy || (!disableDeployPipeline && !envsExecutionResults.hasErrors())) {
+    if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
         ? await this.runSnapTasks(components, isolateOptions)
         : await this.runTagTasks(components, isolateOptions);
