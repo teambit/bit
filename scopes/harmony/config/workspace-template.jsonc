@@ -49,9 +49,11 @@
   },
 
   /**
-   * workspace variants allow to set different subsets of configuration for components in your workspace.
-   * this is extremely useful for upgrading, aligning and building components with a
-   * new set of dependencies.
+   * workspace variants allow to set different subsets of configuration for components in your
+   * workspace. this is extremely useful for upgrading, aligning and building components with a new
+   * set of dependencies. a rule can be a directory or a component-id/namespace, in which case,
+   * wrap the rule with curly brackets (e.g. `"{ui/*}": {}`)
+   * see https://harmony-docs.bit.dev/aspects/variants for more info.
    **/
   "teambit.workspace/variants": {
     /**
