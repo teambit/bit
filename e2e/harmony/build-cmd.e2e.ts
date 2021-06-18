@@ -1,6 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-
+import { loadBit } from '@teambit/bit';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -43,6 +45,25 @@ describe('build command', function () {
       expect(capsuleDist).to.be.a.directory();
       const filePath = path.join(capsuleDist, 'my-mdx.mdx');
       expect(filePath).to.not.be.a.path();
+    });
+  });
+
+  describe('list tasks', () => {
+    before(() => {
+      helper = new Helper();
+      helper.command.setFeatures(HARMONY_FEATURE);
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+    });
+    it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
+      const harmony = await loadBit(helper.scopes.localPath);
+      const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const compId = await workspace.resolveComponentId('comp1');
+      const component = await workspace.get(compId);
+      const builder = harmony.get<BuilderMain>(BuilderAspect.id);
+      const tasks = builder.listTasks(component);
+      expect(tasks.snapTasks).to.have.lengthOf(0);
+      expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
 });

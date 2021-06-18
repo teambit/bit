@@ -8,7 +8,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe.only('publish functionality', function () {
+describe('publish functionality', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;

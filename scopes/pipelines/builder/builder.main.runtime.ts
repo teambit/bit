@@ -211,6 +211,14 @@ export class BuilderMain {
     return buildResult;
   }
 
+  listTasks(component: Component) {
+    const compEnv = this.envs.getEnv(component);
+    const buildTasks = this.buildService.getDescriptor(compEnv).tasks;
+    const tagTasks = this.tagService.getDescriptor(compEnv).tasks;
+    const snapTasks = this.snapService.getDescriptor(compEnv).tasks;
+    return { id: component.id, envId: compEnv.id, buildTasks, tagTasks, snapTasks };
+  }
+
   /**
    * register a build task to apply on all component build pipelines.
    * build happens on `bit build` and as part of `bit tag --persist`.
