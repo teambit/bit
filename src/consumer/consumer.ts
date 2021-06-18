@@ -634,7 +634,7 @@ export default class Consumer {
     build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
-    disableTagAndSnapPipelines: boolean;
+    disableTagAndSnapPipelines?: boolean;
     forceDeploy?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
