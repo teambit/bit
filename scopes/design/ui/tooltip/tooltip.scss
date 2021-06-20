@@ -1,5 +1,5 @@
-$bg: var(--bg-tooltip, #2b2b2b);
-$textColor: var(--text-color, #fff);
+$bg: var(--bit-bg-tooltip, #2b2b2b);
+$textColor: var(--bit-text-color, #fff);
 
 // using global '.tippy-box' from TippyJS
 .tippy-box[data-theme~='teambit'] {

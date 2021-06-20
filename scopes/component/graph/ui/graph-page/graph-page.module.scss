@@ -15,8 +15,8 @@
   width: unset;
 
   border-radius: 5px;
-  border: solid 1px var(--border-color);
-  background: var(--bg-dent, #f6f6f6);
+  border: solid 1px var(--bit-border-color-lightest, #ededed);
+  background: var(--bit-bg-dent, #f6f6f6);
 }
 
 .summery {
@@ -30,6 +30,6 @@
   padding: 8px;
 
   font-size: 0.75em;
-  box-shadow: var(--shadow-faint);
+  box-shadow: var(--bit-shadow-faint);
   z-index: 8; // position above the abs positioned graph items
 }

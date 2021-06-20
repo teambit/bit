@@ -8,7 +8,7 @@
 
   .title {
     margin-bottom: 24px;
-    font-size: var(--h-xs);
+    font-size: var(--bit-h-xs, 26px);
   }
   .separator {
     margin-bottom: 0;
