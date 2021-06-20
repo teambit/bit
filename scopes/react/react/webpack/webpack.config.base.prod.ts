@@ -3,9 +3,6 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
-// Make sure the bit-react-transformer is a dependency
-// TODO: remove it once we can set policy from component to component then set it via the component.json
-import '@teambit/react.babel.bit-react-transformer';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
