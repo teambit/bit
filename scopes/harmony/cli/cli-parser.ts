@@ -3,6 +3,7 @@ import yargs, { CommandModule } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import chalk from 'chalk';
 import { getCommandId } from './get-command-id';
@@ -11,11 +12,9 @@ import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIParser {
-  constructor(private commands: Command[], private groups: GroupsType) {}
+  constructor(private commands: Command[], private groups: GroupsType, public parser = yargs) {}
 
-  async parse() {
-    const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
-
+  async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
 
     yargs(args);
@@ -31,7 +30,9 @@ export class CLIParser {
     });
     this.configureGlobalFlags();
     this.setHelpMiddleware();
+    this.handleCommandFailure();
     this.configureCompletion();
+    yargs.strict(); // don't allow non-exist flags and non-exist commands
 
     yargs
       // .recommendCommands() // don't use it, it brings the global help of yargs, we have a custom one
@@ -42,7 +43,7 @@ export class CLIParser {
 
   private setHelpMiddleware() {
     yargs.middleware((argv) => {
-      if (argv._.length === 0) {
+      if (argv._.length === 0 && argv.help) {
         // this is the main help page
         this.printHelp();
         process.exit(0);
@@ -51,9 +52,22 @@ export class CLIParser {
         loader.off(); // stop the "loading bit..." before showing help if needed
         // this is a command help page
         yargs.showHelp(logCommandHelp);
-        process.exit(0);
+        if (!logger.isDaemon) process.exit(0);
       }
     }, true);
+  }
+
+  private handleCommandFailure() {
+    yargs.fail((msg, err) => {
+      loader.stop();
+      if (err) {
+        throw err;
+      }
+      yargs.showHelp(logCommandHelp);
+      // eslint-disable-next-line no-console
+      console.log(`\n${chalk.yellow(msg)}`);
+      if (!logger.isDaemon) process.exit(1);
+    });
   }
 
   private configureCompletion() {

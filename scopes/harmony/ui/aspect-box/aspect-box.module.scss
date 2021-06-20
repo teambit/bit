@@ -1,5 +1,5 @@
 .aspectBox {
-  border: 1px solid var(--separator-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   border-radius: 9px;
   padding: 16px;
   display: grid;
@@ -32,12 +32,12 @@
 }
 .aspectLink {
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--bit-text-color-light, #6c707c);
 }
 .sectionTitle {
   margin-bottom: 16px;
   font-weight: bold;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
 }
 .log {
   overflow: hidden;

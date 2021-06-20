@@ -4,22 +4,22 @@
   align-items: center;
   justify-content: space-between;
   height: 40px;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   transition: all 300ms ease-in-out;
 
   &:hover {
-    background-color: var(--border-color, #ededed);
+    background-color: var(--bit-border-color-lightest, #ededed);
     // border-radius: 8px;
     transition: background-color 300ms ease-in-out;
     .right {
       visibility: unset;
       opacity: 1;
-      color: var(--text-muted);
+      color: var(--bit-text-color-light, #6c707c);
       //TODO - fix hover effect and timing of icon
       transition: visibility 200ms, opacity 100ms ease-in-out;
       .icon {
         &:hover {
-          color: var(--text-highlight);
+          color: var(--bit-text-color-heavy);
         }
       }
     }
@@ -27,8 +27,8 @@
   &.active {
     display: flex;
     align-items: center;
-    background-color: var(--base-color);
-    color: var(--bg-base);
+    background-color: var(--bit-accent-color, #6c5ce7);
+    color: var(--bit-bg-color, #ffffff);
 
     // overrides
     &:hover {
@@ -36,16 +36,16 @@
     }
 
     .box {
-      background-color: var(--bg-color);
+      background-color: var(--bit-bg-color, #ffffff);
     }
 
     .right {
       visibility: unset;
       opacity: 1;
-      color: var(--muted-color);
+      color: var(--bit-accent-bg, #eceaff);
       .icon {
         &:hover {
-          color: var(--bg-color);
+          color: var(--bit-bg-color, #ffffff);
         }
       }
     }
@@ -62,7 +62,7 @@
   width: 10px;
   height: 10px;
   flex-shrink: 0;
-  background-color: var(--text-highlight);
+  background-color: var(--bit-text-color-heavy);
   margin-right: 11px;
   border-radius: 1px;
 }
@@ -109,7 +109,7 @@
         top: 0;
         left: 0;
         right: 0;
-        background-color: var(--base-color);
+        background-color: var(--bit-accent-color, #6c5ce7);
         height: 3px;
         border-radius: 10px;
         transition: background-color 300ms, height 300ms;

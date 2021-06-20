@@ -8,11 +8,11 @@
   overflow: hidden;
   .topbar {
     flex: none;
-    background-color: var(--bg-color, #ffffff);
-    border-bottom: 1px solid var(--border-color, #ededed);
+    background-color: var(--bit-bg-color, #ffffff);
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
     .whiteCorner {
-      background-color: var(--bg-color, #ffffff);
-      border-bottom: 1px solid var(--border-color, #ededed);
+      background-color: var(--bit-bg-color, #ffffff);
+      border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
     }
   }
 }

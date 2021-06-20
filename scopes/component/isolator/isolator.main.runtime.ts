@@ -27,7 +27,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
-import { equals, map } from 'ramda';
+import equals from 'ramda/src/equals';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
@@ -398,9 +398,9 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     const capsules: Capsule[] = await Promise.all(
-      map((component: Component) => {
+      components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      }, components)
+      })
     );
     return capsules;
   }

@@ -27,7 +27,8 @@ export type ComponentMapFile = {
 };
 
 export type NextVersion = {
-  version: 'patch' | 'minor' | 'major' | string;
+  version: 'patch' | 'minor' | 'major' | 'prerelease' | string;
+  preRelease?: string;
   message?: string;
   username?: string;
   email?: string;
@@ -379,7 +380,7 @@ export default class ComponentMap {
    * so then they'll be tracked by bitmap.
    * this doesn't get called on Harmony, it's for legacy only.
    */
-  async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
+  async trackDirectoryChangesLegacy(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
     if (!trackDir) {
       return;

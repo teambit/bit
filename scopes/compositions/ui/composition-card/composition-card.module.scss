@@ -3,9 +3,9 @@
   min-height: 122px;
   min-width: 199px;
 
-  background-color: var(--bg-base);
+  background-color: var(--bit-bg-color, #ffffff);
 
-  box-shadow: var(--shadow-raised-low);
+  box-shadow: var(--bit-shadow-raised-low);
 
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
 }
 
 .title {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--bit-border-color-lightest, #ededed);
   padding: 8px 16px;
   font-size: 0.875em;
   display: flex;
@@ -42,9 +42,13 @@
   }
 }
 .linkToComposition {
-  color: var(--text-highlight, #2b2b2b);
+  color: var(--bit-text-color-heavy, #2b2b2b);
   text-decoration: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 300ms, visibility 300ms ease-in-out;
+}
+
+.compositionCardError {
+  border-radius: 4px 4px 0px 0px;
 }

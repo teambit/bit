@@ -62,7 +62,7 @@ $b70: #0d2de3;
 .minimap {
   right: 24px;
   bottom: 24px;
-  box-shadow: var(--shadow-faint);
+  box-shadow: var(--bit-shadow-faint);
   background: white !important; // override inline styles from package
   border-radius: 5px;
 
@@ -76,7 +76,7 @@ $b70: #0d2de3;
 }
 
 .controls {
-  box-shadow: var(--shadow-faint);
+  box-shadow: var(--bit-shadow-faint);
 
   left: 24px;
   bottom: 24px;

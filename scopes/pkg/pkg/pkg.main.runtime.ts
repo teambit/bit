@@ -1,5 +1,4 @@
-import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, omit } from 'lodash';
 import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
@@ -259,7 +258,7 @@ export class PkgMain {
     }
     // Keys not allowed to override
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    return R.omit(specialKeys, newProps);
+    return omit(newProps, specialKeys);
   }
 
   getPackageJsonModifications(component: Component): Record<string, any> {
@@ -281,8 +280,10 @@ export class PkgMain {
     if (!latestVersion) {
       throw new BitError('can not get manifest for component without versions');
     }
+    const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
     const distTags = {
       latest: latestVersion,
+      ...preReleaseLatestTags,
     };
 
     const versions = await this.getAllSnapsManifests(component);

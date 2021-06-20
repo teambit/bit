@@ -165,8 +165,21 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private getFromCache(id: ComponentID, forCapsule: boolean) {
-    return forCapsule ? this.componentsCacheForCapsule.get(id.toString()) : this.componentsCache.get(id.toString());
+  /**
+   * make sure that not only the id-str match, but also the legacy-id.
+   * this is needed because the ComponentID.toString() is the same whether or not the legacy-id has
+   * scope-name, as it includes the defaultScope if the scope is empty.
+   * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
+   * legacy-id, the component is the cache has the old id.
+   */
+  private getFromCache(id: ComponentID, forCapsule: boolean): Component | undefined {
+    const fromCache = forCapsule
+      ? this.componentsCacheForCapsule.get(id.toString())
+      : this.componentsCache.get(id.toString());
+    if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
+      return fromCache;
+    }
+    return undefined;
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {
@@ -178,8 +191,10 @@ export class WorkspaceComponentLoader {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
-      this.logger.error(`failed loading component ${id.toString()}`, err);
       if (this.isComponentNotExistsError(err)) {
+        this.logger.debug(
+          `failed loading component "${id.toString()}" from the workspace due to "${err.name}" error\n${err.message}`
+        );
         return undefined;
       }
       throw err;

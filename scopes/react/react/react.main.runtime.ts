@@ -1,4 +1,4 @@
-import { mergeDeepLeft } from 'ramda';
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -112,11 +112,12 @@ export class ReactMain {
    */
   overrideBuildTsConfig(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
   ) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions, tsModule);
       },
     });
   }

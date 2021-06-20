@@ -1,5 +1,5 @@
 .testBlock {
-  border-bottom: 1px solid var(--border-color, var(--border-color, #f6f6f6));
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   &.open {
     border-bottom: none;
     > .row > span {
@@ -21,7 +21,7 @@
 }
 
 .testTable {
-  border: 1px solid var(--separator-color);
+  border: 1px solid var(--bit-border-color, #babec9);
   border-left: none;
   border-top-right-radius: 9px;
   border-bottom-right-radius: 9px;
@@ -52,9 +52,9 @@
 }
 
 .heading {
-  font-size: var(--p-xxs);
+  font-size: var(--bit-p-xxs, 12px);
   font-weight: bold;
-  color: var(--text-muted);
+  color: var(--bit-text-color-light, #6c707c);
   text-transform: uppercase;
 }
 
@@ -113,7 +113,7 @@
   }
   > div {
     font-weight: bold;
-    font-size: var(--p-xs);
+    font-size: var(--bit-p-xs);
     > span {
       margin-right: 5px;
     }
@@ -128,14 +128,14 @@
   }
 }
 .duration {
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
   display: flex;
   align-items: center;
   color: #878c9a;
   white-space: nowrap;
   > span {
     &:first-child {
-      color: var(--text-muted);
+      color: var(--bit-text-color-light, #6c707c);
       margin-right: 8px;
     }
   }

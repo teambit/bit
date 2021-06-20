@@ -18,11 +18,11 @@ export class PackCmd implements Command {
   description = 'create tar for npm publish';
   options = [
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
-    ['o', 'override [boolean]', 'override existing pack file'],
-    ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
-    ['p', 'prefix [boolean]', 'keep custom (binding) prefix'],
-    // ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
-    ['j', 'json [boolean]', 'return the output as JSON'],
+    ['o', 'override', 'override existing pack file'],
+    ['k', 'keep', 'should keep isolated environment [default = false]'],
+    ['p', 'prefix', 'keep custom (binding) prefix'],
+    // ['c', 'use-capsule', 'isolate using the capsule and pack on the capsule'],
+    ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
   alias = '';

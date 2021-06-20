@@ -1,4 +1,4 @@
-import { forEachObjIndexed } from 'ramda';
+import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
 import { SemVer } from 'semver';
 
 import { PackageName } from '../../dependencies';

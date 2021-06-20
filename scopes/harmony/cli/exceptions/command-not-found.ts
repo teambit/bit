@@ -12,7 +12,7 @@ export class CommandNotFound extends BitError {
   report() {
     let output = chalk.yellow(
       `warning: '${chalk.bold(this.commandName)}' is not a valid command.
-see 'bit --help' for additional information`
+see 'bit help' for additional information`
     );
     if (this.suggestion) {
       output += `\nDid you mean ${chalk.bold(this.suggestion)}?`;
