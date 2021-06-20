@@ -463,6 +463,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/dom-to-react"
     },
+    "modules/generate-style-loaders": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-style-loaders"
+    },
     "modules/match-pattern": {
         "scope": "teambit.workspace",
         "version": "0.0.384",
