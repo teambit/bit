@@ -138,7 +138,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.cssNoModulesRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -222,7 +222,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.cssModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -240,7 +240,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.sassNoModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -263,7 +263,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.sassModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -282,7 +282,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.lessNoModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -303,7 +303,7 @@ export default function createWebpackConfig(
             {
               test: stylesRegexps.lessModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,

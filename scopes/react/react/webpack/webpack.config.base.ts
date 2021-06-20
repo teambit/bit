@@ -104,7 +104,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.cssNoModulesRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -200,7 +200,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.cssModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -218,7 +218,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.sassNoModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -241,7 +241,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.sassModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -260,7 +260,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.lessNoModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -281,7 +281,7 @@ export default function (isEnvProduction = false): Configuration {
             {
               test: stylesRegexps.lessModuleRegex,
               use: generateStyleLoaders(
-                merge(baseStyleLoadersOptions, {
+                merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
                     sourceMap: isEnvProduction && shouldUseSourceMap,
