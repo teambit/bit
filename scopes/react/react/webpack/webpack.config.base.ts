@@ -107,7 +107,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                   },
                 })
               ),
@@ -203,7 +203,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                     modules: {
                       getLocalIdent: getCSSModuleLocalIdent,
                     },
@@ -221,7 +221,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                   },
                   shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
                   preProcessOptions: {
@@ -244,7 +244,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 3,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                     modules: {
                       getLocalIdent: getCSSModuleLocalIdent,
                     },
@@ -263,7 +263,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                   },
                   shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
                   preProcessOptions: {
@@ -284,7 +284,7 @@ export default function (isEnvProduction = false): Configuration {
                 merge({}, baseStyleLoadersOptions, {
                   cssLoaderOpts: {
                     importLoaders: 1,
-                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
                     modules: {
                       getLocalIdent: getCSSModuleLocalIdent,
                     },
