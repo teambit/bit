@@ -1,7 +1,9 @@
+import { merge } from 'lodash';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import webpack, { Configuration } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
@@ -28,6 +30,13 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
+const baseStyleLoadersOptions = {
+  miniCssExtractPlugin: MiniCssExtractPlugin.loader,
+  cssLoaderPath: require.resolve('css-loader'),
+  postCssLoaderPath: require.resolve('postcss-loader'),
+  postCssConfig,
+};
+
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
@@ -41,47 +50,6 @@ export default function (isEnvProduction = false): Configuration {
   // Omit trailing slash as %PUBLIC_URL%/xyz looks better than %PUBLIC_URL%xyz.
   // Get environment variables to inject into our app.
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
-
-  // common function to get style loaders
-  const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
-    const loaders = [
-      {
-        loader: MiniCssExtractPlugin.loader,
-      },
-      {
-        loader: require.resolve('css-loader'),
-        options: cssOptions,
-      },
-      {
-        // Options for PostCSS as we reference these options twice
-        // Adds vendor prefixing based on your specified browser support in
-        // package.json
-        loader: require.resolve('postcss-loader'),
-        options: {
-          // We don't use the config file way to make it easier to mutate it by other envs
-          postcssOptions: postCssConfig,
-          sourceMap: isEnvProduction && shouldUseSourceMap,
-        },
-      },
-    ].filter(Boolean);
-    if (preProcessor) {
-      loaders.push(
-        {
-          loader: require.resolve('resolve-url-loader'),
-          options: {
-            sourceMap: isEnvProduction && shouldUseSourceMap,
-          },
-        },
-        {
-          loader: require.resolve(preProcessor),
-          options: {
-            sourceMap: true,
-          },
-        }
-      );
-    }
-    return loaders;
-  };
 
   return {
     resolve: {
@@ -135,10 +103,14 @@ export default function (isEnvProduction = false): Configuration {
             // By default we support CSS Modules with the extension .module.css
             {
               test: stylesRegexps.cssNoModulesRegex,
-              use: getStyleLoaders({
-                importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
-              }),
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                  },
+                })
+              ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
               // Remove this when webpack adds a warning or an error for this.
@@ -227,25 +199,36 @@ export default function (isEnvProduction = false): Configuration {
             // using the extension .module.css
             {
               test: stylesRegexps.cssModuleRegex,
-              use: getStyleLoaders({
-                importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
-                modules: {
-                  getLocalIdent: getCSSModuleLocalIdent,
-                },
-              }),
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                })
+              ),
             },
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
             {
               test: stylesRegexps.sassNoModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 3,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                },
-                'sass-loader'
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 3,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('sass-loader'),
+                  },
+                })
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -257,25 +240,37 @@ export default function (isEnvProduction = false): Configuration {
             // using the extension .module.scss or .module.sass
             {
               test: stylesRegexps.sassModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 3,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                  modules: {
-                    getLocalIdent: getCSSModuleLocalIdent,
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 3,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
                   },
-                },
-                'sass-loader'
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('sass-loader'),
+                  },
+                })
               ),
             },
             {
               test: stylesRegexps.lessNoModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 1,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                },
-                'less-loader'
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('less-loader'),
+                  },
+                })
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -285,18 +280,23 @@ export default function (isEnvProduction = false): Configuration {
             },
             {
               test: stylesRegexps.lessModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 1,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                  modules: {
-                    getLocalIdent: getCSSModuleLocalIdent,
+              use: generateStyleLoaders(
+                merge(baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
                   },
-                },
-                'less-loader'
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('less-loader'),
+                  },
+                })
               ),
             },
-
             {
               test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
               type: 'asset',
