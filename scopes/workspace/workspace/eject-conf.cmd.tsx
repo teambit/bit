@@ -19,8 +19,8 @@ export default class EjectConfCmd implements Command {
   group = 'development';
   shortDescription = 'eject the target component configuration file (e.g. create a `component.json` file)';
   options = [
-    ['p', 'propagate [boolean]', 'mark propagate true in the config file'],
-    ['o', 'override [boolean]', 'override file if exist'],
+    ['p', 'propagate', 'mark propagate true in the config file'],
+    ['o', 'override', 'override file if exist'],
   ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}

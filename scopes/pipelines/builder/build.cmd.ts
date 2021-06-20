@@ -26,7 +26,7 @@ export class BuilderCmd implements Command {
       '',
       'tasks <string>',
       `build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.
-                            specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
     ],
     ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
   ] as CommandOptions;

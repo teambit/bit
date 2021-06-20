@@ -181,6 +181,9 @@ export default class CommandHelper {
   persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
+  persistTagWithoutBuild(options = '') {
+    return this.runCmd(`bit tag --persist ${options}`, undefined, undefined, BUILD_ON_CI);
+  }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
   }

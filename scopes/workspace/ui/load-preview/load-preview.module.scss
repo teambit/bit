@@ -7,12 +7,12 @@
   cursor: pointer;
   font-size: 12px;
   border-radius: 6px;
-  color: var(--primary-label-text);
-  background-color: var(--text-color);
+  color: var(--bit-text-on-accent, #ffffff);
+  background-color: var(--bit-text-color, #414141);
   padding: 4px 8px;
   transition: background-color 300ms ease-in-out;
   &:hover {
-    background-color: var(--text-highlight);
+    background-color: var(--bit-text-color-heavy);
   }
   .icon {
     margin-right: 5px;

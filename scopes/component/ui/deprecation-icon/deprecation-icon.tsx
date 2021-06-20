@@ -2,7 +2,7 @@ import React from 'react';
 import classnames from 'classnames';
 import { Icon, IconProps } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
-import { colorPalette } from '@teambit/base-ui.theme.color-palette';
+import { colorPalette } from '@teambit/base-ui.theme.accent-color';
 import { themedText } from '@teambit/base-ui.text.themed-text';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import styles from './deprecation-icon.module.scss';
@@ -20,7 +20,7 @@ export function DeprecationIcon({ component, className, ...rest }: DeprecationIc
       content={<div className={styles.deprectaedTooltipContent}>Deprecated</div>}
     >
       <div>
-        <Icon {...rest} of="note-deprecated" className={classnames(themedText, colorPalette.hunger, className)} />
+        <Icon {...rest} of="note-deprecated" className={classnames(themedText, colorPalette.warning, className)} />
       </div>
     </Tooltip>
   );

@@ -26,7 +26,7 @@ export default class Init implements LegacyCommand {
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     [
       'T',
-      'standalone [boolean]',
+      'standalone',
       'do not nest component store within .git directory and do not write config data inside package.json',
     ],
     ['r', 'reset', 'write missing or damaged Bit files'],

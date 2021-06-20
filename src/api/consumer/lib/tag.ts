@@ -38,6 +38,7 @@ export type BasicTagParams = {
   persist: boolean;
   disableDeployPipeline: boolean;
   forceDeploy: boolean;
+  preRelease?: string;
 };
 
 type TagParams = {

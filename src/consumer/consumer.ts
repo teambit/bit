@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
+import semver, { ReleaseType } from 'semver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -45,7 +45,7 @@ import { composeComponentPath, composeDependencyPath } from '../utils/bit/compos
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import { PathAbsolute, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../utils/path';
 import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
-import ComponentMap from './bit-map/component-map';
+import ComponentMap, { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
@@ -589,16 +589,22 @@ export default class Consumer {
     }
   }
 
-  updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
+  updateNextVersionOnBitmap(
+    taggedComponents: Component[],
+    exactVersion?: string | null,
+    releaseType?: ReleaseType,
+    preRelease?: string
+  ) {
     taggedComponents.forEach((taggedComponent) => {
       const log = taggedComponent.log;
       if (!log) throw new Error('updateNextVersionOnBitmap, unable to get log');
-      const nextVersion = {
-        version: exactVersion || releaseType,
+      const nextVersion: NextVersion = {
+        version: exactVersion || (releaseType as string), // one of them is set for sure
         message: log.message,
         username: log.username,
         email: log.email,
       };
+      if (preRelease) nextVersion.preRelease = preRelease;
       if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
       taggedComponent.componentMap.updateNextVersion(nextVersion);
     });

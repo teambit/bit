@@ -12,10 +12,10 @@ export type TestTableProps = {
   testResults: TestsFiles[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function TestTable({ testResults }: TestTableProps) {
+export function TestTable({ testResults, ...rest }: TestTableProps) {
   if (!testResults || testResults.length === 0) return null;
   return (
-    <>
+    <div {...rest}>
       {testResults.map((testFile, index) => {
         const testHasErrors = testFile?.error?.failureMessage;
         const borderColor = testFile.failed > 0 || testHasErrors ? '#e62e5c' : '#37b26c';
@@ -30,7 +30,7 @@ export function TestTable({ testResults }: TestTableProps) {
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
