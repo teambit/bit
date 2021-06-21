@@ -26,22 +26,39 @@ Since environments are extensible, so are the build pipelines configured by them
 
 An example of a build-task is `compile`, it's written in the compiler aspect and is running on each one of the capsules created by the build process. build-tasks in many cases generate artifacts, in this case, the compiler generates `dists` files and write them on the isolated capsules. There artifacts files are used later for example when creating packages.
 
+## Pipelines
+
+There are three pipelines: `build`, `tag` and `snap`.
+
+- `bit build` runs the build pipeline.
+- `bit tag` runs the build pipeline and then the tag pipeline.
+- `bit snap` runs the build pipeline and then the snap pipeline.
+
 ## List Build Tasks
 
-To get a list of all the tasks that will be running during `bit build` on a specific component, run `bit env <id>`. Here is an example of the relevant part from the output:
+To get a list of all the tasks that will be running per pipeline on a specific component, run `bit build --list-tasks <id>`.
+Here is an example of the relevant part from the output:
 
 ```
-Environment: teambit.harmony/aspect
-teambit.pipelines/builder
+➜  bit build --list-tasks ui/tooltip
+Tasks List
+id:    teambit.design/ui/tooltip@0.0.347
+envId: teambit.react/react
 
-total 7 tasks are configured to be executed in the following order
-1. teambit.harmony/aspect:CoreExporter
-2. teambit.compilation/compiler:BabelCompiler
-3. teambit.compilation/compiler:TypescriptCompiler
-4. teambit.defender/tester:TestComponents
-5. teambit.pkg/pkg:PreparePackages
-6. teambit.pkg/pkg:PublishDryRun
-7. teambit.preview/preview:GeneratePreview
+Build Pipeline Tasks:
+teambit.harmony/aspect:CoreExporter
+teambit.compilation/compiler:TSCompiler
+teambit.defender/tester:TestComponents
+teambit.pkg/pkg:PreparePackages
+teambit.pkg/pkg:PublishDryRun
+teambit.preview/preview:GeneratePreview
+
+Tag Pipeline Tasks:
+teambit.harmony/application:build_ui_application
+teambit.pkg/pkg:PublishComponents
+
+Snap Pipeline Tasks:
+<N/A>
 ```
 
 ## Implementing Build Tasks
@@ -53,16 +70,16 @@ Keep in mind that the entire graph may contain components from other envs.
 Some tasks, such as, compiling in typescript and bundling with Webpack, need the entire graph.
 Others, such as, Babel, need only the seeders. However, normally, the bundling is running after the compilation and it expects to have the dependencies compiled, so you might need the entire graph regardless.
 
-## Adding Build Tasks
+## Adding Tasks to a pipeline
 
 There are two ways of adding tasks to the build pipeline.
 
-1. `getBuildPipe()` method of the env.
-2. registering to the slot via `builder.registerBuildTask()`.
+1. `getBuildPipe()` method of the env. (or `getTagPipe()` and `getSnapPipe()`)
+2. registering to the slot via `builder.registerBuildTask()`. (or `registerTagTask()` and `registerSnapTask()`)
 
 in the option #1, it's possible to determine the order. e.g. `getBuildPipe() { return [taskA, taskB, taskC]; }`
 in the option #2, the register happens once the extension is loaded, so there is no way to put
-one task before/after another task.
+one task before/after another task as of now.
 
 ## Sequencing the build tasks
 
@@ -72,12 +89,13 @@ The Build Pipeline takes into consideration the following factors when deciding 
 - **Dependencies**: A task can depend on other tasks. That means, the dependencies must be completed successfully for all envs before this task starts. The dependencies are applicable inside a location and not across locations. This is configured by the task itself.
 - **An environment's list of build tasks**: This is the array of tasks as it is defined by an environment
 
-## Executing the build pipeline
+## Executing the pipelines
 
 Commands that trigger the build pipeline:
 
-- `bit build` - will run the build pipeline on your local machine, for the entire workspace. The output data will not persist. - That is most often used for testing and debugging the build process.
-- `bit tag` - will run the build pipeline on your local machine, before creating a new component release version. The output data will persist.
+- `bit build` - runs the build pipeline on your local machine, for the entire workspace. The output data will not persist. - That is most often used for testing and debugging the build process.
+- `bit tag` - runs the tag pipeline in addition to the build pipeline, before creating a new component release version. The output data will persist.
+- `bit snap` - runs the snap pipeline in addition to the build pipeline. The output data will persist.
 
 Build pipelines are determined by the environments in use. That means, in order to override the default pipeline, we need to create a new environment extension or modify an existing one.
 
