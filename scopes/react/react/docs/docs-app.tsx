@@ -5,6 +5,8 @@ import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { IconFont } from '@teambit/design.theme.icons-font';
 import { RenderingContext } from '@teambit/preview';
 import { Base } from './base';
+// @TODO - delete this once using @teambit/documenter.theme.theme-context > v40.0.0
+import tempStyles from './docs.headers.module.scss';
 
 export type DocsAppProps = {
   Provider?: React.ComponentType;
@@ -17,7 +19,7 @@ export type DocsAppProps = {
 export function DocsApp({ Provider = Noop, docs, componentId, compositions, renderingContext }: DocsAppProps) {
   return (
     <Provider>
-      <ThemeContext>
+      <ThemeContext className={tempStyles.headingOverrides}>
         <IconFont query="jyyv17" />
         <Base docs={docs} componentId={componentId} compositions={compositions} renderingContext={renderingContext} />
       </ThemeContext>
