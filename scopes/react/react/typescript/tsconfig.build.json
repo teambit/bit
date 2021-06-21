@@ -5,7 +5,7 @@
     ],
     "target": "es2015",
     "module": "commonjs",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "allowJs": true,
     "composite": true,
     "declaration": true,

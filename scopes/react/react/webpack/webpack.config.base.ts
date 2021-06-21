@@ -134,7 +134,14 @@ export default function (isEnvProduction = false): Configuration {
                 babelrc: false,
                 configFile: false,
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
-                presets: [require.resolve('@babel/preset-react')],
+                presets: [
+                  [
+                    require.resolve('@babel/preset-react'),
+                    {
+                      runtime: 'automatic',
+                    },
+                  ],
+                ],
                 plugins: [
                   [
                     require.resolve('babel-plugin-named-asset-import'),
