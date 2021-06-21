@@ -14,7 +14,7 @@ export function EmptyScope({ name }: EmptyScopeProps) {
       <div className={styles.text}>
         <span>Set</span>{' '}
         <HighlightedText size="xxs" element="span">
-          {`"defaultScope": “${name}"`}
+          {`"defaultScope": "${name}"`}
         </HighlightedText>{' '}
         <span>in</span>{' '}
         <HighlightedText size="xxs" element="span">
