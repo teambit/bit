@@ -165,14 +165,6 @@ export class ReactEnv implements Environment {
     return path;
   }
 
-  /**
-   * get the default react webpack config.
-   */
-  private getDevWebpackConfig(context: DevServerContext): Configuration {
-    // const fileMapPath = this.writeFileMap(context.components, true);
-    // return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
-  }
-
   getDevEnvId(id?: string) {
     if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;

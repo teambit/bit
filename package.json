@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.98",
+  "version": "1.0.103",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -94,6 +94,7 @@
     "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
     "full-setup:windows": "npm run install-harmony && npm run build-harmony:windows && npm run build && npm run build:types:windows",
     "full-setup:bbit": "rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
+    "full-setup:bit": "rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",

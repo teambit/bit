@@ -11,7 +11,7 @@
       font-size: 15px;
       font-weight: bold;
       margin-right: 10px;
-      color: var(--text-highlight);
+      color: var(--bit-text-color-heavy);
     }
   }
   > div:nth-child(2) {
@@ -24,11 +24,11 @@
     color: white;
     padding: 3px 8px;
     margin-right: 23px;
-    background-color: var(--text-color);
+    background-color: var(--bit-text-color, #414141);
     border-radius: 6px;
   }
   .hiddenContributorsCount {
-    color: var(--base-highlight);
+    color: var(--bit-accent-heavy, #5d4aec);
     font-size: 14px;
     padding-left: 8px;
   }

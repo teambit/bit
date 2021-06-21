@@ -87,6 +87,17 @@ export class ComponentID {
   }
 
   /**
+   * examples:
+   * 1.0.0 => null
+   * 1.0.0-dev.1 => ['dev', 1]
+   * 1.0.0-dev.1.alpha.2 => ['dev', 1, 'alpha', 2]
+   * 1.0.0-0 => [0]
+   */
+  getVersionPreReleaseData(): null | readonly string[] {
+    return this._legacy.getVersionPreReleaseData();
+  }
+
+  /**
    * serialize a component ID without its version.
    */
   toStringWithoutVersion() {

@@ -149,13 +149,13 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
     );
   }
 
-  if (component?.buildStatus === 'pending')
+  if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
       <StatusMessageCard className={styles.buildStatusMessage} status="PROCESSING" title="component preview pending">
         this might take some time
       </StatusMessageCard>
     );
-  if (component?.buildStatus === 'failed')
+  if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
     return (
       <StatusMessageCard
         className={styles.buildStatusMessage}

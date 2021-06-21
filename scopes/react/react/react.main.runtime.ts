@@ -1,4 +1,4 @@
-import { mergeDeepLeft } from 'ramda';
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';

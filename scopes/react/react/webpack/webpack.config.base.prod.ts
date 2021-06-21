@@ -1,7 +1,7 @@
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
-import webpack, { Configuration } from 'webpack';
+import { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json

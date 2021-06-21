@@ -2,8 +2,6 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
-
-import { flatten } from 'ramda';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
@@ -13,6 +11,7 @@ import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd } from './cli.cmd';
+import { HelpCmd } from './help.cmd';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean) => Promise<void>;
@@ -21,7 +20,7 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
 
 export class CLIMain {
-  private groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
+  public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
 
   constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot) {}
 
@@ -53,14 +52,14 @@ export class CLIMain {
    * list of all registered commands. (legacy and new).
    */
   get commands(): CommandList {
-    return flatten(this.commandsSlot.values());
+    return this.commandsSlot.values().flat();
   }
 
   /**
-   * when running `bit --help`, commands are grouped by categories.
+   * when running `bit help`, commands are grouped by categories.
    * this method helps registering a new group by providing its name and a description.
    * the name is what needs to be assigned to the `group` property of the Command interface.
-   * the description is what shown in the `bit --help` output.
+   * the description is what shown in the `bit help` output.
    */
   registerGroup(name: string, description: string) {
     if (this.groups[name]) {
@@ -130,8 +129,8 @@ export class CLIMain {
     const legacyCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliCmd = new CliCmd(cliMain);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd);
-
+    const helpCmd = new HelpCmd(cliMain);
+    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
     return cliMain;
   }
 }

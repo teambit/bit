@@ -13,7 +13,7 @@ export default class Deprecate implements LegacyCommand {
   skipWorkspace = true;
   alias = 'd';
 
-  opts = [['r', 'remote [boolean]', 'deprecate a component from a remote scope']] as CommandOptions;
+  opts = [['r', 'remote', 'deprecate a component from a remote scope']] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

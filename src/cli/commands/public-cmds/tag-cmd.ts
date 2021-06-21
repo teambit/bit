@@ -26,6 +26,7 @@ export default class Tag implements LegacyCommand {
     ['p', 'patch', 'increment the patch version number'],
     ['', 'minor', 'increment the minor version number'],
     ['', 'major', 'increment the major version number'],
+    ['', 'pre-release [identifier]', 'EXPERIMENTAL. increment a pre-release version (e.g. 1.0.0-dev.1)'],
     ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
@@ -55,6 +56,7 @@ export default class Tag implements LegacyCommand {
       patch,
       minor,
       major,
+      preRelease,
       force = false,
       verbose = false,
       ignoreMissingDependencies = false,
@@ -100,9 +102,9 @@ export default class Tag implements LegacyCommand {
       throw new GeneralError('you can use either force-deploy or disable-deploy-pipeline, but not both');
     }
 
-    const releaseFlags = [patch, minor, major].filter((x) => x);
+    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
     if (releaseFlags.length > 1) {
-      throw new GeneralError('you can use only one of the following - patch, minor, major');
+      throw new GeneralError('you can use only one of the following - patch, minor, major, pre-release');
     }
 
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
@@ -111,6 +113,7 @@ export default class Tag implements LegacyCommand {
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
     else if (patch) releaseType = 'patch';
+    else if (preRelease) releaseType = 'prerelease';
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
@@ -120,6 +123,7 @@ export default class Tag implements LegacyCommand {
       message,
       exactVersion: getVersion(),
       releaseType,
+      preRelease: typeof preRelease === 'string' ? preRelease : '',
       force,
       verbose,
       ignoreUnresolvedDependencies,

@@ -9,7 +9,7 @@
   .title {
     margin-bottom: 24px;
     @media screen and (max-width: 480px) {
-      font-size: var(--h-sm, 24px);
+      font-size: var(--bit-h-sm, 24px);
     }
   }
 }

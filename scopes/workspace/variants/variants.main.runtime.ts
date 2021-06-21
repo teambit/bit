@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import ConsumerOverrides from '@teambit/legacy/dist/consumer/config/consumer-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
-import { forEachObjIndexed, omit } from 'ramda';
+import { omit, forEach } from 'lodash';
 import {
   MatchedPatternWithConfig,
   isMatchPattern,
@@ -35,11 +35,11 @@ export class VariantsMain {
   }
 
   private validateConfig() {
-    forEachObjIndexed((patternConfig: Record<string, any>, pattern: string) => {
+    forEach(this.patterns, (patternConfig: Record<string, any>, pattern: string) => {
       if (patternConfig.defaultScope && !isValidScopeName(patternConfig.defaultScope)) {
         throw new InvalidScopeName(patternConfig.defaultScope, undefined, pattern);
       }
-    }, this.patterns);
+    });
   }
 
   raw(): Patterns {
@@ -60,7 +60,7 @@ export class VariantsMain {
    */
   byRootDirAndName(rootDir: PathLinuxRelative, componentName: string): VariantsComponentConfig | undefined {
     const matches: MatchedPatternWithConfig[] = [];
-    forEachObjIndexed((patternConfig, pattern) => {
+    forEach(this.patterns, (patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, componentName, pattern);
 
       // Ignore matches with exclude matches
@@ -70,7 +70,7 @@ export class VariantsMain {
           specificity: match.maxSpecificity,
         });
       }
-    }, this.patterns);
+    });
 
     const sortedMatches: MatchedPatternWithConfig[] = sortMatchesBySpecificity(matches);
 
@@ -103,7 +103,7 @@ export class VariantsMain {
 }
 
 function getExtensionFromPatternRawConfig(config: Record<string, any>) {
-  const rawExtensions = omit(INTERNAL_FIELDS, config);
+  const rawExtensions = omit(config, INTERNAL_FIELDS);
   const extensions = ExtensionDataList.fromConfigObject(rawExtensions);
   return extensions;
 }

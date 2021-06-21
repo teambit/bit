@@ -6,7 +6,7 @@
   height: 96px;
 }
 .nameSpace {
-  color: var(--text-muted, #6c707c);
+  color: var(--bit-text-color-light, #6c707c);
   font-size: 10px;
   font-weight: bold;
   text-transform: uppercase;
@@ -29,8 +29,8 @@
   }
 }
 .description {
-  color: var(--text-muted, #6c707c);
-  font-size: var(--p-xs, 14px);
+  color: var(--bit-text-color-light, #6c707c);
+  font-size: var(--bit-p-xs, 14px);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
