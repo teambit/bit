@@ -5,7 +5,7 @@ import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { IconFont } from '@teambit/design.theme.icons-font';
 import { RenderingContext } from '@teambit/preview';
 import { Base } from './base';
-// @TODO - delete this once using @teambit/documenter.theme.theme-context > v40.0.0
+// @TODO - delete this once using @teambit/documenter.theme.theme-context > v4.0.0
 import tempStyles from './docs.headers.module.scss';
 
 export type DocsAppProps = {
