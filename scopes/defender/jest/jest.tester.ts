@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
-// import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
@@ -28,6 +27,8 @@ export class JestTester implements Tester {
   configPath = this.jestConfig;
 
   displayName = 'Jest';
+
+  isSerial = true;
 
   _callback: CallbackFn | undefined;
 
@@ -133,8 +134,6 @@ export class JestTester implements Tester {
       this.logger.warn(message);
     };
 
-    if (context.debug) config.runInBand = true;
-    config.runInBand = true;
     if (context.watch) {
       config.watchAll = true;
       config.noCache = true;
@@ -194,7 +193,12 @@ export class JestTester implements Tester {
         await workerApi.onTestComplete(cbFn);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
+        await workerApi.watch(
+          this.jestModule,
+          this.jestConfig,
+          this.patternsToArray(context.patterns),
+          context.rootPath
+        );
       } catch (err) {
         this.logger.error('jest.tester.watch() caught an error', err);
       }
