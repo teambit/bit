@@ -18453,6 +18453,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"generate-style-loaders-612a20@workspace:scopes/webpack/modules/generate-style-loaders":
+  version: 0.0.0-use.local
+  resolution: "generate-style-loaders-612a20@workspace:scopes/webpack/modules/generate-style-loaders"
+  languageName: unknown
+  linkType: soft
+
 "generator-4902a3@workspace:scopes/generator/aspect-docs/generator":
   version: 0.0.0-use.local
   resolution: "generator-4902a3@workspace:scopes/generator/aspect-docs/generator"
