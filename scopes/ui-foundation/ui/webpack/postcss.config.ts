@@ -1,15 +1,15 @@
 import postcssNormalize from 'postcss-normalize';
-import postcssPresetEnv from 'postcss-preset-env';
 // import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 
-const config = {
+export const postCssConfig = {
   // Necessary for external CSS imports to work
   // https://github.com/facebook/create-react-app/issues/2677
   ident: 'postcss',
   plugins: [
     // eslint-disable-next-line global-require
     require('postcss-flexbugs-fixes'),
-    postcssPresetEnv({
+    // eslint-disable-next-line global-require
+    require('postcss-preset-env')({
       autoprefixer: {
         flexbox: 'no-2009',
       },
@@ -21,4 +21,3 @@ const config = {
     postcssNormalize(),
   ],
 };
-module.exports = config;
