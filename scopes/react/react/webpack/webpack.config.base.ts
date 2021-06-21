@@ -8,6 +8,8 @@ import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/react.babel.bit-react-transformer';
+// Make sure the mdx-loader is a dependency
+import '@teambit/mdx.modules.mdx-loader';
 
 const moduleFileExtensions = [
   'web.mjs',
