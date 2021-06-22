@@ -463,6 +463,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
+    "modules/diff": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/diff"
+    },
     "modules/dom-to-react": {
         "scope": "teambit.react",
         "version": "0.0.385",

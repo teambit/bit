@@ -16,11 +16,11 @@ export default async function lane({
   showDefaultLane,
   notMerged,
 }: {
-  name: string;
+  name?: string;
   remote?: string;
-  merged: boolean;
+  merged?: boolean;
   showDefaultLane: boolean;
-  notMerged: boolean;
+  notMerged?: boolean;
 }): Promise<LaneResults> {
   const showMergeData = Boolean(merged || notMerged);
   if (remote) {

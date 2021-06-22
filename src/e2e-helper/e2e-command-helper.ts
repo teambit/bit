@@ -213,22 +213,22 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
   }
   showLanes(options = '') {
-    const results = this.runCmd(`bit lane ${options}`);
+    const results = this.runCmd(`bit lane list ${options}`);
     return removeChalkCharacters(results) as string;
   }
   showOneLane(name: string) {
-    return this.runCmd(`bit lane ${name}`);
+    return this.runCmd(`bit lane show ${name}`);
   }
   showLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane ${options} --json`);
+    const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
   showRemoteLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane --remote ${this.scopes.remote} ${options} --json`);
+    const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
   showOneLaneParsed(name: string) {
-    const results = this.runCmd(`bit lane ${name} --json`);
+    const results = this.runCmd(`bit lane show ${name} --json`);
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
