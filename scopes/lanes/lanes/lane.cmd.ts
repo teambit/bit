@@ -1,17 +1,23 @@
 import chalk from 'chalk';
+import { Command, CommandOptions } from '@teambit/cli';
+import { lane } from '@teambit/legacy/dist/api/consumer';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 
-import { lane } from '../../../api/consumer';
-import { LaneResults } from '../../../api/consumer/lib/lane';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { LaneData } from '../../../scope/lanes/lanes';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-
-export default class Lane implements LegacyCommand {
+type LaneOptions = {
+  details: boolean;
+  remote?: string;
+  merged: boolean;
+  notMerged: boolean;
+  json: boolean;
+};
+export class LaneCmd implements Command {
   name = 'lane [name]';
+  shortDescription = 'show lanes details';
   description = `show lanes details
-  https://${BASE_DOCS_DOMAIN}/docs/lanes`;
+https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   alias = '';
-  opts = [
+  options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
@@ -24,48 +30,15 @@ export default class Lane implements LegacyCommand {
   remoteOp = true;
   skipWorkspace = true;
 
-  action(
-    [name]: string[],
-    {
-      details = false,
-      remote,
-      merged = false,
-      notMerged = false,
-      json = false,
-    }: {
-      details: boolean;
-      remote?: string;
-      merged: boolean;
-      notMerged: boolean;
-      json: boolean;
-    }
-  ): Promise<any> {
-    return lane({
+  async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
+    const { details = false, remote, merged = false, notMerged = false, json = false } = laneOptions;
+    const results = await lane({
       name,
       remote,
       showDefaultLane: json,
       merged,
       notMerged,
-    }).then((results) => ({ results, details, json, name, merged, notMerged, remote }));
-  }
-
-  report({
-    results,
-    details,
-    json,
-    name,
-    merged,
-    notMerged,
-    remote,
-  }: {
-    results: LaneResults;
-    details: boolean;
-    json: boolean;
-    name?: string;
-    merged: boolean;
-    notMerged: boolean;
-    remote?: string;
-  }): string {
+    });
     if (json) return JSON.stringify(results, null, 2);
     if (merged) {
       const mergedLanes = results.lanes.filter((l) => l.isMerged);
