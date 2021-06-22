@@ -123,7 +123,18 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
+    const pkg = new PkgMain(
+      config,
+      packageJsonPropsRegistry,
+      workspace,
+      scope,
+      builder,
+      packer,
+      envs,
+      componentAspect,
+      publishTask
+    );
 
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
@@ -134,10 +145,9 @@ export class PkgMain {
 
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
     dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
-    builder.registerDeployTasks([publishTask]);
+    builder.registerTagTasks([publishTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -202,7 +212,9 @@ export class PkgMain {
      */
     private envs: EnvsMain,
 
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+
+    public publishTask: PublishTask
   ) {}
 
   /**

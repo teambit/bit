@@ -36,7 +36,7 @@ export type BasicTagParams = {
   build: boolean;
   soft: boolean;
   persist: boolean;
-  disableDeployPipeline: boolean;
+  disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
   preRelease?: string;
 };

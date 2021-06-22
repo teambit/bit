@@ -25,6 +25,7 @@ export default class Snap implements LegacyCommand {
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
+    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
   ] as CommandOptions;
   loader = true;
@@ -42,6 +43,7 @@ export default class Snap implements LegacyCommand {
       build,
       skipTests = false,
       skipAutoSnap = false,
+      disableSnapPipeline = false,
       forceDeploy = false,
     }: {
       message?: string;
@@ -52,6 +54,7 @@ export default class Snap implements LegacyCommand {
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
+      disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
     }
   ): Promise<any> {
@@ -64,6 +67,10 @@ export default class Snap implements LegacyCommand {
         'you can use either a specific component [id] to snap a particular component or --all flag to snap them all'
       );
     }
+    const disableTagAndSnapPipelines = disableSnapPipeline;
+    if (disableTagAndSnapPipelines && forceDeploy) {
+      throw new GeneralError('you can use either force-deploy or disable-snap-pipeline, but not both');
+    }
 
     return snapAction({
       id,
@@ -74,6 +81,7 @@ export default class Snap implements LegacyCommand {
       build,
       skipTests,
       skipAutoSnap,
+      disableTagAndSnapPipelines,
       forceDeploy,
     });
   }
