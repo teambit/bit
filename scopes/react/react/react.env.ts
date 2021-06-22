@@ -272,7 +272,6 @@ export class ReactEnv implements Environment {
         '@babel/runtime': '7.12.18',
         '@types/testing-library__jest-dom': '5.9.5',
       },
-      // TODO: take version from config
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',
