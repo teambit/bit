@@ -49,7 +49,10 @@ export function renderTemplate(root: HTMLElement, template: string) {
  * to apply custom logic for component DOM mounting.
  */
 export default (composition: HtmlComposition) => {
-
+  // first clear the root node from any previous compositions. Required as all compositions
+  // of a specific component are rendered in the same iframe
+  root.innerHTML = '';
+  
   if (composition instanceof Element || composition instanceof HTMLDocument){
     root.appendChild(composition);
     return;
