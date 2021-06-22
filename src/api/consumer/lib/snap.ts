@@ -24,6 +24,7 @@ export async function snapAction(args: {
   build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
+  disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
 }): Promise<SnapResults | null> {
   const {
@@ -35,6 +36,7 @@ export async function snapAction(args: {
     skipTests,
     skipAutoSnap,
     build,
+    disableTagAndSnapPipelines,
     forceDeploy,
   } = args;
   const consumer: Consumer = await loadConsumer();
@@ -52,6 +54,7 @@ export async function snapAction(args: {
     skipTests,
     verbose,
     skipAutoSnap,
+    disableTagAndSnapPipelines,
     forceDeploy,
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -3,7 +3,6 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
-
 import { BuilderMain } from './builder.main.runtime';
 
 type BuildOpts = {
@@ -12,6 +11,7 @@ type BuildOpts = {
   cachePackagesOnCapsulesRoot: boolean;
   reuseCapsules: boolean;
   tasks: string;
+  listTasks?: string;
 };
 
 export class BuilderCmd implements Command {
@@ -29,18 +29,27 @@ export class BuilderCmd implements Command {
 specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
     ],
     ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
+    [
+      '',
+      'list-tasks <string>',
+      'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
 
   async report(
     [userPattern]: [string],
-    { install = false, cachePackagesOnCapsulesRoot = false, reuseCapsules = false, tasks }: BuildOpts
+    { install = false, cachePackagesOnCapsulesRoot = false, reuseCapsules = false, tasks, listTasks }: BuildOpts
   ): Promise<string> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    if (listTasks) {
+      return this.getListTasks(listTasks);
+    }
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
-    if (!this.workspace) throw new ConsumerNotFound();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
@@ -60,5 +69,23 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     envsExecutionResults.throwErrorsIfExist();
     this.logger.consoleSuccess();
     return chalk.green(`the build has been completed. total: ${envsExecutionResults.tasksQueue.length} tasks`);
+  }
+
+  private async getListTasks(componentIdStr: string): Promise<string> {
+    const compId = await this.workspace.resolveComponentId(componentIdStr);
+    const component = await this.workspace.get(compId);
+    const results = this.builder.listTasks(component);
+    return `${chalk.green('Tasks List')}
+id:    ${results.id.toString()}
+envId: ${results.envId}
+
+${chalk.bold('Build Pipeline Tasks:')}
+${results.buildTasks.join('\n')}
+
+${chalk.bold('Tag Pipeline Tasks:')}
+${results.tagTasks.join('\n')}
+
+${chalk.bold('Snap Pipeline Tasks:')}
+${results.snapTasks.join('\n') || '<N/A>'}`;
   }
 }
