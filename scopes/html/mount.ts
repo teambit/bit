@@ -2,6 +2,8 @@
 // import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { HtmlAspect } from './html.aspect';
 import { HtmlComponent, defaultHtmlComponent } from './html-component-model';
+import { HtmlComposition, HtmlFunctionComposition } from './interfaces';
+import { createElementFromString } from './utils';
 
 
 
@@ -19,6 +21,15 @@ import { HtmlComponent, defaultHtmlComponent } from './html-component-model';
 //   return Wrapper;
 // }
 
+function ensureRootElementInBody(){
+  const root = document.createElement('div');
+  root.id = 'root';
+  document.body.appendChild(root);
+  return root;
+}
+
+const root = document.getElementById('root') || ensureRootElementInBody();
+
 /**
  * HOC to wrap and mount all registered providers into the DOM.
  * TODO implement for regular html providers/wrappers
@@ -27,18 +38,32 @@ export function withProviders() {
   return `<div></div>`
 }
 
+export function renderTemplate(root: HTMLElement, template: string) {
+  root.appendChild(createElementFromString(template));
+}
+
+
 /**
  * this mounts compositions into the DOM in the component preview.
  * this function can be overridden through ReactAspect.overrideCompositionsMounter() API
  * to apply custom logic for component DOM mounting.
  */
-export default (CompositionHtml: () => HtmlComponent = () => defaultHtmlComponent) => {
-  // const nodeContext = previewContext.get(NodeAspect.id);
-  const { template, js, css} = CompositionHtml();
-  const root = document.getElementById('root');
+export default (composition: HtmlComposition) => {
 
-  const htmlFragment = document.createRange().createContextualFragment(template);
+  if (composition instanceof Element || composition instanceof HTMLDocument){
+    root.appendChild(composition);
+    return;
+  }
 
-  root?.appendChild(htmlFragment);
+  switch(typeof composition){
+    case 'function':
+      composition(root);
+      return;
+    case 'string':
+      renderTemplate(root, composition);
+      return;
+    default:
+      return; // TODO error "this type of composition is not supported by the html env"
 
+  }
 };
