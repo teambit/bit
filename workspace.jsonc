@@ -485,6 +485,9 @@
     "scopes/generator": {
       "defaultScope": "teambit.generator"
     },
+    "scopes/lanes": {
+      "defaultScope": "teambit.lanes"
+    },
     "scopes/explorer": {
       "defaultScope": "teambit.explorer"
     },

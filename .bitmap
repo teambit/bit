@@ -397,6 +397,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
+    "lanes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/lanes"
+    },
     "legacy-bit-id": {
         "scope": "teambit.component",
         "version": "0.0.365",
