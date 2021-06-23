@@ -1,6 +1,10 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import chalk from 'chalk';
+import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneDiffGenerator } from './lane-diff-generator';
 
 export class LaneDiffCmd implements Command {
   name = 'diff [values...]';
@@ -24,16 +28,28 @@ bit lane diff from to => diff between "from" lane and "to" lane. (can work also 
     if (this.workspace) {
       // todo: implement
     } else {
-      if (values.length < 2) {
-        throw new Error(
-          `expect "values" to include at least two args: from-lane and to-lane, got ${values.length} args`
-        );
+      if (values.length < 1) {
+        throw new Error(`expect "values" to include at least one arg - the lane name`);
       }
+      if (values.length > 2) {
+        throw new Error(`expect "values" to include no more than two args, got ${values.length}`);
+      }
+
       const legacyScope = this.scope.legacyScope;
-      const fromLaneName = values[0];
-      const toLaneName = values[1];
-      const fromLane = await legacyScope.lanes.getLanesData(legacyScope, fromLaneName);
-      const toLane = await legacyScope.lanes.getLanesData(legacyScope, toLaneName);
+      const fromLaneName = values.length === 2 ? values[0] : '';
+      const toLaneName = values.length === 2 ? values[1] : values[0];
+      const fromLane = fromLaneName ? await legacyScope.lanes.loadLane(new LaneId({ name: fromLaneName })) : null;
+      const toLane = await legacyScope.lanes.loadLane(new LaneId({ name: toLaneName }));
+      if (!toLane) {
+        throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
+      }
+      const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, fromLane, toLane);
+      const { compsWithDiff, newComps } = await laneDiffGenerator.generate();
+      const diffResultsStr = outputDiffResults(compsWithDiff);
+      const newCompsIdsStr = newComps.map((id) => chalk.bold(id)).join('\n');
+      const newCompsTitle = `The following components were introduced in ${chalk.bold(toLaneName)} lane`;
+      const newCompsStr = newComps.length ? `${chalk.green(newCompsTitle)}\n${newCompsIdsStr}` : '';
+      return `${diffResultsStr}\n${newCompsStr}`;
     }
     return 'diff';
   }

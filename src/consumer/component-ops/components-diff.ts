@@ -1,10 +1,12 @@
+import chalk from 'chalk';
 import R from 'ramda';
 
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { Version } from '../../scope/models';
+import { Scope } from '../../scope';
+import { ModelComponent, Version } from '../../scope/models';
 import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
 import { PathLinux, PathOsBased } from '../../utils/path';
@@ -21,13 +23,17 @@ export type DiffResults = {
   fieldsDiff?: FieldsDiff[] | null | undefined;
 };
 
+export type DiffOptions = {
+  verbose?: boolean; // whether show internal components diff, such as sourceRelativePath
+  formatDepsAsTable?: boolean; // show dependencies output as table
+};
+
 export default async function componentsDiff(
   consumer: Consumer,
   ids: BitId[],
   version: string | null | undefined,
   toVersion: string | null | undefined,
-  verbose: boolean, // whether show internal components diff, such as sourceRelativePath
-  table: boolean // show output as table when possible
+  diffOpts: DiffOptions
 ): Promise<DiffResults[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
@@ -80,7 +86,7 @@ export default async function componentsDiff(
     diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
-    await updateFieldsDiff(fromVersionComponent, component, diffResult);
+    await updateFieldsDiff(fromVersionComponent, component, diffResult, diffOpts);
 
     return diffResult;
   }
@@ -105,7 +111,7 @@ export default async function componentsDiff(
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toVersionComponent = await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository);
-    await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult);
+    await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 
     return diffResult;
   }
@@ -122,15 +128,50 @@ export default async function componentsDiff(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, component.id.version, component.id.version);
     // $FlowFixMe we made sure already that component.componentFromModel is defined
-    await updateFieldsDiff(component.componentFromModel, component, diffResult);
+    await updateFieldsDiff(component.componentFromModel, component, diffResult, diffOpts);
 
     return diffResult;
   }
+}
 
-  async function updateFieldsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
-    diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose, table);
-    diffResult.hasDiff = hasDiff(diffResult);
-  }
+export async function diffBetweenVersionsObjects(
+  modelComponent: ModelComponent,
+  tmp: Tmp,
+  fromVersionObject: Version,
+  toVersionObject: Version,
+  fromVersion: string,
+  toVersion: string,
+  scope: Scope,
+  diffOpts: DiffOptions
+) {
+  const diffResult: DiffResults = { id: modelComponent.toBitId(), hasDiff: false };
+  const repository = scope.objects;
+  const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
+  const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
+
+  diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, fromVersion, toVersion);
+  const fromVersionComponent = await modelComponent.toConsumerComponent(
+    fromVersionObject.hash().toString(),
+    scope.name,
+    repository
+  );
+  const toVersionComponent = await modelComponent.toConsumerComponent(
+    toVersionObject.hash().toString(),
+    scope.name,
+    repository
+  );
+  await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
+  return diffResult;
+}
+
+async function updateFieldsDiff(
+  componentA: Component,
+  componentB: Component,
+  diffResult: DiffResults,
+  diffOpts: DiffOptions
+) {
+  diffResult.fieldsDiff = diffBetweenComponentsObjects(componentA, componentB, diffOpts);
+  diffResult.hasDiff = hasDiff(diffResult);
 }
 
 function hasDiff(diffResult: DiffResults): boolean {
@@ -185,4 +226,22 @@ async function getFilesDiff(
     return { filePath: relativePath, diffOutput };
   });
   return Promise.all(filesDiffP);
+}
+
+export function outputDiffResults(diffResults: DiffResults[]): string {
+  return diffResults
+    .map((diffResult) => {
+      if (diffResult.hasDiff) {
+        const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
+        const titleSeparator = new Array(titleStr.length).fill('-').join('');
+        const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
+        // @ts-ignore since hasDiff is true, filesDiff must be set
+        const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
+        const files = filesWithDiff.map((fileDiff) => fileDiff.diffOutput).join('\n');
+        const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
+        return `${title}\n${files}\n${fields}`;
+      }
+      return `no diff for ${chalk.bold(diffResult.id.toString())}`;
+    })
+    .join('\n\n');
 }
