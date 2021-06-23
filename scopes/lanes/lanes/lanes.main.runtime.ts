@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd } from '@teambit/lanes.modules.diff';
@@ -7,6 +8,7 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { LanesAspect } from './lanes.aspect';
 import { LaneCmd, LaneListCmd, LaneShowCmd } from './lane.cmd';
+import { lanesSchema } from './lanes.graphql';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -28,13 +30,13 @@ export class LanesMain {
     merged?: boolean;
     showDefaultLane?: boolean;
     notMerged?: boolean;
-  }): Promise<LaneResults> {
+  }): Promise<LaneData[]> {
     const showMergeData = Boolean(merged || notMerged);
     const consumer = this.workspace?.consumer;
     if (remote) {
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(name, showMergeData);
-      return { lanes };
+      return lanes;
     }
     const lanes = await this.scope.legacyScope.lanes.getLanesData(this.scope.legacyScope, name, showMergeData);
 
@@ -43,9 +45,12 @@ export class LanesMain {
       if (defaultLane) lanes.push(defaultLane);
     }
 
-    const currentLane = consumer ? this.scope.legacyScope.lanes.getCurrentLaneName() : null;
+    return lanes;
+  }
 
-    return { lanes, currentLane };
+  getCurrentLane(): string | null {
+    if (!this.workspace?.consumer) return null;
+    return this.scope.legacyScope.lanes.getCurrentLaneName();
   }
 
   private getLaneDataOfDefaultLane(): LaneData | null {
@@ -61,9 +66,9 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace]: [CLIMain, ScopeMain, Workspace]) {
+  static async provider([cli, scope, workspace, graphql]: [CLIMain, ScopeMain, Workspace, GraphqlMain]) {
     const lanesMain = new LanesMain(workspace, scope);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     if (!isLegacy) {
@@ -74,6 +79,7 @@ export class LanesMain {
         new LaneDiffCmd(workspace, scope),
       ];
       cli.register(laneCmd);
+      graphql.register(lanesSchema(lanesMain));
     }
     return lanesMain;
   }
