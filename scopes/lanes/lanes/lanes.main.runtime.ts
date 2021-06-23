@@ -67,7 +67,7 @@ export class LanesMain {
     const lanesMain = new LanesMain(workspace, scope);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     if (!isLegacy) {
-      const laneCmd = new LaneCmd(workspace, scope);
+      const laneCmd = new LaneCmd(lanesMain, workspace, scope);
       laneCmd.commands = [
         new LaneListCmd(lanesMain, workspace, scope),
         new LaneShowCmd(lanesMain, workspace, scope),

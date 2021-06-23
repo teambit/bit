@@ -158,7 +158,7 @@ export class LaneShowCmd implements Command {
       return scopeLanes;
     }
 
-    const results = await lane({
+    const results = await this.lanes.getLanes({
       name,
       remote,
       showDefaultLane: json,
@@ -187,10 +187,10 @@ https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   skipWorkspace = true;
   commands: Command[] = [];
 
-  constructor(private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
-    return new LaneListCmd(this.workspace, this.scope).report([name], laneOptions);
+    return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);
   }
 }
 
