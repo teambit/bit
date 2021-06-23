@@ -1,6 +1,5 @@
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
@@ -43,11 +42,9 @@ export class LaneDiffGenerator {
     }
     const fromVersion = await fromLaneHead.load(this.scope.legacyScope.objects);
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
-    const tmp = new Tmp(this.scope.legacyScope);
     const fromLaneStr = this.fromLane ? this.fromLane.name : DEFAULT_LANE;
     const diff = await diffBetweenVersionsObjects(
       modelComponent,
-      tmp,
       fromVersion as Version,
       toVersion as Version,
       fromLaneStr,

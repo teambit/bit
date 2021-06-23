@@ -136,7 +136,6 @@ export default async function componentsDiff(
 
 export async function diffBetweenVersionsObjects(
   modelComponent: ModelComponent,
-  tmp: Tmp,
   fromVersionObject: Version,
   toVersionObject: Version,
   fromVersion: string,
@@ -148,8 +147,14 @@ export async function diffBetweenVersionsObjects(
   const repository = scope.objects;
   const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
   const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
-
-  diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, fromVersion, toVersion);
+  const tmp = new Tmp(scope);
+  try {
+    diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, fromVersion, toVersion);
+  } catch (err) {
+    await tmp.clear();
+    throw err;
+  }
+  await tmp.clear();
   const fromVersionComponent = await modelComponent.toConsumerComponent(
     fromVersionObject.hash().toString(),
     scope.name,
