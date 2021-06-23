@@ -3,16 +3,16 @@ import chalk from 'chalk';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { lane } from '@teambit/legacy/dist/api/consumer';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LanesMain } from './lanes.main.runtime';
 
 type LaneOptions = {
-  details: boolean;
+  details?: boolean;
   remote?: string;
-  merged: boolean;
-  notMerged: boolean;
-  json: boolean;
+  merged?: boolean;
+  notMerged?: boolean;
+  json?: boolean;
 };
 
 export class LaneListCmd implements Command {
@@ -32,24 +32,16 @@ export class LaneListCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
 
   async report(args, laneOptions: LaneOptions): Promise<string> {
-    const { details = false, remote, merged = false, notMerged = false, json = false } = laneOptions;
+    const { details, remote, merged, notMerged } = laneOptions;
 
-    if (!this.workspace) {
-      if (!this.scope) throw new Error(`lane command needs to be run within a workspace or a scope`);
-      const scopeLanes = await this.scope.legacyScope.listLanes();
-      return scopeLanes.map((l) => l.name).join('\n');
-    }
-
-    const results = await lane({
+    const results = await this.lanes.getLanes({
       remote,
-      showDefaultLane: json,
       merged,
       notMerged,
     });
-    if (json) return JSON.stringify(results, null, 2);
     if (merged) {
       const mergedLanes = results.lanes.filter((l) => l.isMerged);
       if (!mergedLanes.length) return chalk.green('None of the lanes is merged');
@@ -83,6 +75,19 @@ export class LaneListCmd implements Command {
       })
       .join('\n');
 
+    const outputFooter = () => {
+      let footer = '\n';
+      if (details) {
+        footer += 'You can use --merged and --not-merged to see which of the lanes is fully merged.';
+      } else {
+        footer +=
+          "to get more info on all lanes in workspace use 'bit lane list --details' or 'bit lane show <lane-name>' for a specific lane.";
+      }
+      if (!remote && this.workspace) footer += `\nswitch lanes using 'bit switch <name>'.`;
+
+      return footer;
+    };
+
     return outputCurrentLane() + outputAvailableLanes() + outputFooter();
 
     function outputCurrentLane() {
@@ -93,32 +98,13 @@ export class LaneListCmd implements Command {
       if (!availableLanes) return '';
       return remote ? `${availableLanes}\n` : `\nAvailable lanes:\n${availableLanes}\n`;
     }
-
-    function outputFooter() {
-      let footer = '\n';
-      if (details) {
-        footer += 'You can use --merged and --not-merged to see which of the lanes is fully merged.';
-      } else {
-        footer +=
-          "to get more info on all lanes in workspace use 'bit lane list --details' or 'bit lane show <lane-name>' for a specific lane.";
-      }
-      if (!remote) footer += `\nswitch lanes using 'bit switch <name>'.`;
-
-      return footer;
-    }
   }
   async json(args, laneOptions: LaneOptions) {
-    const { remote, merged = false, notMerged = false, json = false } = laneOptions;
+    const { remote, merged = false, notMerged = false } = laneOptions;
 
-    if (!this.workspace) {
-      if (!this.scope) throw new Error(`lane command needs to be run within a workspace or a scope`);
-      const scopeLanes = await this.scope.legacyScope.listLanes();
-      return scopeLanes;
-    }
-
-    const results = await lane({
+    const results = await this.lanes.getLanes({
       remote,
-      showDefaultLane: json,
+      showDefaultLane: true,
       merged,
       notMerged,
     });
@@ -140,7 +126,7 @@ export class LaneShowCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const { remote, json = false } = laneOptions;
@@ -151,7 +137,7 @@ export class LaneShowCmd implements Command {
       return scopeLanes.map((l) => l.name).join('\n');
     }
 
-    const results = await lane({
+    const results = await this.lanes.getLanes({
       name,
       remote,
       showDefaultLane: json,
