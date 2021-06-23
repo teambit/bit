@@ -16,6 +16,7 @@ import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
+import { generateMfLink } from './generate-mf-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
@@ -107,6 +108,31 @@ export class PreviewMain {
     return targetPath;
   }
 
+  async writeMfLink(
+    prefix: string,
+    context: ExecutionContext,
+    moduleMap: ComponentMap<string[]>,
+    defaultModule: string | undefined,
+    dirName: string
+  ) {
+    const exposes = await this.computeExposesFromExecutionContext(context);
+    console.log('exposes', exposes);
+    console.log('moduleMap', require('util').inspect(moduleMap, { depth: 3 }));
+
+    const contents = generateMfLink(prefix, moduleMap, defaultModule);
+    const hash = objectHash(contents);
+    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    console.log('targetPath MF link', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+
+    return targetPath;
+  }
+
   private execContexts = new Map<string, ExecutionContext>();
   private componentsByAspect = new Map<string, RuntimeComponents>();
 
@@ -121,11 +147,12 @@ export class PreviewMain {
 
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
+    // throw new Error('g');
 
     return [...linkFiles, previewRuntime];
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
+  private async updateLinkFiles(components: Component[] = [], context: ExecutionContext, useMf = true) {
     const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
       const templatePath = await previewDef.renderTemplatePath?.(context);
@@ -139,7 +166,9 @@ export class PreviewMain {
       console.log('dirPath', dirPath);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
+      const link = useMf
+        ? await this.writeMfLink(previewDef.prefix, context, withPaths, templatePath, dirPath)
+        : this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
       return link;
     });
 

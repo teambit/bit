@@ -20,6 +20,7 @@ export class PreviewRoute implements Route {
       const component: any = req.component as any;
       if (!component) throw new Error(`preview failed to get a component object, url ${req.url}`);
       const artifact = await this.preview.getPreview(component);
+      console.log('im here');
       // TODO: please fix file path concatenation here.
       const file = artifact.getFile(`public/${req.params.previewPath || 'index.html'}`);
       // TODO: 404 again how to handle.

@@ -7,6 +7,7 @@ export default function (
   mfName: string,
   server: string,
   port = 3000,
+  rootPath: string,
   remoteEntryName = 'remote-entry.js'
 ): Configuration {
   return {
@@ -14,7 +15,7 @@ export default function (
       new webpack.container.ModuleFederationPlugin({
         // TODO: implement
         remotes: {
-          [mfName]: `${mfName}@${server}:${port}/${remoteEntryName}`,
+          [mfName]: `${mfName}@${server}:${port}${rootPath}/${remoteEntryName}`,
         },
       }),
     ],

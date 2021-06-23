@@ -19,7 +19,9 @@ export class CompositionsPreview {
   ) {}
 
   render(componentId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
+    console.log('im in render of composition');
     if (!modules.componentMap[componentId]) return;
+    debugger;
 
     const compositions = this.selectPreviewModel(componentId, modules);
     const active = this.getActiveComposition(compositions);
@@ -29,7 +31,9 @@ export class CompositionsPreview {
 
   /** gets relevant information for this preview to render */
   selectPreviewModel(componentId: string, previewModule: PreviewModule) {
+    debugger;
     const files = previewModule.componentMap[componentId] || [];
+    console.log('selectPreviewModel', files);
 
     // allow compositions to come from many files. It is assumed they will have unique named
     const combined = Object.assign({}, ...files);

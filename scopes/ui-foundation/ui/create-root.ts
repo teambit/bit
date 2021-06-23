@@ -18,6 +18,7 @@ export async function createRoot(
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
 
   return `
+  debugger
 ${createImports(aspectDefs)}
 
 const isBrowser = typeof window !== "undefined";
@@ -33,6 +34,7 @@ export function render(...props){
         const rootExtension = harmony.get('${rootAspect}');
 
         if (isBrowser) {
+          debugger
           return rootExtension.render(${rootId}, ...props);
         } else {
           return rootExtension.renderSsr(${rootId}, ...props);

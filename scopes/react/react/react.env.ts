@@ -186,8 +186,11 @@ export class ReactEnv implements Environment {
     const mfName = camelCase(`${context.id.toString()}_MF`);
     // TODO: take the port dynamically
     const port = context.port;
+    const rootPath = context.rootPath;
 
-    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'localhost', port);
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'localhost', port, rootPath || '');
+    console.log('envBaseConfig', require('util').inspect(envBaseConfig, { depth: 10 }));
+
     const envDevConfig = envPreviewDevConfigFactory(context.id);
 
     const fileMapPath = this.writeFileMap(context.components, true);

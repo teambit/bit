@@ -30,6 +30,7 @@ import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
+import { createRootBootstrap } from './create-root-bootstrap';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -196,7 +197,7 @@ export class UiMain {
     const [name, uiRoot] = maybeUiRoot;
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const ssr = uiRoot.buildOptions?.ssr || false;
+    const ssr = false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
 
     const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
@@ -377,10 +378,15 @@ export class UiMain {
       runtimeName,
       this.harmony.config.toObject()
     );
-    const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
-    if (fs.existsSync(filepath)) return filepath;
+    const rootRelativePath = `${runtimeName}.root${sha1(contents)}.js`;
+    const filepath = resolve(join(__dirname, rootRelativePath));
+    const rootBootstrapContents = await createRootBootstrap(rootRelativePath);
+    const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
+    const rootBootstrapPath = resolve(join(__dirname, rootBootstrapRelativePath));
+    if (fs.existsSync(filepath) && fs.existsSync(rootBootstrapPath)) return rootBootstrapPath;
     fs.outputFileSync(filepath, contents);
-    return filepath;
+    fs.outputFileSync(rootBootstrapPath, rootBootstrapContents);
+    return rootBootstrapPath;
   }
 
   private async selectPort() {

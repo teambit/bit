@@ -18,8 +18,5 @@ linkModules('${prefix}', defaultModule, {
     })
     .join(',\n')}
 });
-// import("uiButton/uiButton").then(Module => console.log('dadsafasdf', Module))
-
-
 `;
 }
