@@ -232,6 +232,11 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
+  diffLane(args: string, onScope = false) {
+    const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
+    const output = this.runCmd(`bit lane diff ${args}`, cwd);
+    return removeChalkCharacters(output) as string;
+  }
   getHead(id: string, cwd?: string) {
     const comp = this.catComponent(id, cwd);
     return comp.head;

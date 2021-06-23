@@ -162,6 +162,23 @@ export class LaneShowCmd implements Command {
     const title = `showing information for ${chalk.bold(name)}${outputRemoteLane(onlyLane.remote)}\n`;
     return title + outputComponents(onlyLane.components);
   }
+
+  async json([name]: [string], laneOptions: LaneOptions) {
+    const { remote, json = false } = laneOptions;
+
+    if (!this.workspace) {
+      if (!this.scope) throw new Error(`lane command needs to be run within a workspace or a scope`);
+      const scopeLanes = await this.scope.legacyScope.listLanes();
+      return scopeLanes;
+    }
+
+    const results = await lane({
+      name,
+      remote,
+      showDefaultLane: json,
+    });
+    return results;
+  }
 }
 
 export class LaneCmd implements Command {

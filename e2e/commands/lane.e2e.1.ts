@@ -90,6 +90,19 @@ describe('bit lane command', function () {
         expect(remoteLanes.lanes).to.have.lengthOf(1);
         expect(remoteLanes.lanes[0].name).to.equal('dev');
       });
+      describe('bit lane diff on the scope', () => {
+        let diffOutput: string;
+        before(() => {
+          diffOutput = helper.command.diffLane('dev', true);
+        });
+        it('should show the diff correctly', () => {
+          expect(diffOutput).to.have.string('--- foo.js (master)');
+          expect(diffOutput).to.have.string('+++ foo.js (dev)');
+
+          expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
+          expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+        });
+      });
     });
     describe('exporting the lane implicitly (no lane-name entered)', () => {
       before(() => {
@@ -285,7 +298,7 @@ describe('bit lane command', function () {
           expect(lanes.components).to.have.lengthOf(1);
         });
         it('should not create a lane with the same name as the remote', () => {
-          const output = helper.general.runWithTryCatch('bit lane dev');
+          const output = helper.general.runWithTryCatch('bit lane show dev');
           expect(output).to.have.string('not found');
         });
       });
