@@ -1,0 +1,91 @@
+---
+description: 'Docs for Html aspect'
+labels: ['docs', 'aspect', 'extensions', 'html', 'environment', 'framework-less', 'vanillajs', 'vanilla js']
+---
+
+## Overview
+
+The Html aspect provides a tools for developing framework-less components, which can be any mix of html, css (various flavours) and javascript.
+
+These tools include a [bit development environment](https://harmony-docs.bit.dev/building-with-bit/environments) which enables easy rendering of component
+examples via the compositions feature (see below) as well as functions for extracting html from a url, and converting strings to html elements.
+
+### No-Framework components
+
+For shareable, framework-less components __documentation is absolutely key__.
+
+Not using a framework brings the benefit of smaller bundle sizes, total freedom to manipulate the dom how you wish and most importantly the ability to use
+in any consuming app, no matter the framework it is using.   
+
+However this freedom comes at the cost of there being no sort of standardisation in terms of the output of a framework-less component, and it's not immediately apparent
+to consumers of your components what output to expect from the component and how to use it in their application.
+
+So providing documentation as part of your component, which describes how your component works and more importantly how to consume it in an application
+is the difference between full adoption and a great component which just isn't usable enough.
+
+### Compositions
+
+[Bit compositions](https://harmony-docs.bit.dev/aspects/compositions/) allow you to create visual examples of your components, not just in terms of UI but
+in a full context to illustrate your component working in various different scenarios. This env supports creating compositions in a number of different formats.
+
+These formats stem from the fact that Html + JS + CSS components can be implemented in a variety of ways, and their consumption is directly tied to their implementation.  
+You can also think of compositions as examples for how to consume your component, and the different composition formats can be used in conjunction 
+with each other, as separate examples of various ways of consuming your component.
+
+Support composition formats in this environment:
+
+1. As an HTML element/fragment
+1. As an HTML string (can include script tags)
+1. As a javascript function
+
+#### HTML Element/Fragment Compositions
+
+One method is to provide an HTML element as your composition. This element will then be rendered in the DOM. If your component outputs an HTML element or fragment (which can be an entire app)
+then this would be the simplest format of composition.
+
+#### Html string Composition
+
+Another is to pass a string of HTML, which will be converted into actual HTML and rendered on the page.
+
+#### Function Composition
+
+The third method is to pass a function, which takes in a root element as argument, and mutates the dom based on that root element. Use this if your
+component creates its own HTML and relies on having access to the dom element inside which its HTML output will live.
+
+#### Example 
+
+Sample component:
+```js
+export function createColouredDiv(compositionType: string, colour: string){
+  const newDiv = document.createElement('div');
+  newDiv.style.color = colour;
+  newDiv.textContent = `This is a${compositionType} composition with ${colour} text`;
+  return newDiv;
+}
+```
+
+Compositions file demonstrating the 3 types of composition:
+```js
+import { createColouredDiv } from './test-component';
+
+
+export const HtmlStringComposition = createColouredDiv('n HTML string','orange').outerHTML;
+
+export const FunctionComposition = (root) => {
+  const newDiv = createColouredDiv(' function', 'darkgreen');
+  root.appendChild(newDiv);
+}
+
+export const ElementComposition = createColouredDiv('n element', 'darkBlue');
+```
+
+
+### Additional tools
+
+In order to support other methods of bringing in DOM elements to a document, we've also supplied a couple of helper functions.
+
+1. `fetchHtmlFromUrl`
+This async function takes in a url as parameter and outputs your HTML string. You can then either convert that to a DOM element (using the next helper function)
+or just render that string as a composition via the HTML string composition method above.
+1.  `createElementFromString`
+This method will take in a string of HTML and output a full DOM fragment which can be added to the DOM directly. 
