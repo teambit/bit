@@ -6807,9 +6807,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.104":
-  version: 1.0.104
-  resolution: "@teambit/legacy@npm:1.0.104"
+"@teambit/legacy@npm:1.0.105":
+  version: 1.0.105
+  resolution: "@teambit/legacy@npm:1.0.105"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6932,7 +6932,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 77a1f6df6d1545e93ca2a75f763513812a962f7a96c50ff5bfd575420a4b3a0d15c4d9b4e3b5ff49e7de48effd6782d5b0312589993d899750d33e13721a1cd8
+  checksum: 8f276b33cd37cf82a2f9ab4501c8a0c74c432be3ce8b608662131ac55c3eb5ac08d45a334b2c5131007d2f465566fcc0951dbc1bd747be2586a86ba9fe721579
   languageName: node
   linkType: hard
 
@@ -7070,7 +7070,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.1
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.104
+    "@teambit/legacy": 1.0.105
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7139,11 +7139,11 @@ __metadata:
     "@typescript-eslint/parser": 4.13.0
     "@typescript-eslint/typescript-estree": 4.15.1
     "@vuedoc/parser": 2.4.0
-    "@yarnpkg/cli": 3.0.0-rc.5
-    "@yarnpkg/core": 3.0.0-rc.5
-    "@yarnpkg/fslib": 2.5.0-rc.5
-    "@yarnpkg/plugin-npm": 2.5.0-rc.5
-    "@yarnpkg/plugin-pack": 3.0.0-rc.5
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/plugin-npm": ^2.5.0-rc.6
+    "@yarnpkg/plugin-pack": ^3.0.0-rc.6
     acorn: 6.4.2
     agentkeepalive: 4.1.4
     ajv: 6.12.6
@@ -7466,7 +7466,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.104
+    "@teambit/legacy": 1.0.105
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -9659,30 +9659,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/cli@npm:3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/cli@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fcli%2F-%2Fcli-3.0.0-rc.5.tgz"
+"@yarnpkg/cli@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/cli@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/libzip": ^2.2.2-rc.3
-    "@yarnpkg/parsers": ^2.4.0-rc.3
-    "@yarnpkg/plugin-compat": ^3.0.0-rc.5
-    "@yarnpkg/plugin-dlx": ^3.0.0-rc.5
-    "@yarnpkg/plugin-essentials": ^3.0.0-rc.5
-    "@yarnpkg/plugin-file": ^2.2.1-rc.5
-    "@yarnpkg/plugin-git": ^2.4.0-rc.5
-    "@yarnpkg/plugin-github": ^2.2.0-rc.5
-    "@yarnpkg/plugin-http": ^2.1.3-rc.5
-    "@yarnpkg/plugin-init": ^3.0.0-rc.5
-    "@yarnpkg/plugin-link": ^2.1.2-rc.5
-    "@yarnpkg/plugin-node-modules": ^3.0.0-rc.5
-    "@yarnpkg/plugin-npm": ^2.5.0-rc.5
-    "@yarnpkg/plugin-npm-cli": ^3.0.0-rc.5
-    "@yarnpkg/plugin-pack": ^3.0.0-rc.5
-    "@yarnpkg/plugin-patch": ^3.0.0-rc.5
-    "@yarnpkg/plugin-pnp": ^3.0.0-rc.5
-    "@yarnpkg/shell": ^3.0.0-rc.5
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/libzip": ^2.2.2-rc.4
+    "@yarnpkg/parsers": ^2.4.0-rc.4
+    "@yarnpkg/plugin-compat": ^3.0.0-rc.6
+    "@yarnpkg/plugin-dlx": ^3.0.0-rc.6
+    "@yarnpkg/plugin-essentials": ^3.0.0-rc.6
+    "@yarnpkg/plugin-file": ^2.2.1-rc.6
+    "@yarnpkg/plugin-git": ^2.4.0-rc.6
+    "@yarnpkg/plugin-github": ^2.2.0-rc.6
+    "@yarnpkg/plugin-http": ^2.1.3-rc.6
+    "@yarnpkg/plugin-init": ^3.0.0-rc.6
+    "@yarnpkg/plugin-link": ^2.1.2-rc.6
+    "@yarnpkg/plugin-node-modules": ^3.0.0-rc.6
+    "@yarnpkg/plugin-npm": ^2.5.0-rc.6
+    "@yarnpkg/plugin-npm-cli": ^3.0.0-rc.6
+    "@yarnpkg/plugin-pack": ^3.0.0-rc.6
+    "@yarnpkg/plugin-patch": ^3.0.0-rc.6
+    "@yarnpkg/plugin-pnp": ^3.0.0-rc.6
+    "@yarnpkg/shell": ^3.0.0-rc.6
     chalk: ^3.0.0
     ci-info: ^2.0.0
     clipanion: ^3.0.0-rc.10
@@ -9691,24 +9691,24 @@ __metadata:
     typanion: ^3.3.0
     yup: ^0.32.9
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: 9c21bdbcf6624702557d9a02159eb15ef749b9f05a9c5e19a4bba64d50f90058a7fdab7a5fab34e6d1c2d4ad2c414ad52d9cb46c35fb1eddfa63b41c69d5a0be
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 76fb205bf6eedb9ab1249370a0107b190c83d9cf26bf28edd53686190d6b572f2ac498e85fbbb7c104b83589f7aba0c59aa850d72c992bc774c2b894d00f3103
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:3.0.0-rc.5, @yarnpkg/core@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/core@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fcore%2F-%2Fcore-3.0.0-rc.5.tgz"
+"@yarnpkg/core@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/core@npm:3.0.0-rc.6"
   dependencies:
     "@arcanis/slice-ansi": ^1.0.2
     "@types/semver": ^7.1.0
     "@types/treeify": ^1.0.0
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/json-proxy": ^2.1.1-rc.3
-    "@yarnpkg/libzip": ^2.2.2-rc.3
-    "@yarnpkg/parsers": ^2.4.0-rc.3
-    "@yarnpkg/pnp": ^3.0.0-rc.5
-    "@yarnpkg/shell": ^3.0.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/json-proxy": ^2.1.1-rc.4
+    "@yarnpkg/libzip": ^2.2.2-rc.4
+    "@yarnpkg/parsers": ^2.4.0-rc.4
+    "@yarnpkg/pnp": ^3.0.0-rc.6
+    "@yarnpkg/shell": ^3.0.0-rc.6
     camelcase: ^5.3.1
     chalk: ^3.0.0
     ci-info: ^2.0.0
@@ -9732,17 +9732,7 @@ __metadata:
     treeify: ^1.1.0
     tslib: ^1.13.0
     tunnel: ^0.0.6
-  checksum: e9ef0d84d7162d2dc3d43b4ef6b65284d1b9b23ae840a7d45ede6fc49930ca66af37b1866c59ca520d0036eb1c3fffea88307108648a32c740c0b2630942fe99
-  languageName: node
-  linkType: hard
-
-"@yarnpkg/fslib@npm:2.5.0-rc.5, @yarnpkg/fslib@npm:^2.5.0-rc.5":
-  version: 2.5.0-rc.5
-  resolution: "@yarnpkg/fslib@npm:2.5.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Ffslib%2F-%2Ffslib-2.5.0-rc.5.tgz"
-  dependencies:
-    "@yarnpkg/libzip": ^2.2.2-rc.3
-    tslib: ^1.13.0
-  checksum: 3a4f8432502eaf9fed669aca9a7dc98dd0eb2e50b244fcdee93c81e75d6445f45e283904dee8c273cfa0f6bb29e1a86f26cdbe260cdda82551a81bf5f21f25b6
+  checksum: 525419144bd1ccc959082fa69f18cf374e7210de837eeb89c3bedd72f889362b7f6618c156d89ad01ece1cab08a749b52e428aab55d24926a7b202ae2ee0d9c9
   languageName: node
   linkType: hard
 
@@ -9756,13 +9746,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/json-proxy@npm:^2.1.1-rc.3":
-  version: 2.1.1-rc.3
-  resolution: "@yarnpkg/json-proxy@npm:2.1.1-rc.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fjson-proxy%2F-%2Fjson-proxy-2.1.1-rc.3.tgz"
+"@yarnpkg/fslib@npm:^2.5.0-rc.6":
+  version: 2.5.0-rc.6
+  resolution: "@yarnpkg/fslib@npm:2.5.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/libzip": ^2.2.2-rc.4
     tslib: ^1.13.0
-  checksum: f6f10a392caf1e3fbfb4f66ecdf8961b234838cd69162ea9df186afe2066851c9b248c1032cc336063831dd2838ea4c699a61c7145b93212a8bd5dfc10e43233
+  checksum: 26a9b66d616fe1469140858ba180f59781d39ce148ee6498e020ce247aa334bce45d78566ef6eb2ecac7bc558c3d33fc7bc610171eba1dbb2e9b6dc34d04a22a
+  languageName: node
+  linkType: hard
+
+"@yarnpkg/json-proxy@npm:^2.1.1-rc.4":
+  version: 2.1.1-rc.4
+  resolution: "@yarnpkg/json-proxy@npm:2.1.1-rc.4"
+  dependencies:
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    tslib: ^1.13.0
+  checksum: 77820fdd3091d800da1c215803e609ddccccc1882f317224b2f2ddaed13e844c4efb8411cd3ed95b063595eae753efc00817e111a5c812dc10945cc63222a148
   languageName: node
   linkType: hard
 
@@ -9776,13 +9776,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/libzip@npm:^2.2.2-rc.3":
-  version: 2.2.2-rc.3
-  resolution: "@yarnpkg/libzip@npm:2.2.2-rc.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Flibzip%2F-%2Flibzip-2.2.2-rc.3.tgz"
+"@yarnpkg/libzip@npm:^2.2.2-rc.4":
+  version: 2.2.2-rc.4
+  resolution: "@yarnpkg/libzip@npm:2.2.2-rc.4"
   dependencies:
     "@types/emscripten": ^1.38.0
     tslib: ^1.13.0
-  checksum: f9e03786dbae7e61c839ec5f57deb42b26d3d902c9b4449be503aff7a0be7cab1a53ed9dc81e80e813f61d65f6d5ca1e342dfd9733ff12c25add8f1ca7a7718c
+  checksum: 40d31125e6e80bd42218a1b92e2043d0050a42ec9738176e6ba47e2066d7efea5ab328750f60f73b7eb9b1080460cb7f982170b8eecccd1795066d1ecbd4c0ff
   languageName: node
   linkType: hard
 
@@ -9796,48 +9796,48 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/parsers@npm:^2.4.0-rc.3":
-  version: 2.4.0-rc.3
-  resolution: "@yarnpkg/parsers@npm:2.4.0-rc.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fparsers%2F-%2Fparsers-2.4.0-rc.3.tgz"
+"@yarnpkg/parsers@npm:^2.4.0-rc.4":
+  version: 2.4.0-rc.4
+  resolution: "@yarnpkg/parsers@npm:2.4.0-rc.4"
   dependencies:
     js-yaml: ^3.10.0
     tslib: ^1.13.0
-  checksum: e99926949bb850b2d09dc4952a6ded194b89a4938cc937175f34920e6e20cdc4428862b49ee1dd986a9151809f2d79ae2eb7faba8ab694a056b6cfa228bebd23
+  checksum: b9a1f0fa80bfdac08bf2d70280fb0779bf760762964e7561ee8cd43fcbb74b97491dee915ac1bc81ca3ce4f228d894a4e3e99737eff631d72ef6009d49bf3c6d
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-compat@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-compat@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-compat%2F-%2Fplugin-compat-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-compat@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-compat@npm:3.0.0-rc.6"
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/plugin-patch": ^3.0.0-rc.5
-  checksum: 9d88cd0688f84b7178a7cae20b65c3a4e52ad480d1d6b3460f9899d7addd8fbc2706e1e8da25689fa3d9c10a7b4a2f7f5e0e0154ea5b83cecc8359b3d594e161
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/plugin-patch": ^3.0.0-rc.6
+  checksum: cdbc4040058c1ddb34fb00a8a4d26f2b6983b43f74edceadbe84c01e8b7c95bc31a25eeac6bf4e3faa3840e0444a608d2464970da9d0aa74e2722025a21dfe7f
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-dlx@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-dlx@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-dlx%2F-%2Fplugin-dlx-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-dlx@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-dlx@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/json-proxy": ^2.1.1-rc.3
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/json-proxy": ^2.1.1-rc.4
     clipanion: ^3.0.0-rc.10
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: 7cded4df9b0b88e5cb9e0abf4fde8ca99a8f866e5ab95bab9996e6eac220841e9c2094ffd1f6309c4092acc4f723eabfe875a8f27eb7d1a529e1fbb01a17c80f
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 34a11ea6eaee8520d89f85608d7fd05592fdf987b0fbd81f5c8d69f91a2f6043405e25b15f1534d5e52690c5725f28d9e95cd7b2f52184860ec7614855b6bae5
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-essentials@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-essentials@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-essentials%2F-%2Fplugin-essentials-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-essentials@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-essentials@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/json-proxy": ^2.1.1-rc.3
-    "@yarnpkg/parsers": ^2.4.0-rc.3
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/json-proxy": ^2.1.1-rc.4
+    "@yarnpkg/parsers": ^2.4.0-rc.4
     ci-info: ^2.0.0
     clipanion: ^3.0.0-rc.10
     enquirer: ^2.3.6
@@ -9847,208 +9847,208 @@ __metadata:
     tslib: ^1.13.0
     typanion: ^3.3.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: a8661a5f136b7df9c47669bc98023f66d0d97de64373b5af45aaa6a577f1162aeb7ecafe58d4b9752c47a7f594a95ad40b91601577463a6cfb5722a61b7cae8c
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 6f860cd0269746ec1d1a33e18cbfceb28194ea54e95a68ea9c689b049155eab442376714ce0242e99a3cb5b081cf87f09364964fa6747c4f7ea4ebb385b607cf
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-file@npm:^2.2.1-rc.5":
-  version: 2.2.1-rc.5
-  resolution: "@yarnpkg/plugin-file@npm:2.2.1-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-file%2F-%2Fplugin-file-2.2.1-rc.5.tgz"
+"@yarnpkg/plugin-file@npm:^2.2.1-rc.6":
+  version: 2.2.1-rc.6
+  resolution: "@yarnpkg/plugin-file@npm:2.2.1-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: 1bcb0a848aa87d33047b5d990a7e43c3dbfefbd7a3fef43f4aac818709da5659af35cf9bc52a89102419c9ab6cb2778031febc907c43377086d21451e8f1f58e
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: ea087cb112666b54579ce27afb656c5b90074a57f5ccb5e6dbd87db098d3346c496b18561b46de5273550a0a27aecbceede84174d6662538ce607557be9d7e42
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-git@npm:^2.4.0-rc.5":
-  version: 2.4.0-rc.5
-  resolution: "@yarnpkg/plugin-git@npm:2.4.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-git%2F-%2Fplugin-git-2.4.0-rc.5.tgz"
+"@yarnpkg/plugin-git@npm:^2.4.0-rc.6":
+  version: 2.4.0-rc.6
+  resolution: "@yarnpkg/plugin-git@npm:2.4.0-rc.6"
   dependencies:
     "@types/semver": ^7.1.0
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     git-url-parse: 11.1.2
     semver: ^7.1.2
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: d8b53f1323c5e8fbe8afb21c2057d559d4d07417ef595c8cb7975ee6ffaaa5b19cf1e0928cf71b69e434d84c5b23a720c3a3fa17f9f8709b96dde6a3b6a3be66
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 71582ee001dff4c31e05b0dec0da4c668d1266098c4a734ceeab3c33f935ced05cf7c038c380cfb9cb2f3fa43b8dbb806b0cc08b92782a4d3374b37eacc4c982
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-github@npm:^2.2.0-rc.5":
-  version: 2.2.0-rc.5
-  resolution: "@yarnpkg/plugin-github@npm:2.2.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-github%2F-%2Fplugin-github-2.2.0-rc.5.tgz"
+"@yarnpkg/plugin-github@npm:^2.2.0-rc.6":
+  version: 2.2.0-rc.6
+  resolution: "@yarnpkg/plugin-github@npm:2.2.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/plugin-git": ^2.4.0-rc.5
-  checksum: 96589c4ce3bfa200e616c93fa2ec5d7eab63a41eaef59a4545ef35804596ddbcb2e751b831333ca555be9053715f14bad0fb0e3b6f3b2a98b642a950d7e309c7
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/plugin-git": ^2.4.0-rc.6
+  checksum: d1b56236de9881fdf1ebe9cb4da3fbca5e3a594c3ac8f41fb706e77f5c0c47ac10d683a35781cd311b3c89406233e5eebf74454b7e6f1854efdb3c69b646e051
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-http@npm:^2.1.3-rc.5":
-  version: 2.1.3-rc.5
-  resolution: "@yarnpkg/plugin-http@npm:2.1.3-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-http%2F-%2Fplugin-http-2.1.3-rc.5.tgz"
+"@yarnpkg/plugin-http@npm:^2.1.3-rc.6":
+  version: 2.1.3-rc.6
+  resolution: "@yarnpkg/plugin-http@npm:2.1.3-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: fd2f273de660c9ae5a13a4c22f40a41e5a0dde187b93e12624cf10ffc8224d5acae91d1b1f34dcd53e750f160ffcbfb273838cd545c404e97d4549b51ba90c7e
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: b3e6a9d622efd9463da52a6cfb0b91f9c51e0794915bf6a47ba88c4c0b0eb31183e2a5deaaf531f8bb51b3ff3288997edabe2e2faf181d3e201779320f9ed739
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-init@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-init@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-init%2F-%2Fplugin-init-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-init@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-init@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     clipanion: ^3.0.0-rc.10
     lodash: ^4.17.15
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: c0daae45961f7b4d7728ee20806f096b6cc645c6a2332c4f06d9204ab30a7743cfa5d192cc9f865a93072e6add293f328f126332798ce2a14f61ac790a292c02
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: cea977d5fcb1b237becc9bb40a970b906beb4bc90687f72651c34977fe0194db1ebaa8bbe48b66ae79062895f43bf0d1a26ab4557f29336ca65540915c19d1e1
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-link@npm:^2.1.2-rc.5":
-  version: 2.1.2-rc.5
-  resolution: "@yarnpkg/plugin-link@npm:2.1.2-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-link%2F-%2Fplugin-link-2.1.2-rc.5.tgz"
+"@yarnpkg/plugin-link@npm:^2.1.2-rc.6":
+  version: 2.1.2-rc.6
+  resolution: "@yarnpkg/plugin-link@npm:2.1.2-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: 32c535e20b063fe53f45626c69a69c7f4341194d3ea87b63b116f9ad1aeacb6cf9d1773a52533fbd2c730c01936b8632b7fe8040ffddfd20077704bc3272eb2e
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 77366bd4ca44b994ae79a5930da3f22a460be4bc81ed5ff814a1295da34c92bf1d81c3f47d6c9a6aaa371d205da91032c4471c0372fb7bc2700cc4bfddb96101
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-node-modules@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-node-modules@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-node-modules%2F-%2Fplugin-node-modules-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-node-modules@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-node-modules@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/libzip": ^2.2.2-rc.3
-    "@yarnpkg/parsers": ^2.4.0-rc.3
-    "@yarnpkg/plugin-pnp": ^3.0.0-rc.5
-    "@yarnpkg/pnp": ^3.0.0-rc.5
-    "@yarnpkg/pnpify": ^3.0.0-rc.6
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/libzip": ^2.2.2-rc.4
+    "@yarnpkg/parsers": ^2.4.0-rc.4
+    "@yarnpkg/plugin-pnp": ^3.0.0-rc.6
+    "@yarnpkg/pnp": ^3.0.0-rc.6
+    "@yarnpkg/pnpify": ^3.0.0-rc.7
     "@zkochan/cmd-shim": ^5.1.0
     clipanion: ^3.0.0-rc.10
     micromatch: ^4.0.2
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: ff1c960b9191540acda9cadba4e299d640a44efc12131d5666d050e45394c09fe82d5300cfefd1d283a71322dfadbdb3451a80a78a28377a42a511e2d7399e35
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 966c445c6cc36d45af4a81254bb039754533a0ab30edbbd910a8943d74aec90c4077f22836c34dc3fc0eef9c12474c55018b10316b7b352419807779c517dfcb
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-npm-cli@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-npm-cli@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-npm-cli%2F-%2Fplugin-npm-cli-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-npm-cli@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-npm-cli@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     clipanion: ^3.0.0-rc.10
     enquirer: ^2.3.6
     semver: ^7.1.2
     tslib: ^1.13.0
     typanion: ^3.3.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/plugin-npm": ^2.5.0-rc.5
-    "@yarnpkg/plugin-pack": ^3.0.0-rc.5
-  checksum: b859f775f2a652fa1674cb01ec378c16a6e856a6ec55506f8a4be5d8c9d4c705972a666fa7e013470b9bb62ebd02947f8d0fb6b798222f6236f06b0c36cd06ef
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/plugin-npm": ^2.5.0-rc.6
+    "@yarnpkg/plugin-pack": ^3.0.0-rc.6
+  checksum: 75d1e55207c6881c97000647da5b772f912a94dd28fb1c9a6fdf5919af54c8f89265ed9fa89c3e20439d4878157202f74b7e3894f396d51e1c41fbc1c0ceb118
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-npm@npm:2.5.0-rc.5, @yarnpkg/plugin-npm@npm:^2.5.0-rc.5":
-  version: 2.5.0-rc.5
-  resolution: "@yarnpkg/plugin-npm@npm:2.5.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-npm%2F-%2Fplugin-npm-2.5.0-rc.5.tgz"
+"@yarnpkg/plugin-npm@npm:^2.5.0-rc.6":
+  version: 2.5.0-rc.6
+  resolution: "@yarnpkg/plugin-npm@npm:2.5.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     enquirer: ^2.3.6
     semver: ^7.1.2
     ssri: ^6.0.1
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/plugin-pack": ^3.0.0-rc.5
-  checksum: 4dd8e97dde53c765f1678364654a60f9ae1d71bf9202e5be655089aafbec3e26d74e317866a8da575f792b03964b635b75cdc4535b509d5d5b12318510967c01
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/plugin-pack": ^3.0.0-rc.6
+  checksum: efe176a8688b39db1d52973f78e5dac7583c80cf107ab5f0e9d6a63bbfc6b46dedb0875190f6b68e585bdbec7554aa01315c3949f32426b88d79fa857592ab91
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-pack@npm:3.0.0-rc.5, @yarnpkg/plugin-pack@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-pack@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-pack%2F-%2Fplugin-pack-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-pack@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-pack@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     clipanion: ^3.0.0-rc.10
     micromatch: ^4.0.2
     tar-stream: ^2.0.1
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: d5e3c266c3b33dc2c02357184b1ae340a940d5d0d7d1cee930ab631d19bc13152321a8f3ba213d556dd0848dec39cf4c66953d027dc0e3cb0add2cd24776d40f
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: a16f9713031b68f257f9885fefdb84e4c5972cb43d39feaba5f12281636d07cd20b262c8962f14b9f29934a48e0d59b37acd491d6493095dfdf1a1e101254852
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-patch@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-patch@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-patch%2F-%2Fplugin-patch-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-patch@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-patch@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/libzip": ^2.2.2-rc.3
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/libzip": ^2.2.2-rc.4
     clipanion: ^3.0.0-rc.10
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: 77ac6e70d01a192b8485a432df05a138674a02314cd495e9b8f1917b01a1876363445d800cf9017a1be2e7de6735425c66e84136e3571f8f9873e81e459969db
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: cd627f87e04fc466f5eee6c619b33ab6108eac21649505b1d39a2f2aa85ca83553c12a4391d84fb3b709a0871f43ed2be835702aa1e4b45c757af5bedb75561f
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-pnp@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-pnp@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-pnp%2F-%2Fplugin-pnp-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-pnp@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-pnp@npm:3.0.0-rc.6"
   dependencies:
     "@types/semver": ^7.1.0
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/plugin-stage": ^3.0.0-rc.5
-    "@yarnpkg/pnp": ^3.0.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/plugin-stage": ^3.0.0-rc.6
+    "@yarnpkg/pnp": ^3.0.0-rc.6
     clipanion: ^3.0.0-rc.10
     micromatch: ^4.0.2
     semver: ^7.1.2
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: d9d8a7348bd970ceaf867c703b804bee2a3f0205bfe6977e5ceeefb4d8513e6bf79ba576c98fa61decde5a203926b795165327dafd390612a2546956a8a6ad77
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: a96e5a528fa2f3d62661de64bde6fb9c7dde5ffbc201dd037c17a0ba93662e07253d3a968113bf460e6a3e1d7b2c59d74f3c12c461e8f97a3f61ee32427f8fe1
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-stage@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/plugin-stage@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fplugin-stage%2F-%2Fplugin-stage-3.0.0-rc.5.tgz"
+"@yarnpkg/plugin-stage@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/plugin-stage@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     clipanion: ^3.0.0-rc.10
     tslib: ^1.13.0
   peerDependencies:
-    "@yarnpkg/cli": ^3.0.0-rc.5
-    "@yarnpkg/core": ^3.0.0-rc.5
-  checksum: ac6340d9fce5f22212b4b7e3a8490107b59269c0ecbba3a46690bc0f21095e53acbbb52773318b71d8bb7937b469c0d806b61fb2fcfc3a6a5375e87e49778fb8
+    "@yarnpkg/cli": ^3.0.0-rc.6
+    "@yarnpkg/core": ^3.0.0-rc.6
+  checksum: 3289f84d1ba1ffc5179b7ecfde63d2e749520faad8a2ff6cbd1b24fed6aac874d3dd5af62aaea0bd85dd5abb6bc99038efd87b784168aa7a329bae45f0e91759
   languageName: node
   linkType: hard
 
@@ -10063,25 +10063,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/pnp@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/pnp@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fpnp%2F-%2Fpnp-3.0.0-rc.5.tgz"
+"@yarnpkg/pnp@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/pnp@npm:3.0.0-rc.6"
   dependencies:
     "@types/node": ^13.7.0
-    "@yarnpkg/fslib": ^2.5.0-rc.5
+    "@yarnpkg/fslib": ^2.5.0-rc.6
     resolve.exports: ^1.0.2
     tslib: ^1.13.0
-  checksum: fd70f7069fd70adfcc6d8f6e3b14f288f20ef5c09b6cd069c6ed39804a63a56c6be66a662d7a8c137332eea8ddf1aefbc150fac28563238791f9aca9f20506be
+  checksum: 10f36197a36270a3ef304d5265244b08dd2a5d63606520b215ce22b17245987281a0af8a814fed2f6c4f11e6a73365fd32dfe5157157178cae2e93843436b009
   languageName: node
   linkType: hard
 
-"@yarnpkg/pnpify@npm:^3.0.0-rc.6":
-  version: 3.0.0-rc.6
-  resolution: "@yarnpkg/pnpify@npm:3.0.0-rc.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fpnpify%2F-%2Fpnpify-3.0.0-rc.6.tgz"
+"@yarnpkg/pnpify@npm:^3.0.0-rc.7":
+  version: 3.0.0-rc.7
+  resolution: "@yarnpkg/pnpify@npm:3.0.0-rc.7"
   dependencies:
-    "@yarnpkg/core": ^3.0.0-rc.5
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/parsers": ^2.4.0-rc.3
+    "@yarnpkg/core": ^3.0.0-rc.6
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/parsers": ^2.4.0-rc.4
     chalk: ^3.0.0
     clipanion: ^3.0.0-rc.10
     comment-json: ^2.2.0
@@ -10097,7 +10097,7 @@ __metadata:
       optional: true
   bin:
     pnpify: ./lib/cli.js
-  checksum: 70c7e568288eb6260d2cc90e1d1636aee3fe1370eb54366ed1a956999f79d4cb3e479b5dcdb1c522fd01549f0ed8c2ff133421e1ee01ad27309206e2aa8fb8d7
+  checksum: d64b1203560c3ff6ce12780d10b8d2a72600e0d0a64f950b9b06e2a1579c51a3dd141a0496a41bc7fc18cbf385de00e16cbcb2d22663e7c3899b4499a3d1f7ec
   languageName: node
   linkType: hard
 
@@ -10119,12 +10119,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/shell@npm:^3.0.0-rc.5":
-  version: 3.0.0-rc.5
-  resolution: "@yarnpkg/shell@npm:3.0.0-rc.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40yarnpkg%2Fshell%2F-%2Fshell-3.0.0-rc.5.tgz"
+"@yarnpkg/shell@npm:^3.0.0-rc.6":
+  version: 3.0.0-rc.6
+  resolution: "@yarnpkg/shell@npm:3.0.0-rc.6"
   dependencies:
-    "@yarnpkg/fslib": ^2.5.0-rc.5
-    "@yarnpkg/parsers": ^2.4.0-rc.3
+    "@yarnpkg/fslib": ^2.5.0-rc.6
+    "@yarnpkg/parsers": ^2.4.0-rc.4
     chalk: ^3.0.0
     clipanion: ^3.0.0-rc.10
     cross-spawn: 7.0.3
@@ -10134,7 +10134,7 @@ __metadata:
     tslib: ^1.13.0
   bin:
     shell: ./lib/cli.js
-  checksum: 200c2418fb9a8bdc380c36a8cc5b6531b41e38739f68dfe8139e66ccd3c26f1557c94f43cf56f70dbbc5f6beeb768b9f1399f42fa43a58799c6ff9481a230835
+  checksum: e278181b7623ac97e13d73f3e6e18f19bebce33b691bf6f1ca2185b38e1b968ffdf8bc20f4f36029a76b83b9421bafbe7bc7cc3ab2c3cf70c03252d51cbe957c
   languageName: node
   linkType: hard
 
