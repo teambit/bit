@@ -13,7 +13,7 @@
 }
 
 .interactive:hover {
-  background: var(--bit-bg-color-highlight);
+  background: var(--bit-bg-heavy, #f6f6f6);
   cursor: pointer;
 }
 

@@ -35,7 +35,7 @@
   text-decoration: none;
   color: var(--bit-text-color-heavy);
   &:hover {
-    background-color: var(--bit-bg-color-highlight);
+    background-color: var(--bit-bg-heavy, #f6f6f6);
   }
   &:last-child {
     margin-bottom: 8px;
