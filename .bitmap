@@ -383,7 +383,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html"
+        "rootDir": "scopes/html/html"
     },
     "insights": {
         "scope": "teambit.explorer",
@@ -816,6 +816,12 @@
         "version": "0.0.388",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/deprecation-icon"
+    },
+    "ui/docs-app": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.tsx",
+        "rootDir": "scopes/react/ui/docs-app"
     },
     "ui/docs/create-heading": {
         "scope": "teambit.mdx",
