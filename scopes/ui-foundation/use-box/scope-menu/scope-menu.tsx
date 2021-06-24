@@ -25,7 +25,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon of="terminal" />
-          <Ellipsis>{`Bulk use components from ${scopeName}`}</Ellipsis>
+          <Ellipsis>{`Bulk import from ${scopeName}`}</Ellipsis>
         </div>
       </div>
       <TabContent
@@ -37,7 +37,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
         }
       >
         <div className={styles.importContent}>
-          <div>Use glob-patterns to import many components </div>
+          <div>Use a glob-pattern to import multiple components</div>
           <CopyBox>{`bit import "${scopeName}/*"`}</CopyBox>
         </div>
       </TabContent>
