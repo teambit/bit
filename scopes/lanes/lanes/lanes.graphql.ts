@@ -42,7 +42,8 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
 
       type Lanes {
         getLanes: [LanesData]
-        getCurrentLane: String
+        getLaneByName(name: String): LanesData
+        getCurrentLaneName: String
         getDiff(values: [String]): GetDiffResult
       }
 
@@ -60,7 +61,16 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
             isMerged: Boolean(lane.isMerged),
           }));
         },
-        getCurrentLane: (lanes: LanesMain) => {
+        getLaneByName: async (lanes: LanesMain, { name }: { name: string }) => {
+          const lanesResults = await lanes.getLanes({ name });
+          const laneResult = lanesResults[0];
+          return {
+            name: laneResult.name,
+            components: laneResult.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
+            isMerged: Boolean(laneResult.isMerged),
+          };
+        },
+        getCurrentLaneName: (lanes: LanesMain) => {
           return lanes.getCurrentLane();
         },
         getDiff: async (lanes: LanesMain, { values }: { values: string[] }) => {

@@ -230,7 +230,7 @@ export default class CommandHelper {
   showOneLaneParsed(name: string) {
     const results = this.runCmd(`bit lane show ${name} --json`);
     const parsed = JSON.parse(results);
-    return parsed.lanes[0];
+    return parsed;
   }
   diffLane(args = '', onScope = false) {
     const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;

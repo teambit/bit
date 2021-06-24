@@ -119,7 +119,7 @@ export class LaneShowCmd implements Command {
   description = `show lane details`;
   alias = '';
   options = [
-    ['j', 'json', 'show lanes details in json format'],
+    ['j', 'json', 'show the lane details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
   ] as CommandOptions;
   loader = true;
@@ -149,9 +149,8 @@ export class LaneShowCmd implements Command {
     const lanes = await this.lanes.getLanes({
       name,
       remote,
-      showDefaultLane: true,
     });
-    return lanes;
+    return lanes[0];
   }
 }
 
