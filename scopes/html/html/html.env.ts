@@ -9,4 +9,12 @@ export class HtmlEnv implements Environment {
   getMounter() {
     return require.resolve('./mount');
   }
+
+  getDependencies() {
+    return {
+      devDependencies: {
+        '@types/jest': '26.0.20',
+      },
+    };
+  }
 }

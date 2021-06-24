@@ -1,6 +1,5 @@
 import { HtmlAspect } from './html.aspect';
 
-export type { HtmlPreview } from './html.preview.runtime';
 export type { HtmlEnv } from './html.env';
 export type { HtmlMain } from './html.main.runtime';
 export type { HtmlComposition, HtmlFunctionComposition } from './interfaces';
