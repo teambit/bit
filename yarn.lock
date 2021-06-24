@@ -15691,6 +15691,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"diff-c3e3c3@workspace:scopes/lanes/diff":
+  version: 0.0.0-use.local
+  resolution: "diff-c3e3c3@workspace:scopes/lanes/diff"
+  languageName: unknown
+  linkType: soft
+
 "diff-sequences@npm:^26.6.2":
   version: 26.6.2
   resolution: "diff-sequences@npm:26.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fdiff-sequences%2F-%2Fdiff-sequences-26.6.2.tgz"
@@ -18382,15 +18388,6 @@ __metadata:
   version: 1.0.0
   resolution: "fs.realpath@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffs.realpath%2F-%2Ffs.realpath-1.0.0.tgz"
   checksum: 99ddea01a7e75aa276c250a04eedeffe5662bce66c65c07164ad6264f9de18fb21be9433ead460e54cff20e31721c811f4fb5d70591799df5f85dce6d6746fd0
-  languageName: node
-  linkType: hard
-
-"fsevents@^2.1.2, fsevents@~2.3.1":
-  version: 2.3.2
-  resolution: "fsevents@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffsevents%2F-%2Ffsevents-2.3.2.tgz"
-  dependencies:
-    node-gyp: latest
-  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
   languageName: node
   linkType: hard
 
@@ -22542,6 +22539,12 @@ __metadata:
 "label-bacb37@workspace:scopes/design/ui/label":
   version: 0.0.0-use.local
   resolution: "label-bacb37@workspace:scopes/design/ui/label"
+  languageName: unknown
+  linkType: soft
+
+"lanes-461520@workspace:scopes/lanes/lanes":
+  version: 0.0.0-use.local
+  resolution: "lanes-461520@workspace:scopes/lanes/lanes"
   languageName: unknown
   linkType: soft
 
@@ -29208,16 +29211,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@1.20.0, resolve@^1.1.6, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.3.2, resolve@^1.8.1":
-  version: 1.20.0
-  resolution: "resolve@npm:1.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fresolve%2F-%2Fresolve-1.20.0.tgz"
-  dependencies:
-    is-core-module: ^2.2.0
-    path-parse: ^1.0.6
-  checksum: 40cf70b2cde00ef57f99daf2dc63c6a56d6c14a1b7fc51735d06a6f0a3b97cb67b4fb7ef6c747b4e13a7baba83b0ef625d7c4ce92a483cd5af923c3b65fd16fe
-  languageName: node
-  linkType: hard
-
 "resolve@patch:resolve@1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.6#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.18.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.20.0
   resolution: "resolve@patch:resolve@npm%3A1.20.0%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Fresolve%252F-%252Fresolve-1.20.0.tgz#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
@@ -32526,46 +32519,6 @@ __metadata:
   bin:
     typescript-language-server: ./lib/cli.js
   checksum: e133ff7625c71f448b09c0dd58cc335c29d0f489b793ff8d096c72d8a475f599cfc7e3b696206c46d83df516a0b3580906192c0c32802d1f038fdf664287892a
-  languageName: node
-  linkType: hard
-
-typescript@3.9.7:
-  version: 3.9.7
-  resolution: "typescript@npm:3.9.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.7.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: d549bf1d3a93796b45be9d1dbebbef63777f8cc4d788461f4bfdb6cb07371a97d3e471c7f39dbe31107e8a25d6d8b2ef5e967af7e8e1768d9560bd95095b360b
-  languageName: node
-  linkType: hard
-
-typescript@4.1.5:
-  version: 4.1.5
-  resolution: "typescript@npm:4.1.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-4.1.5.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: af660e69aa5184520dfa57362dcf7fd1b26d08b869d76b3bd58dcc04058a757983f470cd61ded824ab01fa08a81d58c7f607d8e360f4e550664b9439d04f8e41
-  languageName: node
-  linkType: hard
-
-typescript@^2.6.2:
-  version: 2.9.2
-  resolution: "typescript@npm:2.9.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-2.9.2.tgz"
-  bin:
-    tsc: ./bin/tsc
-    tsserver: ./bin/tsserver
-  checksum: 88be998ac339b6e45f1cd15e22e4a0fedcdb5320d8d1d736e3996a0b9dff03728ebb2580a0658f0c52152b139ea9a405443f42a4ff8a2c4a1a6f4d58e0320132
-  languageName: node
-  linkType: hard
-
-typescript@^3.9.3:
-  version: 3.9.9
-  resolution: "typescript@npm:3.9.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.9.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 0dac8ae4b5ec76a2a5c0148fa718e64318d90d5309216554b3938afc911561860b6e6f95564c650cc5b7baa0360577c8b9a4fda272dd2d1fb376ad805863da06
   languageName: node
   linkType: hard
 
