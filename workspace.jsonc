@@ -8,8 +8,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    "installFromBitDevRegistry": false,
     "policy": {
       "dependencies": {
         "@babel/core": "7.11.6",
@@ -126,7 +124,7 @@
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.input.input": "1.0.2",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
-        "@teambit/evangelist.surfaces.tooltip": "1.0.2",
+        "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/harmony": "0.2.11",
         "@teambit/react.instructions.react.adding-compositions": "0.0.5",
         "@teambit/react.instructions.react.adding-tests": "0.0.5",
@@ -331,6 +329,8 @@
       "**/*.spec.ts"
     ],
     "strictPeerDependencies": true,
+    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
+    "installFromBitDevRegistry": false,
     "extraArgs": []
   },
   "teambit.generator/generator": {
