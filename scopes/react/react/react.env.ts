@@ -197,7 +197,7 @@ export class ReactEnv implements Environment {
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
-    const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
+    const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
