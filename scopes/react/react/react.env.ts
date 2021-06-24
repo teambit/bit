@@ -182,6 +182,7 @@ export class ReactEnv implements Environment {
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     // const fileMapPath = this.writeFileMap(context.components, true);
     // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
