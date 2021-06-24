@@ -176,6 +176,9 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
     return path;
   }
 
+  /**
+   * required for `bit start`
+   */
   getDevEnvId(id?: string) {
     if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;
@@ -190,6 +193,7 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
 
   /**
    * returns and configures the React component dev server.
+   * required for `bit start`
    */
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);

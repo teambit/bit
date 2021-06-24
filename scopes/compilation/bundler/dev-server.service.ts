@@ -63,7 +63,7 @@ export class DevServerService implements EnvService<ComponentServer> {
         if (!mainContext) mainContext = contextList[0];
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
-        const devServer: DevServer = devServerContext.envRuntime.env.getDevServer(devServerContext);
+        const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
 
         return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
       })

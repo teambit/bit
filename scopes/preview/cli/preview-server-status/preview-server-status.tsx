@@ -9,6 +9,14 @@ import type { CompilationResult } from '@teambit/preview.cli.webpack-events-list
 import { PreviewServerHeader } from './preview-server-header';
 import { PreviewServerRow } from './preview-server-row';
 
+export const IGNORE_WARNINGS = [
+  // Webpack 5+ has no facility to disable this warning.
+  // System.import is used in @angular/core for deprecated string-form lazy routes
+  /System.import\(\) is deprecated and will be removed soon/i,
+  // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83
+  /Failed to parse source map from/,
+];
+
 export type PreviewServerStatusProps = {
   previewServers: ComponentServer[];
   serverStats?: Record<string, CompilationResult>;
@@ -25,7 +33,9 @@ export function PreviewServerStatus({ previewServers, serverStats: servers = {} 
       ),
     [servers]
   );
-  const warnings = useMemo(() => flatten(Object.values(servers).map((x) => x.warnings)), [servers]);
+  const warnings = useMemo(() => flatten(Object.values(servers).map((x) => x.warnings)), [servers]).filter(
+    (warning) => !IGNORE_WARNINGS.find((reg) => warning?.message.match(reg))
+  );
 
   if (errors && errors.length) {
     return <Error errors={errors} level={ErrorLevel.ERROR} />;

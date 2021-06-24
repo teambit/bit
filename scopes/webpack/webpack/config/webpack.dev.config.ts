@@ -1,16 +1,17 @@
 import path from 'path';
-import webpack from 'webpack';
+import webpack, { Configuration } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { PubsubMain } from '@teambit/pubsub';
 import { fallbacks } from './webpack-fallbacks';
 
 import html from './html';
 
-import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
+import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin';
 
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -18,7 +19,15 @@ const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub, title?) {
+export function configFactory(
+  devServerID: string,
+  workspaceDir: string,
+  entryFiles: string[],
+  publicRoot: string,
+  publicPath: string,
+  pubsub: PubsubMain,
+  title?: string
+): Configuration {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -65,6 +74,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     stats: 'errors-only',
 
+    // @ts-ignore until types are updated with new options from webpack-dev-server v4
     devServer: {
       static: [
         {
@@ -142,7 +152,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         buffer: require.resolve('buffer/'),
       },
 
-      fallback: fallbacks,
+      fallback: fallbacks as any,
     },
 
     plugins: [

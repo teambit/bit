@@ -1,4 +1,4 @@
-import type { Compiler } from 'webpack';
+import type { Compiler, Stats } from 'webpack';
 import { WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from '../events';
 import { WebpackAspect } from '../webpack.aspect';
 
@@ -7,7 +7,7 @@ const PLUGIN_NAME = 'webpack-compiler-started-plugin';
 /**
  * Monitors Webpack's compilation, and updates progress to Bit
  */
-export default class WebpackBitReporterPlugin {
+export class WebpackBitReporterPlugin {
   // TODO: add plugin type from webpack and implement it
   pubsub: any;
   devServerID: string;
@@ -25,7 +25,7 @@ export default class WebpackBitReporterPlugin {
     });
 
     // "Executed when the compilation has completed."
-    compiler.hooks.done.tap(PLUGIN_NAME, (stats) => {
+    compiler.hooks.done.tap(PLUGIN_NAME, (stats: Stats) => {
       const event = new WebpackCompilationDoneEvent(Date.now(), stats, this.devServerID);
       this.pubsub.pub(WebpackAspect.id, event);
     });

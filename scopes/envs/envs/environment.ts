@@ -120,5 +120,8 @@ export interface DevEnv extends PreviewEnv {
    * Returns and configures the dev server
    * Required for `bit start`
    */
-  getDevServer?: (context: DevServerContext, transformers: WebpackConfigTransformer[]) => DevServer;
+  getDevServer?: (
+    context: DevServerContext,
+    transformers: WebpackConfigTransformer[]
+  ) => DevServer | Promise<DevServer>;
 }

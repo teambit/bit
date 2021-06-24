@@ -34,12 +34,12 @@ export interface DevServerContext extends ExecutionContext {
   /**
    * public path.
    */
-  publicPath?: string;
+  publicPath: string;
 
   /**
    * root path of the workspace.
    */
-  rootPath?: string;
+  rootPath: string;
 
   /**
    * title of the page.

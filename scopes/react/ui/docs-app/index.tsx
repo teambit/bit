@@ -17,7 +17,7 @@ export default function DocsRoot(
   Provider: React.ComponentType | undefined,
   componentId: string,
   docs: DocsFile | undefined,
-  compositions: any,
+  compositions: [React.ComponentType],
   context: RenderingContext
 ) {
   ReactDOM.render(

@@ -5411,18 +5411,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.brand-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.brand-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-0.6.7.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.6.7
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: e8be37bc00153a14f621801fb8cfa01754ad3e1479c1fe4c2e9ec5ad218ef28bc0434e69119ed9e9b0b5ea7af6d10e568d4ce75e3745b02447051b1a947953ab
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.brand-definition@npm:0.7.0":
   version: 0.7.0
   resolution: "@teambit/base-ui.theme.brand-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-0.7.0.tgz"
@@ -5444,18 +5432,6 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 4d4029ab3e66a136c1168c9692aaabd0651d876028e1b834f0f4edd64ea7994caf07a58242e909bebdd05c6ffb0dac50c319fa071aa5519e8fbfc4d4e8dbf9e1
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.color-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.color-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.color-definition%2F-%2Fbase-ui.theme.color-definition-0.6.7.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.6.7
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 4a29d9f7bd28142489bb4420fc5928e4152ba4a657138823fbf75f9f3ae64a2f6a765fccd689750cd77404abdbf28ffb1070562907c8fdd4fbdc472323770acc
   languageName: node
   linkType: hard
 
@@ -5504,16 +5480,6 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 9ad14f72f05d2c28a8146606c940201e9b50cd0c9d633053f3036ff70596502184b7c557e70928e606462ce7d4d56f046b327de4bdc4a72098ce7d604205556f
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.colors@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.colors@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.colors%2F-%2Fbase-ui.theme.colors-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 3f5afb39f3b2791954a5171d20a4a4ba3b9d98fd73c1611232fadf9b062c46e1ae09e75d75519df9fb06765b41cdac0d10de126c1a8953d6e9af2f1ff15d8768
   languageName: node
   linkType: hard
 
@@ -5664,16 +5630,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.heading-margin-definition%2F-%2Fbase-ui.theme.heading-margin-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: bb3a91e80b8d33fb11c348d41d1e95f095f7a7279b50144102185b7d9789177a66040cf2c5d1b7bc86179d978c42eafbd07bbb8c7a98939ee6a16dc186d6ead7
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.heading-margin-definition@npm:0.7.0":
   version: 0.7.0
   resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.heading-margin-definition%2F-%2Fbase-ui.theme.heading-margin-definition-0.7.0.tgz"
@@ -5696,16 +5652,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.shadow-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 30f8d6cd53e840d0b807cd7fa63e9c7591bf9d84f741c50ce171c4d1865fec87c8f6b0e14aea52d2b53503e961fac8a1706a2871c5ab91a4f4f060cc98950058
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.shadow-definition@npm:0.7.0":
   version: 0.7.0
   resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-0.7.0.tgz"
@@ -5725,16 +5671,6 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: aa43775d8743b0294806f811aec85039d5f8494bf7900a6d65135ba1eac5e669ba4491f3f934668b4267027acab8366b6e1e65ffac0b24daf42c91b8c8c79772
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.size-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.size-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.size-definition%2F-%2Fbase-ui.theme.size-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 576eba0b4544177a86c7982a884cf39219a2163278f09fc8a643ad49d7dc18b5f988482ae1eed22453095ee6954306b52bfdbcdcb27f7730fc80952e297d00fb
   languageName: node
   linkType: hard
 
@@ -6028,33 +5964,6 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 6186cd65b4100e4e86a76cace02126559cab8daec7e156aa4a80a5f28c68b5968361901d3f6f2da0e92b9aa5e26b6ca4122a22d481577d312aa81d648c1c5ec1
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-compositions@npm:3.0.8":
-  version: 3.0.8
-  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-3.0.8.tgz"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.8
-    "@teambit/evangelist.theme.icon-font": 0.5.20
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 4be1f4bd4e9c50570a09eeadd8ee6b89f2c326f45131c075666ed7b071a98de349bfb5e9f151527baa62573c92fac3de5937a1492cc920451fca8a8bd2db3f78
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-compositions@npm:3.0.9":
-  version: 3.0.9
-  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-3.0.9.tgz"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.9
-    "@teambit/evangelist.theme.icon-font": 0.5.20
-    core-js: 3.8.3
-  peerDependencies:
-    react: 16.13.1
-    react-dom: 16.13.1
-  checksum: ccf2be00d1b93dbf3d75eb1747658e857515bc71dfa17e7c5d25168b508bedbc3430e1a6080b6f266a7929f73e82e454ab2044d69e9e9b6fb5c281c31ff22f5d
   languageName: node
   linkType: hard
 
@@ -6790,16 +6699,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/evangelist.theme.icon-font@npm:0.5.20":
-  version: 0.5.20
-  resolution: "@teambit/evangelist.theme.icon-font@npm:0.5.20::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.theme.icon-font%2F-%2Fevangelist.theme.icon-font-0.5.20.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 528633c06b06b03ccc51a6ea7989c3ec123a784ecae81abeea41b57d55042e16e0011c562a0559c16e4b3a33e1b49951204c071066e921d7ff5d1fd8c3b9e98c
-  languageName: node
-  linkType: hard
-
 "@teambit/evangelist.theme.icon-font@npm:0.5.5":
   version: 0.5.5
   resolution: "@teambit/evangelist.theme.icon-font@npm:0.5.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.theme.icon-font%2F-%2Fevangelist.theme.icon-font-0.5.5.tgz"
@@ -7136,7 +7035,7 @@ __metadata:
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
     "@types/puppeteer": 3.0.5
-    "@types/react": ^17.0.8
+    "@types/react": 17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7149,13 +7048,13 @@ __metadata:
     "@types/url-join": 4.0.0
     "@types/url-parse": 1.4.3
     "@types/uuid": 3.4.9
-    "@types/webpack": 4.41.25
+    "@types/webpack": 5.28.0
     "@types/webpack-dev-server": 3.11.1
     "@types/webpack-merge": 4.1.5
     "@types/yargs": 17.0.0
     "@typescript-eslint/eslint-plugin": 4.13.0
     "@typescript-eslint/parser": 4.13.0
-    "@typescript-eslint/typescript-estree": 4.15.1
+    "@typescript-eslint/typescript-estree": 4.25.0
     "@vuedoc/parser": 2.4.0
     "@yarnpkg/cli": ^3.0.0-rc.6
     "@yarnpkg/core": ^3.0.0-rc.6
@@ -7208,7 +7107,7 @@ __metadata:
     comment-json: 3.0.3
     constants-browserify: 1.0.0
     copy-to-clipboard: 3.3.1
-    core-js: 3.10.0
+    core-js: 3.13.0
     cors: 2.8.5
     credentials-by-uri: 2.0.0
     cross-fetch: 3.0.6
@@ -7472,7 +7371,7 @@ __metadata:
     vscode-languageserver: 6.1.1
     vscode-ws-jsonrpc: 0.2.0
     vue-template-compiler: 2.6.12
-    webpack: 5.35.0
+    webpack: 5.36.2
     webpack-dev-middleware: 4.1.0
     webpack-dev-server: 4.0.0-beta.2
     webpack-hot-middleware: 2.25.0
@@ -7490,19 +7389,6 @@ __metadata:
     bit: bin/bit.js
   languageName: unknown
   linkType: soft
-
-"@teambit/mdx.ui.mdx-scope-context@npm:0.0.368":
-  version: 0.0.368
-  resolution: "@teambit/mdx.ui.mdx-scope-context@npm:0.0.368::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmdx.ui.mdx-scope-context%2F-%2Fmdx.ui.mdx-scope-context-0.0.368.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.86
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 1fa908b761a60bb0f8f5e0d0e4984bd5cabbb51136ab43bad71732e75e6c2d9306fe160725dfc0f11f5528d515bc79c38ee8b627f525ea6ff38b626e4606fb0a
-  languageName: node
-  linkType: hard
 
 "@teambit/model.composition-id@npm:0.0.259":
   version: 0.0.259
@@ -8680,14 +8566,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^17.0.8":
-  version: 17.0.11
-  resolution: "@types/react@npm:17.0.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.11.tgz"
+"@types/react@npm:17.0.8":
+  version: 17.0.8
+  resolution: "@types/react@npm:17.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.8.tgz"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 89e80ee8e08988abca0266e5e131f57b2e18f326bebfa0ed0a06b0bca29621a5a8202d617254a053f659b9c18090c52cae0aa475a6c6036b8858030f1d448e47
+  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
   languageName: node
   linkType: hard
 
@@ -8909,17 +8795,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/webpack@npm:4.41.25":
-  version: 4.41.25
-  resolution: "@types/webpack@npm:4.41.25::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fwebpack%2F-%2Fwebpack-4.41.25.tgz"
+"@types/webpack@npm:5.28.0":
+  version: 5.28.0
+  resolution: "@types/webpack@npm:5.28.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fwebpack%2F-%2Fwebpack-5.28.0.tgz"
   dependencies:
-    "@types/anymatch": "*"
     "@types/node": "*"
-    "@types/tapable": "*"
-    "@types/uglify-js": "*"
-    "@types/webpack-sources": "*"
-    source-map: ^0.6.0
-  checksum: 90141c04f8662beae69626c31a0a5f21cf9d5886106ec1ee9f81d0aca8dfcb3e1046c161c2f61b6898429ba0d9cfeaa305807c3a81e6fc0886a329c62ce311a2
+    tapable: ^2.2.0
+    webpack: ^5
+  checksum: a038d7e12dd109c6a8d2eb744fd32070ef94f1655e730fb1443b370db98864c3a0e408638b02d12ba08269b9c012b3be8b801117ced2d1102e7676203fd663ed
   languageName: node
   linkType: hard
 
@@ -9255,6 +9138,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/types@npm:4.25.0":
+  version: 4.25.0
+  resolution: "@typescript-eslint/types@npm:4.25.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40typescript-eslint%2Ftypes%2F-%2Ftypes-4.25.0.tgz"
+  checksum: 6048c9bbcb3063a4d2a64fb8b513db4ad502cbfff9f31758e7b7fb093c610a57d0ac79183c125f061e4b0fffb21916d64cac6f722d11a8b75d02b78963c8422c
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/types@npm:4.4.1":
   version: 4.4.1
   resolution: "@typescript-eslint/types@npm:4.4.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40typescript-eslint%2Ftypes%2F-%2Ftypes-4.4.1.tgz"
@@ -9354,6 +9244,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/typescript-estree@npm:4.25.0":
+  version: 4.25.0
+  resolution: "@typescript-eslint/typescript-estree@npm:4.25.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40typescript-eslint%2Ftypescript-estree%2F-%2Ftypescript-estree-4.25.0.tgz"
+  dependencies:
+    "@typescript-eslint/types": 4.25.0
+    "@typescript-eslint/visitor-keys": 4.25.0
+    debug: ^4.1.1
+    globby: ^11.0.1
+    is-glob: ^4.0.1
+    semver: ^7.3.2
+    tsutils: ^3.17.1
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 7c51e4a35367ca638676dc174953dc223d104621bbcdccefec8878ce990fe52a1815ae7f3090fbc66a57ea7653fc7f443841b17c2933a1b5b1346e0441a5dfd4
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/typescript-estree@npm:4.4.1":
   version: 4.4.1
   resolution: "@typescript-eslint/typescript-estree@npm:4.4.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40typescript-eslint%2Ftypescript-estree%2F-%2Ftypescript-estree-4.4.1.tgz"
@@ -9409,6 +9317,16 @@ __metadata:
     "@typescript-eslint/types": 4.16.1
     eslint-visitor-keys: ^2.0.0
   checksum: a02cd959fae7572237eea5b9f5d3056fd5ac600f147f60c6f9025bc1d17801e1c05149ea2b32059d8b7a839914cec1c205f412ac4ed4123f43cf9eeec7a97ada
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/visitor-keys@npm:4.25.0":
+  version: 4.25.0
+  resolution: "@typescript-eslint/visitor-keys@npm:4.25.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40typescript-eslint%2Fvisitor-keys%2F-%2Fvisitor-keys-4.25.0.tgz"
+  dependencies:
+    "@typescript-eslint/types": 4.25.0
+    eslint-visitor-keys: ^2.0.0
+  checksum: 8796635677d2707fcfca3557095f7a6ddadc020fd8f719e1d51e159441db3f73924601f759ec3b68ce8f284eead90b56cdb1429174728512f147821728e6adc8
   languageName: node
   linkType: hard
 
@@ -10537,12 +10455,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.0.4":
-  version: 8.1.0
-  resolution: "acorn@npm:8.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Facorn%2F-%2Facorn-8.1.0.tgz"
+"acorn@npm:^8.2.1":
+  version: 8.4.0
+  resolution: "acorn@npm:8.4.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Facorn%2F-%2Facorn-8.4.0.tgz"
   bin:
     acorn: bin/acorn
-  checksum: 71ce276f632451bc691719f3cf6e866405fa2e94dd26cbdfb9efd05d6aacba5fcdd44722eceea4b29052e40ae34965628d9c9db686ed88b6cc9240c939e0e221
+  checksum: 9ccc11b2b3e3bdb8801ac23a0da38c0f2996445f63aacde0f5022effa550f18fdf9fea77e85c33f00386a277cce4dfdbcb2f3dbb8af29a6d3a707c78af1d5e90
   languageName: node
   linkType: hard
 
@@ -13704,8 +13622,6 @@ __metadata:
 "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button":
   version: 0.0.0-use.local
   resolution: "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button"
-  dependencies:
-    "@teambit/documenter.theme.theme-compositions": 3.0.8
   languageName: unknown
   linkType: soft
 
@@ -14429,10 +14345,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:3.10.0":
-  version: 3.10.0
-  resolution: "core-js@npm:3.10.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.10.0.tgz"
-  checksum: d3ae5274ac6332204b98de1947edc090cac1e6d16d8cbebbeda5ba62afa69a122b1e52e5fff166217b4217b50b0729c5268d3f6612eea8a54b7b65c11d45bb58
+"core-js@npm:3.13.0":
+  version: 3.13.0
+  resolution: "core-js@npm:3.13.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.13.0.tgz"
+  checksum: b6498cdea607ff3a11b4986b0311266f3e717f8423e6bca9b87ac43161232413ad8d4d29233bcb2500ff7934ae49023f7e623603db34634b593360aaac952fc5
   languageName: node
   linkType: hard
 
@@ -16232,8 +16148,6 @@ __metadata:
 "empty-box-dbdece@workspace:scopes/design/ui/empty-box":
   version: 0.0.0-use.local
   resolution: "empty-box-dbdece@workspace:scopes/design/ui/empty-box"
-  dependencies:
-    "@teambit/documenter.theme.theme-compositions": 3.0.9
   languageName: unknown
   linkType: soft
 
@@ -16945,6 +16859,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-scope@npm:5.1.1, eslint-scope@npm:^5.0.0, eslint-scope@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "eslint-scope@npm:5.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feslint-scope%2F-%2Feslint-scope-5.1.1.tgz"
+  dependencies:
+    esrecurse: ^4.3.0
+    estraverse: ^4.1.1
+  checksum: 47e4b6a3f0cc29c7feedee6c67b225a2da7e155802c6ea13bbef4ac6b9e10c66cd2dcb987867ef176292bf4e64eccc680a49e35e9e9c669f4a02bac17e86abdb
+  languageName: node
+  linkType: hard
+
 "eslint-scope@npm:^3.7.1":
   version: 3.7.3
   resolution: "eslint-scope@npm:3.7.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feslint-scope%2F-%2Feslint-scope-3.7.3.tgz"
@@ -16952,16 +16876,6 @@ __metadata:
     esrecurse: ^4.1.0
     estraverse: ^4.1.1
   checksum: 9b9b81fc1056f02db2ad0130dc494d54a2bf6417e2777e38c7aca8a659261870ad1686c98adf2d5501558cf3fb5c6f977a7893027c99307b5c44e9b3fe53c3a5
-  languageName: node
-  linkType: hard
-
-"eslint-scope@npm:^5.0.0, eslint-scope@npm:^5.1.1":
-  version: 5.1.1
-  resolution: "eslint-scope@npm:5.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feslint-scope%2F-%2Feslint-scope-5.1.1.tgz"
-  dependencies:
-    esrecurse: ^4.3.0
-    estraverse: ^4.1.1
-  checksum: 47e4b6a3f0cc29c7feedee6c67b225a2da7e155802c6ea13bbef4ac6b9e10c66cd2dcb987867ef176292bf4e64eccc680a49e35e9e9c669f4a02bac17e86abdb
   languageName: node
   linkType: hard
 
@@ -31984,9 +31898,6 @@ __metadata:
 "time-ago-d19018@workspace:scopes/design/ui/time-ago":
   version: 0.0.0-use.local
   resolution: "time-ago-d19018@workspace:scopes/design/ui/time-ago"
-  dependencies:
-    "@teambit/documenter.ui.heading": 1.0.3
-    "@teambit/documenter.ui.paragraph": 1.0.3
   languageName: unknown
   linkType: soft
 
@@ -33875,6 +33786,16 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
+"watchpack@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "watchpack@npm:2.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwatchpack%2F-%2Fwatchpack-2.2.0.tgz"
+  dependencies:
+    glob-to-regexp: ^0.4.1
+    graceful-fs: ^4.1.2
+  checksum: e275f48fae29edee3195c51a8312b609581b9be5ce323d3102ffd082cb124f48d7a393ce05e4110239e4354379e04d78a97ceb26ae367746e7e218bf258135c8
+  languageName: node
+  linkType: hard
+
 "wbuf@npm:^1.1.0, wbuf@npm:^1.7.3":
   version: 1.7.3
   resolution: "wbuf@npm:1.7.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwbuf%2F-%2Fwbuf-1.7.3.tgz"
@@ -34045,16 +33966,26 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.35.0":
-  version: 5.35.0
-  resolution: "webpack@npm:5.35.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack%2F-%2Fwebpack-5.35.0.tgz"
+"webpack-sources@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "webpack-sources@npm:2.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-sources%2F-%2Fwebpack-sources-2.3.0.tgz"
+  dependencies:
+    source-list-map: ^2.0.1
+    source-map: ^0.6.1
+  checksum: f0b3d13d3f350712c828c7187573d43d15fc1a96a11e81f69e3f10220d611dab95b529aca79ded9690a94040491bd7e4d84717f4467762211762cd01795a7b71
+  languageName: node
+  linkType: hard
+
+"webpack@npm:5.36.2":
+  version: 5.36.2
+  resolution: "webpack@npm:5.36.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack%2F-%2Fwebpack-5.36.2.tgz"
   dependencies:
     "@types/eslint-scope": ^3.7.0
     "@types/estree": ^0.0.47
     "@webassemblyjs/ast": 1.11.0
     "@webassemblyjs/wasm-edit": 1.11.0
     "@webassemblyjs/wasm-parser": 1.11.0
-    acorn: ^8.0.4
+    acorn: ^8.2.1
     browserslist: ^4.14.5
     chrome-trace-event: ^1.0.2
     enhanced-resolve: ^5.8.0
@@ -34077,7 +34008,43 @@ typescript@^3.9.3:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: f4d27563fe8c51d1bdc9e195f7eb46abc73c9ec05ab508c66d82eca7a55eed385889e95575149ce47840f62a004700cb0cba3cb2fab3dd0eeb28a1f33269c287
+  checksum: d3830852b98c51c823acf2e630f4d2080e96f584eec1d227dc6f59fe9f452197a0bf36fc2b3adf36ecdd9533df116e1f61e466f8a1c6e0d1a4d1f6efd414f054
+  languageName: node
+  linkType: hard
+
+"webpack@npm:^5":
+  version: 5.38.1
+  resolution: "webpack@npm:5.38.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack%2F-%2Fwebpack-5.38.1.tgz"
+  dependencies:
+    "@types/eslint-scope": ^3.7.0
+    "@types/estree": ^0.0.47
+    "@webassemblyjs/ast": 1.11.0
+    "@webassemblyjs/wasm-edit": 1.11.0
+    "@webassemblyjs/wasm-parser": 1.11.0
+    acorn: ^8.2.1
+    browserslist: ^4.14.5
+    chrome-trace-event: ^1.0.2
+    enhanced-resolve: ^5.8.0
+    es-module-lexer: ^0.4.0
+    eslint-scope: 5.1.1
+    events: ^3.2.0
+    glob-to-regexp: ^0.4.1
+    graceful-fs: ^4.2.4
+    json-parse-better-errors: ^1.0.2
+    loader-runner: ^4.2.0
+    mime-types: ^2.1.27
+    neo-async: ^2.6.2
+    schema-utils: ^3.0.0
+    tapable: ^2.1.1
+    terser-webpack-plugin: ^5.1.1
+    watchpack: ^2.2.0
+    webpack-sources: ^2.3.0
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack: bin/webpack.js
+  checksum: 631f0e838dd83f2f735f047a161daba2dd58b1550af5bcbe2df4ad25cfc3d836a48d038cf2ded3669ff2e1f6db58fa38866abe8c537b8fea32bda86e1223cb4f
   languageName: node
   linkType: hard
 
