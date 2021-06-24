@@ -12,7 +12,7 @@
   padding-right: 8px;
   font-size: var(--bit-p-xs);
   &:hover {
-    background: var(--bit-bg-color-highlight);
+    background: var(--bit-bg-heavy, #f6f6f6);
   }
 
   .arrow {

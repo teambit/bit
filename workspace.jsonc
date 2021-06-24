@@ -8,8 +8,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    "installFromBitDevRegistry": false,
     "policy": {
       "dependencies": {
         "@babel/core": "7.11.6",
@@ -67,7 +65,7 @@
         "@teambit/base-ui.routing.nav-link": "1.0.0",
         "@teambit/base-ui.routing.routing-provider": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
-        "@teambit/base-ui.surfaces.card": "1.0.0",
+        "@teambit/base-ui.surfaces.card": "1.0.1",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "1.0.0",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "1.0.0",
         "@teambit/base-ui.text.heading": "1.0.1",
@@ -75,9 +73,9 @@
         "@teambit/base-ui.text.paragraph": "1.0.1",
         "@teambit/base-ui.text.text-sizes": "1.0.0",
         "@teambit/base-ui.text.themed-text": "1.0.1",
-        "@teambit/base-ui.theme.accent-color": "1.0.0",
+        "@teambit/base-ui.theme.accent-color": "1.1.0",
         "@teambit/base-ui.theme.colors": "1.0.0",
-        "@teambit/base-ui.theme.dark-theme": "1.0.1",
+        "@teambit/base-ui.theme.dark-theme": "1.0.2",
         "@teambit/base-ui.theme.fonts.roboto": "1.0.0",
         "@teambit/base-ui.theme.sizes": "1.0.0",
         "@teambit/base-ui.theme.theme-provider": "0.6.14",
@@ -118,14 +116,14 @@
         "@teambit/documenter.ui.table.td": "4.0.1",
         "@teambit/documenter.ui.table.tr": "4.0.1",
         "@teambit/documenter.ui.ul": "4.0.1",
-        "@teambit/evangelist.elements.button": "1.0.2",
+        "@teambit/evangelist.elements.button": "1.0.3",
         "@teambit/evangelist.elements.heading": "1.0.2",
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.elements.image": "1.0.2",
         "@teambit/evangelist.elements.x-button": "1.0.2",
-        "@teambit/evangelist.input.checkbox.label": "1.0.2",
+        "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.input.input": "1.0.2",
-        "@teambit/evangelist.surfaces.dropdown": "1.0.1",
+        "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/harmony": "0.2.11",
         "@teambit/react.instructions.react.adding-compositions": "0.0.5",
@@ -331,6 +329,8 @@
       "**/*.spec.ts"
     ],
     "strictPeerDependencies": true,
+    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
+    "installFromBitDevRegistry": false,
     "extraArgs": []
   },
   "teambit.generator/generator": {
