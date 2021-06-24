@@ -1,5 +1,5 @@
 import { Menu, MenuProps } from '@teambit/ui-foundation.ui.menu';
-import { ScopeContext } from '@teambit/scope'; // we need to separate the provider and context from aspect. is this ok for now?
+import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import classNames from 'classnames';
 import React, { useContext } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';

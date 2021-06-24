@@ -445,6 +445,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "models/scope-model": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/models/scope-model"
+    },
     "modules/babel-compiler": {
         "scope": "teambit.compilation",
         "version": "0.0.26",
@@ -955,6 +961,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
+    "ui/hooks/scope-context": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/ui/hooks/scope-context"
+    },
     "ui/hooks/use-bind-key": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.388",
@@ -990,6 +1002,12 @@
         "version": "0.0.81",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-is-mobile"
+    },
+    "ui/hooks/use-scope": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/ui/hooks/use-scope"
     },
     "ui/hooks/use-snaps": {
         "scope": "teambit.component",
