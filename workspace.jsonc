@@ -8,8 +8,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    "installFromBitDevRegistry": false,
     "policy": {
       "dependencies": {
         "@babel/core": "7.11.6",
@@ -242,6 +240,7 @@
         "lodash.compact": "3.0.1",
         "lodash.head": "4.0.1",
         "lodash.pick": "4.4.0",
+        "map-obj": "4.2.1",
         "memoize-one": "5.1.1",
         "memoizee": "0.4.15",
         "memory-fs": "0.5.0",
@@ -331,6 +330,8 @@
       "**/*.spec.ts"
     ],
     "strictPeerDependencies": true,
+    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
+    "installFromBitDevRegistry": false,
     "extraArgs": []
   },
   "teambit.generator/generator": {

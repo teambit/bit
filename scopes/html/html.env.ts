@@ -1,9 +1,12 @@
 import { Environment } from '@teambit/envs';
 
 export class HtmlEnv implements Environment {
-  icon = 'https://static.bit.dev/file_type_html5.svg';
+  icon = 'https://static.bit.dev/file-icons/file_type_html.svg';
 
-  getMounter(){
+  getDocsTemplate() {
+    return require.resolve('./html-docs-app');
+  }
+  getMounter() {
     return require.resolve('./mount');
   }
 }
