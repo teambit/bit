@@ -74,6 +74,27 @@ export default function (fileMapPath: string, workDir: string): Configuration {
             ],
           },
         },
+        // MDX support (move to the mdx aspect and extend from there)
+        {
+          test: /\.mdx?$/,
+          // to skip any files linked from other projects (like Bit itself)
+          include: path.join(workDir, 'node_modules'),
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          descriptionData: { componentId: (value) => !!value },
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
+              },
+            },
+            {
+              loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+            },
+          ],
+        },
       ],
     },
   };
