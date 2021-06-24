@@ -4,7 +4,7 @@ import { fallbacks } from './webpack-fallbacks';
 
 const html = require('./html');
 
-export function configFactory(entries, rootPath): Configuration {
+export function configFactory(entries: string[], rootPath: string): Configuration {
   return {
     mode: 'production',
     // Stop compilation early in production

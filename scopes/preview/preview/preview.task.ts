@@ -41,7 +41,7 @@ export class PreviewTask implements BuildTask {
       rootPath: url,
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
     return bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);

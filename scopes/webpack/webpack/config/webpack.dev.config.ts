@@ -1,5 +1,5 @@
 import path from 'path';
-import webpack, { Configuration } from 'webpack';
+import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -7,6 +7,8 @@ import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddle
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
 import { PubsubMain } from '@teambit/pubsub';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 
 import html from './html';
@@ -27,7 +29,7 @@ export function configFactory(
   publicPath: string,
   pubsub: PubsubMain,
   title?: string
-): Configuration {
+): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -60,7 +62,7 @@ export function configFactory(
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
-      devtoolModuleFilenameTemplate: (info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolModuleFilenameTemplate: (info) => pathNormalizeToLinux(path.resolve(info.absoluteResourcePath)),
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
@@ -74,8 +76,8 @@ export function configFactory(
 
     stats: 'errors-only',
 
-    // @ts-ignore until types are updated with new options from webpack-dev-server v4
     devServer: {
+      // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicDirectory),

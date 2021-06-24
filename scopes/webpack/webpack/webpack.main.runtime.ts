@@ -67,13 +67,11 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const transformerContext: WebpackConfigTransformContext = {
-      mode: 'dev',
-    };
+    const transformerContext: WebpackConfigTransformContext = { mode: 'dev' };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
 
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.rawbaseWebpack || afterMutation.raw, webpack, WsDevServer);
+    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
 
   mergeConfig(target: any, source: any): any {
@@ -82,9 +80,7 @@ export class WebpackMain {
 
   createBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
     const configs = this.createPreviewConfig(context.targets);
-    const transformerContext: WebpackConfigTransformContext = {
-      mode: 'prod',
-    };
+    const transformerContext: WebpackConfigTransformContext = { mode: 'prod' };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);

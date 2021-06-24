@@ -83,18 +83,6 @@
         }
       }
     },
-    "teambit.angular/angular": {
-      "description": "Apply the Angular environment on components",
-      "type": "object",
-      "properties": {
-        "angularVersion": {
-          "description": "Sets Angular major version",
-          "type": "number",
-          "default": 12,
-          "examples": [12, 11, 10, 9]
-        }
-      }
-    },
     "teambit.workspace/variants": {
       "description": "Workspace variants allow to set different subsets of configuration for components in your workspace. This is extremely useful for upgrading, aligning and building components with a new set of dependencies.",
       "type": "object",

@@ -193,12 +193,7 @@ export class JestTester implements Tester {
         await workerApi.onTestComplete(cbFn);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        await workerApi.watch(
-          this.jestModule,
-          this.jestConfig,
-          this.patternsToArray(context.patterns),
-          context.rootPath
-        );
+        await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
       } catch (err) {
         this.logger.error('jest.tester.watch() caught an error', err);
       }

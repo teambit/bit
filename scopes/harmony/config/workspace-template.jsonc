@@ -64,7 +64,7 @@
        * uncomment to apply the chosen environment on all components.
        **/
       // "teambit.react/react": { }
-      // "teambit.angular/angular": { }
+      // "teambit.angular/angular-v12": { }
     }
   }
 }
