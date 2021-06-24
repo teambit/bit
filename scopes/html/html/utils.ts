@@ -1,5 +1,5 @@
 import { HtmlComposition } from './interfaces';
-import { renderTemplate } from '@teambit/html.module.utils';
+import { renderTemplate } from '@teambit/html.modules.render-template';
 
 /**
  * this mounts compositions into the DOM in the component preview.
