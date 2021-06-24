@@ -60,7 +60,12 @@ export default function (fileMapPath: string, workDir: string): Configuration {
             configFile: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app'),
+              [
+                require.resolve('babel-preset-react-app'),
+                {
+                  runtime: 'automatic',
+                },
+              ],
             ],
             plugins: [
               // require.resolve('react-refresh/babel'),

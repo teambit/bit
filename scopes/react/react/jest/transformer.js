@@ -2,7 +2,12 @@
 const { transform } = require('@babel/core');
 
 const presets = [
-  require('@babel/preset-react'),
+  [
+    require('@babel/preset-react'),
+    {
+      runtime: 'automatic',
+    },
+  ],
   require('@babel/preset-typescript'),
   require('babel-preset-jest'),
   [
