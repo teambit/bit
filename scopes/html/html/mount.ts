@@ -4,24 +4,16 @@ import { HtmlAspect } from './html.aspect';
 import { RenderHtmlComposition } from './utils';
 import { HtmlComposition } from './interfaces';
 
+// TODO implement wrapping for providers with html env
 // function wrap(Component: ComponentType, WrapperComponent?: ComponentType): ComponentType {
 //   function Wrapper({ children }: { children?: ReactNode }) {
-//     if (!WrapperComponent) return <Component>{children}</Component>;
-
-//     return (
-//       <WrapperComponent>
-//         <Component>{children}</Component>
-//       </WrapperComponent>
-//     );
-//   }
 
 //   return Wrapper;
 // }
 
-
 /**
  * HOC to wrap and mount all registered providers into the DOM.
- * TODO implement for regular html providers/wrappers
+ * TODO implement for regular html providers/wrappers with wrap function above
  */
 export function withProviders() {
   return `<div></div>`
@@ -36,7 +28,7 @@ function ensureRootElementInBody() {
 
 const getRoot = () => document.getElementById('root') || ensureRootElementInBody();
 
-export default (composition: HtmlComposition) => {
+export default function mountHtmlComposition (composition: HtmlComposition){
   const root = getRoot();
   RenderHtmlComposition(root, composition);
 } 

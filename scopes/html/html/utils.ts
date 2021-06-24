@@ -1,19 +1,5 @@
 import { HtmlComposition } from './interfaces';
-
-export async function fetchHtmlFromUrl(url: string) {
-    return fetch(url)
-        .then(response => response.text())
-        .then(data => data)
-}
-
-export function createElementFromString(htmlString: string) {
-    const htmlFragment = document.createRange().createContextualFragment(htmlString);
-    return htmlFragment;
-}
-
-export function renderTemplate(root: HTMLElement, template: string) {
-    root.appendChild(createElementFromString(template));
-}
+import { renderTemplate } from '@teambit/html.module.utils';
 
 /**
  * this mounts compositions into the DOM in the component preview.

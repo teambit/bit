@@ -445,6 +445,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "module/utils": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/html/utils"
+    },
     "modules/babel-compiler": {
         "scope": "teambit.compilation",
         "version": "0.0.23",
