@@ -8,7 +8,7 @@ import '@teambit/react.babel.bit-react-transformer';
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (fileMapPath: string, workDir: string): Configuration {
+export default function (workDir: string): Configuration {
   return {
     module: {
       rules: [
@@ -45,34 +45,6 @@ export default function (fileMapPath: string, workDir: string): Configuration {
               },
             },
           ],
-        },
-        {
-          test: /\.(mjs|js|jsx|tsx|ts)$/,
-          // TODO: use a more specific exclude for our selfs
-          exclude: [/node_modules/, /dist/],
-          include: workDir,
-          resolve: {
-            fullySpecified: false,
-          },
-          loader: require.resolve('babel-loader'),
-          options: {
-            babelrc: false,
-            configFile: false,
-            presets: [
-              // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app'),
-            ],
-            plugins: [
-              // require.resolve('react-refresh/babel'),
-              // for component highlighting in preview.
-              [
-                require.resolve('@teambit/react.babel.bit-react-transformer'),
-                {
-                  componentFilesPath: fileMapPath,
-                },
-              ],
-            ],
-          },
         },
         // MDX support (move to the mdx aspect and extend from there)
         {

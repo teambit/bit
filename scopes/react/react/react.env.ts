@@ -180,8 +180,9 @@ export class ReactEnv implements Environment {
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
-    const fileMapPath = this.writeFileMap(context.components, true);
-    const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const fileMapPath = this.writeFileMap(context.components, true);
+    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
@@ -192,9 +193,10 @@ export class ReactEnv implements Environment {
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const fileMapPath = this.writeFileMap(context.components);
+    // const fileMapPath = this.writeFileMap(context.components);
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
+    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
