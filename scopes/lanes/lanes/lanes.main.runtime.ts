@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import { LaneDiffCmd } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { LanesAspect } from './lanes.aspect';
@@ -51,6 +51,17 @@ export class LanesMain {
   getCurrentLane(): string | null {
     if (!this.workspace?.consumer) return null;
     return this.scope.legacyScope.lanes.getCurrentLaneName();
+  }
+
+  /**
+   * the values array may include zero to two values and will be processed as following:
+   * [] => diff between the current lane and default lane. (only inside workspace).
+   * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
+   * [from, to] => diff between "from" lane and "to" lane.
+   */
+  public getDiff(values: string[]) {
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    return laneDiffGenerator.generate(values);
   }
 
   private getLaneDataOfDefaultLane(): LaneData | null {

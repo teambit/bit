@@ -2,7 +2,7 @@ import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 import { LanesMain } from './lanes.main.runtime';
 
-export function lanesSchema(lanes: LanesMain): Schema {
+export function lanesSchema(lanesMain: LanesMain): Schema {
   return {
     typeDefs: gql`
       type CompLaneData {
@@ -16,9 +16,34 @@ export function lanesSchema(lanes: LanesMain): Schema {
         isMerged: Boolean
       }
 
+      type FileDiff {
+        filePath: String!
+        diffOutput: String
+      }
+
+      type FieldsDiff {
+        fieldName: String!
+        diffOutput: String
+      }
+
+      type DiffResults {
+        id: String
+        hasDiff: Boolean
+        filesDiff: [FileDiff]
+        fieldsDiff: [FieldsDiff]
+      }
+
+      type GetDiffResult {
+        newComps: [String]
+        compsWithNoChanges: [String]
+        toLaneName: String
+        compsWithDiff: [DiffResults]
+      }
+
       type Lanes {
         getLanes: [LanesData]
         getCurrentLane: String
+        getDiff(values: [String]): GetDiffResult
       }
 
       type Query {
@@ -27,7 +52,7 @@ export function lanesSchema(lanes: LanesMain): Schema {
     `,
     resolvers: {
       Lanes: {
-        getLanes: async () => {
+        getLanes: async (lanes: LanesMain) => {
           const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
@@ -35,12 +60,19 @@ export function lanesSchema(lanes: LanesMain): Schema {
             isMerged: Boolean(lane.isMerged),
           }));
         },
-        getCurrentLane: () => {
+        getCurrentLane: (lanes: LanesMain) => {
           return lanes.getCurrentLane();
+        },
+        getDiff: async (lanes: LanesMain, { values }: { values: string[] }) => {
+          const getDiffResults = await lanes.getDiff(values);
+          return {
+            ...getDiffResults,
+            compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
+          };
         },
       },
       Query: {
-        lanes: () => lanes,
+        lanes: () => lanesMain,
       },
     },
   };
