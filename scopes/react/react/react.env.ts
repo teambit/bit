@@ -219,7 +219,7 @@ export class ReactEnv implements Environment {
    * return a path to a docs template.
    */
   getDocsTemplate() {
-    return require.resolve('./docs');
+    return require.resolve('@teambit/react.ui.docs-app');
   }
 
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
