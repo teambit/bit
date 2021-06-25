@@ -27,9 +27,16 @@ import { Config } from '@teambit/harmony/dist/harmony-config';
 import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
+import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -179,6 +186,7 @@ function shouldLoadInSafeMode() {
 }
 
 export async function loadBit(path = process.cwd()) {
+  clearGlobalsIfNeeded();
   const loadCLIOnly = shouldLoadInSafeMode();
   const config = await getConfig(path);
   registerCoreExtensions();
@@ -227,4 +235,33 @@ function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) 
   });
   // @ts-ignore
   DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
+}
+
+/**
+ * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
+ * when it happens, the static methods in this function still have the callbacks that were added in
+ * the previous loadBit call. this callbacks have the old data such as workspace/bitmap/consumer
+ * of the previous workspace, which leads to hard-to-debug issues.
+ */
+function clearGlobalsIfNeeded() {
+  if (!loadConsumer.cache) {
+    return;
+  }
+  delete loadConsumer.cache;
+  ComponentLoader.onComponentLoadSubscribers = [];
+  ComponentOverrides.componentOverridesLoadingRegistry = {};
+  ComponentConfig.componentConfigLegacyLoadingRegistry = {};
+  ComponentConfig.componentConfigLoadingRegistry = {};
+  PackageJsonTransformer.packageJsonTransformersRegistry = [];
+  // @ts-ignore
+  DependencyResolver.getWorkspacePolicy = undefined;
+  // @ts-ignore
+  ManyComponentsWriter.externalInstaller = {};
+  ExtensionDataList.coreExtensionsNames = new Map();
+  // @ts-ignore
+  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
+  // @ts-ignore
+  WorkspaceConfig.workspaceConfigIsExistRegistry = undefined;
+  // @ts-ignore
+  WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }
