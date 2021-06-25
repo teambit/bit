@@ -4912,16 +4912,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.input.checkbox.hidden@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@teambit/base-ui.input.checkbox.hidden@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.input.checkbox.hidden%2F-%2Fbase-ui.input.checkbox.hidden-1.0.0.tgz"
+"@teambit/base-ui.input.checkbox.hidden@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.input.checkbox.hidden@npm:1.0.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: cb249968c3b2ff15d5f084308c429405fe8f1764811242d4787ab7849846b3cb7935c34df4ddd85a759c87327e6630820d98baf02d31ccad74838fe80e8dbf06
+  checksum: e60c29907f52b2007b20f92431046471df53b75f7d1343df13132528fbeed28f9d3796520c04c2704ca63ab5adebfafb12c21654686027d0af0826c388566724
   languageName: node
   linkType: hard
 
@@ -4938,17 +4938,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.input.checkbox.label@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@teambit/base-ui.input.checkbox.label@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.input.checkbox.label%2F-%2Fbase-ui.input.checkbox.label-1.0.0.tgz"
+"@teambit/base-ui.input.checkbox.label@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.input.checkbox.label@npm:1.0.1"
   dependencies:
-    "@teambit/base-ui.input.checkbox.hidden": 1.0.0
+    "@teambit/base-ui.input.checkbox.hidden": 1.0.1
     "@teambit/base-ui.input.checkbox.indicator": 1.0.0
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 2902cd58fbeff986d3adcea441a1fb9986b35419e8f892d4d63fc8471def9187a145624e986be1a6869af86590fb25bd70b62235e28a769c50c1d4967cce36e5
+  checksum: d009d79c69e0a9a39b78c76a86b9fc297bffe970ff56bb1858742934166daf46b6ccc316c4a3ead2ea740a9157121bb8ea2876e396ef376161ed9452e4aa038e
   languageName: node
   linkType: hard
 
@@ -5158,6 +5158,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.surfaces.background@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.surfaces.background@npm:1.0.1"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 00a7675a2968f25bdc637bbe3c6c85fa3de5ea886c7e5e92b0c611d989d546900d59f1f51e3c73a2ddb6e89c1a3dea52db4752509c04b2b3d4434171e122e50a
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.surfaces.card@npm:0.5.9":
   version: 0.5.9
   resolution: "@teambit/base-ui.surfaces.card@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.card%2F-%2Fbase-ui.surfaces.card-0.5.9.tgz"
@@ -5173,19 +5185,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.surfaces.card@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@teambit/base-ui.surfaces.card@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.card%2F-%2Fbase-ui.surfaces.card-1.0.0.tgz"
+"@teambit/base-ui.surfaces.card@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.surfaces.card@npm:1.0.1"
   dependencies:
     "@teambit/base-ui.css-components.elevation": 1.0.0
     "@teambit/base-ui.css-components.roundness": 1.0.0
-    "@teambit/base-ui.surfaces.background": 1.0.0
+    "@teambit/base-ui.surfaces.background": 1.0.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 064368412ec271c6ae636e5642baa93545f516719311fae27b6ddcadce4696fa79a4510584671a6cde7e4750478efcd9da27a058835e9c1c707849ef6f03163d
+  checksum: f7f5c13555b4ff6d1dcacc884e9237d75b58d6605c25f5323ca68fd4cbf3f95d086f4c2de5ae50852c2517d5ce2d25a7b6b0d82b5393e624e365b04de9fd0092
   languageName: node
   linkType: hard
 
@@ -5374,16 +5386,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.accent-color@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@teambit/base-ui.theme.accent-color@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.accent-color%2F-%2Fbase-ui.theme.accent-color-1.0.0.tgz"
+"@teambit/base-ui.theme.accent-color@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@teambit/base-ui.theme.accent-color@npm:1.1.0"
   dependencies:
     "@teambit/base-ui.theme.colors": 1.0.0
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 5369e6d4c8b0665825aba0ca68b5613d42637125b7a091f9de65dc7953c41292ec2c5f839fe71eff8daa57ad01b4a8eece90e207d28cc59a925dd1263f531ae6
+  checksum: 63ba41540169e3a5231cf67d5711b6dab9868a26c76ede2307547ebd0948107084cf166233c42c3a4f8491e94d1f3c565beab9d82661f1ee8f794508f4fb7be6
   languageName: node
   linkType: hard
 
@@ -5541,16 +5553,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.dark-theme@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@teambit/base-ui.theme.dark-theme@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.dark-theme%2F-%2Fbase-ui.theme.dark-theme-1.0.1.tgz"
+"@teambit/base-ui.theme.dark-theme@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@teambit/base-ui.theme.dark-theme@npm:1.0.2"
   dependencies:
     "@teambit/base-ui.theme.colors": 1.0.0
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 2a774be4a035e1e137ebed3d54384c876d96d83ae52c21650bc5930d488faaa03052c3353f2b0809bc74cd48b490ce42bf9f3a0643f991462630a971e33b59df
+  checksum: 0aa88ffe611ce839ad2623ef8c4e74a5bd286ea04dca376828ad2dd962577ad3cb66c66e14d704bccd8554b13c5b009b3af14f588d21b0f56031ad997c5faff5
   languageName: node
   linkType: hard
 
@@ -6622,9 +6634,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/evangelist.elements.button@npm:1.0.2":
-  version: 1.0.2
-  resolution: "@teambit/evangelist.elements.button@npm:1.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.elements.button%2F-%2Fevangelist.elements.button-1.0.2.tgz"
+"@teambit/evangelist.elements.button@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/evangelist.elements.button@npm:1.0.3"
   dependencies:
     "@teambit/base-ui.input.button": 1.0.1
     classnames: ^2.2.6
@@ -6632,7 +6644,7 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: a50eb0d677d74173bb28af65e3317a537b836110db858b8343ecbcf8e2e7649868b540e0dbfd08a289be0fe49d5778514b4202321f6de17b2cc27cae0954239d
+  checksum: 7fb1e7587651f8bc60bfe88c77941dfc9624a41b4b080c1b2a14973daec278fd72e2953ffc6c7cca96ad9f457439cd1df4b2a5e3e0f88a475a06c08dec629024
   languageName: node
   linkType: hard
 
@@ -6707,17 +6719,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/evangelist.input.checkbox.label@npm:1.0.2":
-  version: 1.0.2
-  resolution: "@teambit/evangelist.input.checkbox.label@npm:1.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.input.checkbox.label%2F-%2Fevangelist.input.checkbox.label-1.0.2.tgz"
+"@teambit/evangelist.input.checkbox.label@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/evangelist.input.checkbox.label@npm:1.0.3"
   dependencies:
-    "@teambit/base-ui.input.checkbox.label": 1.0.0
+    "@teambit/base-ui.input.checkbox.label": 1.0.1
     "@teambit/evangelist.input.checkbox.indicator": 1.0.2
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 8e8ccb131814449d199c09ae8f7815d9e6fb4702571b5d10c776c73303ec0205d37eb5b1eb78ae791721f59c6fd49a8a9a16a7d2a42e9f0b68ac339c2ed48752
+  checksum: 1373954e625924b45fe03da038538ca161a7be394a0adfd45628fa5edf705192c8872f71ff3b834c8761649d4e52ad4368ebe4370c9724bbbb8e77170db4ffaa
   languageName: node
   linkType: hard
 
@@ -6751,6 +6763,25 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 4b7b1c61493a66ac2138f3221977be044fd113eae804c29b4e2e067b2c1cc4e4f642dc1e8c958f0a825bcb81a0c9a50d5d16f6b046b922b1d9786c97d0db7cf1
+  languageName: node
+  linkType: hard
+
+"@teambit/evangelist.surfaces.dropdown@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@teambit/evangelist.surfaces.dropdown@npm:1.0.2"
+  dependencies:
+    "@teambit/base-ui.css-components.elevation": 1.0.0
+    "@teambit/base-ui.css-components.roundness": 1.0.0
+    "@teambit/base-ui.surfaces.abs-container": 1.0.0
+    "@teambit/base-ui.surfaces.background": 1.0.1
+    "@teambit/base-ui.surfaces.drawer": 1.0.0
+    "@teambit/evangelist.css-components.fade-in-out": 1.0.1
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 9acd8d9a8a43c28708869a49b2cf8ba4e34b2f70ee81bec5904b2f42f5906d85a9d851cf2d5b5020ac4a460ec7370433f33c34a1b2b71c7b115b8a4b7f689ac1
   languageName: node
   linkType: hard
 
@@ -6807,9 +6838,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.105":
-  version: 1.0.105
-  resolution: "@teambit/legacy@npm:1.0.105"
+"@teambit/legacy@npm:1.0.106":
+  version: 1.0.106
+  resolution: "@teambit/legacy@npm:1.0.106"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6932,7 +6963,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 8f276b33cd37cf82a2f9ab4501c8a0c74c432be3ce8b608662131ac55c3eb5ac08d45a334b2c5131007d2f465566fcc0951dbc1bd747be2586a86ba9fe721579
+  checksum: 6ce8efbe4064b013f03d1543e3209b36febc08a64d988ee5d6b9cfa38fec2ba3cad11fb38a0957cf1e3399ccb7773c673f0772c96a545b689f7d16399b13e84d
   languageName: node
   linkType: hard
 
@@ -7007,7 +7038,7 @@ __metadata:
     "@teambit/base-ui.routing.routing-provider": 1.0.0
     "@teambit/base-ui.styles.flex-center": 1.0.0
     "@teambit/base-ui.surfaces.background": 0.6.3
-    "@teambit/base-ui.surfaces.card": 1.0.0
+    "@teambit/base-ui.surfaces.card": 1.0.1
     "@teambit/base-ui.surfaces.split-pane.hover-splitter": 1.0.0
     "@teambit/base-ui.surfaces.split-pane.split-pane": 1.0.0
     "@teambit/base-ui.text.heading": 1.0.1
@@ -7015,9 +7046,9 @@ __metadata:
     "@teambit/base-ui.text.paragraph": 1.0.1
     "@teambit/base-ui.text.text-sizes": 1.0.0
     "@teambit/base-ui.text.themed-text": 1.0.1
-    "@teambit/base-ui.theme.accent-color": 1.0.0
+    "@teambit/base-ui.theme.accent-color": 1.1.0
     "@teambit/base-ui.theme.colors": 1.0.0
-    "@teambit/base-ui.theme.dark-theme": 1.0.1
+    "@teambit/base-ui.theme.dark-theme": 1.0.2
     "@teambit/base-ui.theme.fonts.roboto": 1.0.0
     "@teambit/base-ui.theme.sizes": 1.0.0
     "@teambit/base-ui.theme.theme-provider": 0.6.14
@@ -7060,17 +7091,17 @@ __metadata:
     "@teambit/documenter.ui.table.td": 4.0.1
     "@teambit/documenter.ui.table.tr": 4.0.1
     "@teambit/documenter.ui.ul": 4.0.1
-    "@teambit/evangelist.elements.button": 1.0.2
+    "@teambit/evangelist.elements.button": 1.0.3
     "@teambit/evangelist.elements.heading": 1.0.2
     "@teambit/evangelist.elements.icon": 1.0.2
     "@teambit/evangelist.elements.image": 1.0.2
     "@teambit/evangelist.elements.x-button": 1.0.2
-    "@teambit/evangelist.input.checkbox.label": 1.0.2
+    "@teambit/evangelist.input.checkbox.label": 1.0.3
     "@teambit/evangelist.input.input": 1.0.2
-    "@teambit/evangelist.surfaces.dropdown": 1.0.1
+    "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.105
+    "@teambit/legacy": 1.0.106
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7466,7 +7497,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.105
+    "@teambit/legacy": 1.0.106
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -18391,9 +18422,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fsevents@^2.1.2, fsevents@~2.3.1":
+  version: 2.3.2
+  resolution: "fsevents@npm:2.3.2"
+  dependencies:
+    node-gyp: latest
+  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
+  languageName: node
+  linkType: hard
+
 "fsevents@patch:fsevents@^2.1.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
   dependencies:
     node-gyp: latest
   checksum: 78db9daf1f6526a49cefee3917cc988f62dc7f25b5dd80ad6de4ffc4af7f0cab7491ac737626ff53e482a111bc53aac9e411fe3602458eca36f6a003ecf69c16
@@ -29211,9 +29251,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"resolve@1.20.0, resolve@^1.1.6, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.3.2, resolve@^1.8.1":
+  version: 1.20.0
+  resolution: "resolve@npm:1.20.0"
+  dependencies:
+    is-core-module: ^2.2.0
+    path-parse: ^1.0.6
+  checksum: 40cf70b2cde00ef57f99daf2dc63c6a56d6c14a1b7fc51735d06a6f0a3b97cb67b4fb7ef6c747b4e13a7baba83b0ef625d7c4ce92a483cd5af923c3b65fd16fe
+  languageName: node
+  linkType: hard
+
 "resolve@patch:resolve@1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.6#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.18.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.20.0
-  resolution: "resolve@patch:resolve@npm%3A1.20.0%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Fresolve%252F-%252Fresolve-1.20.0.tgz#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
+  resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
   dependencies:
     is-core-module: ^2.2.0
     path-parse: ^1.0.6
@@ -32522,9 +32572,49 @@ __metadata:
   languageName: node
   linkType: hard
 
+typescript@3.9.7:
+  version: 3.9.7
+  resolution: "typescript@npm:3.9.7"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: d549bf1d3a93796b45be9d1dbebbef63777f8cc4d788461f4bfdb6cb07371a97d3e471c7f39dbe31107e8a25d6d8b2ef5e967af7e8e1768d9560bd95095b360b
+  languageName: node
+  linkType: hard
+
+typescript@4.1.5:
+  version: 4.1.5
+  resolution: "typescript@npm:4.1.5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: af660e69aa5184520dfa57362dcf7fd1b26d08b869d76b3bd58dcc04058a757983f470cd61ded824ab01fa08a81d58c7f607d8e360f4e550664b9439d04f8e41
+  languageName: node
+  linkType: hard
+
+typescript@^2.6.2:
+  version: 2.9.2
+  resolution: "typescript@npm:2.9.2"
+  bin:
+    tsc: ./bin/tsc
+    tsserver: ./bin/tsserver
+  checksum: 88be998ac339b6e45f1cd15e22e4a0fedcdb5320d8d1d736e3996a0b9dff03728ebb2580a0658f0c52152b139ea9a405443f42a4ff8a2c4a1a6f4d58e0320132
+  languageName: node
+  linkType: hard
+
+typescript@^3.9.3:
+  version: 3.9.10
+  resolution: "typescript@npm:3.9.10"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 46c842e2cd4797b88b66ef06c9c41dd21da48b95787072ccf39d5f2aa3124361bc4c966aa1c7f709fae0509614d76751455b5231b12dbb72eb97a31369e1ff92
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@3.9.7#~builtin<compat/typescript>":
   version: 3.9.7
-  resolution: "typescript@patch:typescript@npm%3A3.9.7%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.7.tgz#~builtin<compat/typescript>::version=3.9.7&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A3.9.7#~builtin<compat/typescript>::version=3.9.7&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
@@ -32534,7 +32624,7 @@ __metadata:
 
 "typescript@patch:typescript@4.1.5#~builtin<compat/typescript>":
   version: 4.1.5
-  resolution: "typescript@patch:typescript@npm%3A4.1.5%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-4.1.5.tgz#~builtin<compat/typescript>::version=4.1.5&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A4.1.5#~builtin<compat/typescript>::version=4.1.5&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
@@ -32544,7 +32634,7 @@ __metadata:
 
 "typescript@patch:typescript@^2.6.2#~builtin<compat/typescript>":
   version: 2.9.2
-  resolution: "typescript@patch:typescript@npm%3A2.9.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-2.9.2.tgz#~builtin<compat/typescript>::version=2.9.2&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A2.9.2#~builtin<compat/typescript>::version=2.9.2&hash=d8b4e7"
   bin:
     tsc: ./bin/tsc
     tsserver: ./bin/tsserver
@@ -32553,12 +32643,12 @@ __metadata:
   linkType: hard
 
 "typescript@patch:typescript@^3.9.3#~builtin<compat/typescript>":
-  version: 3.9.9
-  resolution: "typescript@patch:typescript@npm%3A3.9.9%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.9.tgz#~builtin<compat/typescript>::version=3.9.9&hash=d8b4e7"
+  version: 3.9.10
+  resolution: "typescript@patch:typescript@npm%3A3.9.10#~builtin<compat/typescript>::version=3.9.10&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 62e5f6494f9bab9d36adeaf04e1b86199ae130af97345f1126e3216af8786de4c9808d0d29472ba98024ce17b26fd101affb5c25079153b8a273cf26af0bfaba
+  checksum: 8dcd46a8a2cb81198497f00c7721a34c914bf6b3241bf9687b868bdec9e59f1f44da41e7917cfc1dcabee4595229c73bab047f2d85c1aedacc0d1b526cc81534
   languageName: node
   linkType: hard
 
