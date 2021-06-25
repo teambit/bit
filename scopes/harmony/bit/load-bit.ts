@@ -237,11 +237,16 @@ function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) 
   DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
 }
 
+/**
+ * loadBit may gets called multiple times (currently, it's happening during e2e-tests that call loadBit).
+ * when it happens, the static methods in this function still have the callbacks that were added in
+ * the previous loadBit call. this callbacks have the old data such as workspace/bitmap/consumer
+ * of the previous workspace, which leads to hard-to-debug issues.
+ */
 function clearGlobalsIfNeeded() {
   if (!loadConsumer.cache) {
     return;
   }
-
   delete loadConsumer.cache;
   ComponentLoader.onComponentLoadSubscribers = [];
   ComponentOverrides.componentOverridesLoadingRegistry = {};

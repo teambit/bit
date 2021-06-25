@@ -48,7 +48,7 @@ describe('build command', function () {
     });
   });
 
-  describe.only('list tasks', () => {
+  describe('list tasks', () => {
     before(() => {
       helper = new Helper();
       helper.command.setFeatures(HARMONY_FEATURE);
@@ -67,7 +67,7 @@ describe('build command', function () {
     });
   });
 
-  describe.only('registering the publish task for the snap pipeline in a new-custom env', () => {
+  describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.command.create('node-env', 'my-env');
