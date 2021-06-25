@@ -86,7 +86,7 @@ export class WebpackMain {
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
       return afterMutation.raw;
     });
-    return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
+    return new WebpackBundler(context.targets, mutatedConfigs, this.logger, webpack);
   }
 
   private createPreviewConfig(targets: Target[]) {
