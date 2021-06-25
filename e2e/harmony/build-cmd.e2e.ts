@@ -48,9 +48,6 @@ describe('build command', function () {
     });
   });
 
-  // @todo: fix!
-  // here is the issue: if we enable this test, the next one fails.
-  // for some reason `loadBit` doesn't work if we run it here once and in the next test again.
   describe.only('list tasks', () => {
     before(() => {
       helper = new Helper();
@@ -60,13 +57,13 @@ describe('build command', function () {
     });
     it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
       const harmony = await loadBit(helper.scopes.localPath);
-      // const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-      // const compId = await workspace.resolveComponentId('comp1');
-      // const component = await workspace.get(compId);
-      // const builder = harmony.get<BuilderMain>(BuilderAspect.id);
-      // const tasks = builder.listTasks(component);
-      // expect(tasks.snapTasks).to.have.lengthOf(0);
-      // expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
+      const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const compId = await workspace.resolveComponentId('comp1');
+      const component = await workspace.get(compId);
+      const builder = harmony.get<BuilderMain>(BuilderAspect.id);
+      const tasks = builder.listTasks(component);
+      expect(tasks.snapTasks).to.have.lengthOf(0);
+      expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
 
@@ -86,9 +83,9 @@ describe('build command', function () {
       const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
       const compId = await workspace.resolveComponentId('comp1');
       const component = await workspace.get(compId);
-      // const builder = harmony.get<BuilderMain>(BuilderAspect.id);
-      // const tasks = builder.listTasks(component);
-      // expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
+      const builder = harmony.get<BuilderMain>(BuilderAspect.id);
+      const tasks = builder.listTasks(component);
+      expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
 });
