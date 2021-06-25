@@ -144,8 +144,7 @@ export default class ComponentLoader {
   }
 
   private async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
-    // ignoreScopeAndVersion because out-of-sync might changed it before
-    const componentMap = this.consumer.bitMap.getComponent(id, { ignoreScopeAndVersion: true });
+    const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
@@ -177,8 +176,7 @@ export default class ComponentLoader {
     component.originallySharedDir = componentMap.originallySharedDir || undefined;
     component.wrapDir = componentMap.wrapDir || undefined;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    // ignoreScopeAndVersion because out-of-sync might changed it before
-    component.componentMap = this.consumer.bitMap.getComponent(id, { ignoreScopeAndVersion: true });
+    component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
 
     const loadDependencies = async () => {
