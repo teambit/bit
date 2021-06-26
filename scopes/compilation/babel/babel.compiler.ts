@@ -152,6 +152,7 @@ export class BabelCompiler implements Compiler {
   }
 
   private replaceFileExtToJs(filePath: string): string {
+    if (!this.isFileSupported(filePath)) return filePath;
     return replaceFileExtToJs(filePath);
   }
 }
