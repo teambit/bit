@@ -474,6 +474,7 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/create-element-from-string"
+    },
     "modules/diff": {
         "scope": "teambit.lanes",
         "version": "0.0.3",
