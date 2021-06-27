@@ -126,7 +126,7 @@ export const manifestsMap = {
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
-  [HtmlAspect.id]: HtmlAspect
+  [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
 };
 
