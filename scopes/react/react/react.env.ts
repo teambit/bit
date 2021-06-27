@@ -17,10 +17,13 @@ import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
-import docs from '@teambit/react.ui.docs-app';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
+// Makes sure the @teambit/react.ui.docs-app is a dependency
+// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import docs from '@teambit/react.ui.docs-app'; 
 import { ReactMainConfig } from './react.main.runtime';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
