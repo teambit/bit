@@ -7329,6 +7329,7 @@ __metadata:
     lodash.unionby: 4.8.0
     lru-cache: 6.0.0
     make-fetch-happen: 4.0.2
+    map-obj: 4.2.1
     memfs: 2.17.1
     memoize-one: 5.1.1
     memoizee: 0.4.15
@@ -19741,6 +19742,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"html-9c3b96@workspace:scopes/html":
+  version: 0.0.0-use.local
+  resolution: "html-9c3b96@workspace:scopes/html"
+  languageName: unknown
+  linkType: soft
+
 "html-comment-regex@npm:^1.1.0":
   version: 1.1.2
   resolution: "html-comment-regex@npm:1.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhtml-comment-regex%2F-%2Fhtml-comment-regex-1.1.2.tgz"
@@ -23601,6 +23608,13 @@ __metadata:
   version: 0.2.2
   resolution: "map-cache@npm:0.2.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmap-cache%2F-%2Fmap-cache-0.2.2.tgz"
   checksum: 3067cea54285c43848bb4539f978a15dedc63c03022abeec6ef05c8cb6829f920f13b94bcaf04142fc6a088318e564c4785704072910d120d55dbc2e0c421969
+  languageName: node
+  linkType: hard
+
+"map-obj@npm:4.2.1":
+  version: 4.2.1
+  resolution: "map-obj@npm:4.2.1"
+  checksum: 2745227b11ba6e6ddc5927b555a8f317aa33886fcd12806193f3e3c6f201eb24c9cff44bf932b1113a1ba461755a479b22439d0d670380330325164ed0e99547
   languageName: node
   linkType: hard
 
