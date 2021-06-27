@@ -467,7 +467,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/utils/create-element-from-string"
+        "rootDir": "scopes/html/modules/create-element-from-string"
     },
     "modules/dom-to-react": {
         "scope": "teambit.react",
@@ -479,7 +479,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/utils/fetch-html-from-url"
+        "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
     "modules/match-pattern": {
         "scope": "teambit.workspace",
@@ -509,7 +509,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/utils/render-template"
+        "rootDir": "scopes/html/modules/render-template"
     },
     "modules/requireable-component": {
         "scope": "teambit.harmony",
