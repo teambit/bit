@@ -434,9 +434,9 @@
         }
       },
       "teambit.envs/envs": {
-        "env": "teambit.harmony/aspect"
+        "env": "teambit.harmony/node"
       },
-      "teambit.harmony/aspect": {}
+      "teambit.harmony/node": {}
     },
     "{modules/**}": {
       "teambit.envs/envs": {
