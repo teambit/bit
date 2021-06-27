@@ -1,7 +1,7 @@
 // import { RenderingContext } from '@teambit/preview';
 // import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { HtmlAspect } from './html.aspect';
-import { RenderHtmlComposition } from './utils';
+import { RenderHtmlComposition } from './render-composition';
 import { HtmlComposition } from './interfaces';
 
 // TODO implement wrapping for providers with html env
