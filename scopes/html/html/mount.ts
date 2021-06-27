@@ -1,6 +1,5 @@
 // import { RenderingContext } from '@teambit/preview';
 // import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
-import { HtmlAspect } from './html.aspect';
 import { RenderHtmlComposition } from './render-composition';
 import { HtmlComposition } from './interfaces';
 
@@ -16,7 +15,7 @@ import { HtmlComposition } from './interfaces';
  * TODO implement for regular html providers/wrappers with wrap function above
  */
 export function withProviders() {
-  return `<div></div>`
+  return `<div></div>`;
 }
 
 function ensureRootElementInBody() {
@@ -28,7 +27,7 @@ function ensureRootElementInBody() {
 
 const getRoot = () => document.getElementById('root') || ensureRootElementInBody();
 
-export default function mountHtmlComposition (composition: HtmlComposition){
+export default function mountHtmlComposition(composition: HtmlComposition) {
   const root = getRoot();
   RenderHtmlComposition(root, composition);
-} 
+}
