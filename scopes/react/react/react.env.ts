@@ -22,10 +22,20 @@ import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import { ReactMainConfig } from './react.main.runtime';
-import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
-import previewConfigFactory from './webpack/webpack.config.preview';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
+
+// webpack configs for both components and envs
+import basePreviewConfigFactory from './webpack/webpack.config.base';
+import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
+
+// webpack configs for envs only
+// import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+
+// webpack configs for components only
+import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
+import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
 export const AspectEnvType = 'react';
 const jestM = require('jest');
@@ -153,15 +163,6 @@ export class ReactEnv implements Environment {
     return path;
   }
 
-  /**
-   * get the default react webpack config.
-   */
-  private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components, true);
-
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
-  }
-
   getDevEnvId(id?: string) {
     if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;
@@ -178,19 +179,31 @@ export class ReactEnv implements Environment {
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
-    const defaultConfig = this.getDevWebpackConfig(context);
+    const baseConfig = basePreviewConfigFactory(false);
+    const envDevConfig = envPreviewDevConfigFactory(context.id);
+    // const fileMapPath = this.writeFileMap(context.components, true);
+    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
+      return merged;
     };
 
     return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const path = this.writeFileMap(context.components);
-    const defaultConfig = previewConfigFactory(path);
+    // const fileMapPath = this.writeFileMap(context.components);
+    const baseConfig = basePreviewConfigFactory(true);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
+    const componentProdConfig = componentPreviewProdConfigFactory();
+
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
+      return merged;
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
@@ -263,7 +276,6 @@ export class ReactEnv implements Environment {
         '@babel/runtime': '7.12.18',
         '@types/testing-library__jest-dom': '5.9.5',
       },
-      // TODO: take version from config
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',

@@ -48,7 +48,7 @@ describe('publish functionality', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      describe('automatically by deploy pipeline', () => {
+      describe('automatically by tag pipeline', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
           helper.command.tagAllComponents();

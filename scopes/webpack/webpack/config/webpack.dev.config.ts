@@ -131,7 +131,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       dev: {
         // Public path is root of content base
-        publicPath: publicRoot,
+        publicPath: path.join('/', publicRoot),
       },
     },
 

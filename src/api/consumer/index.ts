@@ -17,7 +17,6 @@ import init from './lib/init';
 import injectConf from './lib/inject-conf';
 import installAction from './lib/install';
 import isolate from './lib/isolate';
-import lane from './lib/lane';
 import link from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
@@ -77,7 +76,6 @@ export {
   login,
   show,
   paintGraph,
-  lane,
   switchAction,
   fetch,
   clearCache,
