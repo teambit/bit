@@ -491,6 +491,7 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
+    },
     "modules/generate-style-loaders": {
         "scope": "teambit.webpack",
         "version": "0.0.6",
