@@ -12,7 +12,7 @@ import { installNpmPackagesForComponents } from '../../npm-client/install-packag
 import { ComponentWithDependencies } from '../../scope';
 import { isDir, isDirEmptySync } from '../../utils';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
@@ -183,6 +183,7 @@ export default class ManyComponentsWriter {
     const componentWriterInstances = writeComponentsParams.map((writeParams) =>
       ComponentWriter.getInstance(writeParams)
     );
+    this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
     componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
@@ -193,6 +194,37 @@ export default class ManyComponentsWriter {
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }
+
+  private fixDirsIfNested(componentWriterInstances: ComponentWriter[]) {
+    const allDirs = componentWriterInstances.map((c) => c.writeToPath);
+    // e.g. [bar, bar/foo]
+    const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
+      allDirs.find((d) => d.startsWith(`${writeToPath}${path.sep}`))
+    );
+    if (!parentsOfOthersComps.length) {
+      return;
+    }
+    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
+
+    const incrementPath = (p: string, number: number) => `${p}_${number}`;
+    const existingRootDirs = Object.keys(this.bitMap.getAllTrackDirs()).map((p) => path.normalize(p));
+    const allPaths = [...existingRootDirs, ...parentsOfOthersCompsDirs];
+    const incrementRecursively = (p: string) => {
+      let num = 1;
+      let newPath = incrementPath(p, num);
+      while (allPaths.includes(newPath)) {
+        newPath = incrementPath(p, (num += 1));
+      }
+      return newPath;
+    };
+
+    parentsOfOthersComps.forEach((componentWriter) => {
+      if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
+      const newPath = incrementRecursively(componentWriter.writeToPath);
+      componentWriter.writeToPath = newPath;
+    });
+  }
+
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
       this._getWriteParamsOfOneComponent(componentWithDeps)
