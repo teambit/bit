@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { RenderHtmlComposition } from './utils';
+import { RenderHtmlComposition } from './render-composition';
 
-/** adapter that converts html elements to react elements */
-
+/**
+ * Adapter that converts html elements to react elements 
+ * @param element 
+ */
 export function htmlToReact(element: HTMLElement) {
 	return () => {
 		const ref = useRef<HTMLDivElement>(null);
