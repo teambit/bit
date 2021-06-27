@@ -1,5 +1,4 @@
-import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, omit } from 'lodash';
 import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
@@ -124,7 +123,18 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
+    const pkg = new PkgMain(
+      config,
+      packageJsonPropsRegistry,
+      workspace,
+      scope,
+      builder,
+      packer,
+      envs,
+      componentAspect,
+      publishTask
+    );
 
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
@@ -135,10 +145,9 @@ export class PkgMain {
 
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
     dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
-    builder.registerDeployTasks([publishTask]);
+    builder.registerTagTasks([publishTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -203,7 +212,9 @@ export class PkgMain {
      */
     private envs: EnvsMain,
 
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+
+    public publishTask: PublishTask
   ) {}
 
   /**
@@ -259,7 +270,7 @@ export class PkgMain {
     }
     // Keys not allowed to override
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    return R.omit(specialKeys, newProps);
+    return omit(newProps, specialKeys);
   }
 
   getPackageJsonModifications(component: Component): Record<string, any> {
@@ -281,8 +292,10 @@ export class PkgMain {
     if (!latestVersion) {
       throw new BitError('can not get manifest for component without versions');
     }
+    const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
     const distTags = {
       latest: latestVersion,
+      ...preReleaseLatestTags,
     };
 
     const versions = await this.getAllSnapsManifests(component);

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import classNames from 'classnames';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Card } from '@teambit/base-ui.surfaces.card';
-import { colorPalette } from '@teambit/base-ui.theme.color-palette';
+import { colorPalette } from '@teambit/base-ui.theme.accent-color';
 import { CompositionType } from '@teambit/compositions.model.composition-type';
 import { ErrorFallback, ErrorFallbackProps } from '@teambit/react.ui.error-fallback';
 import { humanizeCompositionId } from '@teambit/compositions.model.composition-id';
@@ -28,7 +28,7 @@ export function CompositionCard({ Composition, name, link }: CompositionCardProp
           <Composition />
         </div>
       </ErrorBoundary>
-      <div className={classNames(styles.title, colorPalette.emphasized, themedText)}>
+      <div className={classNames(styles.title, colorPalette.neutralHeavy, themedText)}>
         <span>{humanizedName}</span>
         {link && (
           <a className={styles.linkToComposition} target="_blank" rel="noopener noreferrer" href={link}>

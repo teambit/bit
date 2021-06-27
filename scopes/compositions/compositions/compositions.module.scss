@@ -31,7 +31,7 @@ $panelBg: #fafafa;
 }
 
 .menuBar {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 }
 
 .splitter {
@@ -88,7 +88,7 @@ $panelBg: #fafafa;
 
   .title {
     margin-bottom: 24px;
-    font-size: var(--h-xs);
+    font-size: var(--bit-h-xs, 26px);
   }
   .separator {
     margin-bottom: 41px;

@@ -1,6 +1,12 @@
 import { Export, Module, Parser } from '@teambit/schema';
 import { readFileSync } from 'fs-extra';
-import ts, { isFunctionDeclaration, isVariableStatement, SourceFile, VariableStatement } from 'typescript';
+import ts, {
+  isClassDeclaration,
+  isFunctionDeclaration,
+  isVariableStatement,
+  SourceFile,
+  VariableStatement,
+} from 'typescript';
 
 export class TypeScriptParser implements Parser {
   public extension = /^.*\.(js|jsx|ts|tsx)$/;
@@ -22,6 +28,11 @@ export class TypeScriptParser implements Parser {
       }
 
       if (isFunctionDeclaration(statement)) {
+        if (!statement.name) return undefined;
+        return new Export(statement.name.text);
+      }
+
+      if (isClassDeclaration(statement)) {
         if (!statement.name) return undefined;
         return new Export(statement.name.text);
       }

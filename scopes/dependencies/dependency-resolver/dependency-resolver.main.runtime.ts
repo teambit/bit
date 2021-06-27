@@ -26,7 +26,6 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
-import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -145,6 +144,16 @@ export interface DependencyResolverWorkspaceConfig {
    * regex to determine whether a file is a file meant for development purposes.
    */
   devFilePatterns: string[];
+
+  /**
+   * By default when bit see your default registry in your npmrc is set to 'https://registry.npmjs.org/'
+   * bit will replace it with the bit.dev npm registry (node.bit.dev) during bit install
+   * bit does this in order to save you the need to configure many scoped registries for components from different owners
+   * bit.dev registry will then proxy the request to npmjs registry for non found packages in the bit.dev registry.
+   * in case you want to disable this proxy set this config to false
+   *
+   */
+  installFromBitDevRegistry: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -276,7 +285,7 @@ export class DependencyResolverMain {
   }
 
   private getDependencyListFactory(): DependencyListFactory {
-    const factories = flatten(this.dependencyFactorySlot.values());
+    const factories = this.dependencyFactorySlot.values().flat();
     const factoriesMap = factories.reduce((acc, factory) => {
       acc[factory.type] = factory;
       return acc;
@@ -411,11 +420,11 @@ export class DependencyResolverMain {
   }
 
   private getPreInstallSubscribers(): PreInstallSubscriberList {
-    return flatten(this.preInstallSlot.values());
+    return this.preInstallSlot.values().flat();
   }
 
   private getPostInstallSubscribers(): PostInstallSubscriberList {
-    return flatten(this.postInstallSlot.values());
+    return this.postInstallSlot.values().flat();
   }
 
   /**
@@ -572,9 +581,10 @@ export class DependencyResolverMain {
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
-      !registries.defaultRegistry.uri ||
-      registries.defaultRegistry.uri === NPM_REGISTRY ||
-      NPM_REGISTRY.startsWith(registries.defaultRegistry.uri)
+      this.config.installFromBitDevRegistry &&
+      (!registries.defaultRegistry.uri ||
+        registries.defaultRegistry.uri === NPM_REGISTRY ||
+        NPM_REGISTRY.startsWith(registries.defaultRegistry.uri))
     ) {
       // TODO: this will not handle cases where you have token for private npm registries stored on npmjs
       // it should be handled by somehow in such case (default is npmjs and there is token for default) by sending the token of npmjs to the registry
@@ -744,6 +754,7 @@ export class DependencyResolverMain {
     packageManagerArgs: [],
     devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
+    installFromBitDevRegistry: true,
   };
 
   static async provider(

@@ -43,6 +43,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { LocalLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -59,9 +60,8 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice, uniqBy } from 'lodash';
+import { slice, uniqBy, difference } from 'lodash';
 import path, { join } from 'path';
-import { difference } from 'ramda';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
@@ -498,6 +498,10 @@ export class Workspace implements ComponentFactory {
 
   getSnap(id: ComponentID, hash: string) {
     return this.scope.getSnap(id, hash);
+  }
+
+  getCurrentLaneId(): LocalLaneId {
+    return this.consumer.getCurrentLaneId();
   }
 
   getDefaultExtensions(): ExtensionDataList {
@@ -993,14 +997,14 @@ export class Workspace implements ComponentFactory {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
-        return extensionEntry.stringId;
+        return extensionEntry.stringId as string;
       }
 
       const id = await this.resolveComponentId(extensionEntry.extensionId);
       // return this.resolveComponentId(extensionEntry.extensionId);
       return id.toString();
     });
-    const extensionsIds = await Promise.all(extensionsIdsP);
+    const extensionsIds: string[] = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;

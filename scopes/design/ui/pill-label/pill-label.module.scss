@@ -7,7 +7,7 @@
   width: fit-content;
   padding: 2px 8px;
   text-transform: capitalize;
-  border-color: var(--border-color);
-  color: var(--text-muted);
-  font-size: var(--p-xs);
+  border-color: var(--bit-border-color-lightest, #ededed);
+  color: var(--bit-text-color-light, #6c707c);
+  font-size: var(--bit-p-xs);
 }

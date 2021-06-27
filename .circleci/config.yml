@@ -181,7 +181,7 @@ jobs:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t --build-arg BIT_VERSION=`npm show @teambit/bit version` bitcli/bit-server:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
       - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit-server:latest
@@ -210,14 +210,14 @@ jobs:
       # prod registry
       - run: npm config set @bit:registry https://node.bit.dev
       - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
-      - run: echo "always-auth=true" >> ~/.npmrc
+      # - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
       # run: 'npm config set @bit:registry https://node-stg.bit.dev'
       # -
       # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       - save_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -500,7 +500,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
@@ -510,7 +510,8 @@ jobs:
       - restore_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
-      - run: bvm upgrade
+      - run: bvm install 0.0.428
+      # - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
@@ -561,7 +562,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       # - update_ssh_agent
       - run:
           name: 'bit status'
@@ -595,7 +596,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
       - run:
@@ -841,7 +842,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
       - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
@@ -891,7 +892,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
@@ -966,7 +967,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
           # key: bitsrc-registry-stg-v2
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -1583,7 +1584,6 @@ workflows:
   #           - windows_set_ssh_key
   #           - windows_bvm_install
   #           - windows_build_bvm
-
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:

@@ -2,7 +2,7 @@
   font-weight: bold;
   text-align: center;
 
-  color: var(--base-color);
+  color: var(--bit-accent-color, #6c5ce7);
 
   &:before {
     // color for transparent content

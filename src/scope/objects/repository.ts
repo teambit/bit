@@ -121,7 +121,12 @@ export default class Repository {
         throw err;
       }
       logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
-      if (throws) throw err;
+      if (throws) {
+        // if we just `throw err` we loose the stack trace.
+        // see https://stackoverflow.com/questions/68022123/no-stack-in-fs-promises-readfile-enoent-error
+        const msg = `fatal: failed finding an object file ${this.objectPath(ref)} in the filesystem at ${err.path}`;
+        throw Object.assign(err, { stack: new Error(msg).stack });
+      }
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }

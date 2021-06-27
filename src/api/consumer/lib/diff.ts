@@ -11,7 +11,7 @@ export default async function diff(values: string[], verbose: boolean, table: bo
   if (!bitIds || !bitIds.length) {
     throw new GeneralError('there are no modified components to diff');
   }
-  const diffResults = await componentsDiff(consumer, bitIds, version, toVersion, verbose, table);
+  const diffResults = await componentsDiff(consumer, bitIds, version, toVersion, { verbose, formatDepsAsTable: table });
   await consumer.onDestroy();
   return diffResults;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Icon, IconProps } from '@teambit/evangelist.elements.icon';
-import { colorPalette } from '@teambit/base-ui.theme.color-palette';
+import { colorPalette } from '@teambit/base-ui.theme.accent-color';
 import styles from './level-icon.module.scss';
 
 interface LevelIconProps extends Omit<IconProps, 'of'> {
@@ -20,7 +20,7 @@ export function LevelIcon({ level, className, ...rest }: LevelIconProps) {
         of="error-circle"
         role="img"
         aria-label={level}
-        className={classNames(styles.notificationIcon, colorPalette.impulse, className)}
+        className={classNames(styles.notificationIcon, colorPalette.action, className)}
         {...rest}
       />
     );
@@ -32,7 +32,7 @@ export function LevelIcon({ level, className, ...rest }: LevelIconProps) {
         of="info-circle"
         role="img"
         aria-label={level}
-        className={classNames(styles.notificationIcon, colorPalette.secondary, className)}
+        className={classNames(styles.notificationIcon, colorPalette.process, className)}
         {...rest}
       />
     );
@@ -44,7 +44,7 @@ export function LevelIcon({ level, className, ...rest }: LevelIconProps) {
         of="warn-circle"
         role="img"
         aria-label={level}
-        className={classNames(styles.notificationIcon, colorPalette.hunger, className)}
+        className={classNames(styles.notificationIcon, colorPalette.consider, className)}
         {...rest}
       />
     );
@@ -56,7 +56,7 @@ export function LevelIcon({ level, className, ...rest }: LevelIconProps) {
         of="billing-checkmark"
         role="img"
         aria-label={level}
-        className={classNames(styles.notificationIcon, colorPalette.success, className)}
+        className={classNames(styles.notificationIcon, colorPalette.continue, className)}
         {...rest}
       />
     );

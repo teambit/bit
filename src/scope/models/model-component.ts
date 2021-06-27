@@ -302,7 +302,7 @@ export default class Component extends BitObject {
     }
     // backward compatibility. components created before v15 have master without head
     // @ts-ignore
-    return semver.maxSatisfying(this.listVersions(), '*');
+    return semver.maxSatisfying(this.listVersions(), '*', { includePrerelease: true });
   }
 
   /**
@@ -415,12 +415,13 @@ export default class Component extends BitObject {
   getVersionToAdd(
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
     exactVersion?: string | null,
-    incrementBy?: number
+    incrementBy?: number,
+    preRelease?: string
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy);
+    return exactVersion || this.version(releaseType, incrementBy, preRelease);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -497,15 +498,19 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1): string {
-    const latest = this.latestVersion();
-    if (!latest) return DEFAULT_BIT_VERSION;
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preRelease?: string): string {
+    if (preRelease) releaseType = 'prerelease';
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    let result = semver.inc(latest, releaseType)!;
+    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preRelease)!;
+
+    const latest = this.latestVersion();
+    if (!latest) {
+      return preRelease ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
+    }
+    let result = increment(latest);
     if (incrementBy === 1) return result;
     for (let i = 1; i < incrementBy; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      result = semver.inc(result, releaseType)!;
+      result = increment(result);
     }
     return result;
   }
@@ -659,7 +664,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    manipulateDirData: ManipulateDirItem[] | null | undefined
+    manipulateDirData?: ManipulateDirItem[] | null
   ): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);

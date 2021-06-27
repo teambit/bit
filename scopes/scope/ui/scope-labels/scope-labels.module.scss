@@ -9,7 +9,7 @@
 }
 .pillIcon {
   margin-right: 6px;
-  font-size: var(--p-md);
+  font-size: var(--bit-p-md, 16px);
 }
 
 .componentCount {
@@ -17,5 +17,5 @@
   border-radius: 6px;
   margin-right: 8px;
   font-size: 12px;
-  background-color: var(--border-color);
+  background-color: var(--bit-border-color-lightest, #ededed);
 }

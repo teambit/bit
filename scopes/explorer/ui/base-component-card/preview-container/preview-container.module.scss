@@ -13,9 +13,9 @@
   left: 0;
   right: 0;
   overflow: hidden;
-  border-bottom: 1px solid var(--light-border-color, #cccfd4);
+  border-bottom: 1px solid var(--bit-border-color-light, #cccfd4);
 }
 
 .emptyPreview {
-  background-color: var(--border-color, #ededed);
+  background-color: var(--bit-border-color-lightest, #ededed);
 }

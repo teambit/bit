@@ -18,7 +18,7 @@ export class ShowCmd implements Command {
     ['r', 'remote', 'show a remote component'],
     [
       'c',
-      'compare [boolean]',
+      'compare',
       'compare current file system component to latest tagged component [default=latest]. only works in legacy.',
     ],
   ] as CommandOptions;

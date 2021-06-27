@@ -7,7 +7,7 @@
   justify-content: space-between;
   padding-right: 8px;
   font-size: inherit;
-  font-size: var(--p-xs);
+  font-size: var(--bit-p-xs);
 
   //TODO - move to a link component
   text-decoration: none;
@@ -17,11 +17,11 @@
   border-left: 0px solid transparent;
 
   &:hover {
-    background: var(--bg-topping-highlight);
+    background: var(--bit-bg-heavy, #f6f6f6);
   }
 
   &.active {
-    background: var(--muted-color);
+    background: var(--bit-accent-bg, #eceaff);
     // .right {
     // 	.componentIcon {
     // 		color: $w10;

@@ -1,6 +1,6 @@
 .componentCard {
   position: relative;
-  border-color: var(--light-border-color, #cccfd4);
+  border-color: var(--bit-border-color-light, #cccfd4);
   border-width: 1px;
   border-style: solid;
   width: 100%;
@@ -9,7 +9,7 @@
   cursor: pointer;
   transition: border-color 300ms ease-in-out;
   &:hover {
-    border-color: var(--text-muted, #6c707c);
+    border-color: var(--bit-text-color-light, #6c707c);
     overflow: unset;
   }
 }

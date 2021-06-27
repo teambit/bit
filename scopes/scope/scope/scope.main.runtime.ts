@@ -1,9 +1,8 @@
 import mapSeries from 'p-map-series';
 import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
-import { readdirSync } from 'fs-extra';
+import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -37,7 +36,7 @@ import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import { compact, slice, uniqBy } from 'lodash';
+import { compact, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -270,7 +269,10 @@ export class ScopeMain implements ComponentFactory {
 
   private parseLocalAspect(localAspects: string[]) {
     const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
-    return dirPaths;
+    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
+    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    return existsDirPaths;
   }
 
   private findRuntime(dirPath: string, runtime: string) {
@@ -599,7 +601,9 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying<string>(versions, range)?.toString();
+    return semver
+      .maxSatisfying<string>(versions, range, { includePrerelease: true })
+      ?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {

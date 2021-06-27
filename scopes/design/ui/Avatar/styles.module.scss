@@ -8,7 +8,7 @@
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
-  border: 1px solid var(--border-color, #ededed);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
 
   .tooltip {
     max-width: 13ch;
@@ -18,7 +18,7 @@
     text-align: center;
     display: inline-block;
     justify-self: center;
-    color: var(--bg-color, #ffffff);
+    color: var(--bit-bg-color, #ffffff);
   }
   .orgDefault {
     text-align: center;
@@ -46,12 +46,12 @@
 }
 
 .default {
-  background-color: var(--border-color, #ededed);
-  border: 1px solid var(--border-color, #ededed);
+  background-color: var(--bit-border-color-lightest, #ededed);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
   box-sizing: border-box;
 }
 
 :export {
   //text without hash
-  defaultAvatarBgColor: str-slice(inspect(var(--border-color, #ededed)), 2);
+  defaultAvatarBgColor: str-slice(inspect(var(--bit-border-color-lightest, #ededed)), 2);
 }

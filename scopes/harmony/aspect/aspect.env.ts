@@ -37,6 +37,34 @@ export class AspectEnv implements Environment {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
+  async getDependencies() {
+    return {
+      dependencies: {
+        react: '-',
+        'react-dom': '-',
+        'core-js': '^3.0.0',
+        // For aspects the babel runtime should be a runtime dep not only dev as they are compiled by babel
+        '@babel/runtime': '7.12.18',
+      },
+      // TODO: add this only if using ts
+      devDependencies: {
+        react: '-',
+        'react-dom': '-',
+        '@types/mocha': '-',
+        '@types/node': '12.20.4',
+        '@types/react': '^17.0.8',
+        '@types/react-dom': '^17.0.5',
+        '@types/jest': '^26.0.0',
+        '@types/testing-library__jest-dom': '5.9.5',
+      },
+      peerDependencies: {
+        // TODO: check if we really need react for aspects (maybe for ink support)
+        react: '^16.8.0 || ^17.0.0',
+        'react-dom': '^16.8.0 || ^17.0.0',
+      },
+    };
+  }
+
   getBuildPipe() {
     const tsCompiler = this.reactEnv.createTsCompiler(tsconfig, {
       artifactName: 'declaration',

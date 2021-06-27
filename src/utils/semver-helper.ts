@@ -1,6 +1,5 @@
-import { ReleaseType, valid, prerelease, maxSatisfying } from 'semver';
+import { ReleaseType, valid, maxSatisfying } from 'semver';
 import { InvalidVersion } from '@teambit/component-version';
-import GeneralError from '../error/general-error';
 
 export function isStrReleaseType(str: string): boolean {
   const releaseTypes = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
@@ -8,7 +7,7 @@ export function isStrReleaseType(str: string): boolean {
 }
 
 export function isReleaseTypeSupported(str: string): boolean {
-  const supportedReleaseTypes = ['patch', 'minor', 'major'];
+  const supportedReleaseTypes = ['patch', 'minor', 'major', 'prerelease'];
   return supportedReleaseTypes.includes(str);
 }
 
@@ -23,7 +22,6 @@ export function validateVersion(version: string | undefined): string | undefined
     // it also changes to a valid string (e.g. from v1.0.0 to 1.0.0)
     const validVersion = valid(version);
     if (!validVersion) throw new InvalidVersion(version);
-    if (prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
     return validVersion;
   }
   return undefined;
@@ -40,7 +38,7 @@ export function getValidVersionOrReleaseType(str: string): { releaseType?: Relea
 }
 
 export function getLatestVersion(versions: string[]): string {
-  const max = maxSatisfying(versions, '*');
+  const max = maxSatisfying(versions, '*', { includePrerelease: true });
   if (!max) throw new Error(`unable to find the latest version from ${versions.join(', ')}`);
   return max;
 }

@@ -78,7 +78,21 @@ export class ScopeComponentLoader {
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    const version = (await this.scope.legacyScope.objects.load(new Ref(hash), true)) as Version;
+    const getVersionObject = async (): Promise<Version> => {
+      try {
+        const snap = await this.scope.legacyScope.objects.load(new Ref(hash), true);
+        return snap as Version;
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          const errMsg = `fatal: snap "${hash}" file for component "${id.toString()}" was not found in the filesystem`;
+          this.logger.error(errMsg, err);
+          throw new Error(errMsg);
+        } else {
+          throw err;
+        }
+      }
+    };
+    const version = await getVersionObject();
     return this.createSnapFromVersion(version);
   }
 
@@ -104,8 +118,8 @@ export class ScopeComponentLoader {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+    Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
       tagMap.set(tag.version, tag);
     });
     return tagMap;

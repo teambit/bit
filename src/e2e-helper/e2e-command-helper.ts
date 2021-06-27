@@ -181,6 +181,9 @@ export default class CommandHelper {
   persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
+  persistTagWithoutBuild(options = '') {
+    return this.runCmd(`bit tag --persist ${options}`, undefined, undefined, BUILD_ON_CI);
+  }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
   }
@@ -210,24 +213,29 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
   }
   showLanes(options = '') {
-    const results = this.runCmd(`bit lane ${options}`);
+    const results = this.runCmd(`bit lane list ${options}`);
     return removeChalkCharacters(results) as string;
   }
   showOneLane(name: string) {
-    return this.runCmd(`bit lane ${name}`);
+    return this.runCmd(`bit lane show ${name}`);
   }
   showLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane ${options} --json`);
+    const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
   showRemoteLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane --remote ${this.scopes.remote} ${options} --json`);
+    const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
   showOneLaneParsed(name: string) {
-    const results = this.runCmd(`bit lane ${name} --json`);
+    const results = this.runCmd(`bit lane show ${name} --json`);
     const parsed = JSON.parse(results);
-    return parsed.lanes[0];
+    return parsed;
+  }
+  diffLane(args = '', onScope = false) {
+    const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
+    const output = this.runCmd(`bit lane diff ${args}`, cwd);
+    return removeChalkCharacters(output) as string;
   }
   getHead(id: string, cwd?: string) {
     const comp = this.catComponent(id, cwd);

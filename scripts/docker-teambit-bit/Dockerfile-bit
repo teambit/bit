@@ -1,11 +1,9 @@
 FROM node:12.18.3
-RUN adduser --disabled-password --gecos '' user
-RUN chown -R user /usr/local/
-USER user
+USER root
 
 RUN npm i @teambit/bvm -g
 RUN bvm upgrade
-ENV PATH=$PATH:/home/user/bin
+ENV PATH=$PATH:/root/bin
 
 # increase node process memory
 ENV NODE_OPTIONS=--max_old_space_size=4096
