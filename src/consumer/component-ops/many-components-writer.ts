@@ -12,7 +12,7 @@ import { installNpmPackagesForComponents } from '../../npm-client/install-packag
 import { ComponentWithDependencies } from '../../scope';
 import { isDir, isDirEmptySync } from '../../utils';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
-import { pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
