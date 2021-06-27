@@ -10,7 +10,7 @@
   cursor: pointer;
 
   &:hover {
-    background-color: var(--bit-bg-color-highlight);
+    background-color: var(--bit-bg-heavy, #f6f6f6);
   }
 
   &.active,
