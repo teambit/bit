@@ -3,6 +3,7 @@ import { SpecFiles } from '@teambit/tester';
 
 export type PluginConfig = {
   onComplete: (testSuite: any) => void;
+  shouldRunTestSuite: (specFile: any) => Promise<boolean>;
   specFiles: SpecFiles;
 };
 
@@ -21,6 +22,10 @@ class Watch implements WatchPlugin {
 
   _onComplete: (testSuite: any) => void;
 
+  _shouldRunTestSuite: (specFile: any) => Promise<boolean>;
+
+  _runRunCache: string;
+
   constructor({
     stdin,
     stdout,
@@ -32,25 +37,19 @@ class Watch implements WatchPlugin {
   }) {
     this._stdin = stdin;
     this._stdout = stdout;
+    this._prompt = new Prompt();
+    this._runRunCache;
     this._specFiles = config.specFiles;
     this._onComplete = config.onComplete;
-  }
-
-  private findComponent(specFile: string) {
-    const component = this._specFiles.toArray().find(([, specs]) => {
-      const paths = specs.map((spec) => spec.path);
-      if (paths.includes(specFile)) return true;
-      return false;
-    });
-    return component?.[0];
+    this._shouldRunTestSuite = config.shouldRunTestSuite;
   }
 
   apply(jestHooks: JestHookSubscriber) {
-    // jestHooks.shouldRunTestSuite(async (testSuite) => {
-    //   const component = this.findComponent(testSuite.testPath);
-    //   if ((await component?.isModified()) || (await component?.isNew())) return true;
-    //   return false;
-    // });
+    jestHooks.shouldRunTestSuite(async (testSuite) => {
+      const shouldRun = await this._shouldRunTestSuite(testSuite.testPath);
+      if (shouldRun) return true;
+      return false;
+    });
 
     jestHooks.onTestRunComplete((results) => {
       this._onComplete(results);

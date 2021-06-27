@@ -1,10 +1,12 @@
 import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, sortBy } from 'lodash';
+import crypto from 'crypto';
 // import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
+import { Workspace } from '@teambit/workspace';
 import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap } from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
@@ -22,7 +24,9 @@ export class JestTester implements Tester {
     readonly jestConfig: any,
     private jestModule: typeof jest,
     private jestWorker: HarmonyWorker<JestWorker>,
-    private logger: Logger
+    private logger: Logger,
+    private workspace: Workspace,
+    private cacheHash = new Map()
   ) {}
 
   configPath = this.jestConfig;
@@ -39,13 +43,31 @@ export class JestTester implements Tester {
     return this.jestModule.getVersion();
   }
 
-  // private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
-  //   return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {
-  //     const file = specs.find((spec) => spec.path === path);
-  //     if (file) acc = file;
-  //     return acc;
-  //   }, undefined);
-  // }
+  private sha1(data: string | Buffer) {
+    const sha = crypto.createHash('sha1');
+    sha.update(data);
+    return sha.digest('hex');
+  }
+
+  private async shouldRunTest(context: TesterContext, specFile: string): Promise<boolean> {
+    const components = context.components.map((component) => context.patterns.get(component));
+    const component = components.find((comp) => {
+      if (!comp) return undefined;
+      const [, specs] = comp;
+      return specs.filter((pattern) => minimatch(specFile, pattern.path)).length > 0;
+    });
+    if (!component) return false;
+    const [workspaceComponent] = component;
+    const updatedComponent = await this.workspace.get(workspaceComponent.id);
+    if (!updatedComponent) return false;
+    const { files } = updatedComponent.state.filesystem;
+    // TODO: fix hash on component filesystem
+    const hashes = sortBy(files, ['relative']).map((file) => this.sha1(file.contents));
+    const hash = this.sha1(`${hashes.join(',')}_${specFile}`);
+    if (this.cacheHash[workspaceComponent.id.toString()] === hash) return false;
+    this.cacheHash[workspaceComponent.id.toString()] = hash;
+    return true;
+  }
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
@@ -190,8 +212,13 @@ export class JestTester implements Tester {
           resolve(watchTestResults);
         });
 
+        const cbIsModified = proxy((specFile: string) => this.shouldRunTest(context, specFile));
+
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.onTestComplete(cbFn);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        await workerApi.registerIsModified(cbIsModified);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
