@@ -27,6 +27,7 @@ import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { RuntimeComponents } from './runtime-components';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import { computeExposes } from './compute-exposes';
+import { generateBootstrapFile } from './generate-bootstrap-file';
 
 const noopResult = {
   results: [],
@@ -148,8 +149,9 @@ export class PreviewMain {
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
     // throw new Error('g');
-
-    return [...linkFiles, previewRuntime];
+    const { bootstrapFileName } = this.createBootstrapFile([...linkFiles, previewRuntime], context);
+    const indexEntryPath = this.createIndexEntryFile(bootstrapFileName, context);
+    return [indexEntryPath];
   }
 
   private async updateLinkFiles(components: Component[] = [], context: ExecutionContext, useMf = true) {
@@ -173,6 +175,37 @@ export class PreviewMain {
     });
 
     return Promise.all(paths);
+  }
+
+  private createIndexEntryFile(bootstrapFileName: string, context: ExecutionContext) {
+    const dirName = join(this.tempFolder, context.id);
+    const contents = `import('./${bootstrapFileName}')`;
+    const hash = objectHash(contents);
+    const targetPath = join(dirName, `__index-${this.timestamp}.js`);
+    console.log('createIndexEntryFile', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+    return targetPath;
+  }
+
+  private createBootstrapFile(entryFilesPaths: string[], context: ExecutionContext) {
+    const contents = generateBootstrapFile(entryFilesPaths);
+    const dirName = join(this.tempFolder, context.id);
+    const hash = objectHash(contents);
+    const fileName = `__bootstrap-${this.timestamp}.js`;
+    const targetPath = join(dirName, fileName);
+    console.log('createBootstrapFile', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+    return { bootstrapPath: targetPath, bootstrapFileName: fileName };
   }
 
   async writePreviewRuntime(context: { components: Component[] }) {

@@ -71,7 +71,7 @@ export function getExposedModuleByPreviewDefPrefixFileAndIndex(
   filePath: string,
   index: number
 ): { exposedKey: string; exposedVal: string } {
-  const exposedKey = computeExposeKey(compFullName, previewDefPrefix, index);
+  const exposedKey = `./${computeExposeKey(compFullName, previewDefPrefix, index)}`;
   return {
     exposedKey,
     exposedVal: filePath,
@@ -80,5 +80,5 @@ export function getExposedModuleByPreviewDefPrefixFileAndIndex(
 
 export function computeExposeKey(componentFullName: string, previewDefPrefix: string, index: number): string {
   const compNameNormalized = normalizeMfName(componentFullName);
-  return `./${compNameNormalized}_${previewDefPrefix}_${index}`;
+  return `${compNameNormalized}_${previewDefPrefix}_${index}`;
 }

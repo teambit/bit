@@ -6,7 +6,6 @@ import { computeExposeKey } from './compute-exposes';
 export function generateMfLink(prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string): string {
   return `
   console.log('mf link file');
-  // debugger
 const promises = [
   // import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
   import('${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}').then(Module => Module.linkModules),
@@ -26,9 +25,8 @@ Promise.all(promises).then(([linkModules, harmony]) => {
             const exposedKey = computeExposeKey(compFullName, prefix, index);
             // TODO: take teambitReactReactMf dynamically
             return `() => {
-              debugger;
             console.log('inside link modules');
-            import('teambitReactReactMf/${exposedKey}').then((Module) => {
+            return import('teambitReactReactMf/${exposedKey}').then((Module) => {
               console.log('exposedKey module', Module);
               return Module;
             })}`;

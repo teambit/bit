@@ -18,24 +18,26 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render(componentId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
+  async render(componentId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     console.log('im in render of composition');
     if (!modules.componentMap[componentId]) return;
-    debugger;
 
-    const compositions = this.selectPreviewModel(componentId, modules);
+    const compositions = await this.selectPreviewModel(componentId, modules);
     const active = this.getActiveComposition(compositions);
 
     modules.mainModule.default(active, context);
   }
 
   /** gets relevant information for this preview to render */
-  selectPreviewModel(componentId: string, previewModule: PreviewModule) {
-    debugger;
-    const files = previewModule.componentMap[componentId] || [];
+  async selectPreviewModel(componentId: string, previewModule: PreviewModule) {
+    // const files = (await previewModule.componentMap[componentId]()) || [];
+    const allFunc = previewModule.componentMap[componentId];
+    const promises = allFunc.map((func) => func());
+    const files = await Promise.all(promises);
     console.log('selectPreviewModel', files);
 
     // allow compositions to come from many files. It is assumed they will have unique named
+    // const combined = Object.assign({}, ...files);
     const combined = Object.assign({}, ...files);
     return combined;
   }

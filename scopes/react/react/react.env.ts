@@ -188,7 +188,7 @@ export class ReactEnv implements Environment {
     const port = context.port;
     const rootPath = context.rootPath;
 
-    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'localhost', port, rootPath || '');
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'http://localhost', port, rootPath || '');
     console.log('envBaseConfig', require('util').inspect(envBaseConfig, { depth: 10 }));
 
     const envDevConfig = envPreviewDevConfigFactory(context.id);
