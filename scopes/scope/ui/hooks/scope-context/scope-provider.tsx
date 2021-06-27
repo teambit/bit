@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 
+import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ScopeContext } from './scope-context';
-import { ScopeModel } from './scope-model';
 
 export type ScopeProviderProps = {
   /**

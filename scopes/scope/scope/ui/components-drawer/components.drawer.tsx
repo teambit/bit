@@ -14,7 +14,7 @@ import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { useScope } from '../use-scope';
+import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import styles from './components-drawer.module.scss';
 
 export class ComponentsDrawer implements DrawerType {
@@ -23,7 +23,7 @@ export class ComponentsDrawer implements DrawerType {
   name = 'COMPONENTS';
 
   render = () => {
-    const { scope } = useScope();
+    const { scope } = useScopeQuery();
     const { treeNodeSlot } = this;
 
     const TreeNodeRenderer = useCallback(

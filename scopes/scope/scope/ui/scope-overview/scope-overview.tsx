@@ -5,7 +5,7 @@ import { ScopeDetails } from '@teambit/scope.ui.scope-details';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { EmptyScope } from '@teambit/scope.ui.empty-scope';
 import { ComponentModel } from '@teambit/component';
-import { ScopeContext } from '../scope-context';
+import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import styles from './scope-overview.module.scss';
 import type { ScopeBadgeSlot, OverviewLineSlot } from '../../scope.ui.runtime';
 

@@ -1,1 +1,1 @@
-export { ScopeMenu } from './menu';
+export { ScopeMenu, ScopeUseBox } from './menu';
