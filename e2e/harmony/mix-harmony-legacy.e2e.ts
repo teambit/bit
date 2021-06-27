@@ -34,7 +34,7 @@ describe('mix use of Legacy and Harmony', function () {
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.addComponent('bar', { i: 'bar/foo' });
       });
-      it('bit status should show an issue of ', () => {
+      it('bit status should show an issue of LegacyInsideHarmony', () => {
         helper.command.expectStatusToHaveIssue(IssuesClasses.LegacyInsideHarmony.name);
       });
       it('bit tag should throw an error', () => {

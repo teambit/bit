@@ -48,10 +48,7 @@ describe('build command', function () {
     });
   });
 
-  // @todo: fix!
-  // here is the issue: if we enable this test, the next one fails.
-  // for some reason `loadBit` doesn't work if we run it here once and in the next test again.
-  describe.skip('list tasks', () => {
+  describe('list tasks', () => {
     before(() => {
       helper = new Helper();
       helper.command.setFeatures(HARMONY_FEATURE);

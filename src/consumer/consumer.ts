@@ -194,7 +194,7 @@ export default class Consumer {
    * Running migration process for consumer to update the stores (.bit.map.json) to the current version
    *
    * @param {any} verbose - print debug logs
-   * @returns {Object} - wether the process run and wether it successeded
+   * @returns {Object} - wether the process run and wether it succeeded
    * @memberof Consumer
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
