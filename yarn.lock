@@ -6451,6 +6451,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/documenter.ui.section@npm:4.0.1":
+  version: 4.0.1
+  resolution: "@teambit/documenter.ui.section@npm:4.0.1"
+  dependencies:
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: d159fcdabdc1068735784a530dd29a2d488eff9559ca820eb1caadd902fc0d494fc3e173f755fa949d9ebf77e8a6a4e8b60a56205f9fca301a429d0e14f4410a
+  languageName: node
+  linkType: hard
+
 "@teambit/documenter.ui.separator@npm:1.0.3":
   version: 1.0.3
   resolution: "@teambit/documenter.ui.separator@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.separator%2F-%2Fdocumenter.ui.separator-1.0.3.tgz"
@@ -6845,13 +6858,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.108":
-  version: 1.0.108
-  resolution: "@teambit/legacy@npm:1.0.108"
+"@teambit/legacy@npm:1.0.109":
+  version: 1.0.109
+  resolution: "@teambit/legacy@npm:1.0.109"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
-    "@teambit/network.agent": 0.0.1
+    "@teambit/toolbox.network.agent": 0.0.116
     "@vuedoc/parser": 2.4.0
     acorn: 6.4.2
     ajv: 6.12.6
@@ -6970,7 +6983,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 7832ba655b1e3d7f93ddca04069b1242e7fda249f08be16e86fb9202a7d088a3be10e6e78baef5c17eb387035aea546be15a523fe3a22b6252d96763e4a7768c
+  checksum: cfde2fd07dc9fd00dc3381289eb74308823d538abeb10f337c94a95bd3ec69dc7e6424d6cd870cf794957cbf94db49d191b33d32fa78966ebf48d3b0276531b6
   languageName: node
   linkType: hard
 
@@ -7108,8 +7121,9 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.108
+    "@teambit/legacy": 1.0.109
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
+    "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
     "@teambit/react.instructions.react.adding-tests": 0.0.5
     "@teambit/string.ellipsis": 0.0.7
@@ -7505,7 +7519,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.108
+    "@teambit/legacy": 1.0.109
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -15903,6 +15917,8 @@ __metadata:
 "docs-app-55ecfa@workspace:scopes/react/ui/docs-app":
   version: 0.0.0-use.local
   resolution: "docs-app-55ecfa@workspace:scopes/react/ui/docs-app"
+  dependencies:
+    "@teambit/documenter.ui.section": 4.0.1
   languageName: unknown
   linkType: soft
 

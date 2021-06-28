@@ -7,7 +7,7 @@ export type TranspileFileParams = {
 
 export type TranspileComponentParams = {
   componentDir: string; // absolute path of the component's root directory
-  distDir: string; // absolute path of the component's dist directory
+  outputDir: string; // absolute path of the component's output directory
 };
 
 export type TranspileFileOutput =
@@ -54,8 +54,6 @@ export interface Compiler extends CompilerOptions {
    * id of the compiler.
    */
   id: string;
-
-  icon?: string;
 
   /**
    * serialized config of the compiler.

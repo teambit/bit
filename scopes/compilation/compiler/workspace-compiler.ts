@@ -49,7 +49,7 @@ export class ComponentCompiler {
 
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
-    // clean dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
+    // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (options.deleteDistDir) {
       dataToPersist = new DataToPersist();
       dataToPersist.removePath(new RemovePath(this.distDir));
@@ -146,7 +146,6 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   private async compileAllFilesWithNewCompiler(component: ConsumerComponent): Promise<void> {
     const base = this.distDir;
     const filesToCompile: SourceFile[] = [];
-    const params = { componentDir: this.componentDir, distDir: this.workspace.getComponentPackagePath(component) };
     component.files.forEach((file: SourceFile) => {
       const isFileSupported = this.compilerInstance.isFileSupported(file.path);
       if (isFileSupported) {
@@ -165,7 +164,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
     if (filesToCompile.length) {
       try {
-        await this.compilerInstance.transpileComponent?.(params);
+        await this.compilerInstance.transpileComponent?.({
+          componentDir: this.componentDir,
+          outputDir: this.workspace.getComponentPackagePath(component),
+        });
       } catch (error) {
         this.compileErrors.push({ path: this.componentDir, error });
       }

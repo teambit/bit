@@ -1,12 +1,12 @@
-import { Linter } from '@teambit/linter';
-import { Tester } from '@teambit/tester';
-import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { BuildTask } from '@teambit/builder';
-import { SchemaExtractor } from '@teambit/schema';
-import { WebpackConfigTransformer } from '@teambit/webpack';
-import { PackageJsonProps } from '@teambit/pkg';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import { TsConfigSourceFile } from 'typescript';
+import type { Linter } from '@teambit/linter';
+import type { Tester } from '@teambit/tester';
+import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import type { BuildTask } from '@teambit/builder';
+import type { SchemaExtractor } from '@teambit/schema';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { PackageJsonProps } from '@teambit/pkg';
+import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { TsConfigSourceFile } from 'typescript';
 
 export type EnvDescriptor = {
   type: string;
@@ -97,9 +97,21 @@ export interface BuilderEnv extends PreviewEnv {
 
   /**
    * Returns the component build pipeline
-   * Required for `bit build`
+   * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
   getBuildPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+
+  /**
+   * Returns the component tag pipeline
+   * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
+   */
+  getTagPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+
+  /**
+   * Returns the component snap pipeline
+   * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
+   */
+  getSnapPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
 }
 
 export interface TesterEnv extends Environment {

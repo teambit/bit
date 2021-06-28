@@ -28,8 +28,6 @@ export class JestTester implements Tester {
 
   displayName = 'Jest';
 
-  isSerial = true;
-
   _callback: CallbackFn | undefined;
 
   displayConfig() {
@@ -133,6 +131,9 @@ export class JestTester implements Tester {
     console.warn = (message: string) => {
       this.logger.warn(message);
     };
+
+    if (context.debug) config.runInBand = true;
+    config.runInBand = true;
 
     if (context.watch) {
       config.watchAll = true;

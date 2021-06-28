@@ -1,7 +1,6 @@
 import { stringify, parse } from 'flatted';
 import { expose } from '@teambit/worker';
-
-const jest = require('jest');
+import { runCLI } from 'jest';
 
 export class JestWorker {
   private onTestCompleteCb;
@@ -52,7 +51,7 @@ export class JestWorker {
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      const res = jest.runCLI(withEnv, [jestConfigPath]);
+      const res = runCLI(withEnv, [jestConfigPath]);
       // eslint-disable-next-line no-console
       res.catch((err) => console.error(err));
       resolve();

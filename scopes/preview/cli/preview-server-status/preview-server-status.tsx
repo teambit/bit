@@ -34,7 +34,7 @@ export function PreviewServerStatus({ previewServers, serverStats: servers = {} 
     [servers]
   );
   const warnings = useMemo(() => flatten(Object.values(servers).map((x) => x.warnings)), [servers]).filter(
-    (warning) => !IGNORE_WARNINGS.find((reg) => warning?.message.match(reg))
+    (warning) => !IGNORE_WARNINGS.find((reg) => warning?.message?.match(reg))
   );
 
   if (errors && errors.length) {
