@@ -6,7 +6,7 @@ import HttpAgent from 'agentkeepalive';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
-import { getAgent, AgentOptions } from '@teambit/network.agent';
+import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
 import { BitId, BitIds } from '../../../bit-id';

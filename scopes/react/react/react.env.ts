@@ -20,6 +20,10 @@ import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
+// Makes sure the @teambit/react.ui.docs-app is a dependency
+// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import docs from '@teambit/react.ui.docs-app'; 
 import { ReactMainConfig } from './react.main.runtime';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
@@ -232,7 +236,7 @@ export class ReactEnv implements Environment {
    * return a path to a docs template.
    */
   getDocsTemplate() {
-    return require.resolve('./docs');
+    return require.resolve('@teambit/react.ui.docs-app');
   }
 
   icon = 'https://static.bit.dev/extensions-icons/react.svg';

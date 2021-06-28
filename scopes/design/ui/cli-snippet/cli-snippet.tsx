@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { useMemo } from 'react';
+import React, { useMemo, forwardRef } from 'react';
 import Convert from 'ansi-to-html';
 import { escape } from 'html-escaper';
 
@@ -28,10 +28,13 @@ const colors = {
   15: '#EDEDED',
 };
 
-export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
+export const CliSnippet = forwardRef<HTMLDivElement, CliSnippetProps>(function CliSnippet(
+  { content, className, ...rest }: CliSnippetProps,
+  ref
+) {
   const snippetContent = useMemo(() => convertSnippetContent(content), [content]);
   return (
-    <div {...rest} className={classNames(styles.log, className)}>
+    <div {...rest} ref={ref} className={classNames(styles.log, className)}>
       {snippetContent &&
         snippetContent.map((line, index) => {
           return (
@@ -46,7 +49,7 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
         })}
     </div>
   );
-}
+});
 
 function convertSnippetContent(content: string) {
   if (!content) return null;

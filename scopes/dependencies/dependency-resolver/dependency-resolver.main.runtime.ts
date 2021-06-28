@@ -26,7 +26,7 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
-import { SemVer } from 'semver';
+import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
@@ -35,7 +35,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { PackageManagerNotFound } from './exceptions';
+import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
   WorkspaceManifest,
@@ -154,6 +154,13 @@ export interface DependencyResolverWorkspaceConfig {
    *
    */
   installFromBitDevRegistry: boolean;
+
+  /**
+   * Like https://docs.npmjs.com/cli/v7/using-npm/config#save-prefix
+   * Set the prefix to use when adding dependency to workspace.jsonc via bit install
+   * to lock version to exact version you can use empty string (default)
+   */
+  savePrefix: string;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -256,6 +263,19 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  getSavePrefix(): string {
+    return this.config.savePrefix;
+  }
+
+  getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
+    const prefix = overridePrefix || this.getSavePrefix() || '';
+    const versionWithPrefix = `${prefix}${version}`;
+    if (!semver.validRange(versionWithPrefix)) {
+      throw new InvalidVersionWithPrefix(versionWithPrefix);
+    }
+    return versionWithPrefix;
   }
 
   async getPolicy(component: Component): Promise<VariantPolicy> {
@@ -755,6 +775,7 @@ export class DependencyResolverMain {
     devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
     installFromBitDevRegistry: true,
+    savePrefix: '',
   };
 
   static async provider(
