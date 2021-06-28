@@ -195,9 +195,15 @@ export default class ManyComponentsWriter {
     );
   }
 
+  /**
+   * e.g. [bar, bar/foo] => [bar_1, bar/foo]
+   * otherwise, the bar/foo component will be saved inside "bar" component.
+   * in case bar_1 is taken, increment to bar_2 until the name is available.
+   */
   private fixDirsIfNested(componentWriterInstances: ComponentWriter[]) {
     const allDirs = componentWriterInstances.map((c) => c.writeToPath);
-    // e.g. [bar, bar/foo]
+
+    // get all components that their root-dir is a parent of other components root-dir.
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
       allDirs.find((d) => d.startsWith(`${writeToPath}${path.sep}`))
     );
@@ -218,6 +224,7 @@ export default class ManyComponentsWriter {
       return newPath;
     };
 
+    // change the paths of all these parents root-dir to not collide with the children root-dir
     parentsOfOthersComps.forEach((componentWriter) => {
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
       const newPath = incrementRecursively(componentWriter.writeToPath);

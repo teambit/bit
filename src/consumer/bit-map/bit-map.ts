@@ -104,9 +104,13 @@ export default class BitMap {
     this.markAsChanged();
   }
 
+  /**
+   * in case the added component's root-dir is a parent-dir of other components
+   * or other component's root-dir is a parent root-dir of this component, throw an error
+   */
   private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
     if (this.isLegacy || !rootDir) {
-      return; // with legacy, you can add files inside dir to track them.
+      return;
     }
     const isParentDir = (parent: string, child: string) => {
       const relative = path.relative(parent, child);
@@ -667,6 +671,7 @@ export default class BitMap {
     componentMap.mainFile = mainFile;
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
+      this.throwForExistingParentDir(componentMap);
     }
     if (trackDir) {
       componentMap.trackDir = pathNormalizeToLinux(trackDir);
@@ -708,7 +713,6 @@ export default class BitMap {
   sortValidateAndMarkAsChanged(componentMap: ComponentMap) {
     componentMap.sort();
     componentMap.validate();
-    this.throwForExistingParentDir(componentMap);
     this.markAsChanged();
   }
 
