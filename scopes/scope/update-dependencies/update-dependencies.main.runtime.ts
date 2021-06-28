@@ -24,6 +24,7 @@ import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 
 export type UpdateDepsOptions = {
   tag?: boolean;
+  simulation?: boolean;
   output?: string;
   message?: string;
   username?: string;
@@ -82,11 +83,12 @@ export class UpdateDependenciesMain {
     await this.updateFutureVersion();
     await this.updateAllDeps();
     this.addLogToComponents();
-    await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+    if (!updateDepsOptions.simulation) {
+      await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+    }
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();
-    // await this.scope.reloadAspectsWithNewVersion(this.legacyComponents);
     await mapSeries(this.components, (component) => this.scope.loadComponentsAspect(component));
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       this.components,
@@ -141,10 +143,13 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   private async importAllMissing(depsUpdateItemsRaw: DepUpdateItemRaw[]) {
     const componentIds = depsUpdateItemsRaw.map((d) => ComponentID.fromString(d.componentId));
-    const dependenciesIds = depsUpdateItemsRaw.map((item) =>
-      item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
-    );
-    const idsToImport = [...flatten(dependenciesIds), ...componentIds];
+    const idsToImport = componentIds;
+    if (!this.updateDepsOptions.simulation) {
+      const dependenciesIds = depsUpdateItemsRaw.map((item) =>
+        item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
+      );
+      idsToImport.push(...flatten(dependenciesIds));
+    }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
     await this.scope.import(idsToImport, false);

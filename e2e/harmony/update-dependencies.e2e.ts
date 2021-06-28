@@ -132,5 +132,31 @@ describe('update-dependencies command', function () {
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
+    describe('running from a new bare scope using --simulate and --tag flags', () => {
+      let updateDepsOutput: string;
+      let updateRemote;
+      before(() => {
+        helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
+        updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        // delete the remote from the update-remote scope. it should not reach the remote
+        // for the dependencies, it should only install via registry.
+        helper.scopeHelper.removeRemoteScope(helper.scopes.remote, false, updateRemote.scopePath);
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemote.scopePath);
+        const data = [
+          {
+            componentId: `${secondRemoteName}/comp-b`,
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
+          },
+        ];
+        updateDepsOutput = helper.command.updateDependencies(data, '--tag --simulation', updateRemote.scopePath);
+      });
+      it('should succeed', () => {
+        expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
+      });
+      it('should tag the component locally with the updated version', () => {
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, updateRemote.scopePath);
+        expect(compB.dependencies[0].id.version).to.equal('1.1.0');
+      });
+    });
   });
 });
