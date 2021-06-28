@@ -12,6 +12,8 @@ import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
+import { Compiler } from '@teambit/compiler';
+import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
@@ -61,7 +63,7 @@ export class PreviewMain {
 
     private envs: EnvsMain,
 
-    private workspace: Workspace,
+    private pkg: PkgMain,
 
     private aspectLoader: AspectLoaderMain,
 
@@ -71,8 +73,12 @@ export class PreviewMain {
 
     private builder: BuilderMain,
 
-    private tempFolder: string
+    private workspace?: Workspace
   ) {}
+
+  get tempFolder(): string {
+    return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
+  }
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
     const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
@@ -160,8 +166,18 @@ export class PreviewMain {
       const templatePath = await previewDef.renderTemplatePath?.(context);
 
       const map = await previewDef.getModuleMap(components);
-      const withPaths = map.map<string[]>((files) => {
-        return files.map((file) => file.path);
+      const environment = context.envRuntime.env;
+      const compilerInstance: Compiler = environment.getCompiler?.();
+      const withPaths = map.map<string[]>((files, component) => {
+        const modulePath = this.pkg.getModulePath(component);
+        return files.map((file) => {
+          if (!this.workspace) {
+            return file.path;
+          }
+          const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
+          return join(this.workspace.path, modulePath, distRelativePath);
+        });
+        // return files.map((file) => file.path);
       });
 
       const dirPath = join(this.tempFolder, context.id);
@@ -336,6 +352,7 @@ export class PreviewMain {
     UIAspect,
     EnvsAspect,
     WorkspaceAspect,
+    PkgAspect,
     PubsubAspect,
     AspectLoaderAspect,
   ];
@@ -346,13 +363,14 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pubsub, aspectLoader]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
       EnvsMain,
       Workspace | undefined,
+      PkgMain,
       PubsubMain,
       AspectLoaderMain
     ],
@@ -365,12 +383,12 @@ export class PreviewMain {
       previewSlot,
       uiMain,
       envs,
-      workspace,
+      pkg,
       aspectLoader,
       config,
       bundlingStrategySlot,
       builder,
-      workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR
+      workspace
     );
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));

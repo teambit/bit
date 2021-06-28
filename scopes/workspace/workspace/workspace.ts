@@ -43,6 +43,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { LocalLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -105,6 +106,7 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
+  savePrefix?: string;
 };
 
 export type WorkspaceLinkOptions = LinkingOptions;
@@ -497,6 +499,10 @@ export class Workspace implements ComponentFactory {
 
   getSnap(id: ComponentID, hash: string) {
     return this.scope.getSnap(id, hash);
+  }
+
+  getCurrentLaneId(): LocalLaneId {
+    return this.consumer.getCurrentLaneId();
   }
 
   getDefaultExtensions(): ExtensionDataList {
@@ -1086,10 +1092,14 @@ export class Workspace implements ComponentFactory {
       const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
       resolvedPackages.forEach((resolvedPackage) => {
         if (resolvedPackage.version) {
+          const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
+            resolvedPackage.version,
+            options?.savePrefix
+          );
           newWorkspacePolicyEntries.push({
             dependencyId: resolvedPackage.packageName,
             value: {
-              version: resolvedPackage.version,
+              version: versionWithPrefix,
             },
             lifecycleType: options?.lifecycleType || 'runtime',
           });

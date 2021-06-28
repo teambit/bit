@@ -4,3 +4,4 @@ export { MainAspectNotInstallable } from './main-aspect-not-installable';
 export { MainAspectNotLinkable } from './main-aspect-not-linkable';
 export { CoreAspectLinkError } from './core-aspect-link-error';
 export { HarmonyLinkError } from './harmony-link-error';
+export { InvalidVersionWithPrefix } from './invalid-version-with-prefix';

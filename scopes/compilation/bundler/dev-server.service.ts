@@ -112,7 +112,8 @@ export class DevServerService implements EnvService<ComponentServer> {
     const exposes = await getExposes(context, this.runtimeSlot);
     return Object.assign(context, {
       entry,
-      rootPath: `/preview/${context.envRuntime.id}`,
+      // don't start with a leading "/" because it generates errors on Windows
+      rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `/public`,
       exposes,
     });

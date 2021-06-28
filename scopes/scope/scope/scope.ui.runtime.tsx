@@ -12,10 +12,10 @@ import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
-import { ScopeMenu } from './ui/menu';
+import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
-import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './ui/components-drawer';
 
 export type ScopeBadge = ComponentType;
@@ -310,6 +310,7 @@ export class ScopeUI {
     );
     scopeUi.registerExplicitRoutes();
     scopeUi.registerMenuItem(scopeUi.menuItems);
+    scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">

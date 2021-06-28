@@ -6,10 +6,9 @@ import diff from 'object-diff';
 import R from 'ramda';
 import { compact } from 'lodash';
 import { lt, gt } from 'semver';
-import { Consumer } from '..';
 import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
-import { FieldsDiff } from './components-diff';
+import { DiffOptions, FieldsDiff } from './components-diff';
 import { BitIds } from '../../bit-id';
 
 type ConfigDiff = {
@@ -147,11 +146,9 @@ function componentToPrintableForDiffCommand(component: Component, verbose = fals
 }
 
 export function diffBetweenComponentsObjects(
-  consumer: Consumer,
   componentLeft: Component,
   componentRight: Component,
-  verbose: boolean,
-  table: boolean
+  { verbose, formatDepsAsTable }: DiffOptions
 ): FieldsDiff[] | undefined {
   const printableLeft = componentToPrintableForDiffCommand(componentLeft, verbose);
   const printableRight = componentToPrintableForDiffCommand(componentRight, verbose);
@@ -285,7 +282,7 @@ export function diffBetweenComponentsObjects(
   };
 
   const formatDepsDiff = (diffs: DepDiff[], fieldName: string): string => {
-    return table ? formatDepsDiffAsTable(diffs, fieldName) : formatDepsDiffAsPlainText(diffs, fieldName);
+    return formatDepsAsTable ? formatDepsDiffAsTable(diffs, fieldName) : formatDepsDiffAsPlainText(diffs, fieldName);
   };
 
   const packageDependenciesOutput = (fieldName: string): string | null => {

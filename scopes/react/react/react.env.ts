@@ -19,8 +19,10 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Configuration } from 'webpack';
-import { ReactMainConfig } from './react.main.runtime';
+// Makes sure the @teambit/react.ui.docs-app is a dependency
+// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import docs from '@teambit/react.ui.docs-app';
 
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
@@ -36,6 +38,7 @@ import componentPreviewBaseConfigFactory from './webpack/webpack.config.componen
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
+import { ReactMainConfig } from './react.main.runtime';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -193,10 +196,11 @@ export class ReactEnv implements Environment {
 
     const envDevConfig = envPreviewDevConfigFactory(context.id);
 
-    const fileMapPath = this.writeFileMap(context.components, true);
+    // const fileMapPath = this.writeFileMap(context.components, true);
 
     const componentBaseConfig = componentPreviewBaseConfigFactory(mfName, context.exposes);
-    const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
     // const defaultConfig = this.getDevWebpackConfig(context);
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([
@@ -266,19 +270,25 @@ export class ReactEnv implements Environment {
   async getEnvBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
-    const defaultConfig = envPreviewProdConfigFactory();
+    const mfName = camelCase(`${context.id.toString()}_MF`);
+    // TODO: take the port dynamically
+    const port = 3000;
+    const rootPath = context.rootPath;
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'http://localhost', port, rootPath || '');
+
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([baseConfig, baseProdConfig, defaultConfig]);
+      return configMutator.merge([baseConfig, baseProdConfig, envBaseConfig]);
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
   }
 
   async getComponentBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const fileMapPath = this.writeFileMap(context.components);
+    // const fileMapPath = this.writeFileMap(context.components);
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
-    const prodComponentConfig = componentPreviewProdConfigFactory(fileMapPath);
+    // const prodComponentConfig = componentPreviewProdConfigFactory(fileMapPath);
+    const prodComponentConfig = componentPreviewProdConfigFactory();
     const defaultTransformer: WebpackConfigTransformer = (configMutator, mutatorContext) => {
       if (!mutatorContext.target?.mfName) {
         throw new Error(`missing module federation name for ${mutatorContext.target?.components[0].id.toString()}`);
@@ -298,7 +308,7 @@ export class ReactEnv implements Environment {
    * return a path to a docs template.
    */
   getDocsTemplate() {
-    return require.resolve('./docs');
+    return require.resolve('@teambit/react.ui.docs-app');
   }
 
   icon = 'https://static.bit.dev/extensions-icons/react.svg';

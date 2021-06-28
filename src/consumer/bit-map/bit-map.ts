@@ -57,7 +57,7 @@ export default class BitMap {
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
   allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
-
+  private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
     private mapPath: string,
@@ -390,6 +390,9 @@ export default class BitMap {
     if (ignoreScopeAndVersion) {
       const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
       if (matchWithoutScopeAndVersion) return matchWithoutScopeAndVersion;
+    }
+    if (this.updatedIds[bitId.toString()]) {
+      return this.updatedIds[bitId.toString()].id;
     }
     throw new MissingBitMapComponent(bitId.toString());
   }
@@ -746,6 +749,7 @@ export default class BitMap {
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
     this.markAsChanged();
+    this.updatedIds[oldIdStr] = componentMap;
     return newId;
   }
 

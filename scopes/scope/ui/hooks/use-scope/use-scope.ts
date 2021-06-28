@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 
-import { ScopeModel } from './scope-model';
+import { ScopeModel } from '@teambit/scope.models.scope-model';
 
 const SCOPE = gql`
   {
@@ -32,7 +32,7 @@ const SCOPE = gql`
   }
 `;
 
-export function useScope(): { scope?: ScopeModel } {
+export function useScopeQuery(): { scope?: ScopeModel } {
   const { data, loading } = useDataQuery(SCOPE);
 
   if (!data || loading) {

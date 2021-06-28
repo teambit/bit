@@ -24,10 +24,10 @@ type ItemsByCategory = {
   [key: string]: MenuItem[];
 };
 
-export function MainDropdown({ menuItems }: MainDropdownProps) {
+export function MainDropdown({ menuItems, className, ...rest }: MainDropdownProps) {
   if (!menuItems || isEmpty(menuItems)) return null;
   return (
-    <div className={styles.mainDropdown}>
+    <div {...rest} className={classNames(styles.mainDropdown, className)}>
       <TooltipDrawer
         className={styles.dropdown}
         tooltipClass={styles.menu}

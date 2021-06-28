@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './scope-menu.module.scss';
@@ -24,7 +25,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon of="terminal" />
-          <span>{`Bulk use components from ${scopeName}`}</span>
+          <Ellipsis>{`Bulk import from ${scopeName}`}</Ellipsis>
         </div>
       </div>
       <TabContent
@@ -36,8 +37,8 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
         }
       >
         <div className={styles.importContent}>
-          <div>Use glob-patterns to import many components </div>
-          <CopyBox>{`bit import ${scopeName}/*`}</CopyBox>
+          <div>Use a glob-pattern to import multiple components</div>
+          <CopyBox>{`bit import "${scopeName}/*"`}</CopyBox>
         </div>
       </TabContent>
     </div>

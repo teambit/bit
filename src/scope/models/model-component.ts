@@ -664,7 +664,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    manipulateDirData: ManipulateDirItem[] | null | undefined
+    manipulateDirData?: ManipulateDirItem[] | null
   ): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
