@@ -153,9 +153,13 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit remote add http://localhost:${port}`);
   }
 
-  removeRemoteScope(remoteScope: string = this.scopes.remote, isGlobal = false) {
+  removeRemoteScope(
+    remoteScope: string = this.scopes.remote,
+    isGlobal = false,
+    localScopePath: string = this.scopes.localPath
+  ) {
     const globalArg = isGlobal ? '-g' : '';
-    return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`);
+    return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`, localScopePath);
   }
 
   addRemoteEnvironment(isGlobal = false) {
