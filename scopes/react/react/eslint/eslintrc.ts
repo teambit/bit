@@ -10,7 +10,7 @@ export const eslintConfig = {
   },
 };
 
-module.exports = eslintConfig;
+// module.exports = eslintConfig;
 
 // Using function
 // import generateEslint from '@teambit/react.eslint-config-bit-react';
