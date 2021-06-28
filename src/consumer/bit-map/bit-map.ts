@@ -19,6 +19,7 @@ import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './c
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
+import GeneralError from '../../error/general-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -98,10 +99,38 @@ export default class BitMap {
         throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
-
     componentMap.id = bitId;
     this.components.push(componentMap);
     this.markAsChanged();
+  }
+
+  /**
+   * in case the added component's root-dir is a parent-dir of other components
+   * or other component's root-dir is a parent root-dir of this component, throw an error
+   */
+  private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+    if (this.isLegacy || !rootDir) {
+      return;
+    }
+    const isParentDir = (parent: string, child: string) => {
+      const relative = path.relative(parent, child);
+      return relative && !relative.startsWith('..');
+    };
+    this.components.forEach((existingComponentMap) => {
+      if (!existingComponentMap.rootDir) return;
+      if (isParentDir(existingComponentMap.rootDir, rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
+            existingComponentMap.rootDir
+          } which used by another component "${existingComponentMap.id.toString()}"`
+        );
+      }
+      if (isParentDir(rootDir, existingComponentMap.rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is used by another component ${existingComponentMap.id.toString()}`
+        );
+      }
+    });
   }
 
   setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
@@ -642,6 +671,7 @@ export default class BitMap {
     componentMap.mainFile = mainFile;
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
+      this.throwForExistingParentDir(componentMap);
     }
     if (trackDir) {
       componentMap.trackDir = pathNormalizeToLinux(trackDir);

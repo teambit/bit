@@ -183,6 +183,7 @@ export default class ManyComponentsWriter {
     const componentWriterInstances = writeComponentsParams.map((writeParams) =>
       ComponentWriter.getInstance(writeParams)
     );
+    this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
     componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
@@ -193,6 +194,44 @@ export default class ManyComponentsWriter {
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }
+
+  /**
+   * e.g. [bar, bar/foo] => [bar_1, bar/foo]
+   * otherwise, the bar/foo component will be saved inside "bar" component.
+   * in case bar_1 is taken, increment to bar_2 until the name is available.
+   */
+  private fixDirsIfNested(componentWriterInstances: ComponentWriter[]) {
+    const allDirs = componentWriterInstances.map((c) => c.writeToPath);
+
+    // get all components that their root-dir is a parent of other components root-dir.
+    const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
+      allDirs.find((d) => d.startsWith(`${writeToPath}${path.sep}`))
+    );
+    if (!parentsOfOthersComps.length) {
+      return;
+    }
+    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
+
+    const incrementPath = (p: string, number: number) => `${p}_${number}`;
+    const existingRootDirs = Object.keys(this.bitMap.getAllTrackDirs()).map((p) => path.normalize(p));
+    const allPaths = [...existingRootDirs, ...parentsOfOthersCompsDirs];
+    const incrementRecursively = (p: string) => {
+      let num = 1;
+      let newPath = incrementPath(p, num);
+      while (allPaths.includes(newPath)) {
+        newPath = incrementPath(p, (num += 1));
+      }
+      return newPath;
+    };
+
+    // change the paths of all these parents root-dir to not collide with the children root-dir
+    parentsOfOthersComps.forEach((componentWriter) => {
+      if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
+      const newPath = incrementRecursively(componentWriter.writeToPath);
+      componentWriter.writeToPath = newPath;
+    });
+  }
+
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
       this._getWriteParamsOfOneComponent(componentWithDeps)
