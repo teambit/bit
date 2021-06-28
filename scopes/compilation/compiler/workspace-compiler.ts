@@ -137,7 +137,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
             })
         )
       );
-    } else {
+    } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
       // compiler doesn't support this file type. copy the file as is to the dist dir.
       this.dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
     }
@@ -150,7 +150,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
       const isFileSupported = this.compilerInstance.isFileSupported(file.path);
       if (isFileSupported) {
         filesToCompile.push(file);
-      } else {
+      } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
         // compiler doesn't support this file type. copy the file as is to the dist dir.
         this.dists.push(
           new Dist({
