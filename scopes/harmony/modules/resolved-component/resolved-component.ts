@@ -7,6 +7,6 @@ export class ResolvedComponent {
 
   require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    return require(this.capsule.wrkDir);
+    return require(this.capsule.path);
   }
 }

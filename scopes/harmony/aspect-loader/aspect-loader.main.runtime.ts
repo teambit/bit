@@ -106,9 +106,14 @@ export class AspectLoaderMain {
 
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
-    const compiler = this.getCompiler(component);
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
+    const compiler = this.getCompiler(component);
+
+    if (!compiler) {
+      return join(modulePath, runtimeFile.relative);
+    }
+
+    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
     return join(modulePath, dist);
   }
 

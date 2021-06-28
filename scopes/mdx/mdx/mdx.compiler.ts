@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
+import { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
 import { compileSync as mdxCompileSync } from '@teambit/mdx.modules.mdx-compiler';
 import minimatch from 'minimatch';
@@ -25,7 +25,7 @@ export class MDXCompiler implements Compiler {
     return JSON.stringify(this.config, null, 2);
   }
 
-  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const afterMdxCompile = mdxCompileSync(fileContent, {
       filepath: options.filePath,
       // this compiler is not indented to compile according to the bit flavour.

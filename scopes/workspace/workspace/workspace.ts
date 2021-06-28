@@ -916,8 +916,7 @@ export class Workspace implements ComponentFactory {
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
-      const packageName = componentIdToPackageName(component.state._consumer);
-      const localPath = path.join(this.path, 'node_modules', packageName);
+      const localPath = this.getComponentPackagePath(component.state._consumer);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
@@ -1033,8 +1032,7 @@ export class Workspace implements ComponentFactory {
     const stringIds: string[] = [];
     const resolveP = components.map(async (component) => {
       stringIds.push(component.id._legacy.toString());
-      const packageName = componentIdToPackageName(component.state._consumer);
-      const localPath = path.join(this.path, 'node_modules', packageName);
+      const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
@@ -1215,6 +1213,13 @@ export class Workspace implements ComponentFactory {
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
     this.clearCache();
+  }
+
+  getComponentPackagePath(component: ConsumerComponent | Component) {
+    const packageName = componentIdToPackageName(
+      component instanceof ConsumerComponent ? component : component.state._consumer
+    );
+    return path.join(this.path, 'node_modules', packageName);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)

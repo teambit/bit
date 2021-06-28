@@ -1,5 +1,3 @@
-import { ReactAspect } from './react.aspect';
-
 export type { ReactMain, UseWebpackModifiers } from './react.main.runtime';
 export type { ReactPreview } from './react.preview.runtime';
 export type { ReactEnv } from './react.env';
@@ -7,5 +5,4 @@ export type { ReactEnv } from './react.env';
 // Commented - make errors in safari - SyntaxError: Invalid regular expression: invalid group specifier name
 // export * as styleRegexps from '@teambit/modules.style-regexps';
 
-export { ReactAspect };
-export default ReactAspect;
+export { ReactAspect, ReactAspect as default } from './react.aspect';
