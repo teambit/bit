@@ -6431,19 +6431,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.section@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.section@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.section%2F-%2Fdocumenter.ui.section-4.0.1.tgz"
-  dependencies:
-    classnames: ^2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: d159fcdabdc1068735784a530dd29a2d488eff9559ca820eb1caadd902fc0d494fc3e173f755fa949d9ebf77e8a6a4e8b60a56205f9fca301a429d0e14f4410a
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.ui.separator@npm:1.0.3":
   version: 1.0.3
   resolution: "@teambit/documenter.ui.separator@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.separator%2F-%2Fdocumenter.ui.separator-1.0.3.tgz"
@@ -7103,10 +7090,10 @@ __metadata:
     "@teambit/harmony": 0.2.11
     "@teambit/legacy": 1.0.108
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
-    "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
     "@teambit/react.instructions.react.adding-tests": 0.0.5
     "@teambit/string.ellipsis": 0.0.7
+    "@teambit/toolbox.network.agent": 0.0.116
     "@teambit/ui.composition-card": 0.0.259
     "@teambit/ui.routing.provider": 0.0.364
     "@testing-library/jest-dom": 5.11.10
@@ -7329,6 +7316,7 @@ __metadata:
     lodash.unionby: 4.8.0
     lru-cache: 6.0.0
     make-fetch-happen: 4.0.2
+    map-obj: 4.2.1
     memfs: 2.17.1
     memoize-one: 5.1.1
     memoizee: 0.4.15
@@ -7613,6 +7601,32 @@ __metadata:
     react: 16.13.1
     react-dom: 16.13.1
   checksum: 93c4662024decc73e881ca4f61cd9185df81fafa047d82a7b4bb1049e9a3265efa50ebf7eda0c417767346b08704720631a7bed50abb6c8a52613a90911371bf
+  languageName: node
+  linkType: hard
+
+"@teambit/toolbox.network.agent@npm:0.0.116":
+  version: 0.0.116
+  resolution: "@teambit/toolbox.network.agent@npm:0.0.116"
+  dependencies:
+    "@teambit/toolbox.network.proxy-agent": 0.0.116
+    agentkeepalive: 4.1.4
+  peerDependencies:
+    "@teambit/legacy": 1.0.108
+  checksum: d3632a441de2ac90bc9df40601c2de32fb9e8ab242acb9372af74b9bbacb1daad6a1eed811b76f6ba81a198ccdf590870d707bff4ad555511800edf9adb5a68d
+  languageName: node
+  linkType: hard
+
+"@teambit/toolbox.network.proxy-agent@npm:0.0.116":
+  version: 0.0.116
+  resolution: "@teambit/toolbox.network.proxy-agent@npm:0.0.116"
+  dependencies:
+    "@teambit/toolbox.network.agent": 0.0.116
+    http-proxy-agent: 4.0.1
+    https-proxy-agent: 5.0.0
+    socks-proxy-agent: 5.0.0
+  peerDependencies:
+    "@teambit/legacy": 1.0.108
+  checksum: 92c3a62f45e3ae95b52f208b15db073cf241f3aeb8a0afdecfd1e56aebf39d2a9b09d7924b0d07cbe8a87632dc3578bd389e66b8321ce396568f5dcac3e3d762
   languageName: node
   linkType: hard
 
@@ -14535,6 +14549,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"create-element-from-string-401ae5@workspace:scopes/html/modules/create-element-from-string":
+  version: 0.0.0-use.local
+  resolution: "create-element-from-string-401ae5@workspace:scopes/html/modules/create-element-from-string"
+  languageName: unknown
+  linkType: soft
+
 "create-error-class@npm:^3.0.0":
   version: 3.0.2
   resolution: "create-error-class@npm:3.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcreate-error-class%2F-%2Fcreate-error-class-3.0.2.tgz"
@@ -15825,6 +15845,12 @@ __metadata:
 "docs-6fa149@workspace:scopes/docs/docs":
   version: 0.0.0-use.local
   resolution: "docs-6fa149@workspace:scopes/docs/docs"
+  languageName: unknown
+  linkType: soft
+
+"docs-app-55ecfa@workspace:scopes/react/ui/docs-app":
+  version: 0.0.0-use.local
+  resolution: "docs-app-55ecfa@workspace:scopes/react/ui/docs-app"
   languageName: unknown
   linkType: soft
 
@@ -17820,6 +17846,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fetch-html-from-url-02bed4@workspace:scopes/html/modules/fetch-html-from-url":
+  version: 0.0.0-use.local
+  resolution: "fetch-html-from-url-02bed4@workspace:scopes/html/modules/fetch-html-from-url"
+  languageName: unknown
+  linkType: soft
+
 "figgy-pudding@npm:^3.5.1":
   version: 3.5.2
   resolution: "figgy-pudding@npm:3.5.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffiggy-pudding%2F-%2Ffiggy-pudding-3.5.2.tgz"
@@ -19740,6 +19772,12 @@ __metadata:
   checksum: 9aa6eb9ff6c102d2395435aa5d1d91eae20043c4b1497c543d8db501c05f3edacd9a07fb34a987059d7902dba415af4cb4e610f751859ae8e7525df4ffcd085f
   languageName: node
   linkType: hard
+
+"html-7af29c@workspace:scopes/html/html":
+  version: 0.0.0-use.local
+  resolution: "html-7af29c@workspace:scopes/html/html"
+  languageName: unknown
+  linkType: soft
 
 "html-comment-regex@npm:^1.1.0":
   version: 1.1.2
@@ -23601,6 +23639,13 @@ __metadata:
   version: 0.2.2
   resolution: "map-cache@npm:0.2.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmap-cache%2F-%2Fmap-cache-0.2.2.tgz"
   checksum: 3067cea54285c43848bb4539f978a15dedc63c03022abeec6ef05c8cb6829f920f13b94bcaf04142fc6a088318e564c4785704072910d120d55dbc2e0c421969
+  languageName: node
+  linkType: hard
+
+"map-obj@npm:4.2.1":
+  version: 4.2.1
+  resolution: "map-obj@npm:4.2.1"
+  checksum: 2745227b11ba6e6ddc5927b555a8f317aa33886fcd12806193f3e3c6f201eb24c9cff44bf932b1113a1ba461755a479b22439d0d670380330325164ed0e99547
   languageName: node
   linkType: hard
 
@@ -27932,7 +27977,6 @@ __metadata:
   resolution: "react-a12f27@workspace:scopes/react/react"
   dependencies:
     "@babel/preset-typescript": 7.12.17
-    "@teambit/documenter.ui.section": 4.0.1
     "@typescript-eslint/eslint-plugin": 4.15.1
     "@typescript-eslint/parser": 4.15.1
   languageName: unknown
@@ -28935,6 +28979,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"render-template-68ac4a@workspace:scopes/html/modules/render-template":
+  version: 0.0.0-use.local
+  resolution: "render-template-68ac4a@workspace:scopes/html/modules/render-template"
+  languageName: unknown
+  linkType: soft
+
 "renderkid@npm:^2.0.4":
   version: 2.0.5
   resolution: "renderkid@npm:2.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Frenderkid%2F-%2Frenderkid-2.0.5.tgz"
@@ -29760,6 +29810,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"scope-context-0b37a0@workspace:scopes/scope/ui/hooks/scope-context":
+  version: 0.0.0-use.local
+  resolution: "scope-context-0b37a0@workspace:scopes/scope/ui/hooks/scope-context"
+  languageName: unknown
+  linkType: soft
+
 "scope-details-06c250@workspace:scopes/scope/ui/scope-details":
   version: 0.0.0-use.local
   resolution: "scope-details-06c250@workspace:scopes/scope/ui/scope-details"
@@ -29775,6 +29831,12 @@ __metadata:
 "scope-menu-4c9ad8@workspace:scopes/ui-foundation/use-box/scope-menu":
   version: 0.0.0-use.local
   resolution: "scope-menu-4c9ad8@workspace:scopes/ui-foundation/use-box/scope-menu"
+  languageName: unknown
+  linkType: soft
+
+"scope-model-583510@workspace:scopes/scope/models/scope-model":
+  version: 0.0.0-use.local
+  resolution: "scope-model-583510@workspace:scopes/scope/models/scope-model"
   languageName: unknown
   linkType: soft
 
@@ -33197,6 +33259,12 @@ typescript@^3.9.3:
 "use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query":
   version: 0.0.0-use.local
   resolution: "use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query"
+  languageName: unknown
+  linkType: soft
+
+"use-scope-ef283b@workspace:scopes/scope/ui/hooks/use-scope":
+  version: 0.0.0-use.local
+  resolution: "use-scope-ef283b@workspace:scopes/scope/ui/hooks/use-scope"
   languageName: unknown
   linkType: soft
 

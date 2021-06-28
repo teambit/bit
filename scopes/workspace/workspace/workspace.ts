@@ -106,6 +106,7 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
+  savePrefix?: string;
 };
 
 export type WorkspaceLinkOptions = LinkingOptions;
@@ -1085,10 +1086,14 @@ export class Workspace implements ComponentFactory {
       const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
       resolvedPackages.forEach((resolvedPackage) => {
         if (resolvedPackage.version) {
+          const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
+            resolvedPackage.version,
+            options?.savePrefix
+          );
           newWorkspacePolicyEntries.push({
             dependencyId: resolvedPackage.packageName,
             value: {
-              version: resolvedPackage.version,
+              version: versionWithPrefix,
             },
             lifecycleType: options?.lifecycleType || 'runtime',
           });
