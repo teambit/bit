@@ -66,7 +66,7 @@ export async function transpileFilePathAsync(
   if (!result || !result.code) {
     return null;
   }
-  const outputPath = replaceFileExtToJs(filePath);
+  const outputPath = replaceFileExtToJs(path.basename(filePath));
   const mapFilePath = `${outputPath}.map`;
   const code = result.code || '';
   const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${mapFilePath}` : code;

@@ -92,12 +92,13 @@ export class BabelCompiler implements Compiler {
     await Promise.all(
       sourceFiles.map(async (filePath) => {
         const absoluteFilePath = path.join(capsule.path, filePath);
+        this.options.babelTransformOptions ||= {};
+        this.options.babelTransformOptions.sourceFileName = path.basename(filePath);
+        this.options.babelTransformOptions.filename = path.basename(filePath);
         try {
           const result = await transpileFilePathAsync(
             absoluteFilePath,
-
             this.options.babelTransformOptions || {},
-
             this.babelModule
           );
           if (!result || !result.length) {
