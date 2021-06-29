@@ -3,6 +3,7 @@ import { ExecutionContext } from '@teambit/envs';
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { PreviewMain } from './preview.main.runtime';
+import { PreviewAspect } from './preview.aspect';
 
 export class PreviewTask implements BuildTask {
   constructor(
@@ -17,7 +18,7 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain
   ) {}
 
-  aspectId = 'teambit.preview/preview';
+  aspectId = PreviewAspect.id;
   name = 'GeneratePreview';
   location: TaskLocation = 'end';
 

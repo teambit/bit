@@ -12,10 +12,14 @@ export interface BundlingStrategy {
   /**
    * compute bundling targets for the build context.
    */
-  computeTargets(context: BuildContext, previewDefs: PreviewDefinition[], previewTask: PreviewTask): Promise<Target[]>;
+  computeTargets(context: BuildContext, previewDefs: PreviewDefinition[], previewTask?: PreviewTask): Promise<Target[]>;
 
   /**
    * compute the results of the bundler.
    */
-  computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask): Promise<BuiltTaskResult>;
+  computeResults(
+    context: BundlerContext,
+    results: BundlerResult[],
+    previewTask?: PreviewTask
+  ): Promise<BuiltTaskResult>;
 }

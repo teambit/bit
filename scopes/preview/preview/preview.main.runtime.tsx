@@ -29,6 +29,8 @@ import { RuntimeComponents } from './runtime-components';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import { computeExposes } from './compute-exposes';
 import { generateBootstrapFile } from './generate-bootstrap-file';
+import { EnvMfBundlingStrategy } from './strategies/env-mf-strategy';
+import { GenerateEnvPreviewTask } from './bundle-env.task';
 
 const noopResult = {
   results: [],
@@ -116,19 +118,16 @@ export class PreviewMain {
 
   async writeMfLink(
     prefix: string,
-    context: ExecutionContext,
+    // context: ExecutionContext,
     moduleMap: ComponentMap<string[]>,
     defaultModule: string | undefined,
     dirName: string
   ) {
-    const exposes = await this.computeExposesFromExecutionContext(context);
-    console.log('exposes', exposes);
-    console.log('moduleMap', require('util').inspect(moduleMap, { depth: 3 }));
+    // const exposes = await this.computeExposesFromExecutionContext(context);
 
     const contents = generateMfLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
     const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
-    console.log('targetPath MF link', targetPath);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -184,7 +183,7 @@ export class PreviewMain {
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
       const link = useMf
-        ? await this.writeMfLink(previewDef.prefix, context, withPaths, templatePath, dirPath)
+        ? await this.writeMfLink(previewDef.prefix, withPaths, templatePath, dirPath)
         : this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
       return link;
     });
@@ -192,8 +191,8 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
-  private createIndexEntryFile(bootstrapFileName: string, context: ExecutionContext) {
-    const dirName = join(this.tempFolder, context.id);
+  public createIndexEntryFile(bootstrapFileName: string, context: ExecutionContext, rootDir = this.tempFolder) {
+    const dirName = join(rootDir, context.id);
     const contents = `import('./${bootstrapFileName}')`;
     const hash = objectHash(contents);
     const targetPath = join(dirName, `__index-${this.timestamp}.js`);
@@ -207,9 +206,9 @@ export class PreviewMain {
     return targetPath;
   }
 
-  private createBootstrapFile(entryFilesPaths: string[], context: ExecutionContext) {
+  public createBootstrapFile(entryFilesPaths: string[], context: ExecutionContext, rootDir = this.tempFolder) {
     const contents = generateBootstrapFile(entryFilesPaths);
-    const dirName = join(this.tempFolder, context.id);
+    const dirName = join(rootDir, context.id);
     const hash = objectHash(contents);
     const fileName = `__bootstrap-${this.timestamp}.js`;
     const targetPath = join(dirName, fileName);
@@ -259,7 +258,7 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(), new EnvMfBundlingStrategy(this)];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -294,9 +293,8 @@ export class PreviewMain {
   /**
    * return the configured bundling strategy.
    */
-  getBundlingStrategy(): BundlingStrategy {
+  getBundlingStrategy(strategyName = this.config.bundlingStrategy): BundlingStrategy {
     const defaultStrategies = this.getDefaultStrategies();
-    const strategyName = this.config.bundlingStrategy;
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;
@@ -400,7 +398,8 @@ export class PreviewMain {
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+    if (!config.disabled)
+      builder.registerBuildTasks([new PreviewTask(bundler, preview), new GenerateEnvPreviewTask(envs, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
