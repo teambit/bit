@@ -77,8 +77,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
       it('should not strip the shared dir', () => {
         const bitMap = helper.bitMap.read();
-        const componentMap = bitMap[`${helper.scopes.remote}/comp@0.0.1`];
-        expect(componentMap.rootDir).to.equal('components/comp');
+        const componentMap = bitMap.comp;
+        expect(componentMap.rootDir).to.equal(`${helper.scopes.remote}/comp`);
         expect(componentMap.mainFile).to.equal('bar/foo.js');
       });
     });
