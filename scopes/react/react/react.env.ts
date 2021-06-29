@@ -27,7 +27,6 @@ import { Configuration } from 'webpack';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import docs from '@teambit/react.ui.docs-app';
 import { ReactMainConfig } from './react.main.runtime';
-import eslintConfig from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
 // webpack configs for both components and envs
@@ -46,6 +45,7 @@ export const AspectEnvType = 'react';
 const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
+const eslintConfig = require('./eslint/eslintrc');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
