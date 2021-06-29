@@ -183,6 +183,7 @@ export const IGNORE_LIST = [
  */
 export const INIT_COMMAND = 'init';
 
+export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 /**
  * bit global config keys
  */
