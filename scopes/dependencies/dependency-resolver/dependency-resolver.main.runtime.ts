@@ -628,6 +628,7 @@ export class DependencyResolverMain {
         );
         updatedRegistries = updatedRegistries.updateScopedRegistry(name, registryWithAuth);
       }
+      return updatedRegistries;
     });
     return updatedRegistries;
   }
