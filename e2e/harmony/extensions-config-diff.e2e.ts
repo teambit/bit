@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -14,7 +13,6 @@ describe('extensions config diff', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
     helper.scopeHelper.reInitLocalScopeHarmony();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();

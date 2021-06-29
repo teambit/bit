@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -12,7 +11,6 @@ describe('tag components on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

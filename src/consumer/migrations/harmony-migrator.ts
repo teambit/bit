@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { Consumer } from '..';
-import { addFeature, HARMONY_FEATURE } from '../../api/consumer/lib/feature-toggle';
+import { addFeature } from '../../api/consumer/lib/feature-toggle';
 import { individualFilesDesc } from '../../cli/commands/public-cmds/status-cmd';
 import { COMPONENT_ORIGINS, WORKSPACE_JSONC } from '../../constants';
 import GeneralError from '../../error/general-error';
@@ -37,7 +37,6 @@ export class HarmonyMigrator {
     if (!this.consumer.isLegacy) return; // it's already Harmony.
     this.backupAndRemoveBitJson();
     await this.backupAndRemoveBitPropInPkgJson();
-    addFeature(HARMONY_FEATURE);
     const workspacePath = this.consumer.getPath();
     // because Harmony feature is added, the load writes the workspace.jsonc because the configuration
     // files are now missing.

@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { ExportMissingVersions } from '../../src/scope/exceptions/export-missing-versions';
 import ServerIsBusy from '../../src/scope/exceptions/server-is-busy';
@@ -11,7 +10,6 @@ describe('export functionality on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

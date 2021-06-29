@@ -1,6 +1,5 @@
 import chai from 'chai';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -11,7 +10,6 @@ describe('add command on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
