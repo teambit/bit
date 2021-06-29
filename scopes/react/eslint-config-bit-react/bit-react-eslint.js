@@ -1,7 +1,18 @@
 // As object
 module.exports = {
-  extends: [require.resolve('eslint-config-airbnb-typescript'), 'plugin:jest/recommended'],
+  extends: ['plugin:jest/recommended'],
   plugins: ['jest'],
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.mjs'],
+      extends: [require.resolve('eslint-config-airbnb-typescript')],
+      rules: {
+        '@typescript-eslint/camelcase': 'off',
+        'import/no-extraneous-dependencies': 'off',
+        'import/prefer-default-export': 'off',
+      },
+    },
+  ],
   parserOptions: {
     warnOnUnsupportedTypeScriptVersion: false,
     ecmaFeatures: {
@@ -17,11 +28,7 @@ module.exports = {
       version: 26,
     },
   },
-  rules: {
-    '@typescript-eslint/camelcase': 'off',
-    'import/no-extraneous-dependencies': 'off',
-    'import/prefer-default-export': 'off',
-  },
+
   env: {
     'jest/globals': true,
   },

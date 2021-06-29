@@ -40,7 +40,7 @@ export class LinterMain {
   static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, LoggerAspect, WorkspaceAspect];
 
   static defaultConfig = {
-    extensionFormats: ['.ts', 'tsx', '.js', '.jsx', 'js', 'mjs'],
+    extensionFormats: ['.ts', '.tsx', '.js', '.jsx', '.mjs'],
   };
 
   static async provider(
