@@ -1,7 +1,7 @@
 // Using object
 import '@teambit/react.eslint-config-bit-react';
 
-export const eslintConfig = {
+module.exports = {
   extends: [require.resolve('@teambit/react.eslint-config-bit-react')],
   parserOptions: {
     createDefaultProgram: true,
