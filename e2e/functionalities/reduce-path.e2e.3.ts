@@ -64,6 +64,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   describe('with new functionality (save added path as rootDir, no reduce on import)', () => {
     describe('when rootDir is not the same as the sharedDir', () => {
       before(() => {
+        helper.command.resetFeatures();
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
         helper.fs.outputFile('src/bar/foo.js');
@@ -82,9 +83,9 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
     });
   });
-  // most are skipped because we ended up not supporting this move from the old functionality to the new one
+  // skipped because we ended up not supporting this move from the old functionality to the new one
   // we might support it in the future in a different way, so I'm leaving it them as skipped
-  describe('moving from old-functionality to the new one', () => {
+  describe.skip('moving from old-functionality to the new one', () => {
     describe('when there is trackDir and not relative paths', () => {
       let output;
       before(() => {

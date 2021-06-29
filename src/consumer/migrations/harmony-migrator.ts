@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { Consumer } from '..';
-import { addFeature } from '../../api/consumer/lib/feature-toggle';
 import { individualFilesDesc } from '../../cli/commands/public-cmds/status-cmd';
 import { COMPONENT_ORIGINS, WORKSPACE_JSONC } from '../../constants';
 import GeneralError from '../../error/general-error';

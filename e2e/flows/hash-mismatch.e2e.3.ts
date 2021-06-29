@@ -24,6 +24,7 @@ found hash mismatch of hash-mismatch-case/foo, version 0.0.1.
 describe('hash mismatch', function () {
   this.timeout(0);
   const helper = new Helper();
+  helper.command.setFeatures('legacy-workspace-config');
   after(() => {
     helper.scopeHelper.destroy();
   });

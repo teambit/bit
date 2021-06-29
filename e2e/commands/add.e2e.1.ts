@@ -18,7 +18,6 @@ import {
   TestIsDirectory,
   VersionShouldBeRemoved,
 } from '../../src/consumer/component-ops/add-components/exceptions';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -1274,22 +1273,6 @@ describe('bit add command', function () {
       expect(files[1].relativePath).to.equal('bbb.js');
       expect(files[2].relativePath).to.equal('ccc.js');
       expect(files[3].relativePath).to.equal('ddd.js');
-    });
-  });
-  describe('adding files when workspace is new', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.fixtures.createComponentBarFoo();
-    });
-    it('should throw an error AddingIndividualFiles', () => {
-      const addFunc = () => helper.command.addComponent('bar/foo.js');
-      const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
-      helper.general.expectToThrow(addFunc, error);
-    });
-    it('when excluding a file, should throw an error', () => {
-      helper.fs.outputFile('bar/foo1.js');
-      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
-      expect(cmd).to.throw('unable to exclude files when tracking a directory');
     });
   });
 });

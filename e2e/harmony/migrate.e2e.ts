@@ -6,7 +6,8 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('migrating legacy workspace to Harmony', function () {
+// not relevant probably. we ask users to re-create their workspace
+describe.skip('migrating legacy workspace to Harmony', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
