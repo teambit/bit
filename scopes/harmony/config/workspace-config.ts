@@ -330,12 +330,13 @@ export class WorkspaceConfig implements HostConfig {
 
   static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
     const contentBuffer = await fs.readFile(workspaceJsoncPath);
+    let parsed;
     try {
-      const parsed = parse(contentBuffer.toString());
-      return WorkspaceConfig.fromObject(parsed);
+      parsed = parse(contentBuffer.toString());
     } catch (e) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
+    return WorkspaceConfig.fromObject(parsed);
   }
 
   async write({ dir }: { dir?: PathOsBasedAbsolute }): Promise<void> {
