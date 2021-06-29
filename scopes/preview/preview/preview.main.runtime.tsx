@@ -12,7 +12,6 @@ import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
-import { Compiler } from '@teambit/compiler';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
