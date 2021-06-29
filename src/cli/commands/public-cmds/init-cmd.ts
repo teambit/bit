@@ -41,6 +41,7 @@ export default class Init implements LegacyCommand {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
+    ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 
