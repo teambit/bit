@@ -10,7 +10,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
 import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
+import { getPathRelativeRegardlessCWD, PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
@@ -30,7 +30,7 @@ import {
 
 export type ComponentWriterProps = {
   component: Component;
-  writeToPath: PathOsBasedRelative;
+  writeToPath: PathLinuxRelative;
   writeConfig?: boolean;
   writePackageJson?: boolean;
   override?: boolean;
@@ -49,7 +49,7 @@ export type ComponentWriterProps = {
 
 export default class ComponentWriter {
   component: Component;
-  writeToPath: PathOsBasedRelative;
+  writeToPath: PathLinuxRelative;
   writeConfig: boolean;
   writePackageJson: boolean;
   override: boolean;
