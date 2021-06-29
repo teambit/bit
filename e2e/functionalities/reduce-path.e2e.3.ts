@@ -71,7 +71,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp');
       });
