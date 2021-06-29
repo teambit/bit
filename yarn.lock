@@ -5286,15 +5286,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.text.heading@npm:0.6.12":
-  version: 0.6.12
-  resolution: "@teambit/base-ui.text.heading@npm:0.6.12"
-  dependencies:
-    core-js: ^3.0.0
+"@teambit/base-ui.text.heading@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.text.heading@npm:0.5.9"
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 25d991dc90e803fb0dee4503aff353ea85edd16172b096c0b4cd79e7df036c5b507afe557a97045f21f977b4816ec969333c56e1cea76f0b6ed74eee93cf7530
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 2a43e266ba99908743be9f43bc28c32e2de97ec5975dd634b00e63caefcd9c00874da33b17cc11d92011e1daec235c86846f1fa989bdcbee87b3e05846e669ed
   languageName: node
   linkType: hard
 
@@ -5323,18 +5321,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.text.paragraph@npm:0.6.13":
-  version: 0.6.13
-  resolution: "@teambit/base-ui.text.paragraph@npm:0.6.13"
+"@teambit/base-ui.text.paragraph@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.text.paragraph@npm:0.5.9"
   dependencies:
-    "@teambit/base-ui.text.text-sizes": 0.0.4
-    "@teambit/base-ui.theme.sizes": 0.6.10
+    "@teambit/base-ui.theme.sizes": 0.5.9
     classnames: ^2.2.6
-    core-js: ^3.0.0
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 5b65f8f0e6a035d3f58477d4c3a0a2db06805471ec965ad3c909d25351c5b0fce646a19b6b8af47db4ad75c5b36ae15f95a0f51335db1ca563307d4079a536b5
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 5e429ea61f25a85f951f2e4edeedf7a1ec6916f9d3d6dc4c7c052824b09ddbb6f1a07852cef3d09d322a375213808567cf9f4ea458f814da33cd7ef7499f96ff
   languageName: node
   linkType: hard
 
@@ -5350,18 +5346,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 8f1d605fe510421cd54a9c388f180cd38e442e9311196e1deae67f1c7678ebed7d526faf3e6daf00fdb3e8207f35821ccafc7309dbf2c1d958a586fb2269b114
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.text.text-sizes@npm:0.0.4":
-  version: 0.0.4
-  resolution: "@teambit/base-ui.text.text-sizes@npm:0.0.4"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 705a87d39bfd95b241a4af524840e799563c2e8ec4982827f626c46cb86f7d58dc53c9761281d20b563599e5a00bb6067ba074ade44f161c40c91ccd6f026c74
   languageName: node
   linkType: hard
 
@@ -5766,15 +5750,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.sizes@npm:0.6.10":
-  version: 0.6.10
-  resolution: "@teambit/base-ui.theme.sizes@npm:0.6.10"
-  dependencies:
-    core-js: ^3.0.0
+"@teambit/base-ui.theme.sizes@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.theme.sizes@npm:0.5.9"
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 614ea7cec351a113a2ed5389190d1ece7de99d76703eed97033886e0be0c0cad39e7fdf3a247b3002c428af7d41d96e2e0b74846bc9c428e4f38f5eb8bf568a3
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: aaaa918d37a15e407d0f2fa0b64ce94b8ab2368185c2add378a3e9a808c838c804fe8a0f78d2e4e8376eda48278cd55d140fc525a59b573564019556b1fcf4da
   languageName: node
   linkType: hard
 
@@ -6252,17 +6234,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.heading@npm:3.0.14":
-  version: 3.0.14
-  resolution: "@teambit/documenter.ui.heading@npm:3.0.14"
+"@teambit/documenter.ui.heading@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/documenter.ui.heading@npm:1.0.3"
   dependencies:
-    "@teambit/base-ui.text.heading": 0.6.12
+    "@teambit/base-ui.text.heading": 0.5.9
     classnames: ^2.2.6
-    core-js: ^3.0.0
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: d26dde2b5887ad6840134c7cfd83b62a3ec76c79f730d4bd9ae2a2b83006425f5d59b682abe2dee1d5da4c458cf622dbe4394f3b02e5245c56d1723f2aa426af
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: b221aa599a49607ebbd783a9a24d418a9df2f7b3e4d27e3f2ea52e845a2a4693dd8fc061b6b49e9eb9c6dfe934ad2c536148e09d8e951bab87b3fb6618ec2352
   languageName: node
   linkType: hard
 
@@ -6393,18 +6374,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.paragraph@npm:3.0.14":
-  version: 3.0.14
-  resolution: "@teambit/documenter.ui.paragraph@npm:3.0.14"
+"@teambit/documenter.ui.paragraph@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/documenter.ui.paragraph@npm:1.0.3"
   dependencies:
-    "@teambit/base-ui.text.paragraph": 0.6.13
-    "@teambit/base-ui.theme.sizes": 0.6.10
+    "@teambit/base-ui.text.paragraph": 0.5.9
+    "@teambit/base-ui.theme.sizes": 0.5.9
     classnames: ^2.2.6
-    core-js: ^3.0.0
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 59a9ba51c823f96ce90afdbf4415f66d46f91f32509e55e9b3af333ae9b4e94f243820891d6f833bfab595c4fd6d82aa295f435d94495c0e0abe984853b13090
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 875d4889b10694ce95be95635836a7afe5065bafe0eaad20e8cc7178bafd50bc71b789f4cd186d077cfcd10e6b1951c8bc4e557cd296d0a2b60507785b658cd0
   languageName: node
   linkType: hard
 
@@ -32053,8 +32033,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "time-ago-d19018@workspace:scopes/design/ui/time-ago"
   dependencies:
-    "@teambit/documenter.ui.heading": 3.0.14
-    "@teambit/documenter.ui.paragraph": 3.0.14
+    "@teambit/documenter.ui.heading": 1.0.3
+    "@teambit/documenter.ui.paragraph": 1.0.3
   languageName: unknown
   linkType: soft
 
