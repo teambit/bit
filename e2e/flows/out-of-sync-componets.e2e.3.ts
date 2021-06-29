@@ -12,10 +12,10 @@ describe('components that are not synced between the scope and the consumer', fu
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   describe('consumer with a new component and scope with the same component as staged', () => {
     let scopeOutOfSync;
