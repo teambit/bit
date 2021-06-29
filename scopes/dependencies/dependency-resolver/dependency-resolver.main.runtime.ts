@@ -570,20 +570,9 @@ export class DependencyResolverMain {
     const bitScope = registries.scopes.bit;
 
     const getDefaultBitRegistry = (): Registry => {
-      const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
-
       const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
 
-      let bitAuthHeaderValue = bitScope?.authHeaderValue;
-      let bitOriginalAuthType = bitScope?.originalAuthType;
-      let bitOriginalAuthValue = bitScope?.originalAuthValue;
-
-      // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
-      if ((!bitScope || !bitScope.authHeaderValue) && bitGlobalConfigToken) {
-        bitOriginalAuthType = 'authToken';
-        bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
-        bitOriginalAuthValue = bitGlobalConfigToken;
-      }
+      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScope);
 
       const alwaysAuth = bitAuthHeaderValue !== undefined;
       const bitDefaultRegistry = new Registry(
@@ -617,7 +606,53 @@ export class DependencyResolverMain {
       registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
     }
 
+    registries = this.addAuthToScopedBitRegistries(registries, bitScope);
     return registries;
+  }
+
+  /**
+   * This will mutate any registry which point to BIT_DEV_REGISTRY to have the auth config from the @bit scoped registry or from the user.token in bit's config
+   */
+  private addAuthToScopedBitRegistries(registries: Registries, bitScopeRegistry: Registry): Registries {
+    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScopeRegistry);
+    const alwaysAuth = bitAuthHeaderValue !== undefined;
+    let updatedRegistries = registries;
+    Object.entries(registries.scopes).map(([name, registry]) => {
+      if (!registry.authHeaderValue && BIT_DEV_REGISTRY.includes(registry.uri)) {
+        const registryWithAuth = new Registry(
+          registry.uri,
+          alwaysAuth,
+          bitAuthHeaderValue,
+          bitOriginalAuthType,
+          bitOriginalAuthValue
+        );
+        updatedRegistries = updatedRegistries.updateScopedRegistry(name, registryWithAuth);
+      }
+      return updatedRegistries;
+    });
+    return updatedRegistries;
+  }
+
+  private getBitAuthConfig(
+    bitScopeRegistry: Registry
+  ): Partial<{ bitOriginalAuthType: string; bitAuthHeaderValue: string; bitOriginalAuthValue: string }> {
+    const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+    let bitAuthHeaderValue = bitScopeRegistry?.authHeaderValue;
+    let bitOriginalAuthType = bitScopeRegistry?.originalAuthType;
+    let bitOriginalAuthValue = bitScopeRegistry?.originalAuthValue;
+
+    // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
+    if ((!bitScopeRegistry || !bitScopeRegistry.authHeaderValue) && bitGlobalConfigToken) {
+      bitOriginalAuthType = 'authToken';
+      bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+      bitOriginalAuthValue = bitGlobalConfigToken;
+    }
+
+    return {
+      bitOriginalAuthType,
+      bitAuthHeaderValue,
+      bitOriginalAuthValue,
+    };
   }
 
   get packageManagerName(): string {
