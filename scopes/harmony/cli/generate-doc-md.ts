@@ -2,14 +2,24 @@ import { Command } from '@teambit/legacy/dist/cli/command';
 import { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
 import { getCommandId } from './get-command-id';
 
+export type GenerateOpts = {
+  metadata?: Record<string, string>;
+};
 export class GenerateCommandsDoc {
-  constructor(private commands: Command[]) {}
+  constructor(private commands: Command[], private options: GenerateOpts) {}
 
   generate(): string {
     const commands = this.getAllPublicCommands();
+    const metadata = {
+      id: 'cli-all',
+      title: 'CLI Commands',
+      ...this.options.metadata,
+    };
+    const metadataStr = Object.keys(metadata)
+      .map((key) => `${key}: ${metadata[key]}`)
+      .join('\n');
     let output = `---
-id: cli-all
-title: CLI Commands
+${metadataStr}
 ---
 
 Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.
