@@ -61,6 +61,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/aspect-docs/generator"
     },
+    "aspect-docs/html": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/html/aspect-docs/html"
+    },
     "aspect-docs/logger": {
         "scope": "teambit.harmony",
         "version": "0.0.31",
