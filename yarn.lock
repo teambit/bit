@@ -7020,12 +7020,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.109":
-  version: 1.0.109
-  resolution: "@teambit/legacy@npm:1.0.109"
+"@teambit/legacy@npm:1.0.110":
+  version: 1.0.110
+  resolution: "@teambit/legacy@npm:1.0.110"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
+    "@teambit/network.agent": 0.0.1
     "@teambit/toolbox.network.agent": 0.0.116
     "@vuedoc/parser": 2.4.0
     acorn: 6.4.2
@@ -7145,7 +7146,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: cfde2fd07dc9fd00dc3381289eb74308823d538abeb10f337c94a95bd3ec69dc7e6424d6cd870cf794957cbf94db49d191b33d32fa78966ebf48d3b0276531b6
+  checksum: c61d4e2bed70f86d8aa855b99170bd2fc6721f420aebce66f36dc8d96eab94fa505044fbf926fb0d4dcb5a25954c0c32048dcb82d4ce9061039207b7ab45b415
   languageName: node
   linkType: hard
 
@@ -7283,12 +7284,9 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.109
-<<<<<<< Updated upstream
+    "@teambit/legacy": 1.0.110
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
-=======
->>>>>>> Stashed changes
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
     "@teambit/react.instructions.react.adding-tests": 0.0.5
     "@teambit/string.ellipsis": 0.0.7
@@ -7685,13 +7683,12 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.109
+    "@teambit/legacy": 1.0.110
   bin:
     bit: bin/bit.js
   languageName: unknown
   linkType: soft
 
-<<<<<<< Updated upstream
 "@teambit/mdx.ui.mdx-scope-context@npm:0.0.368":
   version: 0.0.368
   resolution: "@teambit/mdx.ui.mdx-scope-context@npm:0.0.368"
@@ -7705,8 +7702,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-=======
->>>>>>> Stashed changes
 "@teambit/model.composition-id@npm:0.0.259":
   version: 0.0.259
   resolution: "@teambit/model.composition-id@npm:0.0.259::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmodel.composition-id%2F-%2Fmodel.composition-id-0.0.259.tgz"
@@ -7733,6 +7728,38 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 04a8e8a88cbbba7296705a0e8145d1e8f5cdd1e5264bfe0a9a9c87c5451b46d2a45bd879aa9986bafa65783036a489329e2f600db11603d9ce72c646a87cf828
+  languageName: node
+  linkType: hard
+
+"@teambit/network.agent@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@teambit/network.agent@npm:0.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fnetwork.agent%2F-%2Fnetwork.agent-0.0.1.tgz"
+  dependencies:
+    "@teambit/network.proxy-agent": 0.0.1
+    agentkeepalive: 4.1.4
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.38
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 5cea7497801060f00ad8cd090a8861383dd2d043b4df4a91c08369ebd18943b463c9fe9c06dbf4b3b1daf00b2281252cf84db5cd1a2b84e1fdcc6f08b81304b5
+  languageName: node
+  linkType: hard
+
+"@teambit/network.proxy-agent@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@teambit/network.proxy-agent@npm:0.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fnetwork.proxy-agent%2F-%2Fnetwork.proxy-agent-0.0.1.tgz"
+  dependencies:
+    "@teambit/network.agent": 0.0.1
+    core-js: 3.8.3
+    http-proxy-agent: 4.0.1
+    https-proxy-agent: 5.0.0
+    socks-proxy-agent: 5.0.0
+  peerDependencies:
+    "@teambit/legacy": 1.0.38
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: d9b2008ddbe2eb2043b50b44c75ca70ca44c9e6583674925915edfc23087d0fbd9e8bb5bd8475c06345a0c3b5661265d8a12c5d893e930508c4b6b284addfef9
   languageName: node
   linkType: hard
 
@@ -8851,15 +8878,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-<<<<<<< Updated upstream
-"@types/react@npm:^17.0.8":
-  version: 17.0.11
-  resolution: "@types/react@npm:17.0.11"
-=======
 "@types/react@npm:17.0.8":
   version: 17.0.8
   resolution: "@types/react@npm:17.0.8"
->>>>>>> Stashed changes
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
