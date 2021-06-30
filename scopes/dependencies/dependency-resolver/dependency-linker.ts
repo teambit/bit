@@ -525,14 +525,14 @@ export class DependencyLinker {
     try {
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(distDir);
-      const harmonyPath = path.resolve(path.join(module.path, '..', '..'));
+      const resolvedPath = path.resolve(path.join(module.path, '..', '..'));
       // in this case we want the symlinks to be relative links
       // Using the fs module to make sure it is relative to the target
       if (fs.existsSync(target)) {
         return undefined;
       }
-      createSymlinkOrCopy(harmonyPath, target);
-      return { from: harmonyPath, to: target };
+      createSymlinkOrCopy(resolvedPath, target);
+      return { from: resolvedPath, to: target };
     } catch (err) {
       throw new NonAspectCorePackageLinkError(err, packageName);
     }
