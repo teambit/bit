@@ -13,11 +13,11 @@ export class ExportCmd implements Command {
   description = `export components to a remote scope.
   bit export => export all staged components to their current scope
   Legacy:
-  bit export <remote> [id...] => export (optionally given ids) to the specified remote
-  bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
+  \`bit export <remote> [id...]\` => export (optionally given ids) to the specified remote
+  \`bit export ${CURRENT_UPSTREAM} [id...]\` => export (optionally given ids) to their current scope
   Harmony:
-  bit export [id...] => export (optionally given ids) to their current scope
-  bit export <remote> <lane...> => export the specified lanes to the specified remote
+  \`bit export [id...]\` => export (optionally given ids) to their current scope
+  \`bit export <remote> <lane...>\` => export the specified lanes to the specified remote
 
   https://${BASE_DOCS_DOMAIN}/docs/export
   ${WILDCARD_HELP('export remote-scope')}`;
