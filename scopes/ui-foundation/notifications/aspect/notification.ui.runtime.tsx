@@ -15,9 +15,9 @@ import { NotificationsAspect } from './notifications.aspect';
  * extension
  */
 export default class NotificationUI implements NotificationsStore {
-  static dependencies = [UIAspect];
+  static dependencies: any = [UIAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider([uiRuntimeExtension]: [UiUI]) {
     return new NotificationUI(uiRuntimeExtension);

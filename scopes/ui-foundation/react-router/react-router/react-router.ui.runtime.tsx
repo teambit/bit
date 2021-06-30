@@ -114,7 +114,7 @@ export class ReactRouterUI {
   };
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<LocationListener>()];
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider(deps, config, [routeSlot, routeChangeSlot]: [RouteSlot, RouteChangeSlot]) {
     return new ReactRouterUI(routeSlot, routeChangeSlot);

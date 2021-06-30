@@ -316,9 +316,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     });
   }
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
+  static dependencies: any = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
 
   static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
 

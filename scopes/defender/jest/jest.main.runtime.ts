@@ -16,8 +16,8 @@ export class JestMain {
     return new JestTester(JestAspect.id, jestConfig, jestModule, this.jestWorker, this.logger);
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [WorkerAspect, LoggerAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [WorkerAspect, LoggerAspect];
 
   static async provider([worker, loggerAspect]: [WorkerMain, LoggerMain]) {
     const logger = loggerAspect.createLogger(JestAspect.id);

@@ -213,8 +213,8 @@ import { ReactWithProvidersAspect } from './react-with-providers.aspect'
 import { Center } from './composition-providers/center'
 
 export class ReactWithProvidersPreview {
-  static runtime = PreviewRuntime
-  static dependencies = [ReactAspect]
+  static runtime: any = PreviewRuntime
+  static dependencies: any = [ReactAspect]
 
   static async provider([react]: [ReactPreview]) {
     react.registerProvider([Center])

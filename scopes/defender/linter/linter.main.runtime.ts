@@ -16,7 +16,7 @@ export type LinterConfig = {
 };
 
 export class LinterMain {
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
   constructor(private envs: EnvsMain, private linterService: LinterService) {}
 
@@ -37,7 +37,7 @@ export class LinterMain {
     return new LintTask(LinterAspect.id, name);
   }
 
-  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, LoggerAspect, WorkspaceAspect];
+  static dependencies: any = [EnvsAspect, CLIAspect, ComponentAspect, LoggerAspect, WorkspaceAspect];
 
   static defaultConfig = {
     extensionFormats: ['.ts', '.tsx', '.js', '.jsx', '.mjs'],

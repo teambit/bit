@@ -6,13 +6,13 @@ import { HtmlEnv } from './html.env';
 
 export class HtmlMain {
   static slots = [];
-  static dependencies = [EnvsAspect, ReactAspect];
-  static runtime = MainRuntime;
+  static dependencies: any = [EnvsAspect, ReactAspect];
+  static runtime: any = MainRuntime;
   static async provider([envs, react]: [EnvsMain, ReactMain]) {
     const htmlEnv: HtmlEnv = envs.merge(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
 
-  return new HtmlMain();
+    return new HtmlMain();
   }
 }
 

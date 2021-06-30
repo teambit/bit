@@ -21,8 +21,8 @@ export class AspectMain {
     return this.envs.compose(this.aspectEnv, transformers);
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     ReactAspect,
     EnvsAspect,
     BuilderAspect,

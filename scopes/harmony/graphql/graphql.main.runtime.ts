@@ -265,8 +265,8 @@ export class GraphqlMain {
     subscriptionsPath: '/subscriptions',
   };
 
-  static runtime = MainRuntime;
-  static dependencies = [LoggerAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [LoggerAspect];
 
   static async provider(
     [loggerFactory]: [LoggerMain],

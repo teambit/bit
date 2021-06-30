@@ -778,8 +778,8 @@ export class DependencyResolverMain {
     return this;
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     EnvsAspect,
     LoggerAspect,
     ConfigAspect,

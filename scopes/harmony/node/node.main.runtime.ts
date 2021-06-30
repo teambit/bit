@@ -106,8 +106,8 @@ export class NodeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.nodeEnv), transformers);
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [EnvsAspect, ReactAspect, GeneratorAspect];
 
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);

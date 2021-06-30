@@ -5,9 +5,9 @@ import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 
 export class DocsUI {
-  static dependencies = [ComponentAspect];
+  static dependencies: any = [ComponentAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider([component]: [ComponentUI]) {
     const docs = new DocsUI();

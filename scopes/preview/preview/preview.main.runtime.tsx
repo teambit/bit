@@ -258,8 +258,8 @@ export class PreviewMain {
 
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     BundlerAspect,
     BuilderAspect,
     ComponentAspect,

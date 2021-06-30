@@ -11,9 +11,9 @@ export class ChangeLogUI {
     return <ChangeLogPage />;
   };
 
-  static dependencies = [ComponentAspect];
+  static dependencies: any = [ComponentAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider([component]: [ComponentUI]) {
     const ui = new ChangeLogUI();

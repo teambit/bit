@@ -143,8 +143,8 @@ export class DocsMain {
 
   static slots = [Slot.withType<DocProp>(), Slot.withType<DocReader>()];
 
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     PreviewAspect,
     GraphqlAspect,
     WorkspaceAspect,

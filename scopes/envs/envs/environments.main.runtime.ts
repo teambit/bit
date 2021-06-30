@@ -38,7 +38,7 @@ export type Descriptor = {
 export const DEFAULT_ENV = 'teambit.harmony/node';
 
 export class EnvsMain {
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
   private alreadyShownWarning = {};
 
@@ -458,7 +458,7 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect];
+  static dependencies: any = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect];
 
   static async provider(
     [graphql, loggerAspect, component, cli]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain],

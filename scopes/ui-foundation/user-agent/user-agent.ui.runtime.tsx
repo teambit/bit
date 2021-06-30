@@ -14,9 +14,9 @@ type UserAgentRenderCtx = {
 export class UserAgentUI {
   static slots = [];
 
-  static dependencies = [UIAspect];
+  static dependencies: any = [UIAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider([uiUi]: [UiUI]) {
     const userAgentUi = new UserAgentUI();

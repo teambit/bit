@@ -6,9 +6,9 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXAspect } from './mdx.aspect';
 
 export class MDXEnvUI {
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
   static slots = [];
-  static dependencies = [CompositionsAspect, TesterAspect];
+  static dependencies: any = [CompositionsAspect, TesterAspect];
 
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const mdxEnvUI = new MDXEnvUI();

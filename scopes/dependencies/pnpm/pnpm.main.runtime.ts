@@ -7,8 +7,8 @@ import { PnpmAspect } from './pnpm.aspect';
 import { PnpmPackageManager } from './pnpm.package-manager';
 
 export class PnpmMain {
-  static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, PkgAspect, LoggerAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [DependencyResolverAspect, PkgAspect, LoggerAspect];
 
   static async provider([depResolver, pkg, loggerExt]: [DependencyResolverMain, PkgMain, LoggerMain]) {
     const logger = loggerExt.createLogger(PnpmAspect.id);

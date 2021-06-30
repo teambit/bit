@@ -127,7 +127,7 @@ export class WorkspaceUI {
     },
   ];
 
-  static dependencies = [
+  static dependencies: any = [
     UIAspect,
     ComponentAspect,
     SidebarAspect,
@@ -137,7 +137,7 @@ export class WorkspaceUI {
     GraphAspect,
   ];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static slots = [
     Slot.withType<RouteProps>(),

@@ -3,8 +3,8 @@ import { MainRuntime } from '@teambit/cli';
 import { NonRequireableAspect } from './non-requireable-aspect.aspect';
 
 export class NonRequireableMain {
-  static runtime = MainRuntime;
-  static dependencies = [];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [];
 
   static async provider() {
     console.log('dummy extension runs');

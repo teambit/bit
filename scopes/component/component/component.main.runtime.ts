@@ -130,8 +130,8 @@ export class ComponentMain {
 
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>(), Slot.withType<ShowFragment[]>()];
 
-  static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, ConfigAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [GraphqlAspect, ExpressAspect, CLIAspect, ConfigAspect];
 
   static async provider(
     [graphql, express, cli, configAspect]: [GraphqlMain, ExpressMain, CLIMain, Config],

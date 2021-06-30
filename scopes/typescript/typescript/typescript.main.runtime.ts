@@ -37,8 +37,8 @@ export class TypescriptMain {
     };
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [SchemaAspect, LoggerAspect];
 
   static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
     schema.registerParser(new TypeScriptParser());

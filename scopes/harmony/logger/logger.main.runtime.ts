@@ -4,8 +4,8 @@ import { Logger } from './logger';
 import { LoggerAspect } from './logger.aspect';
 
 export class LoggerMain {
-  static runtime = MainRuntime;
-  static dependencies = [];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [];
 
   createLogger(extensionName: string): Logger {
     return new Logger(extensionName);

@@ -6,8 +6,8 @@ import { ${namePascalCase}Aspect } from './${name}.aspect';
 
 export class ${namePascalCase}Main {
   static slots = [];
-  static dependencies = [];
-  static runtime = MainRuntime;
+  static dependencies: any = [];
+  static runtime: any = MainRuntime;
   static async provider() {
     return new ${namePascalCase}Main();
   }

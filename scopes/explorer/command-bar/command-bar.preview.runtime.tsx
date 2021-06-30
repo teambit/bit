@@ -19,8 +19,8 @@ export class CommandBarPreview {
     this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
   };
 
-  static dependencies = [PubsubAspect];
-  static runtime = PreviewRuntime;
+  static dependencies: any = [PubsubAspect];
+  static runtime: any = PreviewRuntime;
   static async provider([pubSub]: [PubsubPreview]) {
     const pubsubPreview = new CommandBarPreview(pubSub);
     return pubsubPreview;

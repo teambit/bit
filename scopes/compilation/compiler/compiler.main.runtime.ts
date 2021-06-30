@@ -57,9 +57,9 @@ export class CompilerMain {
     return new DistArtifact(artifacts);
   }
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
-  static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect, PubsubAspect, AspectLoaderAspect];
+  static dependencies: any = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect, PubsubAspect, AspectLoaderAspect];
 
   static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder]: [
     CLIMain,

@@ -33,8 +33,8 @@ export class StencilMain {
     // return new StencilDevServer({}, this.workspace);
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, CompilerAspect, WorkspaceAspect, WebpackAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [EnvsAspect, CompilerAspect, WorkspaceAspect, WebpackAspect];
 
   static async provider([envs, compiler, workspace, webpack]: [EnvsMain, CompilerMain, Workspace, WebpackMain]) {
     const stencil = new StencilMain(workspace);

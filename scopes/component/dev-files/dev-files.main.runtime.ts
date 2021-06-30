@@ -123,9 +123,9 @@ export class DevFilesMain {
     patterns: [],
   };
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
+  static dependencies: any = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
 
   static async provider(
     [envs, workspace, componentAspect, graphql]: [EnvsMain, Workspace, ComponentMain, GraphqlMain],

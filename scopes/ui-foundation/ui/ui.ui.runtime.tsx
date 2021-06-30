@@ -239,9 +239,9 @@ export class UiUI {
 
   static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderLifecycle>()];
 
-  static dependencies = [GraphqlAspect, ReactRouterAspect];
+  static dependencies: any = [GraphqlAspect, ReactRouterAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static async provider(
     [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],

@@ -87,8 +87,8 @@ type VersionPackageManifest = {
 };
 
 export class PkgMain {
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     CLIAspect,
     ScopeAspect,
     EnvsAspect,

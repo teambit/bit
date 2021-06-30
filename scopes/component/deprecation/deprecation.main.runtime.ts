@@ -13,8 +13,8 @@ export type DeprecationInfo = {
 
 export class DeprecationMain {
   constructor(private scope: ScopeMain) {}
-  static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ScopeAspect, ComponentAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [GraphqlAspect, ScopeAspect, ComponentAspect];
 
   getDeprecationInfo(component: Component): DeprecationInfo {
     const deprecated = component.state._consumer.deprecated;

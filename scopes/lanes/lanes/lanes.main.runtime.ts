@@ -77,8 +77,8 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect];
-  static runtime = MainRuntime;
+  static dependencies: any = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect];
+  static runtime: any = MainRuntime;
   static async provider([cli, scope, workspace, graphql]: [CLIMain, ScopeMain, Workspace, GraphqlMain]) {
     const lanesMain = new LanesMain(workspace, scope);
     const isLegacy = workspace && workspace.consumer.isLegacy;

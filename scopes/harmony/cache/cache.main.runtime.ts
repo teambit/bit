@@ -10,7 +10,7 @@ export type CacheConfig = {
 };
 
 export class CacheMain {
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
   constructor(
     /**
@@ -24,7 +24,7 @@ export class CacheMain {
     private readonly logger: Logger
   ) {}
 
-  static dependencies = [LoggerAspect];
+  static dependencies: any = [LoggerAspect];
 
   static defaultConfig = {
     cacheDirectory: CACHE_ROOT,

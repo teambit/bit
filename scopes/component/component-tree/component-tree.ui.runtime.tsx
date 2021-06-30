@@ -14,11 +14,11 @@ export class ComponentTreeUI {
     return this;
   }
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static slots = [Slot.withType<ComponentTreeNode>()];
 
-  static dependencies = [];
+  static dependencies: any = [];
 
   static async provider(deps, config, [treeNodeSlot]: [ComponentTreeSlot]) {
     return new ComponentTreeUI(treeNodeSlot);

@@ -35,11 +35,11 @@ export class SidebarUI {
     return <SideBar drawerSlot={this.drawerSlot} {...props}></SideBar>;
   };
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static slots = [Slot.withType<DrawerType>()];
 
-  static dependencies = [];
+  static dependencies: any = [];
 
   static async provider(deps, config, [drawerSlot]: [DrawerSlot]) {
     return new SidebarUI(drawerSlot);

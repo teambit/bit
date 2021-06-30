@@ -105,8 +105,8 @@ export class CLIMain {
     }
   }
 
-  static dependencies = [];
-  static runtime = MainRuntime;
+  static dependencies: any = [];
+  static runtime: any = MainRuntime;
   static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
 
   static async provider(deps, config, [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]) {

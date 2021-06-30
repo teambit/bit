@@ -12,7 +12,7 @@ export class MultiCompilerMain {
     return new MultiCompiler(MultiCompilerAspect.id, compilers, options, {});
   }
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
   static async provider() {
     return new MultiCompilerMain();

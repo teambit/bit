@@ -149,8 +149,8 @@ export class ApplicationMain {
     return res.results[0].data;
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect];
 
   static slots = [
     Slot.withType<ApplicationType[]>(),

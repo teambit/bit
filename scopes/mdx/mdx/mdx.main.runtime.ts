@@ -34,8 +34,8 @@ export class MDXMain {
     return mdxCompiler;
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [
+  static runtime: any = MainRuntime;
+  static dependencies: any = [
     DocsAspect,
     DependencyResolverAspect,
     ReactAspect,

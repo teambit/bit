@@ -8,9 +8,9 @@ import { ReactAspect } from './react.aspect';
 import { HighlighterWidget } from './highlighter-widget';
 
 export class ReactUI {
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
   static slots = [];
-  static dependencies = [CompositionsAspect, TesterAspect];
+  static dependencies: any = [CompositionsAspect, TesterAspect];
 
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const reactUI = new ReactUI();

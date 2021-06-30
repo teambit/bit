@@ -21,11 +21,11 @@ export class ReactPreview {
     };
   }
 
-  static runtime = PreviewRuntime;
+  static runtime: any = PreviewRuntime;
 
   static slots = [Slot.withType<Provider>()];
 
-  static dependencies = [PreviewAspect];
+  static dependencies: any = [PreviewAspect];
 
   static async provider([preview]: [PreviewPreview], config, [providerSlot]: [ProviderSlot]) {
     const reactPreview = new ReactPreview(preview, providerSlot);

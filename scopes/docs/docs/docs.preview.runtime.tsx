@@ -25,8 +25,8 @@ export class DocsPreview {
     return relevant[0];
   }
 
-  static runtime = PreviewRuntime;
-  static dependencies = [PreviewAspect];
+  static runtime: any = PreviewRuntime;
+  static dependencies: any = [PreviewAspect];
 
   static async provider([preview]: [PreviewPreview]) {
     const docsPreview = new DocsPreview(preview);

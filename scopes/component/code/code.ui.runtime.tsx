@@ -30,9 +30,9 @@ export class CodeUI {
     this.fileIconSlot?.register(icons);
     return this;
   }
-  static dependencies = [ComponentAspect];
+  static dependencies: any = [ComponentAspect];
 
-  static runtime = UIRuntime;
+  static runtime: any = UIRuntime;
 
   static slots = [Slot.withType<string>()];
 

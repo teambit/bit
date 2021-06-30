@@ -68,7 +68,7 @@ export class PubsubPreview {
     this.events.emit(topic, message);
   };
 
-  static runtime = PreviewRuntime;
+  static runtime: any = PreviewRuntime;
 
   static async provider(): Promise<PubsubPreview> {
     const pubsubPreview = new PubsubPreview();

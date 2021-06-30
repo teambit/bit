@@ -131,8 +131,8 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 };
 
 export class IsolatorMain {
-  static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
 

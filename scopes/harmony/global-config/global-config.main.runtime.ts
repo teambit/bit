@@ -13,8 +13,8 @@ import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 
 export class GlobalConfigMain {
-  static runtime = MainRuntime;
-  static dependencies = [];
+  static runtime: any = MainRuntime;
+  static dependencies: any = [];
   static slots = [];
 
   async get(key: string): Promise<string | undefined> {

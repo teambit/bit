@@ -33,9 +33,9 @@ export class ESLintMain {
     return new ESLintLinter(this.logger, options, ESLintModule);
   }
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
-  static dependencies = [LoggerAspect];
+  static dependencies: any = [LoggerAspect];
 
   static async provider([loggerExt]: [LoggerMain]): Promise<ESLintMain> {
     const logger = loggerExt.createLogger(ESLintAspect.id);

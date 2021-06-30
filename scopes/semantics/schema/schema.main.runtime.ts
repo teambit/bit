@@ -83,9 +83,9 @@ export class SchemaMain {
     return this;
   }
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
-  static dependencies = [EnvsAspect];
+  static dependencies: any = [EnvsAspect];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',

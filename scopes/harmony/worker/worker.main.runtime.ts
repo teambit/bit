@@ -18,7 +18,7 @@ export class WorkerMain {
     private workerNameSlot: WorkerNameSlot
   ) {}
 
-  static runtime = MainRuntime;
+  static runtime: any = MainRuntime;
 
   listWorkers() {
     return this.workerSlot.values();
@@ -60,7 +60,7 @@ export class WorkerMain {
 
   static slots = [Slot.withType<HarmonyWorker<unknown>>(), Slot.withType<string>()];
 
-  static dependencies = [ComponentAspect, PkgAspect];
+  static dependencies: any = [ComponentAspect, PkgAspect];
 
   static async provider(
     [componentAspect, pkg]: [ComponentMain, PkgMain],
