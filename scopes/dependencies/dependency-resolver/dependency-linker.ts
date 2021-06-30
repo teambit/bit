@@ -391,7 +391,8 @@ export class DependencyLinker {
       throw new MainAspectNotLinkable();
     }
     const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
-    this.removeSymlinkTarget(target);
+    const shouldSymlink = this.removeSymlinkTarget(target);
+    if (!shouldSymlink) return undefined;
     const src = this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
@@ -456,7 +457,8 @@ export class DependencyLinker {
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
-    this.removeSymlinkTarget(target, hasLocalInstallation);
+    const shouldSymlink = this.removeSymlinkTarget(target, hasLocalInstallation);
+    if (!shouldSymlink) return undefined;
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {
       aspectDir = getAspectDir(id);
@@ -480,7 +482,10 @@ export class DependencyLinker {
     }
   }
 
-  private removeSymlinkTarget(targetPath: string, hasLocalInstallation = false) {
+  /**
+   * returns true if it's safe to symlink it later.
+   */
+  private removeSymlinkTarget(targetPath: string, hasLocalInstallation = false): boolean {
     // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
     // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
     // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
@@ -493,12 +498,13 @@ export class DependencyLinker {
       // Do not override links created by other means
       if (!targetStat.isSymbolicLink()) {
         this.logger.debug(`removing link target, target ${targetPath} already exist. skipping it`);
-        return undefined;
+        return false;
       }
       // it's a symlink, remove is as it might point to an older version
       fs.removeSync(targetPath);
+      return true;
     }
-    return undefined;
+    return true;
   }
 
   private linkNonAspectCorePackages(
