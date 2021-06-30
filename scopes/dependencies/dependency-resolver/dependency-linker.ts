@@ -15,7 +15,12 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import Symlink from '@teambit/legacy/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
-import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
+import {
+  MainAspectNotLinkable,
+  RootDirNotDefined,
+  CoreAspectLinkError,
+  NonAspectCorePackageLinkError,
+} from './exceptions';
 import { WorkspacePolicy } from './policy';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
@@ -76,6 +81,7 @@ export type LinkResults = {
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
+  teambitLegacyLink?: LinkDetail;
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
   linkToDirResults?: LinkToDirResult[];
@@ -166,6 +172,8 @@ export class DependencyLinker {
       result.coreAspectsLinks = coreAspectsLinks;
     }
 
+    const teambitLegacyLink = this.linkTeambitLegacy(componentDirectoryMap, finalRootDir);
+    result.teambitLegacyLink = teambitLegacyLink;
     const harmonyLink = this.linkHarmony(componentDirectoryMap, finalRootDir);
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
@@ -383,7 +391,7 @@ export class DependencyLinker {
       throw new MainAspectNotLinkable();
     }
     const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
-    this.removeNonSymlinkTarget(target);
+    this.removeSymlinkTarget(target);
     const src = this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
@@ -448,7 +456,7 @@ export class DependencyLinker {
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
-    this.removeNonSymlinkTarget(target, hasLocalInstallation);
+    this.removeSymlinkTarget(target, hasLocalInstallation);
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {
       aspectDir = getAspectDir(id);
@@ -472,7 +480,7 @@ export class DependencyLinker {
     }
   }
 
-  private removeNonSymlinkTarget(targetPath: string, hasLocalInstallation = false) {
+  private removeSymlinkTarget(targetPath: string, hasLocalInstallation = false) {
     // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
     // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
     // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
@@ -493,32 +501,30 @@ export class DependencyLinker {
     return undefined;
   }
 
-  private linkHarmony(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
-    const name = 'harmony';
-    const packageName = '@teambit/harmony';
-
+  private linkNonAspectCorePackages(
+    dirMap: ComponentMap<string>,
+    rootDir: string,
+    name: string,
+    packageName = `@teambit/${name}`
+  ): LinkDetail | undefined {
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
     const mainAspectPath = path.join(rootDir, this.aspectLoader.mainAspect.packageName);
-    const harmonyDir = path.join(mainAspectPath, 'dist', name);
+    const distDir = path.join(mainAspectPath, 'dist', name);
 
     const target = path.join(rootDir, 'node_modules', packageName);
-    const isTargetExists = fs.pathExistsSync(target);
-    // Do not override links created by other means
-    if (isTargetExists) {
-      return undefined;
-    }
-    const isHarmonyDirExist = fs.pathExistsSync(harmonyDir);
-    if (!isHarmonyDirExist) {
-      const newDir = getHarmonyDirForDevEnv();
+    this.removeSymlinkTarget(target);
+    const isDistDirExist = fs.pathExistsSync(distDir);
+    if (!isDistDirExist) {
+      const newDir = getDistDirForDevEnv(packageName);
       createSymlinkOrCopy(newDir, target);
       return { from: newDir, to: target };
     }
 
     try {
       // eslint-disable-next-line global-require, import/no-dynamic-require
-      const module = require(harmonyDir);
+      const module = require(distDir);
       const harmonyPath = path.resolve(path.join(module.path, '..', '..'));
       // in this case we want the symlinks to be relative links
       // Using the fs module to make sure it is relative to the target
@@ -528,20 +534,39 @@ export class DependencyLinker {
       createSymlinkOrCopy(harmonyPath, target);
       return { from: harmonyPath, to: target };
     } catch (err) {
-      throw new HarmonyLinkError(err);
+      throw new NonAspectCorePackageLinkError(err, packageName);
     }
+  }
+
+  private linkHarmony(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+    const name = 'harmony';
+    return this.linkNonAspectCorePackages(dirMap, rootDir, name);
+  }
+
+  private linkTeambitLegacy(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+    const name = 'legacy';
+    return this.linkNonAspectCorePackages(dirMap, rootDir, name);
   }
 }
 
 /**
- * When running dev env (bd) we need to get the harmony folder from the node_modules of the clone
+ * When running dev env (bd) we need to get the harmony/legacy folder from the node_modules of the clone
  */
-function getHarmonyDirForDevEnv(): string {
-  const moduleDirectory = require.resolve('@teambit/harmony');
-  const dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
-  if (!fs.existsSync(dirPath)) {
-    throw new BitError(`unable to find @teambit/harmony in ${dirPath}`);
+function getDistDirForDevEnv(packageName: string): string {
+  let moduleDirectory = require.resolve(packageName);
+  let dirPath;
+  if (moduleDirectory.includes(packageName)) {
+    dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+  } else {
+    // This is usually required for the @teambit/legacy, as we re inside the nm so we can't find it in the other way
+    const nmDir = __dirname.substring(0, __dirname.indexOf('@teambit'));
+    dirPath = path.join(nmDir, packageName);
+    moduleDirectory = require.resolve(packageName, { paths: [nmDir] });
   }
+  if (!fs.existsSync(dirPath)) {
+    throw new BitError(`unable to find ${packageName} in ${dirPath}`);
+  }
+
   return dirPath;
 }
 
