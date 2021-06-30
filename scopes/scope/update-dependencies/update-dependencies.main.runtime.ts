@@ -210,6 +210,11 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   private async getDependencyWithExactVersion(depStr: string): Promise<ComponentID> {
     const compId = ComponentID.fromString(depStr);
+    if (this.updateDepsOptions.simulation) {
+      // for simulation, we don't have the objects of the dependencies, so don't try to find the
+      // exact version, expect the entered version to be okay.
+      return compId;
+    }
     const range = compId.version || '*'; // if not version specified, assume the latest
     const id = compId.changeVersion(undefined);
     const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);

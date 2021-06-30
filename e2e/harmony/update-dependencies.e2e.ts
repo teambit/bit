@@ -145,7 +145,7 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@1.1.0`],
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag --simulation', updateRemote.scopePath);

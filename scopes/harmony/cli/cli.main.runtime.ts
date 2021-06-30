@@ -10,7 +10,7 @@ import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
-import { CliCmd } from './cli.cmd';
+import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 
 export type CommandList = Array<Command>;
@@ -128,8 +128,10 @@ export class CLIMain {
     const legacyRegistry = buildRegistry(extensionsCommands);
     const legacyCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
+    const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
+    cliCmd.commands.push(cliGenerateCmd);
     cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
     return cliMain;
   }

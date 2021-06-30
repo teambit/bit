@@ -1,6 +1,6 @@
 import gitconfig from 'gitconfig';
 import R from 'ramda';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import Config from '../../../global-config/config';
 
@@ -47,6 +47,10 @@ export async function get(key: string): Promise<string | undefined> {
     cache().set(config);
     return config;
   };
+  const envVarName = toEnvVariableName(key);
+  if (process.env[envVarName]) {
+    return process.env[envVarName];
+  }
   const config = await getConfigObject();
   const val = config ? config.get(key) : undefined;
   if (!R.isNil(val)) return val;
@@ -67,6 +71,10 @@ export function getSync(key: string): string | undefined {
     cache().set(config);
     return config;
   };
+  const envVarName = toEnvVariableName(key);
+  if (process.env[envVarName]) {
+    return process.env[envVarName];
+  }
   const config = getConfigObject();
   const val = config ? config.get(key) : undefined;
   if (!R.isNil(val)) return val;
@@ -132,4 +140,8 @@ function gitCache() {
 
 function invalidateCache() {
   cache().set(null);
+}
+
+function toEnvVariableName(configName: string): string {
+  return `${ENV_VARIABLE_CONFIG_PREFIX}${configName.replace(/\./, '_').toUpperCase()}`;
 }
