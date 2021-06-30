@@ -7,7 +7,6 @@ import {
 } from '../../scopes/harmony/aspect-loader/constants';
 import { CannotLoadExtension } from '../../scopes/harmony/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -22,7 +21,6 @@ describe('load extensions', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

@@ -3,7 +3,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
@@ -76,7 +75,7 @@ export default class ScopeHelper {
   }
 
   initHarmonyWorkspace() {
-    this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
+    this.command.runCmd('bit init');
   }
 
   /**

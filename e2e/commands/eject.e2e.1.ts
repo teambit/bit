@@ -16,6 +16,7 @@ describe('bit eject command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   describe('local component', () => {
     before(() => {

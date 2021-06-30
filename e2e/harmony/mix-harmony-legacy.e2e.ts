@@ -15,12 +15,13 @@ describe('mix use of Legacy and Harmony', function () {
   });
   describe('legacy component into Harmony workspace', () => {
     before(() => {
+      helper.command.setFeatures('legacy-workspace-config');
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-
+      helper.command.resetFeatures();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
     });
