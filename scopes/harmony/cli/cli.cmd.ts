@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
@@ -5,21 +6,41 @@ import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
 import { CLIMain } from './cli.main.runtime';
-import { GenerateCommandsDoc } from './generate-doc-md';
+import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
 
-export class CliCmd implements Command {
-  name = 'cli';
-  description = 'EXPERIMENTAL. enters bit cli program';
+export class CliGenerateCmd implements Command {
+  name = 'generate';
+  description = 'EXPERIMENTAL. generate an .md file with all commands details';
   alias = '';
   loader = false;
   group = 'general';
-  options = [['', 'generate', 'generate an .md file with all commands details']] as CommandOptions;
+  options = [
+    [
+      '',
+      'metadata',
+      'metadata/front-matter to place at the top of the .md file, enter as an object e.g. --metadata.id=cli --metadata.title=commands',
+    ],
+  ] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}
 
-  async report(args, { generate }: { generate: boolean }): Promise<string> {
-    if (generate) return new GenerateCommandsDoc(this.cliMain.commands).generate();
+  async report(args, { metadata }: GenerateOpts): Promise<string> {
+    return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
+  }
+}
 
+export class CliCmd implements Command {
+  name = 'cli';
+  description = 'EXPERIMENTAL. enters bit cli program and generate commands list';
+  alias = '';
+  commands: Command[] = [];
+  loader = false;
+  group = 'general';
+  options = [] as CommandOptions;
+
+  constructor(private cliMain: CLIMain) {}
+
+  async report(): Promise<string> {
     logger.isDaemon = true;
     const rl = readline.createInterface({
       input: process.stdin,

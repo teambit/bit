@@ -12,7 +12,7 @@ import { installNpmPackagesForComponents } from '../../npm-client/install-packag
 import { ComponentWithDependencies } from '../../scope';
 import { isDir, isDirEmptySync } from '../../utils';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
@@ -205,7 +205,7 @@ export default class ManyComponentsWriter {
 
     // get all components that their root-dir is a parent of other components root-dir.
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
-      allDirs.find((d) => d.startsWith(`${writeToPath}${path.sep}`))
+      allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
     if (!parentsOfOthersComps.length) {
       return;
@@ -213,8 +213,8 @@ export default class ManyComponentsWriter {
     const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
 
     const incrementPath = (p: string, number: number) => `${p}_${number}`;
-    const existingRootDirs = Object.keys(this.bitMap.getAllTrackDirs()).map((p) => path.normalize(p));
-    const allPaths = [...existingRootDirs, ...parentsOfOthersCompsDirs];
+    const existingRootDirs = Object.keys(this.bitMap.getAllTrackDirs());
+    const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
     const incrementRecursively = (p: string) => {
       let num = 1;
       let newPath = incrementPath(p, num);
@@ -239,7 +239,7 @@ export default class ManyComponentsWriter {
   }
   _getWriteParamsOfOneComponent(componentWithDeps: ComponentWithDependencies): ComponentWriterProps {
     // for isolated components, the component files should be on the root. see #1758
-    const componentRootDir: PathOsBasedRelative = this.isolated
+    const componentRootDir: PathLinuxRelative = this.isolated
       ? '.'
       : this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
@@ -349,7 +349,7 @@ export default class ManyComponentsWriter {
           ...this._getDefaultWriteParams(),
           writeConfig: false,
           component: dep,
-          writeToPath: depRootPath,
+          writeToPath: pathNormalizeToLinux(depRootPath),
           origin: COMPONENT_ORIGINS.NESTED,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           existingComponentMap: componentMap,
@@ -419,10 +419,10 @@ to move all component files to a different directory, run bit remove and then bi
       writePackageJson: this.writePackageJson,
     });
   }
-  _getComponentRootDir(bitId: BitId): PathOsBasedRelative {
+  _getComponentRootDir(bitId: BitId): PathLinuxRelative {
     if (this.consumer) {
       return this.writeToPath
-        ? this.consumer.getPathRelativeToConsumer(path.resolve(this.writeToPath))
+        ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(this.writeToPath)))
         : this.consumer.composeRelativeComponentPath(bitId);
     }
     return composeComponentPath(bitId);
@@ -431,8 +431,7 @@ to move all component files to a different directory, run bit remove and then bi
     if (this.isolated) {
       return composeDependencyPathForIsolated(bitId, DEFAULT_DIR_DEPENDENCIES);
     }
-    // $FlowFixMe consumer is set here
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore consumer is set here
     return this.consumer.composeRelativeDependencyPath(bitId);
   }
   _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ComponentMap | null | undefined) {
