@@ -10,6 +10,7 @@ import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { htmlEnvTemplate } from './templates/html-env';
+import { htmlComponentTemplate } from './templates/html-component';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
 
@@ -99,7 +100,7 @@ export class HtmlMain {
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const htmlEnv: HtmlEnv = envs.merge(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
-    generator.registerComponentTemplate([htmlEnvTemplate]);
+    generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate]);
   return new HtmlMain(react, htmlEnv, envs);
   }
 }

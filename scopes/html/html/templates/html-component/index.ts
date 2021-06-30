@@ -4,7 +4,7 @@ import { compositionFile } from './files/composition';
 import { docsFile } from './files/docs';
 import { testFile } from './files/test';
 
-export const htmlComponent: ComponentTemplate = {
+export const htmlComponentTemplate: ComponentTemplate = {
   name: 'html-component',
   description: 'a basic html component',
 
