@@ -50,7 +50,7 @@ export function addFeature(featureName: string) {
 
 export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
 
-export const HARMONY_FEATURE = 'harmony';
+export const LEGACY_FEATURE = 'legacy-workspace-config';
 
 export const NO_FS_CACHE_FEATURE = 'no-fs-cache';
 
@@ -58,6 +58,6 @@ export const BUILD_ON_CI = 'build-on-ci';
 
 export const EXPORT_CENTRAL = 'export-central';
 
-export function isHarmonyEnabled() {
-  return isFeatureEnabled(HARMONY_FEATURE);
+export function isLegacyEnabled() {
+  return isFeatureEnabled(LEGACY_FEATURE);
 }

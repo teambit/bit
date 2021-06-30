@@ -2,7 +2,6 @@ import chai, { expect } from 'chai';
 import { isEmpty } from 'lodash';
 
 import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -17,7 +16,6 @@ describe('component config', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

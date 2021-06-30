@@ -3,7 +3,6 @@ import * as pathlib from 'path';
 import R from 'ramda';
 
 import { init } from '../../../api/consumer';
-import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 import { initScope } from '../../../api/scope';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
@@ -42,11 +41,7 @@ export default class Init implements LegacyCommand {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
-    [
-      '',
-      'harmony',
-      'EXPERIMENTAL. create a new workspace using the experimental Harmony version. to migrate, run bit migrate --harmony',
-    ],
+    ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 
@@ -68,10 +63,8 @@ export default class Init implements LegacyCommand {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       tester,
       defaultDirectory,
-      harmony,
       packageManager,
     } = flags;
-    if (harmony) addFeature(HARMONY_FEATURE);
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
