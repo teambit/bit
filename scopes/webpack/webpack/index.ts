@@ -9,3 +9,5 @@ export { Configuration } from 'webpack';
 export { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 export { WebpackBitReporterPlugin } from './plugins/webpack-bit-reporter-plugin';
 export { fallbacks } from './config/webpack-fallbacks';
+export { fallbacksAliases } from './config/webpack-fallbacks-aliases';
+export { fallbacksProvidePluginConfig } from './config/webpack-fallbacks-provide-plugin-config';
