@@ -87,7 +87,7 @@ export class ReactNativeMain {
   }
 
   static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect];
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
   static async provider([react, envs, generator]: [ReactMain, EnvsMain, GeneratorMain]) {
     const webpackModifiers: UseWebpackModifiers = {
       previewConfig: [previewConfigTransformer],

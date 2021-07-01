@@ -32,9 +32,9 @@ export class HarmonyUiAppMain {
 
   static slots = [];
 
-  static dependencies: any = [ApplicationAspect, UIAspect, ComponentAspect];
+  static dependencies = [ApplicationAspect, UIAspect, ComponentAspect];
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
   static async provider([application, ui, componentAspect]: [ApplicationMain, UiMain, ComponentMain]) {
     return new HarmonyUiAppMain(application, ui, componentAspect);

@@ -56,8 +56,8 @@ export type TesterOptions = {
 };
 
 export class TesterMain {
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
+  static runtime = MainRuntime;
+  static dependencies = [
     CLIAspect,
     EnvsAspect,
     WorkspaceAspect,

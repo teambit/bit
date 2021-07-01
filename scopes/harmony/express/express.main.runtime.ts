@@ -20,7 +20,7 @@ export type MiddlewareSlot = SlotRegistry<MiddlewareManifest[]>;
 export type RouteSlot = SlotRegistry<Route[]>;
 
 export class ExpressMain {
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
   constructor(
     /**
@@ -143,7 +143,7 @@ export class ExpressMain {
   }
 
   static slots = [Slot.withType<Route[]>(), Slot.withType<MiddlewareManifest[]>()];
-  static dependencies: any = [LoggerAspect];
+  static dependencies = [LoggerAspect];
 
   static defaultConfig = {
     port: 4001,

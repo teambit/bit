@@ -148,9 +148,9 @@ export class CommandBarUI {
     });
   }
 
-  static dependencies: any = [UIAspect, PubsubAspect];
+  static dependencies = [UIAspect, PubsubAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
-  static runtime: any = UIRuntime;
+  static runtime = UIRuntime;
   static async provider(
     [uiUi, pubsubUI]: [UiUI, PubsubUI],
     config,

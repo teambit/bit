@@ -89,8 +89,8 @@ export class GraphqlUI {
 
   renderHooks = new GraphqlRenderLifecycle(this);
 
-  static runtime: any = UIRuntime;
-  static dependencies: any = [];
+  static runtime = UIRuntime;
+  static dependencies = [];
   static slots = [];
 
   static async provider() {

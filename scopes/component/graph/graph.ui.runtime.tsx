@@ -25,8 +25,8 @@ export class GraphUI {
   }
 
   constructor(private componentWidgetSlot: ComponentWidgetSlot) {}
-  static dependencies: any = [ComponentAspect];
-  static runtime: any = UIRuntime;
+  static dependencies = [ComponentAspect];
+  static runtime = UIRuntime;
   static slots = [Slot.withType<ComponentWidget>()];
   static async provider([componentUI]: [ComponentUI], config, [componentWidgetSlot]: [ComponentWidgetSlot]) {
     const graphUI = new GraphUI(componentWidgetSlot);

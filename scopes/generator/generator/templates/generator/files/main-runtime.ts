@@ -7,8 +7,8 @@ import { ${namePascalCase}Aspect } from './${name}.aspect';
 
 export class ${namePascalCase}Main {
   static slots = [];
-  static dependencies: any = [GeneratorAspect];
-  static runtime: any = MainRuntime;
+  static dependencies = [GeneratorAspect];
+  static runtime = MainRuntime;
   static async provider([generator]: [GeneratorMain]) {
   /**
   * Array of templates. Add as many templates as you want

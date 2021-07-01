@@ -24,8 +24,8 @@ export type VariantsComponentConfig = {
 const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
 export class VariantsMain {
-  static runtime: any = MainRuntime;
-  static dependencies: any = [];
+  static runtime = MainRuntime;
+  static dependencies = [];
 
   _loadedLegacy: ConsumerOverrides;
 

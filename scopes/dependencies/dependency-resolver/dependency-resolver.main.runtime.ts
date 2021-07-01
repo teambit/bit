@@ -857,8 +857,8 @@ export class DependencyResolverMain {
     return manifest;
   }
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
+  static runtime = MainRuntime;
+  static dependencies = [
     EnvsAspect,
     LoggerAspect,
     ConfigAspect,

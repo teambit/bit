@@ -175,9 +175,9 @@ export class ComponentUI {
     this.pageItemSlot.register(items);
   };
 
-  static dependencies: any = [PubsubAspect, CommandBarAspect];
+  static dependencies = [PubsubAspect, CommandBarAspect];
 
-  static runtime: any = UIRuntime;
+  static runtime = UIRuntime;
 
   static slots = [
     Slot.withType<RouteProps>(),

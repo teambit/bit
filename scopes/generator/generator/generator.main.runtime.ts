@@ -170,9 +170,9 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  static dependencies: any = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
   static async provider(
     [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],

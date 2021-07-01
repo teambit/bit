@@ -127,15 +127,8 @@ export class CompositionsMain {
     compositionPreviewFilePattern: ['**/*.{t,j}s?(x)'],
   };
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
-    PreviewAspect,
-    GraphqlAspect,
-    WorkspaceAspect,
-    SchemaAspect,
-    DevFilesAspect,
-    ComponentAspect,
-  ];
+  static runtime = MainRuntime;
+  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, DevFilesAspect, ComponentAspect];
 
   static async provider(
     [preview, graphql, workspace, schema, devFiles]: [PreviewMain, GraphqlMain, Workspace, SchemaMain, DevFilesMain],

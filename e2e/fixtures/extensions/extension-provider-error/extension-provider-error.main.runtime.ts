@@ -2,8 +2,8 @@ import { MainRuntime } from '@teambit/cli';
 import { ExtensionProviderErrorAspect } from './extension-provider-error.aspect';
 
 export class ExtensionProviderErrorMain {
-  static runtime: any = MainRuntime;
-  static dependencies: any = [];
+  static runtime = MainRuntime;
+  static dependencies = [];
 
   static async provider() {
     throw new Error('error in provider');

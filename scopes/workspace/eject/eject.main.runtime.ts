@@ -5,9 +5,9 @@ import { EjectCmd } from './eject-cmd';
 import { EjectAspect } from './eject.aspect';
 
 export class EjectMain {
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
-  static dependencies: any = [CLIAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
 
   static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
     const logger = loggerMain.createLogger(EjectAspect.id);

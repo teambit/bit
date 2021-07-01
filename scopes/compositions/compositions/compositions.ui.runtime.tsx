@@ -25,8 +25,8 @@ export class CompositionsUI {
     this.menuBarWidgetSlot.register(widget);
   }
 
-  static dependencies: any = [ComponentAspect];
-  static runtime: any = UIRuntime;
+  static dependencies = [ComponentAspect];
+  static runtime = UIRuntime;
   static slots = [Slot.withType<ReactNode>(), Slot.withType<ComponentType>()];
 
   static async provider(

@@ -113,8 +113,8 @@ export class BundlerMain {
 
   static slots = [Slot.withType<BrowserRuntime>()];
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
+  static runtime = MainRuntime;
+  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
 
   static defaultConfig = {
     dedicatedEnvDevServers: [],

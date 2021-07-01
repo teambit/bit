@@ -6,9 +6,9 @@ import { YarnPackageManager } from './yarn.package-manager';
 import { YarnAspect } from './yarn.aspect';
 
 export class YarnMain {
-  static dependencies: any = [DependencyResolverAspect, PkgAspect, LoggerAspect];
+  static dependencies = [DependencyResolverAspect, PkgAspect, LoggerAspect];
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
   static async provider([depResolver, pkg, loggerExt]: [DependencyResolverMain, PkgMain, LoggerMain]) {
     const logger = loggerExt.createLogger(YarnAspect.id);

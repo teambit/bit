@@ -687,9 +687,9 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
   ];
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
-  static dependencies: any = [
+  static dependencies = [
     ComponentAspect,
     UIAspect,
     GraphqlAspect,

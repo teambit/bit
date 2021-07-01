@@ -117,9 +117,9 @@ export class PreviewPreview {
     };
   }
 
-  static runtime: any = PreviewRuntime;
+  static runtime = PreviewRuntime;
 
-  static dependencies: any = [PubsubAspect];
+  static dependencies = [PubsubAspect];
 
   static slots = [Slot.withType<PreviewType>(), Slot.withType<RenderingContextProvider>()];
 

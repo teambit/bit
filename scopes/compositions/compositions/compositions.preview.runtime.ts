@@ -47,9 +47,9 @@ export class CompositionsPreview {
     return module[chosen];
   }
 
-  static runtime: any = PreviewRuntime;
+  static runtime = PreviewRuntime;
 
-  static dependencies: any = [PreviewAspect];
+  static dependencies = [PreviewAspect];
 
   static async provider([preview]: [PreviewPreview]) {
     const compPreview = new CompositionsPreview(preview);

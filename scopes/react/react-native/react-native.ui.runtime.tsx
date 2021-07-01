@@ -6,9 +6,9 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { ReactNativeAspect } from './react-native.aspect';
 
 export class ReactNativeEnvUI {
-  static runtime: any = UIRuntime;
+  static runtime = UIRuntime;
   static slots = [];
-  static dependencies: any = [CompositionsAspect, TesterAspect];
+  static dependencies = [CompositionsAspect, TesterAspect];
 
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const reactNativeEnvUI = new ReactNativeEnvUI();

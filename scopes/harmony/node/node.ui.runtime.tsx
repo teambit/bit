@@ -6,9 +6,9 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { NodeAspect } from './node.aspect';
 
 export class NodeEnvUI {
-  static runtime: any = UIRuntime;
+  static runtime = UIRuntime;
   static slots = [];
-  static dependencies: any = [CompositionsAspect, TesterAspect];
+  static dependencies = [CompositionsAspect, TesterAspect];
 
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const nodeEnvUI = new NodeEnvUI();

@@ -465,8 +465,8 @@ export class UiMain {
     host: 'localhost',
   };
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
+  static runtime = MainRuntime;
+  static dependencies = [
     PubsubAspect,
     CLIAspect,
     GraphqlAspect,

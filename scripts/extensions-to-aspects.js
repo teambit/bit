@@ -33,9 +33,9 @@ function addRunTimeToMain(extName) {
   const contentChanged = `import { ${extNameCamelCase}Aspect } from './${extName}.aspect';
 import { MainRuntime } from '../cli';
 ${content.replace(
-  '  static dependencies: any =',
-  `  static runtime: any = MainRuntime;
-  static dependencies: any =`
+  '  static dependencies =',
+  `  static runtime = MainRuntime;
+  static dependencies =`
 )}
 ${extNameCamelCase}Aspect.addRuntime(${extNameCamelCase}Main);`;
   fs.writeFileSync(mainRuntimePath, contentChanged);

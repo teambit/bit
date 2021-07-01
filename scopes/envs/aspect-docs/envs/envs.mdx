@@ -698,9 +698,9 @@ import { ReactAspect, ReactPreview } from '@teambit/react';
 import { ReactExtensionAspect } from './react-with-providers.aspect';
 
 export class ReactExtensionPreview {
-  static runtime: any = PreviewRuntime;
+  static runtime = PreviewRuntime;
 
-  static dependencies: any = [ReactAspect];
+  static dependencies = [ReactAspect];
 
   static async provider([react]: [ReactPreview]) {
     return new ReactExtensionPreview();
@@ -738,9 +738,9 @@ export class ReactExtensionMain {
     return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
-  static dependencies: any = [ReactAspect, EnvsAspect];
+  static dependencies = [ReactAspect, EnvsAspect];
 
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
     const reactExtension = envs.compose(react, [react.overrideTsConfig(tsconfig)]);
@@ -777,9 +777,9 @@ import { ReactExtensionAspect } from './react-with-providers.aspect';
 import { Center } from './my-providers/center';
 
 export class ReactExtensionPreview {
-  static runtime: any = PreviewRuntime;
+  static runtime = PreviewRuntime;
 
-  static dependencies: any = [ReactAspect];
+  static dependencies = [ReactAspect];
 
   static async provider([react]: [ReactPreview]) {
     react.registerProvider(Center);

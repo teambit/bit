@@ -363,8 +363,8 @@ export class AspectLoaderMain {
     }
   }
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [LoggerAspect, EnvsAspect];
+  static runtime = MainRuntime;
+  static dependencies = [LoggerAspect, EnvsAspect];
   static slots = [Slot.withType<OnAspectLoadError>(), Slot.withType<OnLoadRequireableExtension>()];
 
   static async provider(

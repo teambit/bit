@@ -294,8 +294,8 @@ export class ReactMain {
     };
   }
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
+  static runtime = MainRuntime;
+  static dependencies = [
     EnvsAspect,
     JestAspect,
     TypescriptAspect,

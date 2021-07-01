@@ -261,8 +261,8 @@ export class BuilderMain {
     Slot.withType<BuildTask>(),
   ];
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [
+  static runtime = MainRuntime;
+  static dependencies = [
     CLIAspect,
     EnvsAspect,
     WorkspaceAspect,

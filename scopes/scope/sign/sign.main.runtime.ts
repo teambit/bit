@@ -151,9 +151,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     return { componentsToSkip, componentsToSign };
   }
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
-  static dependencies: any = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 

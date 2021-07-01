@@ -7,9 +7,9 @@ import { TesterAspect } from './tester.aspect';
 
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 export class TesterUI {
-  static dependencies: any = [ComponentAspect];
+  static dependencies = [ComponentAspect];
 
-  static runtime: any = UIRuntime;
+  static runtime = UIRuntime;
 
   stageKey?: string;
 

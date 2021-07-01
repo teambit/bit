@@ -24,7 +24,7 @@ export class PubsubMain {
     delete this.topicMap[topicId];
   }
 
-  static runtime: any = MainRuntime;
+  static runtime = MainRuntime;
 
   static async provider() {
     return new PubsubMain();

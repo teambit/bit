@@ -81,8 +81,8 @@ export class PubsubUI {
     return this.childApi?.pub(topic, event);
   };
 
-  static runtime: any = UIRuntime;
-  static dependencies: any = [UIAspect];
+  static runtime = UIRuntime;
+  static dependencies = [UIAspect];
 
   static async provider([uiUI]: [UiUI]) {
     const pubsubUI = new PubsubUI();

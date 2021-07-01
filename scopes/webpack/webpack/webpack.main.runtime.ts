@@ -108,8 +108,8 @@ export class WebpackMain {
 
   static slots = [];
 
-  static runtime: any = MainRuntime;
-  static dependencies: any = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
+  static runtime = MainRuntime;
+  static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
 
   static async provider([pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain]) {
     const logPublisher = logger.createLogger(WebpackAspect.id);

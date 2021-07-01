@@ -246,8 +246,8 @@ export class ScopeUI {
     },
   ];
 
-  static dependencies: any = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
-  static runtime: any = UIRuntime;
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
+  static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
     Slot.withType<RouteProps>(),
