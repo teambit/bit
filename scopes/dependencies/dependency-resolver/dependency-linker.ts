@@ -556,7 +556,7 @@ export class DependencyLinker {
 
   private linkTeambitLegacy(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
     const name = 'legacy';
-    return this.linkNonAspectCorePackages(rootDir, name);
+    return this.linkNonAspectCorePackages(rootDir, name, undefined, true);
   }
 }
 
