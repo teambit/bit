@@ -62,10 +62,8 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
         <Composer components={reactContext}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             {Content.isMDXComponent ? (
-              <MDXLayout>
-                <div className={styles.mdx}>
-                  <Content />
-                </div>
+              <MDXLayout className={styles.mdx}>
+                <Content />
               </MDXLayout>
             ) : (
               <Content />
