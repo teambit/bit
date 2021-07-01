@@ -1,6 +1,11 @@
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 
-export type { AspectLoaderMain, AspectDescriptor, MainAspect } from './aspect-loader.main.runtime';
+export type {
+  AspectLoaderMain,
+  AspectDescriptor,
+  MainAspect,
+  OnLoadRequireableExtension,
+} from './aspect-loader.main.runtime';
 export {
   getAspectDef,
   getAspectDir,
