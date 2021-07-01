@@ -1,5 +1,5 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
-import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
+import { Compiler, TranspileFileParams, TranspileFileOutput } from '@teambit/compiler';
 import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
@@ -36,7 +36,7 @@ export class TypescriptCompiler implements Compiler {
   /**
    * compile one file on the workspace
    */
-  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     if (!this.isFileSupported(options.filePath)) {
       return null; // file is not supported
     }

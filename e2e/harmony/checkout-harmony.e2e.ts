@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
@@ -18,7 +17,6 @@ describe('bit checkout command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
     helper.scopeHelper.reInitLocalScopeHarmony();
   });
   after(() => {

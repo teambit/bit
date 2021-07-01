@@ -83,7 +83,7 @@ export class PreviewMain {
     return new PreviewArtifact(artifacts);
   }
 
-  getDefs() {
+  getDefs(): PreviewDefinition[] {
     return this.previewSlot.values();
   }
 
@@ -91,10 +91,11 @@ export class PreviewMain {
   private timestamp = Date.now();
 
   /**
-   * write a link for a loading custom modules dynamically.
+   * write a link to load custom modules dynamically.
    * @param prefix write
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
+   * @param dirName
    */
   writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);

@@ -6,7 +6,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { BuilderEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -15,13 +15,18 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
+import { Linter } from '@teambit/linter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
+import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
+// Makes sure the @teambit/react.ui.docs-app is a dependency
+// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import docs from '@teambit/react.ui.docs-app';
 import { ReactMainConfig } from './react.main.runtime';
-import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
 // webpack configs for both components and envs
@@ -40,11 +45,12 @@ export const AspectEnvType = 'react';
 const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
+const eslintConfig = require('./eslint/eslintrc');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements Environment {
+export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv {
   constructor(
     /**
      * jest extension
@@ -86,11 +92,11 @@ export class ReactEnv implements Environment {
     private eslint: ESLintMain
   ) {}
 
-  getTsConfig(targetTsConfig?: TsConfigSourceFile) {
+  getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
     return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
-  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
+  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
     return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
@@ -102,7 +108,11 @@ export class ReactEnv implements Environment {
     return this.jestAspect.createTester(config, jestModule);
   }
 
-  createTsCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
+  createTsCompiler(
+    targetConfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
+  ) {
     const tsconfig = this.getTsConfig(targetConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     const additionalTypes = compilerOptions.types || [];
@@ -127,14 +137,18 @@ export class ReactEnv implements Environment {
     );
   }
 
-  getCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
+  getCompiler(
+    targetConfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
+  ) {
     return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
   }
 
   /**
    * returns and configures the component linter.
    */
-  getLinter() {
+  getLinter(): Linter {
     return this.eslint.createLinter({
       config: eslintConfig,
       // resolve all plugins from the react environment.
@@ -162,6 +176,9 @@ export class ReactEnv implements Environment {
     return path;
   }
 
+  /**
+   * required for `bit start`
+   */
   getDevEnvId(id?: string) {
     if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;
@@ -170,12 +187,13 @@ export class ReactEnv implements Environment {
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
+  getSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
     return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
   }
 
   /**
    * returns and configures the React component dev server.
+   * required for `bit start`
    */
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
@@ -229,16 +247,16 @@ export class ReactEnv implements Environment {
   }
 
   /**
-   * return a path to a docs template.
+   * returns a path to a docs template.
    */
   getDocsTemplate() {
-    return require.resolve('./docs');
+    return require.resolve('@teambit/react.ui.docs-app');
   }
 
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
-   * return a function which mounts a given component to DOM
+   * returns a paths to a function which mounts a given component to DOM
    */
   getMounter() {
     return require.resolve('./mount');
@@ -254,7 +272,7 @@ export class ReactEnv implements Environment {
   /**
    * adds dependencies to all configured components.
    */
-  async getDependencies() {
+  getDependencies() {
     return {
       dependencies: {
         react: '-',

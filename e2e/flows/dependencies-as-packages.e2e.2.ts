@@ -311,6 +311,7 @@ chai.use(require('chai-fs'));
       });
       describe('installing in Harmony', () => {
         before(() => {
+          helper.command.resetFeatures();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.runCmd('npm init -y');

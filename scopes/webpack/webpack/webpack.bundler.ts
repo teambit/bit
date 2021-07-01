@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { Bundler, BundlerResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
-import webpack, { Compiler, Configuration } from 'webpack';
+import { Compiler, Configuration } from 'webpack';
 
 export class WebpackBundler implements Bundler {
   constructor(
@@ -16,11 +16,13 @@ export class WebpackBundler implements Bundler {
      */
     private configs: Configuration[],
 
-    private logger: Logger
+    private logger: Logger,
+
+    private webpack
   ) {}
 
   async run(): Promise<BundlerResult[]> {
-    const compilers = this.configs.map((config) => webpack(config as any));
+    const compilers = this.configs.map((config: any) => this.webpack(config));
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
@@ -51,15 +53,15 @@ export class WebpackBundler implements Bundler {
   }
 
   private getComponents(outputPath: string) {
+    const splitPath = outputPath.split('/');
+    splitPath.pop();
+    const path = splitPath.join('/');
     const target = this.targets.find((targetCandidate) => {
-      const splitPath = outputPath.split('/');
-      splitPath.pop();
-      const path = splitPath.join('/');
       return path === targetCandidate.outputPath;
     });
 
     if (!target) {
-      throw new Error('could not find component id for path');
+      throw new Error(`Could not find component id for path "${path}"`);
     }
 
     return target.components;

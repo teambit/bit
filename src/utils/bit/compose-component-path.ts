@@ -3,7 +3,7 @@ import format from 'string-format';
 
 import BitId from '../../bit-id/bit-id';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
-import { PathOsBased } from '../path';
+import { PathLinuxRelative, PathOsBased } from '../path';
 import { parseScope } from './parse-scope';
 
 /**
@@ -16,7 +16,7 @@ import { parseScope } from './parse-scope';
 export function composeComponentPath(
   bitId: BitId,
   componentsDefaultDirectory: string = DEFAULT_COMPONENTS_DIR_PATH
-): string {
+): PathLinuxRelative {
   let defaultDir = componentsDefaultDirectory;
   const { scope, owner } = parseScope(bitId.scope);
   // Prevent case where for example {scope}/{name} becomes /my-comp (in case the scope is empty)
@@ -35,8 +35,7 @@ export function composeComponentPath(
 
 export function composeDependencyPath(
   bitId: BitId,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  dependenciesDir?: string = DEFAULT_DEPENDENCIES_DIR_PATH
+  dependenciesDir: string = DEFAULT_DEPENDENCIES_DIR_PATH
 ): PathOsBased {
   return path.join(dependenciesDir, bitId.toFullPath());
 }

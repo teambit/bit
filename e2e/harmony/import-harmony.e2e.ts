@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -13,7 +12,6 @@ describe('import functionality on Harmony', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -135,6 +133,53 @@ describe('import functionality on Harmony', function () {
       const importOutput = helper.command.import();
       expect(importOutput).to.not.include('new versions: 0.0.1, 0.0.2, 0.0.3');
       expect(importOutput).to.include('new versions: 0.0.3');
+    });
+  });
+  describe('multiple components some are directory of others', () => {
+    let scopeBeforeImport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('foo/index.js');
+      helper.fs.outputFile('bar/index.js');
+      helper.command.addComponent('foo');
+      helper.command.addComponent('bar', { n: 'foo' });
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('import them all at the same time', () => {
+      before(() => {
+        helper.command.importComponent('*');
+      });
+      it('should change the parent directory path and add _1 to the path', () => {
+        helper.scopes.remoteWithoutOwner;
+        const parentDir = path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1');
+        expect(parentDir).to.be.a.directory();
+        const originalParentDir = path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo');
+        expect(originalParentDir).to.be.a.directory();
+      });
+    });
+    describe('import the parent dir first and then the child', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
+        helper.command.importComponent('foo');
+      });
+      it('should throw when importing the child', () => {
+        expect(() => helper.command.importComponent('foo/bar')).to.throw('unable to add');
+      });
+    });
+    describe('import the child dir first and then the parent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
+        helper.command.importComponent('foo/bar');
+      });
+      it('should throw when importing the child', () => {
+        expect(() => helper.command.importComponent('foo -O')).to.throw('unable to add');
+      });
     });
   });
 });

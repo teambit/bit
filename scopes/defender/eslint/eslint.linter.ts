@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { Linter, LinterContext } from '@teambit/linter';
+import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
@@ -17,8 +17,7 @@ export class ESLintLinter implements Linter {
     private ESLint?: any
   ) {}
 
-  // @ts-ignore
-  async lint(context: LinterContext) {
+  async lint(context: LinterContext): Promise<LintResults> {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
@@ -46,7 +45,7 @@ export class ESLintLinter implements Linter {
       };
     });
 
-    const results = await resultsP;
+    const results = ((await resultsP) as any) as ComponentLintResult[];
 
     return {
       results,

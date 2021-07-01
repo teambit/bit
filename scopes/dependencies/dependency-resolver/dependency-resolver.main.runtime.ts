@@ -26,7 +26,7 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
-import { SemVer } from 'semver';
+import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
@@ -35,7 +35,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { PackageManagerNotFound } from './exceptions';
+import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
   WorkspaceManifest,
@@ -154,6 +154,13 @@ export interface DependencyResolverWorkspaceConfig {
    *
    */
   installFromBitDevRegistry: boolean;
+
+  /**
+   * Like https://docs.npmjs.com/cli/v7/using-npm/config#save-prefix
+   * Set the prefix to use when adding dependency to workspace.jsonc via bit install
+   * to lock version to exact version you can use empty string (default)
+   */
+  savePrefix: string;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -256,6 +263,19 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  getSavePrefix(): string {
+    return this.config.savePrefix;
+  }
+
+  getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
+    const prefix = overridePrefix || this.getSavePrefix() || '';
+    const versionWithPrefix = `${prefix}${version}`;
+    if (!semver.validRange(versionWithPrefix)) {
+      throw new InvalidVersionWithPrefix(versionWithPrefix);
+    }
+    return versionWithPrefix;
   }
 
   async getPolicy(component: Component): Promise<VariantPolicy> {
@@ -550,20 +570,9 @@ export class DependencyResolverMain {
     const bitScope = registries.scopes.bit;
 
     const getDefaultBitRegistry = (): Registry => {
-      const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
-
       const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
 
-      let bitAuthHeaderValue = bitScope?.authHeaderValue;
-      let bitOriginalAuthType = bitScope?.originalAuthType;
-      let bitOriginalAuthValue = bitScope?.originalAuthValue;
-
-      // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
-      if ((!bitScope || !bitScope.authHeaderValue) && bitGlobalConfigToken) {
-        bitOriginalAuthType = 'authToken';
-        bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
-        bitOriginalAuthValue = bitGlobalConfigToken;
-      }
+      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScope);
 
       const alwaysAuth = bitAuthHeaderValue !== undefined;
       const bitDefaultRegistry = new Registry(
@@ -597,7 +606,53 @@ export class DependencyResolverMain {
       registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
     }
 
+    registries = this.addAuthToScopedBitRegistries(registries, bitScope);
     return registries;
+  }
+
+  /**
+   * This will mutate any registry which point to BIT_DEV_REGISTRY to have the auth config from the @bit scoped registry or from the user.token in bit's config
+   */
+  private addAuthToScopedBitRegistries(registries: Registries, bitScopeRegistry: Registry): Registries {
+    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScopeRegistry);
+    const alwaysAuth = bitAuthHeaderValue !== undefined;
+    let updatedRegistries = registries;
+    Object.entries(registries.scopes).map(([name, registry]) => {
+      if (!registry.authHeaderValue && BIT_DEV_REGISTRY.includes(registry.uri)) {
+        const registryWithAuth = new Registry(
+          registry.uri,
+          alwaysAuth,
+          bitAuthHeaderValue,
+          bitOriginalAuthType,
+          bitOriginalAuthValue
+        );
+        updatedRegistries = updatedRegistries.updateScopedRegistry(name, registryWithAuth);
+      }
+      return updatedRegistries;
+    });
+    return updatedRegistries;
+  }
+
+  private getBitAuthConfig(
+    bitScopeRegistry: Registry
+  ): Partial<{ bitOriginalAuthType: string; bitAuthHeaderValue: string; bitOriginalAuthValue: string }> {
+    const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+    let bitAuthHeaderValue = bitScopeRegistry?.authHeaderValue;
+    let bitOriginalAuthType = bitScopeRegistry?.originalAuthType;
+    let bitOriginalAuthValue = bitScopeRegistry?.originalAuthValue;
+
+    // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
+    if ((!bitScopeRegistry || !bitScopeRegistry.authHeaderValue) && bitGlobalConfigToken) {
+      bitOriginalAuthType = 'authToken';
+      bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+      bitOriginalAuthValue = bitGlobalConfigToken;
+    }
+
+    return {
+      bitOriginalAuthType,
+      bitAuthHeaderValue,
+      bitOriginalAuthValue,
+    };
   }
 
   get packageManagerName(): string {
@@ -755,6 +810,7 @@ export class DependencyResolverMain {
     devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
     installFromBitDevRegistry: true,
+    savePrefix: '',
   };
 
   static async provider(

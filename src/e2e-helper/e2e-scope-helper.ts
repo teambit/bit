@@ -3,7 +3,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
@@ -76,7 +75,7 @@ export default class ScopeHelper {
   }
 
   initHarmonyWorkspace() {
-    this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
+    this.command.runCmd('bit init');
   }
 
   /**
@@ -153,9 +152,13 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit remote add http://localhost:${port}`);
   }
 
-  removeRemoteScope(remoteScope: string = this.scopes.remote, isGlobal = false) {
+  removeRemoteScope(
+    remoteScope: string = this.scopes.remote,
+    isGlobal = false,
+    localScopePath: string = this.scopes.localPath
+  ) {
     const globalArg = isGlobal ? '-g' : '';
-    return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`);
+    return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`, localScopePath);
   }
 
   addRemoteEnvironment(isGlobal = false) {
