@@ -270,11 +270,11 @@ export default class ScopeHelper {
   }
 
   linkBitLegacy() {
-    const bitLegacyPath = path.join(this.scopes.localPath, './node_modules/@teambit/legacy');
-    const localBitLegacyPath = path.join(__dirname, '../..');
-    fs.removeSync(bitLegacyPath);
-    createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
-    this.linkCoreAspects();
+    // const bitLegacyPath = path.join(this.scopes.localPath, './node_modules/@teambit/legacy');
+    // const localBitLegacyPath = path.join(__dirname, '../..');
+    // fs.removeSync(bitLegacyPath);
+    // createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
+    // this.linkCoreAspects();
   }
 
   linkCoreAspects() {
