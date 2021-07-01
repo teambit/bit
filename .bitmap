@@ -865,29 +865,11 @@
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
-    "ui/docs/create-heading": {
-        "scope": "teambit.mdx",
-        "version": "0.0.396",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/create-heading"
-    },
-    "ui/docs/highlighted-text-span": {
-        "scope": "teambit.mdx",
-        "version": "0.0.396",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/highlighted-text-span"
-    },
     "ui/docs/link": {
         "scope": "teambit.mdx",
         "version": "0.0.396",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/link"
-    },
-    "ui/docs/paragraph": {
-        "scope": "teambit.mdx",
-        "version": "0.0.396",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/paragraph"
     },
     "ui/docs/snippet": {
         "scope": "teambit.mdx",
