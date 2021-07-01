@@ -57,8 +57,9 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     subCommands.forEach((subCommand) => {
       // @ts-ignore
       const name = subCommand.name.match(/^([\w-]+)/)[0];
+      const usage = subCommand.name;
       ret += `### ${name} \n`;
-      ret += `**Usage**: ${subCommand.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
+      ret += `**Usage**: \`${usage}\`  \n\n`;
       ret += `**Description**: ${this.formatDescription(subCommand.description as string)}`;
 
       ret += '\n';
