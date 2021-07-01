@@ -30,7 +30,7 @@ describe('load extensions', function () {
     let output;
     describe('loading simple extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.harmony/aspect');
         helper.command.addComponent('dummy-extension');
@@ -45,7 +45,7 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('non-requireable-aspect');
         helper.command.addComponent('non-requireable-aspect');
         helper.extensions.addExtensionToVariant('non-requireable-aspect', 'teambit.harmony/aspect');
@@ -75,7 +75,7 @@ describe('load extensions', function () {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('extension-provider-error');
         helper.command.addComponent('extension-provider-error');
         helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
