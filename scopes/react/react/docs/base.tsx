@@ -72,7 +72,11 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
             )}
           </ErrorBoundary>
 
-          <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
+          <CompositionsSummary
+            compositions={compositions}
+            className={styles.compositionSection}
+            compositionCardClass={styles.compositionCard}
+          />
 
           <ExamplesOverview examples={Content.examples || examples} />
 

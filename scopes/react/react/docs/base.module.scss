@@ -1,5 +1,5 @@
 .docsMainBlock {
-  padding: 50px 40px 0 40px;
+  padding: 50px 40px 10px 40px;
   max-width: 1440px;
   margin: 0 auto 150px auto;
   .heading {
@@ -42,26 +42,11 @@
   margin-top: 40px;
 }
 
+.compositionCard {
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .mdx {
   font-size: 16px;
-  // to allow user to control column alignment via mdx table
-  table,
-  th,
-  td,
-  tr,
-  thead {
-    text-align: start;
-    &[align='center'] {
-      text-align: center;
-    }
-    &[align='left'] {
-      text-align: start;
-    }
-    &[align='right'] {
-      text-align: end;
-    }
-  }
-  > * {
-    margin-bottom: 16px;
-  }
 }

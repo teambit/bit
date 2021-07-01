@@ -1,4 +1,4 @@
-import 'reset-css';
+// import 'reset-css'; // do not include resets, we want compositions with native behavior
 import React, { PropsWithChildren } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';

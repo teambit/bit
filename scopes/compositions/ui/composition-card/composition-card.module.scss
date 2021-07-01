@@ -4,9 +4,9 @@
   min-width: 199px;
 
   background-color: var(--bit-bg-color, #ffffff);
-
   box-shadow: var(--bit-shadow-raised-low);
 
+  flex: none;
   display: flex;
   flex-direction: column;
   &:hover {
@@ -18,15 +18,18 @@
 }
 
 .compositionContainer {
-  display: flex;
-  flex-grow: 1;
-  justify-content: center;
-  align-items: center;
+  // do not set as `flex`, it will effect the composition
 
+  // center:
+  margin: auto; // assumes container is flex
   padding: 16px;
   box-sizing: border-box;
 
-  overflow: hidden;
+  // prevent leakage:
+  overflow: auto;
+  position: relative; // for position: absolute elements
+  transform: translateZ(0); // prevents elements with `position: fixed` (etc) from leaking out of the composition card
+  max-width: 100%;
 }
 
 .title {
