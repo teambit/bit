@@ -78,16 +78,6 @@ export default class ScopeHelper {
     this.command.runCmd('bit init');
   }
 
-  /**
-   * This will re init a workspace as harmony
-   * link @teambit/legacy in node_modules
-   * link the core aspect in node_modules
-   */
-  reInitLocalWorkspaceHarmonyForNewAspects() {
-    this.reInitLocalScopeHarmony();
-    this.linkBitLegacy();
-  }
-
   initLocalScope() {
     return this.initWorkspace();
   }
@@ -267,14 +257,6 @@ export default class ScopeHelper {
   switchFromLegacyToHarmony() {
     fs.removeSync(path.join(this.scopes.localPath, 'bit.json'));
     this.initHarmonyWorkspace();
-  }
-
-  linkBitLegacy() {
-    // const bitLegacyPath = path.join(this.scopes.localPath, './node_modules/@teambit/legacy');
-    // const localBitLegacyPath = path.join(__dirname, '../..');
-    // fs.removeSync(bitLegacyPath);
-    // createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
-    // this.linkCoreAspects();
   }
 
   linkCoreAspects() {
