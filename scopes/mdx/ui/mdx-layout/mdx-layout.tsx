@@ -6,8 +6,6 @@ import { Link } from '@teambit/mdx.ui.docs.link';
 export type { MDXProviderComponents, MDXLayoutProps } from '@teambit/documenter.markdown.mdx';
 
 const mdxComponents: MDXProviderComponents = {
-  // code snippet includes its own `<pre>` tag
-  pre: ({children}) => children,
   code: Snippet,
   a: Link,
 };
