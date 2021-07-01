@@ -508,10 +508,10 @@ export class DependencyLinker {
   }
 
   private linkNonAspectCorePackages(
-    dirMap: ComponentMap<string>,
     rootDir: string,
     name: string,
-    packageName = `@teambit/${name}`
+    packageName = `@teambit/${name}`,
+    skipExisting = false
   ): LinkDetail | undefined {
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
@@ -520,7 +520,12 @@ export class DependencyLinker {
     const distDir = path.join(mainAspectPath, 'dist', name);
 
     const target = path.join(rootDir, 'node_modules', packageName);
-    this.removeSymlinkTarget(target);
+    const isTargetExisting = fs.pathExistsSync(target);
+    if (skipExisting && isTargetExisting) {
+      return undefined;
+    }
+    const shouldSymlink = this.removeSymlinkTarget(target);
+    if (!shouldSymlink) return undefined;
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
       const newDir = getDistDirForDevEnv(packageName);
@@ -546,12 +551,12 @@ export class DependencyLinker {
 
   private linkHarmony(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
     const name = 'harmony';
-    return this.linkNonAspectCorePackages(dirMap, rootDir, name);
+    return this.linkNonAspectCorePackages(rootDir, name);
   }
 
   private linkTeambitLegacy(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
     const name = 'legacy';
-    return this.linkNonAspectCorePackages(dirMap, rootDir, name);
+    return this.linkNonAspectCorePackages(rootDir, name);
   }
 }
 
