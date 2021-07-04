@@ -2,11 +2,7 @@ import Table from 'cli-table';
 import colors from 'colors';
 
 export class CLITable {
-  constructor(
-    private headers: any,
-    private body: string[][] | Record<string, any>[],
-    private options?: Record<string, any>
-  ) {}
+  constructor(private headers: any, private body: string[][], private options?: Record<string, any>) {}
 
   render(): string {
     const table = new Table({ head: this.headers, style: { border: ['grey'] } });
