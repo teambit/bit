@@ -11,6 +11,11 @@ module.exports = function html(title) {
       </script>
       <!-- minimal css resets -->
       <style> html { height: 100%; } body { margin: 0; height: 100%; } #root { height: 100%; } </style>
+      <style>
+        body::-webkit-scrollbar {
+          display: none;
+        }
+      </style>
     </head>
     <body>
       <div id="root"></div>
