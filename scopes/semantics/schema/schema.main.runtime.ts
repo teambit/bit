@@ -63,8 +63,11 @@ export class SchemaMain {
    * @param component target component.
    */
   async getSchema(component: Component): Promise<SemanticSchema> {
-    const env = this.envs.getEnv(component);
-    const schemaExtractor: SchemaExtractor = env.env.getSchemaExtractor();
+    const env = this.envs.getEnv(component).env;
+    if (typeof env.getSchemaExtractor === 'undefined') {
+      throw new Error(`No SchemaExtractor defined for ${env.name}`);
+    }
+    const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
     await schemaExtractor.extract(component);
 
     return {

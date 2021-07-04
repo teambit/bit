@@ -5,6 +5,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { loadBit } from '@teambit/bit';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
@@ -56,26 +57,24 @@ export class GeneratorMain {
   }
 
   /**
-   * list all component templates registered in the workspace.
+   * list all component templates registered in the workspace or workspace templates in case the
+   * workspace is not available
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    if (this.workspace) {
-      await this.loadAspects();
-      const allTemplates = this.getAllComponentTemplatesFlattened();
-      return allTemplates.map(({ id, template }) => ({
-        aspectId: id,
-        name: template.name,
-        description: template.description,
-        hidden: template.hidden,
-      }));
-    }
-    const allTemplates = this.getAllWorkspaceTemplatesFlattened();
+    const allTemplates = this.isRunningInsideWorkspace()
+      ? this.getAllComponentTemplatesFlattened()
+      : this.getAllWorkspaceTemplatesFlattened();
+
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: template.hidden,
     }));
+  }
+
+  isRunningInsideWorkspace(): boolean {
+    return Boolean(this.workspace);
   }
 
   /**
@@ -139,7 +138,16 @@ export class GeneratorMain {
     const template = this.getWorkspaceTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
-    return workspaceGenerator.generate();
+    const workspacePath = await workspaceGenerator.generate();
+    await this.runInstallOnTheNewWorkspace(workspacePath);
+    return workspacePath;
+  }
+
+  private async runInstallOnTheNewWorkspace(workspacePath: string) {
+    process.chdir(workspacePath);
+    const harmony = await loadBit(workspacePath);
+    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+    await workspace.install();
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {

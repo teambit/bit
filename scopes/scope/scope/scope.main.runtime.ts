@@ -31,8 +31,9 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
-import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
+import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
+import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -52,14 +53,17 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
+type OnPostDeleteData = { ids: ComponentID[] };
 type OnPreFetchObjectData = { ids: string[]; fetchOptions: FETCH_OPTIONS };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
+type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
+export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
@@ -96,6 +100,8 @@ export class ScopeMain implements ComponentFactory {
     private tagRegistry: TagRegistry,
 
     private postPutSlot: OnPostPutSlot,
+
+    private postDeleteSlot: OnPostDeleteSlot,
 
     private postExportSlot: OnPostExportSlot,
 
@@ -228,6 +234,14 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * register to the post-delete slot.
+   */
+  onPostDelete(postDeleteFn: OnPostDelete) {
+    this.postDeleteSlot.register(postDeleteFn);
+    return this;
+  }
+
+  /**
    * register to the post-export slot.
    */
   registerOnPostExport(postExportFn: OnPostExport) {
@@ -260,6 +274,31 @@ export class ScopeMain implements ComponentFactory {
    * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+
+  async delete(
+    { ids, force, lanes }: { ids: string[]; force: boolean; lanes: boolean },
+    headers?: Record<string, any>
+  ) {
+    const authData = getAuthDataFromHeader(headers?.authorization);
+    const result = await remove({
+      path: this.path,
+      ids,
+      force,
+      lanes,
+    });
+
+    const fns = this.postDeleteSlot.values();
+    const metadata = { auth: authData, headers };
+    const componentIds = ids.map((id) => ComponentID.fromString(id));
+    await mapSeries(fns, async (fn) => {
+      try {
+        await fn({ ids: componentIds }, metadata);
+      } catch (err) {
+        this.logger.error('failed to run delete slot', err);
+      }
+    });
+    return result;
+  }
 
   // TODO: temporary compiler workaround - discuss this with david.
   private toJs(str: string) {
@@ -643,6 +682,7 @@ export class ScopeMain implements ComponentFactory {
   static slots = [
     Slot.withType<OnTag>(),
     Slot.withType<OnPostPut>(),
+    Slot.withType<OnPostDelete>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
@@ -676,9 +716,10 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
+    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       TagRegistry,
       OnPostPutSlot,
+      OnPostDeleteSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot
@@ -699,6 +740,7 @@ export class ScopeMain implements ComponentFactory {
       config,
       tagSlot,
       postPutSlot,
+      postDeleteSlot,
       postExportSlot,
       postObjectsPersistSlot,
       preFetchObjectsSlot,

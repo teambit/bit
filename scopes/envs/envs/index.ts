@@ -1,7 +1,7 @@
 import { EnvsAspect } from './environments.aspect';
 
 export { Descriptor, DEFAULT_ENV } from './environments.main.runtime';
-export { Environment } from './environment';
+export * from './environment';
 export { ExecutionContext } from './context';
 export { EnvService, ConcreteService } from './services';
 export { EnvRuntime } from './runtime/env-runtime';

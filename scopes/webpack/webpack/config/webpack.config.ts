@@ -1,10 +1,12 @@
 import webpack, { Configuration } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
+import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
+import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 const html = require('./html');
 
-export function configFactory(entries, rootPath): Configuration {
+export function configFactory(entries: string[], rootPath: string): Configuration {
   return {
     mode: 'production',
     // Stop compilation early in production
@@ -31,10 +33,7 @@ export function configFactory(entries, rootPath): Configuration {
     },
 
     resolve: {
-      alias: {
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer/'),
-      },
+      alias: fallbacksAliases,
 
       // @ts-ignore
       fallback: fallbacks,
@@ -64,10 +63,7 @@ export function configFactory(entries, rootPath): Configuration {
           }
         )
       ),
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer/'), 'Buffer'],
-      }),
+      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
     ],
   };
 }

@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { HASH_SIZE } from '../../src/constants';
@@ -17,7 +16,6 @@ describe('bit snap command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([HARMONY_FEATURE]);
   });
   after(() => {
     helper.scopeHelper.destroy();

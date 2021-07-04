@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
-// import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
@@ -135,6 +134,7 @@ export class JestTester implements Tester {
 
     if (context.debug) config.runInBand = true;
     config.runInBand = true;
+
     if (context.watch) {
       config.watchAll = true;
       config.noCache = true;

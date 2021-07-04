@@ -221,18 +221,18 @@ export default class DataToPersist {
   _log() {
     if (this.remove.length) {
       const pathToDeleteStr = this.remove.map((r) => r.path).join('\n');
-      logger.debug(`DateToPersist, paths-to-delete:\n${pathToDeleteStr}`);
+      logger.debug(`DataToPersist, paths-to-delete:\n${pathToDeleteStr}`);
     }
     if (this.files.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const filesToWriteStr = this.files.map((f) => f.path).join('\n');
-      logger.debug(`DateToPersist, paths-to-write:\n${filesToWriteStr}`);
+      logger.debug(`DataToPersist, paths-to-write:\n${filesToWriteStr}`);
     }
     if (this.symlinks.length) {
       const symlinksStr = this.symlinks
         .map((symlink) => `src (existing): ${symlink.src}\ndest (new): ${symlink.dest}`)
         .join('\n');
-      logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
+      logger.debug(`DataToPersist, symlinks:\n${symlinksStr}`);
     }
   }
   _assertRelative(pathToCheck: string) {

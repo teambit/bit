@@ -9,6 +9,10 @@ export interface DependenciesManifest {
   devDependencies?: LifecycleDependenciesManifest;
   peerDependencies?: LifecycleDependenciesManifest;
 }
+
+export type FindDependencyOptions = {
+  ignoreVersion?: boolean;
+};
 export class DependencyList {
   constructor(private _dependencies: Array<Dependency>) {
     this._dependencies = uniqDeps(_dependencies);
@@ -22,8 +26,13 @@ export class DependencyList {
   /**
    * @param componentIdStr complete string include the scope and the version
    */
-  findDependency(componentIdStr: string): Dependency | undefined {
-    return this.dependencies.find((dep) => dep.id === componentIdStr);
+  findDependency(componentIdStr: string, opts: FindDependencyOptions = {}): Dependency | undefined {
+    const ignoreVersion = opts.ignoreVersion;
+    if (!ignoreVersion) {
+      return this.dependencies.find((dep) => dep.id === componentIdStr);
+    }
+    const componentIdStrWithoutVersion = removeVersion(componentIdStr);
+    return this.dependencies.find((dep) => removeVersion(dep.id) === componentIdStrWithoutVersion);
   }
 
   forEach(predicate: (dep: Dependency, index?: number) => void): void {
@@ -94,4 +103,8 @@ export class DependencyList {
 function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
   const uniq = uniqBy(dependencies, property('id'));
   return uniq;
+}
+
+function removeVersion(id: string): string {
+  return id.split('@')[0];
 }

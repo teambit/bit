@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import { generateRandomStr } from '../../src/utils';
@@ -14,7 +13,6 @@ describe('publish functionality', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

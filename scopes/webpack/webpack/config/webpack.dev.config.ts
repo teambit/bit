@@ -6,11 +6,16 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { PubsubMain } from '@teambit/pubsub';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 
 import html from './html';
 
-import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
+import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin';
+import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
+import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -18,7 +23,15 @@ const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub, title?) {
+export function configFactory(
+  devServerID: string,
+  workspaceDir: string,
+  entryFiles: string[],
+  publicRoot: string,
+  publicPath: string,
+  pubsub: PubsubMain,
+  title?: string
+): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -51,7 +64,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
-      devtoolModuleFilenameTemplate: (info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolModuleFilenameTemplate: (info) => pathNormalizeToLinux(path.resolve(info.absoluteResourcePath)),
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
@@ -66,6 +79,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     stats: 'errors-only',
 
     devServer: {
+      // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicDirectory),
@@ -137,12 +151,9 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
-      alias: {
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer/'),
-      },
+      alias: fallbacksAliases,
 
-      fallback: fallbacks,
+      fallback: fallbacks as any,
     },
 
     plugins: [
@@ -151,10 +162,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         filename: 'index.html',
       }),
 
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer/'), 'Buffer'],
-      }),
+      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
 
       new WebpackBitReporterPlugin({
         options: { pubsub, devServerID },

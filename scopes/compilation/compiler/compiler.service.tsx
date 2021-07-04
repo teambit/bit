@@ -6,7 +6,7 @@ import highlight from 'cli-highlight';
 export type CompilerDescriptor = {
   id: string;
   icon?: string;
-  config: string;
+  config?: string;
 };
 
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
@@ -24,7 +24,9 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
         <Newline />
         <Text color="cyan">compiler config:</Text>
         <Newline />
-        <Text>{descriptor?.config && highlight(descriptor?.config, {language: 'javascript', ignoreIllegals: true})}</Text>
+        <Text>
+          {descriptor?.config && highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })}
+        </Text>
         <Newline />
       </Text>
     );
