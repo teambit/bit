@@ -28,7 +28,7 @@ export function Registry({ registryName, copyString, setActive, prevTab }: Regis
         }
       >
         <div>
-          Configure <HighlightedText size="xxs">{registryName}</HighlightedText> as a Scoped Registry
+          Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
         </div>
         <CopyBox>{copyString}</CopyBox>
       </TabContent>

@@ -13,11 +13,11 @@ export function EmptyScope({ name }: EmptyScopeProps) {
     <EmptyComponentGallery name={name}>
       <div className={styles.text}>
         <span>Set</span>{' '}
-        <HighlightedText size="xxs" element="span">
+        <HighlightedText>
           {`"defaultScope": "${name}"`}
         </HighlightedText>{' '}
         <span>in</span>{' '}
-        <HighlightedText size="xxs" element="span">
+        <HighlightedText>
           workspace.jsonc
         </HighlightedText>{' '}
         <div>file and export components here.</div>
