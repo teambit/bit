@@ -822,10 +822,13 @@ export class DependencyResolverMain {
         // In case of core aspect, do not update the version, as it's loaded to harmony without version
         if (this.aspectLoader.isCoreAspect(dep.id)) return;
         // Lazily get the parent component
-        resolvedParentComponent =
-          typeof parentComponent === 'string'
-            ? await this.componentAspect.getHost().get(parentComponent)
-            : parentComponent;
+        if (typeof parentComponent === 'string') {
+          const parentComponentId = await this.componentAspect.getHost().resolveComponentId(parentComponent);
+          await this.componentAspect.getHost().get(parentComponentId);
+        } else {
+          // it's of type component;
+          resolvedParentComponent = parentComponent;
+        }
         if (!resolvedParentComponent) {
           this.logger.error(
             `could not resolve the component ${parentComponent} during manifest deps resolution. it shouldn't happen`
