@@ -1,6 +1,6 @@
-import { ComponentContext } from '@teambit/generator';
+import { WorkspaceContext } from '@teambit/generator';
 
-export function workspaceConfig({ name }: ComponentContext) {
+export function workspaceConfig({ name }: WorkspaceContext) {
   const data = {
     $schema: 'https://static.bit.dev/teambit/schemas/schema.json',
     'teambit.workspace/workspace': {

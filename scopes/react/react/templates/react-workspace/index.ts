@@ -1,12 +1,12 @@
-import { ComponentContext, ComponentTemplate } from '@teambit/generator';
+import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
 import { workspaceConfig } from './files/workspace-config';
 import { readme } from './files/readme-file';
 import { gitIgnore } from './files/git-ignore';
 
-export const reactWorkspaceTemplate: ComponentTemplate = {
+export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react-workspace',
   description: 'create a new React project',
-  generateFiles: (context: ComponentContext) => {
+  generateFiles: (context: WorkspaceContext) => {
     return [
       {
         relativePath: 'workspace.jsonc',
@@ -20,6 +20,12 @@ export const reactWorkspaceTemplate: ComponentTemplate = {
         relativePath: `README.md`,
         content: readme(),
       },
+    ];
+  },
+  importComponents: () => {
+    return [
+      // todo: delete. this is for testing only. it should be the correct template components
+      { id: 'teambit.base-ui/text/text', path: 'components/text' },
     ];
   },
 };
