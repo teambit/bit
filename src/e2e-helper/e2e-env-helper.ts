@@ -208,7 +208,6 @@ export default class EnvHelper {
     this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
     this.command.addComponent(EXTENSIONS_BASE_FOLDER);
     this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
-    this.scopeHelper.linkBitLegacy();
     this.command.link();
     this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
       policy: {
@@ -231,7 +230,6 @@ export default class EnvHelper {
     this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
     this.command.addComponent(EXTENSIONS_BASE_FOLDER);
     this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
-    this.scopeHelper.linkBitLegacy();
     this.command.link();
     this.command.install();
     this.command.compile();
