@@ -89,6 +89,8 @@
         "@teambit/component.instructions.exporting-components": "0.0.5",
         "@teambit/design.ui.icon-button": "1.0.1",
         "@teambit/documenter.code.react-playground": "4.0.1",
+        "@teambit/documenter.markdown.hybrid-live-code-snippet": "0.1.2",
+        "@teambit/documenter.markdown.mdx": "0.1.2",
         "@teambit/documenter.routing.external-link": "4.1.0",
         "@teambit/documenter.theme.theme-compositions": "4.1.1",
         "@teambit/documenter.theme.theme-context": "4.0.3",
