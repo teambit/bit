@@ -824,7 +824,7 @@ export class DependencyResolverMain {
         // Lazily get the parent component
         if (typeof parentComponent === 'string') {
           const parentComponentId = await this.componentAspect.getHost().resolveComponentId(parentComponent);
-          await this.componentAspect.getHost().get(parentComponentId);
+          resolvedParentComponent = await this.componentAspect.getHost().get(parentComponentId);
         } else {
           // it's of type component;
           resolvedParentComponent = parentComponent;
