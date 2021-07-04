@@ -6,6 +6,8 @@ import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ReactAspect } from './react.aspect';
 
+const hideScrollbars = 'body::-webkit-scrollbar {display: none;}';
+
 export function CompositionsApp({
   Composition = StandaloneNotFoundPage,
   previewContext,
@@ -19,6 +21,7 @@ export function CompositionsApp({
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
       <Composer components={providers}>
+        <style>{hideScrollbars}</style>
         <Composition />
       </Composer>
     </ErrorBoundary>
