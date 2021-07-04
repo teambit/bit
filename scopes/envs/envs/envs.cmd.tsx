@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import Table from 'tty-table';
+import { CLITable } from '@teambit/cli-table';
 import { Command } from '@teambit/cli';
 import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { EnvsMain } from './environments.main.runtime';
@@ -77,16 +77,7 @@ export class EnvsCmd implements Command {
         value: 'env',
       },
     ];
-
-    const options = {
-      borderStyle: 'solid',
-      paddingBottom: 0,
-      headerAlign: 'center',
-      align: 'left',
-      headerColor: 'cyan',
-    };
-
-    const table = new Table(header, tableData, options);
+    const table = CLITable.fromObject(header, tableData);
     return table.render();
   }
 }
