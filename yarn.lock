@@ -5328,18 +5328,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.surfaces.background@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@teambit/base-ui.surfaces.background@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.background%2F-%2Fbase-ui.surfaces.background-1.0.0.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: d995fee85e88ab7ac1e8dbca1d53c6d6ebf9aefb13bc96e9a2da1a7e23047aea6fd6f215f9f57608d3be1e0e8ba2c5bec80b9f18e0cc23740be7ed87563937f8
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.surfaces.background@npm:1.0.1":
   version: 1.0.1
   resolution: "@teambit/base-ui.surfaces.background@npm:1.0.1"
@@ -5468,6 +5456,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.text.heading@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.text.heading@npm:0.5.9"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 2a43e266ba99908743be9f43bc28c32e2de97ec5975dd634b00e63caefcd9c00874da33b17cc11d92011e1daec235c86846f1fa989bdcbee87b3e05846e669ed
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.text.heading@npm:1.0.1":
   version: 1.0.1
   resolution: "@teambit/base-ui.text.heading@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.text.heading%2F-%2Fbase-ui.text.heading-1.0.1.tgz"
@@ -5490,6 +5488,19 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: fb76def72aed2a9e215fd62af2a2a03bf2b6cc42c170b55b6453c171519aa88aa4b3df969e09c52b4696e71ccf5534634a595f6a4557d614d6f2bfd21bbeb827
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.text.paragraph@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.text.paragraph@npm:0.5.9"
+  dependencies:
+    "@teambit/base-ui.theme.sizes": 0.5.9
+    classnames: ^2.2.6
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 5e429ea61f25a85f951f2e4edeedf7a1ec6916f9d3d6dc4c7c052824b09ddbb6f1a07852cef3d09d322a375213808567cf9f4ea458f814da33cd7ef7499f96ff
   languageName: node
   linkType: hard
 
@@ -5570,15 +5581,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.brand-definition@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.brand-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-0.7.0.tgz"
+"@teambit/base-ui.theme.brand-definition@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.brand-definition@npm:0.6.7"
+  dependencies:
+    "@teambit/base-ui.theme.colors": 0.6.7
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: e8be37bc00153a14f621801fb8cfa01754ad3e1479c1fe4c2e9ec5ad218ef28bc0434e69119ed9e9b0b5ea7af6d10e568d4ce75e3745b02447051b1a947953ab
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.brand-definition@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/base-ui.theme.brand-definition@npm:1.0.0"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 11d58381089f8aef6bd5e52c9a7acde6bdcbb5fbcd6f8ae002bc2235ef2b9caa5501a1538c41c5be74fd0568c450ae0f3b8296556d0114955229ed3096266e52
+  checksum: 5e2b06f04b21bbafaab2394cf6943421d62196eb7bf113d5bf42fb54e2e020d7bbacb80ea3654117c87cfc30a37952a37184926ece4506f9369e43932fdd2da6
   languageName: node
   linkType: hard
 
@@ -5594,29 +5617,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.color-definition@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.color-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.color-definition%2F-%2Fbase-ui.theme.color-definition-0.7.0.tgz"
+"@teambit/base-ui.theme.color-definition@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.color-definition@npm:0.6.7"
   dependencies:
-    "@teambit/base-ui.theme.colors": 0.7.0
-    core-js: ^3.0.0
+    "@teambit/base-ui.theme.colors": 0.6.7
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 78d2765c5ffbae00391fa153e464f90009bd961de26b45369d1bd2e12c3a831db33bd06c599cb8683f6a4471a337483671020b688dc5ce0c65ab1b0e16e1324e
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 4a29d9f7bd28142489bb4420fc5928e4152ba4a657138823fbf75f9f3ae64a2f6a765fccd689750cd77404abdbf28ffb1070562907c8fdd4fbdc472323770acc
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.color-definition@npm:0.7.1":
-  version: 0.7.1
-  resolution: "@teambit/base-ui.theme.color-definition@npm:0.7.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.color-definition%2F-%2Fbase-ui.theme.color-definition-0.7.1.tgz"
+"@teambit/base-ui.theme.color-definition@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.theme.color-definition@npm:1.0.1"
   dependencies:
-    "@teambit/base-ui.theme.colors": 0.7.1
+    "@teambit/base-ui.theme.colors": 1.0.0
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 1a08b2a5b929a7910e8d43663393d56dc8401072ce71cdb6f9518273d4945404a4a8f578a6f82568986570676ea6cf0683a648436b5919c177e5b83da9016204
+  checksum: 805e8ca89a28dd2c89931d24f1487dd1bfb4c09d44a6f9ae73e6b922d86e6a859444d13482571807a8169942c852742302b40be8be81e95c2cd18df7dfc43701
   languageName: node
   linkType: hard
 
@@ -5642,27 +5664,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.colors@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.colors@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.colors%2F-%2Fbase-ui.theme.colors-0.7.0.tgz"
-  dependencies:
-    core-js: ^3.0.0
+"@teambit/base-ui.theme.colors@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.colors@npm:0.6.7"
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: dbb381ede074a4c320194f04b43a3578197c509c4a4990ba798492c7c9c6f60dcc396da95e15458cef6046a51b44c2ed1ddef7f3163ee9f1457af46d9c2267d4
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.colors@npm:0.7.1":
-  version: 0.7.1
-  resolution: "@teambit/base-ui.theme.colors@npm:0.7.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.colors%2F-%2Fbase-ui.theme.colors-0.7.1.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 89c7cec42a0af27b1afc0e4b433ed92aa231b05cdc71bce215d1beaa357f56e91fc4de3dc8a793a594a5fca10af4039b652b95fdc9e38524baac9ee1a6d50712
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 3f5afb39f3b2791954a5171d20a4a4ba3b9d98fd73c1611232fadf9b062c46e1ae09e75d75519df9fb06765b41cdac0d10de126c1a8953d6e9af2f1ff15d8768
   languageName: node
   linkType: hard
 
@@ -5701,39 +5709,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.fonts.book@npm:0.6.10":
-  version: 0.6.10
-  resolution: "@teambit/base-ui.theme.fonts.book@npm:0.6.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.book%2F-%2Fbase-ui.theme.fonts.book-0.6.10.tgz"
-  dependencies:
-    core-js: ^3.0.0
+"@teambit/base-ui.theme.fonts.book@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.fonts.book@npm:0.6.7"
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: e7e00d85591e69026b85e59c23fd72af45f8e44ead11ad1743aeeda9cca76f53b24ce31eba8f776611f2f89a806cee4e5a1c661a669c047464b62d361ff1e39e
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 11c46caf8a3f6948f6d55911ae8419972fce94527f61763152cb096d5ed49eb5e077fd3f0262f0486f5b49ac9f5d3383cec4e7091144e2a23aeed7b16aab9960
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.fonts.book@npm:0.6.11":
-  version: 0.6.11
-  resolution: "@teambit/base-ui.theme.fonts.book@npm:0.6.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.book%2F-%2Fbase-ui.theme.fonts.book-0.6.11.tgz"
+"@teambit/base-ui.theme.fonts.book@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/base-ui.theme.fonts.book@npm:1.0.0"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 11821eeedf3061c0ecbe964e4a5bfba0bb72a629172f0a0de60fb45b90da0ab24ddd4d1de6d0343ba056d6e4c3cd6e6d9b8a9c43c1daf645a6163b89ef259b1a
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.fonts.roboto@npm:0.6.10":
-  version: 0.6.10
-  resolution: "@teambit/base-ui.theme.fonts.roboto@npm:0.6.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.roboto%2F-%2Fbase-ui.theme.fonts.roboto-0.6.10.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: d233f2f2e27dae3de53ca81182ccda0fa0c934da47584d2e08bf752088d72944b928136b1af970f4b0ff1b05a62fa1958af090820ab84d994e8a98a28a5fdc31
+  checksum: 248e420376019f9fb8538fddd47b38800c16b61ebceb10f8ba26cd77671cb40b2b39eeba1d968fd526c42515a0c225e331c901cb1b432aa229c969a927b06b0b
   languageName: node
   linkType: hard
 
@@ -5744,6 +5738,16 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 3350e8553a11bae0577be3bb2a23ad0b36ccb8774bdce77276f55ee56f8d9b249b0483ce5ea9156dda984d2cc1417366ee4dac00b2006988a268741e07c6ef39
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.fonts.roboto@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.fonts.roboto@npm:0.6.7"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: f738e51669aa121e899773659ad58feec54ddd55877085ba8c430baf8ba24de0764a42a15a9ba01ef0738041140d8cb5ab83cee750d6657d6e93fc69234fe4c5
   languageName: node
   linkType: hard
 
@@ -5769,15 +5773,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.heading-margin-definition@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.heading-margin-definition%2F-%2Fbase-ui.theme.heading-margin-definition-0.7.0.tgz"
+"@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: bb3a91e80b8d33fb11c348d41d1e95f095f7a7279b50144102185b7d9789177a66040cf2c5d1b7bc86179d978c42eafbd07bbb8c7a98939ee6a16dc186d6ead7
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.heading-margin-definition@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:1.0.0"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: abbf631d65fc82fde9635fe3359d3a50c77882548391ee048e38800f417bd40c4d0454475150eda5fbabb085b20b9de8518a996c07dd1f5481c277f9944f44f2
+  checksum: 22b23a0c2299e8334aed07a12fb85d2b59eeaf100e5537d9d84aa5326a30972e8949db645417d445e86ce3a39c18b5721b895f884cdbcdc89e1eb95567046b54
   languageName: node
   linkType: hard
 
@@ -5791,15 +5805,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.shadow-definition@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-0.7.0.tgz"
+"@teambit/base-ui.theme.shadow-definition@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.6.7"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 30f8d6cd53e840d0b807cd7fa63e9c7591bf9d84f741c50ce171c4d1865fec87c8f6b0e14aea52d2b53503e961fac8a1706a2871c5ab91a4f4f060cc98950058
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.shadow-definition@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/base-ui.theme.shadow-definition@npm:1.0.0"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: a850f8246e3acb8084c3ff6942bf1295138b0d3e1fac2bd783a8db9aab3bece7e25b8051bfb292d13aa09c7f45fb38fb4abd1e957c73a83289c92af511150e5e
+  checksum: 74c044e2754890cec84bca1e7f5f71ec7701a438246748802f7fadfef2f912a709f0ce4490d1093bf5dbbd76bfef11c8a84f5a1769ddf8f1b5a16df09e4ba648
   languageName: node
   linkType: hard
 
@@ -5813,15 +5837,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.size-definition@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@teambit/base-ui.theme.size-definition@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.size-definition%2F-%2Fbase-ui.theme.size-definition-0.7.0.tgz"
+"@teambit/base-ui.theme.size-definition@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.size-definition@npm:0.6.7"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 576eba0b4544177a86c7982a884cf39219a2163278f09fc8a643ad49d7dc18b5f988482ae1eed22453095ee6954306b52bfdbcdcb27f7730fc80952e297d00fb
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.size-definition@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/base-ui.theme.size-definition@npm:1.0.0"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 71b2ca8dfa76e2ecab824782fa8317604f5d5a74a89a8a071b9a8c0b7a88a608ce457bfbbccf016b0e8231e1c68f4023dada846f538fd3f37be2291d9c0a6f25
+  checksum: 0855108c3510cd0bed73dc6332c7292d6d1dd7ab9c6db95dce43949d522007baf712cf45d1cb6ce9e8debcc03d980ac61956852c6179d57e2c03eafe7d858c85
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.theme.sizes@npm:0.5.9":
+  version: 0.5.9
+  resolution: "@teambit/base-ui.theme.sizes@npm:0.5.9"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: aaaa918d37a15e407d0f2fa0b64ce94b8ab2368185c2add378a3e9a808c838c804fe8a0f78d2e4e8376eda48278cd55d140fc525a59b573564019556b1fcf4da
   languageName: node
   linkType: hard
 
@@ -5855,41 +5899,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.theme-provider@npm:0.6.13":
-  version: 0.6.13
-  resolution: "@teambit/base-ui.theme.theme-provider@npm:0.6.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.theme-provider%2F-%2Fbase-ui.theme.theme-provider-0.6.13.tgz"
+"@teambit/base-ui.theme.theme-provider@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.theme.theme-provider@npm:0.6.7"
   dependencies:
-    "@teambit/base-ui.theme.brand-definition": 0.7.0
-    "@teambit/base-ui.theme.color-definition": 0.7.0
-    "@teambit/base-ui.theme.fonts.book": 0.6.10
-    "@teambit/base-ui.theme.heading-margin-definition": 0.7.0
-    "@teambit/base-ui.theme.shadow-definition": 0.7.0
-    "@teambit/base-ui.theme.size-definition": 0.7.0
+    "@teambit/base-ui.theme.brand-definition": 0.6.7
+    "@teambit/base-ui.theme.color-definition": 0.6.7
+    "@teambit/base-ui.theme.fonts.book": 0.6.7
+    "@teambit/base-ui.theme.heading-margin-definition": 0.6.7
+    "@teambit/base-ui.theme.shadow-definition": 0.6.7
+    "@teambit/base-ui.theme.size-definition": 0.6.7
     classnames: ^2.2.6
-    core-js: ^3.0.0
   peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 82f92961c4d0d4ba941e416933296a4031419cebb0229de7ae051aa12e98572d1d46f82d20a41fc266a123b2f4165c1d5a773f9dd738ba10635756e270b172dd
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 12de24cff9d4f0fcd1ec9b27ec6a566009847e48e5840ece36b3e045639a9b834e9a0f2d40ea478439f7078ca8c83fd4873f8001c1bf4436ef4460ebf7298171
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.theme-provider@npm:0.6.14":
-  version: 0.6.14
-  resolution: "@teambit/base-ui.theme.theme-provider@npm:0.6.14::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.theme-provider%2F-%2Fbase-ui.theme.theme-provider-0.6.14.tgz"
+"@teambit/base-ui.theme.theme-provider@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.theme.theme-provider@npm:1.0.1"
   dependencies:
-    "@teambit/base-ui.theme.brand-definition": 0.7.0
-    "@teambit/base-ui.theme.color-definition": 0.7.1
-    "@teambit/base-ui.theme.fonts.book": 0.6.11
-    "@teambit/base-ui.theme.heading-margin-definition": 0.7.0
-    "@teambit/base-ui.theme.shadow-definition": 0.7.0
-    "@teambit/base-ui.theme.size-definition": 0.7.0
+    "@teambit/base-ui.theme.brand-definition": 1.0.0
+    "@teambit/base-ui.theme.color-definition": 1.0.1
+    "@teambit/base-ui.theme.fonts.book": 1.0.0
+    "@teambit/base-ui.theme.heading-margin-definition": 1.0.0
+    "@teambit/base-ui.theme.shadow-definition": 1.0.0
+    "@teambit/base-ui.theme.size-definition": 1.0.0
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 7e6fcb43a46fda7d2e89d54e42e94aefd4d04a980132ec01096b3a3d54732f921eb907fecaf21011e5502b53ed5442ef1884a2f128011b325c68d34d791bf141
+  checksum: 431f846ca638892dedc3232d45c2a09a6e77266272119f0ad2104708ed96eb688e8f819abaaef7638e8d8dd844319540474be104dda4d5fdda50f17a146a282d
   languageName: node
   linkType: hard
 
@@ -6040,6 +6083,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/documenter.code.react-playground@npm:4.1.3":
+  version: 4.1.3
+  resolution: "@teambit/documenter.code.react-playground@npm:4.1.3"
+  dependencies:
+    "@teambit/base-ui.input.error": 1.0.1
+    "@teambit/base-ui.surfaces.split-pane.hover-splitter": 1.0.0
+    "@teambit/base-ui.surfaces.split-pane.split-pane": 1.0.0
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+    prism-react-renderer: ^1.1.1
+    react-live: ^2.2.3
+    react-use-dimensions: ^1.2.1
+    use-debounce: ^3.4.3
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: dd4d246587b514d2fdf5c0946b232e97ce39ba125e4933a01f7637f1c0b78c324e9bc66425b6deeee341bc0648f7b1bb7df3606e93da75ce49d21b577dbd3afd
+  languageName: node
+  linkType: hard
+
 "@teambit/documenter.content.documentation-links@npm:4.0.1":
   version: 4.0.1
   resolution: "@teambit/documenter.content.documentation-links@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.content.documentation-links%2F-%2Fdocumenter.content.documentation-links-4.0.1.tgz"
@@ -6052,16 +6115,85 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.routing.external-link@npm:4.0.0":
-  version: 4.0.0
-  resolution: "@teambit/documenter.routing.external-link@npm:4.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.routing.external-link%2F-%2Fdocumenter.routing.external-link-4.0.0.tgz"
+"@teambit/documenter.content.documentation-links@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.content.documentation-links@npm:4.0.3"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: a5424e41e67bc0a0cb510fa7abc82f8c1c83af8520eae7f275e9873f932e67c1fe5d4439ca295dffbbeb92fabd4a432a9fcc51a89d09fa611c94260e059d060c
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.markdown.heading@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@teambit/documenter.markdown.heading@npm:0.1.1"
+  dependencies:
+    "@teambit/documenter.ui.linked-heading": 4.1.1
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 8dc2e4e7fcafe1ccf7d1121af5236b5e319f1a6c016221befe48155902cfa0dd614053d52192a970be2521e2c8fcb241329af8560b9e228720fee69cc6a7304f
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.markdown.hybrid-live-code-snippet@npm:0.1.3":
+  version: 0.1.3
+  resolution: "@teambit/documenter.markdown.hybrid-live-code-snippet@npm:0.1.3"
+  dependencies:
+    "@teambit/documenter.code.react-playground": 4.1.3
+    "@teambit/documenter.ui.code-snippet": 4.1.1
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 17ae8ef634d0565a54dd70084e6c534587fb2ceeb5512f99a55b0f0d0416d5d7ea9ba540e0223f03da5a81b1356654196c557e0575d930896b9983a3642ee13f
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.markdown.mdx@npm:0.1.3":
+  version: 0.1.3
+  resolution: "@teambit/documenter.markdown.mdx@npm:0.1.3"
+  dependencies:
+    "@mdx-js/react": 1.6.22
+    "@teambit/documenter.markdown.heading": 0.1.1
+    "@teambit/documenter.markdown.hybrid-live-code-snippet": 0.1.3
+    "@teambit/documenter.routing.external-link": 4.1.0
+    "@teambit/documenter.ui.block-quote": 4.0.3
+    "@teambit/documenter.ui.bold": 4.0.3
+    "@teambit/documenter.ui.image": 4.0.0
+    "@teambit/documenter.ui.inline-code": 0.1.1
+    "@teambit/documenter.ui.italic": 4.0.3
+    "@teambit/documenter.ui.ol": 4.1.1
+    "@teambit/documenter.ui.paragraph": 4.1.1
+    "@teambit/documenter.ui.separator": 4.1.1
+    "@teambit/documenter.ui.sup": 4.0.3
+    "@teambit/documenter.ui.table.base-table": 4.1.1
+    "@teambit/documenter.ui.table.td": 4.1.1
+    "@teambit/documenter.ui.table.tr": 4.1.1
+    "@teambit/documenter.ui.ul": 4.1.1
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 769fef4bc4fed60b6745684ca9d0378154314a739f62aaaf2230428fe47b703d8a96d64e97e18f3f299a98ea2d8ea517377d9c1a951aa2adf4e07c88df11cc3d
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.routing.external-link@npm:4.1.0":
+  version: 4.1.0
+  resolution: "@teambit/documenter.routing.external-link@npm:4.1.0"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 08108ffc5360b4e99a3625a39150bfbe867e7b3f0deaaa2325d15ef5a72c67a97eff0b569b7af8f42741cb5e8b4230d3e2b28a37b8c5090688660652cc803425
+  checksum: f9896f17bc2dddeb1150f39279d6b1dd455dfce957ec8d7e8f2e2b7aca80f46fd3e1441f75ec83ecadec3b9f615b7426cc5ec0550d3e21d6d371cc02ec8d6106
   languageName: node
   linkType: hard
 
@@ -6075,6 +6207,33 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 6186cd65b4100e4e86a76cace02126559cab8daec7e156aa4a80a5f28c68b5968361901d3f6f2da0e92b9aa5e26b6ca4122a22d481577d312aa81d648c1c5ec1
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.theme.theme-compositions@npm:3.0.8":
+  version: 3.0.8
+  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.8"
+  dependencies:
+    "@teambit/documenter.theme.theme-context": 3.0.8
+    "@teambit/evangelist.theme.icon-font": 0.5.20
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 4be1f4bd4e9c50570a09eeadd8ee6b89f2c326f45131c075666ed7b071a98de349bfb5e9f151527baa62573c92fac3de5937a1492cc920451fca8a8bd2db3f78
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.theme.theme-compositions@npm:3.0.9":
+  version: 3.0.9
+  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.9"
+  dependencies:
+    "@teambit/documenter.theme.theme-context": 3.0.9
+    "@teambit/evangelist.theme.icon-font": 0.5.20
+    core-js: 3.8.3
+  peerDependencies:
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: ccf2be00d1b93dbf3d75eb1747658e857515bc71dfa17e7c5d25168b508bedbc3430e1a6080b6f266a7929f73e82e454ab2044d69e9e9b6fb5c281c31ff22f5d
   languageName: node
   linkType: hard
 
@@ -6093,36 +6252,67 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.theme.theme-context@npm:3.0.14":
-  version: 3.0.14
-  resolution: "@teambit/documenter.theme.theme-context@npm:3.0.14::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-context%2F-%2Fdocumenter.theme.theme-context-3.0.14.tgz"
+"@teambit/documenter.theme.theme-context@npm:3.0.8":
+  version: 3.0.8
+  resolution: "@teambit/documenter.theme.theme-context@npm:3.0.8"
   dependencies:
-    "@teambit/base-ui.theme.fonts.roboto": 0.6.10
-    "@teambit/base-ui.theme.theme-provider": 0.6.13
+    "@teambit/base-ui.theme.fonts.roboto": 0.6.7
+    "@teambit/base-ui.theme.theme-provider": 0.6.7
+    classnames: ^2.2.6
+    reset-css: ^5.0.1
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 7c24f5c848ba08b7fc91949917004e6c7dc1c90c8d4c5bdb831f0ac69b10dcbbde95d2f357efdb717b5954035f684115e1904c728232a23d055c1d2a3b5def48
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.theme.theme-context@npm:3.0.9":
+  version: 3.0.9
+  resolution: "@teambit/documenter.theme.theme-context@npm:3.0.9"
+  dependencies:
+    "@teambit/base-ui.theme.fonts.roboto": 0.6.7
+    "@teambit/base-ui.theme.theme-provider": 0.6.7
+    classnames: ^2.2.6
+    core-js: 3.8.3
+    reset-css: ^5.0.1
+  peerDependencies:
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: a841bcf3cdcf8b16865261341b7d74a3dbd33a318119a6774c04d7d21d73ea79593c1e72e1e023b167ec926bee5b0a008b67348c901c780bf7efc4457d637c0a
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.theme.theme-context@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.theme.theme-context@npm:4.0.3"
+  dependencies:
+    "@teambit/base-ui.theme.fonts.roboto": 1.0.0
+    "@teambit/base-ui.theme.theme-provider": 1.0.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: a09b5b89023a4f0f579f47b9d7cf9d43e7d08fe5e1f372b71c6242fe3762992f22c66a69698f80c5139f26a905d62e97c7934241d48a72023cca07a5051f1ea9
+  checksum: 956e0cc2795d58ae3409f93b78581079686232d3068f4331cecdf9638d1279dfc98d22f6709d70f78c1034c6c4b40b0118e68ad879b927646211ef61d57fcbad
   languageName: node
   linkType: hard
 
-"@teambit/documenter.types.docs-file@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.types.docs-file@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.types.docs-file%2F-%2Fdocumenter.types.docs-file-4.0.1.tgz"
+"@teambit/documenter.types.docs-file@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.types.docs-file@npm:4.0.3"
   dependencies:
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 4b291f3a4e10c772436135801537570be2232745d5b304c60306cc0db268966884edddb5a14ec3a5c3b12eb352a3cb7ca158238cb51b29f6e39e2e84cdb281c0
+  checksum: 7789ee89cd636ff6a53b7c9570680922039e320028070dbef07812c80e8823f96268a32fab3d5f9d104d72576419c8246983b6e4cb00dad1cfb25d28c6cd667a
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.anchor@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.anchor@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.anchor%2F-%2Fdocumenter.ui.anchor-4.0.1.tgz"
+"@teambit/documenter.ui.anchor@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.anchor@npm:4.0.3"
   dependencies:
     "@teambit/evangelist.elements.icon": 1.0.2
     classnames: ^2.2.6
@@ -6130,41 +6320,41 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: fb59a4fd0f292338adaad3e39c3961954f9722a4531d2bc3e50ad0779c6995279735305d55a1b1180d46bc54d00358fd7b6f0b848178fba6191e88af62e5e5e4
+  checksum: 4b1f123c0734993382006e032758efa0260341d207e09e3482c71a5d440e47e2ad172dba18ba8f671f030204410b0bb4b3ee2e5d719ba43cfb87830710f272c3
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.block-quote@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.block-quote@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.block-quote%2F-%2Fdocumenter.ui.block-quote-4.0.1.tgz"
+"@teambit/documenter.ui.block-quote@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.block-quote@npm:4.0.3"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 3853bdf1936ef6833a706f247f691c684fb70c34a34b3af4e92c13338e745aae3095af6d7e1853805b2c87ac1a35ec6a81f1c48f8c9abf711731e1b8e000d63a
+  checksum: 66e13955d7846290a70589249bd7c2135bc63ada0ecd33d04de23e08291573879e19b159318ff844c1b8129bb062fb838bf5f614f90f3fdbd34e8623321bc97e
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.bold@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.bold@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.bold%2F-%2Fdocumenter.ui.bold-4.0.1.tgz"
+"@teambit/documenter.ui.bold@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.bold@npm:4.0.3"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 53ab30a888960a37f60f5d2ac0685d4ce9a834177e67f5baa699fc42389b83487af4b17496f9a8069beb8023d6c3349ea81cb6e261680e64bc92e6f9ef196df2
+  checksum: 10e5345be97189b9874e2214e769c7783d56c3de1393ee184085d0e7c33deef4830d5085b410d6c6b6d2cd1b821bd2ddb85333b8831f2c964a73e1d780d17f9f
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.code-snippet@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.code-snippet@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.code-snippet%2F-%2Fdocumenter.ui.code-snippet-4.0.1.tgz"
+"@teambit/documenter.ui.code-snippet@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.code-snippet@npm:4.1.1"
   dependencies:
-    "@teambit/documenter.ui.copied-message": 4.0.1
+    "@teambit/documenter.ui.copied-message": 4.1.1
     "@teambit/evangelist.elements.icon": 1.0.2
     classnames: ^2.2.6
     copy-to-clipboard: ^3.3.1
@@ -6173,23 +6363,23 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 293b0b29517b35e5750c77a1e30949500a68a5f9fef1705ca396f02eb76766cc7609e29007f1523170e1a505087fec5f0fd8e4960f099b8340c9e46a4b4a140e
+  checksum: ae9abe68dfeb236b322fc1bb4d383ebd999e8ffcadb28107099564af7207d7f4165d662ca5f68e42b2e7d487479eae9b450eda917b679749d79d872dc4b8f72c
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.consumable-link@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.consumable-link@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.consumable-link%2F-%2Fdocumenter.ui.consumable-link-4.0.1.tgz"
+"@teambit/documenter.ui.consumable-link@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.consumable-link@npm:4.0.3"
   dependencies:
     "@teambit/base-ui.layout.grid-component": 1.0.0
-    "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/documenter.ui.paragraph": 4.0.1
+    "@teambit/documenter.ui.copy-box": 4.1.1
+    "@teambit/documenter.ui.paragraph": 4.1.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: f4ed06f9e0c24e286a9da7c333f99116bc8b920028f6bff88a61faf68b8b5000fcf8ae3e7d63938b03dd7654f55a6a1e51b24cb5982f81905d15d47b568e919b
+  checksum: bb2a3e1eeb17b0787d045d6ccba27da3da3f1cbb97cf8ecbf5ab8e2f8bc955ef39b008897c15a1a9e1903d61c915c5c9a953b3097a1229b4084e2641fb1dbb8b
   languageName: node
   linkType: hard
 
@@ -6203,6 +6393,19 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 6c66a93498ea781dd30a42f77c03bcf19a9e8e7b8ac08c2d440bed5bdf0cec14da36fa97417892a1be7e894c717a87baf2ec9925c0c0d1849ac607e5d0641f53
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.copied-message@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.copied-message@npm:4.1.1"
+  dependencies:
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 46d88372c1b3514b3d2d69ce7dadb729488d780d1e87099f20fbca330c77665fda493a34de4e109e88089fe931f0620b3ae4ec018a7d18a725c865b95069662a
   languageName: node
   linkType: hard
 
@@ -6223,9 +6426,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.heading@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.heading@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.heading%2F-%2Fdocumenter.ui.heading-4.0.1.tgz"
+"@teambit/documenter.ui.copy-box@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.copy-box@npm:4.1.1"
+  dependencies:
+    "@teambit/base-ui.layout.grid-component": 1.0.0
+    "@teambit/documenter.ui.copied-message": 4.1.1
+    "@teambit/evangelist.elements.icon": 1.0.2
+    classnames: ^2.2.6
+    copy-to-clipboard: ^3.3.1
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 2cb71a4a6610bc6b621f3ef6b2ee6190049340805a5ad0d9f259702c66d393f5fc99442d33809478c945c4d1a71b6af7875557e959e608ad5f4904ba00116861
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.heading@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/documenter.ui.heading@npm:1.0.3"
+  dependencies:
+    "@teambit/base-ui.text.heading": 0.5.9
+    classnames: ^2.2.6
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: b221aa599a49607ebbd783a9a24d418a9df2f7b3e4d27e3f2ea52e845a2a4693dd8fc061b6b49e9eb9c6dfe934ad2c536148e09d8e951bab87b3fb6618ec2352
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.heading@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.heading@npm:4.1.1"
   dependencies:
     "@teambit/base-ui.text.heading": 1.0.1
     classnames: ^2.2.6
@@ -6233,21 +6466,20 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: c12b59d32ac7eaaf004ac435678fa8f4645fd649ee205b0df24a03d74f6b3d311aed73216a3872a8a6d83160b096aa75d114639a0c04eb568f9cd538205fca6c
+  checksum: c3e1a53cae098f5bd7b5f96701c4c70f41fe469c647aca173266a297ce89562ca8ef99385cdc6cb337cf50e333186dbde7104bb742ee34e47092319a45344ef8
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.highlighted-text@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.highlighted-text@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.highlighted-text%2F-%2Fdocumenter.ui.highlighted-text-4.0.1.tgz"
+"@teambit/documenter.ui.highlighted-text@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.highlighted-text@npm:4.1.1"
   dependencies:
-    "@teambit/documenter.ui.paragraph": 4.0.1
-    classnames: ^2.2.6
+    "@teambit/documenter.ui.inline-code": 0.1.1
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: dff4b897f5bf16b381cb3ceb6dd0a52a324c02a8441df6bd46f250c659e306336a50a4841ecb3131d3727ee1918e36493665b84ecb0d1663499d67111bb58d35
+  checksum: db46c18adf5f421869cc0e597437d780d4145671f11043ed6b16ab4ff8f1badfbac05499b8c106eb491439f0d317daf24268d47dd1a43bdd67c18c69757864b1
   languageName: node
   linkType: hard
 
@@ -6264,95 +6496,122 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.import-action@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.import-action@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.import-action%2F-%2Fdocumenter.ui.import-action-4.0.1.tgz"
+"@teambit/documenter.ui.import-action@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.import-action@npm:4.1.1"
   dependencies:
-    "@teambit/documenter.content.documentation-links": 4.0.1
-    "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/documenter.ui.highlighted-text": 4.0.1
+    "@teambit/documenter.content.documentation-links": 4.0.3
+    "@teambit/documenter.ui.copy-box": 4.1.1
+    "@teambit/documenter.ui.highlighted-text": 4.1.1
     "@teambit/evangelist.elements.icon": 1.0.2
-    "@teambit/evangelist.surfaces.dropdown": 1.0.1
+    "@teambit/evangelist.surfaces.dropdown": 1.0.2
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 6af7da5993990e9132d2b2de53e7b147a663105dae84ea55edc873e6b43e2d0c9e99e4ecdef44659977ebef42da3de58e68e65056ccc07d54437c6f6064ad6c8
+  checksum: bcc2b684755e526809d756a95b8e26a964dc182a8e65f1a5fcf98cc238e472c03765259eb2a5e206e1b5fdf4ea12a9e11c3544a409002e9e6c156534ab4582e9
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.italic@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.italic@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.italic%2F-%2Fdocumenter.ui.italic-4.0.1.tgz"
+"@teambit/documenter.ui.inline-code@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@teambit/documenter.ui.inline-code@npm:0.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 7c8220f36f8086a1ae35439f15011f2ffd93cd09d44abde162ee11d6b308977c67f90dbab8a07f46f87adcce015e3ec532621c35c0444c4c3d74a0304f08d6c6
+  checksum: ab6291768eddd6ceb6429c6908155f5953b9cdd42ef02c71bf7a3097ad5567b4ab8bd02538cc5f4ad475a75bc36befd8b35b5373d8484cac9cb13ca96caed619
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.label-list@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.label-list@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.label-list%2F-%2Fdocumenter.ui.label-list-4.0.1.tgz"
-  dependencies:
-    "@teambit/documenter.ui.label": 4.0.1
-    classnames: ^2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 975079b81e4b2802b90a0dc3c628d87cd457378ad6ade4003c690a5e3d268fd5f1c40040348ea0af2da6b5df601ac4de178b00e4d9f69e292ab32ab8783e9ed0
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.ui.label@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.label@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.label%2F-%2Fdocumenter.ui.label-4.0.1.tgz"
+"@teambit/documenter.ui.italic@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.italic@npm:4.0.3"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: dd69d46fa31429d0a004b044b8bdfca06fa106027df95705834e3f0b637e050a919ece705c705db911576f53ff9db5857cc7b3f59419cbb31985edf52443994d
+  checksum: bf034b5c5b16b8d82c3db220b14f6a0725241f6004ff7174c96a5aef5073a833219a67b001861d059fec19990fa965c96830897f7e632caba09741e7affd3218
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.linked-heading@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.linked-heading@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.linked-heading%2F-%2Fdocumenter.ui.linked-heading-4.0.1.tgz"
+"@teambit/documenter.ui.label-list@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.label-list@npm:4.0.3"
   dependencies:
-    "@teambit/documenter.ui.anchor": 4.0.1
-    "@teambit/documenter.ui.heading": 4.0.1
+    "@teambit/documenter.ui.label": 4.0.3
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: f30369b6d8d21c48d87816f7ac106378a27466ac7981ad0fa71c045e1147f5a558dbb3b7efaff52114a9bc26314ac197aca76cb802b40e59c31eff00ccd1b9ee
+  checksum: d5cfb3d1399bce62384300176c9b362211d7900a90c59c09a99d6cb6a8e7bd9fd2d793430b34969fee1735424fc02d593c3d019a96bd205aed3915877dba68b9
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.ol@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.ol@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.ol%2F-%2Fdocumenter.ui.ol-4.0.1.tgz"
+"@teambit/documenter.ui.label@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.label@npm:4.0.3"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: c8ff0d2445228a1cdff7fd8e52b2c77109b584697e0130ff4db625164fd0c58e1c8d6a5abc090ee007f3f149150f21980a50194ba929f39e1e8dd5e5983da0f1
+  checksum: d4d5e1674c12febec98d1e153c475c843de576f1a8f4419911f8de293b40cbcda14983122d04a8705caa6785862b6031d1300f2d460ecc456538a515cc6e50ef
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.paragraph@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.paragraph@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.paragraph%2F-%2Fdocumenter.ui.paragraph-4.0.1.tgz"
+"@teambit/documenter.ui.linked-heading@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.linked-heading@npm:4.1.1"
+  dependencies:
+    "@teambit/documenter.ui.anchor": 4.0.3
+    "@teambit/documenter.ui.heading": 4.1.1
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: d842fcacc93c777ef1c4dc29ed80b9a37ee52dc530e9d7ecccec456e9a2288469f26f56f7b7b2ac2ace4c55ec50742d7311b48e63d9a7c8a561fbf91974a859f
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.ol@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.ol@npm:4.1.1"
+  dependencies:
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 6c809e743ed7c7d73eefd11c68f82a1842f974e3aecc8c15f9cea6e7f395c3bed68bb00b5516dd34c667f2797ae0b58e3db79de902dbe4848c1e37612894d535
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.paragraph@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/documenter.ui.paragraph@npm:1.0.3"
+  dependencies:
+    "@teambit/base-ui.text.paragraph": 0.5.9
+    "@teambit/base-ui.theme.sizes": 0.5.9
+    classnames: ^2.2.6
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 875d4889b10694ce95be95635836a7afe5065bafe0eaad20e8cc7178bafd50bc71b789f4cd186d077cfcd10e6b1951c8bc4e557cd296d0a2b60507785b658cd0
+  languageName: node
+  linkType: hard
+
+"@teambit/documenter.ui.paragraph@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.paragraph@npm:4.1.1"
   dependencies:
     "@teambit/base-ui.text.paragraph": 1.0.1
     "@teambit/base-ui.theme.sizes": 1.0.0
@@ -6361,23 +6620,23 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 0cfb5e1e3eb1c2e52cfc3b3c34ebb6fd522f7a559b312c1f8d525ffeb511bd325d53c6591b121d0ebdf136aec4fc9e24b0c24b81903cab0d2f5a6751abc5d9ad
+  checksum: 5e51a30bedb7e8244351df07781030f773ecd4734904b06de088744225c02ec85e31f809744ab55659dd0cc5a1914e388dfcb3ba36422c8f20241619a390a072
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.property-table@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.property-table@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.property-table%2F-%2Fdocumenter.ui.property-table-4.0.1.tgz"
+"@teambit/documenter.ui.property-table@npm:4.1.2":
+  version: 4.1.2
+  resolution: "@teambit/documenter.ui.property-table@npm:4.1.2"
   dependencies:
-    "@teambit/documenter.ui.table": 4.0.1
-    "@teambit/documenter.ui.table-row": 4.0.1
+    "@teambit/documenter.ui.table": 4.1.1
+    "@teambit/documenter.ui.table-row": 4.1.1
     core-js: ^3.0.0
     react-use-dimensions: ^1.2.1
     use-debounce: ^3.4.3
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 75050a84ef57c35ee34d9758e97e7b3420ac79dd4fbe75780863c7aaef38a20c68afdcef103ecc7fc5b7cd344a3f9f4662a0df588e728a52380943291290682d
+  checksum: dabf4ebc0583900a250aecb3b89c5b399c2af662cefeaade79540090fe3f8c556e95c19d572305478b08d5fcc835af66689574c364108f98b63477a91eed3175
   languageName: node
   linkType: hard
 
@@ -6393,16 +6652,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.section@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.section@npm:4.0.1"
+"@teambit/documenter.ui.section@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.section@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: d159fcdabdc1068735784a530dd29a2d488eff9559ca820eb1caadd902fc0d494fc3e173f755fa949d9ebf77e8a6a4e8b60a56205f9fca301a429d0e14f4410a
+  checksum: 472586e4020a35ba5594f18e6aa0e64305a6a919a7a4991f72574ba3cc3630de4835a63e6d3156ecd60d11cb4ef7752cc1a1c10054d5021daaa4ade6b1eea225
   languageName: node
   linkType: hard
 
@@ -6418,44 +6677,44 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.separator@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.separator@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.separator%2F-%2Fdocumenter.ui.separator-4.0.1.tgz"
+"@teambit/documenter.ui.separator@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.separator@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 848c7f7be3159912685fa3676257cf43884f25d10a2877b71c221f4f8b2fa0c8e568007cd5176b02e93f6338691b67fdeffe45f4f1d23ed075442f2cd7e4de1b
+  checksum: 794a8e2d3efe9699ebe4554e0f381446da545e10505066e28eb807097d09bcb1e8707b9cbcd2869184b7cc6d4df3038ab2b1093b6cff7aaf56490ed862e10479
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.sub-title@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.sub-title@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.sub-title%2F-%2Fdocumenter.ui.sub-title-4.0.1.tgz"
+"@teambit/documenter.ui.sub-title@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.sub-title@npm:4.1.1"
   dependencies:
     "@teambit/base-ui.text.muted-text": 1.0.1
-    "@teambit/documenter.ui.paragraph": 4.0.1
+    "@teambit/documenter.ui.paragraph": 4.1.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 0d594f2e6c4a8b9076cff871a715c133266575d5a2cd40415bf82c6df098526cc183e6206ee52c9470593a8a4197b6dd79025de33b0b47444b30a48e2f18746a
+  checksum: 8e47aad3fb709d47ec45c70cd2edd8072361a3728f31f48ff82b385d4243d1da4017e03bbe7d0534c2de6402ee870f2193fdb84a5003db2131b94049857dc1ba
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.sup@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.sup@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.sup%2F-%2Fdocumenter.ui.sup-4.0.1.tgz"
+"@teambit/documenter.ui.sup@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.sup@npm:4.0.3"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 8fe482ee0df114340341d1ccc014b327c2803ed6e58498dc4f774c190b6402b65b5da720b8eb6030f0ad64485e9a2352ed75ae53d0e6ed9065672c2414fcc852
+  checksum: d3dbffbd9d224f1d136dbb58378cbd99b74936f41f2119b4b59531ef427d3f19b998ce23e7827c1608f125800960896086f7a74ae67ebd659672abf5f224d794
   languageName: node
   linkType: hard
 
@@ -6472,39 +6731,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-heading-column@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table-heading-column@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-heading-column%2F-%2Fdocumenter.ui.table-heading-column-4.0.1.tgz"
+"@teambit/documenter.ui.table-heading-column@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.table-heading-column@npm:4.0.3"
   dependencies:
-    "@teambit/documenter.ui.heading": 4.0.1
+    "@teambit/documenter.ui.heading": 4.1.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 905b0ba888682b1c2ad8be757840d601053cfe38906caed0c45bcd6abf47c565ba03907ac30a6218e5634db7f3f7706d7e4e1455957ea13de985ea13365cbee0
+  checksum: 40cb8de05aeb81fb3642d487bb8d03e6c6cadf05c10b7ac02ed8f290916b5fdf85adeefc327c6cfb630650f3c86a4aaa7accadc776d6185a419cdeeb05ea3831
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-heading-row@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table-heading-row@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-heading-row%2F-%2Fdocumenter.ui.table-heading-row-4.0.1.tgz"
+"@teambit/documenter.ui.table-heading-row@npm:4.0.3":
+  version: 4.0.3
+  resolution: "@teambit/documenter.ui.table-heading-row@npm:4.0.3"
   dependencies:
     "@teambit/base-ui.layout.grid-component": 1.0.0
-    "@teambit/documenter.ui.table": 4.0.1
-    "@teambit/documenter.ui.table-heading-column": 4.0.1
+    "@teambit/documenter.ui.table": 4.1.1
+    "@teambit/documenter.ui.table-heading-column": 4.0.3
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 4964b3334f05d1834233ad6097718519604bfc6d08f67cb1103bcac6db8fe210a805f9f73f77a4d94169e2506a2cd207455cda81bfe5fcf5f78f8a6ed5240222
+  checksum: 821154e43cd029294a9ec6f3fbcb2df17c1156c880242a62190d6a75043104794377baa39cf9619d6cfed812a7335a22aeb7ef8b59d2468c74ba6942fb278056
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-row@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table-row@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-row%2F-%2Fdocumenter.ui.table-row-4.0.1.tgz"
+"@teambit/documenter.ui.table-row@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.table-row@npm:4.1.1"
   dependencies:
     "@teambit/base-ui.layout.grid-component": 1.0.0
     "@teambit/documenter.ui.table-column": 4.0.0
@@ -6514,73 +6773,73 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 92df1f689a2a42d585bae7f341d4277c45c855c3e603d22f60d5e5b82d2cf7d6546e1fe11b892e4bdfa235ba4b1c4a349de398e430ea6b1da487a851f1c3dfc1
+  checksum: 3778def72cd955c87c684eb657d0d7cddd213cac0addf66150792b483c21a0037de07cd996089627eade598d70c66f2dd0d0cfd9937273c95142d30147703a54
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table.base-table@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table.base-table@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table.base-table%2F-%2Fdocumenter.ui.table.base-table-4.0.1.tgz"
+"@teambit/documenter.ui.table.base-table@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.table.base-table@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: d7384ab18366dfa117f523ff15710441dc82a1a109010c735d30405b360b522e34dc61f194342a049bb2a7995fb675eb40c1fb72fe503ace0fc51dea99df6821
+  checksum: db32903540b3d5076e1785a219878dfbd7f8f4f7cba6957f40bf085df61d405ad68aead38878571710d7fccbc80663cc0797014b8d769da84a713502b7839a23
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table.td@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table.td@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table.td%2F-%2Fdocumenter.ui.table.td-4.0.1.tgz"
+"@teambit/documenter.ui.table.td@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.table.td@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 9adf84263eb55e85cbc197068eeb65b3ac20061bcace2fda11dd1f04e4ed4ea4b3a4c6c33a0a2aa0db4f9c83bb13197c55476b54aa0d06019e20de5838dab0f0
+  checksum: 24159503463396047418b5f454282478f38ce5e48401de4d0719196f79f6e52754b02869c75f5fda5186c2ec7d3b8812aa4913efd97a09ab111e4a22e46a201a
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table.tr@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table.tr@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table.tr%2F-%2Fdocumenter.ui.table.tr-4.0.1.tgz"
+"@teambit/documenter.ui.table.tr@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.table.tr@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: bf96e0b40e181f0586b7f8d7eaa7172cec09698ffd185dd5ffd30b99eb2dbfd14d115fc2a0988ef561f88432620b659690c6caf37b662c86dd8168dc95557967
+  checksum: 7f0463008a84cd9cb8f207a042370e6580424760ddfce378a04226fb6ad98fca97219a1e9784d59854c5e41e3ffbfe668c86c799f91ec05352e04c6a9450e7ba
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.table@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table%2F-%2Fdocumenter.ui.table-4.0.1.tgz"
+"@teambit/documenter.ui.table@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.table@npm:4.1.1"
   dependencies:
-    "@teambit/documenter.ui.table-heading-row": 4.0.1
-    "@teambit/documenter.ui.table-row": 4.0.1
+    "@teambit/documenter.ui.table-heading-row": 4.0.3
+    "@teambit/documenter.ui.table-row": 4.1.1
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 23a48345b6e769816de0638cce542114de07e4dc54e5c952ea15d56976ae3044521a5f2909990d9dc96f2812336198eb4e095523f8c953e55a38927292e29ade
+  checksum: 63441e7a32855aae965439eb7df513d32ac5d8d0a457d070094e71d744d3bb35ee1956bc8a9aa80c8a56f7ed189a3310357b64593d0abf2537ab4819a9102da1
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.ul@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@teambit/documenter.ui.ul@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.ul%2F-%2Fdocumenter.ui.ul-4.0.1.tgz"
+"@teambit/documenter.ui.ul@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.ui.ul@npm:4.1.1"
   dependencies:
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 8076cb6e804b39e93ca3cd36bdd01ddfa16cc7416522bff3c51b860a8ec806c49f24c577887eb5b7f0af776dc7e25adad354830e8a685ade87fb0b5d0c84d295
+  checksum: c43b0b725f3ac2217724ada1d23aab890ddaedb580abf4d3d39e0aa97989d75e1899bf075a03491b548e03193ce627892b0f18ea0961e8894c7aa7410d3321bb
   languageName: node
   linkType: hard
 
@@ -6709,25 +6968,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/evangelist.surfaces.dropdown@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@teambit/evangelist.surfaces.dropdown@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.surfaces.dropdown%2F-%2Fevangelist.surfaces.dropdown-1.0.1.tgz"
-  dependencies:
-    "@teambit/base-ui.css-components.elevation": 1.0.0
-    "@teambit/base-ui.css-components.roundness": 1.0.0
-    "@teambit/base-ui.surfaces.abs-container": 1.0.0
-    "@teambit/base-ui.surfaces.background": 1.0.0
-    "@teambit/base-ui.surfaces.drawer": 1.0.0
-    "@teambit/evangelist.css-components.fade-in-out": 1.0.1
-    classnames: ^2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 4b7b1c61493a66ac2138f3221977be044fd113eae804c29b4e2e067b2c1cc4e4f642dc1e8c958f0a825bcb81a0c9a50d5d16f6b046b922b1d9786c97d0db7cf1
-  languageName: node
-  linkType: hard
-
 "@teambit/evangelist.surfaces.dropdown@npm:1.0.2":
   version: 1.0.2
   resolution: "@teambit/evangelist.surfaces.dropdown@npm:1.0.2"
@@ -6762,6 +7002,16 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 93f2e38cc79dd2a87d4697a745303d0c1954da63c5ff8b8d3ba9369cdc85b976ad69c27ad22aad35dbe636f850222fdb0781d4449463081ff6f054a66538ae8c
+  languageName: node
+  linkType: hard
+
+"@teambit/evangelist.theme.icon-font@npm:0.5.20":
+  version: 0.5.20
+  resolution: "@teambit/evangelist.theme.icon-font@npm:0.5.20"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 528633c06b06b03ccc51a6ea7989c3ec123a784ecae81abeea41b57d55042e16e0011c562a0559c16e4b3a33e1b49951204c071066e921d7ff5d1fd8c3b9e98c
   languageName: node
   linkType: hard
 
@@ -7004,7 +7254,7 @@ __metadata:
     "@teambit/base-ui.theme.dark-theme": 1.0.2
     "@teambit/base-ui.theme.fonts.roboto": 1.0.0
     "@teambit/base-ui.theme.sizes": 1.0.0
-    "@teambit/base-ui.theme.theme-provider": 0.6.14
+    "@teambit/base-ui.theme.theme-provider": 1.0.1
     "@teambit/base-ui.utils.composer": 1.0.0
     "@teambit/base-ui.utils.popper-js.ignore-popper-size": 1.0.0
     "@teambit/base-ui.utils.popper-js.resize-to-match-reference": 1.0.0
@@ -7016,34 +7266,36 @@ __metadata:
     "@teambit/design.ui.icon-button": 1.0.1
     "@teambit/documenter.code.react-playground": 4.0.1
     "@teambit/documenter.content.documentation-links": 4.0.1
-    "@teambit/documenter.routing.external-link": 4.0.0
+    "@teambit/documenter.markdown.hybrid-live-code-snippet": 0.1.3
+    "@teambit/documenter.markdown.mdx": 0.1.3
+    "@teambit/documenter.routing.external-link": 4.1.0
     "@teambit/documenter.theme.theme-compositions": 2.0.3
-    "@teambit/documenter.theme.theme-context": 3.0.14
-    "@teambit/documenter.types.docs-file": 4.0.1
-    "@teambit/documenter.ui.block-quote": 4.0.1
-    "@teambit/documenter.ui.bold": 4.0.1
-    "@teambit/documenter.ui.code-snippet": 4.0.1
-    "@teambit/documenter.ui.consumable-link": 4.0.1
+    "@teambit/documenter.theme.theme-context": 4.0.3
+    "@teambit/documenter.types.docs-file": 4.0.3
+    "@teambit/documenter.ui.block-quote": 4.0.3
+    "@teambit/documenter.ui.bold": 4.0.3
+    "@teambit/documenter.ui.code-snippet": 4.1.1
+    "@teambit/documenter.ui.consumable-link": 4.0.3
     "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/documenter.ui.heading": 4.0.1
-    "@teambit/documenter.ui.highlighted-text": 4.0.1
+    "@teambit/documenter.ui.heading": 4.1.1
+    "@teambit/documenter.ui.highlighted-text": 4.1.1
     "@teambit/documenter.ui.image": 4.0.0
-    "@teambit/documenter.ui.import-action": 4.0.1
-    "@teambit/documenter.ui.italic": 4.0.1
-    "@teambit/documenter.ui.label": 4.0.1
-    "@teambit/documenter.ui.label-list": 4.0.1
-    "@teambit/documenter.ui.linked-heading": 4.0.1
-    "@teambit/documenter.ui.ol": 4.0.1
-    "@teambit/documenter.ui.paragraph": 4.0.1
-    "@teambit/documenter.ui.property-table": 4.0.1
+    "@teambit/documenter.ui.import-action": 4.1.1
+    "@teambit/documenter.ui.italic": 4.0.3
+    "@teambit/documenter.ui.label": 4.0.3
+    "@teambit/documenter.ui.label-list": 4.0.3
+    "@teambit/documenter.ui.linked-heading": 4.1.1
+    "@teambit/documenter.ui.ol": 4.1.1
+    "@teambit/documenter.ui.paragraph": 1.0.3
+    "@teambit/documenter.ui.property-table": 4.1.2
     "@teambit/documenter.ui.section": 1.0.3
     "@teambit/documenter.ui.separator": 1.0.3
-    "@teambit/documenter.ui.sub-title": 4.0.1
-    "@teambit/documenter.ui.sup": 4.0.1
-    "@teambit/documenter.ui.table.base-table": 4.0.1
-    "@teambit/documenter.ui.table.td": 4.0.1
-    "@teambit/documenter.ui.table.tr": 4.0.1
-    "@teambit/documenter.ui.ul": 4.0.1
+    "@teambit/documenter.ui.sub-title": 4.1.1
+    "@teambit/documenter.ui.sup": 4.0.3
+    "@teambit/documenter.ui.table.base-table": 4.1.1
+    "@teambit/documenter.ui.table.td": 4.1.1
+    "@teambit/documenter.ui.table.tr": 4.1.1
+    "@teambit/documenter.ui.ul": 4.1.1
     "@teambit/evangelist.elements.button": 1.0.3
     "@teambit/evangelist.elements.heading": 1.0.2
     "@teambit/evangelist.elements.icon": 1.0.2
@@ -7055,6 +7307,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
     "@teambit/legacy": 1.0.114
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
     "@teambit/react.instructions.react.adding-tests": 0.0.5
@@ -7103,7 +7356,7 @@ __metadata:
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
     "@types/puppeteer": 3.0.5
-    "@types/react": 17.0.8
+    "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7410,7 +7663,6 @@ __metadata:
     tippy.js: 6.2.7
     tsyringe: 4.4.0
     tty-browserify: 0.0.1
-    tty-table: 2.8.13
     type-coverage: 2.15.1
     typedoc: 0.18.0
     typescript: 4.1.5
@@ -7459,6 +7711,19 @@ __metadata:
     bit: bin/bit.js
   languageName: unknown
   linkType: soft
+
+"@teambit/mdx.ui.mdx-scope-context@npm:0.0.368":
+  version: 0.0.368
+  resolution: "@teambit/mdx.ui.mdx-scope-context@npm:0.0.368"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    "@teambit/legacy": 1.0.86
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 1fa908b761a60bb0f8f5e0d0e4984bd5cabbb51136ab43bad71732e75e6c2d9306fe160725dfc0f11f5528d515bc79c38ee8b627f525ea6ff38b626e4606fb0a
+  languageName: node
+  linkType: hard
 
 "@teambit/model.composition-id@npm:0.0.259":
   version: 0.0.259
@@ -7832,6 +8097,15 @@ __metadata:
     "@types/connect": "*"
     "@types/node": "*"
   checksum: 15043566f1909e2a08dabb0a5d2642f8988545a1369bc5995fc40ee90c95200da2aa66f9240fcb19fc6af6ff4e27ff453f311b49363c14bb308c308c0751ca9b
+  languageName: node
+  linkType: hard
+
+"@types/buble@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "@types/buble@npm:0.20.0"
+  dependencies:
+    magic-string: ^0.25.0
+  checksum: 5e1d474e508edf988a4db124cb2379e3c2309f1de49934fd098c98d6676b08a111002c234d8b4bb9931ba38f6239312fd4c2554a1816547f8aa5f90b7a8c068d
   languageName: node
   linkType: hard
 
@@ -8643,14 +8917,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:17.0.8":
-  version: 17.0.8
-  resolution: "@types/react@npm:17.0.8"
+"@types/react@npm:^17.0.8":
+  version: 17.0.13
+  resolution: "@types/react@npm:17.0.13"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
+  checksum: 8e25aaeac17c48e1f60544dc583c3ea770cd3d3ffdea944a1da3069db6a7d3a374d3a8bdac726150404318203c1b564135ce93e3b69bd5c06d7f262463b5525d
   languageName: node
   linkType: hard
 
@@ -13497,6 +13771,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cli-table-425caa@workspace:scopes/toolbox/tables/cli-table":
+  version: 0.0.0-use.local
+  resolution: "cli-table-425caa@workspace:scopes/toolbox/tables/cli-table"
+  languageName: unknown
+  linkType: soft
+
 "cli-table@npm:0.3.6":
   version: 0.3.6
   resolution: "cli-table@npm:0.3.6"
@@ -13715,6 +13995,8 @@ __metadata:
 "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button":
   version: 0.0.0-use.local
   resolution: "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button"
+  dependencies:
+    "@teambit/documenter.theme.theme-compositions": 3.0.8
   languageName: unknown
   linkType: soft
 
@@ -14005,7 +14287,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "component-860f6b@workspace:scopes/component/component"
   dependencies:
-    "@teambit/documenter.ui.separator": 4.0.1
+    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -14494,6 +14776,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"core-js@npm:^3.14.0":
+  version: 3.15.2
+  resolution: "core-js@npm:3.15.2"
+  checksum: f8f61569c4c3bdf50679226f5a1045551192a2f4bc3fa46a873b6fa834cff6d1634ee138a6e4bae3eea99f1b1db2d588fa693de74640447476292b41f595a4c3
+  languageName: node
+  linkType: hard
+
 "core-util-is@npm:1.0.2, core-util-is@npm:^1.0.2, core-util-is@npm:~1.0.0":
   version: 1.0.2
   resolution: "core-util-is@npm:1.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-util-is%2F-%2Fcore-util-is-1.0.2.tgz"
@@ -14592,12 +14881,6 @@ __metadata:
   checksum: 02a6ae3bb9cd4afee3fabd846c1d8426a0e6b495560a977ba46120c473cb283be6aa1cace76b5f927cf4e499c6146fb798253e48e83d522feba807d6b722eaa9
   languageName: node
   linkType: hard
-
-"create-heading-73711b@workspace:scopes/mdx/ui/create-heading":
-  version: 0.0.0-use.local
-  resolution: "create-heading-73711b@workspace:scopes/mdx/ui/create-heading"
-  languageName: unknown
-  linkType: soft
 
 "create-hmac@npm:^1.1.0, create-hmac@npm:^1.1.4, create-hmac@npm:^1.1.7":
   version: 1.1.7
@@ -15880,7 +16163,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "docs-app-55ecfa@workspace:scopes/react/ui/docs-app"
   dependencies:
-    "@teambit/documenter.ui.section": 4.0.1
+    "@teambit/documenter.ui.section": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -16262,6 +16545,8 @@ __metadata:
 "empty-box-dbdece@workspace:scopes/design/ui/empty-box":
   version: 0.0.0-use.local
   resolution: "empty-box-dbdece@workspace:scopes/design/ui/empty-box"
+  dependencies:
+    "@teambit/documenter.theme.theme-compositions": 3.0.9
   languageName: unknown
   linkType: soft
 
@@ -18527,6 +18812,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fsevents@^2.1.2, fsevents@~2.3.1":
+  version: 2.3.2
+  resolution: "fsevents@npm:2.3.2"
+  dependencies:
+    node-gyp: latest
+  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
+  languageName: node
+  linkType: hard
+
 "fsevents@patch:fsevents@^2.1.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
@@ -19742,12 +20036,6 @@ __metadata:
   checksum: ebdf4c14a80cb366a25ab59675df564e4ae3d9044cbed3ef6487c357bf38d08523d114c046008f42bef8cb782d7ef0c4858bc33ec25c6ade5d3f9e504c8c9bf0
   languageName: node
   linkType: hard
-
-"highlighted-text-span-2f925c@workspace:scopes/mdx/ui/highlighted-text-span":
-  version: 0.0.0-use.local
-  resolution: "highlighted-text-span-2f925c@workspace:scopes/mdx/ui/highlighted-text-span"
-  languageName: unknown
-  linkType: soft
 
 "highlighter-provider-505879@workspace:scopes/react/ui/highlighter-provider":
   version: 0.0.0-use.local
@@ -23913,8 +24201,6 @@ __metadata:
 "mdx-layout-7ac240@workspace:scopes/mdx/ui/mdx-layout":
   version: 0.0.0-use.local
   resolution: "mdx-layout-7ac240@workspace:scopes/mdx/ui/mdx-layout"
-  dependencies:
-    "@teambit/documenter.ui.separator": 4.0.1
   languageName: unknown
   linkType: soft
 
@@ -25945,12 +26231,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"paragraph-26b712@workspace:scopes/mdx/ui/paragraph":
-  version: 0.0.0-use.local
-  resolution: "paragraph-26b712@workspace:scopes/mdx/ui/paragraph"
-  languageName: unknown
-  linkType: soft
-
 "parallel-transform@npm:^1.1.0":
   version: 1.2.0
   resolution: "parallel-transform@npm:1.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fparallel-transform%2F-%2Fparallel-transform-1.2.0.tgz"
@@ -27596,6 +27876,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prism-react-renderer@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "prism-react-renderer@npm:1.2.1"
+  peerDependencies:
+    react: ">=0.14.9"
+  checksum: 66cab3d9f9f18ff5db222df74e1f326262ad093202f855ef2bd9e8001fef21b92f2242a2292caa77c36a517a7f379620417b421eaa320405deb6ecb27c18ee5e
+  languageName: node
+  linkType: hard
+
 "prismjs@npm:^1.21.0, prismjs@npm:^1.22.0, prismjs@npm:~1.23.0":
   version: 1.23.0
   resolution: "prismjs@npm:1.23.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fprismjs%2F-%2Fprismjs-1.23.0.tgz"
@@ -28308,6 +28597,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-live@npm:^2.2.3":
+  version: 2.3.0
+  resolution: "react-live@npm:2.3.0"
+  dependencies:
+    "@types/buble": ^0.20.0
+    buble: 0.19.6
+    core-js: ^3.14.0
+    dom-iterator: ^1.0.0
+    prism-react-renderer: ^1.2.1
+    prop-types: ^15.7.2
+    react-simple-code-editor: ^0.11.0
+    unescape: ^1.0.1
+  checksum: c390df78312e5264692b0ac8f745c64294d433546a60eb5992f19fdc517ac6f726a91b7f726e71a79c24db6d16d8ee8a1e927064bec57b52dae488fe6741a93f
+  languageName: node
+  linkType: hard
+
 "react-native-24af20@workspace:scopes/react/react-native":
   version: 0.0.0-use.local
   resolution: "react-native-24af20@workspace:scopes/react/react-native"
@@ -28444,6 +28749,16 @@ __metadata:
     react: ^16.0.0
     react-dom: ^16.0.0
   checksum: d9f448c5d1ba1b630ad6d9d775b5fa651ad1144eb5850fed3831b97d9da6da1daced37301c09946ff3a586f1f0f488f314cc81b744a1b60a343f30517c0767e9
+  languageName: node
+  linkType: hard
+
+"react-simple-code-editor@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "react-simple-code-editor@npm:0.11.0"
+  peerDependencies:
+    react: ^16.0.0
+    react-dom: ^16.0.0
+  checksum: 20d9381c77c7a7ef256e2d871e1b0ab95cc0b025b3933467840f6608ce37835f98785d50b6709df7e4daf75889f3c95a0d80b1809f8399b2361ec282a063196b
   languageName: node
   linkType: hard
 
@@ -29472,6 +29787,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"resolve@1.20.0, resolve@^1.1.6, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.3.2, resolve@^1.8.1":
+  version: 1.20.0
+  resolution: "resolve@npm:1.20.0"
+  dependencies:
+    is-core-module: ^2.2.0
+    path-parse: ^1.0.6
+  checksum: 40cf70b2cde00ef57f99daf2dc63c6a56d6c14a1b7fc51735d06a6f0a3b97cb67b4fb7ef6c747b4e13a7baba83b0ef625d7c4ce92a483cd5af923c3b65fd16fe
+  languageName: node
+  linkType: hard
+
 "resolve@patch:resolve@1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.6#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.18.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.20.0
   resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
@@ -30150,7 +30475,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "separator-7e051b@workspace:scopes/design/ui/separator"
   dependencies:
-    "@teambit/documenter.ui.separator": 4.0.1
+    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -30369,7 +30694,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "side-bar-b708a4@workspace:scopes/ui-foundation/uis/side-bar"
   dependencies:
-    "@teambit/documenter.ui.separator": 4.0.1
+    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -30388,7 +30713,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "sidebar-c63b5b@workspace:scopes/ui-foundation/sidebar"
   dependencies:
-    "@teambit/documenter.ui.separator": 4.0.1
+    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -32166,6 +32491,8 @@ __metadata:
 "time-ago-d19018@workspace:scopes/design/ui/time-ago":
   version: 0.0.0-use.local
   resolution: "time-ago-d19018@workspace:scopes/design/ui/time-ago"
+  dependencies:
+    "@teambit/documenter.ui.heading": 1.0.3
   languageName: unknown
   linkType: soft
 
@@ -32817,6 +33144,46 @@ __metadata:
   bin:
     typescript-language-server: ./lib/cli.js
   checksum: e133ff7625c71f448b09c0dd58cc335c29d0f489b793ff8d096c72d8a475f599cfc7e3b696206c46d83df516a0b3580906192c0c32802d1f038fdf664287892a
+  languageName: node
+  linkType: hard
+
+typescript@3.9.7:
+  version: 3.9.7
+  resolution: "typescript@npm:3.9.7"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: d549bf1d3a93796b45be9d1dbebbef63777f8cc4d788461f4bfdb6cb07371a97d3e471c7f39dbe31107e8a25d6d8b2ef5e967af7e8e1768d9560bd95095b360b
+  languageName: node
+  linkType: hard
+
+typescript@4.1.5:
+  version: 4.1.5
+  resolution: "typescript@npm:4.1.5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: af660e69aa5184520dfa57362dcf7fd1b26d08b869d76b3bd58dcc04058a757983f470cd61ded824ab01fa08a81d58c7f607d8e360f4e550664b9439d04f8e41
+  languageName: node
+  linkType: hard
+
+typescript@^2.6.2:
+  version: 2.9.2
+  resolution: "typescript@npm:2.9.2"
+  bin:
+    tsc: ./bin/tsc
+    tsserver: ./bin/tsserver
+  checksum: 88be998ac339b6e45f1cd15e22e4a0fedcdb5320d8d1d736e3996a0b9dff03728ebb2580a0658f0c52152b139ea9a405443f42a4ff8a2c4a1a6f4d58e0320132
+  languageName: node
+  linkType: hard
+
+typescript@^3.9.3:
+  version: 3.9.10
+  resolution: "typescript@npm:3.9.10"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 46c842e2cd4797b88b66ef06c9c41dd21da48b95787072ccf39d5f2aa3124361bc4c966aa1c7f709fae0509614d76751455b5231b12dbb72eb97a31369e1ff92
   languageName: node
   linkType: hard
 
