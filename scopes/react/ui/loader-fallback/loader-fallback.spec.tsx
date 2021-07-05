@@ -8,9 +8,8 @@ describe('loader-fallback', () => {
       <LoaderFallback Target={Component} DefaultComponent={Default} Loader={Loader} timeout={10} />
     );
 
-    const result = getByText('test target');
-
-    expect(result).toBeInTheDocument();
+    // throws if not found, same as expect
+    getByText('test target');
   });
 
   it('should render default, when target is undefined', () => {
@@ -18,9 +17,8 @@ describe('loader-fallback', () => {
       <LoaderFallback Target={undefined} DefaultComponent={Default} Loader={Loader} timeout={10} />
     );
 
-    const result = getByText('Target is undefined');
-
-    expect(result).toBeInTheDocument();
+    // throws if not found, same as expect
+    getByText('Target is undefined');
   });
 
   it('should render loader, when target becomes undefined', () => {
@@ -30,9 +28,8 @@ describe('loader-fallback', () => {
 
     rerender(<LoaderFallback Target={undefined} DefaultComponent={Default} Loader={Loader} timeout={10} />);
 
-    const result = getByText('loading...');
-
-    expect(result).toBeInTheDocument();
+    // throws if not found, same as expect
+    getByText('loading...');
   });
 
   it('should render DefaultComponent, after timeout, when target becomes undefined', async () => {
@@ -42,9 +39,7 @@ describe('loader-fallback', () => {
 
     rerender(<LoaderFallback Target={undefined} DefaultComponent={Default} Loader={Loader} timeout={10} />);
 
-    await waitFor(() => {
-      expect(getByText('Target is undefined')).toBeInTheDocument();
-    });
+    await waitFor(() => getByText('Target is undefined'));
   });
 });
 
