@@ -1075,6 +1075,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/load-preview"
     },
+    "ui/loader-fallback": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/loader-fallback"
+    },
     "ui/main-dropdown": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.397",
