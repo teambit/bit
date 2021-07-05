@@ -1,6 +1,6 @@
 import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
-import { docFile } from './files/doc';
+import { docsFile } from './files/docs';
 import { extensionFile } from './files/extension';
 
 export const reactEnvTemplate: ComponentTemplate = {
@@ -13,10 +13,7 @@ export const reactEnvTemplate: ComponentTemplate = {
         content: indexFile(context),
         isMain: true,
       },
-      {
-        relativePath: `${context.name}.docs.mdx`,
-        content: docFile(),
-      },
+      docsFile(context),
       {
         relativePath: `${context.name}.extension.ts`,
         content: extensionFile(context),
