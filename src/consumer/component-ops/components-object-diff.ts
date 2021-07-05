@@ -1,6 +1,6 @@
 import arrayDifference from 'array-difference';
 import chalk from 'chalk';
-import Table from 'tty-table';
+import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
 import R from 'ramda';
@@ -231,41 +231,12 @@ export function diffBetweenComponentsObjects(
       oneDiff.left = oneDiff.left || '---';
       oneDiff.right = oneDiff.right || '---';
     });
-    const options = {
-      borderStyle: 'solid',
-      compact: true,
-    };
-    const headerOpts = {
-      headerAlign: 'left',
-      headerColor: 'cyan',
-      align: 'left',
-    };
-    const headers = [
-      {
-        ...headerOpts,
-        alias: 'name',
-        value: 'name',
-      },
-      {
-        ...headerOpts,
-        alias: 'diff',
-        value: 'type',
-      },
-      {
-        ...headerOpts,
-        width: 20,
-        alias: labelLeft(leftVersion, rightVersion),
-        value: 'left',
-      },
-      {
-        ...headerOpts,
-        width: 20,
-        alias: labelRight(leftVersion, rightVersion),
-        value: 'right',
-      },
-    ];
-    const diffTable = new Table(headers, diffs, options);
-    return `\n${chalk.bold(fieldName)}\n${diffTable.render()}`;
+    const diffTable = new Table({
+      head: ['name', 'diif', `${leftVersion}`, `${rightVersion}`],
+      style: { head: ['cyan'] },
+    });
+    diffs.map((dif) => diffTable.push(Object.values(dif)));
+    return `\n${chalk.bold(fieldName)}\n${diffTable.toString()}`;
   };
 
   const formatDepsDiffAsPlainText = (diffs: DepDiff[], fieldName: string): string => {

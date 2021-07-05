@@ -193,6 +193,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli"
     },
+    "cli-table": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/tables/cli-table"
+    },
     "cli/preview-server-status": {
         "scope": "teambit.preview",
         "version": "0.0.397",
