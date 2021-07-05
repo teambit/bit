@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import { loadBit } from '@teambit/bit';
+import pMapSeries from 'p-map-series';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { init } from '@teambit/legacy/dist/api/consumer';
 import path from 'path';
@@ -61,27 +62,25 @@ export class WorkspaceGenerator {
       const componentIds = componentsToImportResolved.map((c) => c.id);
       // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
       const components = await Promise.all(componentIds.map((id) => workspace.scope.getRemoteComponent(id)));
-      await Promise.all(
-        components.map(async (comp) => {
-          const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
-          if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
-          await workspace.write(compData.path, comp);
-          await workspace.track({
-            rootDir: compData.path,
-            componentName: compData.id.name,
-            mainFile: comp.state._consumer.mainFile,
-          });
-          const deps = await dependencyResolver.getDependencies(comp);
-          const workspacePolicyEntries = deps.map((dep) => ({
-            dependencyId: dep.getPackageName?.() || dep.id,
-            lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
-            value: {
-              version: dep.version,
-            },
-          }));
-          dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
-        })
-      );
+      await pMapSeries(components, async (comp) => {
+        const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
+        if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
+        await workspace.write(compData.path, comp);
+        await workspace.track({
+          rootDir: compData.path,
+          componentName: compData.id.name,
+          mainFile: comp.state._consumer.mainFile,
+        });
+        const deps = await dependencyResolver.getDependencies(comp);
+        const workspacePolicyEntries = deps.map((dep) => ({
+          dependencyId: dep.getPackageName?.() || dep.id,
+          lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
+          value: {
+            version: dep.version,
+          },
+        }));
+        dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
+      });
       await dependencyResolver.persistConfig(workspace.path);
       await workspace.writeBitMap();
     }
