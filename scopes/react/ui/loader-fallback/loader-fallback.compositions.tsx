@@ -14,7 +14,6 @@ export const ChangingComponent = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      console.log('tick');
       setCurrent((x?: ComponentType) => (x ? undefined : Component));
     }, 2000);
 
