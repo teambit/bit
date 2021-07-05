@@ -230,7 +230,7 @@
     "table": "^5.2.3",
     "tar-stream": "^2.0.1",
     "tsyringe": "^4.0.1",
-    "tty-table": "^2.8.12",
+    "cli-table": "0.3.6",
     "uid-number": "0.0.6",
     "unionfs": "^3.0.2",
     "uniqid": "^5.2.0",
