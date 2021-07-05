@@ -60,16 +60,21 @@ export class GeneratorMain {
    * workspace is not available
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    const allTemplates = this.isRunningInsideWorkspace()
-      ? this.getAllComponentTemplatesFlattened()
-      : this.getAllWorkspaceTemplatesFlattened();
-
-    return allTemplates.map(({ id, template }) => ({
+    const getTemplateDescriptor = ({
+      id,
+      template,
+    }: {
+      id: string;
+      template: WorkspaceTemplate | ComponentTemplate;
+    }) => ({
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: template.hidden,
-    }));
+    });
+    return this.isRunningInsideWorkspace()
+      ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
+      : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
   }
 
   isRunningInsideWorkspace(): boolean {
