@@ -72,9 +72,17 @@ export class WorkspaceGenerator {
             mainFile: comp.state._consumer.mainFile,
           });
           const deps = await dependencyResolver.getDependencies(comp);
-          // todo: continue to implement using deps.toDependenciesManifest()
+          const workspacePolicyEntries = deps.map((dep) => ({
+            dependencyId: dep.getPackageName?.() || dep.id,
+            lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
+            value: {
+              version: dep.version,
+            },
+          }));
+          dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
         })
       );
+      await dependencyResolver.persistConfig(workspace.path);
       await workspace.writeBitMap();
     }
     await workspace.install();
