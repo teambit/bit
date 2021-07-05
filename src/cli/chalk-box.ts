@@ -1,5 +1,5 @@
 import c from 'chalk';
-import Table from 'tty-table';
+import Table from 'cli-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
 import Component from '../consumer/component/consumer-component';
 import { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
@@ -183,8 +183,9 @@ export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): 
     return [componentId, c.yellow('tests are not defined')];
   });
 
-  const summaryTable = new Table(summaryHeader, summaryRows);
-  return summaryTable.render();
+  const summaryTable = new Table({ head: ['Component ID', 'Specs Results'], style: { head: ['cyan'] } });
+  summaryTable.push(summaryRows);
+  return summaryTable.toString();
 };
 
 export const paintBuildResults = (buildResults: []): string => {

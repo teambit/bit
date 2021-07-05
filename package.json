@@ -259,6 +259,7 @@
     "@babel/register": "^7.8.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
     "@types/bluebird": "^3.5.29",
+    "@types/cli-table": "^0.3.0",
     "@types/chai": "^4.2.9",
     "@types/chai-arrays": "^1.0.3",
     "@types/chai-fs": "^2.0.2",

@@ -1,6 +1,7 @@
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import chalk from 'chalk';
+import normalize from 'normalize-path';
 import diff from 'object-diff';
 import normalize from 'normalize-path';
 import arrayDifference from 'array-difference';

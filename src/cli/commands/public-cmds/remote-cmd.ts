@@ -1,7 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 
 import chalk from 'chalk';
-import Table from 'tty-table';
+import Table from 'cli-table';
 import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
@@ -59,20 +59,11 @@ export default class Remote implements LegacyCommand {
   report(remotes: { [key: string]: string }): string {
     if (empty(remotes)) return chalk.red('no configured remotes found in scope');
 
-    const header = [
-      { value: 'scope name', width: 30, headerColor: 'cyan' },
-      { value: 'host', width: 100, headerColor: 'cyan' }
-    ];
-    const opts = {
-      align: 'left'
-    };
-
-    const table = new Table(header, [], opts);
-
+    const table = new Table({ head: ['scope name', 'host'], style: { head: ['cyan'] } });
     forEach(remotes, (host, name) => {
       table.push([name, host]);
     });
 
-    return table.render();
+    return table.toString();
   }
 }

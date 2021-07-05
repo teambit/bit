@@ -1,29 +1,12 @@
 import c from 'chalk';
-import R from 'ramda';
 import semver from 'semver';
-import Table from 'tty-table';
+import Table from 'cli-table';
+
 import { ListScopeResult } from '../../consumer/component/components-list';
 
 type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 
 export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) => {
-  const header = [
-    { value: 'component ID', width: 70, headerColor: 'cyan', headerAlign: 'left' },
-    {
-      value: showRemoteVersion ? 'local version' : 'local version',
-      width: 9,
-      headerColor: 'cyan',
-      headerAlign: 'left'
-    },
-    { value: 'used version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
-  ];
-  if (showRemoteVersion) {
-    header.push({ value: 'remote version', width: 9, headerColor: 'cyan', headerAlign: 'left' });
-  }
-  const opts = {
-    align: 'left'
-  };
-
   function tabulateComponent(listScopeResult: ListScopeResult): Row {
     const id = listScopeResult.id.toStringWithoutVersion();
     let version = listScopeResult.id.version;
@@ -72,10 +55,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
   }
   const rows = listScopeResults.map(tabulateComponent);
 
-  const table = new Table(
-    header,
-    rows.map(row => R.values(row)),
-    opts
-  );
-  return table.render();
+  const table = new Table({ head: ['component ID', 'local version', 'used version'], style: { head: ['cyan'] } });
+  rows.map((row) => table.push(Object.values(row)));
+  return table.toString();
 };
