@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import Table from 'tty-table';
+import { CLITable } from '@teambit/cli-table';
 import { ApplicationMain } from './application.main.runtime';
 
 export class AppListCmd implements Command {
@@ -22,22 +22,7 @@ export class AppListCmd implements Command {
       return [app.name];
     });
 
-    const options = {
-      borderStyle: 'solid',
-      paddingBottom: 0,
-      headerAlign: 'center',
-      align: 'left',
-      headerColor: 'cyan',
-    };
-
-    const headers = [
-      {
-        width: 35,
-        color: 'cyan',
-      },
-    ];
-
-    const table = new Table(headers, rows, options);
+    const table = new CLITable([], rows);
     return table.render();
   }
 }

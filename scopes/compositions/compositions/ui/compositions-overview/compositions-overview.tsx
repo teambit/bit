@@ -6,14 +6,15 @@ import styles from './compositions-overview.module.scss';
 
 export type CompositionsOverviewProps = {
   compositions?: CompositionsModule;
+  compositionCardClass?: string;
 };
 
-export function CompositionsOverview({ compositions }: CompositionsOverviewProps) {
+export function CompositionsOverview({ compositions, compositionCardClass }: CompositionsOverviewProps) {
   return (
     <div className={styles.background}>
       {compositions &&
         Object.entries(compositions).map(([key, composition]) => (
-          <CompositionCard key={key} Composition={composition} name={key} />
+          <CompositionCard key={key} Composition={composition} name={key} className={compositionCardClass} />
         ))}
     </div>
   );
