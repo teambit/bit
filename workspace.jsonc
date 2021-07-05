@@ -65,6 +65,7 @@
         "@teambit/base-ui.routing.nav-link": "1.0.0",
         "@teambit/base-ui.routing.routing-provider": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
+        "@teambit/base-ui.surfaces.background": "1.0.1",
         "@teambit/base-ui.surfaces.card": "1.0.1",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "1.0.0",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "1.0.0",
@@ -334,6 +335,7 @@
     "strictPeerDependencies": true,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     "installFromBitDevRegistry": false,
+    "savePrefix": "",
     "extraArgs": []
   },
   "teambit.generator/generator": {
