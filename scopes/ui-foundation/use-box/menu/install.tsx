@@ -24,7 +24,7 @@ export function Install({ componentName, copyString, back, registryName, package
           <div>
             <Icon of="settings" />
             <span>
-              Configure <HighlightedText size="xxs">{registryName}</HighlightedText> as a Scoped Registry
+              Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
             </span>
           </div>
           <Icon of="arrow_right" />
