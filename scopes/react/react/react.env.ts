@@ -25,7 +25,6 @@ import { Configuration } from 'webpack';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import docs from '@teambit/react.ui.docs-app';
 import { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 
@@ -42,7 +41,6 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
 export const AspectEnvType = 'react';
-const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
@@ -103,9 +101,9 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jestM): Tester {
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModule);
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
   createTsCompiler(

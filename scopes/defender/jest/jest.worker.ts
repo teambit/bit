@@ -1,6 +1,6 @@
 import { stringify, parse } from 'flatted';
 import { expose } from '@teambit/worker';
-import { runCLI } from 'jest';
+import type jest from 'jest';
 
 export class JestWorker {
   private onTestCompleteCb;
@@ -10,13 +10,15 @@ export class JestWorker {
     // return this;
   }
 
-  watch(jestConfigPath: string, testFiles: string[], rootPath: string): Promise<void> {
+  watch(jestConfigPath: string, testFiles: string[], rootPath: string, jestModulePath: string): Promise<void> {
     return new Promise((resolve) => {
       // TODO: remove this after jest publish new version to npm: https://github.com/facebook/jest/pull/10804
       // eslint-disable-next-line
       console.warn = function () {};
-      // eslint-disable-next-line
+      // eslint-disable-next-line import/no-dynamic-require,global-require
       const jestConfig = require(jestConfigPath);
+      // eslint-disable-next-line import/no-dynamic-require,global-require
+      const jestModule: typeof jest = require(jestModulePath);
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: testFiles,
@@ -51,7 +53,7 @@ export class JestWorker {
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      const res = runCLI(withEnv, [jestConfigPath]);
+      const res = jestModule.runCLI(withEnv, [jestConfigPath]);
       // eslint-disable-next-line no-console
       res.catch((err) => console.error(err));
       resolve();
