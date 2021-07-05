@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
 import { loadBit } from '@teambit/bit';
+import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
@@ -65,16 +66,8 @@ export class WorkspaceGenerator {
       const componentIds = componentsToImportResolved.map((c) => c.id);
       // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
       const components = await Promise.all(componentIds.map((id) => workspace.scope.getRemoteComponent(id)));
-      const pkg = harmony.get<PkgMain>(PkgAspect.id);
-      const packageToReplace = {};
-      const scopeToReplace = workspace.defaultScope.replace('.', '/');
-      components.forEach((comp) => {
-        const currentPackageName = pkg.getPackageName(comp);
-        const newPackageName = currentPackageName.replace(comp.id.scope.replace('.', '/'), scopeToReplace);
-        packageToReplace[currentPackageName] = newPackageName;
-      });
-      const currentPackages = Object.keys(packageToReplace);
-      await Promise.all(components.map((comp) => this.replaceOriginalPackageNameWithNew(comp, packageToReplace)));
+      const oldAndNewPackageNames = this.getNewPackageNames(components, harmony, workspace);
+      await Promise.all(components.map((comp) => this.replaceOriginalPackageNameWithNew(comp, oldAndNewPackageNames)));
       await pMapSeries(components, async (comp) => {
         const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
         if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
@@ -85,6 +78,7 @@ export class WorkspaceGenerator {
           mainFile: comp.state._consumer.mainFile,
         });
         const deps = await dependencyResolver.getDependencies(comp);
+        const currentPackages = Object.keys(oldAndNewPackageNames);
         const workspacePolicyEntries = deps
           .map((dep) => ({
             dependencyId: dep.getPackageName?.() || dep.id,
@@ -100,6 +94,24 @@ export class WorkspaceGenerator {
       await workspace.writeBitMap();
     }
     await workspace.install();
+  }
+
+  private getNewPackageNames(
+    components: Component[],
+    harmony: Harmony,
+    workspace: Workspace
+  ): {
+    [oldPackageName: string]: string;
+  } {
+    const pkg = harmony.get<PkgMain>(PkgAspect.id);
+    const packageToReplace = {};
+    const scopeToReplace = workspace.defaultScope.replace('.', '/');
+    components.forEach((comp) => {
+      const currentPackageName = pkg.getPackageName(comp);
+      const newPackageName = currentPackageName.replace(comp.id.scope.replace('.', '/'), scopeToReplace);
+      packageToReplace[currentPackageName] = newPackageName;
+    });
+    return packageToReplace;
   }
 
   private async replaceOriginalPackageNameWithNew(comp: Component, packageToReplace: Record<string, string>) {
