@@ -1,7 +1,10 @@
 import fs from 'fs-extra';
+import { isBinaryFile } from 'isbinaryfile';
 import { loadBit } from '@teambit/bit';
+import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { init } from '@teambit/legacy/dist/api/consumer';
 import path from 'path';
 import { EnvsMain } from '@teambit/envs';
@@ -62,28 +65,60 @@ export class WorkspaceGenerator {
       const componentIds = componentsToImportResolved.map((c) => c.id);
       // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
       const components = await Promise.all(componentIds.map((id) => workspace.scope.getRemoteComponent(id)));
+      const pkg = harmony.get<PkgMain>(PkgAspect.id);
+      const packageToReplace = {};
+      const scopeToReplace = workspace.defaultScope.replace('.', '/');
+      components.forEach((comp) => {
+        const currentPackageName = pkg.getPackageName(comp);
+        const newPackageName = currentPackageName.replace(comp.id.scope.replace('.', '/'), scopeToReplace);
+        packageToReplace[currentPackageName] = newPackageName;
+      });
+      const currentPackages = Object.keys(packageToReplace);
+      await Promise.all(components.map((comp) => this.replaceOriginalPackageNameWithNew(comp, packageToReplace)));
       await pMapSeries(components, async (comp) => {
         const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
         if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
         await workspace.write(compData.path, comp);
         await workspace.track({
           rootDir: compData.path,
-          componentName: compData.id.name,
+          componentName: compData.id.fullName,
           mainFile: comp.state._consumer.mainFile,
         });
         const deps = await dependencyResolver.getDependencies(comp);
-        const workspacePolicyEntries = deps.map((dep) => ({
-          dependencyId: dep.getPackageName?.() || dep.id,
-          lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
-          value: {
-            version: dep.version,
-          },
-        }));
+        const workspacePolicyEntries = deps
+          .map((dep) => ({
+            dependencyId: dep.getPackageName?.() || dep.id,
+            lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
+            value: {
+              version: dep.version,
+            },
+          }))
+          .filter((entry) => !currentPackages.includes(entry.dependencyId)); // remove components that are now imported
         dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
       });
       await dependencyResolver.persistConfig(workspace.path);
       await workspace.writeBitMap();
     }
     await workspace.install();
+  }
+
+  private async replaceOriginalPackageNameWithNew(comp: Component, packageToReplace: Record<string, string>) {
+    await Promise.all(
+      comp.filesystem.files.map(async (file) => {
+        const isBinary = await isBinaryFile(file.contents);
+        if (isBinary) return;
+        const strContent = file.contents.toString();
+        let newContent = strContent;
+        Object.keys(packageToReplace).forEach((currentPackage) => {
+          if (strContent.includes(currentPackage)) {
+            const currentPkgRegex = new RegExp(currentPackage, 'g');
+            newContent = newContent.replace(currentPkgRegex, packageToReplace[currentPackage]);
+          }
+        });
+        if (strContent !== newContent) {
+          file.contents = Buffer.from(newContent);
+        }
+      })
+    );
   }
 }
