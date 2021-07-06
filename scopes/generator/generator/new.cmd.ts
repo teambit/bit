@@ -4,7 +4,7 @@ import { GeneratorMain } from './generator.main.runtime';
 
 export type NewOptions = {
   aspect?: string;
-  owner?: string;
+  defaultScope?: string;
   standalone?: boolean;
 };
 
@@ -17,7 +17,7 @@ export class NewCmd implements Command {
   group = 'start';
   options = [
     ['a', 'aspect <string>', 'aspect-id of the template. helpful when multiple aspects use the same template name'],
-    ['o', 'owner <string>', `Append the owner to any of the defaultScope in the workspace.jsonc template`],
+    ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
   ] as CommandOptions;
 
