@@ -456,7 +456,7 @@ function getEntryPointForAngularComponent(
   const content = getLinkToFileContent(component.mainFile, []);
   const filePath = ANGULAR_BIT_ENTRY_POINT_FILE.find((entryPoint) => {
     const fp = path.join(componentRoot, entryPoint);
-    return existsSync(fp);
+    return existsSync(consumer?.toAbsolutePath(fp) || fp);
   });
   if (!filePath) {
     throw new Error('Unable to find entry point for Angular component');
