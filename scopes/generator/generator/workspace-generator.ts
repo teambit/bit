@@ -3,10 +3,13 @@ import { isBinaryFile } from 'isbinaryfile';
 import { loadBit } from '@teambit/bit';
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
+import execa from 'execa';
 import pMapSeries from 'p-map-series';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { init } from '@teambit/legacy/dist/api/consumer';
+import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
+import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import path from 'path';
 import { EnvsMain } from '@teambit/envs';
 import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -37,7 +40,22 @@ export class WorkspaceGenerator {
     await this.writeWorkspaceFiles(files);
     const componentsToImport = this.template?.importComponents?.();
     await this.importAndInstall(componentsToImport);
+    await this.initGit();
     return this.workspacePath;
+  }
+
+  private async initGit() {
+    if (this.options.standalone) return;
+    const gitExecutablePath = getGitExecutablePath();
+    const params = ['init'];
+    try {
+      await execa(gitExecutablePath, params);
+    } catch (err) {
+      if (err.exitCodeName === 'ENOENT') {
+        throw new GitNotFound(gitExecutablePath, err);
+      }
+      throw err;
+    }
   }
 
   /**
