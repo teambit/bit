@@ -66,7 +66,8 @@ export class WorkspaceGenerator {
    * writes the generated template files to the default directory set in the workspace config
    */
   private async writeWorkspaceFiles(): Promise<void> {
-    const templateFiles = this.template.generateFiles({ name: this.workspaceName });
+    const workspaceContext = { name: this.workspaceName, defaultScope: this.options.defaultScope };
+    const templateFiles = this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
         await fs.writeFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
