@@ -79,6 +79,7 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
+      disableHostCheck: true,
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
         {
