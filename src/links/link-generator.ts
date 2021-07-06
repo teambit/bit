@@ -1,3 +1,4 @@
+import { existsSync } from 'fs-extra';
 import groupBy from 'lodash.groupby';
 import * as path from 'path';
 import R from 'ramda';
@@ -453,7 +454,13 @@ function getEntryPointForAngularComponent(
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
   const content = getLinkToFileContent(component.mainFile, []);
-  const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
+  const filePath = ANGULAR_BIT_ENTRY_POINT_FILE.find((entryPoint) => {
+    const fp = path.join(componentRoot, entryPoint);
+    return existsSync(consumer?.toAbsolutePath(fp) || fp);
+  });
+  if (!filePath) {
+    throw new Error('Unable to find entry point for Angular component');
+  }
   return LinkFile.load({ filePath, content, override: false });
 }
 

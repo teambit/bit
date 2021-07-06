@@ -424,7 +424,7 @@ export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
 
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
-export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+export const ANGULAR_BIT_ENTRY_POINT_FILE = ['public-api.ts', 'public_api.ts'];
 
 export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
 
