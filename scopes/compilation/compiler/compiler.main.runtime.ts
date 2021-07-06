@@ -27,7 +27,7 @@ export class CompilerMain {
   ) {}
 
   compileOnWorkspace(
-    componentsIds: string[] | BitId[], // when empty, it compiles all
+    componentsIds: string[] | BitId[] = [], // when empty, it compiles all
     options: CompileOptions = {}
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
