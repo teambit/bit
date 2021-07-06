@@ -18,6 +18,11 @@ export interface WorkspaceContext {
   name: string;
 }
 
+export interface ComponentToImport {
+  id: string;
+  path: string;
+}
+
 export interface WorkspaceTemplate {
   /**
    * name of the workspace template. for example: `react-workspace`.
@@ -38,4 +43,6 @@ export interface WorkspaceTemplate {
    * template function for generating the template files,
    */
   generateFiles(context: WorkspaceContext): WorkspaceFile[];
+
+  importComponents?: () => ComponentToImport[];
 }

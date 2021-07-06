@@ -40,7 +40,7 @@ export class ComponentGenerator {
       }
     });
 
-    await this.workspace.consumer.writeBitMap();
+    await this.workspace.writeBitMap();
 
     return generateResults;
   }
