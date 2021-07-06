@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Card } from '@teambit/base-ui.surfaces.card';
+import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { colorPalette } from '@teambit/base-ui.theme.accent-color';
 import { CompositionType } from '@teambit/compositions.model.composition-type';
 import { ErrorFallback, ErrorFallbackProps } from '@teambit/react.ui.error-fallback';
@@ -10,19 +10,19 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { themedText } from '@teambit/base-ui.text.themed-text';
 import styles from './composition-card.module.scss';
 
-export type CompositionCardProps = {
+export interface CompositionCardProps extends CardProps {
   Composition: CompositionType;
   name: string;
   link?: string;
 };
 
-export function CompositionCard({ Composition, name, link }: CompositionCardProps) {
+export function CompositionCard({ Composition, name, link, className, ...rest }: CompositionCardProps) {
   const { canvas } = Composition;
 
   const humanizedName = useMemo(() => humanizeCompositionId(name), [name]);
 
   return (
-    <Card elevation="low" className={classNames(styles.compositionCard)}>
+    <Card elevation="low" className={classNames(className, styles.compositionCard)} {...rest}>
       <ErrorBoundary FallbackComponent={CompositionErrorFallback}>
         <div style={canvas} className={styles.compositionContainer}>
           <Composition />

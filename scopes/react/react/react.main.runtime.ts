@@ -24,7 +24,6 @@ import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
-import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -200,10 +199,11 @@ export class ReactMain {
   /**
    * override the jest configuration.
    * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
+   * @param jestModulePath absolute path to jest
    */
-  overrideJestConfig(jestConfigPath: string, jestModule: any = jest) {
+  overrideJestConfig(jestConfigPath: string, jestModulePath?: string) {
     return this.envs.override({
-      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
+      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
     });
   }
 

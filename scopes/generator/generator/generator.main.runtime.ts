@@ -5,7 +5,6 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { loadBit } from '@teambit/bit';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
@@ -61,16 +60,21 @@ export class GeneratorMain {
    * workspace is not available
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    const allTemplates = this.isRunningInsideWorkspace()
-      ? this.getAllComponentTemplatesFlattened()
-      : this.getAllWorkspaceTemplatesFlattened();
-
-    return allTemplates.map(({ id, template }) => ({
+    const getTemplateDescriptor = ({
+      id,
+      template,
+    }: {
+      id: string;
+      template: WorkspaceTemplate | ComponentTemplate;
+    }) => ({
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: template.hidden,
-    }));
+    });
+    return this.isRunningInsideWorkspace()
+      ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
+      : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
   }
 
   isRunningInsideWorkspace(): boolean {
@@ -139,15 +143,8 @@ export class GeneratorMain {
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
     const workspacePath = await workspaceGenerator.generate();
-    await this.runInstallOnTheNewWorkspace(workspacePath);
-    return workspacePath;
-  }
 
-  private async runInstallOnTheNewWorkspace(workspacePath: string) {
-    process.chdir(workspacePath);
-    const harmony = await loadBit(workspacePath);
-    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    await workspace.install();
+    return workspacePath;
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {

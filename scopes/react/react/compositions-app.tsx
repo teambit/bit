@@ -6,6 +6,9 @@ import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ReactAspect } from './react.aspect';
 
+// hide scrollbars so they won't be visible in the preview at the component card (and it's ok not to show them in the compositions page)
+const hideScrollbars = 'body::-webkit-scrollbar {display: none;}';
+
 export function CompositionsApp({
   Composition = StandaloneNotFoundPage,
   previewContext,
@@ -19,6 +22,7 @@ export function CompositionsApp({
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
       <Composer components={providers}>
+        <style>{hideScrollbars}</style>
         <Composition />
       </Composer>
     </ErrorBoundary>
