@@ -1,13 +1,13 @@
 import { WorkspaceContext } from '@teambit/generator';
 
-export function workspaceConfig({ name }: WorkspaceContext) {
+export function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const data = {
     $schema: 'https://static.bit.dev/teambit/schemas/schema.json',
     'teambit.workspace/workspace': {
       name,
       icon: 'https://static.bit.dev/bit-logo.svg',
       defaultDirectory: '{scope}/{name}',
-      defaultScope: 'my-scope',
+      defaultScope: defaultScope || 'my-scope',
     },
     'teambit.dependencies/dependency-resolver': {
       packageManager: 'teambit.dependencies/pnpm',
