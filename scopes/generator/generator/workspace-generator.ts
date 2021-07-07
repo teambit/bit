@@ -70,7 +70,7 @@ export class WorkspaceGenerator {
     const templateFiles = this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
-        await fs.writeFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
+        await fs.outputFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
       })
     );
   }
