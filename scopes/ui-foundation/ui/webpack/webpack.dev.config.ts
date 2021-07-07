@@ -10,7 +10,7 @@ const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMi
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
-const { default: html } = require('./html');
+const { html } = require('./html');
 
 /*
  * Webpack config for the bit ui
