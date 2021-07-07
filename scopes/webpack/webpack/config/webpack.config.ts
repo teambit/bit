@@ -3,8 +3,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
-
-const html = require('./html');
+import { html } from './html';
 
 export function configFactory(entries: string[], rootPath: string): Configuration {
   return {
