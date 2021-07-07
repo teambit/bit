@@ -440,7 +440,7 @@ export const HASH_SIZE = 40;
 // @todo: decide how the delimiter should look like
 export const LANE_REMOTE_DELIMITER = '/';
 
-export const DEFAULT_LANE = 'master';
+export const DEFAULT_LANE = 'main';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';

@@ -21,7 +21,7 @@ export default class Lanes {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    if (id.isDefault()) return null; // master lane is not saved
+    if (id.isDefault()) return null; // main lane is not saved
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
     const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
     if (!hash) return null;
