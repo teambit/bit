@@ -442,7 +442,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapAllComponents();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
+      output = helper.general.runWithTryCatch('bit tag bar/foo');
     });
     it('should block the tag and suggest to switch to master and merge the changes', () => {
       expect(output).to.have.string(
