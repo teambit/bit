@@ -79,6 +79,9 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
+      // @ts-ignore - temp until types of webpack-dev-server v4
+      firewall: false,
+
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
         {

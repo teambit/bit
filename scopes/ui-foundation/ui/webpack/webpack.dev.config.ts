@@ -98,6 +98,9 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     stats: 'errors-only',
 
     devServer: {
+      // @ts-ignore - temp until types of webpack-dev-server v4
+      firewall: false,
+
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
