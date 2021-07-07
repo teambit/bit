@@ -90,7 +90,6 @@ ${WILDCARD_HELP('tag')}`;
       disableTagPipeline?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
-    console.log('version', ver);
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (soft) build = false;
     function getVersion(): string | undefined {
@@ -130,7 +129,7 @@ ${WILDCARD_HELP('tag')}`;
 
     const params = {
       ids: id,
-      all,
+      all: Boolean(all),
       message,
       exactVersion: getVersion(),
       releaseType,
