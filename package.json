@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.115",
+  "version": "1.0.116",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -180,7 +180,7 @@
     "lodash.unionby": "4.8.0",
     "lru-cache": "6.0.0",
     "make-fetch-happen": "4.0.2",
-    "memfs": "2.17.1",
+    "memfs": "3.2.2",
     "minimatch": "3.0.4",
     "mockery": "2.1.0",
     "module-definition": "3.3.1",

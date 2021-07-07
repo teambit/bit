@@ -7192,7 +7192,7 @@ __metadata:
     lru-cache: 6.0.0
     make-fetch-happen: 4.0.2
     map-obj: 4.2.1
-    memfs: 2.17.1
+    memfs: 3.2.2
     memoize-one: 5.1.1
     memoizee: 0.4.15
     memory-fs: 0.5.0
@@ -7360,6 +7360,7 @@ __metadata:
     yn: 2.0.0
   peerDependencies:
     "@teambit/legacy": 1.0.115
+    jest: 26.6.3
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -23965,7 +23966,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"memfs@npm:^3.2.0, memfs@npm:^3.2.2":
+"memfs@npm:3.2.2, memfs@npm:^3.2.0, memfs@npm:^3.2.2":
   version: 3.2.2
   resolution: "memfs@npm:3.2.2"
   dependencies:

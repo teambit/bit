@@ -240,6 +240,8 @@ export default class ComponentWriter {
         if (!(artifactFiles instanceof ArtifactFiles)) {
           artifactFiles = deserializeArtifactFiles(artifactFiles);
         }
+        // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
+        // see artifact-files.importMultipleDistsArtifacts().
         const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })

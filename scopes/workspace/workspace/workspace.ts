@@ -457,7 +457,7 @@ export class Workspace implements ComponentFactory {
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
     // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.consumer.bitMap.write(this.consumer.componentFsCache);
+    await this.writeBitMap();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
@@ -606,7 +606,7 @@ export class Workspace implements ComponentFactory {
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.consumer.writeBitMap();"
+   * to write the .bitmap file once completed, run "await this.writeBitMap();"
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const addComponent = new AddComponents(
@@ -618,6 +618,19 @@ export class Workspace implements ComponentFactory {
     const componentName = addedComponent?.id.name || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
+  }
+
+  async write(rootPath: string, component: Component) {
+    await Promise.all(
+      component.filesystem.files.map(async (file) => {
+        const pathToWrite = path.join(this.path, rootPath, file.path);
+        await fs.outputFile(pathToWrite, file.contents);
+      })
+    );
+  }
+
+  async writeBitMap() {
+    await this.consumer.writeBitMap();
   }
 
   /**

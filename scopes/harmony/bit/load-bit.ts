@@ -244,7 +244,7 @@ function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) 
  * of the previous workspace, which leads to hard-to-debug issues.
  */
 function clearGlobalsIfNeeded() {
-  if (!loadConsumer.cache) {
+  if (!loadConsumer.cache && !PackageJsonTransformer.packageJsonTransformersRegistry.length) {
     return;
   }
   delete loadConsumer.cache;

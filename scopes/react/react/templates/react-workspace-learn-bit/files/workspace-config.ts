@@ -7,7 +7,7 @@ export function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
       name,
       icon: 'https://static.bit.dev/bit-logo.svg',
       defaultDirectory: '{scope}/{name}',
-      defaultScope: defaultScope || 'my-scope',
+      defaultScope: defaultScope || 'owner.collection',
     },
     'teambit.dependencies/dependency-resolver': {
       packageManager: 'teambit.dependencies/pnpm',
