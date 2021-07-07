@@ -145,8 +145,8 @@ describe('bit tag command', function () {
         });
       });
       it('Should throw error when the version already exists', () => {
-        helper.command.tagComponent('components/exact --version 5.5.5', 'message', '-f');
-        const tagWithExisting = () => helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
+        helper.command.tagComponent('components/exact --ver 5.5.5', 'message', '-f');
+        const tagWithExisting = () => helper.command.tagComponent('components/exact --ver 5.5.5', 'message', '-f');
         const error = new VersionAlreadyExists('5.5.5', 'components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
       });
