@@ -734,7 +734,7 @@ export default class Consumer {
       return componentMap.rootDir;
     };
     const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMaster = async (component: ModelComponent | Component): Promise<boolean> => {
+    const isAvailableOnMain = async (component: ModelComponent | Component): Promise<boolean> => {
       if (currentLane.isDefault()) return true;
       const modelComponent =
         component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
@@ -747,8 +747,8 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const availableOnMaster = await isAvailableOnMaster(unknownComponent);
-      if (!availableOnMaster) {
+      const availableOnMain = await isAvailableOnMain(unknownComponent);
+      if (!availableOnMain) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);

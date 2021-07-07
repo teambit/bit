@@ -299,7 +299,7 @@ describe('bit snap command', function () {
           it('should add a descriptive message about the merge', () => {
             const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
             expect(lastVersion.log.message).to.have.string('merge remote');
-            expect(lastVersion.log.message).to.have.string('master');
+            expect(lastVersion.log.message).to.have.string('main');
           });
           it('should update bitmap snap', () => {
             const head = helper.command.getHead('bar/foo');
@@ -385,7 +385,7 @@ describe('bit snap command', function () {
         it('should add a descriptive message about the merge', () => {
           const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
           expect(lastVersion.log.message).to.have.string('merge remote');
-          expect(lastVersion.log.message).to.have.string('master');
+          expect(lastVersion.log.message).to.have.string('main');
         });
         it('should update bitmap snap', () => {
           const head = helper.command.getHead('bar/foo');
@@ -406,7 +406,7 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/master)`);
+          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/main)`);
           expect(content).to.have.string(fixtures.fooFixtureV2);
           expect(content).to.have.string('=======');
           expect(content).to.have.string(fixtures.fooFixtureV3);

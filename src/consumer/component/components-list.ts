@@ -424,8 +424,8 @@ export default class ComponentsList {
     if (includeNested) return listScopeResults;
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
-      if (!componentMap.onLanesOnly) return true; // component is on master, always show it
-      if (!currentLane) return false; // if !currentLane the user is on master, don't show it.
+      if (!componentMap.onLanesOnly) return true; // component is on main, always show it
+      if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };
     return listScopeResults.filter((listResult) => {
