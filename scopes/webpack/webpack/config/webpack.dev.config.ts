@@ -11,7 +11,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 
-import html from './html';
+import { html } from './html';
 
 import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';

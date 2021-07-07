@@ -1,5 +1,5 @@
 /** fallback html template for the main UI, in case ssr is not active */
-export default function html(title: string, withDevTools?: boolean) {
+export function html(title: string, withDevTools?: boolean) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">

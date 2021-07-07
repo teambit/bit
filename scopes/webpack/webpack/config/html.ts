@@ -1,5 +1,5 @@
 /** html template for Previews (docs, compositions, etc) */
-export default function html(title: string) {
+export function html(title: string) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">
