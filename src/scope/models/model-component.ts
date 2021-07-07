@@ -96,10 +96,10 @@ export default class Component extends BitObject {
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
-  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote main head
   /**
    * doesn't get saved in the scope, used to easier access the local snap head data
-   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this
    * prop is undefined.
    */
   laneHeadLocal?: Ref | null;
@@ -245,7 +245,7 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
-      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
@@ -300,7 +300,7 @@ export default class Component extends BitObject {
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
-    // backward compatibility. components created before v15 have master without head
+    // backward compatibility. components created before v15 have main without head
     // @ts-ignore
     return semver.maxSatisfying(this.listVersions(), '*', { includePrerelease: true });
   }
@@ -309,9 +309,9 @@ export default class Component extends BitObject {
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
    * `this.head` may not be populated, e.g. when a component was created on
-   * this lane and never got snapped on master.
+   * this lane and never got snapped on main.
    * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
-   * on master, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
+   * on main, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async latestIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
@@ -320,7 +320,7 @@ export default class Component extends BitObject {
     if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
-    // either a user is on master or a lane, check whether the remote is ahead of the local
+    // either a user is on main or a lane, check whether the remote is ahead of the local
     const allLocalHashes = await getAllVersionHashes(this, repo, false);
     const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
     if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
@@ -461,7 +461,7 @@ export default class Component extends BitObject {
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new GeneralError(
-          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+          'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
       const versionToAddRef = Ref.from(versionToAdd);
@@ -475,7 +475,7 @@ export default class Component extends BitObject {
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;
     }
-    // user on master
+    // user on main
     const head = this.getHead();
     if (
       head &&
@@ -835,12 +835,12 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }
-    // when on master, no need to traverse the parents because local snaps/tags are saved in the
+    // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
-    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;

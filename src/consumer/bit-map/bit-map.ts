@@ -33,15 +33,15 @@ export const CURRENT_BITMAP_SCHEMA = '14.9.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 /**
- * When working on lanes, a component version can be different than the master.
- * For example, when tagging 1.0.0 on master, then switching to a new lane and snapping.
- * The version saved in .bitmap file is the one of master (in this case 1.0.0).
+ * When working on lanes, a component version can be different than the main.
+ * For example, when tagging 1.0.0 on main, then switching to a new lane and snapping.
+ * The version saved in .bitmap file is the one of main (in this case 1.0.0).
  * The hash of the snap is saved on the 'workspace-lane' file.
  * These files are saved in .bit/workspace/lanes/<lane-name> directory, and they're not get
  * synched by Git.
  * Once a lane is exported to a remote scope, then .bitmap gets a new property
  * "lanes" array that includes the remote-lane-id and the version hash.
- * Still, the version on the ID doesn't get changed and it reflects the master version.
+ * Still, the version on the ID doesn't get changed and it reflects the main version.
  * Since all operations on .bitmap are not aware of this new workspace-lane file and the "lanes" prop,
  * we do a manipulation when loading and when saving the .bitmap file.
  * When loading .bitmap file, it also loads the workspace-lane of the active lane if exists.
@@ -886,7 +886,7 @@ export default class BitMap {
         // if not exist, we still need these properties so we know later to parse them correctly.
         componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
         componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
-        // change back the id to the master id, so the local lanes data won't be saved in .bitmap
+        // change back the id to the main id, so the local lanes data won't be saved in .bitmap
         if (componentMapCloned.defaultVersion) {
           componentMapCloned.version = componentMapCloned.defaultVersion;
         }
