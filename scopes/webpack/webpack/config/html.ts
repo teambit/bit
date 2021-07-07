@@ -1,5 +1,5 @@
 /** html template for Previews (docs, compositions, etc) */
-module.exports = function html(title: string) {
+export default function html(title: string) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">
@@ -19,4 +19,4 @@ module.exports = function html(title: string) {
     </body>
   </html>  
   `;
-};
+}
