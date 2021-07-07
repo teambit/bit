@@ -114,11 +114,11 @@ describe('bit tag command', function () {
       it('Should set the exact version when specified on new component', () => {
         helper.fs.createFile('components', 'exact-new.js');
         helper.command.addComponent('components/exact-new.js', { i: 'components/exact-new' });
-        output = helper.command.tagComponent('components/exact-new 5.12.10', 'message', '-f');
+        output = helper.command.tagComponent('components/exact-new@5.12.10', 'message', '-f');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        output = helper.command.tagComponent('components/exact 3.3.3', 'message', '-f');
+        output = helper.command.tagComponent('components/exact@3.3.3', 'message', '-f');
         expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
@@ -145,7 +145,7 @@ describe('bit tag command', function () {
         });
       });
       it('Should throw error when the version already exists', () => {
-        helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
+        helper.command.tagComponent('components/exact --version 5.5.5', 'message', '-f');
         const tagWithExisting = () => helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
         const error = new VersionAlreadyExists('5.5.5', 'components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
@@ -244,7 +244,7 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists in one of the components', () => {
         helper.fs.createFile('components', 'a.js', 'console.log("v4.3.4")');
         helper.fs.createFile('components', 'b.js', 'console.log("v4.3.4")');
-        helper.command.tagComponent('components/a 4.3.4', 'message');
+        helper.command.tagComponent('components/a@4.3.4', 'message');
         helper.fs.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
         const tagWithExisting = () => helper.command.tagAllComponents('', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
@@ -869,7 +869,7 @@ describe('bit tag command', function () {
       describe('when one of the components has the same version', () => {
         let output;
         before(() => {
-          helper.command.tagComponent('bar/foo 0.0.8', 'msg', '--force');
+          helper.command.tagComponent('bar/foo@0.0.8', 'msg', '--force');
           try {
             helper.command.tagAllComponents('--scope 0.0.8');
           } catch (err) {
@@ -883,7 +883,7 @@ describe('bit tag command', function () {
       describe('when one of the components has a greater version', () => {
         let output;
         before(() => {
-          helper.command.tagComponent('bar/foo 0.1.5', 'msg', '--force');
+          helper.command.tagComponent('bar/foo@0.1.5', 'msg', '--force');
           output = helper.command.tagScope('0.1.4', 'msg');
         });
         it('should display a warning', () => {

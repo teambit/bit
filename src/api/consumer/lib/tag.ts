@@ -1,5 +1,6 @@
 import R from 'ramda';
 import semver from 'semver';
+import { compact } from 'lodash';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from '../../../constants';
@@ -46,16 +47,16 @@ type TagParams = {
   releaseType: semver.ReleaseType;
   ignoreUnresolvedDependencies: boolean;
   ignoreNewestVersion: boolean;
-  id: string;
+  ids: string[];
   all: boolean;
   scope?: string | boolean;
   includeImported: boolean;
   incrementBy: number;
 } & BasicTagParams;
 
-export async function tagAction(tagParams: TagParams) {
+export async function tagAction(tagParams: TagParams): Promise<TagResults | null> {
   const {
-    id,
+    ids,
     all,
     exactVersion,
     releaseType,
@@ -65,11 +66,8 @@ export async function tagAction(tagParams: TagParams) {
     includeImported,
     persist,
   } = tagParams;
-
-  const idHasWildcard = hasWildcard(id);
-
-  const isAll = Boolean(all || scope || idHasWildcard);
-
+  const idsHasWildcard = hasWildcard(ids);
+  const isAll = Boolean(all || scope || idsHasWildcard);
   const validExactVersion = validateVersion(exactVersion);
   const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
@@ -84,8 +82,7 @@ export async function tagAction(tagParams: TagParams) {
     includeImported,
     persist,
     force,
-    isAll,
-    id
+    ids
   );
   if (R.isEmpty(bitIds)) return null;
 
@@ -121,28 +118,39 @@ async function getComponentsToTag(
   includeImported: boolean,
   persist: boolean,
   force: boolean,
-  isAll: boolean,
-  id?: string
+  ids: string[]
 ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
   const warnings: string[] = [];
-  const idHasWildcard = id && hasWildcard(id);
-  if (id && !idHasWildcard) {
-    const bitId = consumer.getParsedId(id);
-    if (!force) {
-      const componentStatus = await consumer.getComponentStatusById(bitId);
-      if (componentStatus.modified === false) return { bitIds: [], warnings };
-    }
-    return { bitIds: [bitId], warnings };
-  }
   const componentsList = new ComponentsList(consumer);
-  const softTaggedComponents = componentsList.listSoftTaggedComponents();
-  if (!isAll && persist) {
+  if (persist) {
+    const softTaggedComponents = componentsList.listSoftTaggedComponents();
     return { bitIds: softTaggedComponents, warnings: [] };
   }
 
   const tagPendingComponents = isAllScope
     ? await componentsList.listTagPendingOfAllScope(includeImported)
     : await componentsList.listTagPendingComponents();
+
+  if (ids.length) {
+    const bitIds = await Promise.all(
+      ids.map(async (id) => {
+        const [idWithoutVer, version] = id.split('@');
+        const idHasWildcard = hasWildcard(id);
+        if (idHasWildcard) {
+          const allIds = ComponentsList.filterComponentsByWildcard(tagPendingComponents, idWithoutVer);
+          return allIds.map((bitId) => bitId.changeVersion(version));
+        }
+        const bitId = consumer.getParsedId(idWithoutVer);
+        if (!force) {
+          const componentStatus = await consumer.getComponentStatusById(bitId);
+          if (componentStatus.modified === false) return null;
+        }
+        return bitId.changeVersion(version);
+      })
+    );
+
+    return { bitIds: compact(bitIds.flat()), warnings };
+  }
 
   if (isAllScope && exactVersion) {
     const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
@@ -153,19 +161,5 @@ async function getComponentsToTag(
     });
   }
 
-  if (persist) {
-    // add soft-tagged into the tag-pending if not already exist
-    softTaggedComponents.forEach((bitId) => {
-      if (!tagPendingComponents.find((t) => t.isEqual(bitId))) {
-        softTaggedComponents.push(bitId);
-      }
-    });
-  }
-
-  if (idHasWildcard) {
-    const bitIds = ComponentsList.filterComponentsByWildcard(tagPendingComponents, id as string);
-    return { bitIds, warnings };
-  }
-
-  return { bitIds: tagPendingComponents, warnings };
+  return { bitIds: tagPendingComponents.map((id) => id.changeVersion(undefined)), warnings };
 }

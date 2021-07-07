@@ -657,6 +657,7 @@ export default class Consumer {
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
+      ids,
       ignoreNewestVersion: false,
       scope: this.scope,
       message,
@@ -678,7 +679,7 @@ export default class Consumer {
   }
 
   async _loadComponentsForTag(ids: BitIds): Promise<Component[]> {
-    const { components } = await this.loadComponents(ids);
+    const { components } = await this.loadComponents(ids.toVersionLatest());
     if (this.isLegacy) {
       return components;
     }
