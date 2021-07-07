@@ -18,7 +18,9 @@ type FileTreeProps = {
  */
 export function FileTree({ files, onSelect, selected, TreeNode, ...rest }: FileTreeProps) {
   const rootNode = useMemo(() => {
-    const tree = inflateToTree(files, (c) => c);
+    // make sure that Windows paths are converted to posix
+    const filePaths = files.map((f) => f.replace(/\\/g, '/'));
+    const tree = inflateToTree(filePaths, (c) => c);
     return tree;
   }, [files]);
 
