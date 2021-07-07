@@ -1,0 +1,33 @@
+import { LoaderFallback } from './loader-fallback';
+
+Renders a component, and show a placeholder when it is undefined.
+
+Logic is as follows:
+
+1. when component is defined -> render it
+1. when the initial value of the component is undefined -> show the default immediately
+1. when the component had just changed to be undefined -> show Loader for _x_ seconds
+   1. then, after _x_ seconds - show NotFound
+
+<!-- live playground doesn't keep state when editing :( -->
+<!-- Try it out:
+
+```tsx live
+function Example() {
+  return (
+    <LoaderFallback
+      Target={RegularComponent} // comment this out
+      DefaultComponent={Fallback}
+      timeout={2000}
+    />
+  );
+
+  function RegularComponent() {
+    return <div>regular component</div>;
+  }
+
+  function Fallback() {
+    return <div>this shows when component is undefined</div>;
+  }
+}
+``` -->
