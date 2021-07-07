@@ -335,7 +335,6 @@
     "strictPeerDependencies": true,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     "installFromBitDevRegistry": false,
-    "savePrefix": "",
     "extraArgs": []
   },
   "teambit.generator/generator": {
