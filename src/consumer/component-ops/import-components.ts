@@ -46,7 +46,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
-  skipLane?: boolean; // save on master instead of current lane
+  skipLane?: boolean; // save on main instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
 };
 type ComponentMergeStatus = {
@@ -542,7 +542,7 @@ export default class ImportComponents {
     }
     const currentLane = await this.consumer.getCurrentLaneObject();
     if (!currentLane) {
-      return; // user on master
+      return; // user on main
     }
     await Promise.all(
       componentsWithDependencies.map(async (compWithDeps) => {

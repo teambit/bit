@@ -68,7 +68,7 @@ Summary of when/what lanes data is saved per command:
 - `bit switch --create`: creates a new lane-object.
 - `bit snap`: adds an entry to the lane-object and to the workspace-lane.
 - `bit export`: 1) deletes all records from workspace-lane (as they're in sync with the remote). 2) pushes the lane-object to the remote. On the remote, the lane-object is created or updated/merged.
-- `bit import/fetch`: 1) creates/updates lane-object in the scope. 2) creates/updates remote-lane. the remote-lane is updated also for master.
+- `bit import/fetch`: 1) creates/updates lane-object in the scope. 2) creates/updates remote-lane. the remote-lane is updated also for main.
 
 ### Merge during import
 
