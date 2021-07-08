@@ -612,8 +612,8 @@
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)
             "react-native-web": "0.14.13",
-            "react": "16.14.0",
-            "react-dom": "16.14.0",
+            "react": "17.0.2",
+            "react-dom": "17.0.2",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.2.9",
