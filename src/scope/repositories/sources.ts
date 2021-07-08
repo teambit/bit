@@ -138,7 +138,8 @@ export default class SourceRepository {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
-    const version = await this.objects().load(versionHash);
+    const version = (await this.objects().load(versionHash)) as Version;
+    version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
     if (!version) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
       return undefined;
