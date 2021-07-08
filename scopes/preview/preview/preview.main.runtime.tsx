@@ -118,9 +118,11 @@ export class PreviewMain {
     /** execution context (of the specific env) */
     context: ExecutionContext
   ): Promise<string[]> {
-    // store context for later link file updates
-    this.execContexts.set(context.id, context);
-    this.componentsByAspect.set(context.id, new RuntimeComponents(context.components));
+    // store context for later link-file updates
+    // also register related envs that this context is acting on their behalf
+    [context.id, ...context.relatedContexts].forEach((ctxId) => {
+      this.componentsByAspect.set(ctxId, new RuntimeComponents(context.components, context));
+    });
 
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
@@ -202,14 +204,13 @@ export class PreviewMain {
     const env = this.envs.getEnv(c);
     const envId = env.id.toString();
 
-    const executionContext = this.execContexts.get(envId);
     const components = this.componentsByAspect.get(envId);
-    if (!components || !executionContext) return noopResult;
+    if (!components) return noopResult;
 
     // add / remove / etc
     updater(components);
 
-    await this.updateLinkFiles(components.components, executionContext);
+    await this.updateLinkFiles(components.components, components.executionCtx);
 
     return noopResult;
   };

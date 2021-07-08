@@ -1,8 +1,9 @@
 import { Component, ComponentID } from '@teambit/component';
+import type { ExecutionContext } from '@teambit/envs';
 
 // TODO - use workspace.list() instead of this
 export class RuntimeComponents {
-  constructor(public components: Component[] = []) {}
+  constructor(public components: Component[] = [], public executionCtx: ExecutionContext) {}
   add(added: Component) {
     this.components = this.components.concat(added);
   }
