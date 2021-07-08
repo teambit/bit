@@ -187,7 +187,7 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   const component = await consumer.loadComponent(existingBitMapId);
   const isModified = await consumer.isComponentModified(baseComponent, component);
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  const isHeadSameAsMaster = () => {
+  const isHeadSameAsMain = () => {
     const head = modelComponent.getHead();
     if (!head) return false;
     if (!existingBitMapId.version) return false;
@@ -196,14 +196,14 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     return existingBitMapId.version === headVersion;
   };
   if (isModified) {
-    if (!isHeadSameAsMaster()) {
+    if (!isHeadSameAsMain()) {
       throw new GeneralError(
         `unable to checkout ${id.toStringWithoutVersion()}, the component is modified and belongs to another lane`
       );
     }
 
     const currentComponent: Version = await modelComponent.loadVersion(
-      existingBitMapId.version as string, // we are here because the head is same as master. so, existingBitMapId.version must be set
+      existingBitMapId.version as string, // we are here because the head is same as main. so, existingBitMapId.version must be set
       consumer.scope.objects
     );
     mergeResults = await threeWayMerge({

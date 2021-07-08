@@ -68,7 +68,7 @@ describe('harmony extension config', function () {
       });
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
-          output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
+          output = helper.general.runWithTryCatch('bit tag bar/foo');
           expect(output).to.have.string('has a dependency "dummy-extension"');
           expect(output).to.have.string('this dependency was not included in the tag command');
         });

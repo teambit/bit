@@ -42,9 +42,9 @@ describe('update-dependencies command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagComponent('comp1', undefined, '1.0.5 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.0.5', undefined, '--skip-auto-tag');
       helper.fixtures.populateComponents(1, undefined, ' v3');
-      helper.command.tagComponent('comp1', undefined, '1.1.0 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.1.0', undefined, '--skip-auto-tag');
       helper.command.export();
       secondScopeBeforeUpdate = helper.scopeHelper.cloneScope(secondRemotePath);
     });
