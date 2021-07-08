@@ -74,6 +74,7 @@ async function setFutureVersions(
   exactVersion: string | null | undefined,
   persist: boolean,
   autoTagIds: BitIds,
+  ids: BitIds,
   incrementBy?: number,
   preRelease?: string
 ): Promise<void> {
@@ -92,10 +93,19 @@ async function setFutureVersions(
           undefined,
           componentToTag.componentMap?.nextVersion?.preRelease
         );
+      } else if (isAutoTag) {
+        componentToTag.version = modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease); // auto-tag always bumped as patch
       } else {
-        componentToTag.version = isAutoTag
-          ? modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease) // auto-tag always bumped as patch
-          : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
+        const enteredId = ids.searchWithoutVersion(componentToTag.id);
+        if (enteredId && enteredId.hasVersion()) {
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
+          componentToTag.version = modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion
+          );
+        } else {
+          componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
+        }
       }
     })
   );
@@ -170,6 +180,7 @@ function validateDirManipulation(components: Component[]): void {
 
 export default async function tagModelComponent({
   consumerComponents,
+  ids,
   scope,
   message,
   exactVersion,
@@ -191,6 +202,7 @@ export default async function tagModelComponent({
   incrementBy,
 }: {
   consumerComponents: Component[];
+  ids: BitIds;
   scope: Scope;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -289,6 +301,7 @@ export default async function tagModelComponent({
         exactVersion,
         persist,
         autoTagIds,
+        ids,
         incrementBy,
         preRelease
       );
