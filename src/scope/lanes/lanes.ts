@@ -33,7 +33,10 @@ export default class Lanes {
   }
 
   getCurrentLaneName(): string {
-    return this.scopeJson.lanes.current;
+    const laneName = this.scopeJson.lanes.current;
+    // backward compatibility, in the past, the default lane was master
+    if (laneName === 'master') return DEFAULT_LANE;
+    return laneName;
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
