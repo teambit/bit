@@ -3,7 +3,7 @@ import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext, hasCompiler } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
@@ -11,7 +11,6 @@ import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
-import { Compiler } from '@teambit/compiler';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -139,11 +138,12 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const environment = context.envRuntime.env;
-      const compilerInstance: Compiler = environment.getCompiler?.();
+
+      const compilerInstance = hasCompiler(environment) && environment.getCompiler();
       const withPaths = map.map<string[]>((files, component) => {
         const modulePath = this.pkg.getModulePath(component);
         return files.map((file) => {
-          if (!this.workspace) {
+          if (!this.workspace || !compilerInstance) {
             return file.path;
           }
           const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
