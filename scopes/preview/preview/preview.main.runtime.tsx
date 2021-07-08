@@ -15,6 +15,7 @@ import { Compiler } from '@teambit/compiler';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -69,7 +70,9 @@ export class PreviewMain {
 
     private builder: BuilderMain,
 
-    private workspace?: Workspace
+    private workspace: Workspace | undefined,
+
+    private logger: Logger
   ) {}
 
   get tempFolder(): string {
@@ -111,7 +114,6 @@ export class PreviewMain {
     return targetPath;
   }
 
-  private execContexts = new Map<string, ExecutionContext>();
   private componentsByAspect = new Map<string, RuntimeComponents>();
 
   private async getPreviewTarget(
@@ -205,7 +207,12 @@ export class PreviewMain {
     const envId = env.id.toString();
 
     const components = this.componentsByAspect.get(envId);
-    if (!components) return noopResult;
+    if (!components) {
+      this.logger.warn(
+        `failed to update link file for component "${c.id.toString()}" - could not find execution context for ${envId}`
+      );
+      return noopResult;
+    }
 
     // add / remove / etc
     updater(components);
@@ -270,6 +277,7 @@ export class PreviewMain {
     PkgAspect,
     PubsubAspect,
     AspectLoaderAspect,
+    LoggerAspect,
   ];
 
   static defaultConfig = {
@@ -278,7 +286,7 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader, loggerMain]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
@@ -287,12 +295,15 @@ export class PreviewMain {
       Workspace | undefined,
       PkgMain,
       PubsubMain,
-      AspectLoaderMain
+      AspectLoaderMain,
+      LoggerMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
     harmony: Harmony
   ) {
+    const logger = loggerMain.createLogger(PreviewAspect.id);
+
     const preview = new PreviewMain(
       harmony,
       previewSlot,
@@ -303,7 +314,8 @@ export class PreviewMain {
       config,
       bundlingStrategySlot,
       builder,
-      workspace
+      workspace,
+      logger
     );
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
