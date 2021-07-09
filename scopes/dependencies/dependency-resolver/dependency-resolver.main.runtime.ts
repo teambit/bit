@@ -325,7 +325,12 @@ export class DependencyResolverMain {
     if (!entry) {
       return DependencyList.fromArray([]);
     }
-    const serializedDependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
+    const policy = entry?.data?.policy || [];
+    serializedDependencies.forEach((dep) => {
+      const policyRecord = policy.find((_) => _.dependencyId === dep.id);
+      dep.source = policyRecord?.source;
+    });
     return this.getDependenciesFromSerializedDependencies(serializedDependencies);
   }
 
@@ -732,6 +737,9 @@ export class DependencyResolverMain {
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy);
     }
+    policiesFromEnv.updateSource('env');
+    policiesFromSlots.updateSource('slots');
+    policiesFromConfig.updateSource('config');
     const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
     return result;
   }

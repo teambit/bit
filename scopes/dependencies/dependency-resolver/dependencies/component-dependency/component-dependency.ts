@@ -2,6 +2,7 @@ import { ComponentID } from '@teambit/component';
 
 import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';
+import { DependencySource } from '../../policy/variant-policy/variant-policy';
 
 export const TYPE = 'component';
 
@@ -19,9 +20,10 @@ export class ComponentDependency extends BaseDependency {
     private _packageName: string,
     id: string,
     version: string,
-    lifecycle: DependencyLifecycleType
+    lifecycle: DependencyLifecycleType,
+    source?: DependencySource
   ) {
-    super(id, version, lifecycle);
+    super(id, version, lifecycle, source);
     this._type = TYPE;
   }
 

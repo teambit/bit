@@ -7,6 +7,7 @@ import execa from 'execa';
 import pMapSeries from 'p-map-series';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
+import { BitId } from '@teambit/legacy-bit-id';
 import { init } from '@teambit/legacy/dist/api/consumer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
@@ -87,10 +88,14 @@ export class WorkspaceGenerator {
     const dependencyResolver = this.harmony.get<DependencyResolverMain>(DependencyResolverAspect.id);
 
     const componentsToImportResolved = await Promise.all(
-      componentsToImport.map(async (c) => ({
-        id: await this.workspace.resolveComponentId(c.id),
-        path: c.path,
-      }))
+      componentsToImport.map(async (c) => {
+        const bitId = BitId.parse(c.id, true);
+        const id = ComponentID.fromLegacy(bitId);
+        return {
+          id,
+          path: c.path,
+        };
+      })
     );
     const componentIds = componentsToImportResolved.map((c) => c.id);
     // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
@@ -107,8 +112,10 @@ export class WorkspaceGenerator {
         mainFile: comp.state._consumer.mainFile,
       });
       const deps = await dependencyResolver.getDependencies(comp);
+
       const currentPackages = Object.keys(oldAndNewPackageNames);
       const workspacePolicyEntries = deps
+        .filter((dep) => dep.source !== 'env' && dep.source !== 'slots')
         .map((dep) => ({
           dependencyId: dep.getPackageName?.() || dep.id,
           lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
