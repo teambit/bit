@@ -25,6 +25,10 @@ export class TypescriptCompiler implements Compiler {
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
+    this.options.tsconfig ||= {};
+    this.options.tsconfig.compilerOptions ||= {};
+    // mutate the outDir, otherwise, on capsules, the dists might be written to a different directory and make confusion
+    this.options.tsconfig.compilerOptions.outDir = this.distDir;
   }
 
   displayName = 'TypeScript';
