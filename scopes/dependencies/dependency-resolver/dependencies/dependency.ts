@@ -26,7 +26,7 @@ export interface Dependency {
   version: string;
   type: string;
   lifecycle: DependencyLifecycleType;
-  source: DependencySource;
+  source?: DependencySource;
 
   serialize: <T extends SerializedDependency>() => T;
   setVersion: (newVersion: string) => void;

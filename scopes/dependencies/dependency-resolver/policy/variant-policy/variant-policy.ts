@@ -25,7 +25,7 @@ export type DependencySource = 'env' | 'slots' | 'config';
 
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;
-  source: DependencySource; // determines where the dependency was resolved from, e.g. from its env, or config
+  source?: DependencySource; // determines where the dependency was resolved from, e.g. from its env, or config
 };
 
 export type SerializedVariantPolicyEntry = VariantPolicyEntry;
@@ -106,10 +106,6 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       return acc;
     }, res);
     return res;
-  }
-
-  updateSource(source: DependencySource) {
-    this.entries.forEach((entry) => (entry.source = source));
   }
 
   static mergePolices(policies: VariantPolicy[]): VariantPolicy {

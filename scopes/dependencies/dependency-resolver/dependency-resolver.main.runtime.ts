@@ -712,7 +712,7 @@ export class DependencyResolverMain {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig);
+        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig, 'env');
       }
     }
     const configuredIds = configuredExtensions.ids;
@@ -728,18 +728,16 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1]);
+        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1], 'slots');
         policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy);
+      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
-    policiesFromEnv.updateSource('env');
-    policiesFromSlots.updateSource('slots');
-    policiesFromConfig.updateSource('config');
+
     const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
     return result;
   }

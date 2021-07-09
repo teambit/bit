@@ -9,7 +9,7 @@ import {
 export interface SerializedPackageDependency extends SerializedDependency {}
 
 export class PackageDependency extends BaseDependency {
-  constructor(id: string, version: string, lifecycle: DependencyLifecycleType, source: DependencySource) {
+  constructor(id: string, version: string, lifecycle: DependencyLifecycleType, source?: DependencySource) {
     super(id, version, lifecycle, source);
     this._type = 'package';
   }
