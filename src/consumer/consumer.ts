@@ -550,7 +550,7 @@ export default class Consumer {
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
       incrementBy?: number;
-      ignoreUnresolvedDependencies: boolean | undefined;
+      ignoreIssues: boolean | undefined;
     } & BasicTagParams
   ): Promise<{
     taggedComponents: Component[];
@@ -568,7 +568,7 @@ export default class Consumer {
       await this.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this._loadComponentsForTag(ids);
-    this.throwForComponentIssues(components, tagParams.ignoreUnresolvedDependencies);
+    this.throwForComponentIssues(components, tagParams.ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -584,13 +584,13 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
-  private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
+  private throwForComponentIssues(components: Component[], ignoreIssues?: boolean) {
     components.forEach((component) => {
       if (this.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.relativeComponentsAuthored);
       }
     });
-    if (!ignoreUnresolvedDependencies) {
+    if (!ignoreIssues) {
       const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
       if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
     }
@@ -622,7 +622,7 @@ export default class Consumer {
   async snap({
     ids,
     message = '',
-    ignoreUnresolvedDependencies = false,
+    ignoreIssues = false,
     force = false,
     skipTests = false,
     verbose = false,
@@ -634,7 +634,7 @@ export default class Consumer {
   }: {
     ids: BitIds;
     message?: string;
-    ignoreUnresolvedDependencies?: boolean;
+    ignoreIssues?: boolean;
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
@@ -649,7 +649,7 @@ export default class Consumer {
     });
     const components = await this._loadComponentsForTag(ids);
 
-    this.throwForComponentIssues(components, ignoreUnresolvedDependencies);
+    this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
