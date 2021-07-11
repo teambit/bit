@@ -66,7 +66,9 @@ export class LintCmd implements Command {
     });
 
     const { seconds } = duration;
-    return `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(seconds)}.`;
+    return `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
+      seconds.toString()
+    )}.`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
