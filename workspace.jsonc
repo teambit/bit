@@ -65,6 +65,7 @@
         "@teambit/base-ui.routing.nav-link": "1.0.0",
         "@teambit/base-ui.routing.routing-provider": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
+        "@teambit/base-ui.surfaces.background": "1.0.1",
         "@teambit/base-ui.surfaces.card": "1.0.1",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "1.0.0",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "1.0.0",
@@ -318,7 +319,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.116",
+        "@teambit/legacy": "1.0.119",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -432,7 +433,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.116"
+            "@teambit/legacy": "1.0.119"
           }
         }
       },
@@ -601,7 +602,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.116",
+            "@teambit/legacy": "1.0.119",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -611,8 +612,8 @@
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)
             "react-native-web": "0.14.13",
-            "react": "16.14.0",
-            "react-dom": "16.14.0",
+            "react": "17.0.2",
+            "react-dom": "17.0.2",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.2.9",

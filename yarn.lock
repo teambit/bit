@@ -4970,16 +4970,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.surfaces.background@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@teambit/base-ui.surfaces.background@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.background%2F-%2Fbase-ui.surfaces.background-0.6.3.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 31e2f6243989e4394897f7f91ac3694aa4250815e6c03c7f88cb7653f7cf2bdac6f5928ef67bcba4c54b1fb7f36c78679a444de53360d4cf8cfe945456347dc8
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.surfaces.background@npm:1.0.1":
   version: 1.0.1
   resolution: "@teambit/base-ui.surfaces.background@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.background%2F-%2Fbase-ui.surfaces.background-1.0.1.tgz"
@@ -6692,9 +6682,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.115, @teambit/legacy@npm:1.0.115::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.115.tgz":
-  version: 1.0.115
-  resolution: "@teambit/legacy@npm:1.0.115::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.115.tgz"
+"@teambit/legacy@npm:1.0.119":
+  version: 1.0.119
+  resolution: "@teambit/legacy@npm:1.0.119"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6755,7 +6745,7 @@ __metadata:
     lodash.unionby: 4.8.0
     lru-cache: 6.0.0
     make-fetch-happen: 4.0.2
-    memfs: 2.17.1
+    memfs: 3.2.2
     minimatch: 3.0.4
     mockery: 2.1.0
     module-definition: 3.3.1
@@ -6818,7 +6808,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 476e390c4d9220209d90a310ebf3dda2e3bffd8ef6edc99174837f1d75ed604aef6c93e36454c9e78e6d1a44d8b074f725d87bd311c08c8bbdaf1648cf3dcc37
+  checksum: 5932673b9e441ba9020e8a29c1edd412d70aa31afdf238f3035b603eb053d0f91272d709b101368163ddb30cb66aeb17c83166729b52326670df5f928b24b001
   languageName: node
   linkType: hard
 
@@ -6892,7 +6882,7 @@ __metadata:
     "@teambit/base-ui.routing.nav-link": 1.0.0
     "@teambit/base-ui.routing.routing-provider": 1.0.0
     "@teambit/base-ui.styles.flex-center": 1.0.0
-    "@teambit/base-ui.surfaces.background": 0.6.3
+    "@teambit/base-ui.surfaces.background": 1.0.1
     "@teambit/base-ui.surfaces.card": 1.0.1
     "@teambit/base-ui.surfaces.split-pane.hover-splitter": 1.0.0
     "@teambit/base-ui.surfaces.split-pane.split-pane": 1.0.0
@@ -6958,7 +6948,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.115
+    "@teambit/legacy": 1.0.119
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7260,7 +7250,7 @@ __metadata:
     react-dev-utils: 10.2.1
     react-docgen: 5.3.1
     react-docgen-typescript: 1.21.0
-    react-dom: 16.14.0
+    react-dom: 17.0.2
     react-error-boundary: ^3.0.0
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
@@ -7359,7 +7349,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.115
+    "@teambit/legacy": 1.0.119
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -12138,7 +12128,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bit-226828@workspace:scopes/harmony/bit"
   dependencies:
-    react: 16.14.0
     react-native-web: 0.14.13
   languageName: unknown
   linkType: soft
@@ -17704,13 +17693,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-extend@npm:0.0.2":
-  version: 0.0.2
-  resolution: "fast-extend@npm:0.0.2"
-  checksum: 7b7b066d5b56d1e12e6e293d3340dedfba4da43d002c716fd11cec8ca0f64aa0af125e9f1019c44bf90fa9da8e7a27c07941915021ec2b205013ebd6c9f11afb
-  languageName: node
-  linkType: hard
-
 "fast-extend@npm:1.0.2":
   version: 1.0.2
   resolution: "fast-extend@npm:1.0.2"
@@ -18428,7 +18410,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-monkey@npm:0.3.3, fs-monkey@npm:^0.3.3":
+"fs-monkey@npm:0.3.3":
   version: 0.3.3
   resolution: "fs-monkey@npm:0.3.3"
   checksum: 0d2c3b78ff6b3effc400583c4b84c8b8fbf9f686468f019ed0422308ceb20fc262c1e1aa79b1bab48c6572b35d646e3827601279f9bd027f343e13f0c9200785
@@ -23047,6 +23029,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"loader-fallback-722711@workspace:scopes/react/ui/loader-fallback":
+  version: 0.0.0-use.local
+  resolution: "loader-fallback-722711@workspace:scopes/react/ui/loader-fallback"
+  languageName: unknown
+  linkType: soft
+
 "loader-runner@npm:^4.2.0":
   version: 4.2.0
   resolution: "loader-runner@npm:4.2.0"
@@ -23943,16 +23931,6 @@ __metadata:
     map-age-cleaner: ^0.1.3
     mimic-fn: ^3.1.0
   checksum: c41bc97f6f82b91899206058989e34bcb1543af40413c2ab59e5a8e97e4f8f2188d62e7bd95b2d575d5b0d823d5034a0f274a0676f6d11a0e0b973898b06c8b1
-  languageName: node
-  linkType: hard
-
-"memfs@npm:2.17.1":
-  version: 2.17.1
-  resolution: "memfs@npm:2.17.1"
-  dependencies:
-    fast-extend: 0.0.2
-    fs-monkey: ^0.3.3
-  checksum: daf041a9826051809d1660c0e4f9add3d51f0d5034c71f03a326ba349f0e44e8798e57a96e54592a7011f91cbf9360dea984a1c16b92f0c40f9c8560d95040c3
   languageName: node
   linkType: hard
 
@@ -28260,17 +28238,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.14.0":
-  version: 16.14.0
-  resolution: "react-dom@npm:16.14.0"
+"react-dom@npm:17.0.2":
+  version: 17.0.2
+  resolution: "react-dom@npm:17.0.2"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-    prop-types: ^15.6.2
-    scheduler: ^0.19.1
+    scheduler: ^0.20.2
   peerDependencies:
-    react: ^16.14.0
-  checksum: 5a5c49da0f106b2655a69f96c622c347febcd10532db391c262b26aec225b235357d9da1834103457683482ab1b229af7a50f6927a6b70e53150275e31785544
+    react: 17.0.2
+  checksum: 1c1eaa3bca7c7228d24b70932e3d7c99e70d1d04e13bb0843bbf321582bc25d7961d6b8a6978a58a598af2af496d1cedcfb1bf65f6b0960a0a8161cb8dab743c
   languageName: node
   linkType: hard
 
@@ -28576,17 +28553,6 @@ __metadata:
     react: ^16.8.x
     typescript: ^3.5.2
   checksum: b0d95e9cdfccd0c104f24a42c9a7b7e27d64f4cdd024cdc43d440a3692e63f3ec581c3fb605e107744e331b3e7f95346073ded703148cf4e2e181352df8cc45d
-  languageName: node
-  linkType: hard
-
-"react@npm:16.14.0":
-  version: 16.14.0
-  resolution: "react@npm:16.14.0"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-  checksum: 8484f3ecb13414526f2a7412190575fc134da785c02695eb92bb6028c930bfe1c238d7be2a125088fec663cc7cda0a3623373c46807cf2c281f49c34b79881ac
   languageName: node
   linkType: hard
 
@@ -30005,6 +29971,16 @@ __metadata:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
   checksum: 73e185a59e2ff5aa3609f5b9cb97ddd376f89e1610579d29939d952411ca6eb7a24907a4ea4556569dacb931467a1a4a56d94fe809ef713aa76748642cd96a6c
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:^0.20.2":
+  version: 0.20.2
+  resolution: "scheduler@npm:0.20.2"
+  dependencies:
+    loose-envify: ^1.1.0
+    object-assign: ^4.1.1
+  checksum: c4b35cf967c8f0d3e65753252d0f260271f81a81e427241295c5a7b783abf4ea9e905f22f815ab66676f5313be0a25f47be582254db8f9241b259213e999b8fc
   languageName: node
   linkType: hard
 

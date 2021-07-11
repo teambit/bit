@@ -38,12 +38,13 @@ export class WorkspaceGenerator {
       throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
     }
     await fs.ensureDir(this.workspacePath);
+    process.chdir(this.workspacePath);
+    await this.initGit();
     await init(this.workspacePath, this.options.standalone, false, false, false, false, {});
     await this.writeWorkspaceFiles();
     await this.reloadBitInWorkspaceDir();
     await this.addComponentsFromRemote();
     await this.workspace.install();
-    await this.initGit();
 
     return this.workspacePath;
   }
@@ -70,13 +71,12 @@ export class WorkspaceGenerator {
     const templateFiles = this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
-        await fs.writeFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
+        await fs.outputFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
       })
     );
   }
 
   private async reloadBitInWorkspaceDir() {
-    process.chdir(this.workspacePath);
     this.harmony = await loadBit(this.workspacePath);
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
   }
