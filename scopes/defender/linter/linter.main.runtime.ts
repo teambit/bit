@@ -6,8 +6,8 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from './linter.aspect';
 import { LinterService } from './linter.service';
 import { LintTask } from './lint.task';
-import { LintCmd, LinterOptions } from './lint.cmd';
-import { FixTypes } from './linter-context';
+import { LintCmd } from './lint.cmd';
+import { FixTypes, LinterOptions } from './linter-context';
 
 export type LinterConfig = {
   /**

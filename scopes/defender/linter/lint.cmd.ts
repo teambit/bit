@@ -71,7 +71,6 @@ export class LintCmd implements Command {
     timer.start();
     const componentsIds = await this.getIdsToLint(components, linterOptions.changed);
     const componentsToLint = await this.workspace.getMany(componentsIds);
-    console.log('linterOptions.fixType', linterOptions.fixType);
     const opts: LinterOptions = {
       fix: linterOptions.fix,
       fixTypes: linterOptions.fixType ? (linterOptions.fixType.split(',') as FixTypes) : undefined,
