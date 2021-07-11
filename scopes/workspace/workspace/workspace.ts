@@ -92,6 +92,7 @@ export type EjectConfResult = {
 
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
+export const ComponentRemoved = 'componentRemoved';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -490,6 +491,8 @@ export class Workspace implements ComponentFactory {
       const onRemoveResult = await onRemoveFunc(id);
       results.push({ extensionId: extension, results: onRemoveResult });
     });
+
+    await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
   }
 

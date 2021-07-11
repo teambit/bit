@@ -5,6 +5,8 @@ import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
+type RawComponent = { id: object };
+
 const wcComponentFields = gql`
   fragment wcComponentFields on Component {
     id {
@@ -78,6 +80,18 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   ${wcComponentFields}
 `;
 
+const COMPONENT_SUBSCRIPTION_REMOVED = gql`
+  subscription OnComponentRemoved {
+    componentRemoved {
+      componentIds {
+        name
+        version
+        scope
+      }
+    }
+  }
+`;
+
 export function useWorkspace() {
   const { data, subscribeToMore } = useDataQuery(WORKSPACE);
 
@@ -128,11 +142,32 @@ export function useWorkspace() {
       },
     });
 
+    const unSubCompRemoved = subscribeToMore({
+      document: COMPONENT_SUBSCRIPTION_REMOVED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const componentIds: object[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
+        const idsToRemove = componentIds?.map((x) => ComponentID.fromObject(x));
+        if (!idsToRemove || idsToRemove.length === 0) return prev;
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: prev.workspace.components.filter((component: RawComponent) => {
+              const compId = ComponentID.fromObject(component.id);
+              return idsToRemove.every((id) => !id.isEqual(compId));
+            }),
+          },
+        };
+      },
+    });
+
     // TODO - sub to component removal
 
     return () => {
       unSubCompAddition();
       unSubCompChange();
+      unSubCompRemoved();
     };
   }, []);
 
