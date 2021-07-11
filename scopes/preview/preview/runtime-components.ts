@@ -2,19 +2,25 @@ import { Component, ComponentID } from '@teambit/component';
 import type { ExecutionContext } from '@teambit/envs';
 
 // TODO - use workspace.list() instead of this
-export class RuntimeComponents {
-  constructor(public components: Component[] = [], public executionCtx: ExecutionContext) {}
+export class ExecutionRef {
+  constructor(public executionCtx: ExecutionContext) {
+    this.currentComponents = executionCtx.components;
+  }
+
+  currentComponents: Component[];
+
+  // (public components: Component[] = [], public executionCtx: ExecutionContext) {}
   add(added: Component) {
-    this.components = this.components.concat(added);
+    this.currentComponents = this.currentComponents.concat(added);
   }
   remove(removed: ComponentID) {
-    this.components = this.components.filter((c) => c.id.toString() !== removed.toString());
+    this.currentComponents = this.currentComponents.filter((c) => c.id.toString() !== removed.toString());
   }
   update(next: Component) {
-    this.components = this.components.map((c) => (c.equals(next) ? next : c));
+    this.currentComponents = this.currentComponents.map((c) => (c.equals(next) ? next : c));
   }
 
   get(id: ComponentID) {
-    return this.components.find((x) => x.id.isEqual(id));
+    return this.currentComponents.find((x) => x.id.isEqual(id));
   }
 }
