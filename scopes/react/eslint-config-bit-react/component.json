@@ -27,7 +27,7 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.119"
+          "@teambit/legacy": "1.0.120"
         }
       }
     }
