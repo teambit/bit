@@ -7,9 +7,13 @@ import { Workspace } from '@teambit/workspace';
 import { compact, flatten } from 'lodash';
 import { LinterMain } from './linter.main.runtime';
 import { ComponentLintResult, LintResults } from './linter';
+import { FixTypes, LinterOptions } from './linter-context';
 
-export type LinterOptions = {
+export type LintCmdOptions = {
   changed?: boolean;
+  fix?: boolean;
+  fixType?: string;
+  json?: boolean;
 };
 
 /**
@@ -35,6 +39,8 @@ export class LintCmd implements Command {
   group = 'development';
   options = [
     ['c', 'changed', 'lint only new and modified components'],
+    ['f', 'fix', 'automatically fix problems'],
+    ['', 'fix-type <fixType>', 'specify the types of fixes to apply (problem, suggestion, layout)'],
     ['j', 'json', 'return the lint results in json format'],
   ] as CommandOptions;
 
@@ -45,7 +51,7 @@ export class LintCmd implements Command {
     private workspace: Workspace
   ) {}
 
-  async report([components = []]: [string[]], linterOptions: LinterOptions) {
+  async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
     const { duration, data, componentsIdsToLint } = await this.json([components], linterOptions);
     this.logger.consoleTitle(
       `linting total of ${componentsIdsToLint.length} in workspace '${this.componentHost.name}'`
@@ -60,12 +66,17 @@ export class LintCmd implements Command {
     return `linted ${componentsIdsToLint.length} components in ${seconds}.`;
   }
 
-  async json([components = []]: [string[]], linterOptions: LinterOptions): Promise<JsonLintResults> {
+  async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
     const timer = Timer.create();
     timer.start();
     const componentsIds = await this.getIdsToLint(components, linterOptions.changed);
     const componentsToLint = await this.workspace.getMany(componentsIds);
-    const linterResults = await this.linter.lint(componentsToLint);
+    console.log('linterOptions.fixType', linterOptions.fixType);
+    const opts: LinterOptions = {
+      fix: linterOptions.fix,
+      fixTypes: linterOptions.fixType ? (linterOptions.fixType.split(',') as FixTypes) : undefined,
+    };
+    const linterResults = await this.linter.lint(componentsToLint, opts);
     const jsonLinterResults = toJsonLintResults(linterResults);
     const timerResponse = timer.stop();
     return {

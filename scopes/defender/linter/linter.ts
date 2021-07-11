@@ -35,6 +35,11 @@ export type LintResult = {
    * lint messages.
    */
   messages: LintMessage[];
+
+  /**
+   * Raw data as returned from the linter
+   */
+  raw: any;
 };
 
 export type LintMessage = {
