@@ -55,7 +55,7 @@ export class LintCmd implements Command {
   async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
     const { duration, data, componentsIdsToLint } = await this.json([components], linterOptions);
     this.logger.consoleTitle(
-      `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} in workspace '${chalk.cyan(
+      `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} component(s) in workspace '${chalk.cyan(
         this.componentHost.name
       )}'`
     );
