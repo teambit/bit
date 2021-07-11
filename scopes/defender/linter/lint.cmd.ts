@@ -2,6 +2,7 @@ import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import { Logger } from '@teambit/logger';
+import chalk from 'chalk';
 import { EnvsExecutionResult } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
 import { compact, flatten } from 'lodash';
@@ -54,16 +55,18 @@ export class LintCmd implements Command {
   async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
     const { duration, data, componentsIdsToLint } = await this.json([components], linterOptions);
     this.logger.consoleTitle(
-      `linting total of ${componentsIdsToLint.length} in workspace '${this.componentHost.name}'`
+      `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} in workspace '${chalk.cyan(
+        this.componentHost.name
+      )}'`
     );
 
     data.results.forEach((lintRes) => {
-      this.logger.consoleTitle(`${lintRes.componentId.toString({ ignoreVersion: true })}`);
+      this.logger.consoleTitle(`${chalk.cyan(lintRes.componentId.toString({ ignoreVersion: true }))}`);
       this.logger.console(lintRes.output);
     });
 
     const { seconds } = duration;
-    return `linted ${componentsIdsToLint.length} components in ${seconds}.`;
+    return `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(seconds)}.`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
