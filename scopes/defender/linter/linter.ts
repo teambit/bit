@@ -75,7 +75,7 @@ export type LintMessage = {
 
 export type LintResults = {
   results: ComponentLintResult[];
-  errors: [];
+  errors: Error[];
 };
 
 export interface Linter {
