@@ -7,12 +7,14 @@ import { LinterAspect } from './linter.aspect';
 import { LinterService } from './linter.service';
 import { LintTask } from './lint.task';
 import { LintCmd } from './lint.cmd';
+import { FixTypes, LinterOptions } from './linter-context';
 
 export type LinterConfig = {
   /**
    * extension formats to lint.
    */
   extensionFormats: string[];
+  fixTypes?: FixTypes;
 };
 
 export class LinterMain {
@@ -23,9 +25,9 @@ export class LinterMain {
   /**
    * lint an array of components.
    */
-  async lint(components: Component[]) {
+  async lint(components: Component[], opts: LinterOptions) {
     const envsRuntime = await this.envs.createEnvironment(components);
-    const lintResults = envsRuntime.run(this.linterService);
+    const lintResults = envsRuntime.run(this.linterService, opts);
     return lintResults;
   }
 
@@ -39,8 +41,9 @@ export class LinterMain {
 
   static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, LoggerAspect, WorkspaceAspect];
 
-  static defaultConfig = {
+  static defaultConfig: LinterConfig = {
     extensionFormats: ['.ts', '.tsx', '.js', '.jsx', '.mjs'],
+    fixTypes: ['layout', 'problem', 'suggestion'],
   };
 
   static async provider(

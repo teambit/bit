@@ -1,4 +1,4 @@
-import { flatten } from 'lodash';
+import { flatten, compact } from 'lodash';
 import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
@@ -21,7 +21,8 @@ export class ESLintLinter implements Linter {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
-      const eslint = this.createEslint(this.options, context, this.ESLint);
+      const mergedOpts = this.getOptions(this.options, context);
+      const eslint = this.createEslintByCalculatedOptions(mergedOpts, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
@@ -29,12 +30,16 @@ export class ESLintLinter implements Linter {
           warnIgnored: true,
         });
 
+        if (eslint && mergedOpts.fix && lintResults) {
+          await ESLintLib.outputFixes(lintResults);
+        }
+
         return lintResults;
       });
 
       const files = await Promise.all(filesP);
 
-      const results: ESLintLib.LintResult[] = flatten(files);
+      const results: ESLintLib.LintResult[] = compact(flatten(files));
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
 
@@ -60,6 +65,7 @@ export class ESLintLinter implements Linter {
         errorCount: result.errorCount,
         warningCount: result.warningCount,
         messages: result.messages,
+        raw: result,
       };
     });
   }
@@ -71,6 +77,18 @@ export class ESLintLinter implements Linter {
   }
 
   /**
+   * Create the eslint instance by options that was already merged with context
+   * @param options
+   * @param ESLintModule
+   * @returns
+   */
+  private createEslintByCalculatedOptions(options: ESLintLib.Options, ESLintModule?: any): ESLintLib {
+    // eslint-disable-next-line no-new
+    if (ESLintModule) new ESLintModule.ESLint(options);
+    return new ESLintLib(options);
+  }
+
+  /**
    * get options for eslint.
    */
   private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
@@ -79,6 +97,8 @@ export class ESLintLinter implements Linter {
       extensions: context.extensionFormats,
       useEslintrc: false,
       cwd: options.pluginPath,
+      fix: !!context.fix,
+      fixTypes: context.fixTypes,
     };
   }
 
