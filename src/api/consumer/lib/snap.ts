@@ -20,7 +20,7 @@ export async function snapAction(args: {
   message: string;
   force: boolean;
   verbose: boolean;
-  ignoreUnresolvedDependencies: boolean;
+  ignoreIssues: boolean;
   build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
@@ -32,7 +32,7 @@ export async function snapAction(args: {
     message,
     force,
     verbose,
-    ignoreUnresolvedDependencies,
+    ignoreIssues,
     skipTests,
     skipAutoSnap,
     build,
@@ -47,7 +47,7 @@ export async function snapAction(args: {
   if (!ids) return null;
   const tagResults = await consumer.snap({
     ids,
-    ignoreUnresolvedDependencies,
+    ignoreIssues,
     message,
     force,
     build,

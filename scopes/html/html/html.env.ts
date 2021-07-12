@@ -6,7 +6,7 @@ export class HtmlEnv implements Environment {
   getDocsTemplate() {
     return require.resolve('./html-docs-app');
   }
-  
+
   getMounter() {
     return require.resolve('./mount');
   }
