@@ -138,11 +138,13 @@ export default class SourceRepository {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
-    const version = await this.objects().load(versionHash);
+    const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
       return undefined;
     }
+    // workaround an issue when a component has a dependency with the same id as the component itself
+    version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
 
     return returnComponent(version as Version);
   }
