@@ -55,17 +55,8 @@ type TagParams = {
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams): Promise<TagResults | null> {
-  const {
-    ids,
-    all,
-    exactVersion,
-    releaseType,
-    force,
-    ignoreUnresolvedDependencies,
-    scope,
-    includeImported,
-    persist,
-  } = tagParams;
+  const { ids, all, exactVersion, releaseType, force, ignoreUnresolvedDependencies, scope, includeImported, persist } =
+    tagParams;
   const idsHasWildcard = hasWildcard(ids);
   const isAll = Boolean(all || scope || idsHasWildcard);
   const validExactVersion = validateVersion(exactVersion);

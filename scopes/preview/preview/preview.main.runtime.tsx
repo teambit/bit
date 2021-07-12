@@ -24,7 +24,7 @@ import { PreviewRoute } from './preview.route';
 import { PreviewTask } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
-import { RuntimeComponents } from './runtime-components';
+import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 
 const noopResult = {
@@ -113,7 +113,7 @@ export class PreviewMain {
     return targetPath;
   }
 
-  private componentsByAspect = new Map<string, RuntimeComponents>();
+  private executionRefs = new Map<string, ExecutionRef>();
 
   private async getPreviewTarget(
     /** execution context (of the specific env) */
@@ -122,7 +122,7 @@ export class PreviewMain {
     // store context for later link-file updates
     // also register related envs that this context is acting on their behalf
     [context.id, ...context.relatedContexts].forEach((ctxId) => {
-      this.componentsByAspect.set(ctxId, new RuntimeComponents(context.components, context));
+      this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
     const previewRuntime = await this.writePreviewRuntime(context);
@@ -202,12 +202,12 @@ export class PreviewMain {
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
   // instead we keep track of changes
-  private handleComponentChange = async (c: Component, updater: (currentComponents: RuntimeComponents) => void) => {
+  private handleComponentChange = async (c: Component, updater: (currentComponents: ExecutionRef) => void) => {
     const env = this.envs.getEnv(c);
     const envId = env.id.toString();
 
-    const components = this.componentsByAspect.get(envId);
-    if (!components) {
+    const executionRef = this.executionRefs.get(envId);
+    if (!executionRef) {
       this.logger.warn(
         `failed to update link file for component "${c.id.toString()}" - could not find execution context for ${envId}`
       );
@@ -215,16 +215,16 @@ export class PreviewMain {
     }
 
     // add / remove / etc
-    updater(components);
+    updater(executionRef);
 
-    await this.updateLinkFiles(components.components, components.executionCtx);
+    await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
 
     return noopResult;
   };
 
   private handleComponentRemoval = (cId: ComponentID) => {
     let component: Component | undefined;
-    this.componentsByAspect.forEach((components) => {
+    this.executionRefs.forEach((components) => {
       const found = components.get(cId);
       if (found) component = found;
     });

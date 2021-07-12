@@ -268,7 +268,7 @@ export class PkgMain {
     });
 
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
+    const currentConfig = currentExtension?.config as unknown as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
@@ -279,7 +279,7 @@ export class PkgMain {
 
   getPackageJsonModifications(component: Component): Record<string, any> {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = currentExtension?.data as unknown as ComponentPkgExtensionData;
     return currentData?.packageJsonModification ?? {};
   }
 
