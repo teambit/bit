@@ -127,7 +127,11 @@ function createCompiler(options: Partial<MDXCompileOptions>) {
 function extractMetadata() {
   return function transformer(tree, file) {
     visit(tree, 'yaml', (node: any) => {
-      file.data.frontmatter = yaml.parse(node.value);
+      try {
+        file.data.frontmatter = yaml.parse(node.value);
+      } catch (err) {
+        throw new Error(`failed extracting metadata/front-matter using Yaml lib, due to an error: ${err.message}`);
+      }
     });
   };
 }

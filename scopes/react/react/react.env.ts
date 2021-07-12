@@ -6,7 +6,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { BuilderEnv, CompilerEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv } from '@teambit/envs';
+import { BuilderEnv, CompilerEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv, FormatterEnv } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -15,7 +15,9 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
+import { PrettierMain } from '@teambit/prettier';
 import { Linter } from '@teambit/linter';
+import { Formatter } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
@@ -44,11 +46,12 @@ export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
+const prettierConfig = require('./prettier/prettier.config.js');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv {
+export class ReactEnv implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
   constructor(
     /**
      * jest extension
@@ -87,7 +90,9 @@ export class ReactEnv implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, Buil
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private prettier: PrettierMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -151,6 +156,15 @@ export class ReactEnv implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, Buil
       config: eslintConfig,
       // resolve all plugins from the react environment.
       pluginPath: __dirname,
+    });
+  }
+
+  /**
+   * returns and configures the component formatter.
+   */
+  getFormatter(): Formatter {
+    return this.prettier.createFormatter({
+      config: prettierConfig,
     });
   }
 

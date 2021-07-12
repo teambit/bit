@@ -24,6 +24,7 @@ import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
+import { PrettierMain, PrettierAspect } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -42,6 +43,7 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
+  PrettierMain,
   ApplicationMain,
   GeneratorMain
 ];
@@ -306,6 +308,7 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
+    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
   ];
@@ -322,12 +325,24 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
+      prettier,
       application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(
+      jestAspect,
+      tsAspect,
+      compiler,
+      webpack,
+      workspace,
+      pkg,
+      tester,
+      config,
+      eslint,
+      prettier
+    );
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

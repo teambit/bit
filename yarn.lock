@@ -6997,6 +6997,7 @@ __metadata:
     "@types/node-fetch": 2.5.8
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
+    "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
     "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
@@ -7234,7 +7235,7 @@ __metadata:
     postcss-normalize: 9.0.0
     postcss-preset-env: 6.7.0
     postcss-safe-parser: 5.0.2
-    prettier: 2.2.1
+    prettier: 2.3.2
     prettier-eslint: 11.0.0
     pretty-time: 1.1.0
     process: 0.11.10
@@ -8445,6 +8446,13 @@ __metadata:
     "@types/pino-std-serializers": "*"
     "@types/sonic-boom": "*"
   checksum: e535a948649cfa23595c396c9901aa48a56e0016662a4838f025a4b891dbd2efbda1a1ea3b3b302b8b7540257c46f77a371cde43ea1585860ca8498ee5a59ef5
+  languageName: node
+  linkType: hard
+
+"@types/prettier@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@types/prettier@npm:2.3.2"
+  checksum: c4313e16650811f47b07a0fa7ac0742e966f61283a7292eb667fd4626d760bf3b7d896be3eaabb3354ad45fdbe3a340299b018dd3bcce1ff753d030a8cd2479c
   languageName: node
   linkType: hard
 
@@ -18311,6 +18319,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"formatter-4e6db5@workspace:scopes/defender/formatter":
+  version: 0.0.0-use.local
+  resolution: "formatter-4e6db5@workspace:scopes/defender/formatter"
+  languageName: unknown
+  linkType: soft
+
 "forwarded@npm:0.2.0":
   version: 0.2.0
   resolution: "forwarded@npm:0.2.0"
@@ -27474,6 +27488,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier-06f835@workspace:scopes/defender/prettier":
+  version: 0.0.0-use.local
+  resolution: "prettier-06f835@workspace:scopes/defender/prettier"
+  languageName: unknown
+  linkType: soft
+
 "prettier-eslint@npm:11.0.0":
   version: 11.0.0
   resolution: "prettier-eslint@npm:11.0.0"
@@ -27494,16 +27514,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:2.2.1":
-  version: 2.2.1
-  resolution: "prettier@npm:2.2.1"
-  bin:
-    prettier: bin-prettier.js
-  checksum: 800de2df3d37067ab24478c7f32c60ca0c57b01742133287829feeb4a70d239a7bf6bccb56196784777af591ad80fb9ba70c1a49b0fcecf9f5622a764d513edb
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^2.0.0":
+"prettier@npm:2.3.2, prettier@npm:^2.0.0":
   version: 2.3.2
   resolution: "prettier@npm:2.3.2"
   bin:
