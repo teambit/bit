@@ -42,11 +42,9 @@ Instead of building an application that has many components, Bit lets you develo
 
 <p align="left">
 
-* **Workspace** is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the workspace UI to visually develop and manage your components with ease.  
+* **Workspace - build and compose components**. The workspace is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the *Workspace UI* to visually develop and manage your components with ease.  
  
-* **Scope** is where you push, version, and organize your components. It’s a component store.  
- 
-* **Remote Hosting**: Remote Scopes let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
+* **Scope - manage and scale with components**. Scopes are where you push, version, and organize your components. It’s a component store. *Remote Scopes* let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
 
 
 ### How to Start?
