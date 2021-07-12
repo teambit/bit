@@ -37,7 +37,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.119"
+          "@teambit/legacy": "1.0.120"
         }
       }
     }

@@ -640,9 +640,7 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver
-      .maxSatisfying<string>(versions, range, { includePrerelease: true })
-      ?.toString();
+    return semver.maxSatisfying<string>(versions, range, { includePrerelease: true })?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {

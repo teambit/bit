@@ -49,7 +49,7 @@ export class DependencyList {
   }
 
   toTypeArray<T extends Dependency>(typeName: string): T[] {
-    const list: T[] = (this.dependencies.filter((dep) => dep.type === typeName) as any) as T[];
+    const list: T[] = this.dependencies.filter((dep) => dep.type === typeName) as any as T[];
     return list;
   }
 

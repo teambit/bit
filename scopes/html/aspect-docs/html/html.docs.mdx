@@ -1,22 +1,22 @@
 ---
-description: 'Docs for Node aspect'
+description: 'Docs for Html aspect'
 labels: ['docs', 'aspect', 'extensions']
 ---
 
-import { Node } from './index';
+import { Html } from './index';
 
 ## Static Content Page in MDX
 
-Docs for Node aspect
+Docs for Html aspect
 
 ### Component usage
 
 Use your component in any mdx file:
 
 ```js
-import { Node } from '@teambit/harmony.aspect-docs.node';
+import { Html } from '@teambit/html.aspect-docs.html';
 
-<Node />;
+<Html />;
 ```
 
 ### Render with theme and MDX providers
@@ -24,11 +24,11 @@ import { Node } from '@teambit/harmony.aspect-docs.node';
 ```js
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { Node } from '@teambit/harmony.aspect-docs.node';
+import { Html } from '@teambit/html.aspect-docs.html';
 
 <ThemeCompositions>
   <MDXLayout>
-    <Node />
+    <Html />
   </MDXLayout>
 </ThemeCompositions>;
 ```

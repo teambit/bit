@@ -14,7 +14,7 @@ export interface CompositionCardProps extends CardProps {
   Composition: CompositionType;
   name: string;
   link?: string;
-};
+}
 
 export function CompositionCard({ Composition, name, link, className, ...rest }: CompositionCardProps) {
   const { canvas } = Composition;
