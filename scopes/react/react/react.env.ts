@@ -6,7 +6,16 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { BuilderEnv, CompilerEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv, FormatterEnv } from '@teambit/envs';
+import {
+  BuilderEnv,
+  CompilerEnv,
+  DependenciesEnv,
+  DevEnv,
+  LinterEnv,
+  PackageEnv,
+  TesterEnv,
+  FormatterEnv,
+} from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -51,7 +60,8 @@ const prettierConfig = require('./prettier/prettier.config.js');
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
+export class ReactEnv
+  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
   constructor(
     /**
      * jest extension
