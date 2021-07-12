@@ -43,7 +43,14 @@ import { pathNormalizeToLinux, sortObject } from '../utils';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
-import { PathAbsolute, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../utils/path';
+import {
+  PathAbsolute,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedAbsolute,
+  PathOsBasedRelative,
+  PathRelative,
+} from '../utils/path';
 import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import ComponentMap, { NextVersion } from './bit-map/component-map';
 import Component from './component';
@@ -650,6 +657,7 @@ export default class Consumer {
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
+      ids,
       ignoreNewestVersion: false,
       scope: this.scope,
       message,
@@ -671,7 +679,7 @@ export default class Consumer {
   }
 
   async _loadComponentsForTag(ids: BitIds): Promise<Component[]> {
-    const { components } = await this.loadComponents(ids);
+    const { components } = await this.loadComponents(ids.toVersionLatest());
     if (this.isLegacy) {
       return components;
     }
@@ -726,7 +734,7 @@ export default class Consumer {
       return componentMap.rootDir;
     };
     const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMaster = async (component: ModelComponent | Component): Promise<boolean> => {
+    const isAvailableOnMain = async (component: ModelComponent | Component): Promise<boolean> => {
       if (currentLane.isDefault()) return true;
       const modelComponent =
         component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
@@ -739,8 +747,8 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const availableOnMaster = await isAvailableOnMaster(unknownComponent);
-      if (!availableOnMaster) {
+      const availableOnMain = await isAvailableOnMain(unknownComponent);
+      if (!availableOnMain) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
@@ -798,7 +806,7 @@ export default class Consumer {
     return withoutPrefix;
   }
 
-  composeRelativeComponentPath(bitId: BitId): string {
+  composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
     const { componentsDefaultDirectory } = this.dirStructure;
     // in the past, scope was the full-scope (owner+scope-name), currently, scope is only the scope-name.
     const compDirBackwardCompatible = this.isLegacy

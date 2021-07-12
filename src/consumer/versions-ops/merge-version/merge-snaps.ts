@@ -38,7 +38,7 @@ export type ComponentStatus = {
 };
 
 /**
- * when user is on master, it merges the remote master components into local.
+ * when user is on main, it merges the remote main components into local.
  * when user is on a lane, it merges the remote lane components into the local lane.
  */
 export async function mergeComponentsFromRemote(
@@ -150,7 +150,7 @@ export async function merge({
 
   if (localLane) consumer.scope.objects.add(localLane);
 
-  await consumer.scope.objects.persist(); // persist anyway, it localLane is null it should save all master heads
+  await consumer.scope.objects.persist(); // persist anyway, it localLane is null it should save all main heads
 
   await consumer.scope.objects.unmergedComponents.write();
 
@@ -348,7 +348,7 @@ export async function applyVersion({
   await manyComponentsWriter.writeAll();
 
   // if mergeResults, the head snap is going to be updated on a later phase when snapping with two parents
-  // otherwise, update the head of the current lane or master
+  // otherwise, update the head of the current lane or main
   if (mergeResults) {
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
       unmergedComponent.resolved = false;
@@ -360,7 +360,7 @@ export async function applyVersion({
   } else if (localLane) {
     localLane.addComponent({ id, head: remoteHead });
   } else {
-    // this is master
+    // this is main
     const modelComponent = await consumer.scope.getModelComponent(id);
     if (!consumer.isLegacy) modelComponent.setHead(remoteHead);
     consumer.scope.objects.add(modelComponent);

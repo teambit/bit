@@ -1,5 +1,5 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
-import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
+import { Compiler, TranspileFileParams, TranspileFileOutput } from '@teambit/compiler';
 import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
@@ -25,6 +25,10 @@ export class TypescriptCompiler implements Compiler {
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
+    this.options.tsconfig ||= {};
+    this.options.tsconfig.compilerOptions ||= {};
+    // mutate the outDir, otherwise, on capsules, the dists might be written to a different directory and make confusion
+    this.options.tsconfig.compilerOptions.outDir = this.distDir;
   }
 
   displayName = 'TypeScript';
@@ -36,7 +40,7 @@ export class TypescriptCompiler implements Compiler {
   /**
    * compile one file on the workspace
    */
-  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     if (!this.isFileSupported(options.filePath)) {
       return null; // file is not supported
     }

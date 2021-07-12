@@ -119,7 +119,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       if (filepath && !componentMap) setMap(filepath);
     },
     post() {
-      // reset memoization, in case any file change between runs
+      // reset memoization, in case any file changes between runs
       extractMeta.clear();
     },
   };

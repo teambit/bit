@@ -183,8 +183,9 @@ export default class Dependencies {
     });
   }
 
-  validate(): void {
-    let message = 'failed validating the dependencies.';
+  validate(bitId?: BitId): void {
+    const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
+    let message = `failed validating the dependencies${compIdStr}.`;
     validateType(message, this.dependencies, 'dependencies', 'array');
     const allIds = this.getAllIds();
     this.dependencies.forEach((dependency) => {
@@ -196,6 +197,11 @@ export default class Dependencies {
       const sameIds = allIds.filterExact(dependency.id);
       if (sameIds.length > 1) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
+      }
+      if (bitId && bitId.isEqual(dependency.id)) {
+        throw new ValidationError(
+          `failed validating ${bitId.toString()}, one of the dependencies has the same id as the component`
+        );
       }
       const permittedProperties = ['id', 'relativePaths', 'packageName'];
       const currentProperties = Object.keys(dependency);

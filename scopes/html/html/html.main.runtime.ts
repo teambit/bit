@@ -12,7 +12,7 @@ export class HtmlMain {
     const htmlEnv: HtmlEnv = envs.merge(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
 
-  return new HtmlMain();
+    return new HtmlMain();
   }
 }
 

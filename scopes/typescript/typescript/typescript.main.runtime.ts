@@ -2,7 +2,8 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { SchemaAspect, SchemaMain } from '@teambit/schema';
+import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
+import { PackageJsonProps } from '@teambit/pkg';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -21,7 +22,7 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: TsConfigSourceFile) {
+  createSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
     return new TypeScriptExtractor(tsconfig);
   }
 
@@ -29,7 +30,7 @@ export class TypescriptMain {
    * add the default package json properties to the component
    * :TODO @gilad why do we need this DSL? can't I just get the args here.
    */
-  getPackageJsonProps() {
+  getPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
       types: '{main}.ts',

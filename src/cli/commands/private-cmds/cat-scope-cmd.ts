@@ -1,4 +1,4 @@
-import Table from 'tty-table';
+import Table from 'cli-table';
 
 import { catScope } from '../../../api/scope';
 import ModelComponent from '../../../scope/models/model-component';
@@ -52,17 +52,9 @@ export default class CatScope implements LegacyCommand {
       return JSON.stringify(payload, null, 2);
     }
     if (!full) {
-      const header = [
-        { value: 'Id', width: 70, headerColor: 'cyan' },
-        { value: 'Object', width: 50, headerColor: 'cyan' },
-      ];
-      const opts = {
-        align: 'left',
-      };
-
-      const table = new Table(header, [], opts);
+      const table = new Table({ head: ['id', 'Object'], style: { head: ['cyan'] } });
       payload.forEach((co) => table.push([co.id(), `obj: ${co.hash().toString()}`]));
-      return table.render();
+      return table.toString();
     }
 
     return payload.map((co) => `> ${co.hash().toString()}\n\n${co.id()}\n`).join('\n');

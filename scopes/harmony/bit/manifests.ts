@@ -43,6 +43,7 @@ import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
+import { FormatterAspect } from '@teambit/formatter';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
@@ -50,6 +51,7 @@ import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
+import { PrettierAspect } from '@teambit/prettier';
 import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
@@ -61,7 +63,7 @@ import { ExportAspect } from '@teambit/export';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
-import LanesAspect from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -70,8 +72,10 @@ export const manifestsMap = {
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [ESLintAspect.id]: ESLintAspect,
+  [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
+  [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,

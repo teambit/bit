@@ -230,8 +230,8 @@ export default function validateVersionInstance(version: Version): void {
       );
     }
   });
-  version.dependencies.validate();
-  version.devDependencies.validate();
+  version.dependencies.validate(version.componentId);
+  version.devDependencies.validate(version.componentId);
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }

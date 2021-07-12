@@ -56,26 +56,29 @@ export class GeneratorMain {
   }
 
   /**
-   * list all component templates registered in the workspace.
+   * list all component templates registered in the workspace or workspace templates in case the
+   * workspace is not available
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    if (this.workspace) {
-      await this.loadAspects();
-      const allTemplates = this.getAllComponentTemplatesFlattened();
-      return allTemplates.map(({ id, template }) => ({
-        aspectId: id,
-        name: template.name,
-        description: template.description,
-        hidden: template.hidden,
-      }));
-    }
-    const allTemplates = this.getAllWorkspaceTemplatesFlattened();
-    return allTemplates.map(({ id, template }) => ({
+    const getTemplateDescriptor = ({
+      id,
+      template,
+    }: {
+      id: string;
+      template: WorkspaceTemplate | ComponentTemplate;
+    }) => ({
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: template.hidden,
-    }));
+    });
+    return this.isRunningInsideWorkspace()
+      ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
+      : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
+  }
+
+  isRunningInsideWorkspace(): boolean {
+    return Boolean(this.workspace);
   }
 
   /**
@@ -139,7 +142,9 @@ export class GeneratorMain {
     const template = this.getWorkspaceTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
-    return workspaceGenerator.generate();
+    const workspacePath = await workspaceGenerator.generate();
+
+    return workspacePath;
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {

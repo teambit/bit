@@ -159,7 +159,7 @@ async function applyVersion(
   const componentWriter = ComponentWriter.getInstance({
     component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    writeToPath: component.files[0].base, // find the current path from the files. (we use the first one but it's the same for all)
+    writeToPath: pathNormalizeToLinux(component.files[0].base), // find the current path from the files. (we use the first one but it's the same for all)
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,

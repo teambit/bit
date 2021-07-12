@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { HASH_SIZE } from '../../src/constants';
@@ -17,7 +16,6 @@ describe('bit snap command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([HARMONY_FEATURE]);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -301,7 +299,7 @@ describe('bit snap command', function () {
           it('should add a descriptive message about the merge', () => {
             const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
             expect(lastVersion.log.message).to.have.string('merge remote');
-            expect(lastVersion.log.message).to.have.string('master');
+            expect(lastVersion.log.message).to.have.string('main');
           });
           it('should update bitmap snap', () => {
             const head = helper.command.getHead('bar/foo');
@@ -387,7 +385,7 @@ describe('bit snap command', function () {
         it('should add a descriptive message about the merge', () => {
           const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
           expect(lastVersion.log.message).to.have.string('merge remote');
-          expect(lastVersion.log.message).to.have.string('master');
+          expect(lastVersion.log.message).to.have.string('main');
         });
         it('should update bitmap snap', () => {
           const head = helper.command.getHead('bar/foo');
@@ -408,7 +406,7 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/master)`);
+          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/main)`);
           expect(content).to.have.string(fixtures.fooFixtureV2);
           expect(content).to.have.string('=======');
           expect(content).to.have.string(fixtures.fooFixtureV3);
@@ -444,7 +442,7 @@ describe('bit snap command', function () {
             helper.fixtures.createComponentBarFoo('');
           });
           it('should block tagging the component', () => {
-            const output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
+            const output = helper.general.runWithTryCatch('bit tag bar/foo');
             expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
           });
           it('should not include the component when running bit tag --all', () => {

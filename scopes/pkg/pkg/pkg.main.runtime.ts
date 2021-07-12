@@ -5,7 +5,7 @@ import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/compon
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
@@ -125,6 +125,7 @@ export class PkgMain {
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
     const pkg = new PkgMain(
+      logPublisher,
       config,
       packageJsonPropsRegistry,
       workspace,
@@ -176,8 +177,7 @@ export class PkgMain {
    */
   getModulePath(component: Component) {
     const pkgName = this.getPackageName(component);
-    const path = join('node_modules', pkgName);
-    return path;
+    return join('node_modules', pkgName);
   }
 
   /**
@@ -188,6 +188,10 @@ export class PkgMain {
    * @memberof PkgExtension
    */
   constructor(
+    /**
+     * logger extension
+     */
+    readonly logger: Logger,
     /**
      * pkg extension configuration.
      */
@@ -247,7 +251,7 @@ export class PkgMain {
    * 3. props defined by the user (they are the strongest one)
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
-    let newProps = {};
+    let newProps: PackageJsonProps = {};
     const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
@@ -264,7 +268,7 @@ export class PkgMain {
     });
 
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
+    const currentConfig = currentExtension?.config as unknown as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
@@ -275,7 +279,7 @@ export class PkgMain {
 
   getPackageJsonModifications(component: Component): Record<string, any> {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = currentExtension?.data as unknown as ComponentPkgExtensionData;
     return currentData?.packageJsonModification ?? {};
   }
 
@@ -358,7 +362,8 @@ export class PkgMain {
     const pkgJson = currentData?.pkgJson ?? {};
     const checksum = currentData?.checksum;
     if (!checksum) {
-      throw new BitError(`checksum for ${component.id} is missing`);
+      this.logger.error(`checksum for ${component.id.toString()} is missing`);
+      return undefined;
     }
     const dist = {
       shasum: checksum,
