@@ -1,7 +1,6 @@
 import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
-import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { EnvsExecutionResult } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
@@ -45,30 +44,29 @@ export class LintCmd implements Command {
     ['j', 'json', 'return the lint results in json format'],
   ] as CommandOptions;
 
-  constructor(
-    private linter: LinterMain,
-    private componentHost: ComponentFactory,
-    private logger: Logger,
-    private workspace: Workspace
-  ) {}
+  constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
 
   async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
     const { duration, data, componentsIdsToLint } = await this.json([components], linterOptions);
-    this.logger.consoleTitle(
+    const title = chalk.bold(
       `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} component(s) in workspace '${chalk.cyan(
         this.componentHost.name
       )}'`
     );
 
-    data.results.forEach((lintRes) => {
-      this.logger.consoleTitle(`${chalk.cyan(lintRes.componentId.toString({ ignoreVersion: true }))}`);
-      this.logger.console(lintRes.output);
-    });
+    const componentsOutputs = data.results
+      .map((lintRes) => {
+        const compTitle = chalk.bold.cyan(lintRes.componentId.toString({ ignoreVersion: true }));
+        const compOutput = lintRes.output;
+        return `${compTitle}\n${compOutput}`;
+      })
+      .join('\n');
 
     const { seconds } = duration;
-    return `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
+    const summery = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
       seconds.toString()
     )}.`;
+    return `${title}\n\n${componentsOutputs}\n\n${summery}`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
