@@ -9,7 +9,6 @@ export class ExecutionRef {
 
   currentComponents: Component[];
 
-  // (public components: Component[] = [], public executionCtx: ExecutionContext) {}
   add(added: Component) {
     this.currentComponents = this.currentComponents.concat(added);
   }
