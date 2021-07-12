@@ -12,7 +12,6 @@ export class FormatTask implements BuildTask {
       return {
         component: formatResult.component,
         metadata: {
-          output: formatResult.output,
           results: formatResult.results,
         },
         errors: [],
