@@ -4,8 +4,13 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { loadBit } from '@teambit/bit';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -59,7 +64,7 @@ export class GeneratorMain {
    * list all component templates registered in the workspace or workspace templates in case the
    * workspace is not available
    */
-  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
+  async listTemplates(): Promise<TemplateDescriptor[]> {
     const getTemplateDescriptor = ({
       id,
       template,
@@ -75,6 +80,13 @@ export class GeneratorMain {
     return this.isRunningInsideWorkspace()
       ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
       : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
+  }
+
+  /**
+   * @deprecated use this.listTemplates()
+   */
+  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
+    return this.listTemplates();
   }
 
   isRunningInsideWorkspace(): boolean {
@@ -100,14 +112,47 @@ export class GeneratorMain {
     return found?.template;
   }
 
+  async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
+    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
+    await globalScope.ensureDir();
+    const globalScopeHarmony = await loadBit(globalScope.path);
+    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    const id = await scope.resolveComponentId(aspectId);
+    const components = await scope.import([id]);
+    if (!components.length) throw new Error(`failed importing ${aspectId}`);
+    const templateAspect = components[0];
+    const resolvedAspects = await scope.getResolvedAspects([templateAspect]);
+    const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
+    await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
+    const generator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
+    const fullAspectId = templateAspect.id.toString();
+    return generator.searchRegisteredWorkspaceTemplate(name, fullAspectId);
+  }
+
   /**
    * returns a specific workspace template.
    */
-  getWorkspaceTemplate(name: string, aspectId?: string): WorkspaceTemplate | undefined {
+  async getWorkspaceTemplate(name: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
+    const registeredTemplate = await this.searchRegisteredWorkspaceTemplate(name, aspectId);
+    if (registeredTemplate) {
+      return registeredTemplate;
+    }
+    if (!aspectId)
+      throw new Error(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+    const fromGlobal = await this.findTemplateInGlobalScope(aspectId, name);
+    if (fromGlobal) {
+      return fromGlobal;
+    }
+    throw new Error(`template "${name}" was not found`);
+  }
+
+  async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
     const templates = this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
-      if (aspectId && id !== aspectId) return false;
-      return template.name === name;
+      if (aspectId && name) return aspectId === id && name === template.name;
+      if (aspectId) return aspectId === id;
+      if (name) return name === template.name;
+      throw new Error(`searchRegisteredWorkspaceTemplate expects to get "name" or "aspectId"`);
     });
     return found?.template;
   }
@@ -139,7 +184,7 @@ export class GeneratorMain {
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
     const { aspect: aspectId } = options;
-    const template = this.getWorkspaceTemplate(templateName, aspectId);
+    const template = await this.getWorkspaceTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
     const workspacePath = await workspaceGenerator.generate();

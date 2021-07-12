@@ -16,7 +16,11 @@ export class NewCmd implements Command {
   loader = true;
   group = 'start';
   options = [
-    ['a', 'aspect <string>', 'aspect-id of the template. helpful when multiple aspects use the same template name'],
+    [
+      'a',
+      'aspect <string>',
+      'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of name collision',
+    ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
   ] as CommandOptions;
