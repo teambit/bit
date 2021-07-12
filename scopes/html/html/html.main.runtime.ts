@@ -21,12 +21,12 @@ export class HtmlMain {
     readonly htmlEnv: HtmlEnv,
 
     private envs: EnvsMain
-  ){}
+  ) {}
   static slots = [];
   static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
   static runtime = MainRuntime;
 
-/**
+  /**
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -101,7 +101,7 @@ export class HtmlMain {
     const htmlEnv: HtmlEnv = envs.merge(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
     generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate]);
-  return new HtmlMain(react, htmlEnv, envs);
+    return new HtmlMain(react, htmlEnv, envs);
   }
 }
 

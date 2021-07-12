@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
@@ -19,7 +18,6 @@ describe('bit lane command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([HARMONY_FEATURE]);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -35,7 +33,7 @@ describe('bit lane command', function () {
       expect(output).to.have.string('current lane - dev');
     });
   });
-  describe('create a snap on master then on a new lane', () => {
+  describe('create a snap on main then on a new lane', () => {
     let beforeExport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -59,9 +57,9 @@ describe('bit lane command', function () {
     });
     it('bit log should show both snaps', () => {
       const log = helper.command.log('bar/foo');
-      const masterSnap = helper.command.getHead('bar/foo');
+      const mainSnap = helper.command.getHead('bar/foo');
       const devSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
-      expect(log).to.have.string(masterSnap);
+      expect(log).to.have.string(mainSnap);
       expect(log).to.have.string(devSnap);
     });
     describe('bit lane with --details flag', () => {
@@ -79,7 +77,7 @@ describe('bit lane command', function () {
         diffOutput = helper.command.diffLane();
       });
       it('should show the diff correctly', () => {
-        expect(diffOutput).to.have.string('--- foo.js (master)');
+        expect(diffOutput).to.have.string('--- foo.js (main)');
         expect(diffOutput).to.have.string('+++ foo.js (dev)');
 
         expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
@@ -109,7 +107,7 @@ describe('bit lane command', function () {
           diffOutput = helper.command.diffLane('dev', true);
         });
         it('should show the diff correctly', () => {
-          expect(diffOutput).to.have.string('--- foo.js (master)');
+          expect(diffOutput).to.have.string('--- foo.js (main)');
           expect(diffOutput).to.have.string('+++ foo.js (dev)');
 
           expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
@@ -282,7 +280,7 @@ describe('bit lane command', function () {
           expect(diff).to.have.string("-module.exports = function foo() { return 'got foo v2'; }");
           expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v3'; }");
         });
-        it('should not show the diff between the filesystem and master', () => {
+        it('should not show the diff between the filesystem and main', () => {
           expect(diff).to.not.have.string("-module.exports = function foo() { return 'got foo'; }");
         });
       });
@@ -330,7 +328,7 @@ describe('bit lane command', function () {
       helper.command.exportLane('dev');
       authorScope = helper.scopeHelper.cloneLocalScope();
     });
-    describe('merging remote lane into master', () => {
+    describe('merging remote lane into main', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
@@ -346,13 +344,13 @@ describe('bit lane command', function () {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
-      it('bit lane should show that all components are belong to master', () => {
+      it('bit lane should show that all components are belong to main', () => {
         const lanes = helper.command.showLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
     });
-    describe('merging remote lane into master when components are not in workspace using --existing flag', () => {
+    describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
       let mergeOutput;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
@@ -375,7 +373,7 @@ describe('bit lane command', function () {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
-      it('bit lane should not show the components as if they belong to master', () => {
+      it('bit lane should not show the components as if they belong to main', () => {
         const lanes = helper.command.showLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(0);
@@ -421,7 +419,7 @@ describe('bit lane command', function () {
           const lane = helper.command.showOneLaneParsed('dev');
           expect(lane.components).to.have.lengthOf(3);
         });
-        it('bit lane --merged should not show the lane as it was not merged into master yet', () => {
+        it('bit lane --merged should not show the lane as it was not merged into main yet', () => {
           const merged = helper.command.showLanes('--merged');
           expect(merged).to.not.have.string('dev');
           expect(merged).to.have.string('None of the lanes is merged');
@@ -444,20 +442,20 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapAllComponents();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
+      output = helper.general.runWithTryCatch('bit tag bar/foo');
     });
-    it('should block the tag and suggest to switch to master and merge the changes', () => {
+    it('should block the tag and suggest to switch to main and merge the changes', () => {
       expect(output).to.have.string(
-        'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+        'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
       );
     });
   });
-  describe('master => lane-a => labe-b, so laneB branched from laneA', () => {
+  describe('main => lane-a => labe-b, so laneB branched from laneA', () => {
     let beforeSwitchingBack;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      // master
+      // main
       helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
       helper.command.snapAllComponents();
@@ -481,11 +479,11 @@ describe('bit lane command', function () {
 
       beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();
     });
-    it('lane-a should not contain components from master', () => {
+    it('lane-a should not contain components from main', () => {
       const lane = helper.command.showOneLaneParsed('lane-a');
       expect(lane.components).to.have.lengthOf(1);
     });
-    it('laneB object should include components from laneA, but not from master', () => {
+    it('laneB object should include components from laneA, but not from main', () => {
       const lane = helper.command.showOneLaneParsed('lane-b');
       expect(lane.components).to.have.lengthOf(2);
     });
@@ -503,9 +501,9 @@ describe('bit lane command', function () {
           removeChalkCharacters('successfully set "lane-a" as the active lane') as string
         );
       });
-      // master components belong to lane-a only if they are snapped on lane-a, so utils/is-type
+      // main components belong to lane-a only if they are snapped on lane-a, so utils/is-type
       // doesn't belong to lane-a and should not appear as staged when on lane-a.
-      it('bit status should not show neither lane-b nor master components as staged', () => {
+      it('bit status should not show neither lane-b nor main components as staged', () => {
         const statusParsed = helper.command.statusJson();
         expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string']);
         const status = helper.command.status();
@@ -517,16 +515,16 @@ describe('bit lane command', function () {
       });
       // @todo: test each one of the commands on bar/foo
     });
-    describe('checking out from lane-b to master', () => {
+    describe('checking out from lane-b to main', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
-        helper.command.switchLocalLane('master');
+        helper.command.switchLocalLane('main');
       });
-      it('bit list should only show master components', () => {
+      it('bit list should only show main components', () => {
         const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
-      it('bit status should show only master components as staged', () => {
+      it('bit status should show only main components as staged', () => {
         const statusParsed = helper.command.statusJson();
         expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
@@ -534,17 +532,17 @@ describe('bit lane command', function () {
         expect(status).to.not.have.string('utils/is-string');
       });
     });
-    describe('switching to lane-a then to master', () => {
+    describe('switching to lane-a then to main', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
         helper.command.switchLocalLane('lane-a');
-        helper.command.switchLocalLane('master');
+        helper.command.switchLocalLane('main');
       });
-      it('bit list should only show master components', () => {
+      it('bit list should only show main components', () => {
         const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
-      it('bit status should show only master components as staged', () => {
+      it('bit status should show only main components as staged', () => {
         const statusParsed = helper.command.statusJson();
         expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
@@ -554,7 +552,7 @@ describe('bit lane command', function () {
     });
   });
   // @todo: implement
-  describe('master => lane-a => labe-b, so laneB branched from laneA all exported', () => {
+  describe('main => lane-a => labe-b, so laneB branched from laneA all exported', () => {
     describe('then cloned to another project and checked out to lane-a', () => {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
     });
@@ -581,9 +579,9 @@ describe('bit lane command', function () {
         const lane = helper.command.showOneLaneParsed('dev');
         expect(lane.components).to.have.lengthOf(1);
       });
-      describe('switching to master', () => {
+      describe('switching to main', () => {
         before(() => {
-          helper.command.switchLocalLane('master');
+          helper.command.switchLocalLane('main');
         });
         it('bit list should not show the component', () => {
           const list = helper.command.listLocalScopeParsed();
@@ -600,9 +598,9 @@ describe('bit lane command', function () {
         const lane = helper.command.showOneLaneParsed('dev');
         expect(lane.components).to.have.lengthOf(0);
       });
-      describe('switching to master', () => {
+      describe('switching to main', () => {
         before(() => {
-          helper.command.switchLocalLane('master');
+          helper.command.switchLocalLane('main');
         });
         it('bit list should show the component', () => {
           const list = helper.command.listLocalScopeParsed();
@@ -631,7 +629,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
       helper.command.snapAllComponents();
 
-      helper.command.switchLocalLane('master');
+      helper.command.switchLocalLane('main');
     });
     it('should checkout to the same version the origin branch had before the switch', () => {
       helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1');
@@ -896,7 +894,6 @@ describe('bit lane command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
@@ -921,7 +918,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe('tag on master, export, create lane and snap', () => {
+  describe('tag on main, export, create lane and snap', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();

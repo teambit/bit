@@ -6,7 +6,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { BuilderEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv } from '@teambit/envs';
+import { BuilderEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv, FormatterEnv } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -15,7 +15,9 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
+import { PrettierMain } from '@teambit/prettier';
 import { Linter } from '@teambit/linter';
+import { Formatter } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
@@ -25,7 +27,6 @@ import { Configuration } from 'webpack';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import docs from '@teambit/react.ui.docs-app';
 import { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 
@@ -42,15 +43,15 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
 export const AspectEnvType = 'react';
-const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
+const prettierConfig = require('./prettier/prettier.config.js');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv {
+export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
   constructor(
     /**
      * jest extension
@@ -89,7 +90,9 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private prettier: PrettierMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -103,9 +106,9 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jestM): Tester {
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModule);
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
   createTsCompiler(
@@ -153,6 +156,15 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
       config: eslintConfig,
       // resolve all plugins from the react environment.
       pluginPath: __dirname,
+    });
+  }
+
+  /**
+   * returns and configures the component formatter.
+   */
+  getFormatter(): Formatter {
+    return this.prettier.createFormatter({
+      config: prettierConfig,
     });
   }
 

@@ -16,6 +16,17 @@ export interface WorkspaceContext {
    * it is used as the directory name for the workspace.
    */
   name: string;
+
+  /**
+   * default scope as entered by the user.
+   * it will be set in the workspace.jsonc and be used for componens
+   */
+  defaultScope?: string;
+}
+
+export interface ComponentToImport {
+  id: string;
+  path: string;
 }
 
 export interface WorkspaceTemplate {
@@ -38,4 +49,6 @@ export interface WorkspaceTemplate {
    * template function for generating the template files,
    */
   generateFiles(context: WorkspaceContext): WorkspaceFile[];
+
+  importComponents?: () => ComponentToImport[];
 }

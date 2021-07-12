@@ -72,7 +72,7 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  onLanesOnly? = false; // whether a component is available only on lanes and not on master
+  onLanesOnly? = false; // whether a component is available only on lanes and not on main
   lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
   defaultVersion?: string | null;
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
@@ -343,7 +343,7 @@ export default class ComponentMap {
 
   /**
    * this.id.version should indicate the currently used version, regardless of the lane.
-   * on the filesystem, id.version is saved according to the master, so it needs to be changed.
+   * on the filesystem, id.version is saved according to the main, so it needs to be changed.
    * @param currentRemote
    * @param currentLaneIds
    */

@@ -424,7 +424,7 @@ export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
 
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
-export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+export const ANGULAR_BIT_ENTRY_POINT_FILE = ['public-api.ts', 'public_api.ts'];
 
 export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
 
@@ -440,7 +440,7 @@ export const HASH_SIZE = 40;
 // @todo: decide how the delimiter should look like
 export const LANE_REMOTE_DELIMITER = '/';
 
-export const DEFAULT_LANE = 'master';
+export const DEFAULT_LANE = 'main';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';

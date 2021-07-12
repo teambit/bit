@@ -2,7 +2,6 @@ import chai, { expect } from 'chai';
 import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Component } from '@teambit/component';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -13,7 +12,6 @@ describe('workspace aspect', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -22,7 +20,6 @@ describe('workspace aspect', function () {
   describe('tag a component twice', () => {
     before(() => {
       helper = new Helper();
-      helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // 0.0.1

@@ -24,14 +24,14 @@ export default async function createNewLane(
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (laneComponents) return laneComponents;
     // when branching from one lane to another, copy components from the origin lane
-    // when branching from master, no need to copy anything
+    // when branching from main, no need to copy anything
     const currentLaneObject = await consumer.getCurrentLaneObject();
     return currentLaneObject ? currentLaneObject.components : [];
   };
   const getDataToPopulateWorkspaceLaneIfNeeded = (): BitIds => {
     if (laneComponents) return new BitIds(); // if laneComponent, this got created when importing a remote lane
     // when branching from one lane to another, copy components from the origin workspace-lane
-    // when branching from master, no need to copy anything
+    // when branching from main, no need to copy anything
     const currentWorkspaceLane = consumer.bitMap.workspaceLane;
     return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
   };

@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -109,7 +108,6 @@ chai.use(require('chai-fs'));
   describe('Harmony watch, using Compiler & Typescript extensions', () => {
     before(() => {
       helper.command.resetFeatures();
-      helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();

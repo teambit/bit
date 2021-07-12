@@ -29,8 +29,10 @@ export class TemplatesCmd implements Command {
     }
 
     const grouped = groupBy(results, 'aspectId');
-    const title = chalk.green(`\nThe following template(s) are available with the command bit create: \nbit create react-component ui/button
-    \n`);
+    const titleStr = this.generator.isRunningInsideWorkspace()
+      ? `The following template(s) are available with the command bit create: \nbit create react-component ui/button`
+      : `The following template(s) are available with the command bit new: \nbit new react-workspace my-workspace`;
+    const title = chalk.green(`\n${titleStr}\n`);
     const templateOutput = (template: TemplateDescriptor) => {
       const desc = template.description ? ` (${template.description})` : '';
       return `    ${template.name}${chalk.dim(desc)}`;

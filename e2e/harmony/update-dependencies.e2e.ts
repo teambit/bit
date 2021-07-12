@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -13,7 +12,6 @@ describe('update-dependencies command', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -44,9 +42,9 @@ describe('update-dependencies command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagComponent('comp1', undefined, '1.0.5 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.0.5', undefined, '--skip-auto-tag');
       helper.fixtures.populateComponents(1, undefined, ' v3');
-      helper.command.tagComponent('comp1', undefined, '1.1.0 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.1.0', undefined, '--skip-auto-tag');
       helper.command.export();
       secondScopeBeforeUpdate = helper.scopeHelper.cloneScope(secondRemotePath);
     });

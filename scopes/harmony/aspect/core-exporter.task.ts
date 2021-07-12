@@ -21,6 +21,7 @@ export class CoreExporterTask implements BuildTask {
       const distDir = this.env.getCompiler().distDir;
       await this.addFolderForAllCoreAspects(mainAspectCapsule, distDir);
       await this.addFolderForHarmony(mainAspectCapsule, distDir);
+      await this.addFolderForLegacy(mainAspectCapsule, distDir);
     }
 
     return {
@@ -47,14 +48,27 @@ export class CoreExporterTask implements BuildTask {
     return Promise.all(createBarrelFilesP);
   }
 
-  private async addFolderForHarmony(mainAspectCapsule: Capsule, distDir: string) {
-    const name = 'harmony';
-    const packageName = '@teambit/harmony';
+  private async addFolderForNonAspectCorePackages(
+    mainAspectCapsule: Capsule,
+    distDir: string,
+    name: string,
+    packageName = `@teambit/${name}`
+  ) {
     const capsuleDir = mainAspectCapsule.path;
     const newDirPath = path.join(capsuleDir, distDir, name);
     await fs.ensureDir(newDirPath);
     const barrelContent = generateBarrelFile(packageName);
     await fs.writeFile(path.join(newDirPath, 'index.js'), barrelContent);
+  }
+
+  private async addFolderForHarmony(mainAspectCapsule: Capsule, distDir: string) {
+    const name = 'harmony';
+    await this.addFolderForNonAspectCorePackages(mainAspectCapsule, distDir, name);
+  }
+
+  private async addFolderForLegacy(mainAspectCapsule: Capsule, distDir: string) {
+    const name = 'legacy';
+    await this.addFolderForNonAspectCorePackages(mainAspectCapsule, distDir, name);
   }
 }
 

@@ -9,7 +9,7 @@ export class GenerateCommandsDoc {
   constructor(private commands: Command[], private options: GenerateOpts) {}
 
   generate(): string {
-    const commands = this.getAllPublicCommands();
+    const commands = this.getAllPublicCommandsSorted();
     const metadata = {
       id: 'cli-all',
       title: 'CLI Commands',
@@ -29,8 +29,9 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     return output;
   }
 
-  private getAllPublicCommands() {
-    return this.commands.filter((cmd) => !cmd.private);
+  private getAllPublicCommandsSorted() {
+    const publicCommands = this.commands.filter((cmd) => !cmd.private);
+    return publicCommands.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   private generateCommand(cmd: Command) {
@@ -57,8 +58,9 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     subCommands.forEach((subCommand) => {
       // @ts-ignore
       const name = subCommand.name.match(/^([\w-]+)/)[0];
+      const usage = subCommand.name;
       ret += `### ${name} \n`;
-      ret += `**Usage**: ${subCommand.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
+      ret += `**Usage**: \`${usage}\`  \n\n`;
       ret += `**Description**: ${this.formatDescription(subCommand.description as string)}`;
 
       ret += '\n';
@@ -73,9 +75,9 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     output += `|---|:-----:|---|\n`;
     options.forEach((opt) => {
       const [alias, flag, description] = opt;
-      const aliasFormatted = alias ? `-${alias}` : '   ';
+      const aliasFormatted = alias ? `\`-${alias}\`` : '   ';
       const flagFormatted = `--${flag}`;
-      output += `|\`${flagFormatted}\`|\`${aliasFormatted}\`|${description}|\n`;
+      output += `|\`${flagFormatted}\`|${aliasFormatted}|${description}|\n`;
     });
     output += `\n`;
     return output;

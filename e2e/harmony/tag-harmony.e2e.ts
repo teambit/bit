@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -12,7 +11,6 @@ describe('tag components on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -183,9 +181,9 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(3);
-      helper.command.tagWithoutBuild('comp3 0.0.3');
-      helper.command.tagWithoutBuild('comp2 0.0.2');
-      helper.command.tagWithoutBuild('comp1 0.0.1');
+      helper.command.tagWithoutBuild('comp3@0.0.3');
+      helper.command.tagWithoutBuild('comp2@0.0.2');
+      helper.command.tagWithoutBuild('comp1@0.0.1');
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without version', () => {

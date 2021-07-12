@@ -2,7 +2,6 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -15,7 +14,6 @@ describe('babel compiler', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -32,7 +30,6 @@ describe('babel compiler', function () {
         helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
         helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
-        helper.scopeHelper.linkBitLegacy();
         helper.command.link();
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
           policy: {
