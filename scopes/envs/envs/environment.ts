@@ -1,4 +1,5 @@
 import type { Linter } from '@teambit/linter';
+import type { Formatter } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
 import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import type { BuildTask } from '@teambit/builder';
@@ -67,6 +68,14 @@ export interface LinterEnv extends Environment {
    * Required for `bit lint`
    */
   getLinter?: () => Linter;
+}
+
+export interface FormatterEnv extends Environment {
+  /**
+   * Returns & configures the formatter to use (prettier, ...)
+   * Required for `bit format`
+   */
+  getFormatter?: () => Formatter;
 }
 
 export interface PreviewEnv extends Environment {
