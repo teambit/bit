@@ -355,6 +355,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
+    "formatter": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/formatter"
+    },
     "generator": {
         "scope": "teambit.generator",
         "version": "0.0.449",
@@ -624,6 +630,12 @@
         "version": "0.0.449",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
+    },
+    "prettier": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/prettier"
     },
     "preview": {
         "scope": "teambit.preview",
