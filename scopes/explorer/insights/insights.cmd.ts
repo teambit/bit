@@ -8,7 +8,10 @@ export default class InsightsCmd implements Command {
   description = 'Insights on component graph';
   group = 'development';
   private = true;
-  options = [['l', 'list', 'list all insights']] as CommandOptions;
+  options = [
+    ['l', 'list', 'list all insights'],
+    ['v', 'verbose', 'verbose output'],
+  ] as CommandOptions;
   insightManager: InsightManager;
   constructor(insightManager: InsightManager) {
     this.insightManager = insightManager;

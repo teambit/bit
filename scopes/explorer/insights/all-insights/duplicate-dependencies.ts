@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
-
+import { rcompare } from 'semver';
+// import { ComponentID } from '../../../component/component-id';
+import { ComponentID } from '@teambit/component';
 import { Insight, InsightResult, RawResult } from '../insight';
 // import NoDataForInsight from '../exceptions/no-data-for-insight';
 
@@ -11,13 +13,17 @@ type Dependent = {
   usedVersion: string;
 };
 
+type VersionWithDependents = {
+  version: string;
+  compId: string;
+  dependents: Dependent[];
+};
+
 type FormattedEntry = {
   dependencyId: string;
   latestVersion: string;
-  dependents: {
-    id: string;
-    usedVersion: string;
-  }[];
+  totalOutdatedDependents: string;
+  dependentsByVersion: VersionWithDependents[];
 };
 export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
@@ -51,27 +57,43 @@ export default class DuplicateDependencies implements Insight {
   private formatData(data: any): FormattedEntry[] {
     const formatted: FormattedEntry[] = [];
     for (const [dependency, depData] of data.entries()) {
-      const dependents: Dependent[] = this.getDependents(depData.priorVersions);
+      const { totalOutdatedDependents, dependentsByVersion } = this.getDependents(depData.priorVersions);
       formatted.push({
         dependencyId: dependency,
         latestVersion: depData.latestVersionId,
-        dependents,
+        totalOutdatedDependents: totalOutdatedDependents.toString(),
+        dependentsByVersion,
       });
     }
     return formatted;
   }
 
-  private getDependents(priorVersions: VersionSubgraph[]): Dependent[] {
-    const dependents: Dependent[] = [];
+  private getDependents(
+    priorVersions: VersionSubgraph[]
+  ): { totalOutdatedDependents: number; dependentsByVersion: VersionWithDependents[] } {
+    let totalOutdatedDependents = 0;
+    let dependentsByVersion: VersionWithDependents[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
+      let dependents: Dependent[] = [];
       pVersion.immediateDependents.forEach((dependent: string) => {
         dependents.push({
           id: dependent,
           usedVersion: pVersion.versionId,
         });
       });
+      dependentsByVersion.push({
+        compId: pVersion.versionId,
+        version: ComponentID.fromString(pVersion.versionId).version || pVersion.versionId.split('@')[1],
+        dependents,
+      });
+      totalOutdatedDependents += pVersion.immediateDependents.length;
     });
-    return dependents;
+    dependentsByVersion.sort(this.revreseCompareVersions);
+    return { totalOutdatedDependents, dependentsByVersion };
+  }
+
+  revreseCompareVersions(v1: VersionWithDependents, v2: VersionWithDependents) {
+    return rcompare(v1.version, v2.version);
   }
 
   private renderDependents(dependents: { id: string; usedVersion: string }[]): string {
@@ -86,9 +108,10 @@ export default class DuplicateDependencies implements Insight {
   private renderData(data: FormattedEntry[]) {
     const string = data
       .map((obj) => {
-        return `\nDuplicate dependency
---------------------
-Dependency: ${obj.dependencyId}
+        return `\nComponent with outdated dependencies
+------------------------------------
+Found ${data.totalOutdatedDependents} outdated dependencies for ${obj.dependencyId}
+The latest version is "${obj.latestVersion}"
 Dependents:
 ${this.renderDependents(obj.dependents)}`;
       })
