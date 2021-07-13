@@ -72,9 +72,9 @@ export default class DuplicateDependencies implements Insight {
     priorVersions: VersionSubgraph[]
   ): { totalOutdatedDependents: number; dependentsByVersion: VersionWithDependents[] } {
     let totalOutdatedDependents = 0;
-    let dependentsByVersion: VersionWithDependents[] = [];
+    const dependentsByVersion: VersionWithDependents[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
-      let dependents: Dependent[] = [];
+      const dependents: Dependent[] = [];
       const version = ComponentID.fromString(pVersion.versionId).version || pVersion.versionId.split('@')[1];
       pVersion.immediateDependents.forEach((dependent: string) => {
         dependents.push({
@@ -118,9 +118,9 @@ export default class DuplicateDependencies implements Insight {
   private renderData(data: FormattedEntry[]) {
     const string = data
       .map((obj) => {
-        return `\n\nFound ${obj.totalOutdatedDependents} outdated dependencies for ${obj.dependencyId}
+        return `\n\nFound ${obj.totalOutdatedDependents} outdated dependents for ${obj.dependencyId}
 The latest version is "${obj.latestVersion}"
-Dependents:
+Outdated dependents:
 ${this.stringifyDependentsByVersion(obj.dependentsByVersion)}`;
       })
       .join('\n');
@@ -136,7 +136,7 @@ ${this.stringifyDependentsByVersion(obj.dependentsByVersion)}`;
         name: this.name,
         description: this.description,
       },
-      data: bareResult.data,
+      data: formattedData,
       message: bareResult.message,
       renderedData,
     };

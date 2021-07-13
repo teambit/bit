@@ -2,6 +2,9 @@ import InsightAlreadyExists from './exceptions/insight-already-exists';
 import InsightNotFound from './exceptions/insight-not-found';
 import { Insight, InsightResult } from './insight';
 
+export type RunInsightOptions = {
+  renderData: boolean;
+};
 export class InsightManager {
   /** insights is an insight registry */
   readonly insights: Map<string, Insight> = new Map();
@@ -54,13 +57,16 @@ export class InsightManager {
    * execute an array of insights
    *
    */
-  async run(insightNames: string[]): Promise<InsightResult[]> {
+  async run(insightNames: string[], opts: RunInsightOptions): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
     await Promise.all(
       insightNames.map(async (insightName) => {
         const insight = this.getByName(insightName);
         if (insight) {
           const insightRes: InsightResult = await insight.run();
+          if (!opts.renderData) {
+            delete insightRes.renderedData;
+          }
           res.push(insightRes);
         }
       })
@@ -72,13 +78,8 @@ export class InsightManager {
    * execute all insights in the registry
    *
    */
-  async runAll(): Promise<InsightResult[]> {
-    const res: InsightResult[] = [];
-    for (const [, insight] of this.insights.entries()) {
-      // eslint-disable-next-line no-await-in-loop
-      const insightRes: InsightResult = await insight.run();
-      res.push(insightRes);
-    }
-    return res;
+  async runAll(opts: RunInsightOptions): Promise<InsightResult[]> {
+    const allInsightNames = this.listInsights();
+    return this.run(allInsightNames, opts);
   }
 }
