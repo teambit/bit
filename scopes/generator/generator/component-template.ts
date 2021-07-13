@@ -60,6 +60,11 @@ export interface ComponentTemplate {
   hidden?: boolean;
 
   /**
+   * whether this template is for an aspect or not (in which case we will update workspace.jsonc accordingly)
+   */
+  aspect?: boolean;
+
+  /**
    * template function for generating the file of a certain component.,
    */
   generateFiles(context: ComponentContext): ComponentFile[];

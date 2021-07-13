@@ -12,7 +12,7 @@ export class ${Name}Extension {
   static async provider([envs, react]: [EnvsMain, ReactMain]) {
     const ${Name}Env = react.compose([
       /*
-        Use any of the "react.override..." transformers to
+        Use any of the "react.override..." transformers
       */
     ])
 
