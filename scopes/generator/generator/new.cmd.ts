@@ -6,6 +6,7 @@ export type NewOptions = {
   aspect?: string;
   defaultScope?: string;
   standalone?: boolean;
+  loadFrom?: string;
 };
 
 export class NewCmd implements Command {
@@ -23,6 +24,11 @@ export class NewCmd implements Command {
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
+    [
+      '',
+      'load-from <string>',
+      'path to the workspace containing the template. helpful during a development of a workspace-template',
+    ],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
