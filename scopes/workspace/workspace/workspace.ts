@@ -58,10 +58,9 @@ import { buildOneGraphForComponents } from '@teambit/legacy/dist/scope/graph/com
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference } from 'lodash';
-import path, { join } from 'path';
+import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
@@ -212,6 +211,11 @@ export class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /** get the `node_modules` folder of this workspace */
+  private get modulesPath() {
+    return path.join(this.path, 'node_modules');
   }
 
   get isLegacy(): boolean {
@@ -1035,7 +1039,12 @@ export class Workspace implements ComponentFactory {
     id: string
   ) {
     const PREFIX = 'bit';
-    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+    const cacheDir = path.join(this.modulesPath, '.cache', PREFIX, id);
+
+    // maybe should also check it's a folder and has write permissions
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
 
     return cacheDir;
   }
@@ -1232,7 +1241,7 @@ export class Workspace implements ComponentFactory {
     const packageName = componentIdToPackageName(
       component instanceof ConsumerComponent ? component : component.state._consumer
     );
-    return path.join(this.path, 'node_modules', packageName);
+    return path.join(this.modulesPath, packageName);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)

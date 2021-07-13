@@ -25,6 +25,17 @@ To use this environment for your components, add it to any of the `variants` in 
 }
 ```
 
+In addition, because this env has its own method for rendering components you need to add it to the `bundler` configuration on the workspace.  
+In `workspace.json` add the following as a top-level key-value pair:
+
+```json
+{
+  "teambit.compilation/bundler": {
+    "dedicatedEnvDevServers": ["teambit.html/html"]
+  }
+}
+```
+
 ### No-Framework components
 
 For shareable, framework-less components **documentation is absolutely key**.
