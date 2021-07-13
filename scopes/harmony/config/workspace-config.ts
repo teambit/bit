@@ -192,18 +192,8 @@ export class WorkspaceConfig implements HostConfig {
       const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
-    const getTemplateFile = async () => {
-      try {
-        return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-      } catch (err) {
-        if (err.code !== 'ENOENT') throw err;
-        // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-        return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
-      }
-    };
-    const templateFile = await getTemplateFile();
-    const templateStr = templateFile.toString();
 
+    const templateStr = await getWorkspaceConfigTemplateFile();
     const template = parse(templateStr);
     // TODO: replace this assign with some kind of deepAssign that keeps the comments
     // right now the comments above the internal props are overrides after the assign
@@ -478,4 +468,14 @@ export function transformLegacyPropsToExtensions(
   }
   // @ts-ignore
   return data;
+}
+
+export async function getWorkspaceConfigTemplateFile(): Promise<string> {
+  try {
+    return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'), 'utf-8');
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
+    return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'), 'utf-8');
+  }
 }

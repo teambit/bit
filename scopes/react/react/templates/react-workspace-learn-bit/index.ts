@@ -9,7 +9,7 @@ export const reactWorkspaceLearnBitTemplate: WorkspaceTemplate = {
   name: 'react-learn-bit',
   description: 'EXPERIMENTAL. react workspace with learn-bit components',
   hidden: true,
-  generateFiles: (context: WorkspaceContext) => {
+  generateFiles: async (context: WorkspaceContext) => {
     return [
       {
         relativePath: 'workspace.jsonc',
