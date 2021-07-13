@@ -8,6 +8,7 @@ import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { BitError } from '@teambit/bit-error';
 import { loadBit } from '@teambit/bit';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -112,6 +113,10 @@ export class GeneratorMain {
     return found?.template;
   }
 
+  /**
+   * get or create a global scope, import the non-core aspects, load bit from that scope, create
+   * capsules for the aspects and load them from the capsules.
+   */
   async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
     const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
     await globalScope.ensureDir();
@@ -119,7 +124,7 @@ export class GeneratorMain {
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
     const id = await scope.resolveComponentId(aspectId);
     const components = await scope.import([id]);
-    if (!components.length) throw new Error(`failed importing ${aspectId}`);
+    if (!components.length) throw new BitError(`failed importing ${aspectId}`);
     const templateAspect = components[0];
     const resolvedAspects = await scope.getResolvedAspects([templateAspect]);
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
@@ -138,12 +143,12 @@ export class GeneratorMain {
       return registeredTemplate;
     }
     if (!aspectId)
-      throw new Error(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+      throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
     const fromGlobal = await this.findTemplateInGlobalScope(aspectId, name);
     if (fromGlobal) {
       return fromGlobal;
     }
-    throw new Error(`template "${name}" was not found`);
+    throw new BitError(`template "${name}" was not found`);
   }
 
   async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
@@ -166,12 +171,12 @@ export class GeneratorMain {
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
     const template = this.getComponentTemplate(templateName, aspectId);
-    if (!template) throw new Error(`template "${templateName}" was not found`);
+    if (!template) throw new BitError(`template "${templateName}" was not found`);
     const scope = options.scope || this.workspace.defaultScope;
     if (!isValidScopeName(scope)) {
       throw new InvalidScopeName(scope);
     }
-    if (!scope) throw new Error(`failed finding defaultScope`);
+    if (!scope) throw new BitError(`failed finding defaultScope`);
 
     const componentIds = componentNames.map((componentName) => {
       const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
@@ -185,7 +190,7 @@ export class GeneratorMain {
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
     const { aspect: aspectId } = options;
     const template = await this.getWorkspaceTemplate(templateName, aspectId);
-    if (!template) throw new Error(`template "${templateName}" was not found`);
+    if (!template) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
     const workspacePath = await workspaceGenerator.generate();
 
