@@ -6682,9 +6682,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.119":
-  version: 1.0.119
-  resolution: "@teambit/legacy@npm:1.0.119"
+"@teambit/legacy@npm:1.0.120":
+  version: 1.0.120
+  resolution: "@teambit/legacy@npm:1.0.120"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6808,7 +6808,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 5932673b9e441ba9020e8a29c1edd412d70aa31afdf238f3035b603eb053d0f91272d709b101368163ddb30cb66aeb17c83166729b52326670df5f928b24b001
+  checksum: 1bd805020897ecb1d481f11f133f597a2b5c0e0aa0076e685b479dbea369bb1735b49ad27a19e993fd460fb0380f393f5f520be83cf02617a3a2810bce420533
   languageName: node
   linkType: hard
 
@@ -6948,7 +6948,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.119
+    "@teambit/legacy": 1.0.120
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -6974,7 +6974,6 @@ __metadata:
     "@types/didyoumean": 1.2.0
     "@types/eslint": 7.2.4
     "@types/express": 4.17.9
-    "@types/find-cache-dir": 3.2.0
     "@types/find-root": 1.1.2
     "@types/fs-extra": 9.0.7
     "@types/get-port": 4.2.0
@@ -6997,6 +6996,7 @@ __metadata:
     "@types/node-fetch": 2.5.8
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
+    "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
     "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
@@ -7111,7 +7111,6 @@ __metadata:
     express-graphql: 0.12.0
     express-history-api-fallback: 2.2.1
     filenamify: 4.2.0
-    find-cache-dir: 3.3.1
     find-root: 1.1.0
     find-up: 5.0.0
     firstline: 2.0.2
@@ -7234,7 +7233,7 @@ __metadata:
     postcss-normalize: 9.0.0
     postcss-preset-env: 6.7.0
     postcss-safe-parser: 5.0.2
-    prettier: 2.2.1
+    prettier: 2.3.2
     prettier-eslint: 11.0.0
     pretty-time: 1.1.0
     process: 0.11.10
@@ -7349,7 +7348,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.119
+    "@teambit/legacy": 1.0.120
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -7998,13 +7997,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/find-cache-dir@npm:3.2.0":
-  version: 3.2.0
-  resolution: "@types/find-cache-dir@npm:3.2.0"
-  checksum: ab3d19426010047b6c66586110c87c2425e887f64c887654b1c4ac92f1b686eebdd1127643cbed69f198f057d20e0bbdafdcbc8fb5ec9fa5c81bae15fc275cbf
-  languageName: node
-  linkType: hard
-
 "@types/find-root@npm:1.1.2":
   version: 1.1.2
   resolution: "@types/find-root@npm:1.1.2"
@@ -8445,6 +8437,13 @@ __metadata:
     "@types/pino-std-serializers": "*"
     "@types/sonic-boom": "*"
   checksum: e535a948649cfa23595c396c9901aa48a56e0016662a4838f025a4b891dbd2efbda1a1ea3b3b302b8b7540257c46f77a371cde43ea1585860ca8498ee5a59ef5
+  languageName: node
+  linkType: hard
+
+"@types/prettier@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@types/prettier@npm:2.3.2"
+  checksum: c4313e16650811f47b07a0fa7ac0742e966f61283a7292eb667fd4626d760bf3b7d896be3eaabb3354ad45fdbe3a340299b018dd3bcce1ff753d030a8cd2479c
   languageName: node
   linkType: hard
 
@@ -17996,17 +17995,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"find-cache-dir@npm:3.3.1, find-cache-dir@npm:^3.3.1":
-  version: 3.3.1
-  resolution: "find-cache-dir@npm:3.3.1"
-  dependencies:
-    commondir: ^1.0.1
-    make-dir: ^3.0.2
-    pkg-dir: ^4.1.0
-  checksum: 0f7c22b65e07f9b486b4560227d014fab1e79ffbbfbafb87d113a2e878510bd620ef6fdff090e5248bb2846d28851d19e42bfdc7c50687966acc106328e7abf1
-  languageName: node
-  linkType: hard
-
 "find-cache-dir@npm:^2.0.0":
   version: 2.1.0
   resolution: "find-cache-dir@npm:2.1.0"
@@ -18015,6 +18003,17 @@ __metadata:
     make-dir: ^2.0.0
     pkg-dir: ^3.0.0
   checksum: 60ad475a6da9f257df4e81900f78986ab367d4f65d33cf802c5b91e969c28a8762f098693d7a571b6e4dd4c15166c2da32ae2d18b6766a18e2071079448fdce4
+  languageName: node
+  linkType: hard
+
+"find-cache-dir@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "find-cache-dir@npm:3.3.1"
+  dependencies:
+    commondir: ^1.0.1
+    make-dir: ^3.0.2
+    pkg-dir: ^4.1.0
+  checksum: 0f7c22b65e07f9b486b4560227d014fab1e79ffbbfbafb87d113a2e878510bd620ef6fdff090e5248bb2846d28851d19e42bfdc7c50687966acc106328e7abf1
   languageName: node
   linkType: hard
 
@@ -18310,6 +18309,12 @@ __metadata:
   checksum: 646a60e1336250d802509cf24fb801e43bd4a70a07510c816fa133aa42cdbc9c21e66e9cc0801bb183c5b031c9d68be62e7fbb6877756e52357850f92aa28799
   languageName: node
   linkType: hard
+
+"formatter-4e6db5@workspace:scopes/defender/formatter":
+  version: 0.0.0-use.local
+  resolution: "formatter-4e6db5@workspace:scopes/defender/formatter"
+  languageName: unknown
+  linkType: soft
 
 "forwarded@npm:0.2.0":
   version: 0.2.0
@@ -19804,6 +19809,12 @@ __metadata:
   checksum: 9aa6eb9ff6c102d2395435aa5d1d91eae20043c4b1497c543d8db501c05f3edacd9a07fb34a987059d7902dba415af4cb4e610f751859ae8e7525df4ffcd085f
   languageName: node
   linkType: hard
+
+"html-429aba@workspace:scopes/html/aspect-docs/html":
+  version: 0.0.0-use.local
+  resolution: "html-429aba@workspace:scopes/html/aspect-docs/html"
+  languageName: unknown
+  linkType: soft
 
 "html-7af29c@workspace:scopes/html/html":
   version: 0.0.0-use.local
@@ -27474,6 +27485,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier-06f835@workspace:scopes/defender/prettier":
+  version: 0.0.0-use.local
+  resolution: "prettier-06f835@workspace:scopes/defender/prettier"
+  languageName: unknown
+  linkType: soft
+
 "prettier-eslint@npm:11.0.0":
   version: 11.0.0
   resolution: "prettier-eslint@npm:11.0.0"
@@ -27494,16 +27511,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:2.2.1":
-  version: 2.2.1
-  resolution: "prettier@npm:2.2.1"
-  bin:
-    prettier: bin-prettier.js
-  checksum: 800de2df3d37067ab24478c7f32c60ca0c57b01742133287829feeb4a70d239a7bf6bccb56196784777af591ad80fb9ba70c1a49b0fcecf9f5622a764d513edb
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^2.0.0":
+"prettier@npm:2.3.2, prettier@npm:^2.0.0":
   version: 2.3.2
   resolution: "prettier@npm:2.3.2"
   bin:
