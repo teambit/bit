@@ -733,7 +733,7 @@ export class DependencyResolverMain {
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
-    const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
+    const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }

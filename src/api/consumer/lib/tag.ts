@@ -45,7 +45,7 @@ export type BasicTagParams = {
 type TagParams = {
   exactVersion: string | undefined;
   releaseType: semver.ReleaseType;
-  ignoreUnresolvedDependencies: boolean;
+  ignoreIssues: boolean;
   ignoreNewestVersion: boolean;
   ids: string[];
   all: boolean;
@@ -55,17 +55,7 @@ type TagParams = {
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams): Promise<TagResults | null> {
-  const {
-    ids,
-    all,
-    exactVersion,
-    releaseType,
-    force,
-    ignoreUnresolvedDependencies,
-    scope,
-    includeImported,
-    persist,
-  } = tagParams;
+  const { ids, all, exactVersion, releaseType, force, ignoreIssues, scope, includeImported, persist } = tagParams;
   const idsHasWildcard = hasWildcard(ids);
   const isAll = Boolean(all || scope || idsHasWildcard);
   const validExactVersion = validateVersion(exactVersion);
@@ -91,7 +81,7 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
     ids: BitIds.fromArray(bitIds),
     exactVersion: validExactVersion,
     releaseType,
-    ignoreUnresolvedDependencies,
+    ignoreIssues,
   };
   const tagResults = await consumer.tag(consumerTagParams);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

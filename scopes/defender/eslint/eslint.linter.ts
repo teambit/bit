@@ -50,7 +50,7 @@ export class ESLintLinter implements Linter {
       };
     });
 
-    const results = ((await resultsP) as any) as ComponentLintResult[];
+    const results = (await resultsP) as any as ComponentLintResult[];
 
     return {
       results,

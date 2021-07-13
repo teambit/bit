@@ -34,7 +34,8 @@ ${WILDCARD_HELP('tag')}`;
     ['', 'pre-release [identifier]', 'EXPERIMENTAL. increment a pre-release version (e.g. 1.0.0-dev.1)'],
     ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
+    ['', 'ignore-unresolved-dependencies', 'DEPRECATED. use --ignore-issues instead'],
+    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
@@ -66,7 +67,8 @@ ${WILDCARD_HELP('tag')}`;
       preRelease,
       force = false,
       verbose = false,
-      ignoreUnresolvedDependencies = false,
+      ignoreUnresolvedDependencies,
+      ignoreIssues = false,
       ignoreNewestVersion = false,
       skipTests = false,
       skipAutoTag = false,
@@ -85,6 +87,7 @@ ${WILDCARD_HELP('tag')}`;
       minor?: boolean;
       major?: boolean;
       ignoreUnresolvedDependencies?: boolean;
+      ignoreIssues?: boolean;
       scope?: string | boolean;
       incrementBy?: number;
       disableDeployPipeline?: boolean;
@@ -106,6 +109,9 @@ ${WILDCARD_HELP('tag')}`;
       throw new GeneralError(
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
+    }
+    if (typeof ignoreUnresolvedDependencies === 'boolean') {
+      ignoreIssues = ignoreUnresolvedDependencies;
     }
     if (id.length === 2) {
       const secondArg = id[1];
@@ -147,7 +153,7 @@ ${WILDCARD_HELP('tag')}`;
       preRelease: typeof preRelease === 'string' ? preRelease : '',
       force,
       verbose,
-      ignoreUnresolvedDependencies,
+      ignoreIssues,
       ignoreNewestVersion,
       skipTests,
       skipAutoTag,
