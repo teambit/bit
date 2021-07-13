@@ -23,6 +23,7 @@ import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { FormatterContext } from '@teambit/formatter';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -31,7 +32,6 @@ import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
-import { FormatterContext } from '../../defender/formatter';
 
 type ReactDeps = [
   EnvsMain,
