@@ -1,7 +1,8 @@
 import { MainRuntime } from '@teambit/cli';
 import { Options as PrettierModuleOptions } from 'prettier';
-import { Formatter } from '@teambit/formatter';
+import { Formatter, FormatterContext } from '@teambit/formatter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';
 
@@ -12,6 +13,15 @@ export type PrettierOptions = {
   config: PrettierModuleOptions;
 };
 
+export type PrettierConfigTransformContext = {
+  check: boolean;
+};
+
+export type PrettierConfigTransformer = (
+  config: PrettierConfigMutator,
+  context: PrettierConfigTransformContext
+) => PrettierConfigMutator;
+
 export class PrettierMain {
   constructor(private logger: Logger) {}
   /**
@@ -19,8 +29,16 @@ export class PrettierMain {
    * @param options prettier options.
    * @param PrettierModule reference to an `prettier` module.
    */
-  createFormatter(options: PrettierOptions, PrettierModule?: any): Formatter {
-    return new PrettierFormatter(this.logger, options, PrettierModule);
+  createFormatter(
+    context: FormatterContext,
+    options: PrettierOptions,
+    transformers: PrettierConfigTransformer[] = [],
+    PrettierModule?: any
+  ): Formatter {
+    const configMutator = new PrettierConfigMutator(options.config);
+    const transformerContext: PrettierConfigTransformContext = { check: !!context.check };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return new PrettierFormatter(this.logger, afterMutation.raw, PrettierModule);
   }
 
   static runtime = MainRuntime;
@@ -34,3 +52,14 @@ export class PrettierMain {
 }
 
 PrettierAspect.addRuntime(PrettierMain);
+
+export function runTransformersWithContext(
+  config: PrettierConfigMutator,
+  transformers: PrettierConfigTransformer[] = [],
+  context: PrettierConfigTransformContext
+): PrettierConfigMutator {
+  const newConfig = transformers.reduce((acc, transformer) => {
+    return transformer(acc, context);
+  }, config);
+  return newConfig;
+}
