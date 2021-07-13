@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
-import { ComponentMain, ComponentID } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -83,7 +84,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id: legacyDep.id.toString(),
       isExtension: false,
       packageName,
-      componentId: legacyDep.id.serialize(),
+      // TODO - replace legacy BitIdwithComponentID, like `ComponentID.fromLegacy(legacyDep.id).toObject()`,
+      componentId: legacyDep.id.serialize() as ComponentIdObj,
       version: legacyDep.id.getVersion().toString(),
       __type: TYPE,
       lifecycle,
@@ -108,7 +110,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id: extension.extensionId.toString(),
       isExtension: true,
       packageName,
-      componentId: extension.extensionId.serialize(),
+      // TODO - replace legacy BitIdwithComponentID, like `ComponentID.fromLegacy(extension.extensionId).toObject()`,
+      componentId: extension.extensionId.serialize() as ComponentIdObj,
       version: extension.extensionId.getVersion().toString(),
       __type: TYPE,
       lifecycle,
