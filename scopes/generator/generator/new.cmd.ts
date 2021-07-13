@@ -19,7 +19,7 @@ export class NewCmd implements Command {
     [
       'a',
       'aspect <string>',
-      'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of name collision',
+      'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
