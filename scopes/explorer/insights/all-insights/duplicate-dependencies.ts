@@ -75,6 +75,7 @@ export default class DuplicateDependencies implements Insight {
     let dependentsByVersion: VersionWithDependents[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
       let dependents: Dependent[] = [];
+      const version = ComponentID.fromString(pVersion.versionId).version || pVersion.versionId.split('@')[1];
       pVersion.immediateDependents.forEach((dependent: string) => {
         dependents.push({
           id: dependent,
@@ -83,7 +84,7 @@ export default class DuplicateDependencies implements Insight {
       });
       dependentsByVersion.push({
         compId: pVersion.versionId,
-        version: ComponentID.fromString(pVersion.versionId).version || pVersion.versionId.split('@')[1],
+        version,
         dependents,
       });
       totalOutdatedDependents += pVersion.immediateDependents.length;
@@ -96,7 +97,7 @@ export default class DuplicateDependencies implements Insight {
     return rcompare(v1.version, v2.version);
   }
 
-  private renderDependents(dependents: { id: string; usedVersion: string }[]): string {
+  private stringifyDependents(dependents: Dependent[]): string {
     const string = dependents
       .map((dependent) => {
         return `- ${dependent.id} => ${dependent.usedVersion}`;
@@ -105,15 +106,22 @@ export default class DuplicateDependencies implements Insight {
     return string;
   }
 
+  private stringifyDependentsByVersion(versions: VersionWithDependents[]): string {
+    const string = versions
+      .map((version) => {
+        return `- ${version.compId} has ${version.dependents.length} dependents`;
+      })
+      .join('\n');
+    return string;
+  }
+
   private renderData(data: FormattedEntry[]) {
     const string = data
       .map((obj) => {
-        return `\nComponent with outdated dependencies
-------------------------------------
-Found ${data.totalOutdatedDependents} outdated dependencies for ${obj.dependencyId}
+        return `\n\nFound ${obj.totalOutdatedDependents} outdated dependencies for ${obj.dependencyId}
 The latest version is "${obj.latestVersion}"
 Dependents:
-${this.renderDependents(obj.dependents)}`;
+${this.stringifyDependentsByVersion(obj.dependentsByVersion)}`;
       })
       .join('\n');
     return string;
