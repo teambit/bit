@@ -1,4 +1,6 @@
 import { join } from 'path';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentID } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
@@ -6,6 +8,8 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { loadBit } from '@teambit/bit';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
 import { difference, compact } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
@@ -319,6 +323,22 @@ export class AspectLoaderMain {
 
   isAspect(manifest: any) {
     return !!(manifest.addRuntime && manifest.getRuntime);
+  }
+
+  /**
+   * get or create a global scope, import the non-core aspects, load bit from that scope, create
+   * capsules for the aspects and load them from the capsules.
+   */
+  async loadAspectsFromGlobalScope(aspectIds: string[]): Promise<Component[]> {
+    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
+    await globalScope.ensureDir();
+    const globalScopeHarmony = await loadBit(globalScope.path);
+    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    const ids = await scope.resolveMultipleComponentIds(aspectIds);
+    const components = await scope.import(ids);
+    const resolvedAspects = await scope.getResolvedAspects(components);
+    await this.loadRequireableExtensions(resolvedAspects, true);
+    return components;
   }
 
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {

@@ -5,7 +5,9 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -36,7 +38,8 @@ export class GeneratorMain {
     private workspaceTemplateSlot: WorkspaceTemplateSlot,
     private config: GeneratorConfig,
     private workspace: Workspace,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -59,7 +62,7 @@ export class GeneratorMain {
    * list all component templates registered in the workspace or workspace templates in case the
    * workspace is not available
    */
-  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
+  async listTemplates(): Promise<TemplateDescriptor[]> {
     const getTemplateDescriptor = ({
       id,
       template,
@@ -75,6 +78,13 @@ export class GeneratorMain {
     return this.isRunningInsideWorkspace()
       ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
       : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
+  }
+
+  /**
+   * @deprecated use this.listTemplates()
+   */
+  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
+    return this.listTemplates();
   }
 
   isRunningInsideWorkspace(): boolean {
@@ -101,13 +111,39 @@ export class GeneratorMain {
   }
 
   /**
+   * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
+   * global scope and load it from the capsule
+   */
+  async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
+    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const fullAspectId = aspects[0].id.toString();
+    return this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
+  }
+
+  /**
    * returns a specific workspace template.
    */
-  getWorkspaceTemplate(name: string, aspectId?: string): WorkspaceTemplate | undefined {
+  async getWorkspaceTemplate(name: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
+    const registeredTemplate = await this.searchRegisteredWorkspaceTemplate(name, aspectId);
+    if (registeredTemplate) {
+      return registeredTemplate;
+    }
+    if (!aspectId)
+      throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+    const fromGlobal = await this.findTemplateInGlobalScope(aspectId, name);
+    if (fromGlobal) {
+      return fromGlobal;
+    }
+    throw new BitError(`template "${name}" was not found`);
+  }
+
+  async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
     const templates = this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
-      if (aspectId && id !== aspectId) return false;
-      return template.name === name;
+      if (aspectId && name) return aspectId === id && name === template.name;
+      if (aspectId) return aspectId === id;
+      if (name) return name === template.name;
+      throw new Error(`searchRegisteredWorkspaceTemplate expects to get "name" or "aspectId"`);
     });
     return found?.template;
   }
@@ -121,12 +157,12 @@ export class GeneratorMain {
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
     const template = this.getComponentTemplate(templateName, aspectId);
-    if (!template) throw new Error(`template "${templateName}" was not found`);
+    if (!template) throw new BitError(`template "${templateName}" was not found`);
     const scope = options.scope || this.workspace.defaultScope;
     if (!isValidScopeName(scope)) {
       throw new InvalidScopeName(scope);
     }
-    if (!scope) throw new Error(`failed finding defaultScope`);
+    if (!scope) throw new BitError(`failed finding defaultScope`);
 
     const componentIds = componentNames.map((componentName) => {
       const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
@@ -139,8 +175,8 @@ export class GeneratorMain {
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
     const { aspect: aspectId } = options;
-    const template = this.getWorkspaceTemplate(templateName, aspectId);
-    if (!template) throw new Error(`template "${templateName}" was not found`);
+    const template = await this.getWorkspaceTemplate(templateName, aspectId);
+    if (!template) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
     const workspacePath = await workspaceGenerator.generate();
 
@@ -175,16 +211,23 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect, AspectLoaderAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
+    [workspace, cli, graphql, envs, aspectLoader]: [Workspace, CLIMain, GraphqlMain, EnvsMain, AspectLoaderMain],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, workspaceTemplateSlot, config, workspace, envs);
+    const generator = new GeneratorMain(
+      componentTemplateSlot,
+      workspaceTemplateSlot,
+      config,
+      workspace,
+      envs,
+      aspectLoader
+    );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
