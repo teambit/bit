@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
-type RawComponent = { id: object };
+type RawComponent = { id: ComponentIdObj };
 
 const wcComponentFields = gql`
   fragment wcComponentFields on Component {
@@ -145,18 +145,16 @@ export function useWorkspace() {
     const unSubCompRemoved = subscribeToMore({
       document: COMPONENT_SUBSCRIPTION_REMOVED,
       updateQuery: (prev, { subscriptionData }) => {
-        const componentIds: object[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
-        const idsToRemove = componentIds?.map((x) => ComponentID.fromObject(x));
+        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
         if (!idsToRemove || idsToRemove.length === 0) return prev;
 
         return {
           ...prev,
           workspace: {
             ...prev.workspace,
-            components: prev.workspace.components.filter((component: RawComponent) => {
-              const compId = ComponentID.fromObject(component.id);
-              return idsToRemove.every((id) => !id.isEqual(compId));
-            }),
+            components: prev.workspace.components.filter((component: RawComponent) =>
+              idsToRemove.every((id) => !ComponentID.isEqualObj(id, component.id))
+            ),
           },
         };
       },

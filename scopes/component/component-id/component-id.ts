@@ -78,12 +78,8 @@ export class ComponentID {
     return ComponentID.fromLegacy(legacyId, this.scope);
   }
 
-  isEqual(id: ComponentID, opts: { ignoreVersion?: boolean } = {}): boolean {
-    const result = id.scope === this.scope && id.toString() === this.toString();
-    if (!opts.ignoreVersion) {
-      return result && this.version === id.version;
-    }
-    return result;
+  isEqual(id: ComponentID, opts?: EqualityOption): boolean {
+    return ComponentID.isEqual(this, id, opts);
   }
 
   /**
@@ -126,7 +122,8 @@ export class ComponentID {
       object.scope = this.scope;
     }
 
-    return object;
+    // TODO - TS does not realize object.scope now has a value
+    return object as ComponentIdObj;
   }
 
   /**
@@ -159,16 +156,44 @@ export class ComponentID {
     return new ComponentID(legacyId, scope);
   }
 
-  static fromObject(object: any, scope?: string) {
+  // overload when providing scope separaetly, e.g. `fromObject({ name: 'button' }, 'teambit.base-ui')`
+  static fromObject(object: Omit<ComponentIdObj, 'scope'>, scope: string): ComponentID;
+  static fromObject(object: ComponentIdObj, scope?: string): ComponentID;
+  /** deserialize a componnet id from raw object */
+  static fromObject(object: ComponentIdObj, scope?: string) {
     return ComponentID.fromLegacy(new BitId(object), scope);
   }
 
   /**
    * check if object can be correctly deserialized to be a ComponentID
    */
-  static isValidObject(o: any): boolean {
+  static isValidObject(o: any): o is ComponentIdObj {
     return typeof o === 'object' && typeof o.name === 'string' && typeof o.scope === 'string';
     // consider validating values with regex
+  }
+
+  static isEqual(a?: ComponentID, b?: ComponentID, opts: EqualityOption = {}): boolean {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+
+    let result = a.scope === b.scope && a.toString() === b.toString();
+    if (!opts.ignoreVersion) {
+      result = result && a.version === b.version;
+    }
+    return result;
+  }
+
+  static isEqualObj(a?: ComponentIdObj, b?: ComponentIdObj, opts: EqualityOption = {}): boolean {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+
+    let result = a.scope === b.scope && a.name === b.name;
+
+    if (!opts.ignoreVersion) {
+      result = result && a.version === b.version;
+    }
+
+    return result;
   }
 
   /**
@@ -179,3 +204,14 @@ export class ComponentID {
     return new ComponentID(legacyId, scope);
   }
 }
+
+/**
+ * serialized component id.
+ */
+export type ComponentIdObj = {
+  name: string;
+  scope: string;
+  version?: string;
+};
+
+type EqualityOption = { ignoreVersion?: boolean };
