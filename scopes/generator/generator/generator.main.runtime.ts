@@ -42,7 +42,8 @@ export class GeneratorMain {
     private workspaceTemplateSlot: WorkspaceTemplateSlot,
     private config: GeneratorConfig,
     private workspace: Workspace,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -114,24 +115,13 @@ export class GeneratorMain {
   }
 
   /**
-   * get or create a global scope, import the non-core aspects, load bit from that scope, create
-   * capsules for the aspects and load them from the capsules.
+   * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
+   * global scope and load it from the capsule
    */
   async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
-    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
-    await globalScope.ensureDir();
-    const globalScopeHarmony = await loadBit(globalScope.path);
-    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
-    const id = await scope.resolveComponentId(aspectId);
-    const components = await scope.import([id]);
-    if (!components.length) throw new BitError(`failed importing ${aspectId}`);
-    const templateAspect = components[0];
-    const resolvedAspects = await scope.getResolvedAspects([templateAspect]);
-    const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
-    await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
-    const generator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
-    const fullAspectId = templateAspect.id.toString();
-    return generator.searchRegisteredWorkspaceTemplate(name, fullAspectId);
+    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const fullAspectId = aspects[0].id.toString();
+    return this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
   }
 
   /**
@@ -225,16 +215,23 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect, AspectLoaderAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
+    [workspace, cli, graphql, envs, aspectLoader]: [Workspace, CLIMain, GraphqlMain, EnvsMain, AspectLoaderMain],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, workspaceTemplateSlot, config, workspace, envs);
+    const generator = new GeneratorMain(
+      componentTemplateSlot,
+      workspaceTemplateSlot,
+      config,
+      workspace,
+      envs,
+      aspectLoader
+    );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
