@@ -21,7 +21,7 @@ export class TemplatesCmd implements Command {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [], templatesOptions: TemplatesOptions) {
-    let results = await this.generator.listComponentTemplates();
+    let results = await this.generator.listTemplates();
 
     // Make sure that we don't list hidden templates
     if (!templatesOptions.showAll) {

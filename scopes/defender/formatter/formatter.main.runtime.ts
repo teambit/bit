@@ -10,7 +10,6 @@ import { FormatCmd } from './format.cmd';
 import { FormatterOptions } from './formatter-context';
 
 export type FormatterConfig = {};
-
 export class FormatterMain {
   static runtime = MainRuntime;
 

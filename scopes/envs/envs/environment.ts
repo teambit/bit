@@ -1,6 +1,7 @@
 import type { Linter } from '@teambit/linter';
-import type { Formatter } from '@teambit/formatter';
+import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
+import type { Compiler } from '@teambit/compiler';
 import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
@@ -75,7 +76,7 @@ export interface FormatterEnv extends Environment {
    * Returns & configures the formatter to use (prettier, ...)
    * Required for `bit format`
    */
-  getFormatter?: () => Formatter;
+  getFormatter?: (context: FormatterContext, transformers: any[]) => Formatter;
 }
 
 export interface PreviewEnv extends Environment {
@@ -129,6 +130,18 @@ export interface TesterEnv extends Environment {
    * Required for `bit start` & `bit test`
    */
   getTester?: (path: string, tester: any) => Tester;
+}
+
+export interface CompilerEnv {
+  /**
+   * Returns a compiler
+   * Required for making and reading dists, especially for `bit compile`
+   */
+  getCompiler: () => Compiler;
+}
+
+export function hasCompiler(obj: Environment): obj is CompilerEnv {
+  return typeof obj.getCompiler === 'function';
 }
 
 export interface DevEnv extends PreviewEnv {

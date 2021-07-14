@@ -321,6 +321,14 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * whether or not a workspace has a component with the given name
+   */
+  async hasName(name: string): Promise<boolean> {
+    const ids = await this.listIds();
+    return Boolean(ids.find((id) => id.fullName === name));
+  }
+
+  /**
    * Check if a specific id exist in the workspace or in the scope
    * @param componentId
    */

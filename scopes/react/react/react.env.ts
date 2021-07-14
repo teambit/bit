@@ -6,7 +6,16 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { BuilderEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv, FormatterEnv } from '@teambit/envs';
+import {
+  BuilderEnv,
+  CompilerEnv,
+  DependenciesEnv,
+  DevEnv,
+  LinterEnv,
+  PackageEnv,
+  TesterEnv,
+  FormatterEnv,
+} from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -15,9 +24,9 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
-import { PrettierMain } from '@teambit/prettier';
+import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
 import { Linter } from '@teambit/linter';
-import { Formatter } from '@teambit/formatter';
+import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
@@ -51,7 +60,8 @@ const prettierConfig = require('./prettier/prettier.config.js');
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
+export class ReactEnv
+  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
   constructor(
     /**
      * jest extension
@@ -162,10 +172,14 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
   /**
    * returns and configures the component formatter.
    */
-  getFormatter(): Formatter {
-    return this.prettier.createFormatter({
-      config: prettierConfig,
-    });
+  getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
+    return this.prettier.createFormatter(
+      context,
+      {
+        config: prettierConfig,
+      },
+      transformers
+    );
   }
 
   private getFileMap(components: Component[], local = false) {

@@ -15,8 +15,8 @@ export class FormatterService implements EnvService<FormatResults> {
 
   async run(context: ExecutionContext, options: FormatterServiceOptions): Promise<FormatResults> {
     const mergedOpts = defaults(options, this.formatterConfig);
-    const formatter: Formatter = context.env.getFormatter();
     const formatterContext: FormatterContext = Object.assign({}, mergedOpts, context);
+    const formatter: Formatter = context.env.getFormatter(formatterContext);
 
     const results = options.check ? await formatter.check(formatterContext) : await formatter.format(formatterContext);
     return results;

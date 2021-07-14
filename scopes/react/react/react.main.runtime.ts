@@ -23,8 +23,9 @@ import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { FormatterContext } from '@teambit/formatter';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
-import { PrettierMain, PrettierAspect } from '@teambit/prettier';
+import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -70,6 +71,10 @@ export type ReactMainConfig = {
 export type UseWebpackModifiers = {
   previewConfig?: WebpackConfigTransformer[];
   devServerConfig?: WebpackConfigTransformer[];
+};
+
+export type UsePrettierModifiers = {
+  transformers: PrettierConfigTransformer[];
 };
 
 export class ReactMain {
@@ -140,6 +145,10 @@ export class ReactMain {
     );
   }
 
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
     const overrides: any = {};
     const devServerTransformers = modifiers?.devServerConfig;
@@ -153,6 +162,18 @@ export class ReactMain {
       overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
     }
     return this.envs.override(overrides);
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  usePrettier(modifiers?: UsePrettierModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getFormatter: (context: FormatterContext) => this.reactEnv.getFormatter(context, transformers),
+    });
   }
 
   /**

@@ -69,7 +69,7 @@ export class WorkspaceGenerator {
    */
   private async writeWorkspaceFiles(): Promise<void> {
     const workspaceContext = { name: this.workspaceName, defaultScope: this.options.defaultScope };
-    const templateFiles = this.template.generateFiles(workspaceContext);
+    const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
         await fs.outputFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);

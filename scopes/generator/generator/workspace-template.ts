@@ -48,7 +48,7 @@ export interface WorkspaceTemplate {
   /**
    * template function for generating the template files,
    */
-  generateFiles(context: WorkspaceContext): WorkspaceFile[];
+  generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
   importComponents?: () => ComponentToImport[];
 }
