@@ -2,11 +2,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
+import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { BuilderMain } from '../builder.main.runtime';
 import { ArtifactsOpts } from './artifacts.cmd';
-import pMapSeries from 'p-map-series';
 
 export type ExtractorResult = {
   id: ComponentID;
