@@ -170,11 +170,11 @@
         "@types/webpack": "5.28.0",
         "@types/webpack-dev-server": "3.11.1",
         "@types/webpack-merge": "4.1.5",
-        "@yarnpkg/cli": "^3.0.0-rc.6",
-        "@yarnpkg/core": "^3.0.0-rc.6",
-        "@yarnpkg/fslib": "^2.5.0-rc.6",
-        "@yarnpkg/plugin-npm": "^2.5.0-rc.6",
-        "@yarnpkg/plugin-pack": "^3.0.0-rc.6",
+        "@yarnpkg/cli": "^3.0.0-rc.9",
+        "@yarnpkg/core": "^3.0.0-rc.9",
+        "@yarnpkg/fslib": "^2.5.0-rc.9",
+        "@yarnpkg/plugin-npm": "^2.5.0-rc.9",
+        "@yarnpkg/plugin-pack": "^3.0.0-rc.9",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
@@ -317,7 +317,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.121",
+        "@teambit/legacy": "1.0.122",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -432,7 +432,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.121"
+            "@teambit/legacy": "1.0.122"
           }
         }
       },
@@ -601,7 +601,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.121",
+            "@teambit/legacy": "1.0.122",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

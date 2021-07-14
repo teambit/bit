@@ -9,13 +9,13 @@ import {
 import PrettierLib, { Options as PrettierModuleOptions } from 'prettier';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
-import { PrettierOptions } from './prettier.main.runtime';
+// import { PrettierOptions } from './prettier.main.runtime';
 
 export class PrettierFormatter implements Formatter {
   constructor(
     private logger: Logger,
 
-    private options: PrettierOptions,
+    private options: PrettierModuleOptions,
 
     /**
      * reference to the prettier module.
@@ -27,10 +27,11 @@ export class PrettierFormatter implements Formatter {
     return this.run(context);
   }
   async check(context: FormatterContext): Promise<FormatResults> {
-    return this.run(context, true);
+    return this.run(context);
   }
 
-  private async run(context: FormatterContext, check = false): Promise<FormatResults> {
+  private async run(context: FormatterContext): Promise<FormatResults> {
+    const check = !!context.check;
     const longProcessLogger = this.logger.createLongProcessLogger('formatting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component): Promise<ComponentFormatResult> => {
       longProcessLogger.logProgress(component.id.toString());
@@ -76,8 +77,8 @@ export class PrettierFormatter implements Formatter {
    * get options for eslint.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private getOptions(options: PrettierOptions, context: FormatterContext): PrettierModuleOptions {
-    return options.config;
+  private getOptions(options: PrettierModuleOptions, context: FormatterContext): PrettierModuleOptions {
+    return options;
   }
 
   private addFilePathToOpts(options: PrettierModuleOptions, file: AbstractVinyl): PrettierModuleOptions {

@@ -4,6 +4,7 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
+import { loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
@@ -120,6 +121,17 @@ export class GeneratorMain {
     return this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
   }
 
+  async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
+    if (!aspectId) throw new BitError(`to load template from a different workspace, please provide the aspect-id`);
+    const harmony = await loadBit(workspacePath);
+    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+    const aspectComponentId = await workspace.resolveComponentId(aspectId);
+    await workspace.loadAspects([aspectId], true);
+    const aspectFullId = aspectComponentId.toString();
+    const generator = harmony.get<GeneratorMain>(GeneratorAspect.id);
+    return generator.searchRegisteredWorkspaceTemplate(name, aspectFullId);
+  }
+
   /**
    * returns a specific workspace template.
    */
@@ -174,8 +186,10 @@ export class GeneratorMain {
   }
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
-    const { aspect: aspectId } = options;
-    const template = await this.getWorkspaceTemplate(templateName, aspectId);
+    const { aspect: aspectId, loadFrom } = options;
+    const template = loadFrom
+      ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
+      : await this.getWorkspaceTemplate(templateName, aspectId);
     if (!template) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
     const workspacePath = await workspaceGenerator.generate();
