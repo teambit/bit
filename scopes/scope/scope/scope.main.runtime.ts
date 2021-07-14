@@ -29,6 +29,7 @@ import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
+import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
@@ -526,6 +527,7 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get ids of all scope components.
+   * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
@@ -634,6 +636,20 @@ export class ScopeMain implements ComponentFactory {
 
   async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
+  }
+
+  /**
+   * load components into the scope through a variants pattern.
+   */
+  async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
+    const ids = await this.listIds(true);
+    const finalPatterns = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
+    const targetIds = ids.filter((id) => {
+      return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
+    });
+
+    const components = await this.getMany(targetIds);
+    return components;
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
