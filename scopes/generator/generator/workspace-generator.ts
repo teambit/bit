@@ -114,8 +114,9 @@ export class WorkspaceGenerator {
       const deps = await dependencyResolver.getDependencies(comp);
 
       const currentPackages = Object.keys(oldAndNewPackageNames);
+      // only bring auto-resolved dependencies, others should be set in the workspace.jsonc template
       const workspacePolicyEntries = deps
-        .filter((dep) => dep.source !== 'env' && dep.source !== 'slots')
+        .filter((dep) => dep.source === 'auto')
         .map((dep) => ({
           dependencyId: dep.getPackageName?.() || dep.id,
           lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
