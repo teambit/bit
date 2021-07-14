@@ -349,6 +349,12 @@
         "mainFile": "index.js",
         "rootDir": "scopes/react/eslint-config-bit-react"
     },
+    "eslint/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/eslint-config-mutator"
+    },
     "export": {
         "scope": "teambit.scope",
         "version": "0.0.453",
