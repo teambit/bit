@@ -35,14 +35,18 @@ export abstract class BaseDependency implements Dependency {
     return this._source;
   }
 
+  set source(source) {
+    this._source = source;
+  }
+
   serialize<SerializedDependency>(): SerializedDependency {
-    return ({
+    return {
       id: this.id,
       version: this.version,
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
       source: this.source,
-    } as unknown) as SerializedDependency;
+    } as unknown as SerializedDependency;
   }
 
   setVersion(newVersion: string) {

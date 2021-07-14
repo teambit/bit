@@ -299,10 +299,15 @@ export class DependencyResolverMain {
    * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
    * @param component
    */
-  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+  async extractDepsFromLegacy(component: Component, policy: VariantPolicy): Promise<SerializedDependency[]> {
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    dependencyList.forEach((dep) => {
+      const found = policy.find(dep.id);
+      // if no policy found, the dependency was auto-resolved from the source code
+      dep.source = found?.source || 'auto';
+    });
     return dependencyList.serialize();
   }
 
@@ -326,11 +331,6 @@ export class DependencyResolverMain {
       return DependencyList.fromArray([]);
     }
     const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
-    const policy = entry?.data?.policy || [];
-    serializedDependencies.forEach((dep) => {
-      const policyRecord = policy.find((_) => _.dependencyId === dep.id);
-      dep.source = policyRecord?.source;
-    });
     return this.getDependenciesFromSerializedDependencies(serializedDependencies);
   }
 
