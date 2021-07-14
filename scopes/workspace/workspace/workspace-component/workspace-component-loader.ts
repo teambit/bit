@@ -222,7 +222,7 @@ export class WorkspaceComponentLoader {
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
 
     const depResolverData = {
       dependencies,

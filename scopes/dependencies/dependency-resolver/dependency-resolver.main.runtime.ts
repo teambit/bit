@@ -299,7 +299,8 @@ export class DependencyResolverMain {
    * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
    * @param component
    */
-  async extractDepsFromLegacy(component: Component, policy: VariantPolicy): Promise<SerializedDependency[]> {
+  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+    const policy = await this.getPolicy(component);
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
