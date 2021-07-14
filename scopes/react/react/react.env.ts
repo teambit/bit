@@ -23,9 +23,9 @@ import { TypescriptMain } from '@teambit/typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain } from '@teambit/eslint';
+import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
-import { Linter } from '@teambit/linter';
+import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
@@ -61,7 +61,8 @@ const prettierConfig = require('./prettier/prettier.config.js');
  * a component environment built for [React](https://reactjs.org) .
  */
 export class ReactEnv
-  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv {
+  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv
+{
   constructor(
     /**
      * jest extension
@@ -161,12 +162,16 @@ export class ReactEnv
   /**
    * returns and configures the component linter.
    */
-  getLinter(): Linter {
-    return this.eslint.createLinter({
-      config: eslintConfig,
-      // resolve all plugins from the react environment.
-      pluginPath: __dirname,
-    });
+  getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    return this.eslint.createLinter(
+      context,
+      {
+        config: eslintConfig,
+        // resolve all plugins from the react environment.
+        pluginPath: __dirname,
+      },
+      transformers
+    );
   }
 
   /**

@@ -80,6 +80,11 @@ export class ReactNativeMain {
   usePrettier = this.react.usePrettier.bind(this.react);
 
   /**
+   * An API to mutate the eslint config
+   */
+  useEslint = this.react.useEslint.bind(this.react);
+
+  /**
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
