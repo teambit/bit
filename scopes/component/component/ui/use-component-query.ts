@@ -129,7 +129,7 @@ export function useComponentQuery(componentId: string, host: string) {
         const prevComponent = prev?.getHost?.get;
         const updatedComponent = subscriptionData?.data?.componentChanged?.component;
 
-        const isUpdated = ComponentID.isEqualObj(prevComponent?.id && updatedComponent?.id);
+        const isUpdated = updatedComponent && ComponentID.isEqualObj(prevComponent?.id, updatedComponent?.id);
 
         if (isUpdated) {
           return {
