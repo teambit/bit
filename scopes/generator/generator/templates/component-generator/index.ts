@@ -4,8 +4,8 @@ import { aspectFile } from './files/aspect-file';
 import { docsFile } from './files/docs-file';
 import { mainRuntime } from './files/main-runtime';
 
-export const generatorTemplate: ComponentTemplate = {
-  name: 'generator',
+export const componentGeneratorTemplate: ComponentTemplate = {
+  name: 'component-generator',
   description: 'create your own component generator',
   generateFiles: (context: ComponentContext) => {
     return [
