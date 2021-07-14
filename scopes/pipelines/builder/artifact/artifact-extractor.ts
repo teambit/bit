@@ -43,20 +43,7 @@ export class ArtifactExtractor {
       };
     });
     this.filterByOptions(artifactObjectsPerId);
-    const extractorResults: ExtractorResult[] = [];
-    artifactObjectsPerId.forEach(({ id, artifacts }) => {
-      const results: ExtractorArtifactResult[] = artifacts.map((artifact) => {
-        return {
-          aspectId: artifact.task.id,
-          taskName: artifact.task.name || artifact.generatedBy,
-          files: artifact.files.refs.map((ref) => ref.relativePath),
-        };
-      });
-      extractorResults.push({
-        id,
-        artifacts: results,
-      });
-    });
+    const extractorResults = this.artifactsObjectsToExtractorResults(artifactObjectsPerId);
 
     return extractorResults;
   }
@@ -68,6 +55,22 @@ export class ArtifactExtractor {
         return acc;
       }, {});
       return { id: result.id, artifacts };
+    });
+  }
+
+  private artifactsObjectsToExtractorResults(artifactObjectsPerId: ArtifactObjectsPerId[]): ExtractorResult[] {
+    return artifactObjectsPerId.map(({ id, artifacts }) => {
+      const results: ExtractorArtifactResult[] = artifacts.map((artifact) => {
+        return {
+          aspectId: artifact.task.id,
+          taskName: artifact.task.name || artifact.generatedBy,
+          files: artifact.files.refs.map((ref) => ref.relativePath),
+        };
+      });
+      return {
+        id,
+        artifacts: results,
+      };
     });
   }
 
