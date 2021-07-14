@@ -172,18 +172,20 @@ export class ComponentID {
     // consider validating values with regex
   }
 
-  static isEqual(a?: ComponentID, b?: ComponentID, opts: EqualityOption = {}): boolean {
+  static isEqual(a: ComponentID | undefined, b: ComponentID | undefined, opts: EqualityOption = {}): boolean {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
-    let result = a.scope === b.scope && a.toString() === b.toString();
+    let result =
+      a.scope === b.scope &&
+      a.toString({ ignoreVersion: opts.ignoreVersion }) === b.toString({ ignoreVersion: opts.ignoreVersion });
     if (!opts.ignoreVersion) {
       result = result && a.version === b.version;
     }
     return result;
   }
 
-  static isEqualObj(a?: ComponentIdObj, b?: ComponentIdObj, opts: EqualityOption = {}): boolean {
+  static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
