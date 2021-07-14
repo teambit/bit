@@ -1,6 +1,19 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import { MissingScope } from './exceptions';
 
+/**
+ * serialized component id.
+ */
+export type ComponentIdObj = {
+  name: string;
+  scope: string;
+  version?: string;
+};
+
+export type LegacyComponentId = {};
+
+type EqualityOption = { ignoreVersion?: boolean };
+
 export class ComponentID {
   constructor(
     /**
@@ -206,14 +219,3 @@ export class ComponentID {
     return new ComponentID(legacyId, scope);
   }
 }
-
-/**
- * serialized component id.
- */
-export type ComponentIdObj = {
-  name: string;
-  scope: string;
-  version?: string;
-};
-
-type EqualityOption = { ignoreVersion?: boolean };

@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -34,6 +34,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     let id;
 
     if (serialized.componentId.scope) {
+      // @ts-ignore - ts is saying scope is possibly missing, but just checked it is defined
       id = ComponentID.fromObject(serialized.componentId);
     } else {
       id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
@@ -84,8 +85,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id: legacyDep.id.toString(),
       isExtension: false,
       packageName,
-      // TODO - replace legacy BitIdwithComponentID, like `ComponentID.fromLegacy(legacyDep.id).toObject()`,
-      componentId: legacyDep.id.serialize() as ComponentIdObj,
+      componentId: legacyDep.id.serialize(),
       version: legacyDep.id.getVersion().toString(),
       __type: TYPE,
       lifecycle,
@@ -110,8 +110,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id: extension.extensionId.toString(),
       isExtension: true,
       packageName,
-      // TODO - replace legacy BitIdwithComponentID, like `ComponentID.fromLegacy(extension.extensionId).toObject()`,
-      componentId: extension.extensionId.serialize() as ComponentIdObj,
+      componentId: extension.extensionId.serialize(),
       version: extension.extensionId.getVersion().toString(),
       __type: TYPE,
       lifecycle,

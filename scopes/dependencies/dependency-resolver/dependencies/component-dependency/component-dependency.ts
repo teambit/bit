@@ -1,4 +1,5 @@
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import type { BitIdProps } from '@teambit/legacy-bit-id';
 
 import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';
@@ -6,7 +7,7 @@ import { BaseDependency } from '../base-dependency';
 export const TYPE = 'component';
 
 export interface SerializedComponentDependency extends SerializedDependency {
-  componentId: ComponentIdObj;
+  componentId: BitIdProps;
   isExtension: boolean;
   packageName: string;
 }
