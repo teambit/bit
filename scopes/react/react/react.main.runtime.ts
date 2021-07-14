@@ -24,7 +24,8 @@ import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
-import { ESLintMain, ESLintAspect } from '@teambit/eslint';
+import { LinterContext } from '@teambit/linter';
+import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
@@ -73,6 +74,9 @@ export type UseWebpackModifiers = {
   devServerConfig?: WebpackConfigTransformer[];
 };
 
+export type UseEslintModifiers = {
+  transformers: EslintConfigTransformer[];
+};
 export type UsePrettierModifiers = {
   transformers: PrettierConfigTransformer[];
 };
@@ -162,6 +166,18 @@ export class ReactMain {
       overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
     }
     return this.envs.override(overrides);
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  useEslint(modifiers?: UseEslintModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getLinter: (context: LinterContext) => this.reactEnv.getLinter(context, transformers),
+    });
   }
 
   /**
