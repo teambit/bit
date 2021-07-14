@@ -1,9 +1,12 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
 import minimatch from 'minimatch';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { BuilderMain } from '../builder.main.runtime';
 import { ArtifactsOpts } from './artifacts.cmd';
+import pMapSeries from 'p-map-series';
 
 export type ExtractorResult = {
   id: ComponentID;
@@ -43,6 +46,7 @@ export class ArtifactExtractor {
       };
     });
     this.filterByOptions(artifactObjectsPerId);
+    await this.saveFilesInFileSystem(artifactObjectsPerId);
     const extractorResults = this.artifactsObjectsToExtractorResults(artifactObjectsPerId);
 
     return extractorResults;
@@ -55,6 +59,24 @@ export class ArtifactExtractor {
         return acc;
       }, {});
       return { id: result.id, artifacts };
+    });
+  }
+
+  private async saveFilesInFileSystem(artifactObjectsPerId: ArtifactObjectsPerId[]) {
+    const outDir = this.options.outDir;
+    if (!outDir) {
+      return;
+    }
+    // @todo: optimize this to first import all missing hashes.
+    await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
+      const vinyls = await Promise.all(
+        artifacts.map((artifactObject) =>
+          artifactObject.files.getVinylsAndImportIfMissing(id.scope as string, this.scope.legacyScope)
+        )
+      );
+      const flattenedVinyls = vinyls.flat();
+      const compPath = path.join(outDir, id.toStringWithoutVersion());
+      await Promise.all(flattenedVinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
     });
   }
 
