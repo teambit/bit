@@ -474,7 +474,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true) {
+  async import(ids: ComponentID[], useCache = true): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -486,7 +486,6 @@ export class ScopeMain implements ComponentFactory {
     });
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
-    // TODO: return a much better output based on legacy version-dependencies
     return this.getMany(ids);
   }
 
@@ -640,9 +639,7 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver
-      .maxSatisfying<string>(versions, range, { includePrerelease: true })
-      ?.toString();
+    return semver.maxSatisfying<string>(versions, range, { includePrerelease: true })?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {

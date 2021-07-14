@@ -6,11 +6,11 @@ import { gitIgnore } from './files/git-ignore';
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react-workspace',
   description: 'create a new React project',
-  generateFiles: (context: WorkspaceContext) => {
+  generateFiles: async (context: WorkspaceContext) => {
     return [
       {
         relativePath: 'workspace.jsonc',
-        content: workspaceConfig(context),
+        content: await workspaceConfig(context),
       },
       {
         relativePath: `.gitignore`,

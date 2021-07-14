@@ -21,7 +21,7 @@ export default class Snap implements LegacyCommand {
     ['a', 'all', 'snap all new and modified components'],
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
+    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
@@ -39,7 +39,7 @@ export default class Snap implements LegacyCommand {
       all = false,
       force = false,
       verbose = false,
-      ignoreUnresolvedDependencies = false,
+      ignoreIssues = false,
       build,
       skipTests = false,
       skipAutoSnap = false,
@@ -50,7 +50,7 @@ export default class Snap implements LegacyCommand {
       all?: boolean;
       force?: boolean;
       verbose?: boolean;
-      ignoreUnresolvedDependencies?: boolean;
+      ignoreIssues?: boolean;
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
@@ -77,7 +77,7 @@ export default class Snap implements LegacyCommand {
       message,
       force,
       verbose,
-      ignoreUnresolvedDependencies,
+      ignoreIssues,
       build,
       skipTests,
       skipAutoSnap,

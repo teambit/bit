@@ -62,6 +62,10 @@ export class ReactNativeMain {
     this.react
   );
 
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers) {
     const mergedModifiers: UseWebpackModifiers = {
       previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
@@ -69,6 +73,11 @@ export class ReactNativeMain {
     };
     return this.react.useWebpack(mergedModifiers);
   }
+
+  /**
+   * An API to mutate the prettier config
+   */
+  usePrettier = this.react.usePrettier.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.

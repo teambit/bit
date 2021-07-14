@@ -143,7 +143,6 @@
         "@types/didyoumean": "1.2.0",
         "@types/eslint": "7.2.4",
         "@types/express": "4.17.9",
-        "@types/find-cache-dir": "3.2.0",
         "@types/find-root": "1.1.2",
         "@types/get-port": "4.2.0",
         "@types/history": "4.7.8",
@@ -213,7 +212,6 @@
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
         "filenamify": "4.2.0",
-        "find-cache-dir": "3.3.1",
         "find-root": "1.1.0",
         "flatted": "3.1.0",
         "fuse.js": "6.4.6",
@@ -319,7 +317,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.119",
+        "@teambit/legacy": "1.0.122",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -335,6 +333,7 @@
     "strictPeerDependencies": true,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     "installFromBitDevRegistry": false,
+    "savePrefix": "",
     "extraArgs": []
   },
   "teambit.generator/generator": {
@@ -433,7 +432,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.119"
+            "@teambit/legacy": "1.0.122"
           }
         }
       },
@@ -602,7 +601,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.119",
+            "@teambit/legacy": "1.0.122",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
