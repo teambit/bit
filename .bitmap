@@ -643,6 +643,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/prettier"
     },
+    "prettier/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/prettier-config-mutator"
+    },
     "preview": {
         "scope": "teambit.preview",
         "version": "0.0.453",

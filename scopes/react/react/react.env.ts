@@ -24,9 +24,9 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
-import { PrettierMain } from '@teambit/prettier';
+import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
 import { Linter } from '@teambit/linter';
-import { Formatter } from '@teambit/formatter';
+import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
@@ -172,10 +172,14 @@ export class ReactEnv
   /**
    * returns and configures the component formatter.
    */
-  getFormatter(): Formatter {
-    return this.prettier.createFormatter({
-      config: prettierConfig,
-    });
+  getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
+    return this.prettier.createFormatter(
+      context,
+      {
+        config: prettierConfig,
+      },
+      transformers
+    );
   }
 
   private getFileMap(components: Component[], local = false) {

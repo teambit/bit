@@ -77,6 +77,11 @@ export class HtmlMain {
   useWebpack = this.react.useWebpack.bind(this.react);
 
   /**
+   * An API to mutate the prettier config
+   */
+  usePrettier = this.react.usePrettier.bind(this.react);
+
+  /**
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
