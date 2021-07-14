@@ -10,6 +10,7 @@ export class PrettierConfigMutator {
 
   setKey(key: string, value: any) {
     this.raw[key] = value;
+    return this;
   }
 
   addPlugin(plugin: Plugin | string) {
@@ -17,5 +18,6 @@ export class PrettierConfigMutator {
       this.raw.plugins = [];
     }
     this.raw.plugins.push(plugin);
+    return this;
   }
 }

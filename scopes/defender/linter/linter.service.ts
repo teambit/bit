@@ -11,7 +11,6 @@ export class LinterService implements EnvService<LintResults> {
 
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = defaults(options, this.linterConfig);
-    const linter: Linter = context.env.getLinter();
     const linterContext: LinterContext = Object.assign(
       {},
       {
@@ -22,6 +21,7 @@ export class LinterService implements EnvService<LintResults> {
       },
       context
     );
+    const linter: Linter = context.env.getLinter(linterContext);
 
     const results = await linter.lint(linterContext);
     return results;
