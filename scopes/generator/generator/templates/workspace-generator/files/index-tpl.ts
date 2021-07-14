@@ -11,7 +11,7 @@ export const workspaceTemplate: WorkspaceTemplate = {
     return [
       {
         relativePath: 'workspace.jsonc',
-        content: workspaceConfig(context),
+        content: await workspaceConfig(context),
       },
       {
         relativePath: '.gitignore',

@@ -1,11 +1,9 @@
 export function workspaceConfigTemplate() {
   return `import { WorkspaceContext } from '@teambit/generator';
-import { getWorkspaceConfigTemplateFile } from '@teambit/config';
-import { parse, stringify } from 'comment-json';
+import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
-  const workspaceConfigTemplate = await getWorkspaceConfigTemplateFile();
-  const configParsed = parse(workspaceConfigTemplate);
+  const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'my-scope';
   configParsed['teambit.workspace/variants'] = {
@@ -14,7 +12,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     },
   };
 
-  return stringify(configParsed, undefined, 2);
+  return stringifyWorkspaceConfig(configParsed);
 }
 `;
 }
