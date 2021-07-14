@@ -33,12 +33,12 @@ export class ArtifactExtractor {
   constructor(
     private scope: ScopeMain,
     private builder: BuilderMain,
-    private ids: string[],
+    private patterns: string[],
     private options: ArtifactsOpts
   ) {}
 
   async list(): Promise<ExtractorResult[]> {
-    const components = await this.getComponents();
+    const components = await this.scope.byPattern(this.patterns);
     const artifactObjectsPerId: ArtifactObjectsPerId[] = components.map((component) => {
       return {
         id: component.id,
@@ -46,10 +46,9 @@ export class ArtifactExtractor {
       };
     });
     this.filterByOptions(artifactObjectsPerId);
-    await this.saveFilesInFileSystem(artifactObjectsPerId);
-    const extractorResults = this.artifactsObjectsToExtractorResults(artifactObjectsPerId);
+    await this.saveFilesInFileSystemIfAsked(artifactObjectsPerId);
 
-    return extractorResults;
+    return this.artifactsObjectsToExtractorResults(artifactObjectsPerId);
   }
 
   groupResultsByAspect(extractorResult: ExtractorResult[]) {
@@ -62,7 +61,7 @@ export class ArtifactExtractor {
     });
   }
 
-  private async saveFilesInFileSystem(artifactObjectsPerId: ArtifactObjectsPerId[]) {
+  private async saveFilesInFileSystemIfAsked(artifactObjectsPerId: ArtifactObjectsPerId[]) {
     const outDir = this.options.outDir;
     if (!outDir) {
       return;
@@ -96,12 +95,6 @@ export class ArtifactExtractor {
     });
   }
 
-  private async getComponents() {
-    // @todo: implement patterns matching for scope
-    const componentIds = await this.scope.resolveMultipleComponentIds(this.ids);
-    return this.scope.loadMany(componentIds);
-  }
-
   private filterByOptions(artifactObjectsPerId: ArtifactObjectsPerId[]) {
     const { aspect, task, files } = this.options;
     artifactObjectsPerId.forEach((item) => {
@@ -115,6 +108,8 @@ export class ArtifactExtractor {
           const refs = artifact.files.refs.filter((ref) => minimatch(ref.relativePath, files));
           artifact.files = new ArtifactFiles([], [], refs);
         });
+        // remove artifacts with no files
+        item.artifacts = item.artifacts.filter((artifact) => artifact.files.refs.length);
       }
     });
   }
