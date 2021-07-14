@@ -1,4 +1,4 @@
-import type { Linter } from '@teambit/linter';
+import type { Linter, LinterContext } from '@teambit/linter';
 import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
 import type { Compiler } from '@teambit/compiler';
@@ -68,7 +68,7 @@ export interface LinterEnv extends Environment {
    * Returns & configures the linter to use (ESLint, ...)
    * Required for `bit lint`
    */
-  getLinter?: () => Linter;
+  getLinter?: (context: LinterContext, transformers: any[]) => Linter;
 }
 
 export interface FormatterEnv extends Environment {
