@@ -6,7 +6,6 @@ import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Scope } from '../../scope';
 import { ModelComponent, Version } from '../../scope/models';
-import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
 import { saveIntoOsTmp } from '../../utils/fs/save-into-os-tmp';
 import { PathLinux, PathOsBased } from '../../utils/path';
