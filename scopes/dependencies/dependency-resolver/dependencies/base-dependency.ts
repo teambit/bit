@@ -1,9 +1,15 @@
+import { DependencySource } from '../policy/variant-policy/variant-policy';
 import { Dependency, DependencyLifecycleType, DependencyManifest } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
   _type: string;
 
-  constructor(private _id: string, private _version: string, private _lifecycle: DependencyLifecycleType) {}
+  constructor(
+    private _id: string,
+    private _version: string,
+    private _lifecycle: DependencyLifecycleType,
+    private _source?: DependencySource
+  ) {}
 
   get id() {
     return this._id;
@@ -25,13 +31,22 @@ export abstract class BaseDependency implements Dependency {
     return this._lifecycle;
   }
 
+  get source() {
+    return this._source;
+  }
+
+  set source(source) {
+    this._source = source;
+  }
+
   serialize<SerializedDependency>(): SerializedDependency {
-    return ({
+    return {
       id: this.id,
       version: this.version,
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
-    } as unknown) as SerializedDependency;
+      source: this.source,
+    } as unknown as SerializedDependency;
   }
 
   setVersion(newVersion: string) {
