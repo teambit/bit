@@ -397,8 +397,8 @@ export default class CommandHelper {
     return this.runCmd('bit status');
   }
 
-  statusJson() {
-    const status = this.runCmd('bit status --json');
+  statusJson(cwd = this.scopes.localPath) {
+    const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
   }
 
@@ -424,8 +424,8 @@ export default class CommandHelper {
     return statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
   }
 
-  expectStatusToNotHaveIssues() {
-    const statusJson = this.statusJson();
+  expectStatusToNotHaveIssues(cwd = this.scopes.localPath) {
+    const statusJson = this.statusJson(cwd);
     ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
@@ -505,6 +505,9 @@ export default class CommandHelper {
   }
   create(templateName: string, componentName: string, flags = '') {
     return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  }
+  new(templateName: string, flags = '', workspaceName = 'my-workspace') {
+    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

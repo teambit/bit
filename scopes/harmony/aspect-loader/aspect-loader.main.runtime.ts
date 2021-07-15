@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
@@ -334,8 +335,10 @@ export class AspectLoaderMain {
     await globalScope.ensureDir();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
-    const ids = await scope.resolveMultipleComponentIds(aspectIds);
-    const components = await scope.import(ids);
+    const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    // @todo: Gilad make this work
+    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
+    const components = await scope.import(ids, undefined, true);
     const resolvedAspects = await scope.getResolvedAspects(components);
     await this.loadRequireableExtensions(resolvedAspects, true);
     return components;
