@@ -1,4 +1,5 @@
 import React from 'react';
+import open from 'open';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
@@ -81,6 +82,8 @@ export class StartCmd implements Command {
       rebuild,
       verbose,
     });
+
+    uiServer.then((server) => open(`http://localhost:${server.port}`)).catch((error) => this.logger.error(error));
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
