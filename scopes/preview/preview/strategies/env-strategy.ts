@@ -90,7 +90,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
       const paths = ComponentMap.as(context.components, (component) => {
         const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
-        const maybeFiles = moduleMap.byComponent(component);
+        const maybeFiles = moduleMap.get(component);
         if (!maybeFiles || !capsule) return [];
         const [, files] = maybeFiles;
         const compiledPaths = this.getPaths(context, files, capsule);

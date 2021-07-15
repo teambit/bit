@@ -259,8 +259,10 @@ describe('component with package.json as a file of the component', function () {
       });
     });
   });
+  // harmony test.
   describe('bit version >= 14.8.0 should ignore package.json files altogether', () => {
     before(() => {
+      helper.command.resetFeatures();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fs.outputFile('bar/package.json');
       helper.fs.outputFile('bar/foo.js');

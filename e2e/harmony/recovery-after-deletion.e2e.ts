@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import { ComponentNotFound } from '../../src/scope/exceptions';
@@ -22,7 +21,6 @@ describe('recovery after component/scope deletion', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -531,7 +529,7 @@ describe('recovery after component/scope deletion', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeImportScope);
             helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
-            helper.command.tagComponent(`${remote2Name}/comp3`, undefined, '0.0.8 --force');
+            helper.command.tagComponent(`${remote2Name}/comp3@0.0.8`, undefined, '--force');
             helper.command.export();
             helper.command.importAllComponents();
           });

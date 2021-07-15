@@ -32,6 +32,7 @@ import { Watcher } from './watch/watcher';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
+import { Tag } from './tag-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -193,6 +194,7 @@ export default async function provideWorkspace(
     cli.unregister('link');
     commands.push(new LinkCommand(workspace, logger));
   }
+  commands.push(new Tag());
   cli.register(...commands);
   component.registerHost(workspace);
 

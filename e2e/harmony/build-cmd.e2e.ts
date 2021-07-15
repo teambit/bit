@@ -3,7 +3,6 @@ import path from 'path';
 import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -14,7 +13,6 @@ describe('build command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -51,7 +49,6 @@ describe('build command', function () {
   describe('list tasks', () => {
     before(() => {
       helper = new Helper();
-      helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(1);
     });
@@ -62,7 +59,7 @@ describe('build command', function () {
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.have.lengthOf(0);
+      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });

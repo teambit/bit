@@ -20,7 +20,7 @@ export function metaFromPackageJson(filepath: string) {
 }
 
 function extractMetadata(pkgPath: string): ComponentMeta | undefined {
-  const pkg = praseJsonFile(pkgPath);
+  const pkg = parseJsonFile(pkgPath);
   if (!pkg) return undefined;
 
   const compId = pkg.componentId;
@@ -40,7 +40,7 @@ function extractMetadata(pkgPath: string): ComponentMeta | undefined {
   }
 }
 
-function praseJsonFile(pkgPath: string): Json | undefined {
+function parseJsonFile(pkgPath: string): Json | undefined {
   if (!existsSync(pkgPath)) return undefined;
   try {
     const content = readFileSync(pkgPath, 'utf-8');

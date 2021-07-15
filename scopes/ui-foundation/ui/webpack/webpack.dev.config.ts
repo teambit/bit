@@ -1,5 +1,6 @@
-import { Configuration } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { WebpackConfigWithDevServer } from '@teambit/webpack';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -9,7 +10,7 @@ const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMi
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
-const { default: html } = require('./html');
+const { html } = require('./html');
 
 /*
  * Webpack config for the bit ui
@@ -46,7 +47,7 @@ module.exports = {
   devConfig: createWebpackConfig,
 };
 
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Configuration {
+function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -82,7 +83,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
-      devtoolModuleFilenameTemplate: (info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolModuleFilenameTemplate: (info) => pathNormalizeToLinux(path.resolve(info.absoluteResourcePath)),
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
@@ -96,8 +97,11 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
 
     stats: 'errors-only',
 
-    // @ts-ignore - remove this once there is types package for webpack-dev-server v4
     devServer: {
+      // @ts-ignore - temp until types of webpack-dev-server v4
+      firewall: false,
+
+      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicUrlOrPath),

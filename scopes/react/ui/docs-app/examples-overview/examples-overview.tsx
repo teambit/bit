@@ -7,9 +7,9 @@ import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
 import { Example } from './example';
 
-export type ExamplesOverviewProps = {
+export interface ExamplesOverviewProps extends React.HTMLAttributes<HTMLDivElement> {
   examples: Example[];
-};
+}
 
 export function ExamplesOverview({ examples, ...rest }: ExamplesOverviewProps) {
   if (examples.length <= 0) return null;

@@ -1,4 +1,6 @@
 import { join } from 'path';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentID } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
@@ -6,8 +8,10 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { loadBit } from '@teambit/bit';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference } from 'lodash';
+import { difference, compact } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
@@ -35,6 +39,15 @@ export type ResolvedAspect = {
 
 type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
+
+export type OnLoadRequireableExtension = (
+  requireableExtension: RequireableComponent,
+  manifest: ExtensionManifest | Aspect
+) => Promise<ExtensionManifest | Aspect>;
+/**
+ * A slot which run during loading the requirable extension (after first manifest calculation)
+ */
+export type OnLoadRequireableExtensionSlot = SlotRegistry<OnLoadRequireableExtension>;
 
 export type MainAspect = {
   /**
@@ -73,7 +86,8 @@ export class AspectLoaderMain {
     private logger: Logger,
     private envs: EnvsMain,
     private harmony: Harmony,
-    private onAspectLoadErrorSlot: OnAspectLoadErrorSlot
+    private onAspectLoadErrorSlot: OnAspectLoadErrorSlot,
+    private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot
   ) {}
 
   private getCompiler(component: Component) {
@@ -83,6 +97,10 @@ export class AspectLoaderMain {
 
   registerOnAspectLoadErrorSlot(onAspectLoadError: OnAspectLoadError) {
     this.onAspectLoadErrorSlot.register(onAspectLoadError);
+  }
+
+  registerOnLoadRequireableExtensionSlot(onLoadRequireableExtension: OnLoadRequireableExtension) {
+    this.onLoadRequireableExtensionSlot.register(onLoadRequireableExtension);
   }
 
   /**
@@ -106,9 +124,14 @@ export class AspectLoaderMain {
 
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
-    const compiler = this.getCompiler(component);
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
+    const compiler = this.getCompiler(component);
+
+    if (!compiler) {
+      return join(modulePath, runtimeFile.relative);
+    }
+
+    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
     return join(modulePath, dist);
   }
 
@@ -242,9 +265,10 @@ export class AspectLoaderMain {
       const aspect = await requireableExtension.require();
       const manifest = aspect.default || aspect;
       manifest.id = idStr;
-      return manifest;
+      const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+      return newManifest;
     };
-    const manifestsP = requireableExtensions.map(async (requireableExtension) => {
+    const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
@@ -278,20 +302,48 @@ export class AspectLoaderMain {
       }
       return undefined;
     });
-    const manifests = await Promise.all(manifestsP);
+    const manifests = await manifestsP;
 
     // Remove empty manifests as a result of loading issue
-    const filteredManifests = manifests.filter((manifest) => manifest);
+    const filteredManifests = compact(manifests);
     return this.loadExtensionsByManifests(filteredManifests, throwOnError);
   }
 
-  isAspect(manifest: any) {
-    return manifest.addRuntime && manifest.getRuntime;
+  async runOnLoadRequireableExtensionSubscribers(
+    requireableExtension: RequireableComponent,
+    manifest: ExtensionManifest | Aspect
+  ): Promise<ExtensionManifest | Aspect> {
+    let updatedManifest = manifest;
+    const entries = this.onLoadRequireableExtensionSlot.toArray();
+    await mapSeries(entries, async ([, onLoadRequireableExtensionFunc]) => {
+      updatedManifest = await onLoadRequireableExtensionFunc(requireableExtension, updatedManifest);
+    });
+    return updatedManifest;
   }
 
-  private prepareManifests(manifests: ExtensionManifest[]) {
+  isAspect(manifest: any) {
+    return !!(manifest.addRuntime && manifest.getRuntime);
+  }
+
+  /**
+   * get or create a global scope, import the non-core aspects, load bit from that scope, create
+   * capsules for the aspects and load them from the capsules.
+   */
+  async loadAspectsFromGlobalScope(aspectIds: string[]): Promise<Component[]> {
+    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
+    await globalScope.ensureDir();
+    const globalScopeHarmony = await loadBit(globalScope.path);
+    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    const ids = await scope.resolveMultipleComponentIds(aspectIds);
+    const components = await scope.import(ids);
+    const resolvedAspects = await scope.getResolvedAspects(components);
+    await this.loadRequireableExtensions(resolvedAspects, true);
+    return components;
+  }
+
+  private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {
     return manifests.map((manifest: any) => {
-      if (this.isAspect(manifest)) return manifest;
+      if (this.isAspect(manifest)) return manifest as Aspect;
       manifest.runtime = MainRuntime;
       if (!manifest.id) throw new Error('manifest must have static id');
       const aspect = Aspect.create({
@@ -303,14 +355,16 @@ export class AspectLoaderMain {
   }
 
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
-  async loadExtensionsByManifests(extensionsManifests: ExtensionManifest[], throwOnError = true) {
+  async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
     try {
       const manifests = extensionsManifests.filter((manifest) => {
+        // @ts-ignore TODO: fix this
         const isValid = this.isAspect(manifest) || manifest.provider;
         if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
         return isValid;
       });
       const preparedManifests = this.prepareManifests(manifests);
+      // @ts-ignore TODO: fix this
       await this.harmony.load(preparedManifests);
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
@@ -331,16 +385,22 @@ export class AspectLoaderMain {
 
   static runtime = MainRuntime;
   static dependencies = [LoggerAspect, EnvsAspect];
-  static slots = [Slot.withType<OnAspectLoadError>()];
+  static slots = [Slot.withType<OnAspectLoadError>(), Slot.withType<OnLoadRequireableExtension>()];
 
   static async provider(
     [loggerExt, envs]: [LoggerMain, EnvsMain],
     config,
-    [onAspectLoadErrorSlot]: [OnAspectLoadErrorSlot],
+    [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot]: [OnAspectLoadErrorSlot, OnLoadRequireableExtensionSlot],
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
-    const aspectLoader = new AspectLoaderMain(logger, envs, harmony, onAspectLoadErrorSlot);
+    const aspectLoader = new AspectLoaderMain(
+      logger,
+      envs,
+      harmony,
+      onAspectLoadErrorSlot,
+      onLoadRequireableExtensionSlot
+    );
     return aspectLoader;
   }
 }

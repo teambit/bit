@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HttpHelper } from '../http-helper';
@@ -10,7 +9,6 @@ import { HttpHelper } from '../http-helper';
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

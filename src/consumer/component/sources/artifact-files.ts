@@ -8,6 +8,7 @@ import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
+import Component from '../consumer-component';
 
 import { ArtifactVinyl } from './artifact';
 
@@ -95,6 +96,26 @@ export class ArtifactFiles {
     this.vinyls = await Promise.all(this.refs.map((artifact) => getOneArtifact(artifact)));
     return this.vinyls;
   }
+}
+
+export async function importMultipleDistsArtifacts(scope: Scope, components: Component[]) {
+  const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
+  const groupedHashes: { [scopeName: string]: string[] } = {};
+  components.forEach((component) => {
+    const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
+    artifactsFiles.forEach((artifactFiles) => {
+      if (!artifactFiles) return;
+      if (!(artifactFiles instanceof ArtifactFiles)) {
+        artifactFiles = deserializeArtifactFiles(artifactFiles);
+      }
+      if (artifactFiles.isEmpty()) return;
+      if (artifactFiles.vinyls.length) return;
+      const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
+      (groupedHashes[component.scope as string] ||= []).push(...allHashes);
+    });
+  });
+  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  await scopeComponentsImporter.importManyObjects(groupedHashes);
 }
 
 export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {

@@ -4,7 +4,7 @@ import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext, hasCompiler } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
@@ -15,6 +15,7 @@ import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { generateMfLink } from './generate-mf-link';
@@ -25,7 +26,7 @@ import { PreviewRoute } from './preview.route';
 import { PreviewTask } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
-import { RuntimeComponents } from './runtime-components';
+import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import { computeExposes } from './compute-exposes';
 import { generateBootstrapFile } from './generate-bootstrap-file';
@@ -74,7 +75,9 @@ export class PreviewMain {
 
     private builder: BuilderMain,
 
-    private workspace?: Workspace
+    private workspace: Workspace | undefined,
+
+    private logger: Logger
   ) {}
 
   get tempFolder(): string {
@@ -88,7 +91,7 @@ export class PreviewMain {
     return new PreviewArtifact(artifacts);
   }
 
-  getDefs() {
+  getDefs(): PreviewDefinition[] {
     return this.previewSlot.values();
   }
 
@@ -96,10 +99,11 @@ export class PreviewMain {
   private timestamp = Date.now();
 
   /**
-   * write a link for a loading custom modules dynamically.
+   * write a link to load custom modules dynamically.
    * @param prefix write
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
+   * @param dirName
    */
   writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
@@ -138,17 +142,18 @@ export class PreviewMain {
     return targetPath;
   }
 
-  private execContexts = new Map<string, ExecutionContext>();
-  private componentsByAspect = new Map<string, RuntimeComponents>();
+  private executionRefs = new Map<string, ExecutionRef>();
 
   // TODO: consolidate code duplication with the env-strategy computePaths logic
   private async getPreviewTarget(
     /** execution context (of the specific env) */
     context: ExecutionContext
   ): Promise<string[]> {
-    // store context for later link file updates
-    this.execContexts.set(context.id, context);
-    this.componentsByAspect.set(context.id, new RuntimeComponents(context.components));
+    // store context for later link-file updates
+    // also register related envs that this context is acting on their behalf
+    [context.id, ...context.relatedContexts].forEach((ctxId) => {
+      this.executionRefs.set(ctxId, new ExecutionRef(context));
+    });
 
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
@@ -165,11 +170,12 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const environment = context.envRuntime.env;
-      const compilerInstance: Compiler = environment.getCompiler?.();
+
+      const compilerInstance = hasCompiler(environment) && environment.getCompiler();
       const withPaths = map.map<string[]>((files, component) => {
         const modulePath = this.pkg.getModulePath(component);
         return files.map((file) => {
-          if (!this.workspace) {
+          if (!this.workspace || !compilerInstance) {
             return file.path;
           }
           const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
@@ -263,25 +269,29 @@ export class PreviewMain {
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
   // instead we keep track of changes
-  private handleComponentChange = async (c: Component, updater: (currentComponents: RuntimeComponents) => void) => {
+  private handleComponentChange = async (c: Component, updater: (currentComponents: ExecutionRef) => void) => {
     const env = this.envs.getEnv(c);
     const envId = env.id.toString();
 
-    const executionContext = this.execContexts.get(envId);
-    const components = this.componentsByAspect.get(envId);
-    if (!components || !executionContext) return noopResult;
+    const executionRef = this.executionRefs.get(envId);
+    if (!executionRef) {
+      this.logger.warn(
+        `failed to update link file for component "${c.id.toString()}" - could not find execution context for ${envId}`
+      );
+      return noopResult;
+    }
 
     // add / remove / etc
-    updater(components);
+    updater(executionRef);
 
-    await this.updateLinkFiles(components.components, executionContext);
+    await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
 
     return noopResult;
   };
 
   private handleComponentRemoval = (cId: ComponentID) => {
     let component: Component | undefined;
-    this.componentsByAspect.forEach((components) => {
+    this.executionRefs.forEach((components) => {
       const found = components.get(cId);
       if (found) component = found;
     });
@@ -352,6 +362,7 @@ export class PreviewMain {
     PkgAspect,
     PubsubAspect,
     AspectLoaderAspect,
+    LoggerAspect,
   ];
 
   static defaultConfig = {
@@ -360,7 +371,7 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader, loggerMain]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
@@ -369,12 +380,15 @@ export class PreviewMain {
       Workspace | undefined,
       PkgMain,
       PubsubMain,
-      AspectLoaderMain
+      AspectLoaderMain,
+      LoggerMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
     harmony: Harmony
   ) {
+    const logger = loggerMain.createLogger(PreviewAspect.id);
+
     const preview = new PreviewMain(
       harmony,
       previewSlot,
@@ -385,7 +399,8 @@ export class PreviewMain {
       config,
       bundlingStrategySlot,
       builder,
-      workspace
+      workspace,
+      logger
     );
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));

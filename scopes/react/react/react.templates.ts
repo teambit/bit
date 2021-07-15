@@ -5,6 +5,7 @@ import { reactEnvTemplate } from './templates/react-env';
 import { reactWorkspaceTemplate } from './templates/react-workspace';
 import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
+import { reactWorkspaceLearnBitTemplate } from './templates/react-workspace-learn-bit';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -14,4 +15,4 @@ export const componentTemplates: ComponentTemplate[] = [
   reactEnvTemplate,
 ];
 
-export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate];
+export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceLearnBitTemplate];

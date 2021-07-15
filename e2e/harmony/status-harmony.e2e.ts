@@ -1,5 +1,4 @@
 import { IssuesClasses } from '@teambit/component-issues';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('status command on Harmony', function () {
@@ -7,7 +6,6 @@ describe('status command on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();

@@ -1,9 +1,5 @@
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import {
-  HARMONY_FEATURE,
-  isFeatureEnabled,
-  isHarmonyEnabled,
-} from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { isLegacyEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -17,7 +13,7 @@ import LegacyWorkspaceConfig, {
 import { EnvType } from '@teambit/legacy/dist/legacy-extensions/env-extension-types';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { assign, parse, stringify } from 'comment-json';
+import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
@@ -89,8 +85,8 @@ export class WorkspaceConfig implements HostConfig {
   isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
-    const isHarmony = data || (isHarmonyEnabled() && !legacyConfig);
-    this.isLegacy = !isHarmony;
+    this.isLegacy = Boolean(isLegacyEnabled() || legacyConfig);
+    const isHarmony = !this.isLegacy;
     logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
     if (isHarmony) {
@@ -180,46 +176,32 @@ export class WorkspaceConfig implements HostConfig {
     dirPath?: PathOsBasedAbsolute,
     legacyInitProps?: LegacyInitProps
   ) {
-    if (isFeatureEnabled(HARMONY_FEATURE)) {
-      const getTemplateFile = async () => {
-        try {
-          return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-        } catch (err) {
-          if (err.code !== 'ENOENT') throw err;
-          // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-          return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
-        }
-      };
-      const templateFile = await getTemplateFile();
-      const templateStr = templateFile.toString();
-
-      const template = parse(templateStr);
-      // TODO: replace this assign with some kind of deepAssign that keeps the comments
-      // right now the comments above the internal props are overrides after the assign
-      const merged = assign(template, props);
-      const instance = new WorkspaceConfig(merged, undefined);
-      if (dirPath) {
-        instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
+    if (isLegacyEnabled() && dirPath) {
+      if (!dirPath) throw new Error('workspace-config, dirPath is missing');
+      // Only support here what needed for e2e tests
+      const legacyProps: LegacyWorkspaceConfigProps = {};
+      if (props['teambit.dependencies/dependency-resolver']) {
+        legacyProps.packageManager = props['teambit.dependencies/dependency-resolver'].packageManager;
       }
+      if (props['teambit.workspace/workspace']) {
+        legacyProps.componentsDefaultDirectory = props['teambit.workspace/workspace'].defaultDirectory;
+      }
+
+      const standAlone = legacyInitProps?.standAlone ?? false;
+      const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
+      const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
-    // @todo: once harmony is stable, revert the if, and use this 'legacy-workspace-config' feature.
-    // if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
-    if (!dirPath) throw new Error('workspace-config, dirPath is missing');
-    // Only support here what needed for e2e tests
-    const legacyProps: LegacyWorkspaceConfigProps = {};
-    if (props['teambit.dependencies/dependency-resolver']) {
-      legacyProps.packageManager = props['teambit.dependencies/dependency-resolver'].packageManager;
-    }
-    if (props['teambit.workspace/workspace']) {
-      legacyProps.componentsDefaultDirectory = props['teambit.workspace/workspace'].defaultDirectory;
-    }
 
-    const standAlone = legacyInitProps?.standAlone ?? false;
-    const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
-    const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
+    const template = await getWorkspaceConfigTemplateParsed();
+    // TODO: replace this assign with some kind of deepAssign that keeps the comments
+    // right now the comments above the internal props are overrides after the assign
+    const merged = assign(template, props);
+    const instance = new WorkspaceConfig(merged, undefined);
+    if (dirPath) {
+      instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
+    }
     return instance;
-    // }
   }
 
   /**
@@ -337,12 +319,13 @@ export class WorkspaceConfig implements HostConfig {
 
   static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
     const contentBuffer = await fs.readFile(workspaceJsoncPath);
+    let parsed;
     try {
-      const parsed = parse(contentBuffer.toString());
-      return WorkspaceConfig.fromObject(parsed);
+      parsed = parse(contentBuffer.toString());
     } catch (e) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
+    return WorkspaceConfig.fromObject(parsed);
   }
 
   async write({ dir }: { dir?: PathOsBasedAbsolute }): Promise<void> {
@@ -484,4 +467,20 @@ export function transformLegacyPropsToExtensions(
   }
   // @ts-ignore
   return data;
+}
+
+export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {
+  let fileContent: Buffer;
+  try {
+    fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
+    fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
+  }
+  return parse(fileContent.toString());
+}
+
+export function stringifyWorkspaceConfig(workspaceConfig: CommentJSONValue): string {
+  return stringify(workspaceConfig, undefined, 2);
 }

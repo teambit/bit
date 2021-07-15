@@ -10,6 +10,21 @@ The Html aspect provides a tools for developing framework-less components, which
 These tools include a [bit development environment](https://harmony-docs.bit.dev/building-with-bit/environments) which enables easy rendering of component
 examples via the compositions feature (see below) as well as functions for extracting html from a url, and converting strings to html elements.
 
+### Using the html env
+
+To use this environment for your components, add it to any of the `variants` in your `workspace.jsonc` file as follows:
+
+```json title="workspace.jsonc"
+{
+  "teambit.workspace/variants": {
+    "some/path": {
+      // e.g. apply the env to all components under the some/path directory
+      "teambit.html/html": {}
+    }
+  }
+}
+```
+
 ### No-Framework components
 
 For shareable, framework-less components **documentation is absolutely key**.
@@ -23,6 +38,8 @@ to consumers of your components what output to expect from the component and how
 So providing documentation as part of your component, which describes how your component works and more importantly how to consume it in an application
 is the difference between full adoption and a great component which just isn't usable enough.
 
+Bit provides two forms of documentation, which we recommend to use in tandem - a docs.md/x files, which is fairly self-explanatory, and compositions.
+
 ### Compositions
 
 [Bit compositions](https://harmony-docs.bit.dev/aspects/compositions/) allow you to create visual examples of your components, not just in terms of UI but
@@ -32,7 +49,7 @@ These formats stem from the fact that Html + JS + CSS components can be implemen
 You can also think of compositions as examples for how to consume your component, and the different composition formats can be used in conjunction
 with each other, as separate examples of various ways of consuming your component.
 
-Support composition formats in this environment:
+Supported composition formats in this environment:
 
 1. As an HTML element/fragment
 1. As an HTML string (can include script tags)

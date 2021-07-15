@@ -19,6 +19,7 @@ import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './c
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
+import GeneralError from '../../error/general-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -32,15 +33,15 @@ export const CURRENT_BITMAP_SCHEMA = '14.9.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 /**
- * When working on lanes, a component version can be different than the master.
- * For example, when tagging 1.0.0 on master, then switching to a new lane and snapping.
- * The version saved in .bitmap file is the one of master (in this case 1.0.0).
+ * When working on lanes, a component version can be different than the main.
+ * For example, when tagging 1.0.0 on main, then switching to a new lane and snapping.
+ * The version saved in .bitmap file is the one of main (in this case 1.0.0).
  * The hash of the snap is saved on the 'workspace-lane' file.
  * These files are saved in .bit/workspace/lanes/<lane-name> directory, and they're not get
  * synched by Git.
  * Once a lane is exported to a remote scope, then .bitmap gets a new property
  * "lanes" array that includes the remote-lane-id and the version hash.
- * Still, the version on the ID doesn't get changed and it reflects the master version.
+ * Still, the version on the ID doesn't get changed and it reflects the main version.
  * Since all operations on .bitmap are not aware of this new workspace-lane file and the "lanes" prop,
  * we do a manipulation when loading and when saving the .bitmap file.
  * When loading .bitmap file, it also loads the workspace-lane of the active lane if exists.
@@ -98,10 +99,38 @@ export default class BitMap {
         throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
-
     componentMap.id = bitId;
     this.components.push(componentMap);
     this.markAsChanged();
+  }
+
+  /**
+   * in case the added component's root-dir is a parent-dir of other components
+   * or other component's root-dir is a parent root-dir of this component, throw an error
+   */
+  private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+    if (this.isLegacy || !rootDir) {
+      return;
+    }
+    const isParentDir = (parent: string, child: string) => {
+      const relative = path.relative(parent, child);
+      return relative && !relative.startsWith('..');
+    };
+    this.components.forEach((existingComponentMap) => {
+      if (!existingComponentMap.rootDir) return;
+      if (isParentDir(existingComponentMap.rootDir, rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
+            existingComponentMap.rootDir
+          } which used by another component "${existingComponentMap.id.toString()}"`
+        );
+      }
+      if (isParentDir(rootDir, existingComponentMap.rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is used by another component ${existingComponentMap.id.toString()}`
+        );
+      }
+    });
   }
 
   setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
@@ -642,6 +671,7 @@ export default class BitMap {
     componentMap.mainFile = mainFile;
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
+      this.throwForExistingParentDir(componentMap);
     }
     if (trackDir) {
       componentMap.trackDir = pathNormalizeToLinux(trackDir);
@@ -856,7 +886,7 @@ export default class BitMap {
         // if not exist, we still need these properties so we know later to parse them correctly.
         componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
         componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
-        // change back the id to the master id, so the local lanes data won't be saved in .bitmap
+        // change back the id to the main id, so the local lanes data won't be saved in .bitmap
         if (componentMapCloned.defaultVersion) {
           componentMapCloned.version = componentMapCloned.defaultVersion;
         }

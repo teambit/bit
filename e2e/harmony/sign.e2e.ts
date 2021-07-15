@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { HARMONY_FEATURE, BUILD_ON_CI } from '../../src/api/consumer/lib/feature-toggle';
+import { BUILD_ON_CI } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -9,7 +9,7 @@ describe('sign command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([HARMONY_FEATURE, BUILD_ON_CI]);
+    helper.command.setFeatures([BUILD_ON_CI]);
   });
   after(() => {
     helper.scopeHelper.destroy();

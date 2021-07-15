@@ -12,6 +12,8 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
+import webpack from 'webpack';
+import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
@@ -35,7 +37,7 @@ export class WebpackMain {
     /**
      * Pubsub extension.
      */
-    private pubsub: PubsubMain,
+    public pubsub: PubsubMain,
 
     /**
      * workspace extension.
@@ -50,13 +52,11 @@ export class WebpackMain {
     /**
      * Logger extension
      */
-    private logger: Logger
+    public logger: Logger
   ) {}
 
   /**
    * create an instance of bit-compliant webpack dev server for a set of components
-   * @param components array of components to launch.
-   * @param config webpack config. will be merged to the base webpack config as seen at './config'
    */
   createDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const config = this.createDevServerConfig(
@@ -68,9 +68,7 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const transformerContext: WebpackConfigTransformContext = {
-      mode: 'dev',
-    };
+    const transformerContext: WebpackConfigTransformContext = { mode: 'dev' };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     console.log(afterMutation.raw.entry);
     // @ts-ignore - fix this
@@ -93,7 +91,7 @@ export class WebpackMain {
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     console.log(afterMutation.raw.entry);
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw);
+    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
 
   mergeConfig(target: any, source: any): any {
@@ -102,9 +100,7 @@ export class WebpackMain {
 
   createBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
     const configs = this.createPreviewConfig(context.targets);
-    const transformerContext: WebpackConfigTransformContext = {
-      mode: 'prod',
-    };
+    const transformerContext: WebpackConfigTransformContext = { mode: 'prod' };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
@@ -124,7 +120,7 @@ export class WebpackMain {
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
       return afterMutation.raw;
     });
-    return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
+    return new WebpackBundler(context.targets, mutatedConfigs, this.logger, webpack);
   }
 
   private createPreviewConfig(targets: Target[]) {
@@ -137,8 +133,8 @@ export class WebpackMain {
     entry: string[],
     rootPath: string,
     devServerID: string,
-    publicRoot?: string,
-    publicPath?: string,
+    publicRoot: string,
+    publicPath: string,
     title?: string
   ) {
     return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub, title);
@@ -157,7 +153,7 @@ export class WebpackMain {
 
 WebpackAspect.addRuntime(WebpackMain);
 
-function runTransformersWithContext(
+export function runTransformersWithContext(
   config: WebpackConfigMutator,
   transformers: WebpackConfigTransformer[] = [],
   context: WebpackConfigTransformContext
