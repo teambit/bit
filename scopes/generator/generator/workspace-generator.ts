@@ -4,6 +4,7 @@ import { loadBit } from '@teambit/bit';
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import execa from 'execa';
+import { BitId } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
@@ -88,7 +89,7 @@ export class WorkspaceGenerator {
 
     const componentsToImportResolved = await Promise.all(
       componentsToImport.map(async (c) => ({
-        id: await this.workspace.resolveComponentId(c.id),
+        id: ComponentID.fromLegacy(BitId.parse(c.id, true)),
         path: c.path,
       }))
     );

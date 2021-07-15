@@ -475,7 +475,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true): Promise<Component[]> {
+  async import(ids: ComponentID[], useCache = true, throwIfNotExist = false): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -487,7 +487,7 @@ export class ScopeMain implements ComponentFactory {
     });
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
-    return this.getMany(ids);
+    return this.getMany(ids, throwIfNotExist);
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
@@ -569,10 +569,10 @@ export class ScopeMain implements ComponentFactory {
     return modelComponent.scope === this.name;
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return this.get(id);
+      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
     });
     const components = await componentsP;
     return compact(components);
