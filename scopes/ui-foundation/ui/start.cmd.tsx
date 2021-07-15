@@ -83,13 +83,13 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    uiServer.then((server) => open(server.publicUrl)).catch((error) => this.logger.error(error));
+    uiServer.then((server) => open(this.ui.publicUrl || server.fullUrl)).catch((error) => this.logger.error(error));
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} url={this.ui.publicUrl} />;
   }
 }

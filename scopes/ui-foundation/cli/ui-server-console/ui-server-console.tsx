@@ -13,9 +13,12 @@ export type UIServerConsoleProps = {
    * name of the app.
    */
   appName: string;
+
+  /** explicity server url */
+  url?: string;
 };
 
-export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProps) {
+export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProp
       <Text>
         You can now view '<Text color="cyan">{appName}</Text>' components in the browser.
       </Text>
-      <Text>Bit server is running on http://localhost:{uiServer.port}</Text>
+      <Text>Bit server is running on {url || uiServer.fullUrl}</Text>
     </>
   );
 }

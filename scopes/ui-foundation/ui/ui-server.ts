@@ -63,10 +63,10 @@ export class UIServer {
     return 'localhost';
   }
 
-  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
-  get publicUrl() {
+  /** the server listens at this url */
+  get fullUrl() {
     const port = this.port !== 80 ? `:${this.port}` : '';
-    return `http://localhost${port}`;
+    return `http://${this.host}${port}`;
   }
 
   /**
