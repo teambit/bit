@@ -83,6 +83,10 @@ describe('bit lane command', function () {
         expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
         expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
       });
+      it('should not show the id field as it is redundant', () => {
+        expect(diffOutput).to.not.have.string('--- Id');
+        expect(diffOutput).to.not.have.string('+++ Id');
+      });
     });
     describe('exporting the lane by explicitly entering the lane to the cli', () => {
       before(() => {
