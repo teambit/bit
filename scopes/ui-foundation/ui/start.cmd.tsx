@@ -5,6 +5,9 @@ import { Logger } from '@teambit/logger';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
+type StartArgs = [uiName: string, userPattern: string];
+type StartFlags = { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean };
+
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
@@ -28,15 +31,7 @@ export class StartCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report(
-    [uiRootName, userPattern]: [string, string],
-    {
-      dev,
-      port,
-      rebuild,
-      verbose,
-    }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
-  ): Promise<string> {
+  async report([uiRootName, userPattern]: StartArgs, { dev, port, rebuild, verbose }: StartFlags): Promise<string> {
     this.logger.off();
     const pattern = userPattern && userPattern.toString();
 
@@ -53,32 +48,17 @@ export class StartCmd implements Command {
   }
 
   async render(
-    [uiRootName, userPattern]: [string, string],
-    {
-      dev,
-      port,
-      rebuild,
-      verbose,
-    }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+    [uiRootName, userPattern]: StartArgs,
+    { dev, port, rebuild, verbose }: StartFlags
   ): Promise<React.ReactElement> {
-    // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    // const processWrite = process.stdout.write.bind(process.stdout);
-    // process.stdout.write = (data, cb) => {
-    //   if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
-    //   return processWrite(data, cb);
-    // };
-
-    const pattern = userPattern && userPattern.toString();
     this.logger.off();
-    const ui = this.ui.getUi();
-    if (!ui) throw new Error('ui not found');
-    const [, uiRoot] = ui;
-    const appName = uiRoot.name;
+    const appName = this.ui.getUiName(uiRootName);
+
     const uiServer = this.ui.createRuntime({
       uiRootName,
-      pattern,
+      pattern: userPattern,
       dev,
-      port: port ? parseInt(port) : undefined,
+      port: +port,
       rebuild,
       verbose,
     });

@@ -12,7 +12,7 @@ export type UIServerConsoleProps = {
   /**
    * name of the app.
    */
-  appName: string;
+  appName?: string;
 
   /** explicity server url */
   url?: string;
@@ -23,9 +23,7 @@ export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsol
 
   useEffect(() => {
     futureUiServer
-      .then((server) => {
-        setUiServer(server);
-      })
+      .then((server) => setUiServer(server))
       .catch((err) => {
         throw err;
       });
@@ -41,13 +39,9 @@ export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsol
       })}
       <Newline />
       <Text>
-        You can now view '<Text color="cyan">{appName}</Text>' components in the browser.
+        You can now view '<Text color="cyan">{uiServer?.getName()}</Text>' components in the browser.
       </Text>
       <Text>Bit server is running on {url || uiServer.fullUrl}</Text>
     </>
   );
 }
-
-UIServerConsole.defaultProps = {
-  futureStartPlugins: Promise.resolve([]),
-};
