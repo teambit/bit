@@ -10,8 +10,6 @@ export type ComponentIdObj = {
   version?: string;
 };
 
-export type LegacyComponentId = {};
-
 type EqualityOption = { ignoreVersion?: boolean };
 
 export class ComponentID {
