@@ -16754,6 +16754,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"eslint-config-mutator-3e5e85@workspace:scopes/defender/eslint-config-mutator":
+  version: 0.0.0-use.local
+  resolution: "eslint-config-mutator-3e5e85@workspace:scopes/defender/eslint-config-mutator"
+  languageName: unknown
+  linkType: soft
+
 "eslint-config-prettier@npm:6.15.0":
   version: 6.15.0
   resolution: "eslint-config-prettier@npm:6.15.0"
