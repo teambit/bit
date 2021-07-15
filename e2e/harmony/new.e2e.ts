@@ -47,5 +47,13 @@ describe('new command', function () {
       expect(status.newComponents).to.have.lengthOf(1);
       helper.command.expectStatusToNotHaveIssues(wsPath);
     });
+    it('should not add env dependencies to the workspace.jsonc', () => {
+      const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
+      const configFile = helper.bitJsonc.read(wsPath);
+      const dependencies = configFile['teambit.dependencies/dependency-resolver'].policy.dependencies;
+      expect(dependencies).to.not.have.property('@babel/runtime');
+      expect(dependencies).to.not.have.property('@types/jest');
+      expect(dependencies).to.not.have.property('@types/node');
+    });
   });
 });
