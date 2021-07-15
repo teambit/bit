@@ -58,6 +58,17 @@ export class UIServer {
     return this._port;
   }
 
+  /** the hostname for the server to listen at. Currently statically 'localhost' */
+  get host() {
+    return 'localhost';
+  }
+
+  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
+  get publicUrl() {
+    const port = this.port !== 80 ? `:${this.port}` : '';
+    return `http://localhost${port}`;
+  }
+
   /**
    * get the webpack configuration of the UI server.
    */
@@ -111,7 +122,7 @@ export class UIServer {
     // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
 
-    server.listen(port);
+    server.listen(port, this.host);
     this._port = port;
 
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
@@ -178,12 +189,12 @@ export class UIServer {
     const gqlProxies: ProxyEntry[] = [
       {
         context: ['/graphql', '/api'],
-        target: `http://localhost:${port}`,
+        target: `http://${this.host}:${port}`,
         changeOrigin: true,
       },
       {
         context: ['/subscriptions'],
-        target: `ws://localhost:${port}`,
+        target: `ws://${this.host}:${port}`,
         ws: true,
       },
     ];

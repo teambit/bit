@@ -83,7 +83,7 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    uiServer.then((server) => open(`http://localhost:${server.port}`)).catch((error) => this.logger.error(error));
+    uiServer.then((server) => open(server.publicUrl)).catch((error) => this.logger.error(error));
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
