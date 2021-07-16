@@ -6,5 +6,5 @@ export function aspectFile({ namePascalCase, componentId }: ComponentContext) {
 export const ${namePascalCase}Aspect = Aspect.create({
   id: '${componentId}',
 });
-  `;
+`;
 }
