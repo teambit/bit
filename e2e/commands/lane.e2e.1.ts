@@ -177,7 +177,7 @@ describe('bit lane command', function () {
       });
       // before, it was throwing "lane main was not found in scope" error
       it('bit fetch with no args should not throw errors', () => {
-        expect(helper.command.fetchAllLanes()).to.not.throw();
+        expect(() => helper.command.fetchAllLanes()).to.not.throw();
       });
     });
     describe('importing the lane and checking out by bit switch', () => {
