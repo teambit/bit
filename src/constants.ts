@@ -444,6 +444,8 @@ export const LANE_REMOTE_DELIMITER = '/';
 
 export const DEFAULT_LANE = 'main';
 
+export const PREVIOUS_DEFAULT_LANE = 'master';
+
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
