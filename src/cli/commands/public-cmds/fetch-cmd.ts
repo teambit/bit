@@ -16,7 +16,7 @@ export default class Fetch implements LegacyCommand {
     [
       'l',
       'lanes',
-      'EXPERIMENTAL. fetch lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button',
+      'EXPERIMENTAL. fetch component objects from lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button',
     ],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON'],
