@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
-import { ComponentMain, ComponentID } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
+import { ComponentID } from '@teambit/component-id';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -33,6 +34,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     let id;
 
     if (serialized.componentId.scope) {
+      // @ts-ignore - ts is saying scope is possibly missing, but just checked it is defined
       id = ComponentID.fromObject(serialized.componentId);
     } else {
       id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
