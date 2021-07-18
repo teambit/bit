@@ -59,7 +59,7 @@ describe('build command', function () {
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.have.lengthOf(0);
+      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });

@@ -18,7 +18,8 @@ import { ComponentGenerator, GenerateResult } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
-import { generatorTemplate } from './templates/generator';
+import { componentGeneratorTemplate } from './templates/component-generator';
+import { workspaceGeneratorTemplate } from './templates/workspace-generator';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
@@ -245,7 +246,7 @@ export class GeneratorMain {
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
-    generator.registerComponentTemplate([generatorTemplate]);
+    generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);
     return generator;
   }
 }

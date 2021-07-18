@@ -25,6 +25,7 @@ import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
 import { Serializable } from './types';
+import { ArtifactsCmd } from './artifact/artifacts.cmd';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
@@ -170,7 +171,7 @@ export class BuilderMain {
     return data?.data;
   }
 
-  private getArtifacts(component: Component): ArtifactObject[] | undefined {
+  getArtifacts(component: Component): ArtifactObject[] | undefined {
     return this.getBuilderData(component)?.artifacts;
   }
 
@@ -334,8 +335,9 @@ export class BuilderMain {
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
     if (workspace && !workspace.consumer.isLegacy) {
+      const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
       cli.unregister('build');
-      cli.register(new BuilderCmd(builder, workspace, logger));
+      cli.register(...commands);
     }
     return builder;
   }

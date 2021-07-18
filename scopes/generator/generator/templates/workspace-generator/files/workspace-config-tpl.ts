@@ -1,4 +1,5 @@
-import { WorkspaceContext } from '@teambit/generator';
+export function workspaceConfigTemplate() {
+  return `import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
@@ -12,4 +13,6 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
   };
 
   return stringifyWorkspaceConfig(configParsed);
+}
+`;
 }

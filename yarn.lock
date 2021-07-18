@@ -6682,9 +6682,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.122":
-  version: 1.0.122
-  resolution: "@teambit/legacy@npm:1.0.122"
+"@teambit/legacy@npm:1.0.124":
+  version: 1.0.124
+  resolution: "@teambit/legacy@npm:1.0.124"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6809,7 +6809,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: e7dd1e007552b78c7b632048d5c767bd3fd9995f5d6a36e0b9d6a22a04422ac6407adf7e613fa193427207c7ba3ad0cca2f29177a1b0c67b46ced8e49891fbf1
+  checksum: d004488ae0ba6b5bdc0c9430e1c7fdaa8dfc6d49c1fe5c91252b87bd1f28ebdd03a329747ce86c5a788e7c1f0637c56ba2a6a77afbe6e870624878bb916cf336
   languageName: node
   linkType: hard
 
@@ -6949,7 +6949,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.122
+    "@teambit/legacy": 1.0.124
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7349,7 +7349,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.122
+    "@teambit/legacy": 1.0.124
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -16751,6 +16751,12 @@ __metadata:
   resolution: "eslint-config-bit-react-8b2c72@workspace:scopes/react/eslint-config-bit-react"
   dependencies:
     eslint-config-airbnb-typescript: 12.0.0
+  languageName: unknown
+  linkType: soft
+
+"eslint-config-mutator-3e5e85@workspace:scopes/defender/eslint-config-mutator":
+  version: 0.0.0-use.local
+  resolution: "eslint-config-mutator-3e5e85@workspace:scopes/defender/eslint-config-mutator"
   languageName: unknown
   linkType: soft
 

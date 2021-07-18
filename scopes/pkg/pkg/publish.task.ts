@@ -2,7 +2,6 @@ import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit
 import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
 import { Publisher } from './publisher';
-import { Packer } from './packer';
 
 /**
  * publish components by running "npm publish"
@@ -10,12 +9,7 @@ import { Packer } from './packer';
 export class PublishTask implements BuildTask {
   readonly name = 'PublishComponents';
   readonly location: TaskLocation = 'end';
-  constructor(
-    readonly aspectId: string,
-    private publisher: Publisher,
-    private packer: Packer,
-    private logger: Logger
-  ) {}
+  constructor(readonly aspectId: string, private publisher: Publisher, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = false;
@@ -29,16 +23,11 @@ export class PublishTask implements BuildTask {
       }
     });
     this.logger.info(`going to run publish on ${capsulesToPublish.length} out of ${capsules.length}`);
-
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
-    this.logger.info(`going to run pack dry-run on ${capsules.length} out of ${capsules.length}`);
-
-    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, false, true);
-    const packArtifactsDefs = this.packer.getArtifactDefInCapsule();
 
     return {
-      componentsResults: publishResults.concat(packResults),
-      artifacts: [packArtifactsDefs],
+      componentsResults: publishResults,
+      artifacts: [],
     };
   }
 }

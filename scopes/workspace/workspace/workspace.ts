@@ -1272,6 +1272,15 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    // This is required in case where you have in your workspace a component with the same name as a core aspect
+    // let's say you have component called react-native (which is eventually my-org.my-scope/react-native)
+    // and you set teambit.react/react-native as your env
+    // bit will get here with the string teambit.react/react-native and will try to resolve it from the workspace
+    // during this it will find the my-org.my-scope/react-native which is incorrect as the core one doesn't exist in the
+    // workspace
+    if (this.aspectLoader.isCoreAspect(id.toString())) {
+      return ComponentID.fromString(id.toString());
+    }
     let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
     if (!legacyId) {
       try {
