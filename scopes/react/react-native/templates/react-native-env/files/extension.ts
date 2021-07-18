@@ -12,7 +12,7 @@ export class ${Name}Extension {
   static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
     const ${Name}Env = reactNative.compose([
       /*
-        Use any of the "reactNative.override..." transformers to
+        Use any of the "reactNative.override..." transformers
       */
     ])
 
