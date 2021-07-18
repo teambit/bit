@@ -138,5 +138,5 @@ function toRenderResult(obj: RenderResult | React.ReactElement) {
 
 function isRenderResult(obj: RenderResult | any): obj is RenderResult {
   // eslint-disable-next-line no-prototype-builtins
-  return typeof obj === 'object' && typeof obj.code === 'number' && !!obj.hasOwnProperty('data');
+  return typeof obj === 'object' && typeof obj.code === 'number' && obj.hasOwnProperty('data');
 }
