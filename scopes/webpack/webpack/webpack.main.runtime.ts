@@ -72,7 +72,7 @@ export class WebpackMain {
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     console.log(afterMutation.raw.entry);
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw);
+    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
 
   createComponentDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {

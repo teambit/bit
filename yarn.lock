@@ -6950,7 +6950,6 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
     "@teambit/legacy": 1.0.124
-    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
     "@teambit/react.instructions.react.adding-tests": 0.0.5
@@ -6999,7 +6998,7 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
-    "@types/react": ^17.0.8
+    "@types/react": 17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7202,6 +7201,7 @@ __metadata:
     mz: 2.7.0
     nanoid: 3.1.20
     nerf-dart: 1.0.0
+    new-url-loader: 0.1.1
     node-fetch: 2.6.1
     node-source-walk: 4.2.0
     normalize-path: 2.1.1
@@ -7350,24 +7350,10 @@ __metadata:
     yn: 2.0.0
   peerDependencies:
     "@teambit/legacy": 1.0.124
-    jest: 26.6.3
   bin:
     bit: bin/bit.js
   languageName: unknown
   linkType: soft
-
-"@teambit/mdx.ui.mdx-scope-context@npm:0.0.368":
-  version: 0.0.368
-  resolution: "@teambit/mdx.ui.mdx-scope-context@npm:0.0.368::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmdx.ui.mdx-scope-context%2F-%2Fmdx.ui.mdx-scope-context-0.0.368.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.86
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 1fa908b761a60bb0f8f5e0d0e4984bd5cabbb51136ab43bad71732e75e6c2d9306fe160725dfc0f11f5528d515bc79c38ee8b627f525ea6ff38b626e4606fb0a
-  languageName: node
-  linkType: hard
 
 "@teambit/model.composition-id@npm:0.0.259":
   version: 0.0.259
@@ -8540,7 +8526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^17.0.8":
+"@types/react@npm:*":
   version: 17.0.13
   resolution: "@types/react@npm:17.0.13"
   dependencies:
@@ -8548,6 +8534,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 8e25aaeac17c48e1f60544dc583c3ea770cd3d3ffdea944a1da3069db6a7d3a374d3a8bdac726150404318203c1b564135ce93e3b69bd5c06d7f262463b5525d
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:17.0.8":
+  version: 17.0.8
+  resolution: "@types/react@npm:17.0.8"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
   languageName: node
   linkType: hard
 
@@ -24846,6 +24843,15 @@ __metadata:
   version: 1.0.0
   resolution: "nerf-dart@npm:1.0.0"
   checksum: 0e5508d83eae21a6ed0bd32b3a048c849741023811f06efa972800f4ad55eaa8205442e81c406ad051771f232c4ed3d3ee262f6c850bbcad9660f54a6471a4b9
+  languageName: node
+  linkType: hard
+
+"new-url-loader@npm:0.1.1":
+  version: 0.1.1
+  resolution: "new-url-loader@npm:0.1.1"
+  peerDependencies:
+    webpack: ^5.0.0
+  checksum: 8b060835c49dfa8f8ec7c2319e453d99a4e5c25c9c5f6f69bea76c42e386f46ca0eab0e6e984bc8915b40078ae27775a66a3d76235ee80ac034db48af11a0ca2
   languageName: node
   linkType: hard
 
