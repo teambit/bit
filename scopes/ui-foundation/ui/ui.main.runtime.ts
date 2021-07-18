@@ -71,6 +71,9 @@ export type UIConfig = {
    * always relative to the workspace root directory.
    */
   publicDir: string;
+
+  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
+  publicUrl?: string;
 };
 
 export type RuntimeOptions = {
@@ -178,11 +181,14 @@ export class UiMain {
     return this.config.publicDir;
   }
 
-  getUiByName(name = '') {
+  private getUiByName(name: string) {
     const roots = this.uiRootSlot.toArray();
-    return roots.find(([, uiRoot]) => {
-      return uiRoot.name === name;
-    });
+    const [, root] =
+      roots.find(([, uiRoot]) => {
+        return uiRoot.name === name;
+      }) || [];
+
+    return root;
   }
 
   /**
@@ -191,9 +197,9 @@ export class UiMain {
   async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
     // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootName: "${uiRootName}"`);
-    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+    const maybeUiRoot = this.getUi(uiRootName);
 
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
     const [name, uiRoot] = maybeUiRoot;
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
@@ -233,9 +239,9 @@ export class UiMain {
    * create a Bit UI runtime.
    */
   async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
-    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+    const maybeUiRoot = this.getUi(uiRootName);
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
 
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
     const [name, uiRoot] = maybeUiRoot;
 
     const plugins = await this.initiatePlugins({
@@ -339,7 +345,7 @@ export class UiMain {
    */
   getUi(uiRootName?: string): [string, UIRoot] | undefined {
     if (uiRootName) {
-      const root = this.getUiRootOrThrow(uiRootName, false);
+      const root = this.uiRootSlot.get(uiRootName) || this.getUiByName(uiRootName);
       if (!root) return undefined;
       return [uiRootName, root];
     }
@@ -348,14 +354,15 @@ export class UiMain {
     return uis.find(([, root]) => root.priority);
   }
 
-  getUiRootOrThrow(uiRootName: string, shouldThrow: boolean): UIRoot | undefined {
-    const uiSlot = this.uiRootSlot.get(uiRootName);
-    if (!uiSlot && shouldThrow)
-      throw new UnknownUI(
-        uiRootName,
-        this.uiRootSlot.toArray().map(([id]) => id)
-      );
-    return uiSlot;
+  getUiName(uiRootName?: string): string | undefined {
+    const [, ui] = this.getUi(uiRootName) || [];
+    if (!ui) return undefined;
+
+    return ui.name;
+  }
+
+  private possibleUis() {
+    return this.uiRootSlot.toArray().map(([id]) => id);
   }
 
   createLink(aspectDefs: AspectDefinition[], rootExtensionName: string) {
@@ -460,12 +467,16 @@ export class UiMain {
     await this.cache.set(uiRoot.path, hash);
   }
 
+  get publicUrl() {
+    return this.config.publicUrl;
+  }
+
   private async openBrowser(url: string) {
     const openBrowser = new OpenBrowser(this.logger);
     openBrowser.open(url);
   }
 
-  static defaultConfig = {
+  static defaultConfig: UIConfig = {
     publicDir: 'public/bit',
     portRange: [3000, 3100],
     host: 'localhost',

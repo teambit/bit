@@ -9,10 +9,11 @@ The following describes the final implementation, which differs from the specifi
 
 - create a snap: `bit snap` (synopsis similar to the `bit tag`).
 - create a new lane: `bit switch <name> --create`
-- list lanes: `bit lane`.
+- list lanes: `bit lane list`.
 - switch between lanes: `bit switch <name>`
 - merge lanes: `bit merge --lane`.
-- show lane details: `bit lane <name>`
+- show lane details: `bit lane show <name>`
+- diff between lanes: `bit lane diff <values>`
 - track local lane to a remote lane: `bit switch --as`
 - rename a lane `bit switch --rename`
 - remove a lane `bit remove --lane`.

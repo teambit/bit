@@ -1,12 +1,14 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import type { BitIdProps } from '@teambit/legacy-bit-id';
 
 import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';
+import { DependencySource } from '../../policy/variant-policy/variant-policy';
 
 export const TYPE = 'component';
 
 export interface SerializedComponentDependency extends SerializedDependency {
-  componentId: Record<string, any>;
+  componentId: BitIdProps;
   isExtension: boolean;
   packageName: string;
 }
@@ -19,9 +21,10 @@ export class ComponentDependency extends BaseDependency {
     private _packageName: string,
     id: string,
     version: string,
-    lifecycle: DependencyLifecycleType
+    lifecycle: DependencyLifecycleType,
+    source?: DependencySource
   ) {
-    super(id, version, lifecycle);
+    super(id, version, lifecycle, source);
     this._type = TYPE;
   }
 

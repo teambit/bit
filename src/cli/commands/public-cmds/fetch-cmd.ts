@@ -13,7 +13,11 @@ export default class Fetch implements LegacyCommand {
   alias = '';
   private = true;
   opts = [
-    ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
+    [
+      'l',
+      'lanes',
+      'EXPERIMENTAL. fetch lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button',
+    ],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON'],
     [
