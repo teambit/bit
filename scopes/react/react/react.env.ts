@@ -52,7 +52,6 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
 import { ReactMainConfig } from './react.main.runtime';
-import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
