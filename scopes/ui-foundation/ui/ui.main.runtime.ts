@@ -70,6 +70,9 @@ export type UIConfig = {
    * always relative to the workspace root directory.
    */
   publicDir: string;
+
+  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
+  publicUrl?: string;
 };
 
 export type RuntimeOptions = {
@@ -452,6 +455,10 @@ export class UiMain {
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
+  }
+
+  get publicUrl() {
+    return this.config.publicUrl;
   }
 
   private async openBrowser(url: string) {

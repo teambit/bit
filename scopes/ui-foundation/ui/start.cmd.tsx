@@ -1,4 +1,5 @@
 import React from 'react';
+import open from 'open';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
@@ -82,11 +83,13 @@ export class StartCmd implements Command {
       verbose,
     });
 
+    uiServer.then((server) => open(this.ui.publicUrl || server.fullUrl)).catch((error) => this.logger.error(error));
+
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} url={this.ui.publicUrl} />;
   }
 }
