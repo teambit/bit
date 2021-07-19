@@ -2,7 +2,7 @@ import { v4 } from 'uuid';
 
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
-import { DEFAULT_LANE } from '../../constants';
+import { DEFAULT_LANE, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
@@ -10,6 +10,7 @@ import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
+import GeneralError from '../../error/general-error';
 
 export type LaneProps = {
   name: string;
@@ -166,7 +167,10 @@ export default class Lane extends BitObject {
       }
     });
     if (this.name === DEFAULT_LANE) {
-      throw new ValidationError(`${message}, this name is reserved as the default lane`);
+      throw new GeneralError(`${message}, this name is reserved as the default lane`);
+    }
+    if (this.name === PREVIOUS_DEFAULT_LANE) {
+      throw new GeneralError(`${message}, this name is reserved as the old default lane`);
     }
   }
 }
