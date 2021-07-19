@@ -13,9 +13,5 @@ export const ScopeTitleWithImageExample = () => (
 );
 
 export const ScopeTitleWithIconExample = () => (
-  <ScopeTitle
-    scopeName="teambit.base-ui"
-    icon="https://static.bit.dev/scope-icons-selector/Spaceship.svg?v=0.2"
-    backgroundIconColor="#babec9"
-  />
+  <ScopeTitle scopeName="teambit.base-ui" icon="https://static.bit.dev/scope-icons-selector/Spaceship.svg?v=0.2" />
 );

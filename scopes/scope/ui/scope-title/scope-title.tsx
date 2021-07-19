@@ -12,7 +12,10 @@ type ScopeTitleProps = {
   backgroundIconColor?: string;
 } & React.HTMLAttributes<HTMLHeadingElement>;
 
-export function ScopeTitle({ scopeName, icon, backgroundIconColor, className }: ScopeTitleProps) {
+// temporary fix because the API not return the backgroundIconColor from the scope style.
+const DEFAULT_COLOR = '#babec9';
+
+export function ScopeTitle({ scopeName, icon, backgroundIconColor = DEFAULT_COLOR, className }: ScopeTitleProps) {
   return (
     <H1 className={styles.title} size="sm">
       <ScopeIcon
