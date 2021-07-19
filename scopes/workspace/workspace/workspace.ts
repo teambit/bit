@@ -91,6 +91,7 @@ export type EjectConfResult = {
 
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
+export const ComponentRemoved = 'componentRemoved';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -474,11 +475,11 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
-      // TODO: find way to standardize event names.
-      await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
+    // TODO: find way to standardize event names.
+    await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
     return results;
   }
 
@@ -488,10 +489,10 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
+    await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
     return results;
   }
 
@@ -502,6 +503,8 @@ export class Workspace implements ComponentFactory {
       const onRemoveResult = await onRemoveFunc(id);
       results.push({ extensionId: extension, results: onRemoveResult });
     });
+
+    await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
   }
 
@@ -1272,6 +1275,15 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    // This is required in case where you have in your workspace a component with the same name as a core aspect
+    // let's say you have component called react-native (which is eventually my-org.my-scope/react-native)
+    // and you set teambit.react/react-native as your env
+    // bit will get here with the string teambit.react/react-native and will try to resolve it from the workspace
+    // during this it will find the my-org.my-scope/react-native which is incorrect as the core one doesn't exist in the
+    // workspace
+    if (this.aspectLoader.isCoreAspect(id.toString())) {
+      return ComponentID.fromString(id.toString());
+    }
     let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
     if (!legacyId) {
       try {

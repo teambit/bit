@@ -17,6 +17,7 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
+          "@svgr/webpack": "5.5.0",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
           "@typescript-eslint/parser": "4.15.1",
@@ -27,6 +28,7 @@
           "eslint-plugin-react": "7.22.0",
           "eslint-plugin-jsx-a11y": "6.4.1",
           "eslint-plugin-mdx": "1.13.0",
+          "new-url-loader": "0.1.1",
           "react-app-polyfill": "1.0.6",
           "resolve-url-loader": "3.1.2",
           "@mdx-js/react": "1.6.22",
@@ -60,7 +62,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.122"
+          "@teambit/legacy": "1.0.124"
         }
       }
     }
