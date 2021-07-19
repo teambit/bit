@@ -11,6 +11,7 @@ import styles from './scope-details.module.scss';
 type ScopeDetailsProps = {
   scopeName: string;
   icon?: string;
+  backgroundIconColor?: string;
   badgeSlot: ScopeBadgeSlot;
   description: string;
   componentCount: number;
@@ -20,6 +21,7 @@ type ScopeDetailsProps = {
 export function ScopeDetails({
   scopeName,
   icon,
+  backgroundIconColor,
   badgeSlot,
   overviewSlot,
   description,
@@ -31,7 +33,7 @@ export function ScopeDetails({
   return (
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
-        <ScopeTitle scopeName={scopeName} icon={icon} />
+        <ScopeTitle scopeName={scopeName} icon={icon} backgroundIconColor={backgroundIconColor} />
       </div>
       <Subtitle>{description}</Subtitle>
       <ScopeLabels badgeSlot={badgeSlot} componentCount={componentCount} />

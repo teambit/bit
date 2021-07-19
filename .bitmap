@@ -1267,6 +1267,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-details"
     },
+    "ui/scope-icon": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/ui/scope-icon"
+    },
     "ui/scope-labels": {
         "scope": "teambit.scope",
         "version": "0.0.412",
