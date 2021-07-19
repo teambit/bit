@@ -7202,6 +7202,7 @@ __metadata:
     mz: 2.7.0
     nanoid: 3.1.20
     nerf-dart: 1.0.0
+    new-url-loader: 0.1.1
     node-fetch: 2.6.1
     node-source-walk: 4.2.0
     normalize-path: 2.1.1
@@ -24846,6 +24847,15 @@ __metadata:
   version: 1.0.0
   resolution: "nerf-dart@npm:1.0.0"
   checksum: 0e5508d83eae21a6ed0bd32b3a048c849741023811f06efa972800f4ad55eaa8205442e81c406ad051771f232c4ed3d3ee262f6c850bbcad9660f54a6471a4b9
+  languageName: node
+  linkType: hard
+
+"new-url-loader@npm:0.1.1":
+  version: 0.1.1
+  resolution: "new-url-loader@npm:0.1.1"
+  peerDependencies:
+    webpack: ^5.0.0
+  checksum: 8b060835c49dfa8f8ec7c2319e453d99a4e5c25c9c5f6f69bea76c42e386f46ca0eab0e6e984bc8915b40078ae27775a66a3d76235ee80ac034db48af11a0ca2
   languageName: node
   linkType: hard
 
