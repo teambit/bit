@@ -53,7 +53,7 @@ export class StartCmd implements Command {
   ): Promise<React.ReactElement> {
     this.logger.off();
     const appName = this.ui.getUiName(uiRootName);
-
+    await this.ui.invokePreStart();
     const uiServer = this.ui.createRuntime({
       uiRootName,
       pattern: userPattern,
