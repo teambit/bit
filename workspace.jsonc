@@ -40,7 +40,6 @@
         "@popperjs/core": "2.6.0",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
-        "@svgr/webpack": "5.5.0",
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "1.0.0",
         "@teambit/base-ui.css-components.pill": "1.0.0",

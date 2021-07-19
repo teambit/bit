@@ -17,6 +17,7 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
+          "@svgr/webpack": "5.5.0",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
           "@typescript-eslint/parser": "4.15.1",
