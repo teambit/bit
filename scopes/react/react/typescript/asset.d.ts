@@ -3,9 +3,13 @@ declare module '*.png' {
   export = value;
 }
 declare module '*.svg' {
-  const value: any;
-  export = value;
+  import type { FunctionComponent, SVGProps } from 'react';
+
+  export const ReactComponent: FunctionComponent<SVGProps<SVGSVGElement> & { title?: string }>;
+  const src: string;
+  export default src;
 }
+
 // @TODO Gilad
 declare module '*.jpg' {
   const value: any;
