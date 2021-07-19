@@ -10,20 +10,25 @@ export type Component = {
   error?: ComponentError;
 };
 
+type ComponentRoute = {
+  componentId?: string;
+};
+
 export function useComponent(host: string, id?: ComponentID): Component {
   const {
-    // @ts-ignore
     params: { componentId },
-  } = useRouteMatch();
+  } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
   const version = query.get('version') || undefined;
 
-  const targetId = id || componentId;
+  const targetId = id?.toString({ ignoreVersion: true }) || componentId;
+  if (!targetId) throw new TypeError('useComponent received no component id');
 
   return useComponentQuery(withVersion(targetId, version), host);
 }
 
 function withVersion(id: string, version?: string) {
   if (!version) return id;
+  if (id.includes('@')) return id;
   return `${id}@${version}`;
 }

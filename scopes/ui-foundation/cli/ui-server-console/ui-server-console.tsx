@@ -12,17 +12,18 @@ export type UIServerConsoleProps = {
   /**
    * name of the app.
    */
-  appName: string;
+  appName?: string;
+
+  /** explicity server url */
+  url?: string;
 };
 
-export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProps) {
+export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
 
   useEffect(() => {
     futureUiServer
-      .then((server) => {
-        setUiServer(server);
-      })
+      .then((server) => setUiServer(server))
       .catch((err) => {
         throw err;
       });
@@ -38,13 +39,9 @@ export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProp
       })}
       <Newline />
       <Text>
-        You can now view '<Text color="cyan">{appName}</Text>' components in the browser.
+        You can now view '<Text color="cyan">{uiServer?.getName()}</Text>' components in the browser.
       </Text>
-      <Text>Bit server is running on http://localhost:{uiServer.port}</Text>
+      <Text>Bit server is running on {url || uiServer.fullUrl}</Text>
     </>
   );
 }
-
-UIServerConsole.defaultProps = {
-  futureStartPlugins: Promise.resolve([]),
-};
