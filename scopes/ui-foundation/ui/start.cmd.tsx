@@ -6,7 +6,7 @@ import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
 type StartArgs = [uiName: string, userPattern: string];
-type StartFlags = { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean };
+type StartFlags = { dev: boolean; port: string; rebuild: boolean; verbose: boolean; noBrowser: boolean };
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
@@ -19,7 +19,7 @@ export class StartCmd implements Command {
     ['p', 'port [number]', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
-    ['', 'suppress-browser-launch', 'do not automatically open browser when ready'],
+    ['', 'no-browser', 'do not automatically open browser when ready'],
   ] as CommandOptions;
 
   constructor(
@@ -49,7 +49,7 @@ export class StartCmd implements Command {
 
   async render(
     [uiRootName, userPattern]: StartArgs,
-    { dev, port, rebuild, verbose }: StartFlags
+    { dev, port, rebuild, verbose, noBrowser }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
     const appName = this.ui.getUiName(uiRootName);
@@ -63,7 +63,9 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    uiServer.then((server) => open(this.ui.publicUrl || server.fullUrl)).catch((error) => this.logger.error(error));
+    if (!noBrowser) {
+      uiServer.then((server) => open(this.ui.publicUrl || server.fullUrl)).catch((error) => this.logger.error(error));
+    }
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
