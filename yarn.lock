@@ -6682,9 +6682,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.122":
-  version: 1.0.122
-  resolution: "@teambit/legacy@npm:1.0.122"
+"@teambit/legacy@npm:1.0.124":
+  version: 1.0.124
+  resolution: "@teambit/legacy@npm:1.0.124"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6809,7 +6809,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: e7dd1e007552b78c7b632048d5c767bd3fd9995f5d6a36e0b9d6a22a04422ac6407adf7e613fa193427207c7ba3ad0cca2f29177a1b0c67b46ced8e49891fbf1
+  checksum: d004488ae0ba6b5bdc0c9430e1c7fdaa8dfc6d49c1fe5c91252b87bd1f28ebdd03a329747ce86c5a788e7c1f0637c56ba2a6a77afbe6e870624878bb916cf336
   languageName: node
   linkType: hard
 
@@ -6949,7 +6949,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.122
+    "@teambit/legacy": 1.0.124
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7202,6 +7202,7 @@ __metadata:
     mz: 2.7.0
     nanoid: 3.1.20
     nerf-dart: 1.0.0
+    new-url-loader: 0.1.1
     node-fetch: 2.6.1
     node-source-walk: 4.2.0
     normalize-path: 2.1.1
@@ -7349,7 +7350,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.122
+    "@teambit/legacy": 1.0.124
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -24846,6 +24847,15 @@ __metadata:
   version: 1.0.0
   resolution: "nerf-dart@npm:1.0.0"
   checksum: 0e5508d83eae21a6ed0bd32b3a048c849741023811f06efa972800f4ad55eaa8205442e81c406ad051771f232c4ed3d3ee262f6c850bbcad9660f54a6471a4b9
+  languageName: node
+  linkType: hard
+
+"new-url-loader@npm:0.1.1":
+  version: 0.1.1
+  resolution: "new-url-loader@npm:0.1.1"
+  peerDependencies:
+    webpack: ^5.0.0
+  checksum: 8b060835c49dfa8f8ec7c2319e453d99a4e5c25c9c5f6f69bea76c42e386f46ca0eab0e6e984bc8915b40078ae27775a66a3d76235ee80ac034db48af11a0ca2
   languageName: node
   linkType: hard
 

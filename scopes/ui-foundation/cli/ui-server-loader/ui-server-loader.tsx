@@ -6,7 +6,7 @@ export type UIServerLoaderProps = {
   /**
    * name of the ui root.
    */
-  name: string;
+  name?: string;
 };
 
 export function UIServerLoader({ name }: UIServerLoaderProps) {
@@ -16,7 +16,12 @@ export function UIServerLoader({ name }: UIServerLoaderProps) {
         <Text color="green">
           <Spinner type="dots" />
         </Text>{' '}
-        Starting development servers for '<Text color="cyan">{name}</Text>'
+        Starting UI servers{' '}
+        {name && (
+          <>
+            for '<Text color="cyan">{name}</Text>'
+          </>
+        )}
       </Text>
     </Box>
   );
