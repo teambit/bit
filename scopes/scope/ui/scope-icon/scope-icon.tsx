@@ -48,7 +48,7 @@ export function ScopeIcon({
         <img src={imageWithParams} className={classNames(styles.scopeImg, imgClassName)} />
       ) : (
         <span className={classNames(styles.letter, textSize.xs)}>
-          {displayName ? getInitials(displayName).toUpperCase() : '?'}
+          {displayName ? getInitials(displayName)?.toUpperCase() : '?'}
         </span>
       )}
     </div>
