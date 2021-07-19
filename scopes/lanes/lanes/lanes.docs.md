@@ -1,7 +1,4 @@
-Taken from https://github.com/teambit/bit/pull/2754
-
 See more details about these two features here: [Lanes](https://github.com/teambit/bit/issues/1986). [Snaps](https://github.com/teambit/bit/issues/1985).
-Note that for now, these features are disabled by a feature toggle "lanes". Our recommendation is not to use it yet.
 
 The following describes the final implementation, which differs from the specification above.
 
@@ -69,7 +66,8 @@ Summary of when/what lanes data is saved per command:
 - `bit switch --create`: creates a new lane-object.
 - `bit snap`: adds an entry to the lane-object and to the workspace-lane.
 - `bit export`: 1) deletes all records from workspace-lane (as they're in sync with the remote). 2) pushes the lane-object to the remote. On the remote, the lane-object is created or updated/merged.
-- `bit import/fetch`: 1) creates/updates lane-object in the scope. 2) creates/updates remote-lane. the remote-lane is updated also for main.
+- `bit switch --remote`: 1) creates/updates lane-object in the scope. 2) creates/updates remote-lane. the remote-lane is updated also for main.
+- `bit fetch` or `bit import --objects`: creates/updates remote-lane. the remote-lane is updated also for main. It doesn't update/merge the lane object.
 
 ### Merge during import
 
