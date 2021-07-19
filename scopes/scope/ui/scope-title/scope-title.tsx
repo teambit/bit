@@ -1,20 +1,26 @@
+import React from 'react';
+import classNames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { H1 } from '@teambit/documenter.ui.heading';
-import classNames from 'classnames';
-import React from 'react';
-import { UserAvatar } from '@teambit/design.ui.avatar';
+import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
 
 import styles from './scope-title.module.scss';
 
 type ScopeTitleProps = {
   scopeName: string;
   icon?: string;
+  backgroundIconColor?: string;
 } & React.HTMLAttributes<HTMLHeadingElement>;
 
-export function ScopeTitle({ scopeName, icon, className }: ScopeTitleProps) {
+export function ScopeTitle({ scopeName, icon, backgroundIconColor, className }: ScopeTitleProps) {
   return (
     <H1 className={styles.title} size="sm">
-      <UserAvatar size={32} account={{ name: scopeName.split('.')[1] || scopeName, profileImage: icon }} />
+      <ScopeIcon
+        size={32}
+        displayName={scopeName.split('.')[1] || scopeName}
+        scopeImage={icon}
+        bgColor={backgroundIconColor}
+      />
       <span className={classNames(mutedText, styles.orgName, className)}>{scopeName.replace('.', '/')}</span>
     </H1>
   );
