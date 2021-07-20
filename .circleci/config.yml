@@ -1299,7 +1299,8 @@ jobs:
     steps:
       - run:
           name: 'set GitHub token for github actions orb'
-          command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
+          # command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
+          command: "echo 'export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken' >> $BASH_ENV"
       - github-actions/repository_dispatch:
           repo_name: "teambit/bit-angular"
           event_type: "bit_master_push"
