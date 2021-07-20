@@ -30062,6 +30062,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"scope-icon-b946de@workspace:scopes/scope/ui/scope-icon":
+  version: 0.0.0-use.local
+  resolution: "scope-icon-b946de@workspace:scopes/scope/ui/scope-icon"
+  languageName: unknown
+  linkType: soft
+
 "scope-labels-9a064d@workspace:scopes/scope/ui/scope-labels":
   version: 0.0.0-use.local
   resolution: "scope-labels-9a064d@workspace:scopes/scope/ui/scope-labels"
