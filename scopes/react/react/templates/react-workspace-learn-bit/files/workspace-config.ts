@@ -14,6 +14,7 @@ export function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
       policy: {
         dependencies: {},
         peerDependencies: {
+          '@testing-library/react': '11.2.6',
           react: '16.13.1',
           'react-dom': '16.13.1',
         },
