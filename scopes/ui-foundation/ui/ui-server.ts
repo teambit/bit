@@ -68,6 +68,10 @@ export class UIServer {
     const port = this.port !== 80 ? `:${this.port}` : '';
     return `http://${this.host}${port}`;
   }
+  
+  get buildOptions() {
+    return this.uiRoot.buildOptions;
+  }
 
   /**
    * get the webpack configuration of the UI server.
@@ -121,7 +125,7 @@ export class UIServer {
   }
 
   private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
-    if (!this.uiRoot.buildOptions?.ssr) return;
+    if (!this.buildOptions?.ssr) return;
 
     const ssrMiddleware = await createSsrMiddleware({
       root,
