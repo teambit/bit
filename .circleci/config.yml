@@ -120,9 +120,6 @@ commands: # reusable commands
       - run:
           name: 'set GitHub token'
           command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
-      - run:
-          name: 'set GitHub token for github actions orb'
-          command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
       - add_ssh_keys:
           fingerprints:
             - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
@@ -1300,7 +1297,9 @@ jobs:
     <<: *defaults
     resource_class: small
     steps:
-      - set_git_credentials
+      - run:
+          name: 'set GitHub token for github actions orb'
+          command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
       - github-actions/repository_dispatch:
           repo_name: "teambit/bit-angular"
           event_type: "bit_master_push"
