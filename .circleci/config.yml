@@ -139,6 +139,7 @@ commands: # reusable commands
 
 orbs:
   win: circleci/windows@2.4.0
+  github-actions: movermeyer/github-actions@0.0.5
 
 jobs:
   checkout_code:
@@ -1292,6 +1293,20 @@ jobs:
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
 
+  notify_bit_angular:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - run:
+          name: 'set GitHub token for github actions orb'
+          # command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
+          command: "echo 'export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken' >> $BASH_ENV"
+      - github-actions/repository_dispatch:
+          repo_name: "teambit/bit-angular"
+          event_type: "bit_master_push"
+          # github_personal_access_token: $ghToken
+
+
 workflows:
   version: 2
   build_and_test:
@@ -1652,3 +1667,10 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+
+  notify_master_change:
+    jobs:
+      - notify_bit_angular:
+          filters:
+            branches:
+              only: bit-angular-github-actions
