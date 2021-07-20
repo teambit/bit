@@ -15,4 +15,4 @@ export const componentTemplates: ComponentTemplate[] = [
   reactEnvTemplate,
 ];
 
-export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceLearnBitTemplate];
+export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceEmptyTemplate];
