@@ -944,5 +944,32 @@ describe('bit lane command', function () {
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
       expect(status).to.have.string(`versions: ${hash} ...`);
     });
+    describe('export the lane, then switch back to main', () => {
+      before(() => {
+        helper.command.exportLane();
+        helper.command.switchLocalLane('main');
+      });
+      it('status should not show the components as pending updates', () => {
+        helper.command.expectStatusToBeClean();
+      });
+      describe('switch the lane back to dev', () => {
+        before(() => {
+          helper.command.switchLocalLane('dev');
+        });
+        // before, it was changing the version to the head of the lane
+        it('should not change the version prop in .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.version).to.equal('0.0.1');
+        });
+        describe('switch back to main', () => {
+          before(() => {
+            helper.command.switchLocalLane('main');
+          });
+          it('status should not show the components as pending updates', () => {
+            helper.command.expectStatusToBeClean();
+          });
+        });
+      });
+    });
   });
 });

@@ -365,10 +365,9 @@ export default class ComponentWriter {
       ) {
         return;
       }
-      this.bitMap.removeComponent(this.component.id);
+      // this.bitMap.removeComponent(this.component.id);
     }
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore this.component.componentMap is set
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
