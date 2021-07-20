@@ -120,6 +120,9 @@ commands: # reusable commands
       - run:
           name: 'set GitHub token'
           command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - run:
+          name: 'set GitHub token for github actions orb'
+          command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
       - add_ssh_keys:
           fingerprints:
             - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
@@ -139,6 +142,7 @@ commands: # reusable commands
 
 orbs:
   win: circleci/windows@2.4.0
+  github-actions: movermeyer/github-actions@0.0.5
 
 jobs:
   checkout_code:
@@ -1292,6 +1296,15 @@ jobs:
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
 
+  notify_bit_angular:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - set_git_credentials
+      - github-actions/repository_dispatch:
+          repo_name: "teambit/bit-angular"
+          event_type: "bit_master_push"
+
 workflows:
   version: 2
   build_and_test:
@@ -1652,3 +1665,10 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+
+  notify_master_change:
+    jobs:
+      - notify_bit_angular:
+          filters:
+            branches:
+              only: bit-angular-github-actions
