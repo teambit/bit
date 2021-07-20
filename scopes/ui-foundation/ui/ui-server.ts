@@ -68,7 +68,7 @@ export class UIServer {
     const port = this.port !== 80 ? `:${this.port}` : '';
     return `http://${this.host}${port}`;
   }
-  
+
   get buildOptions() {
     return this.uiRoot.buildOptions;
   }
@@ -112,7 +112,7 @@ export class UIServer {
     // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
 
-    server.listen(port, this.host);
+    server.listen(port);
     this._port = port;
 
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
