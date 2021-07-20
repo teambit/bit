@@ -37,7 +37,7 @@ export function ScopeIcon({
   className,
   ...rest
 }: ScopeIconProps) {
-  const imageWithParams = addAvatarQueryParams(scopeImage || '', size, '');
+  const imageWithParams = scopeImage && addAvatarQueryParams(scopeImage, size, '');
   return (
     <div
       className={classNames(styles.scopeIcon, scopeImage && styles.iconBackground, className)}
