@@ -1297,12 +1297,13 @@ jobs:
     <<: *defaults
     resource_class: small
     steps:
-      - run:
-          name: 'set GitHub token for github actions orb'
-          command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
+      # - run:
+      #     name: 'set GitHub token for github actions orb'
+      #     command: export GITHUB_PERSONAL_ACCESS_TOKEN=$ghToken
       - github-actions/repository_dispatch:
           repo_name: "teambit/bit-angular"
           event_type: "bit_master_push"
+          github_personal_access_token: $ghToken
 
 
 workflows:
