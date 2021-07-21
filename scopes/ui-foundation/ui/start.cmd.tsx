@@ -53,7 +53,7 @@ export class StartCmd implements Command {
   ): Promise<React.ReactElement> {
     this.logger.off();
     const appName = this.ui.getUiName(uiRootName);
-
+    await this.ui.invokePreStart();
     const uiServer = this.ui.createRuntime({
       uiRootName,
       pattern: userPattern,
@@ -64,7 +64,13 @@ export class StartCmd implements Command {
     });
 
     if (!noBrowser) {
-      uiServer.then((server) => open(this.ui.publicUrl || server.fullUrl)).catch((error) => this.logger.error(error));
+      uiServer
+        .then((server) => {
+          if (!server.buildOptions?.launchBrowserOnStart) return undefined;
+
+          return open(this.ui.publicUrl || server.fullUrl);
+        })
+        .catch((error) => this.logger.error(error));
     }
 
     // DO NOT CHANGE THIS - this meant to be an async hook.

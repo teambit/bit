@@ -22,7 +22,7 @@ export const workspaceTemplate: WorkspaceTemplate = {
     },
   ],
   importComponents: () => [
-    { id: 'learn-bit-react.base-ui/ui/img', path: 'learn-bit/img' },
+    { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
   ],
 };
 `;

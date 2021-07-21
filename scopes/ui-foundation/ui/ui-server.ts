@@ -69,6 +69,10 @@ export class UIServer {
     return `http://${this.host}${port}`;
   }
 
+  get buildOptions() {
+    return this.uiRoot.buildOptions;
+  }
+
   /**
    * get the webpack configuration of the UI server.
    */
@@ -108,7 +112,7 @@ export class UIServer {
     // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
 
-    server.listen(port, this.host);
+    server.listen(port);
     this._port = port;
 
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
@@ -121,7 +125,7 @@ export class UIServer {
   }
 
   private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
-    if (!this.uiRoot.buildOptions?.ssr) return;
+    if (!this.buildOptions?.ssr) return;
 
     const ssrMiddleware = await createSsrMiddleware({
       root,

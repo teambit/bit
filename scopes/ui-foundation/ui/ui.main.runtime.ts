@@ -36,6 +36,8 @@ export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMa
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
+export type PreStart = () => Promise<void>;
+
 export type OnStart = () => Promise<undefined | ComponentType<{}>>;
 
 export type StartPluginSlot = SlotRegistry<StartPlugin>;
@@ -43,6 +45,8 @@ export type StartPluginSlot = SlotRegistry<StartPlugin>;
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
 export type BuildMethodOverwrite = (name: string, uiRoot: UIRoot, rebuild?: boolean) => Promise<string>;
+
+export type PreStartSlot = SlotRegistry<PreStart>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 
@@ -131,6 +135,11 @@ export class UiMain {
      * express extension.
      */
     private express: ExpressMain,
+
+    /**
+     * pre-start slot
+     */
+    private preStartSlot: PreStartSlot,
 
     /**
      * on start slot
@@ -250,6 +259,7 @@ export class UiMain {
     });
 
     if (this.componentExtension.isHost(name)) this.componentExtension.setHostPriority(name);
+
     const uiServer = UIServer.create({
       express: this.express,
       graphql: this.graphql,
@@ -284,6 +294,14 @@ export class UiMain {
   private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
     return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
   };
+
+  /**
+   * pre-start events are triggered and *completed* before the webserver started.
+   * (the promise is awaited)
+   */
+  registerPreStart(preStartFn: PreStart) {
+    this.preStartSlot.register(preStartFn);
+  }
 
   /**
    * bind to ui server start event.
@@ -325,6 +343,11 @@ export class UiMain {
       return fn;
     }
     return undefined;
+  }
+
+  async invokePreStart(): Promise<void> {
+    const promises = this.preStartSlot.values().map((fn) => fn());
+    await Promise.all(promises);
   }
 
   async invokeOnStart(): Promise<ComponentType[]> {
@@ -495,6 +518,7 @@ export class UiMain {
 
   static slots = [
     Slot.withType<UIRoot>(),
+    Slot.withType<PreStart>(),
     Slot.withType<OnStart>(),
     Slot.withType<PublicDirOverwriteSlot>(),
     Slot.withType<BuildMethodOverwriteSlot>(),
@@ -504,8 +528,9 @@ export class UiMain {
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
+    [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
+      PreStartSlot,
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
@@ -522,6 +547,7 @@ export class UiMain {
       graphql,
       uiRootSlot,
       express,
+      preStartSlot,
       onStartSlot,
       publicDirOverwriteSlot,
       buildMethodOverwriteSlot,

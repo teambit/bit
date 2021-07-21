@@ -28,7 +28,7 @@ describe('new command', function () {
 
       const indexPath = path.join(helper.scopes.remote, 'workspace-example/template/index.ts');
       const indexContent = helper.fs.readFile(indexPath);
-      const updatedIndex = indexContent.replace('learn-bit-react.base-ui/ui/img', `${helper.scopes.remote}/comp1`);
+      const updatedIndex = indexContent.replace('teambit.react/templates/ui/title', `${helper.scopes.remote}/comp1`);
       helper.fs.outputFile(indexPath, updatedIndex);
 
       helper.command.tagAllComponents();

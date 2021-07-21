@@ -303,7 +303,13 @@ export default function (isEnvProduction = false): Configuration {
               oneOf: [
                 {
                   dependency: { not: ['url'] }, // exclude new URL calls
-                  use: [require.resolve('@svgr/webpack'), require.resolve('new-url-loader')],
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options: { titleProp: true, ref: true },
+                    },
+                    require.resolve('new-url-loader'),
+                  ],
                 },
                 {
                   type: 'asset', // export a data URI or emit a separate file
