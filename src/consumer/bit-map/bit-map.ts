@@ -643,7 +643,8 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
     const getOrCreateComponentMap = (): ComponentMap => {
-      const componentMap = this.getComponentIfExist(componentId, { ignoreVersion: true });
+      const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
+      const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
         componentMap.files = files;

@@ -436,8 +436,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.command.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
+      helper.command.importManyComponents(['utils/is-string@0.0.1', 'utils/is-type@0.0.2']);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.general.getRequireBitPath('utils', 'is-string');
