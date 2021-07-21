@@ -21,6 +21,7 @@ import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/u
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
 import { Compiler } from './types';
+import { PreStartOpts } from '../../ui-foundation/ui/ui.main.runtime';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -194,7 +195,10 @@ export class WorkspaceCompiler {
     }
   }
 
-  async onPreStart(): Promise<void> {
+  async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
+    if (preStartOpts.skipCompilation) {
+      return;
+    }
     await this.compileComponents([], { changed: true, verbose: false, deleteDistDir: false });
   }
 

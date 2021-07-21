@@ -35,7 +35,9 @@ export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMa
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
-export type PreStart = () => Promise<void>;
+export type PreStart = (preStartOpts: PreStartOpts) => Promise<void>;
+
+export type PreStartOpts = { skipCompilation?: boolean };
 
 export type OnStart = () => Promise<undefined | ComponentType<{}>>;
 
@@ -344,8 +346,8 @@ export class UiMain {
     return undefined;
   }
 
-  async invokePreStart(): Promise<void> {
-    const promises = this.preStartSlot.values().map((fn) => fn());
+  async invokePreStart(preStartOpts: PreStartOpts): Promise<void> {
+    const promises = this.preStartSlot.values().map((fn) => fn(preStartOpts));
     await Promise.all(promises);
   }
 
