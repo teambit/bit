@@ -1,6 +1,6 @@
 import { ComponentTemplate, WorkspaceTemplate } from '@teambit/generator';
-import { reactComponent } from './templates/react-component';
-import { reactComponentJS } from './templates/react-component-js';
+import { reactComponent, deprecatedReactComponent } from './templates/react-component';
+import { reactComponentJS, deprecatedReactComponentJS } from './templates/react-component-js';
 import { reactEnvTemplate } from './templates/react-env';
 import { reactWorkspaceEmptyTemplate } from './templates/react-workspace-empty';
 import { reactHook } from './templates/react-hook';
@@ -13,6 +13,8 @@ export const componentTemplates: ComponentTemplate[] = [
   reactHook,
   reactComponentJS,
   reactEnvTemplate,
+  deprecatedReactComponent,
+  deprecatedReactComponentJS,
 ];
 
 export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceEmptyTemplate];
