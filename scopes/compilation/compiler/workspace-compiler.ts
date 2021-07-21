@@ -17,6 +17,7 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
+import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
@@ -194,7 +195,10 @@ export class WorkspaceCompiler {
     }
   }
 
-  async onPreStart(): Promise<void> {
+  async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
+    if (preStartOpts.skipCompilation) {
+      return;
+    }
     await this.compileComponents([], { changed: true, verbose: false, deleteDistDir: false });
   }
 

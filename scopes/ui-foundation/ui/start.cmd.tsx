@@ -6,7 +6,14 @@ import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
 type StartArgs = [uiName: string, userPattern: string];
-type StartFlags = { dev: boolean; port: string; rebuild: boolean; verbose: boolean; noBrowser: boolean };
+type StartFlags = {
+  dev: boolean;
+  port: string;
+  rebuild: boolean;
+  verbose: boolean;
+  noBrowser: boolean;
+  skipCompilation: boolean;
+};
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
@@ -20,6 +27,7 @@ export class StartCmd implements Command {
     ['r', 'rebuild', 'rebuild the UI'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
     ['', 'no-browser', 'do not automatically open browser when ready'],
+    ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],
   ] as CommandOptions;
 
   constructor(
@@ -49,11 +57,11 @@ export class StartCmd implements Command {
 
   async render(
     [uiRootName, userPattern]: StartArgs,
-    { dev, port, rebuild, verbose, noBrowser }: StartFlags
+    { dev, port, rebuild, verbose, noBrowser, skipCompilation }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
     const appName = this.ui.getUiName(uiRootName);
-    await this.ui.invokePreStart();
+    await this.ui.invokePreStart({ skipCompilation });
     const uiServer = this.ui.createRuntime({
       uiRootName,
       pattern: userPattern,
