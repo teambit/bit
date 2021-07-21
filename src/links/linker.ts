@@ -98,6 +98,8 @@ export async function reLinkDependents(consumer: Consumer, components: Component
 }
 
 /**
+ * Not needed for Harmony.
+ *
  * needed for the following cases:
  * 1) user is importing a component directly which was a dependency before. (before: NESTED, now: IMPORTED).
  * 2) user used bit-move to move a dependency to another directory.
@@ -110,8 +112,11 @@ export async function getReLinkDependentsData(
   linkedComponents: BitIds
 ): Promise<DataToPersist> {
   logger.debug('linker: check whether there are direct dependents for re-linking');
-  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsComponentsOf(components);
   const dataToPersist = new DataToPersist();
+  if (!consumer.isLegacy) {
+    return dataToPersist;
+  }
+  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsComponentsOf(components);
   if (directDependentComponents.length) {
     if (directDependentComponents.every((c) => linkedComponents.has(c.id))) {
       // all components already linked
