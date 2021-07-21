@@ -44,7 +44,7 @@ export class PreviewPreview {
   /**
    * render the preview.
    */
-  render = () => {
+  render = async () => {
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
 
@@ -52,16 +52,16 @@ export class PreviewPreview {
     if (!preview || !componentId) {
       throw new PreviewNotFound(previewName);
     }
-    const includes = (preview.include || [])
-      .map((prevName) => {
-        const includedPreview = this.getPreview(prevName);
-        if (!includedPreview) return undefined;
+    const includesP = (preview.include || []).map((prevName) => {
+      const includedPreview = this.getPreview(prevName);
+      if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(componentId.fullName, PREVIEW_MODULES[prevName]);
-      })
-      .filter((module) => !!module);
+      return includedPreview.selectPreviewModel?.(componentId.fullName, PREVIEW_MODULES[prevName]);
+    });
+    const includes = await Promise.all(includesP);
+    const filteredIncludes = includes.filter((module) => !!module);
 
-    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes, this.getRenderingContext());
+    return preview.render(componentId.fullName, PREVIEW_MODULES[name], filteredIncludes, this.getRenderingContext());
   };
 
   /**

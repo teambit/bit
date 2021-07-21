@@ -11,14 +11,17 @@ export class DocsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render = (componentId: string, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
+  render = async (componentId: string, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
     const docsModule = this.selectPreviewModel(componentId, modules);
 
     modules.mainModule.default(NoopProvider, componentId, docsModule, compositions, context);
   };
 
-  selectPreviewModel(componentId: string, modules: PreviewModule) {
-    const relevant = modules.componentMap[componentId];
+  async selectPreviewModel(componentId: string, modules: PreviewModule) {
+    // const relevant = modules.componentMap[componentId];
+    const allFunc = modules.componentMap[componentId];
+    const relevant = await allFunc[0]();
+
     if (!relevant) return undefined;
 
     // only one doc file is supported.

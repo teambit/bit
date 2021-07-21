@@ -25,6 +25,7 @@ import { WebpackDevServer } from './webpack.dev-server';
 
 export type WebpackConfigTransformContext = {
   mode: BundlerMode;
+  target?: Target;
 };
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
@@ -69,7 +70,26 @@ export class WebpackMain {
     const configMutator = new WebpackConfigMutator(config);
     const transformerContext: WebpackConfigTransformContext = { mode: 'dev' };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    console.log(afterMutation.raw.entry);
+    // @ts-ignore - fix this
+    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
+  }
 
+  createComponentDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+    const config = this.createDevServerConfig(
+      context.entry,
+      this.workspace.path,
+      context.id,
+      context.rootPath,
+      context.publicPath,
+      context.title
+    ) as any;
+    const configMutator = new WebpackConfigMutator(config);
+    const transformerContext: WebpackConfigTransformContext = {
+      mode: 'dev',
+    };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    console.log(afterMutation.raw.entry);
     // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
@@ -83,6 +103,20 @@ export class WebpackMain {
     const transformerContext: WebpackConfigTransformContext = { mode: 'prod' };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
+      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+      return afterMutation.raw;
+    });
+    return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
+  }
+
+  createComponentsBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
+    const mutatedConfigs = context.targets.map((target) => {
+      const baseConfig = previewConfigFactory(target.entries, target.outputPath);
+      const transformerContext: WebpackConfigTransformContext = {
+        mode: 'prod',
+        target,
+      };
+      const configMutator = new WebpackConfigMutator(baseConfig);
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
       return afterMutation.raw;
     });

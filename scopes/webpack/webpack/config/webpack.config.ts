@@ -24,11 +24,12 @@ export function configFactory(entries: string[], rootPath: string): Configuratio
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.
-      publicPath: ``,
+      publicPath: 'auto',
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
       // globalObject: 'this',
+      uniqueName: 'react_env_namespace',
     },
 
     resolve: {

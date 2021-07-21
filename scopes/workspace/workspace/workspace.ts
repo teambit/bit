@@ -1060,6 +1060,12 @@ export class Workspace implements ComponentFactory {
     return cacheDir;
   }
 
+  componentModulePath(component: Component): string {
+    const packageName = componentIdToPackageName(component.state._consumer);
+    const modulePath = path.join(this.path, 'node_modules', packageName);
+    return modulePath;
+  }
+
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
     let missingPaths = false;
     const stringIds: string[] = [];

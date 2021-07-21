@@ -14,8 +14,8 @@ import { PreviewMain } from '../preview.main.runtime';
 /**
  * bundles all components in a given env into the same bundle.
  */
-export class EnvBundlingStrategy implements BundlingStrategy {
-  name = 'env';
+export class EnvMfBundlingStrategy implements BundlingStrategy {
+  name = 'env-mf';
 
   constructor(private preview: PreviewMain) {}
 
@@ -47,6 +47,9 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     });
 
     const artifacts = this.getArtifactDef(context);
+
+    console.log('componentsResults', componentsResults);
+    console.log('artifacts', artifacts);
 
     return {
       componentsResults,
@@ -85,35 +88,39 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   private async computePaths(outputPath: string, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
     const previewMain = await this.preview.writePreviewRuntime(context);
-    const moduleMapsPromise = defs.map(async (previewDef) => {
+    const linkFilesP = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap(context.components);
 
       const paths = ComponentMap.as(context.components, (component) => {
         const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
-        const maybeFiles = moduleMap.get(component);
+        const maybeFiles = moduleMap.byComponent(component);
         if (!maybeFiles || !capsule) return [];
         const [, files] = maybeFiles;
         const compiledPaths = this.getPaths(context, files, capsule);
         return compiledPaths;
       });
 
-      const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
+      // const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
 
-      const link = this.preview.writeLink(
+      const link = await this.preview.writeMfLink(
         previewDef.prefix,
         paths,
         previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
         outputPath
       );
 
-      const files = flatten(paths.toArray().map(([, file]) => file)).concat([link]);
+      // const files = flatten(paths.toArray().map(([, file]) => file)).concat([link]);
 
-      if (template) return files.concat([template]);
-      return files;
+      // if (template) return files.concat([template]);
+      // return files;
+      return link;
     });
+    const linkFiles = await Promise.all(linkFilesP);
 
-    const moduleMaps = await Promise.all(moduleMapsPromise);
+    const { bootstrapFileName } = this.preview.createBootstrapFile([...linkFiles, previewMain], context);
+    const indexEntryPath = this.preview.createIndexEntryFile(bootstrapFileName, context);
+    return [indexEntryPath];
 
-    return flatten(moduleMaps.concat([previewMain]));
+    // return flatten(moduleMaps.concat([previewMain]));
   }
 }

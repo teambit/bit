@@ -17,6 +17,16 @@ export type Target = {
    * output path of the target
    */
   outputPath: string;
+
+  /**
+   * module federation namespace name
+   */
+  mfName?: string;
+
+  /**
+   * module federation exposed module
+   */
+  mfExposes?: Record<string, string>;
 };
 
 export interface BundlerContext extends BuildContext {
@@ -45,4 +55,8 @@ export interface DevServerContext extends ExecutionContext {
    * title of the page.
    */
   title?: string;
+
+  port?: number;
+
+  exposes?: Record<string, string>;
 }

@@ -372,6 +372,18 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
+  /**
+   * Provides a temp folder, unique per key.
+   */
+  getTempDir(
+    /*
+     * unique key, i.e. aspect or component id
+     */
+    id: string
+  ): string {
+    return this.legacyScope.tmp.composePath(id);
+  }
+
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
