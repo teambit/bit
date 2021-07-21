@@ -100,6 +100,11 @@ export interface ComponentFactory {
   hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
 
   /**
+   * Get temp dir for the host
+   */
+  getTempDir(id: string): string;
+
+  /**
    * determine whether host should be the prior one in case multiple hosts persist.
    */
   priority?: boolean;

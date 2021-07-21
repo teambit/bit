@@ -1,12 +1,15 @@
 import type { AspectMain } from '@teambit/aspect';
+import { groupBy } from 'lodash';
 import { ComponentType } from 'react';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
+import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
@@ -19,7 +22,8 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-import { createRoot } from './create-root';
+import { createHostRoot } from './create-host-root';
+import { createCoreRoot } from './create-core-root';
 import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
@@ -32,7 +36,17 @@ import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
 import { createRootBootstrap } from './create-root-bootstrap';
 
-export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [
+  PubsubMain,
+  CLIMain,
+  GraphqlMain,
+  ExpressMain,
+  ComponentMain,
+  CacheMain,
+  LoggerMain,
+  AspectLoaderMain,
+  AspectMain
+];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -112,6 +126,8 @@ export type RuntimeOptions = {
   rebuild?: boolean;
 };
 
+const DEFAULT_TEMP_DIR = join(CACHE_ROOT, UIAspect.id);
+
 export class UiMain {
   constructor(
     /**
@@ -171,10 +187,16 @@ export class UiMain {
      */
     private logger: Logger,
 
+    private aspectLoader: AspectLoaderMain,
+
     private harmony: Harmony,
 
     private startPluginSlot: StartPluginSlot
   ) {}
+
+  get tempFolder(): string {
+    return this.componentExtension.getHost()?.getTempDir(UIAspect.id) || DEFAULT_TEMP_DIR;
+  }
 
   async publicDir(uiRoot: UIRoot) {
     const overwriteFn = this.getOverwritePublic();
@@ -399,24 +421,68 @@ export class UiMain {
     aspectDefs: AspectDefinition[],
     rootExtensionName: string,
     runtimeName = UIRuntime.name,
+    rootAspect = UIAspect.id,
+    rootTempDir = this.tempFolder
+  ) {
+    // const rootRelativePath = `${runtimeName}.root${sha1(contents)}.js`;
+    // const filepath = resolve(join(__dirname, rootRelativePath));
+    const aspectsGroups = groupBy(aspectDefs, (def) => {
+      const id = def.getId;
+      if (!id) return 'host';
+      if (this.aspectLoader.isCoreAspect(id)) return 'core';
+      return 'host';
+    });
+
+    // const coreRootFilePath = this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
+    this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
+    const hostRootFilePath = this.writeHostUIRoot(aspectsGroups.host, 'coreRootMfName', runtimeName, rootTempDir);
+
+    const rootBootstrapContents = await createRootBootstrap(hostRootFilePath.relativePath);
+    const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
+    const rootBootstrapPath = resolve(join(rootTempDir, rootBootstrapRelativePath));
+    if (fs.existsSync(rootBootstrapPath)) return rootBootstrapPath;
+    fs.outputFileSync(rootBootstrapPath, rootBootstrapContents);
+    console.log('rootBootstrapPath', rootBootstrapPath);
+    throw new Error('g');
+    return rootBootstrapPath;
+  }
+
+  /**
+   * Generate a file which contains all the core ui aspects and the harmony config to load them
+   * This will get an harmony config, and host specific aspects to load
+   * and load the harmony instance
+   */
+  private writeCoreUiRoot(
+    coreAspects: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id
   ) {
-    const contents = await createRoot(
-      aspectDefs,
-      rootExtensionName,
-      rootAspect,
-      runtimeName,
-      this.harmony.config.toObject()
-    );
-    const rootRelativePath = `${runtimeName}.root${sha1(contents)}.js`;
+    const contents = createCoreRoot(coreAspects, rootExtensionName, rootAspect, runtimeName);
+    const rootRelativePath = `${runtimeName}.core.root.${sha1(contents)}.js`;
     const filepath = resolve(join(__dirname, rootRelativePath));
-    const rootBootstrapContents = await createRootBootstrap(rootRelativePath);
-    const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
-    const rootBootstrapPath = resolve(join(__dirname, rootBootstrapRelativePath));
-    if (fs.existsSync(filepath) && fs.existsSync(rootBootstrapPath)) return rootBootstrapPath;
+    console.log('core ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
     fs.outputFileSync(filepath, contents);
-    fs.outputFileSync(rootBootstrapPath, rootBootstrapContents);
-    return rootBootstrapPath;
+    return { fullPath: filepath, relativePath: rootRelativePath };
+  }
+
+  /**
+   * Generate a file which contains host (workspace/scope) specific ui aspects. and the harmony config to load them
+   */
+  private writeHostUIRoot(
+    hostAspects: AspectDefinition[] = [],
+    coreRootName: string,
+    runtimeName = UIRuntime.name,
+    rootTempDir = this.tempFolder
+  ) {
+    const contents = createHostRoot(hostAspects, coreRootName, this.harmony.config.toObject());
+    const rootRelativePath = `${runtimeName}.host.root.${sha1(contents)}.js`;
+    const filepath = resolve(join(rootTempDir, rootRelativePath));
+    console.log('host ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
+    fs.outputFileSync(filepath, contents);
+    return { fullPath: filepath, relativePath: rootRelativePath };
   }
 
   private async selectPort() {
@@ -514,6 +580,7 @@ export class UiMain {
     ComponentAspect,
     CacheAspect,
     LoggerAspect,
+    AspectLoaderAspect,
   ];
 
   static slots = [
@@ -526,7 +593,7 @@ export class UiMain {
   ];
 
   static async provider(
-    [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
+    [pubsub, cli, graphql, express, componentExtension, cache, loggerMain, aspectLoader]: UIDeps,
     config,
     [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
@@ -554,6 +621,7 @@ export class UiMain {
       componentExtension,
       cache,
       logger,
+      aspectLoader,
       harmony,
       proxyGetterSlot
     );

@@ -9,7 +9,7 @@ export async function createRootBootstrap(rootPath: string) {
 
 export default async function bootstrap() {
   // await importReactP;
-return import('./${rootPath}')
+  return import('./${rootPath}')
 }
 bootstrap();
 `;

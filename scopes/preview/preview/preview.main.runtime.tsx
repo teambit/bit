@@ -228,13 +228,13 @@ export class PreviewMain {
     return { bootstrapPath: targetPath, bootstrapFileName: fileName };
   }
 
-  async writePreviewRuntime(context: { components: Component[] }) {
+  async writePreviewRuntime(context: { components: Component[] }, rootDir = this.tempFolder) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
+    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id, rootDir);
     console.log('filePath', filePath);
     return filePath;
   }
