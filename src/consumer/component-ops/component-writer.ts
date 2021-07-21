@@ -355,20 +355,24 @@ export default class ComponentWriter {
    */
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
-    const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
-    if (componentMapExistWithSameVersion) {
-      if (
-        this.existingComponentMap &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
-        this.origin === COMPONENT_ORIGINS.NESTED
-      ) {
-        return;
+    if (this.consumer?.isLegacy) {
+      // this logic is not needed in Harmony, and we can't just remove the component as it may have
+      // lanes data
+      const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
+      if (componentMapExistWithSameVersion) {
+        if (
+          this.existingComponentMap &&
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
+          this.origin === COMPONENT_ORIGINS.NESTED
+        ) {
+          return;
+        }
+        this.bitMap.removeComponent(this.component.id);
       }
-      this.bitMap.removeComponent(this.component.id);
     }
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
+    // @ts-ignore this.component.componentMap is set
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
