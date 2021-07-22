@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { Linter as ESLinter } from 'eslint';
+// import { Linter as ESLinter, ESLint as ESLintLib } from 'eslint';
+import { ESLint as ESLintLib } from 'eslint';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
@@ -10,7 +11,8 @@ export type ESLintOptions = {
   /**
    * linter config for eslint.
    */
-  config: ESLinter.Config;
+  // config: ESLinter.Config;
+  config: ESLintLib.Options;
 
   /**
    * specify to path to resolve eslint plugins from.
@@ -50,9 +52,11 @@ export class ESLintMain {
     transformers: EslintConfigTransformer[] = [],
     ESLintModule?: any
   ): Linter {
-    const configMutator = new EslintConfigMutator(options);
+    const mergedOptions = getOptions(options, context);
+    const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+
     return new ESLintLinter(this.logger, afterMutation.raw, ESLintModule);
   }
 
@@ -67,6 +71,21 @@ export class ESLintMain {
 }
 
 ESLintAspect.addRuntime(ESLintMain);
+
+/**
+ * get options for eslint.
+ */
+function getOptions(options: ESLintOptions, context: LinterContext): ESLintOptions {
+  const mergedConfig: ESLintLib.Options = {
+    overrideConfig: options.config,
+    extensions: context.extensionFormats,
+    useEslintrc: false,
+    cwd: options.pluginPath,
+    fix: !!context.fix,
+    fixTypes: context.fixTypes,
+  };
+  return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats });
+}
 
 export function runTransformersWithContext(
   config: EslintConfigMutator,
