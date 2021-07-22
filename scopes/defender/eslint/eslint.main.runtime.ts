@@ -77,6 +77,7 @@ ESLintAspect.addRuntime(ESLintMain);
  */
 function getOptions(options: ESLintOptions, context: LinterContext): ESLintOptions {
   const mergedConfig: ESLintLib.Options = {
+    // @ts-ignore - this is a bug in the @types/eslint types
     overrideConfig: options.config,
     extensions: context.extensionFormats,
     useEslintrc: false,
