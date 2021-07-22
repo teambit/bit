@@ -3,6 +3,7 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import any from 'ramda/src/any';
 import minimatch from 'minimatch';
 import { maxBy, property, sortBy } from 'lodash';
+import { DirPatternWithStar } from './exceptions';
 
 export const PATTERNS_DELIMITER = ',';
 export const MATCH_ALL_ITEM = '*';
@@ -80,6 +81,9 @@ export function isMatchPatternItem(
   }
   const { excluded, patternItemWithoutExcludeSign } = parseExclusion(patternItemTrimmed);
   if (isDirItem(patternItemWithoutExcludeSign)) {
+    if (patternItemWithoutExcludeSign.includes('*')) {
+      throw new DirPatternWithStar(patternItemWithoutExcludeSign);
+    }
     return { ...isMatchDirPatternItem(rootDir, patternItemWithoutExcludeSign), excluded };
   }
   return { ...isMatchNamespacePatternItem(componentName, patternItemWithoutExcludeSign), excluded };
