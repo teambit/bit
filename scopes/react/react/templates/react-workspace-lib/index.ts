@@ -6,8 +6,8 @@ import { assetTypes } from './files/types/asset';
 import { styleTypes } from './files/types/style';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
-  name: 'react',
-  description: 'EXPERIMENTAL. react workspace with sample components',
+  name: 'react-lib',
+  description: 'EXPERIMENTAL. react workspace for a component library',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return [
@@ -39,7 +39,8 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
       { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
       { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
       { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
-      { id: 'teambit.react/templates/pages/welcome', path: 'pages/welcome' },
+      { id: 'teambit.react/templates/styles/colors', path: 'styles/colors' },
+      { id: 'teambit.react/templates/themes/theme', path: 'themes/theme' },
     ];
   },
 };
