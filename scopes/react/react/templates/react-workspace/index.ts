@@ -35,6 +35,7 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
+      { id: 'teambit.react/templates/env/templates', path: 'env/templates' },
       { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
       { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
       { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
