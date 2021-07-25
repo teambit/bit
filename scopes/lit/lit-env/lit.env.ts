@@ -19,7 +19,8 @@ export class LitEnv implements DependenciesEnv {
         "lit-scss-loader": "1.1.0",
         "css-loader": "5.2.6",
         "sass-loader": "12.0.0",
-        "lit": "2.0.0-rc.2"
+        "lit": "2.0.0-rc.2",
+        "node-sass": "^5.0.0"
       },
     };
   }
