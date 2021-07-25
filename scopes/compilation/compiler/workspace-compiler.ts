@@ -16,6 +16,8 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { UiMain } from '@teambit/ui';
+import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
@@ -180,15 +182,24 @@ export class WorkspaceCompiler {
     private workspace: Workspace,
     private envs: EnvsMain,
     private pubsub: PubsubMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private ui: UiMain
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
       this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
     }
+  }
+
+  async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
+    if (preStartOpts.skipCompilation) {
+      return;
+    }
+    await this.compileComponents([], { changed: true, verbose: false, deleteDistDir: false });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {

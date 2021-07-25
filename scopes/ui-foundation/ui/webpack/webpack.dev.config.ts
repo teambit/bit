@@ -10,7 +10,7 @@ const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMi
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
-const { default: html } = require('./html');
+const { html } = require('./html');
 
 /*
  * Webpack config for the bit ui
@@ -98,6 +98,9 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     stats: 'errors-only',
 
     devServer: {
+      // @ts-ignore - temp until types of webpack-dev-server v4
+      firewall: false,
+
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {

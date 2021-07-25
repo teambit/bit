@@ -23,8 +23,10 @@ import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
-import { ESLintMain, ESLintAspect } from '@teambit/eslint';
-import jest from 'jest';
+import { FormatterContext } from '@teambit/formatter';
+import { LinterContext } from '@teambit/linter';
+import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
+import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -43,6 +45,7 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
+  PrettierMain,
   ApplicationMain,
   GeneratorMain
 ];
@@ -69,6 +72,13 @@ export type ReactMainConfig = {
 export type UseWebpackModifiers = {
   previewConfig?: WebpackConfigTransformer[];
   devServerConfig?: WebpackConfigTransformer[];
+};
+
+export type UseEslintModifiers = {
+  transformers: EslintConfigTransformer[];
+};
+export type UsePrettierModifiers = {
+  transformers: PrettierConfigTransformer[];
 };
 
 export class ReactMain {
@@ -139,6 +149,10 @@ export class ReactMain {
     );
   }
 
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
     const overrides: any = {};
     const devServerTransformers = modifiers?.devServerConfig;
@@ -152,6 +166,30 @@ export class ReactMain {
       overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
     }
     return this.envs.override(overrides);
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  useEslint(modifiers?: UseEslintModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getLinter: (context: LinterContext) => this.reactEnv.getLinter(context, transformers),
+    });
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  usePrettier(modifiers?: UsePrettierModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getFormatter: (context: FormatterContext) => this.reactEnv.getFormatter(context, transformers),
+    });
   }
 
   /**
@@ -200,10 +238,11 @@ export class ReactMain {
   /**
    * override the jest configuration.
    * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
+   * @param jestModulePath absolute path to jest
    */
-  overrideJestConfig(jestConfigPath: string, jestModule: any = jest) {
+  overrideJestConfig(jestConfigPath: string, jestModulePath?: string) {
     return this.envs.override({
-      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
+      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
     });
   }
 
@@ -306,6 +345,7 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
+    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
   ];
@@ -322,12 +362,24 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
+      prettier,
       application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(
+      jestAspect,
+      tsAspect,
+      compiler,
+      webpack,
+      workspace,
+      pkg,
+      tester,
+      config,
+      eslint,
+      prettier
+    );
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

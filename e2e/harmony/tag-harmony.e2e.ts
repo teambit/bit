@@ -181,9 +181,9 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(3);
-      helper.command.tagWithoutBuild('comp3 0.0.3');
-      helper.command.tagWithoutBuild('comp2 0.0.2');
-      helper.command.tagWithoutBuild('comp1 0.0.1');
+      helper.command.tagWithoutBuild('comp3@0.0.3');
+      helper.command.tagWithoutBuild('comp2@0.0.2');
+      helper.command.tagWithoutBuild('comp1@0.0.1');
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without version', () => {

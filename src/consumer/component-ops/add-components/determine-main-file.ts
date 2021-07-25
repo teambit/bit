@@ -1,7 +1,12 @@
 import * as path from 'path';
 import R from 'ramda';
 
-import { DEFAULT_INDEX_EXTS, DEFAULT_INDEX_NAME, DEFAULT_SEPARATOR } from '../../../constants';
+import {
+  ANGULAR_BIT_ENTRY_POINT_FILE,
+  DEFAULT_INDEX_EXTS,
+  DEFAULT_INDEX_NAME,
+  DEFAULT_SEPARATOR,
+} from '../../../constants';
 import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 import { MissingMainFile } from '../../bit-map/exceptions';
@@ -21,6 +26,7 @@ export default function determineMainFile(
     onlyOneFileEnteredUseIt,
     searchForFileNameIndex,
     searchForSameFileNameAsImmediateDir,
+    searchForAngularEntryPoint,
   ];
 
   for (const strategy of strategies) {
@@ -95,6 +101,18 @@ export default function determineMainFile(
         if (searchResult) {
           return searchResult;
         }
+      }
+    }
+    return null;
+  }
+  /**
+   * The component is an angular component and uses the angular entry point
+   */
+  function searchForAngularEntryPoint(): PathLinux | null | undefined {
+    for (const entryPoint of ANGULAR_BIT_ENTRY_POINT_FILE) {
+      const searchResult = _searchMainFile(entryPoint);
+      if (searchResult) {
+        return searchResult;
       }
     }
     return null;

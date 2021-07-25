@@ -23,6 +23,7 @@ export interface UIRoot extends ComponentDir {
 
   buildOptions?: {
     ssr?: boolean;
+    launchBrowserOnStart?: boolean;
   };
 
   /**

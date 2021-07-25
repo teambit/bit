@@ -11,9 +11,11 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 
-import html from './html';
+import { html } from './html';
 
 import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin';
+import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
+import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -77,6 +79,9 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
+      // @ts-ignore - temp until types of webpack-dev-server v4
+      firewall: false,
+
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
         {
@@ -149,10 +154,7 @@ export function configFactory(
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
-      alias: {
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer/'),
-      },
+      alias: fallbacksAliases,
 
       fallback: fallbacks as any,
     },
@@ -163,10 +165,7 @@ export function configFactory(
         filename: 'index.html',
       }),
 
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer/'), 'Buffer'],
-      }),
+      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
 
       new WebpackBitReporterPlugin({
         options: { pubsub, devServerID },

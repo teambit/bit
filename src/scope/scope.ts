@@ -866,11 +866,7 @@ export default class Scope {
     return fs.remove(pendingDir); // no error is thrown if not exists
   }
 
-  static ensure(
-    path: PathOsBasedAbsolute,
-    name: string | null | undefined,
-    groupName: string | null | undefined
-  ): Promise<Scope> {
+  static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = Repository.create({ scopePath: path, scopeJson });

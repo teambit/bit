@@ -529,7 +529,7 @@ describe('recovery after component/scope deletion', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeImportScope);
             helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
-            helper.command.tagComponent(`${remote2Name}/comp3`, undefined, '0.0.8 --force');
+            helper.command.tagComponent(`${remote2Name}/comp3@0.0.8`, undefined, '--force');
             helper.command.export();
             helper.command.importAllComponents();
           });

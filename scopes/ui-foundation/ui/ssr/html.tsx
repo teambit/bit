@@ -12,11 +12,13 @@ interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
   assets?: Assets;
 }
 
+/** html template for the main UI, when ssr is active */
 export function Html({ assets = {}, withDevTools = false, children, ...rest }: HtmlProps) {
   return (
     <html lang="en" {...rest}>
       <head>
         <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{assets.title || 'bit scope'}</title>
         <style id="before-hydrate-styles">
           .--ssr-hidden {'{'}

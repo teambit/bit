@@ -1,10 +1,12 @@
+import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
 import { get } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
@@ -297,10 +299,16 @@ export class DependencyResolverMain {
    * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
    * @param component
    */
-  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+  async extractDepsFromLegacy(component: Component, policy?: VariantPolicy): Promise<SerializedDependency[]> {
+    const componentPolicy = policy || (await this.getPolicy(component));
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    dependencyList.forEach((dep) => {
+      const found = componentPolicy.find(dep.id);
+      // if no policy found, the dependency was auto-resolved from the source code
+      dep.source = found?.source || 'auto';
+    });
     return dependencyList.serialize();
   }
 
@@ -323,7 +331,7 @@ export class DependencyResolverMain {
     if (!entry) {
       return DependencyList.fromArray([]);
     }
-    const serializedDependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
     return this.getDependenciesFromSerializedDependencies(serializedDependencies);
   }
 
@@ -705,7 +713,7 @@ export class DependencyResolverMain {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig);
+        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig, 'env');
       }
     }
     const configuredIds = configuredExtensions.ids;
@@ -721,15 +729,16 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1]);
+        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1], 'slots');
         policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
-    const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
+    const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy);
+      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
+
     const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
     return result;
   }
@@ -776,6 +785,86 @@ export class DependencyResolverMain {
   registerDetector(detector: DependencyDetector) {
     DetectorHook.hooks.push(detector);
     return this;
+  }
+
+  /**
+   * This function registered to the onLoadRequireableExtensionSlot of the aspect-loader
+   * Update the aspect / manifest deps versions in the runtimes (recursively)
+   * This function mutate the manifest directly as otherwise it becomes very complicated
+   * TODO: think if this funciton should be here as it about dependencies, or on the aspect loader
+   * (as it's aware of the internal structure of aspects)
+   * Maybe only register the dep resolution part to the aspect loader
+   * at the moment it here for simplify the process
+   * @param requireableExtension
+   * @param manifest
+   * @returns
+   */
+  async onLoadRequireableExtensionSubscriber(
+    requireableExtension: RequireableComponent,
+    manifest: ExtensionManifest | Aspect
+  ): Promise<ExtensionManifest | Aspect> {
+    const parentComponent = requireableExtension.component;
+    return this.resolveRequireableExtensionManifestDepsVersionsRecursively(parentComponent, manifest);
+  }
+
+  /**
+   * Update the aspect / manifest deps versions in the runtimes (recursively)
+   * @param parentComponent
+   * @param manifest
+   */
+  private async resolveRequireableExtensionManifestDepsVersionsRecursively(
+    // Allow getting here string for lazy load the component
+    // we only want to load the component in case there are deps to resolve
+    parentComponent: Component | string,
+    manifest: ExtensionManifest | Aspect
+    // TODO: add visited = new Map() for performence improve
+  ): Promise<ExtensionManifest | Aspect> {
+    // Not resolve it immediately for performance sake
+    let resolvedParentComponent: Component | undefined;
+    let resolvedParentDeps: DependencyList;
+    const updateDirectDepsVersions = (deps: Array<ExtensionManifest | Aspect>): Promise<void[]> => {
+      return mapSeries(deps, async (dep) => {
+        // Nothing to update (this shouldn't happen ever)
+        if (!dep.id) return;
+        // In case of core aspect, do not update the version, as it's loaded to harmony without version
+        if (this.aspectLoader.isCoreAspect(dep.id)) return;
+        // Lazily get the parent component
+        if (typeof parentComponent === 'string') {
+          const parentComponentId = await this.componentAspect.getHost().resolveComponentId(parentComponent);
+          resolvedParentComponent = await this.componentAspect.getHost().get(parentComponentId);
+        } else {
+          // it's of type component;
+          resolvedParentComponent = parentComponent;
+        }
+        if (!resolvedParentComponent) {
+          this.logger.error(
+            `could not resolve the component ${parentComponent} during manifest deps resolution. it shouldn't happen`
+          );
+          return;
+        }
+        // Lazily get the dependencies
+        resolvedParentDeps = resolvedParentDeps || (await this.getDependencies(resolvedParentComponent));
+        const resolvedDep = resolvedParentDeps.findDependency(dep.id, { ignoreVersion: true });
+        // TODO: add a way to update id in harmony
+        // @ts-ignore
+        dep.id = resolvedDep?.id ?? dep.id;
+        await this.resolveRequireableExtensionManifestDepsVersionsRecursively(dep.id, dep);
+      });
+    };
+    if (manifest.dependencies) {
+      await updateDirectDepsVersions(manifest.dependencies);
+    }
+    // TODO: add a function to get all runtimes and not access private member
+    // @ts-ignore
+    if (manifest._runtimes) {
+      // @ts-ignore
+      await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
+        if (runtime.dependencies) {
+          await updateDirectDepsVersions(runtime.dependencies);
+        }
+      });
+    }
+    return manifest;
   }
 
   static runtime = MainRuntime;
@@ -882,6 +971,9 @@ export class DependencyResolverMain {
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
+    aspectLoader.registerOnLoadRequireableExtensionSlot(
+      dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
+    );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
 

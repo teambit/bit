@@ -5,6 +5,7 @@ import path from 'path';
 import { Workspace } from '@teambit/workspace';
 import { EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
+import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
@@ -30,7 +31,12 @@ export class ComponentGenerator {
       try {
         const componentPath = this.getComponentPath(componentId);
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
-          throw new Error(`unable to create a component at "${componentPath}", this path already exist`);
+          throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
+        }
+        if (await this.workspace.hasName(componentId.fullName)) {
+          throw new BitError(
+            `unable to create a component "${componentId.fullName}", a component with the same name already exist`
+          );
         }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
@@ -40,7 +46,7 @@ export class ComponentGenerator {
       }
     });
 
-    await this.workspace.consumer.writeBitMap();
+    await this.workspace.writeBitMap();
 
     return generateResults;
   }

@@ -24,6 +24,6 @@ export class TypeScriptExtractor implements SchemaExtractor {
     });
     const docs = typedocApp.convert(paths);
     if (!docs) throw new Error();
-    return (typedocApp.serializer.projectToObject(docs) as any) as Module;
+    return typedocApp.serializer.projectToObject(docs) as any as Module;
   }
 }

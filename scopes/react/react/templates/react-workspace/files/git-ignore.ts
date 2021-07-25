@@ -1,8 +1,11 @@
 export function gitIgnore() {
   return `.idea/
 .vscode/
+.git
+.bit
 node_modules/
 build
+public
 .DS_Store
 *.tgz
 template/src/__tests__/__snapshots__/

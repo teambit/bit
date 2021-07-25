@@ -9,7 +9,7 @@ import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 const scope = {
   path: path.join(__dirname, '.bit'),
-  lanes: { getCurrentLaneName: () => 'master' },
+  lanes: { getCurrentLaneName: () => 'main' },
 };
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
