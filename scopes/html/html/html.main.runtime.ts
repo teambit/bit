@@ -6,7 +6,7 @@ import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { htmlEnvTemplate } from './templates/html-env';
@@ -93,6 +93,13 @@ export class HtmlMain {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.htmlEnv.getDependencies()),
     });
+  }
+
+    /**
+   * create a new composition of the html environment.
+   */
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
