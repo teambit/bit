@@ -83,6 +83,10 @@ describe('bit lane command', function () {
         expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
         expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
       });
+      it('should not show the id field as it is redundant', () => {
+        expect(diffOutput).to.not.have.string('--- Id');
+        expect(diffOutput).to.not.have.string('+++ Id');
+      });
     });
     describe('exporting the lane by explicitly entering the lane to the cli', () => {
       before(() => {
@@ -170,6 +174,10 @@ describe('bit lane command', function () {
       it('bit status should show a clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      // before, it was throwing "lane main was not found in scope" error
+      it('bit fetch with no args should not throw errors', () => {
+        expect(() => helper.command.fetchAllLanes()).to.not.throw();
       });
     });
     describe('importing the lane and checking out by bit switch', () => {
@@ -922,11 +930,11 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.fixtures.populateComponents(1);
+      helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
-      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
     });
     it('bit status should show the correct staged versions', () => {
@@ -935,6 +943,45 @@ describe('bit lane command', function () {
       const status = helper.command.status();
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
       expect(status).to.have.string(`versions: ${hash} ...`);
+    });
+    describe('export the lane, then switch back to main', () => {
+      let afterSwitching;
+      before(() => {
+        helper.command.exportLane();
+        helper.command.switchLocalLane('main');
+        afterSwitching = helper.scopeHelper.cloneLocalScope();
+      });
+      it('status should not show the components as pending updates', () => {
+        helper.command.expectStatusToBeClean();
+      });
+      describe('switch the lane back to dev', () => {
+        before(() => {
+          helper.command.switchLocalLane('dev');
+        });
+        // before, it was changing the version to the head of the lane
+        it('should not change the version prop in .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.version).to.equal('0.0.1');
+        });
+        describe('switch back to main', () => {
+          before(() => {
+            helper.command.switchLocalLane('main');
+          });
+          it('status should not show the components as pending updates', () => {
+            helper.command.expectStatusToBeClean();
+          });
+        });
+      });
+      describe('merging the dev lane when the lane is ahead (no diverge)', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterSwitching);
+          helper.command.mergeLane('dev');
+        });
+        it('should merge the lane', () => {
+          const mergedLanes = helper.command.showLanes('--merged');
+          expect(mergedLanes).to.include('dev');
+        });
+      });
     });
   });
 });

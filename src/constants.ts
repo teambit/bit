@@ -347,6 +347,8 @@ export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
 
 export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
 
+export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
+
 export const GLOBAL_CONFIG_FILE = 'config.json';
 
 export const GLOBAL_REMOTES = 'global-remotes.json';
@@ -441,6 +443,8 @@ export const HASH_SIZE = 40;
 export const LANE_REMOTE_DELIMITER = '/';
 
 export const DEFAULT_LANE = 'main';
+
+export const PREVIOUS_DEFAULT_LANE = 'master';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';

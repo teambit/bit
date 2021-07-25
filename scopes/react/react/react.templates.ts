@@ -1,11 +1,11 @@
 import { ComponentTemplate, WorkspaceTemplate } from '@teambit/generator';
-import { reactComponent } from './templates/react-component';
-import { reactComponentJS } from './templates/react-component-js';
+import { reactComponent, deprecatedReactComponent } from './templates/react-component';
+import { reactComponentJS, deprecatedReactComponentJS } from './templates/react-component-js';
 import { reactEnvTemplate } from './templates/react-env';
-import { reactWorkspaceTemplate } from './templates/react-workspace';
+import { reactWorkspaceEmptyTemplate } from './templates/react-workspace-empty';
 import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
-import { reactWorkspaceLearnBitTemplate } from './templates/react-workspace-learn-bit';
+import { reactWorkspaceTemplate } from './templates/react-workspace';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -13,6 +13,8 @@ export const componentTemplates: ComponentTemplate[] = [
   reactHook,
   reactComponentJS,
   reactEnvTemplate,
+  deprecatedReactComponent,
+  deprecatedReactComponentJS,
 ];
 
-export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceLearnBitTemplate];
+export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceEmptyTemplate];

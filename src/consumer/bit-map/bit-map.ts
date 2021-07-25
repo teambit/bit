@@ -64,7 +64,7 @@ export default class BitMap {
     private mapPath: string,
     public schema: string,
     private isLegacy: boolean,
-    public workspaceLane: WorkspaceLane | null,
+    public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
     private remoteLaneName?: RemoteLaneId
   ) {
     this.components = [];
@@ -398,13 +398,7 @@ export default class BitMap {
    */
   getBitId(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
     if (!(bitId instanceof BitId)) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
@@ -423,6 +417,7 @@ export default class BitMap {
     if (this.updatedIds[bitId.toString()]) {
       return this.updatedIds[bitId.toString()].id;
     }
+
     throw new MissingBitMapComponent(bitId.toString());
   }
 
@@ -459,7 +454,10 @@ export default class BitMap {
     bitId: BitId,
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap {
-    const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+    const existingBitId: BitId = this.getBitId(bitId, {
+      ignoreVersion,
+      ignoreScopeAndVersion,
+    });
     return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
   }
 
@@ -470,13 +468,7 @@ export default class BitMap {
    */
   getComponentIfExist(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
@@ -651,10 +643,12 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
     const getOrCreateComponentMap = (): ComponentMap => {
-      const componentMap = this.getComponentIfExist(componentId);
+      const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
+      const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
         componentMap.files = files;
+        componentMap.id = componentId;
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -704,6 +698,7 @@ export default class BitMap {
 
   reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
+    if (!workspaceLane) this.remoteLaneName = undefined;
     this._invalidateCache();
     this.components.forEach((componentMap) =>
       componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null)
@@ -724,6 +719,7 @@ export default class BitMap {
   };
 
   _removeFromComponentsArray(componentId: BitId) {
+    logger.debug(`bit-map: _removeFromComponentsArray ${componentId.toString()}`);
     this.components = this.components.filter((componentMap) => !componentMap.id.isEqual(componentId));
     this.markAsChanged();
   }

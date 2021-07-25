@@ -58,6 +58,21 @@ export class UIServer {
     return this._port;
   }
 
+  /** the hostname for the server to listen at. Currently statically 'localhost' */
+  get host() {
+    return 'localhost';
+  }
+
+  /** the server listens at this url */
+  get fullUrl() {
+    const port = this.port !== 80 ? `:${this.port}` : '';
+    return `http://${this.host}${port}`;
+  }
+
+  get buildOptions() {
+    return this.uiRoot.buildOptions;
+  }
+
   /**
    * get the webpack configuration of the UI server.
    */
@@ -90,22 +105,8 @@ export class UIServer {
     app.use(express.static(root, { index: false }));
 
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
-    if (this.uiRoot.buildOptions?.ssr) {
-      const ssrMiddleware = await createSsrMiddleware({
-        root,
-        port,
-        title: this.uiRoot.name,
-        logger: this.logger,
-      });
 
-      if (ssrMiddleware) {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        app.get('*', ssrMiddleware);
-        this.logger.debug('[ssr] serving for "*"');
-      } else {
-        this.logger.warn('[ssr] middleware failed setup');
-      }
-    }
+    await this.setupServerSideRendering({ root, port, app });
 
     // in any and all other cases, serve index.html.
     // No any other endpoints past this will execute
@@ -121,6 +122,26 @@ export class UIServer {
     return this.plugins.map((plugin) => {
       return plugin.render();
     });
+  }
+
+  private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
+    if (!this.buildOptions?.ssr) return;
+
+    const ssrMiddleware = await createSsrMiddleware({
+      root,
+      port,
+      title: this.uiRoot.name,
+      logger: this.logger,
+    });
+
+    if (!ssrMiddleware) {
+      this.logger.warn('[ssr] middleware failed setup');
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.get('*', ssrMiddleware);
+    this.logger.debug('[ssr] serving for "*"');
   }
 
   private async configureProxy(app: Express, server: Server) {
@@ -178,12 +199,12 @@ export class UIServer {
     const gqlProxies: ProxyEntry[] = [
       {
         context: ['/graphql', '/api'],
-        target: `http://localhost:${port}`,
+        target: `http://${this.host}:${port}`,
         changeOrigin: true,
       },
       {
         context: ['/subscriptions'],
-        target: `ws://localhost:${port}`,
+        target: `ws://${this.host}:${port}`,
         ws: true,
       },
     ];

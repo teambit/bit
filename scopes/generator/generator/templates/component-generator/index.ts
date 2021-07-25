@@ -4,9 +4,10 @@ import { aspectFile } from './files/aspect-file';
 import { docsFile } from './files/docs-file';
 import { mainRuntime } from './files/main-runtime';
 
-export const generatorTemplate: ComponentTemplate = {
-  name: 'generator',
-  description: 'create your own component generator',
+export const componentGeneratorTemplate: ComponentTemplate = {
+  name: 'component-generator',
+  description:
+    'create your own component generator \nDocs: https://harmony-docs.bit.dev/extending-bit/creating-a-custom-generator',
   generateFiles: (context: ComponentContext) => {
     return [
       {

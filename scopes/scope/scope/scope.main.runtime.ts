@@ -29,6 +29,7 @@ import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
+import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
@@ -474,7 +475,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true) {
+  async import(ids: ComponentID[], useCache = true, throwIfNotExist = false): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -486,8 +487,7 @@ export class ScopeMain implements ComponentFactory {
     });
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
-    // TODO: return a much better output based on legacy version-dependencies
-    return this.getMany(ids);
+    return this.getMany(ids, throwIfNotExist);
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
@@ -527,6 +527,7 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get ids of all scope components.
+   * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
@@ -568,10 +569,10 @@ export class ScopeMain implements ComponentFactory {
     return modelComponent.scope === this.name;
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return this.get(id);
+      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
     });
     const components = await componentsP;
     return compact(components);
@@ -635,6 +636,20 @@ export class ScopeMain implements ComponentFactory {
 
   async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
+  }
+
+  /**
+   * load components into the scope through a variants pattern.
+   */
+  async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
+    const ids = await this.listIds(true);
+    const finalPatterns = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
+    const targetIds = ids.filter((id) => {
+      return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
+    });
+
+    const components = await this.getMany(targetIds);
+    return components;
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {

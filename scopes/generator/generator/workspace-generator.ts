@@ -4,6 +4,7 @@ import { loadBit } from '@teambit/bit';
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import execa from 'execa';
+import { BitId } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
@@ -68,7 +69,7 @@ export class WorkspaceGenerator {
    */
   private async writeWorkspaceFiles(): Promise<void> {
     const workspaceContext = { name: this.workspaceName, defaultScope: this.options.defaultScope };
-    const templateFiles = this.template.generateFiles(workspaceContext);
+    const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
         await fs.outputFile(path.join(this.workspacePath, templateFile.relativePath), templateFile.content);
@@ -88,7 +89,7 @@ export class WorkspaceGenerator {
 
     const componentsToImportResolved = await Promise.all(
       componentsToImport.map(async (c) => ({
-        id: await this.workspace.resolveComponentId(c.id),
+        id: ComponentID.fromLegacy(BitId.parse(c.id, true)),
         path: c.path,
       }))
     );
@@ -107,8 +108,11 @@ export class WorkspaceGenerator {
         mainFile: comp.state._consumer.mainFile,
       });
       const deps = await dependencyResolver.getDependencies(comp);
+
       const currentPackages = Object.keys(oldAndNewPackageNames);
+      // only bring auto-resolved dependencies, others should be set in the workspace.jsonc template
       const workspacePolicyEntries = deps
+        .filter((dep) => dep.source === 'auto')
         .map((dep) => ({
           dependencyId: dep.getPackageName?.() || dep.id,
           lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,

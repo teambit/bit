@@ -32,6 +32,7 @@ import { PackageRoute, routePath } from './package.route';
 import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
 import { PackageFragment } from './package.fragment';
+import { PackTask } from './pack.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -123,7 +124,8 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, logPublisher);
+    const packTask = new PackTask(PkgAspect.id, packer, logPublisher);
     const pkg = new PkgMain(
       logPublisher,
       config,
@@ -148,7 +150,8 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
-    builder.registerTagTasks([publishTask]);
+    builder.registerTagTasks([packTask, publishTask]);
+    builder.registerSnapTasks([packTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -218,6 +221,9 @@ export class PkgMain {
 
     private componentAspect: ComponentMain,
 
+    /**
+     * keep it as public. external env might want to register it to the snap pipeline
+     */
     public publishTask: PublishTask
   ) {}
 

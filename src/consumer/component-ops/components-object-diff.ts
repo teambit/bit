@@ -136,6 +136,7 @@ function componentToPrintableForDiffCommand(component: Component, verbose = fals
   delete comp.dependencies;
   delete comp.devDependencies;
   delete comp.peerDependencies;
+  delete comp.id;
   if (!verbose) {
     delete comp.overridesDependencies;
     delete comp.overridesDevDependencies;

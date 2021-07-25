@@ -13,7 +13,7 @@ import LegacyWorkspaceConfig, {
 import { EnvType } from '@teambit/legacy/dist/legacy-extensions/env-extension-types';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { assign, parse, stringify } from 'comment-json';
+import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
@@ -192,19 +192,8 @@ export class WorkspaceConfig implements HostConfig {
       const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
-    const getTemplateFile = async () => {
-      try {
-        return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-      } catch (err) {
-        if (err.code !== 'ENOENT') throw err;
-        // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-        return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
-      }
-    };
-    const templateFile = await getTemplateFile();
-    const templateStr = templateFile.toString();
 
-    const template = parse(templateStr);
+    const template = await getWorkspaceConfigTemplateParsed();
     // TODO: replace this assign with some kind of deepAssign that keeps the comments
     // right now the comments above the internal props are overrides after the assign
     const merged = assign(template, props);
@@ -478,4 +467,20 @@ export function transformLegacyPropsToExtensions(
   }
   // @ts-ignore
   return data;
+}
+
+export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {
+  let fileContent: Buffer;
+  try {
+    fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
+    fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
+  }
+  return parse(fileContent.toString());
+}
+
+export function stringifyWorkspaceConfig(workspaceConfig: CommentJSONValue): string {
+  return stringify(workspaceConfig, undefined, 2);
 }
