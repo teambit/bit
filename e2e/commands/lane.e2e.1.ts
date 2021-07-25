@@ -930,11 +930,11 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.fixtures.populateComponents(1);
+      helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
-      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
     });
     it('bit status should show the correct staged versions', () => {
@@ -945,9 +945,11 @@ describe('bit lane command', function () {
       expect(status).to.have.string(`versions: ${hash} ...`);
     });
     describe('export the lane, then switch back to main', () => {
+      let afterSwitching;
       before(() => {
         helper.command.exportLane();
         helper.command.switchLocalLane('main');
+        afterSwitching = helper.scopeHelper.cloneLocalScope();
       });
       it('status should not show the components as pending updates', () => {
         helper.command.expectStatusToBeClean();
@@ -968,6 +970,16 @@ describe('bit lane command', function () {
           it('status should not show the components as pending updates', () => {
             helper.command.expectStatusToBeClean();
           });
+        });
+      });
+      describe('merging the dev lane when the lane is ahead (no diverge)', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterSwitching);
+          helper.command.mergeLane('dev');
+        });
+        it('should merge the lane', () => {
+          const mergedLanes = helper.command.showLanes('--merged');
+          expect(mergedLanes).to.include('dev');
         });
       });
     });
