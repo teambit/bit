@@ -1,3 +1,4 @@
+import { sha1 } from '@teambit/legacy/dist/utils';
 import { Compiler } from '@teambit/compiler';
 import { BuilderAspect, BuilderMain, BuildContext } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
@@ -9,9 +10,9 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import objectHash from 'object-hash';
-import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
-import { join } from 'path';
+import { uniq, groupBy } from 'lodash';
+import fs, { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { join, resolve } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -32,6 +33,9 @@ import { computeExposes } from './compute-exposes';
 import { generateBootstrapFile } from './generate-bootstrap-file';
 import { EnvMfBundlingStrategy } from './strategies/env-mf-strategy';
 import { GenerateEnvPreviewTask } from './bundle-env.task';
+import { createHostRoot } from './create-host-root';
+import { createCoreRoot } from './create-core-root';
+import { createRootBootstrap } from './create-root-bootstrap';
 
 const noopResult = {
   results: [],
@@ -234,9 +238,85 @@ export class PreviewMain {
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id, rootDir);
+    const filePath = await this.generateRootForMf(filteredAspects, name, 'preview', PreviewAspect.id, rootDir);
     console.log('filePath', filePath);
     return filePath;
+  }
+
+  /**
+   * generate the root file of the UI runtime.
+   */
+  async generateRootForMf(
+    aspectDefs: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = PreviewRuntime.name,
+    rootAspect = UIAspect.id,
+    rootTempDir = this.tempFolder
+  ) {
+    // const rootRelativePath = `${runtimeName}.root${sha1(contents)}.js`;
+    // const filepath = resolve(join(__dirname, rootRelativePath));
+    const aspectsGroups = groupBy(aspectDefs, (def) => {
+      const id = def.getId;
+      if (!id) return 'host';
+      if (this.aspectLoader.isCoreAspect(id)) return 'core';
+      return 'host';
+    });
+
+    // const coreRootFilePath = this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
+    const { fullPath: coreRootFilePath } = this.writeCoreUiRoot(
+      aspectsGroups.core,
+      rootExtensionName,
+      runtimeName,
+      rootAspect
+    );
+    const hostRootFilePath = this.writeHostUIRoot(aspectsGroups.host, coreRootFilePath, runtimeName, rootTempDir);
+
+    const rootBootstrapContents = await createRootBootstrap(hostRootFilePath.relativePath);
+    const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
+    const rootBootstrapPath = resolve(join(rootTempDir, rootBootstrapRelativePath));
+    if (fs.existsSync(rootBootstrapPath)) return rootBootstrapPath;
+    fs.outputFileSync(rootBootstrapPath, rootBootstrapContents);
+    console.log('rootBootstrapPath', rootBootstrapPath);
+    throw new Error('g');
+    return rootBootstrapPath;
+  }
+
+  /**
+   * Generate a file which contains all the core ui aspects and the harmony config to load them
+   * This will get an harmony config, and host specific aspects to load
+   * and load the harmony instance
+   */
+  private writeCoreUiRoot(
+    coreAspects: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = UIRuntime.name,
+    rootAspect = UIAspect.id
+  ) {
+    const contents = createCoreRoot(coreAspects, rootExtensionName, rootAspect, runtimeName);
+    const rootRelativePath = `${runtimeName}.core.root.${sha1(contents)}.js`;
+    const filepath = resolve(join(__dirname, rootRelativePath));
+    console.log('core ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
+    fs.outputFileSync(filepath, contents);
+    return { fullPath: filepath, relativePath: rootRelativePath };
+  }
+
+  /**
+   * Generate a file which contains host (workspace/scope) specific ui aspects. and the harmony config to load them
+   */
+  private writeHostUIRoot(
+    hostAspects: AspectDefinition[] = [],
+    coreRootPath: string,
+    runtimeName = UIRuntime.name,
+    rootTempDir = this.tempFolder
+  ) {
+    const contents = createHostRoot(hostAspects, coreRootPath, this.harmony.config.toObject());
+    const rootRelativePath = `${runtimeName}.host.root.${sha1(contents)}.js`;
+    const filepath = resolve(join(rootTempDir, rootRelativePath));
+    console.log('host ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
+    fs.outputFileSync(filepath, contents);
+    return { fullPath: filepath, relativePath: rootRelativePath };
   }
 
   /**

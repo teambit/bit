@@ -3,7 +3,7 @@ import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compat
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
-import { UIAspect } from './ui.aspect';
+import { UIAspect } from '../../ui-foundation/ui/ui.aspect';
 
 export function createCoreRoot(
   aspectDefs: AspectDefinition[],
