@@ -436,8 +436,13 @@ export class UiMain {
     });
 
     // const coreRootFilePath = this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
-    this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
-    const hostRootFilePath = this.writeHostUIRoot(aspectsGroups.host, 'coreRootMfName', runtimeName, rootTempDir);
+    const { fullPath: coreRootFilePath } = this.writeCoreUiRoot(
+      aspectsGroups.core,
+      rootExtensionName,
+      runtimeName,
+      rootAspect
+    );
+    const hostRootFilePath = this.writeHostUIRoot(aspectsGroups.host, coreRootFilePath, runtimeName, rootTempDir);
 
     const rootBootstrapContents = await createRootBootstrap(hostRootFilePath.relativePath);
     const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
@@ -474,11 +479,11 @@ export class UiMain {
    */
   private writeHostUIRoot(
     hostAspects: AspectDefinition[] = [],
-    coreRootName: string,
+    coreRootPath: string,
     runtimeName = UIRuntime.name,
     rootTempDir = this.tempFolder
   ) {
-    const contents = createHostRoot(hostAspects, coreRootName, this.harmony.config.toObject());
+    const contents = createHostRoot(hostAspects, coreRootPath, this.harmony.config.toObject());
     const rootRelativePath = `${runtimeName}.host.root.${sha1(contents)}.js`;
     const filepath = resolve(join(rootTempDir, rootRelativePath));
     console.log('host ui root', filepath);

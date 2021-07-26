@@ -3,7 +3,7 @@ import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compat
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
-export function createHostRoot(aspectDefs: AspectDefinition[], coreRootName: string, config = {}) {
+export function createHostRoot(aspectDefs: AspectDefinition[], coreRootPath: string, config = {}) {
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
 
@@ -12,7 +12,7 @@ ${createImports(aspectDefs)}
 const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 ${idSetters.join('\n')}
 
-const coreRoot = import('${coreRootName}').then(coreRoot => {
+const coreRoot = import('${coreRootPath}').then(coreRoot => {
   const render = coreRoot.render;
   render(config, [${identifiers.join()}]);
 });
