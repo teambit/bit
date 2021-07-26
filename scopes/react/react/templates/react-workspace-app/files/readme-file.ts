@@ -9,7 +9,7 @@ bit start
 
 ## What's included
 
-- **UI Components and a Page Component**
+- **UI Components and Page Components**
 
 Some basic components with composition file, doc file, test file, scss styles and the component file which is then exported using the index file.
 
@@ -21,7 +21,7 @@ This is an auto-generated file and includes the mapping of your components. Ther
 bit remove ui/* --delete files
 \`\`\`
 
-This remove the component from the bitmap as well as remove the files.
+This removes the component from the bitmap as well as remove the files.
 
 - **.gitignore**
 
