@@ -13,7 +13,6 @@ import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
-import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
@@ -44,6 +43,7 @@ import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
+import { FormatterAspect } from '@teambit/formatter';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
@@ -51,6 +51,7 @@ import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
+import { PrettierAspect } from '@teambit/prettier';
 import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
@@ -61,6 +62,8 @@ import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
+import { HtmlAspect } from '@teambit/html';
+import { LanesAspect } from '@teambit/lanes';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -69,8 +72,10 @@ export const manifestsMap = {
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [ESLintAspect.id]: ESLintAspect,
+  [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
+  [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
@@ -84,7 +89,6 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
-  [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -126,6 +130,8 @@ export const manifestsMap = {
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
+  [HtmlAspect.id]: HtmlAspect,
+  [LanesAspect.id]: LanesAspect,
 };
 
 export function isCoreAspect(id: string) {

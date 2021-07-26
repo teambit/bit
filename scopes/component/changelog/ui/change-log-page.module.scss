@@ -1,15 +1,14 @@
 .changeLogPage {
-  padding: 50px 40px 0 40px;
+  padding: 50px 40px 100px 40px;
   max-width: 1440px;
-  margin: 0 auto 48px;
-  width: auto;
-  overflow-y: scroll;
-  @media screen and (max-width: 768px) {
-    width: unset;
-  }
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+
   .title {
     margin-bottom: 24px;
-    font-size: var(--h-xs);
+    font-size: var(--bit-h-xs, 26px);
   }
   .separator {
     margin-bottom: 0;
@@ -18,4 +17,8 @@
 
 .separatorNoChangeLog {
   margin-bottom: 41px;
+}
+
+.changeLogCard {
+  margin-bottom: 8px;
 }

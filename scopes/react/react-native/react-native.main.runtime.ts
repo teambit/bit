@@ -32,7 +32,7 @@ export class ReactNativeMain {
    * override the TS config of the environment.
    */
   overrideTsConfig: (
-    tsconfig: TsConfigSourceFile,
+    tsconfig?: TsConfigSourceFile,
     compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
     tsModule?: any
   ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
@@ -51,7 +51,7 @@ export class ReactNativeMain {
    * override the build ts config.
    */
   overrideBuildTsConfig: (
-    tsconfig: any,
+    tsconfig?: TsConfigSourceFile,
     compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
   ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
@@ -62,6 +62,10 @@ export class ReactNativeMain {
     this.react
   );
 
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers) {
     const mergedModifiers: UseWebpackModifiers = {
       previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
@@ -71,11 +75,21 @@ export class ReactNativeMain {
   }
 
   /**
+   * An API to mutate the prettier config
+   */
+  usePrettier = this.react.usePrettier.bind(this.react);
+
+  /**
+   * An API to mutate the eslint config
+   */
+  useEslint = this.react.useEslint.bind(this.react);
+
+  /**
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies()),
+      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies?.()),
     });
   }
 
@@ -118,15 +132,15 @@ function getReactNativeDeps() {
       'react-dom': '-',
       'react-native': '-',
       '@types/jest': '^26.0.0',
-      '@types/react': '^16.8.0',
-      '@types/react-dom': '^16.8.0',
-      '@types/react-native': '^0.63.0',
+      '@types/react': '^17.0.8',
+      '@types/react-dom': '^17.0.5',
+      '@types/react-native': '^0.64.1',
     },
     peerDependencies: {
-      react: '^16.8.0',
-      'react-dom': '^16.8.0',
-      'react-native': '^0.63.0',
-      'react-native-web': '^0.14.0',
+      react: '^16.8.0 || ^17.0.0',
+      'react-dom': '^16.8.0 || ^17.0.0',
+      'react-native': '^0.64.1',
+      'react-native-web': '^0.16.0',
     },
   };
 }

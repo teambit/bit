@@ -1,54 +1,114 @@
-# Bit
+<p align="center">
+  <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-logo%20(2).png"/>
+</p>
 
-Bit is a tool for composing modern applications of independent components.  
+<p align="center">
+  <a href="https://harmony-docs.bit.dev/">Documentation</a> |
+  <a href="https://bit.dev/">Platform</a> |
+  <a href="https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw">Learn</a>
+</p>
 
-It extends the benefits of micro-services to everything you build, front and back. With Bit teams can autonomously develop, build, and release components, while continuously collaborating and integrating to compose larger applications together.  
+<h3 align="center">
+  Build components first.
+</h3>
 
-Bit's extendible toolset (and visual development UI) creates a simple yet powerful experience for every developer, while larger teams can smoothly scale to build many developers and projects in the [component cloud](https://bit.dev/).
+<p align="center">
+Open infrastructure for component-driven applications to speed and scale development.
+</p>
 
-Modularity benefits almost every part of the development process, from [speeding up releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. You can start enjoying Bit through one of many popular [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as **Micro Frontends**, **Design Systems**, **Development Speed**, and **Collaboration on components**.
-
-[![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
-
+<p align="center">
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 <a href="https://circleci.com/gh/teambit/bit/tree/master"><img alt="Circle Status" src="https://circleci.com/gh/teambit/bit/tree/master.svg?style=shield&circle-token=d9fc5b19b90fb7e0655d941a5d7f21b61174c4e7">
-[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+<a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
-[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bitdev_&url=https://bit.dev&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Docs](https://harmony-docs.bit.dev/) • [Bit Cloud](https://bit.dev/) • [Slack](https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w) • [Twitter](https://twitter.com/bitdev_) • [YouTube](https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw) • [Blog](https://blog.bitsrc.io/tagged/bit) • [Resources](https://harmony-docs.bit.dev/resources/conference-talks/)
+## What is Bit?
 
-## Install Bit
+<p align="center">
+  <a href="https://harmony-docs.bit.dev/">
+    <img alt="Bit Workspace" src="https://storage.googleapis.com/static.bit.dev/harmony-docs/CleanShot%202021-05-28%20at%2021.01.49%402x.png" />
+  </a>
+</p>
+<p align="left">
+Bit is an OSS Infrastructure for building and composing components. It is an extensible toolchain for component-driven applications / systems which are faster to develop, simpler to understand, test, and maintain, more resilient and performant, and easier to collaborate on.
 
-Install Bit Version Manager:
+Instead of building an application that has many components, Bit lets you develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.
 
-```
+</p>
+
+### Key Features
+
+<p align="left">
+
+- **Workspace - build and compose components**. The workspace is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the _Workspace UI_ to visually develop and manage your components with ease.
+
+- **Scope - manage and scale with components**. Scopes are where you push, version, and organize your components. It’s a component store. _Remote Scopes_ let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
+
+### How to Start?
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=7afMBwj5fR4">
+    <img alt="Bit Workspace" src="https://storage.googleapis.com/static.bit.dev/harmony-docs/build%20with%20bit%20youtube.png" />
+  </a>
+</p>
+
+To get started follow the [quick-start guide](https://harmony-docs.bit.dev/getting-started/installing-bit) or try the official [Bit for React tutorial](https://harmony-docs.bit.dev/tutorials/react/create-and-consume-components).
+
+Install [Bit Version Manager](https://harmony-docs.bit.dev/getting-started/installing-bit):
+
+```bash
 npm i -g @teambit/bvm
-
 # or
-
 yarn global add @teambit/bvm
 ```
 
 Install Bit:
 
-```
+```bash
 bvm install
 ```
 
-Init a Bit Workspace:
+Start a [Bit workspace](https://harmony-docs.bit.dev/getting-started/initializing-workspace):
 
+```bash
+bit new react-workspace <my-workspace-name>
 ```
-bit init --harmony
+
+Install dependencies:
+
+```bash
+cd <my-workspace-name>
+bit install
 ```
 
+Create a component:
 
-### Getting Started
+```bash
+bit create react-component ui/button     # TypeScript
+bit create react-component-js ui/button  # JavaScript
+```
 
-- [Getting started](https://harmony-docs.bit.dev/getting-started/installing-bit)
-- [What is Bit?](https://harmony-docs.bit.dev/essentials/what-is-bit)
-- [Thinking in Components](https://harmony-docs.bit.dev/component-architecture/thinking-in-components)
+Install dependencies for test files:
+
+```bash
+bit install @testing-library/react
+```
+
+Start the dev server
+
+```bash
+bit start
+```
+
+Open-up your browser on localhost:3000, or any other available port, and display your workspace with your components.
+
+### Popular Onboarding Use-Cases
+
+- Micro Frontends
+- Design Systems (Component Marketplace)
+- Shared Logic and Backend Functionality
+- Rapid Application Development
 
 ### Resources & Community
 
@@ -59,12 +119,6 @@ bit init --harmony
 - [Live streams](https://harmony-docs.bit.dev/resources/live-streams)
 - [Articles](https://harmony-docs.bit.dev/resources/articles)
 - [Community](https://harmony-docs.bit.dev/resources/community)
-
-## Large scale example of building with Bit
-
-Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.
-
-Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on Bit's cloud platform.
 
 ## Contributing 🎗️
 

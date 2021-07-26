@@ -38,10 +38,10 @@ export default class Merge implements LegacyCommand {
   shortDescription = 'merge changes of different component versions';
   group: Group = 'development';
   description = `merge changes of different component versions
-  bit merge <version> [ids...] => merge changes of the given version into the checked out version
-  bit merge [ids...] => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
-  bit merge <lane> --lane => EXPERIMENTAL. merge given lane into current lane
-  bit merge <remote> <lane> --lane => EXPERIMENTAL. merge given remote-lane into current lane
+  \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
+  \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
+  \`bit merge <lane> --lane\` => EXPERIMENTAL. merge given lane into current lane
+  \`bit merge <remote> <lane> --lane\` => EXPERIMENTAL. merge given remote-lane into current lane
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
   opts = [
@@ -63,7 +63,7 @@ export default class Merge implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     {
       ours = false,
       theirs = false,

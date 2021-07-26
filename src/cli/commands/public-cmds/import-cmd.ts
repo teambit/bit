@@ -58,7 +58,7 @@ export default class Import implements LegacyCommand {
     [
       '',
       'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master',
+      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
     ],
   ] as CommandOptions;
   loader = true;
@@ -66,7 +66,7 @@ export default class Import implements LegacyCommand {
   remoteOp = true;
 
   action(
-    [ids]: [string[]],
+    [ids = []]: [string[]],
     {
       tester = false,
       compiler = false,

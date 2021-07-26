@@ -7,7 +7,7 @@ export type InsightResult = {
   metaData: InsightMetaData;
   message: string;
   data: any;
-  renderedData: string;
+  renderedData?: string;
 };
 
 export type RawResult = {

@@ -18,8 +18,8 @@ import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
-import { getLastModifiedDirTimestampMs, getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
+import GeneralError from '../../error/general-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -33,15 +33,15 @@ export const CURRENT_BITMAP_SCHEMA = '14.9.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 /**
- * When working on lanes, a component version can be different than the master.
- * For example, when tagging 1.0.0 on master, then switching to a new lane and snapping.
- * The version saved in .bitmap file is the one of master (in this case 1.0.0).
+ * When working on lanes, a component version can be different than the main.
+ * For example, when tagging 1.0.0 on main, then switching to a new lane and snapping.
+ * The version saved in .bitmap file is the one of main (in this case 1.0.0).
  * The hash of the snap is saved on the 'workspace-lane' file.
  * These files are saved in .bit/workspace/lanes/<lane-name> directory, and they're not get
  * synched by Git.
  * Once a lane is exported to a remote scope, then .bitmap gets a new property
  * "lanes" array that includes the remote-lane-id and the version hash.
- * Still, the version on the ID doesn't get changed and it reflects the master version.
+ * Still, the version on the ID doesn't get changed and it reflects the main version.
  * Since all operations on .bitmap are not aware of this new workspace-lane file and the "lanes" prop,
  * we do a manipulation when loading and when saving the .bitmap file.
  * When loading .bitmap file, it also loads the workspace-lane of the active lane if exists.
@@ -58,13 +58,13 @@ export default class BitMap {
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
   allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
-
+  private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
     private mapPath: string,
     public schema: string,
     private isLegacy: boolean,
-    public workspaceLane: WorkspaceLane | null,
+    public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
     private remoteLaneName?: RemoteLaneId
   ) {
     this.components = [];
@@ -99,10 +99,38 @@ export default class BitMap {
         throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
-
     componentMap.id = bitId;
     this.components.push(componentMap);
     this.markAsChanged();
+  }
+
+  /**
+   * in case the added component's root-dir is a parent-dir of other components
+   * or other component's root-dir is a parent root-dir of this component, throw an error
+   */
+  private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+    if (this.isLegacy || !rootDir) {
+      return;
+    }
+    const isParentDir = (parent: string, child: string) => {
+      const relative = path.relative(parent, child);
+      return relative && !relative.startsWith('..');
+    };
+    this.components.forEach((existingComponentMap) => {
+      if (!existingComponentMap.rootDir) return;
+      if (isParentDir(existingComponentMap.rootDir, rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
+            existingComponentMap.rootDir
+          } which used by another component "${existingComponentMap.id.toString()}"`
+        );
+      }
+      if (isParentDir(rootDir, existingComponentMap.rootDir)) {
+        throw new GeneralError(
+          `unable to add "${id.toString()}", its rootDir ${rootDir} is used by another component ${existingComponentMap.id.toString()}`
+        );
+      }
+    });
   }
 
   setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
@@ -149,7 +177,7 @@ export default class BitMap {
 
     const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
-    await bitMap.loadFiles(consumer.componentFsCache);
+    await bitMap.loadFiles();
     return bitMap;
   }
 
@@ -159,30 +187,13 @@ export default class BitMap {
     delete componentsJson[LANE_KEY];
   }
 
-  async loadFiles(componentFsCache: ComponentFsCache) {
+  async loadFiles() {
     if (this.isLegacy) return;
     const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
-    const { currentLocation } = BitMap.getBitMapLocation(this.projectRoot);
-    // .bitmap might changed manually and will be very confused for the end user
-    // as to why the files look the way they look.
-    // similar with .gitignore, if changed, some files may need to be removed/added
-    const impactFilesChanged = await getLastModifiedPathsTimestampMs([currentLocation as string, '.gitignore']);
     await Promise.all(
       this.components.map(async (componentMap) => {
-        const idStr = componentMap.id.toString();
         const rootDir = componentMap.rootDir;
         if (!rootDir) return;
-        const dataFromCache = await componentFsCache.getFilePathsFromCache(idStr);
-        if (dataFromCache) {
-          const lastModified = await getLastModifiedDirTimestampMs(rootDir);
-          const wasModifiedAfterLastTrack = lastModified > dataFromCache.timestamp;
-          const wereImpactFilesModifiedAfterLastTrack = impactFilesChanged > dataFromCache.timestamp;
-          if (!wasModifiedAfterLastTrack && !wereImpactFilesModifiedAfterLastTrack) {
-            const files = JSON.parse(dataFromCache.data);
-            componentMap.files = files;
-            return;
-          }
-        }
         try {
           componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
           componentMap.recentlyTracked = true;
@@ -387,13 +398,7 @@ export default class BitMap {
    */
   getBitId(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
     if (!(bitId instanceof BitId)) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
@@ -409,6 +414,10 @@ export default class BitMap {
       const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
       if (matchWithoutScopeAndVersion) return matchWithoutScopeAndVersion;
     }
+    if (this.updatedIds[bitId.toString()]) {
+      return this.updatedIds[bitId.toString()].id;
+    }
+
     throw new MissingBitMapComponent(bitId.toString());
   }
 
@@ -445,7 +454,10 @@ export default class BitMap {
     bitId: BitId,
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap {
-    const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+    const existingBitId: BitId = this.getBitId(bitId, {
+      ignoreVersion,
+      ignoreScopeAndVersion,
+    });
     return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
   }
 
@@ -456,13 +468,7 @@ export default class BitMap {
    */
   getComponentIfExist(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
@@ -637,10 +643,12 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
     const getOrCreateComponentMap = (): ComponentMap => {
-      const componentMap = this.getComponentIfExist(componentId);
+      const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
+      const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
         componentMap.files = files;
+        componentMap.id = componentId;
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -657,6 +665,7 @@ export default class BitMap {
     componentMap.mainFile = mainFile;
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
+      this.throwForExistingParentDir(componentMap);
     }
     if (trackDir) {
       componentMap.trackDir = pathNormalizeToLinux(trackDir);
@@ -689,6 +698,7 @@ export default class BitMap {
 
   reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
+    if (!workspaceLane) this.remoteLaneName = undefined;
     this._invalidateCache();
     this.components.forEach((componentMap) =>
       componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null)
@@ -709,6 +719,7 @@ export default class BitMap {
   };
 
   _removeFromComponentsArray(componentId: BitId) {
+    logger.debug(`bit-map: _removeFromComponentsArray ${componentId.toString()}`);
     this.components = this.components.filter((componentMap) => !componentMap.id.isEqual(componentId));
     this.markAsChanged();
   }
@@ -764,6 +775,7 @@ export default class BitMap {
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
     this.markAsChanged();
+    this.updatedIds[oldIdStr] = componentMap;
     return newId;
   }
 
@@ -870,7 +882,7 @@ export default class BitMap {
         // if not exist, we still need these properties so we know later to parse them correctly.
         componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
         componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
-        // change back the id to the master id, so the local lanes data won't be saved in .bitmap
+        // change back the id to the main id, so the local lanes data won't be saved in .bitmap
         if (componentMapCloned.defaultVersion) {
           componentMapCloned.version = componentMapCloned.defaultVersion;
         }
@@ -891,16 +903,15 @@ export default class BitMap {
    * may result in a damaged file
    */
   async write(componentFsCache: ComponentFsCache): Promise<any> {
-    await Promise.all(
-      this.components.map(async (c) => {
-        if (c.recentlyTracked) {
-          await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
-          if (!this.isLegacy) {
-            await componentFsCache.saveFilePathsInCache(c.id.toString(), c.files);
+    if (this.isLegacy) {
+      await Promise.all(
+        this.components.map(async (c) => {
+          if (c.recentlyTracked) {
+            await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
           }
-        }
-      })
-    );
+        })
+      );
+    }
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();

@@ -1,9 +1,8 @@
 import mapSeries from 'p-map-series';
 import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
-import { readdirSync } from 'fs-extra';
+import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -30,14 +29,16 @@ import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
+import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
-import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
+import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
+import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import { compact, slice, uniqBy } from 'lodash';
+import { compact, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -53,14 +54,17 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
+type OnPostDeleteData = { ids: ComponentID[] };
 type OnPreFetchObjectData = { ids: string[]; fetchOptions: FETCH_OPTIONS };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
+type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
+export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
@@ -97,6 +101,8 @@ export class ScopeMain implements ComponentFactory {
     private tagRegistry: TagRegistry,
 
     private postPutSlot: OnPostPutSlot,
+
+    private postDeleteSlot: OnPostDeleteSlot,
 
     private postExportSlot: OnPostExportSlot,
 
@@ -229,6 +235,14 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * register to the post-delete slot.
+   */
+  onPostDelete(postDeleteFn: OnPostDelete) {
+    this.postDeleteSlot.register(postDeleteFn);
+    return this;
+  }
+
+  /**
    * register to the post-export slot.
    */
   registerOnPostExport(postExportFn: OnPostExport) {
@@ -262,6 +276,31 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
+  async delete(
+    { ids, force, lanes }: { ids: string[]; force: boolean; lanes: boolean },
+    headers?: Record<string, any>
+  ) {
+    const authData = getAuthDataFromHeader(headers?.authorization);
+    const result = await remove({
+      path: this.path,
+      ids,
+      force,
+      lanes,
+    });
+
+    const fns = this.postDeleteSlot.values();
+    const metadata = { auth: authData, headers };
+    const componentIds = ids.map((id) => ComponentID.fromString(id));
+    await mapSeries(fns, async (fn) => {
+      try {
+        await fn({ ids: componentIds }, metadata);
+      } catch (err) {
+        this.logger.error('failed to run delete slot', err);
+      }
+    });
+    return result;
+  }
+
   // TODO: temporary compiler workaround - discuss this with david.
   private toJs(str: string) {
     if (str.endsWith('.ts')) return str.replace('.ts', '.js');
@@ -270,7 +309,10 @@ export class ScopeMain implements ComponentFactory {
 
   private parseLocalAspect(localAspects: string[]) {
     const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
-    return dirPaths;
+    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
+    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    return existsDirPaths;
   }
 
   private findRuntime(dirPath: string, runtime: string) {
@@ -433,7 +475,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true) {
+  async import(ids: ComponentID[], useCache = true, throwIfNotExist = false): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -445,8 +487,7 @@ export class ScopeMain implements ComponentFactory {
     });
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
-    // TODO: return a much better output based on legacy version-dependencies
-    return this.getMany(ids);
+    return this.getMany(ids, throwIfNotExist);
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
@@ -486,6 +527,7 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get ids of all scope components.
+   * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
@@ -527,10 +569,10 @@ export class ScopeMain implements ComponentFactory {
     return modelComponent.scope === this.name;
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return this.get(id);
+      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
     });
     const components = await componentsP;
     return compact(components);
@@ -596,10 +638,24 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
+  /**
+   * load components into the scope through a variants pattern.
+   */
+  async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
+    const ids = await this.listIds(true);
+    const finalPatterns = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
+    const targetIds = ids.filter((id) => {
+      return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
+    });
+
+    const components = await this.getMany(targetIds);
+    return components;
+  }
+
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying<string>(versions, range)?.toString();
+    return semver.maxSatisfying<string>(versions, range, { includePrerelease: true })?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -639,6 +695,7 @@ export class ScopeMain implements ComponentFactory {
   static slots = [
     Slot.withType<OnTag>(),
     Slot.withType<OnPostPut>(),
+    Slot.withType<OnPostDelete>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
@@ -672,9 +729,10 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
+    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       TagRegistry,
       OnPostPutSlot,
+      OnPostDeleteSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot
@@ -695,6 +753,7 @@ export class ScopeMain implements ComponentFactory {
       config,
       tagSlot,
       postPutSlot,
+      postDeleteSlot,
       postExportSlot,
       postObjectsPersistSlot,
       preFetchObjectsSlot,

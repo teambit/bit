@@ -18,7 +18,7 @@ export default class Show implements LegacyCommand {
     ['r', 'remote', 'show a remote component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
-    ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]'],
+    ['c', 'compare', 'compare current file system component to latest tagged component [default=latest]'],
     ['d', 'detailed', 'show more details'],
     ['', 'dependents', 'EXPERIMENTAL. show all dependents recursively'],
     ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively'],

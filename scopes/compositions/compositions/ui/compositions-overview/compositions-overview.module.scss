@@ -1,21 +1,15 @@
 .background {
-  background: var(--bg-dent);
+  background: var(--bit-bg-dent, #f6f6f6);
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
   display: flex;
   overflow-x: auto;
 
-  // css trick - enforce padding at the end of a overflow: auto list
-  &::after {
-    content: '';
-    padding: 6px;
-  }
-
   > * {
     margin-right: 16px;
-    flex: none;
   }
+
   > :last-child {
     margin: 0;
   }

@@ -12,15 +12,8 @@ export function EmptyScope({ name }: EmptyScopeProps) {
   return (
     <EmptyComponentGallery name={name}>
       <div className={styles.text}>
-        <span>Set</span>{' '}
-        <HighlightedText size="xxs" element="span">
-          {`"defaultScope": “${name}"`}
-        </HighlightedText>{' '}
-        <span>in</span>{' '}
-        <HighlightedText size="xxs" element="span">
-          workspace.jsonc
-        </HighlightedText>{' '}
-        <div>file and export components here.</div>
+        <span>Set</span> <HighlightedText>{`"defaultScope": "${name}"`}</HighlightedText> <span>in</span>{' '}
+        <HighlightedText>workspace.jsonc</HighlightedText> <div>file and export components here.</div>
       </div>
     </EmptyComponentGallery>
   );

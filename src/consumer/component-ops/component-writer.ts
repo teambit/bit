@@ -10,7 +10,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
 import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
+import { getPathRelativeRegardlessCWD, PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
@@ -30,7 +30,7 @@ import {
 
 export type ComponentWriterProps = {
   component: Component;
-  writeToPath: PathOsBasedRelative;
+  writeToPath: PathLinuxRelative;
   writeConfig?: boolean;
   writePackageJson?: boolean;
   override?: boolean;
@@ -49,7 +49,7 @@ export type ComponentWriterProps = {
 
 export default class ComponentWriter {
   component: Component;
-  writeToPath: PathOsBasedRelative;
+  writeToPath: PathLinuxRelative;
   writeConfig: boolean;
   writePackageJson: boolean;
   override: boolean;
@@ -116,7 +116,6 @@ export default class ComponentWriter {
   async write(): Promise<Component> {
     if (!this.consumer) throw new Error('ComponentWriter.write expect to have a consumer');
     await this.populateComponentsFilesToWrite();
-    // $FlowFixMe consumer is set
     this.component.dataToPersist.addBasePath(this.consumer.getPath());
     await this.component.dataToPersist.persistAllToFS();
     return this.component;
@@ -126,6 +125,7 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
+    this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
     this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
@@ -140,6 +140,14 @@ export default class ComponentWriter {
     await this.populateFilesToWriteToComponentDir(packageManager);
     if (this.isolated) await this.populateArtifacts();
     return this.component;
+  }
+
+  private throwForImportingLegacyIntoHarmony() {
+    if (this.component.isLegacy && this.consumer && !this.consumer.isLegacy) {
+      throw new Error(
+        `unable to write component "${this.component.id.toString()}", it is a legacy component and this workspace is Harmony`
+      );
+    }
   }
 
   async populateFilesToWriteToComponentDir(packageManager?: string) {
@@ -232,6 +240,8 @@ export default class ComponentWriter {
         if (!(artifactFiles instanceof ArtifactFiles)) {
           artifactFiles = deserializeArtifactFiles(artifactFiles);
         }
+        // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
+        // see artifact-files.importMultipleDistsArtifacts().
         const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
@@ -345,20 +355,24 @@ export default class ComponentWriter {
    */
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
-    const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
-    if (componentMapExistWithSameVersion) {
-      if (
-        this.existingComponentMap &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
-        this.origin === COMPONENT_ORIGINS.NESTED
-      ) {
-        return;
+    if (this.consumer?.isLegacy) {
+      // this logic is not needed in Harmony, and we can't just remove the component as it may have
+      // lanes data
+      const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
+      if (componentMapExistWithSameVersion) {
+        if (
+          this.existingComponentMap &&
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
+          this.origin === COMPONENT_ORIGINS.NESTED
+        ) {
+          return;
+        }
+        this.bitMap.removeComponent(this.component.id);
       }
-      this.bitMap.removeComponent(this.component.id);
     }
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
+    // @ts-ignore this.component.componentMap is set
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 

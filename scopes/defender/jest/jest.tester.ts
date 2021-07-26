@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
-// import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
@@ -11,19 +10,23 @@ import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-resul
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import type jest from 'jest';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
 
-const jest = require('jest');
-
 export class JestTester implements Tester {
+  private readonly jestModule: typeof jest;
+
   constructor(
     readonly id: string,
     readonly jestConfig: any,
-    private jestModule: typeof jest,
+    private jestModulePath: string,
     private jestWorker: HarmonyWorker<JestWorker>,
     private logger: Logger
-  ) {}
+  ) {
+    // eslint-disable-next-line global-require,import/no-dynamic-require
+    this.jestModule = require(jestModulePath);
+  }
 
   configPath = this.jestConfig;
 
@@ -135,11 +138,12 @@ export class JestTester implements Tester {
 
     if (context.debug) config.runInBand = true;
     config.runInBand = true;
+
     if (context.watch) {
       config.watchAll = true;
       config.noCache = true;
     }
-    // eslint-disable-next-line
+    // eslint-disable-next-line global-require,import/no-dynamic-require
     const jestConfig = require(this.jestConfig);
 
     const jestConfigWithSpecs = Object.assign(jestConfig, {
@@ -193,8 +197,12 @@ export class JestTester implements Tester {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.onTestComplete(cbFn);
 
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
+        await workerApi.watch(
+          this.jestConfig,
+          this.patternsToArray(context.patterns),
+          context.rootPath,
+          this.jestModulePath
+        );
       } catch (err) {
         this.logger.error('jest.tester.watch() caught an error', err);
       }

@@ -64,27 +64,28 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   describe('with new functionality (save added path as rootDir, no reduce on import)', () => {
     describe('when rootDir is not the same as the sharedDir', () => {
       before(() => {
+        helper.command.resetFeatures();
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
         helper.fs.outputFile('src/bar/foo.js');
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp');
       });
       it('should not strip the shared dir', () => {
         const bitMap = helper.bitMap.read();
-        const componentMap = bitMap[`${helper.scopes.remote}/comp@0.0.1`];
-        expect(componentMap.rootDir).to.equal('components/comp');
+        const componentMap = bitMap.comp;
+        expect(componentMap.rootDir).to.equal(`${helper.scopes.remote}/comp`);
         expect(componentMap.mainFile).to.equal('bar/foo.js');
       });
     });
   });
-  // most are skipped because we ended up not supporting this move from the old functionality to the new one
+  // skipped because we ended up not supporting this move from the old functionality to the new one
   // we might support it in the future in a different way, so I'm leaving it them as skipped
-  describe('moving from old-functionality to the new one', () => {
+  describe.skip('moving from old-functionality to the new one', () => {
     describe('when there is trackDir and not relative paths', () => {
       let output;
       before(() => {

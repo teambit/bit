@@ -1,4 +1,5 @@
-import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
+import { clone, equals, forEachObjIndexed } from 'ramda';
+import { isEmpty } from 'lodash';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
@@ -95,10 +96,10 @@ export default class Component extends BitObject {
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
-  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote main head
   /**
    * doesn't get saved in the scope, used to easier access the local snap head data
-   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this
    * prop is undefined.
    */
   laneHeadLocal?: Ref | null;
@@ -244,7 +245,7 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
-      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
@@ -299,18 +300,18 @@ export default class Component extends BitObject {
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
-    // backward compatibility. components created before v15 have master without head
+    // backward compatibility. components created before v15 have main without head
     // @ts-ignore
-    return semver.maxSatisfying(this.listVersions(), '*');
+    return semver.maxSatisfying(this.listVersions(), '*', { includePrerelease: true });
   }
 
   /**
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
    * `this.head` may not be populated, e.g. when a component was created on
-   * this lane and never got snapped on master.
+   * this lane and never got snapped on main.
    * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
-   * on master, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
+   * on main, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async latestIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
@@ -319,7 +320,7 @@ export default class Component extends BitObject {
     if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
-    // either a user is on master or a lane, check whether the remote is ahead of the local
+    // either a user is on main or a lane, check whether the remote is ahead of the local
     const allLocalHashes = await getAllVersionHashes(this, repo, false);
     const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
     if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
@@ -414,12 +415,13 @@ export default class Component extends BitObject {
   getVersionToAdd(
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
     exactVersion?: string | null,
-    incrementBy?: number
+    incrementBy?: number,
+    preRelease?: string
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy);
+    return exactVersion || this.version(releaseType, incrementBy, preRelease);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -459,7 +461,7 @@ export default class Component extends BitObject {
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new GeneralError(
-          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+          'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
       const versionToAddRef = Ref.from(versionToAdd);
@@ -473,7 +475,7 @@ export default class Component extends BitObject {
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;
     }
-    // user on master
+    // user on main
     const head = this.getHead();
     if (
       head &&
@@ -496,15 +498,19 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1): string {
-    const latest = this.latestVersion();
-    if (!latest) return DEFAULT_BIT_VERSION;
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preRelease?: string): string {
+    if (preRelease) releaseType = 'prerelease';
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    let result = semver.inc(latest, releaseType)!;
+    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preRelease)!;
+
+    const latest = this.latestVersion();
+    if (!latest) {
+      return preRelease ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
+    }
+    let result = increment(latest);
     if (incrementBy === 1) return result;
     for (let i = 1; i < incrementBy; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      result = semver.inc(result, releaseType)!;
+      result = increment(result);
     }
     return result;
   }
@@ -658,7 +664,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    manipulateDirData: ManipulateDirItem[] | null | undefined
+    manipulateDirData?: ManipulateDirItem[] | null
   ): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
@@ -829,12 +835,12 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }
-    // when on master, no need to traverse the parents because local snaps/tags are saved in the
+    // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
-    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;

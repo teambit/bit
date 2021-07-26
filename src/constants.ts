@@ -183,6 +183,7 @@ export const IGNORE_LIST = [
  */
 export const INIT_COMMAND = 'init';
 
+export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 /**
  * bit global config keys
  */
@@ -346,6 +347,8 @@ export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
 
 export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
 
+export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
+
 export const GLOBAL_CONFIG_FILE = 'config.json';
 
 export const GLOBAL_REMOTES = 'global-remotes.json';
@@ -423,7 +426,7 @@ export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
 
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
-export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+export const ANGULAR_BIT_ENTRY_POINT_FILE = ['public-api.ts', 'public_api.ts'];
 
 export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
 
@@ -439,7 +442,9 @@ export const HASH_SIZE = 40;
 // @todo: decide how the delimiter should look like
 export const LANE_REMOTE_DELIMITER = '/';
 
-export const DEFAULT_LANE = 'master';
+export const DEFAULT_LANE = 'main';
+
+export const PREVIOUS_DEFAULT_LANE = 'master';
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';

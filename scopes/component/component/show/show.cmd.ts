@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
-import Table from 'tty-table';
+import { CLITable } from '@teambit/cli-table';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
@@ -18,7 +18,7 @@ export class ShowCmd implements Command {
     ['r', 'remote', 'show a remote component'],
     [
       'c',
-      'compare [boolean]',
+      'compare',
       'compare current file system component to latest tagged component [default=latest]. only works in legacy.',
     ],
   ] as CommandOptions;
@@ -66,26 +66,7 @@ export class ShowCmd implements Command {
       })
     );
 
-    const options = {
-      borderStyle: 'solid',
-      paddingBottom: 0,
-      headerAlign: 'center',
-      align: 'left',
-      headerColor: 'cyan',
-    };
-
-    const headers = [
-      {
-        width: 35,
-        color: 'cyan',
-      },
-      {
-        width: 150,
-        alias: 'content',
-      },
-    ];
-
-    const table = new Table(headers, rows, options);
+    const table = new CLITable([], rows);
     return table.render();
   }
 

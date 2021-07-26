@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
+import semver, { ReleaseType } from 'semver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -43,9 +43,16 @@ import { pathNormalizeToLinux, sortObject } from '../utils';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
-import { PathAbsolute, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../utils/path';
+import {
+  PathAbsolute,
+  PathLinuxRelative,
+  PathOsBased,
+  PathOsBasedAbsolute,
+  PathOsBasedRelative,
+  PathRelative,
+} from '../utils/path';
 import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
-import ComponentMap from './bit-map/component-map';
+import ComponentMap, { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
@@ -194,7 +201,7 @@ export default class Consumer {
    * Running migration process for consumer to update the stores (.bit.map.json) to the current version
    *
    * @param {any} verbose - print debug logs
-   * @returns {Object} - wether the process run and wether it successeded
+   * @returns {Object} - wether the process run and wether it succeeded
    * @memberof Consumer
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -543,7 +550,7 @@ export default class Consumer {
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
       incrementBy?: number;
-      ignoreUnresolvedDependencies: boolean | undefined;
+      ignoreIssues: boolean | undefined;
     } & BasicTagParams
   ): Promise<{
     taggedComponents: Component[];
@@ -561,7 +568,7 @@ export default class Consumer {
       await this.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this._loadComponentsForTag(ids);
-    this.throwForComponentIssues(components, tagParams.ignoreUnresolvedDependencies);
+    this.throwForComponentIssues(components, tagParams.ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -577,28 +584,34 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
-  private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
+  private throwForComponentIssues(components: Component[], ignoreIssues?: boolean) {
     components.forEach((component) => {
       if (this.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.relativeComponentsAuthored);
       }
     });
-    if (!ignoreUnresolvedDependencies) {
+    if (!ignoreIssues) {
       const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
       if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
     }
   }
 
-  updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
+  updateNextVersionOnBitmap(
+    taggedComponents: Component[],
+    exactVersion?: string | null,
+    releaseType?: ReleaseType,
+    preRelease?: string
+  ) {
     taggedComponents.forEach((taggedComponent) => {
       const log = taggedComponent.log;
       if (!log) throw new Error('updateNextVersionOnBitmap, unable to get log');
-      const nextVersion = {
-        version: exactVersion || releaseType,
+      const nextVersion: NextVersion = {
+        version: exactVersion || (releaseType as string), // one of them is set for sure
         message: log.message,
         username: log.username,
         email: log.email,
       };
+      if (preRelease) nextVersion.preRelease = preRelease;
       if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
       taggedComponent.componentMap.updateNextVersion(nextVersion);
     });
@@ -609,24 +622,26 @@ export default class Consumer {
   async snap({
     ids,
     message = '',
-    ignoreUnresolvedDependencies = false,
+    ignoreIssues = false,
     force = false,
     skipTests = false,
     verbose = false,
     build,
     skipAutoSnap = false,
     resolveUnmerged = false,
+    disableTagAndSnapPipelines = false,
     forceDeploy = false,
   }: {
     ids: BitIds;
     message?: string;
-    ignoreUnresolvedDependencies?: boolean;
+    ignoreIssues?: boolean;
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
     build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
+    disableTagAndSnapPipelines?: boolean;
     forceDeploy?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
@@ -634,7 +649,7 @@ export default class Consumer {
     });
     const components = await this._loadComponentsForTag(ids);
 
-    this.throwForComponentIssues(components, ignoreUnresolvedDependencies);
+    this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -642,6 +657,7 @@ export default class Consumer {
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
+      ids,
       ignoreNewestVersion: false,
       scope: this.scope,
       message,
@@ -655,7 +671,7 @@ export default class Consumer {
       build,
       resolveUnmerged,
       isSnap: true,
-      disableDeployPipeline: false,
+      disableTagAndSnapPipelines,
       forceDeploy,
     });
 
@@ -663,7 +679,7 @@ export default class Consumer {
   }
 
   async _loadComponentsForTag(ids: BitIds): Promise<Component[]> {
-    const { components } = await this.loadComponents(ids);
+    const { components } = await this.loadComponents(ids.toVersionLatest());
     if (this.isLegacy) {
       return components;
     }
@@ -718,7 +734,7 @@ export default class Consumer {
       return componentMap.rootDir;
     };
     const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMaster = async (component: ModelComponent | Component): Promise<boolean> => {
+    const isAvailableOnMain = async (component: ModelComponent | Component): Promise<boolean> => {
       if (currentLane.isDefault()) return true;
       const modelComponent =
         component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
@@ -731,8 +747,8 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const availableOnMaster = await isAvailableOnMaster(unknownComponent);
-      if (!availableOnMaster) {
+      const availableOnMain = await isAvailableOnMain(unknownComponent);
+      if (!availableOnMain) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
@@ -790,7 +806,7 @@ export default class Consumer {
     return withoutPrefix;
   }
 
-  composeRelativeComponentPath(bitId: BitId): string {
+  composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
     const { componentsDefaultDirectory } = this.dirStructure;
     // in the past, scope was the full-scope (owner+scope-name), currently, scope is only the scope-name.
     const compDirBackwardCompatible = this.isLegacy

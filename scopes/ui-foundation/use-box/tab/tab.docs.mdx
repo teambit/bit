@@ -1,0 +1,28 @@
+---
+description: A tab that displays an icon
+labels: ['react', 'ui-component', 'component', 'tab']
+---
+
+import { Tab } from './tab';
+
+```js live
+<Tab title="bit" icon="bit" onClick={() => {}} />
+```
+
+an active tab
+
+```js live
+<div style={{ display: 'flex', alignItems: 'center' }}>
+  <Tab isActive title="bit" icon="bit" onClick={() => {}} />
+</div>
+```
+
+multiple tabs with one active
+
+```js live
+<div style={{ display: 'flex', alignItems: 'center' }}>
+  <Tab isActive title="bit" icon="bit" onClick={() => {}} />
+  <Tab title="npm" icon="npm" onClick={() => {}} />
+  <Tab title="yarn" icon="yarn" onClick={() => {}} />
+</div>
+```

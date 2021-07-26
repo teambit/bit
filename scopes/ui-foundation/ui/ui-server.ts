@@ -4,7 +4,7 @@ import { GraphqlMain } from '@teambit/graphql';
 import { Logger } from '@teambit/logger';
 import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
-import getPort from 'get-port';
+import { Port } from '@teambit/toolbox.network.get-port';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
@@ -31,9 +31,9 @@ export type UIServerProps = {
 
 export type StartOptions = {
   /**
-   * port for the UI server to bind. default is a port range of 4000-4200.
+   * port range for the UI server to bind. default is a port range of 4000-4200.
    */
-  port?: number;
+  portRange?: number[] | number;
 };
 
 export class UIServer {
@@ -58,6 +58,21 @@ export class UIServer {
     return this._port;
   }
 
+  /** the hostname for the server to listen at. Currently statically 'localhost' */
+  get host() {
+    return 'localhost';
+  }
+
+  /** the server listens at this url */
+  get fullUrl() {
+    const port = this.port !== 80 ? `:${this.port}` : '';
+    return `http://${this.host}${port}`;
+  }
+
+  get buildOptions() {
+    return this.uiRoot.buildOptions;
+  }
+
   /**
    * get the webpack configuration of the UI server.
    */
@@ -76,10 +91,8 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ port }: StartOptions = {}) {
+  async start({ portRange }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
-    // TODO: better handle ports.
-    const selectedPort = await this.selectPort(port || 4000);
     const publicDir = `/${this.publicDir}`;
     const root = join(this.uiRoot.path, publicDir);
     const server = await this.graphql.createServer({ app });
@@ -91,37 +104,44 @@ export class UIServer {
     // setting `index: false` so index.html will be served by the fallback() middleware
     app.use(express.static(root, { index: false }));
 
-    if (this.uiRoot.buildOptions?.ssr) {
-      const ssrMiddleware = await createSsrMiddleware({
-        root,
-        port: selectedPort,
-        title: this.uiRoot.name,
-        logger: this.logger,
-      });
+    const port = await Port.getPortFromRange(portRange || [3100, 3200]);
 
-      if (ssrMiddleware) {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        app.get('*', ssrMiddleware);
-        this.logger.debug('[ssr] serving for "*"');
-      } else {
-        this.logger.warn('[ssr] middleware failed setup');
-      }
-    }
+    await this.setupServerSideRendering({ root, port, app });
 
     // in any and all other cases, serve index.html.
     // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
 
-    server.listen(selectedPort);
-    this._port = selectedPort;
+    server.listen(port);
+    this._port = port;
 
-    this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
+    this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
   }
 
   getPluginsComponents() {
     return this.plugins.map((plugin) => {
       return plugin.render();
     });
+  }
+
+  private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
+    if (!this.buildOptions?.ssr) return;
+
+    const ssrMiddleware = await createSsrMiddleware({
+      root,
+      port,
+      title: this.uiRoot.name,
+      logger: this.logger,
+    });
+
+    if (!ssrMiddleware) {
+      this.logger.warn('[ssr] middleware failed setup');
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.get('*', ssrMiddleware);
+    this.logger.debug('[ssr] serving for "*"');
   }
 
   private async configureProxy(app: Express, server: Server) {
@@ -148,22 +168,21 @@ export class UIServer {
   /**
    * start a UI dev server.
    */
-  async dev({ port }: StartOptions = {}) {
-    const selectedPort = await this.selectPort(port);
-    // improve port management.
-    await this.start({ port: await getPort({ port: 4000 }) });
+  async dev({ portRange }: StartOptions = {}) {
+    const selectedPort = await this.selectPort(portRange);
+    await this.start({ portRange: [4100, 4200] });
     const config = await this.getDevConfig();
     const compiler = webpack(config);
-    const devServerConfig = await this.getDevServerConfig(config.devServer);
+    const devServerConfig = await this.getDevServerConfig(this._port, config.devServer);
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(compiler, devServerConfig);
     devServer.listen(selectedPort);
+    this._port = selectedPort;
     return devServer;
   }
 
-  private async selectPort(port?: number) {
-    if (port) return port;
-    return getPort({ port: getPort.makeRange(3100, 3200) });
+  private async selectPort(portRange?: number[] | number) {
+    return Port.getPortFromRange(portRange || [3100, 3200]);
   }
 
   private async getProxyFromPlugins() {
@@ -174,18 +193,18 @@ export class UIServer {
     return flatten(await Promise.all(proxiesByPlugin));
   }
 
-  private async getProxy() {
+  private async getProxy(port = 4000) {
     const proxyEntries = await this.getProxyFromPlugins();
 
     const gqlProxies: ProxyEntry[] = [
       {
         context: ['/graphql', '/api'],
-        target: 'http://localhost:4000',
+        target: `http://${this.host}:${port}`,
         changeOrigin: true,
       },
       {
         context: ['/subscriptions'],
-        target: 'ws://localhost:4000',
+        target: `ws://${this.host}:${port}`,
         ws: true,
       },
     ];
@@ -193,8 +212,8 @@ export class UIServer {
     return gqlProxies.concat(proxyEntries);
   }
 
-  private async getDevServerConfig(config?: webpack.Configuration): Promise<webpack.Configuration> {
-    const proxy = await this.getProxy();
+  private async getDevServerConfig(port: number, config?: webpack.Configuration): Promise<webpack.Configuration> {
+    const proxy = await this.getProxy(port);
     const devServerConf = { ...config, proxy };
 
     return devServerConf;

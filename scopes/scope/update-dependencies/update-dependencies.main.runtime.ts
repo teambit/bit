@@ -24,11 +24,13 @@ import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 
 export type UpdateDepsOptions = {
   tag?: boolean;
+  simulation?: boolean;
   output?: string;
   message?: string;
   username?: string;
   email?: string;
   push?: boolean;
+  skipNewScopeValidation?: boolean;
 };
 
 export type DepUpdateItemRaw = {
@@ -75,16 +77,18 @@ export class UpdateDependenciesMain {
     updateDepsOptions: UpdateDepsOptions
   ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
+    await this.validateScopeIsNew();
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
     await this.updateFutureVersion();
     await this.updateAllDeps();
     this.addLogToComponents();
-    await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+    if (!updateDepsOptions.simulation) {
+      await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+    }
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();
-    // await this.scope.reloadAspectsWithNewVersion(this.legacyComponents);
     await mapSeries(this.components, (component) => this.scope.loadComponentsAspect(component));
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       this.components,
@@ -118,6 +122,19 @@ export class UpdateDependenciesMain {
     this.onPostUpdateDependenciesSlot.register(fn);
   }
 
+  private async validateScopeIsNew() {
+    if (this.updateDepsOptions.skipNewScopeValidation) {
+      return;
+    }
+    const ids = await this.scope.listIds();
+    if (ids.length) {
+      // it means this scope is a real remote scope with components, not just cache
+      throw new Error(`unable to run update-dependencies command on an existing scope "${this.scope.name}".
+please create a new scope (bit init --bare) and run it from there.
+to bypass this error, use --skip-new-scope-validation flag (not recommended. it could corrupt the components irreversibly)`);
+    }
+  }
+
   private async triggerOnPostUpdateDependencies() {
     await Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
       this.logger.error('got an error during on-post-updates hook', err)
@@ -126,10 +143,13 @@ export class UpdateDependenciesMain {
 
   private async importAllMissing(depsUpdateItemsRaw: DepUpdateItemRaw[]) {
     const componentIds = depsUpdateItemsRaw.map((d) => ComponentID.fromString(d.componentId));
-    const dependenciesIds = depsUpdateItemsRaw.map((item) =>
-      item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
-    );
-    const idsToImport = [...flatten(dependenciesIds), ...componentIds];
+    const idsToImport = componentIds;
+    if (!this.updateDepsOptions.simulation) {
+      const dependenciesIds = depsUpdateItemsRaw.map((item) =>
+        item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
+      );
+      idsToImport.push(...flatten(dependenciesIds));
+    }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
     await this.scope.import(idsToImport, false);
@@ -190,6 +210,11 @@ export class UpdateDependenciesMain {
 
   private async getDependencyWithExactVersion(depStr: string): Promise<ComponentID> {
     const compId = ComponentID.fromString(depStr);
+    if (this.updateDepsOptions.simulation) {
+      // for simulation, we don't have the objects of the dependencies, so don't try to find the
+      // exact version, expect the entered version to be okay.
+      return compId;
+    }
     const range = compId.version || '*'; // if not version specified, assume the latest
     const id = compId.changeVersion(undefined);
     const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);

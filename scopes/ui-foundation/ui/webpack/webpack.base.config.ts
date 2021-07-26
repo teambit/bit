@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import webpack, { Configuration } from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
@@ -5,6 +6,15 @@ import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
+import { postCssConfig } from './postcss.config';
+
+const baseStyleLoadersOptions = {
+  miniCssExtractPlugin: MiniCssExtractPlugin.loader,
+  cssLoaderPath: require.resolve('css-loader'),
+  postCssLoaderPath: require.resolve('postcss-loader'),
+  postCssConfig,
+};
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -26,48 +36,6 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
 const isEnvProduction = true;
-
-// common function to get style loaders
-const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
-  const loaders = [
-    {
-      loader: MiniCssExtractPlugin.loader,
-    },
-    {
-      loader: require.resolve('css-loader'),
-      options: cssOptions,
-    },
-    {
-      // Options for PostCSS as we reference these options twice
-      // Adds vendor prefixing based on your specified browser support in
-      // package.json
-      loader: require.resolve('postcss-loader'),
-      options: {
-        postcssOptions: {
-          config: path.resolve(__dirname, 'postcss.config.js'),
-        },
-        sourceMap: isEnvProduction && shouldUseSourceMap,
-      },
-    },
-  ].filter(Boolean);
-  if (preProcessor) {
-    loaders.push(
-      {
-        loader: require.resolve('resolve-url-loader'),
-        options: {
-          sourceMap: isEnvProduction && shouldUseSourceMap,
-        },
-      },
-      {
-        loader: require.resolve(preProcessor),
-        options: {
-          sourceMap: true,
-        },
-      }
-    );
-  }
-  return loaders;
-};
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -169,10 +137,14 @@ export default function createWebpackConfig(
             // By default we support CSS Modules with the extension .module.css
             {
               test: stylesRegexps.cssNoModulesRegex,
-              use: getStyleLoaders({
-                importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
-              }),
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                  },
+                })
+              ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
               // Remove this when webpack adds a warning or an error for this.
@@ -183,11 +155,8 @@ export default function createWebpackConfig(
             // smaller than specified limit in bytes as data URLs to avoid requests.
             // A missing `test` is equivalent to a match.
             {
-              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/],
               type: 'asset',
-              generator: {
-                filename: 'static/media/[hash][ext][query]',
-              },
               parser: {
                 dataUrlCondition: {
                   maxSize: imageInlineSizeLimit,
@@ -203,18 +172,6 @@ export default function createWebpackConfig(
                 babelrc: false,
                 configFile: false,
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
-                plugins: [
-                  [
-                    require.resolve('babel-plugin-named-asset-import'),
-                    {
-                      loaderMap: {
-                        svg: {
-                          ReactComponent: '@svgr/webpack?-svgo,+titleProp,+ref![path]',
-                        },
-                      },
-                    },
-                  ],
-                ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
@@ -252,25 +209,36 @@ export default function createWebpackConfig(
             // using the extension .module.css
             {
               test: stylesRegexps.cssModuleRegex,
-              use: getStyleLoaders({
-                importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
-                modules: {
-                  getLocalIdent: getCSSModuleLocalIdent,
-                },
-              }),
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                })
+              ),
             },
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
             {
               test: stylesRegexps.sassNoModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 3,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                },
-                'sass-loader'
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 3,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('sass-loader'),
+                  },
+                })
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -282,25 +250,37 @@ export default function createWebpackConfig(
             // using the extension .module.scss or .module.sass
             {
               test: stylesRegexps.sassModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 3,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                  modules: {
-                    getLocalIdent: getCSSModuleLocalIdent,
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 3,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
                   },
-                },
-                'sass-loader'
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('sass-loader'),
+                  },
+                })
               ),
             },
             {
               test: stylesRegexps.lessNoModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 1,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                },
-                'less-loader'
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                  },
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('less-loader'),
+                  },
+                })
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -310,15 +290,21 @@ export default function createWebpackConfig(
             },
             {
               test: stylesRegexps.lessModuleRegex,
-              use: getStyleLoaders(
-                {
-                  importLoaders: 1,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
-                  modules: {
-                    getLocalIdent: getCSSModuleLocalIdent,
+              use: generateStyleLoaders(
+                merge({}, baseStyleLoadersOptions, {
+                  cssLoaderOpts: {
+                    importLoaders: 1,
+                    sourceMap: isEnvProduction || shouldUseSourceMap,
+                    modules: {
+                      getLocalIdent: getCSSModuleLocalIdent,
+                    },
                   },
-                },
-                'less-loader'
+                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
+                  preProcessOptions: {
+                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
+                    preProcessorPath: require.resolve('less-loader'),
+                  },
+                })
               ),
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
@@ -331,12 +317,8 @@ export default function createWebpackConfig(
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              loader: require.resolve('file-loader'),
               exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
               type: 'asset/resource',
-              generator: {
-                filename: 'static/media/[hash][ext][query]',
-              },
             },
             // ** STOP ** Are you adding a new loader?
             // Make sure to add the new loader(s) before the "file" loader.

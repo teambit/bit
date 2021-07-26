@@ -39,14 +39,14 @@
         },
         "devDependencies": {
           "@teambit/legacy": "-",
-          "@types/react": "^16.8.0",
-          "@types/react-dom": "^16.8.0"
+          "@types/react": "^17.0.8",
+          "@types/react-dom": "^17.0.5"
         },
         "peerDependencies": {
-          "react": "^16.8.0",
-          "react-dom": "^16.8.0",
-          "react-native-web": "^0.14.0",
-          "@teambit/legacy": "1.0.90"
+          "react": "^16.8.0 || ^17.0.0",
+          "react-dom": "^16.8.0 || ^17.0.0",
+          "react-native-web": "^0.16.0",
+          "@teambit/legacy": "1.0.127"
         }
       }
     },

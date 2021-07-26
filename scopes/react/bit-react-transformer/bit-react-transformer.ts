@@ -7,7 +7,7 @@ import { isClassComponent, isFunctionComponent } from './helpers';
 import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl, fieldIsExported } from './model';
 
 export type BitReactTransformerOptions = {
-  componentFilesPath: string;
+  componentFilesPath?: string;
 };
 
 const PLUGIN_NAME = 'bit-react-transformer';
@@ -20,7 +20,7 @@ type Api = { types: typeof Types };
  */
 export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
   let componentMap: Record<string, ComponentMeta>;
-  const types = api.types as typeof Types;
+  const types = api.types;
 
   function setMap(mapPath: string) {
     try {
@@ -33,12 +33,9 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   }
 
   const extractMeta = memoize(
-    (filePath: string) => {
-      return componentMap?.[filePath] || metaFromPackageJson(filePath);
-    },
-    {
-      primitive: true, // optimize for strings
-    }
+    (filePath: string) => componentMap?.[filePath] || metaFromPackageJson(filePath),
+    // optimize for string input:
+    { primitive: true }
   );
 
   function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
@@ -57,17 +54,12 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   const visitor: Visitor<PluginPass> = {
     // visits the start of the file, right after `"use strict"`
     Program(path, state) {
+      // // Do not use .stop() or .skip(), it will stop all other babel plugins as well.
       const filename = state.file.opts.filename;
-      if (!filename) {
-        path.stop(); // stop traversal
-        return;
-      }
+      if (!filename) return;
 
       const meta = extractMeta(filename);
-      if (!meta) {
-        path.stop(); // stop traversal
-        return;
-      }
+      if (!meta) return;
 
       const deceleration = metaToDeceleration(meta, types);
 
@@ -79,14 +71,14 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       // if (!isFunctionComponent(path.node.body)) return;
       const name = path.node.id?.name;
       const filename = state.file.opts.filename;
-      if (!name || !filename) return;
+      if (!name || !filename || !extractMeta(filename)) return;
 
       addComponentId(path, filename, name);
     },
 
     VariableDeclarator(path, state) {
       const filename = state.file.opts.filename;
-      if (!filename) return;
+      if (!filename || !extractMeta(filename)) return;
 
       const node = path.node;
       if (!node.init) return;
@@ -111,7 +103,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
 
     ClassDeclaration(path, state) {
       const filename = state.file.opts.filename;
-      if (!filename) return;
+      if (!filename || !extractMeta(filename)) return;
       if (!isClassComponent(path.node)) return;
 
       const name = path.node.id.name;
@@ -127,7 +119,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       if (filepath && !componentMap) setMap(filepath);
     },
     post() {
-      // reset memoization, in case any file change between runs
+      // reset memoization, in case any file changes between runs
       extractMeta.clear();
     },
   };

@@ -11,7 +11,7 @@ export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) 
     const hashQuery = hash.split('?')[1];
     const query = queryString.parse(hashQuery);
     return query[PARAM_NAME] === 'true';
-  }, []);
+  }, [hash]);
 
   return <ComponentHighlighter disabled={!isActive}>{children}</ComponentHighlighter>;
 };

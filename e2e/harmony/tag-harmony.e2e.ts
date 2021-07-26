@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -12,7 +11,6 @@ describe('tag components on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -183,9 +181,9 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(3);
-      helper.command.tagWithoutBuild('comp3 0.0.3');
-      helper.command.tagWithoutBuild('comp2 0.0.2');
-      helper.command.tagWithoutBuild('comp1 0.0.1');
+      helper.command.tagWithoutBuild('comp3@0.0.3');
+      helper.command.tagWithoutBuild('comp2@0.0.2');
+      helper.command.tagWithoutBuild('comp1@0.0.1');
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without version', () => {
@@ -316,6 +314,52 @@ describe('tag components on Harmony', function () {
         expect(bitMap.comp1.version).to.equal('0.0.4');
         expect(bitMap.comp2.version).to.equal('0.0.4');
         expect(bitMap.comp3.version).to.equal('0.0.4');
+      });
+    });
+  });
+  describe('tag pre-release', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateComponents(3);
+      tagOutput = helper.command.tagAllWithoutBuild('--pre-release dev');
+    });
+    it('should tag all components according to the pre-release version', () => {
+      expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
+    });
+    describe('increment pre-release', () => {
+      before(() => {
+        helper.fixtures.populateComponents(3, undefined, 'v2');
+        tagOutput = helper.command.tagAllWithoutBuild('--pre-release');
+      });
+      it('should use the last pre-release identifier and increment it', () => {
+        expect(tagOutput).to.have.string('comp1@0.0.1-dev.1');
+      });
+    });
+  });
+  describe('soft-tag pre-release', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateComponents(3);
+      tagOutput = helper.command.softTag('--all --pre-release dev');
+    });
+    it('should save the pre-release name in the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      const nextVersion = bitMap.comp1.nextVersion;
+      expect(nextVersion.version).to.equal('prerelease');
+      expect(nextVersion.preRelease).to.equal('dev');
+    });
+    describe('persist the soft-tag', () => {
+      before(() => {
+        tagOutput = helper.command.persistTagWithoutBuild();
+      });
+      it('should use the data in the .bitmap file and tag as a pre-release version', () => {
+        expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
       });
     });
   });

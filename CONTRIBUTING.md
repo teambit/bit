@@ -9,19 +9,18 @@ the setup process is more involving than expected because we write bit using bit
 
 ### installation
 
-- one script to rule them all
+- make sure you have `bit` installed via `bvm` (see [instructions](https://harmony-docs.bit.dev/getting-started/installing-bit/)), then run:
 
 ```bash
-  $ npm run full-setup
+  $ npm run full-setup:bit
 ```
 
 the script does the following:
 
-1. installs a previous version of bit inside `build-harmony` directory.
-2. runs `bit install` to install all dependencies
-3. runs `bit compile` to compile all components in the workspace (Harmony code).
-4. compiles bit-legacy code (by `npm run build`).
-5. generates the d.ts files for the bit-legacy code (by `npm run build:types`).
+1. runs `bit install` to install all dependencies
+2. runs `bit compile` to compile all components in the workspace (Harmony code).
+3. compiles bit-legacy code (by `npm run build`).
+4. generates the d.ts files for the bit-legacy code (by `npm run build:types`).
 
 install command globally and link (in order to use the "bit-dev" command globally and always use the
 latest development build)
@@ -39,7 +38,7 @@ if you want your command to be different then the default (bit-dev) just add you
 for example:
 
 ```bash
-  npm run dev-link bit-dev
+  npm run dev-link bd
 ```
 
 bit will install these commands in `/usr/local/bin/` directory, so in order to remove them just use the bash `rm` command.
@@ -154,7 +153,7 @@ The bootstrap process (in Harmony) in general is as follows:
 2. Bit builds a graph of all core-aspects and aspects entered in the workspace.jsonc file.
 3. Once the graph is ready, it loads them all (calls their provider), so then all aspects instances are ready in-memory.
 4. An aspect can register to the CLI slot (`cli.register()`) and pass `Command` instances. (that's the main reason why all aspects must be loaded before anything else happen. Otherwise, commands won't be registered and the user will get an error about a non-exist command)
-5. `commander` package is used for parsing the commands. All `Command` instances are registered by `Commander`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
+5. `yargs` package is used for parsing the commands. All `Command` instances are registered by `yargs`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
 
 ### Workspace
 

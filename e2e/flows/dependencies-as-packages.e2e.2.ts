@@ -309,6 +309,21 @@ chai.use(require('chai-fs'));
           });
         });
       });
+      describe('installing in Harmony', () => {
+        before(() => {
+          helper.command.resetFeatures();
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.runCmd('npm init -y');
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.utils.is-type`);
+          helper.fs.outputFile('bar/index.js', `require('@ci/${helper.scopes.remote}.utils.is-type');`);
+          helper.command.addComponent('bar');
+          helper.command.compile();
+        });
+        it('should throw an error and prevent tagging the component', () => {
+          expect(() => helper.command.tagAllComponents()).to.throw('unable tagging');
+        });
+      });
     });
     describe('components with nested dependencies and compiler', () => {
       before(async () => {

@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -18,7 +17,6 @@ describe('dependency-resolver extension', function () {
   this.timeout(0);
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -77,7 +75,7 @@ describe('dependency-resolver extension', function () {
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
         expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.8.0');
+        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
       });
     });
     describe('policies added by extension', function () {
@@ -151,8 +149,8 @@ describe('dependency-resolver extension', function () {
       const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
-      // One of the entries is @types/jest coming from the node env
-      expect(depResolverExt.data.dependencies).to.have.lengthOf(2);
+      // some of the entries are @types/jest, @types/node, @babel/runtime coming from the node env
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(4);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
       expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);

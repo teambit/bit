@@ -8,6 +8,6 @@
   outline: none;
 
   &::placeholder {
-    color: var(--text-placeholder-color, #babec9);
+    color: var(--bit-text-inactive, #babec9);
   }
 }

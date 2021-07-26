@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { successEjectMessage } from '../../src/cli/templates/eject-template';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
@@ -14,7 +13,6 @@ describe('eject command on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -25,7 +23,6 @@ describe('eject command on Harmony', function () {
     let scopeBeforeEject: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;

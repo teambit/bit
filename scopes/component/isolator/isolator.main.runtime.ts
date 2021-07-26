@@ -22,12 +22,13 @@ import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { importMultipleDistsArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
-import { equals, map } from 'ramda';
+import equals from 'ramda/src/equals';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
@@ -322,6 +323,7 @@ export class IsolatorMain {
 
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
     const legacyComponents = components.map((component) => component.state._consumer.clone());
+    if (legacyScope) await importMultipleDistsArtifacts(legacyScope, legacyComponents);
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
@@ -398,9 +400,9 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     const capsules: Capsule[] = await Promise.all(
-      map((component: Component) => {
+      components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      }, components)
+      })
     );
     return capsules;
   }

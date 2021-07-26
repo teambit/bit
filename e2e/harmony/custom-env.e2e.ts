@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -13,7 +12,6 @@ describe('custom env', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -62,6 +60,18 @@ describe('custom env', function () {
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
       it('should untag successfully', () => {
         expect(() => helper.command.untag('--all')).to.not.throw();
+      });
+    });
+    describe('out-of-sync scenario where the id is changed during the process', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        helper.command.tagAllWithoutBuild();
+        const bitMapBeforeExport = helper.bitMap.read();
+        helper.command.export();
+        helper.bitMap.write(bitMapBeforeExport);
+      });
+      it('bit status should not throw ComponentNotFound error', () => {
+        expect(() => helper.command.status()).not.to.throw();
       });
     });
   });

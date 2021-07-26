@@ -6,8 +6,25 @@ import { docsFile } from './files/docs';
 // import { testFile } from './files/test';
 
 export const MDXComponent: ComponentTemplate = {
+  name: 'mdx',
+  description: 'MDX-file compiled by Bit to a reuseable component',
+
+  generateFiles: (context: ComponentContext) => {
+    const { name, namePascalCase: Name } = context;
+    const indexFile = {
+      relativePath: 'index.ts',
+      content: `export { default as ${Name} } from './${name}.mdx';
+`,
+    };
+
+    return [indexFile, componentFile(context), compositionFile(context), docsFile(context)];
+  },
+};
+
+export const deprecatedMDXComponent: ComponentTemplate = {
   name: 'mdx-component',
   description: 'MDX-file compiled by Bit to a reuseable component',
+  hidden: true,
 
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;

@@ -21,19 +21,19 @@ export default class Remove implements LegacyCommand {
   alias = 'rm';
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
-    ['t', 'track [boolean]', 'keep tracking component (default = false)'],
+    ['t', 'track', 'keep tracking component (default = false)'],
     [
       'd',
-      'delete-files [boolean]',
+      'delete-files',
       'delete local component files (authored components only. for imported components the files are always deleted)',
     ],
     [
       'f',
-      'force [boolean]',
+      'force',
       'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
-    ['s', 'silent [boolean]', 'skip confirmation'],
-    ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane'],
+    ['s', 'silent', 'skip confirmation'],
+    ['', 'lane', 'EXPERIMENTAL. remove a lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;

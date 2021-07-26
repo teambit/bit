@@ -1,11 +1,11 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { TestLoader } from './test-loader';
 
 export function TestLoaderExample() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TestLoader />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }

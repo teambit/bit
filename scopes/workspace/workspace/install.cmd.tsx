@@ -11,6 +11,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   updateExisting: boolean;
+  savePrefix: string;
 };
 
 export default class InstallCmd implements Command {
@@ -23,6 +24,7 @@ export default class InstallCmd implements Command {
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', 'runtime (default), dev or peer dependency'],
     ['u', 'update-existing [updateExisting]', 'update existing dependencies version and types'],
+    ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
   ] as CommandOptions;
@@ -39,7 +41,7 @@ export default class InstallCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report([packages]: [string[]], options: InstallCmdOptions) {
+  async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
@@ -48,6 +50,7 @@ export default class InstallCmd implements Command {
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
       updateExisting: options.updateExisting,
+      savePrefix: options.savePrefix,
     };
     const components = await this.workspace.install(packages, installOpts);
     const endTime = Date.now();

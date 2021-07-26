@@ -35,6 +35,11 @@ export type LintResult = {
    * lint messages.
    */
   messages: LintMessage[];
+
+  /**
+   * Raw data as returned from the linter
+   */
+  raw: any;
 };
 
 export type LintMessage = {
@@ -75,7 +80,7 @@ export type LintMessage = {
 
 export type LintResults = {
   results: ComponentLintResult[];
-  errors: [];
+  errors: Error[];
 };
 
 export interface Linter {

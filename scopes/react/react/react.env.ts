@@ -6,7 +6,16 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import {
+  BuilderEnv,
+  CompilerEnv,
+  DependenciesEnv,
+  DevEnv,
+  LinterEnv,
+  PackageEnv,
+  TesterEnv,
+  FormatterEnv,
+} from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -14,27 +23,46 @@ import { TypescriptMain } from '@teambit/typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain } from '@teambit/eslint';
+import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
+import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
+import { Linter, LinterContext } from '@teambit/linter';
+import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
+import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
+// Makes sure the @teambit/react.ui.docs-app is a dependency
+// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ReactMainConfig } from './react.main.runtime';
-import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
-import previewConfigFactory from './webpack/webpack.config.preview';
-import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
+// webpack configs for both components and envs
+import basePreviewConfigFactory from './webpack/webpack.config.base';
+import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
+
+// webpack configs for envs only
+// import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+
+// webpack configs for components only
+import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
+import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+
 export const AspectEnvType = 'react';
-const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
+const eslintConfig = require('./eslint/eslintrc');
+const prettierConfig = require('./prettier/prettier.config.js');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements Environment {
+export class ReactEnv
+  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv
+{
   constructor(
     /**
      * jest extension
@@ -73,26 +101,32 @@ export class ReactEnv implements Environment {
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private prettier: PrettierMain
   ) {}
 
-  getTsConfig(targetTsConfig?: TsConfigSourceFile) {
+  getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
     return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
-  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
+  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
     return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jestM): Tester {
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModule);
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
-  createTsCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
+  createTsCompiler(
+    targetConfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
+  ) {
     const tsconfig = this.getTsConfig(targetConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     const additionalTypes = compilerOptions.types || [];
@@ -117,19 +151,47 @@ export class ReactEnv implements Environment {
     );
   }
 
-  getCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
+  getCompiler(
+    targetConfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
+  ) {
     return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
   }
 
   /**
    * returns and configures the component linter.
    */
-  getLinter() {
-    return this.eslint.createLinter({
-      config: eslintConfig,
-      // resolve all plugins from the react environment.
-      pluginPath: __dirname,
-    });
+  getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const defaultTransformer: EslintConfigTransformer = (configMutator) => {
+      configMutator.addExtensionTypes(['.md', '.mdx']);
+      return configMutator;
+    };
+
+    const allTransformers = [defaultTransformer, ...transformers];
+
+    return this.eslint.createLinter(
+      context,
+      {
+        config: eslintConfig,
+        // resolve all plugins from the react environment.
+        pluginPath: __dirname,
+      },
+      allTransformers
+    );
+  }
+
+  /**
+   * returns and configures the component formatter.
+   */
+  getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
+    return this.prettier.createFormatter(
+      context,
+      {
+        config: prettierConfig,
+      },
+      transformers
+    );
   }
 
   private getFileMap(components: Component[], local = false) {
@@ -153,14 +215,8 @@ export class ReactEnv implements Environment {
   }
 
   /**
-   * get the default react webpack config.
+   * required for `bit start`
    */
-  private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components, true);
-
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
-  }
-
   getDevEnvId(id?: string) {
     if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;
@@ -169,27 +225,40 @@ export class ReactEnv implements Environment {
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
+  getSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
     return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
   }
 
   /**
    * returns and configures the React component dev server.
+   * required for `bit start`
    */
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
-    const defaultConfig = this.getDevWebpackConfig(context);
+    const baseConfig = basePreviewConfigFactory(false);
+    const envDevConfig = envPreviewDevConfigFactory(context.id);
+    // const fileMapPath = this.writeFileMap(context.components, true);
+    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
+      return merged;
     };
 
     return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const path = this.writeFileMap(context.components);
-    const defaultConfig = previewConfigFactory(path);
+    // const fileMapPath = this.writeFileMap(context.components);
+    const baseConfig = basePreviewConfigFactory(true);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
+    const componentProdConfig = componentPreviewProdConfigFactory();
+
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
+      return merged;
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
@@ -216,16 +285,16 @@ export class ReactEnv implements Environment {
   }
 
   /**
-   * return a path to a docs template.
+   * returns a path to a docs template.
    */
   getDocsTemplate() {
-    return require.resolve('./docs');
+    return require.resolve('@teambit/react.ui.docs-app');
   }
 
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
-   * return a function which mounts a given component to DOM
+   * returns a paths to a function which mounts a given component to DOM
    */
   getMounter() {
     return require.resolve('./mount');
@@ -241,7 +310,7 @@ export class ReactEnv implements Environment {
   /**
    * adds dependencies to all configured components.
    */
-  async getDependencies() {
+  getDependencies() {
     return {
       dependencies: {
         react: '-',
@@ -254,13 +323,14 @@ export class ReactEnv implements Environment {
         'react-dom': '-',
         '@types/mocha': '-',
         '@types/node': '12.20.4',
-        '@types/react': '^16.8.0',
+        '@types/react': '^17.0.8',
+        '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
         // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.12.18',
+        '@types/testing-library__jest-dom': '5.9.5',
       },
-      // TODO: take version from config
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',
@@ -273,17 +343,19 @@ export class ReactEnv implements Environment {
    */
   getBuildPipe(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ): BuildTask[] {
-    return [this.getCompilerTask(tsconfig, compilerOptions), this.tester.task];
+    return [this.getCompilerTask(tsconfig, compilerOptions, tsModule), this.tester.task];
   }
 
   private getCompilerTask(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions));
+    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions, tsModule));
   }
 
   async __getDescriptor() {

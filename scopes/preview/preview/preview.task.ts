@@ -41,14 +41,14 @@ export class PreviewTask implements BuildTask {
       rootPath: url,
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
     return bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);
   }
 
   async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-    const previewMain = await this.preview.writePreviewRuntime();
+    const previewMain = await this.preview.writePreviewRuntime(context);
 
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([capsule.component]);

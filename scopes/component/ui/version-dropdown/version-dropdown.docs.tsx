@@ -2,13 +2,13 @@ import React from 'react';
 import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionDropdown } from './version-dropdown';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>
           The version-dropdown displays the latest version of the viewed component. <br />
@@ -17,7 +17,7 @@ export default function Overview() {
         </Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 

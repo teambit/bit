@@ -340,7 +340,7 @@ console.log(barFoo.default());`;
       const RelativeCompClass = IssuesClasses.relativeComponents;
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
-      expect(output).to.have.string(new RelativeCompClass().description);
+      expect(output).to.have.string(new RelativeCompClass().descriptionWithSolution);
       expect(output).to.have.string('is-string.js -> utils/is-type');
     });
   });
@@ -372,7 +372,7 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       const RelativeCompClass = IssuesClasses.relativeComponents;
-      expect(output).to.have.string(new RelativeCompClass().description);
+      expect(output).to.have.string(new RelativeCompClass().descriptionWithSolution);
     });
   });
 
@@ -436,8 +436,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.command.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
+      helper.command.importManyComponents(['utils/is-string@0.0.1', 'utils/is-type@0.0.2']);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.general.getRequireBitPath('utils', 'is-string');

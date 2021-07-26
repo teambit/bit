@@ -1,8 +1,6 @@
-import chalk from 'chalk';
-
 import { diff } from '../../../api/consumer';
 import { WILDCARD_HELP } from '../../../constants';
-import { DiffResults } from '../../../consumer/component-ops/components-diff';
+import { DiffResults, outputDiffResults } from '../../../consumer/component-ops/components-diff';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -24,27 +22,13 @@ export default class Diff implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     { verbose = false, table = false }: { verbose?: boolean; table: boolean }
   ): Promise<DiffResults[]> {
     return diff(values, verbose, table);
   }
 
   report(diffResults: DiffResults[]): string {
-    return diffResults
-      .map((diffResult) => {
-        if (diffResult.hasDiff) {
-          const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
-          const titleSeparator = new Array(titleStr.length).fill('-').join('');
-          const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
-          const files = filesWithDiff.map((fileDiff) => fileDiff.diffOutput).join('\n');
-          const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
-          return `${title}\n${files}\n${fields}`;
-        }
-        return `no diff for ${chalk.bold(diffResult.id.toString())}`;
-      })
-      .join('\n\n');
+    return outputDiffResults(diffResults);
   }
 }

@@ -148,7 +148,8 @@ export default class CommandHelper {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options} --build`);
+    const ver = version ? `@${version}` : '';
+    return this.runCmd(`bit tag ${id}${ver} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
@@ -181,6 +182,9 @@ export default class CommandHelper {
   persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
+  persistTagWithoutBuild(options = '') {
+    return this.runCmd(`bit tag --persist ${options}`, undefined, undefined, BUILD_ON_CI);
+  }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
   }
@@ -210,24 +214,29 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
   }
   showLanes(options = '') {
-    const results = this.runCmd(`bit lane ${options}`);
+    const results = this.runCmd(`bit lane list ${options}`);
     return removeChalkCharacters(results) as string;
   }
   showOneLane(name: string) {
-    return this.runCmd(`bit lane ${name}`);
+    return this.runCmd(`bit lane show ${name}`);
   }
   showLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane ${options} --json`);
+    const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
   showRemoteLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane --remote ${this.scopes.remote} ${options} --json`);
+    const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
   showOneLaneParsed(name: string) {
-    const results = this.runCmd(`bit lane ${name} --json`);
+    const results = this.runCmd(`bit lane show ${name} --json`);
     const parsed = JSON.parse(results);
-    return parsed.lanes[0];
+    return parsed;
+  }
+  diffLane(args = '', onScope = false) {
+    const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
+    const output = this.runCmd(`bit lane diff ${args}`, cwd);
+    return removeChalkCharacters(output) as string;
   }
   getHead(id: string, cwd?: string) {
     const comp = this.catComponent(id, cwd);
@@ -257,7 +266,7 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
-  exportLane(laneName: string, scope: string = this.scopes.remote, assert = true) {
+  exportLane(laneName = '', scope: string = this.scopes.remote, assert = true) {
     const result = this.runCmd(`bit export ${scope} ${laneName} --force --lanes`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
@@ -388,8 +397,8 @@ export default class CommandHelper {
     return this.runCmd('bit status');
   }
 
-  statusJson() {
-    const status = this.runCmd('bit status --json');
+  statusJson(cwd = this.scopes.localPath) {
+    const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
   }
 
@@ -415,8 +424,8 @@ export default class CommandHelper {
     return statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
   }
 
-  expectStatusToNotHaveIssues() {
-    const statusJson = this.statusJson();
+  expectStatusToNotHaveIssues(cwd = this.scopes.localPath) {
+    const statusJson = this.statusJson(cwd);
     ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
@@ -496,6 +505,9 @@ export default class CommandHelper {
   }
   create(templateName: string, componentName: string, flags = '') {
     return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  }
+  new(templateName: string, flags = '', workspaceName = 'my-workspace') {
+    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

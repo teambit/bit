@@ -21,10 +21,11 @@ export default class Snap implements LegacyCommand {
     ['a', 'all', 'snap all new and modified components'],
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
+    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
+    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
   ] as CommandOptions;
   loader = true;
@@ -38,20 +39,22 @@ export default class Snap implements LegacyCommand {
       all = false,
       force = false,
       verbose = false,
-      ignoreUnresolvedDependencies = false,
+      ignoreIssues = false,
       build,
       skipTests = false,
       skipAutoSnap = false,
+      disableSnapPipeline = false,
       forceDeploy = false,
     }: {
       message?: string;
       all?: boolean;
       force?: boolean;
       verbose?: boolean;
-      ignoreUnresolvedDependencies?: boolean;
+      ignoreIssues?: boolean;
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
+      disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
     }
   ): Promise<any> {
@@ -64,16 +67,21 @@ export default class Snap implements LegacyCommand {
         'you can use either a specific component [id] to snap a particular component or --all flag to snap them all'
       );
     }
+    const disableTagAndSnapPipelines = disableSnapPipeline;
+    if (disableTagAndSnapPipelines && forceDeploy) {
+      throw new GeneralError('you can use either force-deploy or disable-snap-pipeline, but not both');
+    }
 
     return snapAction({
       id,
       message,
       force,
       verbose,
-      ignoreUnresolvedDependencies,
+      ignoreIssues,
       build,
       skipTests,
       skipAutoSnap,
+      disableTagAndSnapPipelines,
       forceDeploy,
     });
   }

@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import { generateRandomStr } from '../../src/utils';
@@ -14,7 +13,6 @@ describe('publish functionality', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -26,6 +24,7 @@ describe('publish functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -47,7 +46,7 @@ describe('publish functionality', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      describe('automatically by onPostPersistTag hook', () => {
+      describe('automatically by tag pipeline', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
           helper.command.tagAllComponents();
@@ -77,6 +76,23 @@ describe('publish functionality', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '2.0.0');
+          helper.fs.outputFile(
+            'app.js',
+            `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
+          );
+          const output = helper.command.runCmd('node app.js');
+          expect(output.trim()).to.be.equal(appOutput.trim());
+        });
+      });
+      describe('with pre-release', () => {
+        before(async () => {
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.command.tagScope('3.0.0-dev.1');
+        });
+        it('should publish with the tag flag and be able to npm install them by the tag name', () => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.npm.initNpm();
+          helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, 'dev');
           helper.fs.outputFile(
             'app.js',
             `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`

@@ -1,12 +1,11 @@
-import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, omit } from 'lodash';
 import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
@@ -33,6 +32,7 @@ import { PackageRoute, routePath } from './package.route';
 import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
 import { PackageFragment } from './package.fragment';
+import { PackTask } from './pack.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -124,7 +124,20 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, logPublisher);
+    const packTask = new PackTask(PkgAspect.id, packer, logPublisher);
+    const pkg = new PkgMain(
+      logPublisher,
+      config,
+      packageJsonPropsRegistry,
+      workspace,
+      scope,
+      builder,
+      packer,
+      envs,
+      componentAspect,
+      publishTask
+    );
 
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
@@ -135,10 +148,10 @@ export class PkgMain {
 
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
     dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
-    builder.registerDeployTasks([publishTask]);
+    builder.registerTagTasks([packTask, publishTask]);
+    builder.registerSnapTasks([packTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -167,8 +180,7 @@ export class PkgMain {
    */
   getModulePath(component: Component) {
     const pkgName = this.getPackageName(component);
-    const path = join('node_modules', pkgName);
-    return path;
+    return join('node_modules', pkgName);
   }
 
   /**
@@ -179,6 +191,10 @@ export class PkgMain {
    * @memberof PkgExtension
    */
   constructor(
+    /**
+     * logger extension
+     */
+    readonly logger: Logger,
     /**
      * pkg extension configuration.
      */
@@ -203,7 +219,12 @@ export class PkgMain {
      */
     private envs: EnvsMain,
 
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+
+    /**
+     * keep it as public. external env might want to register it to the snap pipeline
+     */
+    public publishTask: PublishTask
   ) {}
 
   /**
@@ -236,7 +257,7 @@ export class PkgMain {
    * 3. props defined by the user (they are the strongest one)
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
-    let newProps = {};
+    let newProps: PackageJsonProps = {};
     const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
@@ -253,18 +274,18 @@ export class PkgMain {
     });
 
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
+    const currentConfig = currentExtension?.config as unknown as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
     // Keys not allowed to override
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    return R.omit(specialKeys, newProps);
+    return omit(newProps, specialKeys);
   }
 
   getPackageJsonModifications(component: Component): Record<string, any> {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = currentExtension?.data as unknown as ComponentPkgExtensionData;
     return currentData?.packageJsonModification ?? {};
   }
 
@@ -281,8 +302,10 @@ export class PkgMain {
     if (!latestVersion) {
       throw new BitError('can not get manifest for component without versions');
     }
+    const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
     const distTags = {
       latest: latestVersion,
+      ...preReleaseLatestTags,
     };
 
     const versions = await this.getAllSnapsManifests(component);
@@ -345,7 +368,8 @@ export class PkgMain {
     const pkgJson = currentData?.pkgJson ?? {};
     const checksum = currentData?.checksum;
     if (!checksum) {
-      throw new BitError(`checksum for ${component.id} is missing`);
+      this.logger.error(`checksum for ${component.id.toString()} is missing`);
+      return undefined;
     }
     const dist = {
       shasum: checksum,

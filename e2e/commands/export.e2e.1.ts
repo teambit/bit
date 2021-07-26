@@ -358,7 +358,7 @@ describe('bit export command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type');
-      helper.command.tagComponent('utils/is-type', undefined, '0.0.2 --force');
+      helper.command.tagComponent('utils/is-type@0.0.2', undefined, '--force');
       helper.command.exportAllComponents();
       const isType = helper.general.getRequireBitPath('utils', 'is-type');
       helper.fs.createFile(

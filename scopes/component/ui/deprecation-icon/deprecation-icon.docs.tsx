@@ -1,20 +1,20 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ComponentModel } from '@teambit/component';
 import { DeprecationIcon } from './deprecation-icon';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>
           The icon shows when the component is deprecated, and if it isn't, the DeprecationIcon will return null.
         </Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 

@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { isNilOrEmpty, compact } from 'ramda-adjunct';
+import pMap from 'p-map';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -23,6 +24,7 @@ import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
@@ -72,7 +74,9 @@ async function setFutureVersions(
   exactVersion: string | null | undefined,
   persist: boolean,
   autoTagIds: BitIds,
-  incrementBy?: number
+  ids: BitIds,
+  incrementBy?: number,
+  preRelease?: string
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -85,12 +89,23 @@ async function setFutureVersions(
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         componentToTag.version = modelComponent.getVersionToAdd(
           exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion
+          exactVersionOrReleaseType.exactVersion,
+          undefined,
+          componentToTag.componentMap?.nextVersion?.preRelease
         );
+      } else if (isAutoTag) {
+        componentToTag.version = modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease); // auto-tag always bumped as patch
       } else {
-        componentToTag.version = isAutoTag
-          ? modelComponent.getVersionToAdd('patch', undefined, incrementBy) // auto-tag always bumped as patch
-          : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy);
+        const enteredId = ids.searchWithoutVersion(componentToTag.id);
+        if (enteredId && enteredId.hasVersion()) {
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
+          componentToTag.version = modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion
+          );
+        } else {
+          componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
+        }
       }
     })
   );
@@ -165,10 +180,12 @@ function validateDirManipulation(components: Component[]): void {
 
 export default async function tagModelComponent({
   consumerComponents,
+  ids,
   scope,
   message,
   exactVersion,
   releaseType,
+  preRelease,
   force,
   consumer,
   ignoreNewestVersion = false,
@@ -180,11 +197,12 @@ export default async function tagModelComponent({
   persist,
   resolveUnmerged,
   isSnap = false,
-  disableDeployPipeline,
+  disableTagAndSnapPipelines,
   forceDeploy,
   incrementBy,
 }: {
   consumerComponents: Component[];
+  ids: BitIds;
   scope: Scope;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -276,7 +294,17 @@ export default async function tagModelComponent({
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
-    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist, autoTagIds, incrementBy);
+    : await setFutureVersions(
+        allComponentsToTag,
+        scope,
+        releaseType,
+        exactVersion,
+        persist,
+        autoTagIds,
+        ids,
+        incrementBy,
+        preRelease
+      );
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
@@ -284,20 +312,21 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await throwForLegacyDependenciesInsideHarmony(consumer, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
-    validateDirManipulation(allComponentsToTag);
+    if (consumer.isLegacy) validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
   }
 
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
-    const onTagOpts = { disableDeployPipeline, throwOnError: true, forceDeploy, skipTests };
+    const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
       func(allComponentsToTag, onTagOpts)
     );
@@ -338,6 +367,29 @@ export async function addFlattenedDependenciesToComponents(scope: Scope, compone
   const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
   loader.stop();
+}
+
+async function throwForLegacyDependenciesInsideHarmony(consumer: Consumer, components: Component[]) {
+  if (consumer.isLegacy) {
+    return;
+  }
+  const throwForComponent = async (component: Component) => {
+    const dependenciesIds = component.getAllDependenciesIds();
+    await Promise.all(
+      dependenciesIds.map(async (depId) => {
+        if (!depId.hasVersion()) return;
+        const modelComp = await consumer.scope.getModelComponentIfExist(depId);
+        if (!modelComp) return;
+        const version = await modelComp.loadVersion(depId.version as string, consumer.scope.objects);
+        if (version.isLegacy) {
+          throw new Error(
+            `unable tagging "${component.id.toString()}", its dependency "${depId.toString()}" is legacy`
+          );
+        }
+      })
+    );
+  };
+  await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
 }
 
 function addSpecsResultsToComponents(components: Component[], testsResults): void {

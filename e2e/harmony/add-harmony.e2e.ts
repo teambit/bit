@@ -1,6 +1,6 @@
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -11,10 +11,25 @@ describe('add command on Harmony', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
+  });
+  describe('adding files when workspace is new', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.createComponentBarFoo();
+    });
+    it('should throw an error AddingIndividualFiles', () => {
+      const addFunc = () => helper.command.addComponent('bar/foo.js');
+      const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
+      helper.general.expectToThrow(addFunc, error);
+    });
+    it('when excluding a file, should throw an error', () => {
+      helper.fs.outputFile('bar/foo1.js');
+      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
+      expect(cmd).to.throw('unable to exclude files when tracking a directory');
+    });
   });
   describe('add a directory inside an existing component', () => {
     before(() => {

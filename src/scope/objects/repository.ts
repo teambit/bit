@@ -121,7 +121,12 @@ export default class Repository {
         throw err;
       }
       logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
-      if (throws) throw err;
+      if (throws) {
+        // if we just `throw err` we loose the stack trace.
+        // see https://stackoverflow.com/questions/68022123/no-stack-in-fs-promises-readfile-enoent-error
+        const msg = `fatal: failed finding an object file ${this.objectPath(ref)} in the filesystem at ${err.path}`;
+        throw Object.assign(err, { stack: new Error(msg).stack });
+      }
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
@@ -328,7 +333,7 @@ export default class Repository {
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
       await this.deleteObjectsFromFS(this.objectsToRemove);
-      this._validateObjects(validate);
+      this.validateObjects(validate, Object.values(this.objects));
       await this.writeObjectsToTheFS(Object.values(this.objects));
       await this.writeRemoteLanes();
       await this.unmergedComponents.write();
@@ -368,9 +373,8 @@ export default class Repository {
    * can easily revert it by changing `bitObject.validateBeforePersist = false` line run regardless
    * the `validate` argument.
    */
-  _validateObjects(validate: boolean) {
-    Object.keys(this.objects).forEach((hash) => {
-      const bitObject = this.objects[hash];
+  validateObjects(validate: boolean, objects: BitObject[]) {
+    objects.forEach((bitObject) => {
       // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
         // @ts-ignore

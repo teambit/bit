@@ -110,6 +110,10 @@ commands: # reusable commands
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
+  install_bvm:
+    steps:
+      - run: npm i -g @teambit/bvm
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
 
   set_git_credentials:
     steps:
@@ -149,16 +153,38 @@ jobs:
           paths:
             - bit
 
+  symphony_docker_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
+      - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-symphony:latest
+
   docker_build:
     machine: true
     steps:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:latest .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:latest .
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit:latest
+
+  server_docker_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
+      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-server:latest
 
   set_ssh_key:
     <<: *defaults
@@ -184,14 +210,14 @@ jobs:
       # prod registry
       - run: npm config set @bit:registry https://node.bit.dev
       - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
-      - run: echo "always-auth=true" >> ~/.npmrc
+      # - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
       # run: 'npm config set @bit:registry https://node-stg.bit.dev'
       # -
       # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       - save_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -467,27 +493,45 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
-      - run:
-          name: 'install harmony'
-          command: 'cd bit && npm run install-harmony'
+
+      - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+      - run: bvm config set DEFAULT_LINK bbit
+      - run: bvm install 0.0.428
+      # - run: bvm upgrade
+      - run: bvm link --verbose
+      - run: bbit
+      - save_cache:
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - /home/circleci/.bvm
+      - run: cd bit && bbit install
+      - run: cd bit && npm run link-bit-legacy
+      - run: cd bit && bbit compile
+
       # - run:
-      #     name: 'import objects'
-      #     command: 'cd bit && npm run import-harmony'
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony'
-          no_output_timeout: '20m'
-      - run:
-          name: 'status harmony'
-          command: 'cd bit && npm run status-harmony'
+      #     name: 'install harmony'
+      #     command: 'cd bit && npm run install-harmony'
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony'
+      #     no_output_timeout: '20m'
+      # - run:
+      #     name: 'status harmony'
+      #     command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -518,7 +562,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       # - update_ssh_agent
       - run:
           name: 'bit status'
@@ -543,29 +587,40 @@ jobs:
       - attach_workspace:
           at: ./
       - bit_global_for_npm
+      - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
-      - run: cd bit && build-harmony/node_modules/.bin/bbit status
+      - run: bvm link
+      # - run: cd bit && build-harmony/node_modules/.bin/bbit status
+      - run: cd bit && bbit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
-      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bbit checkout latest --all --skip-npm-install
+      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
+      # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony-skip-import'
+      - run: cd bit && bbit install --skip-import
+      - run: cd bit && bbit compile
+      - run: cd bit && npm run link-bit-legacy
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
@@ -787,7 +842,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
       - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
@@ -837,7 +892,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
@@ -912,7 +967,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry8
+          key: bitsrc-registry9
           # key: bitsrc-registry-stg-v2
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -1475,9 +1530,15 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-      - docker_build:
+      - symphony_docker_build:
           requires:
             - bit_tag
+      - docker_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
 
   windows-nightly:
     triggers:
@@ -1523,7 +1584,6 @@ workflows:
   #           - windows_set_ssh_key
   #           - windows_bvm_install
   #           - windows_build_bvm
-
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
@@ -1580,8 +1640,15 @@ workflows:
           requires:
             - bit_tag
             - harmony_deploy_approval_job
-      - docker_build:
-          <<: *master_only_filter
+      - symphony_docker_build:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+      - docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build

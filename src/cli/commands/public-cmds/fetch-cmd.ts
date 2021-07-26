@@ -9,11 +9,17 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Fetch implements LegacyCommand {
   name = 'fetch [ids...]';
-  description = `fetch remote objects and store locally`;
+  shortDescription = `fetch remote objects and store locally`;
+  description = `fetch remote objects and store locally.
+for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
   alias = '';
   private = true;
   opts = [
-    ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
+    [
+      'l',
+      'lanes',
+      'EXPERIMENTAL. fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
+    ],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON'],
     [
@@ -25,7 +31,7 @@ export default class Fetch implements LegacyCommand {
   loader = true;
 
   action(
-    [ids]: [string[]],
+    [ids = []]: [string[]],
     {
       lanes = false,
       components = false,

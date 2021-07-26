@@ -27,10 +27,12 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   group = 'development';
   options = [
     ['', 'tag', 'tag once the build is completed (by default it snaps)'],
+    ['', 'simulation', 'simulation purpose. should never be pushed (otherwise, flattened-deps are invalid)'],
     ['', 'push', 'export the updated objects to the original scopes once tagged/snapped'],
     ['', 'message <string>', 'message to be saved as part of the version log'],
     ['', 'username <string>', 'username to be saved as part of the version log'],
     ['', 'email <string>', 'email to be saved as part of the version log'],
+    ['', 'skip-new-scope-validation', 'avoid throwing an error when running on a non-new scope'],
   ] as CommandOptions;
 
   constructor(
@@ -40,6 +42,9 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   ) {}
 
   async report([data]: [string], updateDepsOptions: UpdateDepsOptions) {
+    if (updateDepsOptions.push && updateDepsOptions.simulation) {
+      throw new Error('you cannot use both --push and --simulation flags');
+    }
     const depsUpdateItems = this.parseData(data);
     const results = await this.updateDependenciesMain.updateDependenciesVersions(depsUpdateItems, updateDepsOptions);
     const componentOutput = (depUpdateItem: DepUpdateItem) => {

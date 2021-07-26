@@ -55,6 +55,8 @@ export {
   LinkingOptions,
   DepsLinkedToEnvResult,
   NestedNMDepsLinksResult,
+  LinkToDirResult,
 } from './dependency-linker';
 export { InstallOptions } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
+export { DependencySource } from './policy/variant-policy/variant-policy';

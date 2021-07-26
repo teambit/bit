@@ -5,7 +5,7 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 
-import html from './html';
+import { html } from './html';
 import createBaseConfig from './webpack.base.config';
 
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';

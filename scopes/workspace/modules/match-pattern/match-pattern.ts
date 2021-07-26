@@ -1,8 +1,9 @@
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
-import { sortBy, prop, any } from 'ramda';
+import any from 'ramda/src/any';
 import minimatch from 'minimatch';
-import _ from 'lodash';
+import { maxBy, property, sortBy } from 'lodash';
+import { DirPatternWithStar } from './exceptions';
 
 export const PATTERNS_DELIMITER = ',';
 export const MATCH_ALL_ITEM = '*';
@@ -40,7 +41,7 @@ export type MatchedPatternItemWithExclude = MatchedPatternItem & {
 };
 
 export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
-  const sortedMatches: MatchedPatternWithConfig[] = sortBy(prop('specificity'), matches).reverse();
+  const sortedMatches: MatchedPatternWithConfig[] = sortBy(matches, property('specificity')).reverse();
   return sortedMatches;
 }
 
@@ -53,7 +54,7 @@ export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string
     specificity: -1,
   };
 
-  const maxMatch: MatchedPatternItemWithExclude = _.maxBy(matches, (match) => match.specificity) || defaultVal;
+  const maxMatch: MatchedPatternItemWithExclude = maxBy(matches, (match) => match.specificity) || defaultVal;
   const excluded = any((match) => match.match && match.excluded, matches);
 
   return {
@@ -80,6 +81,9 @@ export function isMatchPatternItem(
   }
   const { excluded, patternItemWithoutExcludeSign } = parseExclusion(patternItemTrimmed);
   if (isDirItem(patternItemWithoutExcludeSign)) {
+    if (patternItemWithoutExcludeSign.includes('*')) {
+      throw new DirPatternWithStar(patternItemWithoutExcludeSign);
+    }
     return { ...isMatchDirPatternItem(rootDir, patternItemWithoutExcludeSign), excluded };
   }
   return { ...isMatchNamespacePatternItem(componentName, patternItemWithoutExcludeSign), excluded };

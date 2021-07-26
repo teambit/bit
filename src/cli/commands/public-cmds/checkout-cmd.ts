@@ -13,9 +13,9 @@ export default class Checkout implements LegacyCommand {
   shortDescription = 'switch between component versions';
   group: Group = 'development';
   description = `switch between component versions or remove local changes
-  bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
-  bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
-  bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
+  \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
+  \`bit checkout latest [ids...]\` => checkout the specified ids (or all components when --all is used) to their latest versions
+  \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
   opts = [
@@ -46,7 +46,7 @@ export default class Checkout implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     {
       interactiveMerge = false,
       ours = false,

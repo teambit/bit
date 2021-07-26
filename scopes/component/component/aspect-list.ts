@@ -1,4 +1,4 @@
-import { isEmpty } from 'ramda';
+import { isEmpty } from 'lodash';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { AspectEntry, SerializableMap } from './aspect-entry';

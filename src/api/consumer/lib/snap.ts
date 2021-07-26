@@ -20,10 +20,11 @@ export async function snapAction(args: {
   message: string;
   force: boolean;
   verbose: boolean;
-  ignoreUnresolvedDependencies: boolean;
+  ignoreIssues: boolean;
   build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
+  disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
 }): Promise<SnapResults | null> {
   const {
@@ -31,10 +32,11 @@ export async function snapAction(args: {
     message,
     force,
     verbose,
-    ignoreUnresolvedDependencies,
+    ignoreIssues,
     skipTests,
     skipAutoSnap,
     build,
+    disableTagAndSnapPipelines,
     forceDeploy,
   } = args;
   const consumer: Consumer = await loadConsumer();
@@ -45,13 +47,14 @@ export async function snapAction(args: {
   if (!ids) return null;
   const tagResults = await consumer.snap({
     ids,
-    ignoreUnresolvedDependencies,
+    ignoreIssues,
     message,
     force,
     build,
     skipTests,
     verbose,
     skipAutoSnap,
+    disableTagAndSnapPipelines,
     forceDeploy,
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

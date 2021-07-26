@@ -31,7 +31,7 @@ $panelBg: #fafafa;
 }
 
 .menuBar {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 }
 
 .splitter {
@@ -81,18 +81,20 @@ $panelBg: #fafafa;
 
 .noCompositionsPage {
   padding: 50px 40px 100px 40px;
-  width: auto;
+  width: 100%;
+  box-sizing: border-box;
   max-width: 1440px;
   margin: 0 auto;
 
-  @media screen and (max-width: 768px) {
-    width: unset;
-  }
   .title {
     margin-bottom: 24px;
-    font-size: var(--h-xs);
+    font-size: var(--bit-h-xs, 26px);
   }
   .separator {
     margin-bottom: 41px;
   }
+}
+
+.buildStatusMessage {
+  margin: auto;
 }

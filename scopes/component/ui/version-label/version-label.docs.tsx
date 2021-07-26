@@ -1,12 +1,12 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionLabel } from './version-label';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>
           A label component to signify whether a component is checked out or if a version of it is its latest version.
@@ -15,7 +15,7 @@ export default function Overview() {
         </Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 

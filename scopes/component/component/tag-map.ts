@@ -1,5 +1,5 @@
 import { getLatestVersion } from '@teambit/legacy/dist/utils/semver-helper';
-import { SemVer } from 'semver';
+import { SemVer, maxSatisfying } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
 import { Hash } from './hash';
@@ -12,6 +12,32 @@ export class TagMap extends Map<SemVer, Tag> {
   byHash(hash: Hash) {
     const tag = Array.from(this.values()).find((currTag) => currTag.hash === hash);
     return tag;
+  }
+
+  /**
+   * e.g.
+   * {
+   *   alpha: '1.0.0-alpha.5',
+   *   dev: '2.2.4-dev.37
+   * }
+   */
+  getPreReleaseLatestTags(): { [preRelease: string]: string } {
+    const preReleaseTagsWithAllVersions = this.toArray().reduce((acc, current) => {
+      const preReleases = current.version.prerelease;
+      if (!preReleases.length) return acc;
+      if (preReleases.length !== 2) {
+        // it could be length 1, e.g. 1.0.0-0, we ignore it.
+        // it could also be length > 2, e.g. 1.0.0-dev.1.alpha.1, we don't support it for now.
+        return acc;
+      }
+      if (typeof preReleases[0] !== 'string') return acc;
+      (acc[preReleases[0]] ||= []).push(current.version.raw);
+      return acc;
+    }, {});
+    return Object.keys(preReleaseTagsWithAllVersions).reduce((acc, current) => {
+      acc[current] = maxSatisfying<string>(preReleaseTagsWithAllVersions[current], '*', { includePrerelease: true });
+      return acc;
+    }, {});
   }
 
   /**
@@ -41,7 +67,7 @@ export class TagMap extends Map<SemVer, Tag> {
   /**
    * get an array of all tags.
    */
-  toArray() {
+  toArray(): Tag[] {
     return Array.from(this.values());
   }
 

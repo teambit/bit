@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -13,7 +12,6 @@ describe('update-dependencies command', function () {
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -44,9 +42,9 @@ describe('update-dependencies command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagComponent('comp1', undefined, '1.0.5 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.0.5', undefined, '--skip-auto-tag');
       helper.fixtures.populateComponents(1, undefined, ' v3');
-      helper.command.tagComponent('comp1', undefined, '1.1.0 --skip-auto-tag');
+      helper.command.tagComponent('comp1@1.1.0', undefined, '--skip-auto-tag');
       helper.command.export();
       secondScopeBeforeUpdate = helper.scopeHelper.cloneScope(secondRemotePath);
     });
@@ -129,6 +127,32 @@ describe('update-dependencies command', function () {
       });
       it('should snap the component with the updated version', () => {
         const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@latest`, secondRemotePath);
+        expect(compB.dependencies[0].id.version).to.equal('1.1.0');
+      });
+    });
+    describe('running from a new bare scope using --simulate and --tag flags', () => {
+      let updateDepsOutput: string;
+      let updateRemote;
+      before(() => {
+        helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
+        updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        // delete the remote from the update-remote scope. it should not reach the remote
+        // for the dependencies, it should only install via registry.
+        helper.scopeHelper.removeRemoteScope(helper.scopes.remote, false, updateRemote.scopePath);
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemote.scopePath);
+        const data = [
+          {
+            componentId: `${secondRemoteName}/comp-b`,
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@1.1.0`],
+          },
+        ];
+        updateDepsOutput = helper.command.updateDependencies(data, '--tag --simulation', updateRemote.scopePath);
+      });
+      it('should succeed', () => {
+        expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
+      });
+      it('should tag the component locally with the updated version', () => {
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, updateRemote.scopePath);
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });

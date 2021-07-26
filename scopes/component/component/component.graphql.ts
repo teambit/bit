@@ -1,6 +1,7 @@
 import stripAnsi from 'strip-ansi';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
@@ -86,6 +87,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         # display name of the component
         displayName: String!
 
+        # component buildStatus
+        buildStatus: String
+
         # list of component releases.
         tags: [Tag]!
 
@@ -135,7 +139,9 @@ export function componentSchema(componentExtension: ComponentMain) {
           return component.state.filesystem.files.map((file) => file.relative);
         },
         getFile: (component: Component, { path }: { path: string }) => {
-          const maybeFile = component.state.filesystem.files.find((file) => file.relative === path);
+          const maybeFile = component.state.filesystem.files.find(
+            (file) => pathNormalizeToLinux(file.relative) === path
+          );
           if (!maybeFile) return undefined;
           return maybeFile.contents.toString('utf-8');
         },

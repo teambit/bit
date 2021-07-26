@@ -94,5 +94,10 @@ describe('Dependencies', () => {
         'expected properties of importSpecifier.mainFile "isDefault,name", got "extra,isDefault,name"'
       );
     });
+    it('should throw when a dependency has the same id as the component', () => {
+      const id = BitId.parse(dependenciesFixture[0].id);
+      validateFunc = () => dependencies.validate(id);
+      expect(validateFunc).to.throw('one of the dependencies has the same id as the component');
+    });
   });
 });

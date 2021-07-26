@@ -102,10 +102,11 @@ export type LegacyOnTagResult = {
   builderData: ExtensionDataEntry;
 };
 export type OnTagOpts = {
-  disableDeployPipeline?: boolean;
+  disableTagAndSnapPipelines?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
   skipTests?: boolean;
+  isSnap?: boolean;
 };
 export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
@@ -206,7 +207,7 @@ export default class Scope {
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
     const versions = readDirSyncIgnoreDsStore(componentFullPath);
-    const latestVersion = semver.maxSatisfying(versions, '*');
+    const latestVersion = semver.maxSatisfying(versions, '*', { includePrerelease: true });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return pathLib.join(relativePath, latestVersion!);
   }
@@ -865,11 +866,7 @@ export default class Scope {
     return fs.remove(pendingDir); // no error is thrown if not exists
   }
 
-  static ensure(
-    path: PathOsBasedAbsolute,
-    name: string | null | undefined,
-    groupName: string | null | undefined
-  ): Promise<Scope> {
+  static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = Repository.create({ scopePath: path, scopeJson });

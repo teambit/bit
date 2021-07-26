@@ -1,3 +1,5 @@
+import type { DependencySource } from '../policy/variant-policy/variant-policy';
+
 export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 
 export interface SerializedDependency {
@@ -5,6 +7,7 @@ export interface SerializedDependency {
   version: string;
   __type: string;
   lifecycle: string;
+  source?: DependencySource;
 }
 
 /**
@@ -23,6 +26,7 @@ export interface Dependency {
   version: string;
   type: string;
   lifecycle: DependencyLifecycleType;
+  source?: DependencySource;
 
   serialize: <T extends SerializedDependency>() => T;
   setVersion: (newVersion: string) => void;

@@ -9,10 +9,10 @@ import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+import { ScopeProvider } from '@teambit/scope.ui.hooks.scope-context';
+import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { ScopeOverview } from './scope-overview';
-import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
-import { useScope } from './use-scope';
 import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
 
 export type ScopeProps = {
@@ -41,7 +41,7 @@ export function Scope({
   context,
   onSidebarTogglerChange,
 }: ScopeProps) {
-  const { scope } = useScope();
+  const { scope } = useScopeQuery();
   const isMobile = useIsMobile();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, !isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;

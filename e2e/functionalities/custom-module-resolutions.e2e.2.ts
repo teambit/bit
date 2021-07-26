@@ -147,15 +147,6 @@ describe('custom module resolutions', function () {
           );
         });
       });
-      describe('importing the component into Harmony workspace', () => {
-        before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
-          helper.scopeHelper.addRemoteScope();
-        });
-        it('should not throw an error on import', () => {
-          expect(() => helper.command.importComponent('bar/foo')).to.not.throw();
-        });
-      });
     });
   });
   describe('using custom module directory when two files in the same component requires each other', () => {

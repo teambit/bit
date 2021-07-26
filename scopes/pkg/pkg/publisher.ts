@@ -1,5 +1,5 @@
 import { ComponentResult, TaskMetadata } from '@teambit/builder';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -10,7 +10,6 @@ import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import mapSeries from 'p-map-series';
 import execa from 'execa';
-import R from 'ramda';
 import { PkgAspect } from './pkg.aspect';
 
 export type PublisherOptions = {
@@ -55,10 +54,11 @@ export class Publisher {
     const startTime = Date.now();
     const publishParams = ['publish'];
     if (this.options.dryRun) publishParams.push('--dry-run');
+    publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
     if (extraArgs && Array.isArray(extraArgs) && extraArgs?.length) {
-      const extraArgsSplit = extraArgs.map((arg) => arg.split(' '));
-      publishParams.push(...R.flatten(extraArgsSplit));
+      const extraArgsSplit = extraArgs.map((arg) => arg.split(' ')).flat();
+      publishParams.push(...extraArgsSplit);
     }
     const publishParamsStr = publishParams.join(' ');
     const cwd = capsule.path;
@@ -81,6 +81,14 @@ export class Publisher {
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
+  }
+
+  private getTagFlagForPreRelease(id: ComponentID): string[] {
+    const preReleaseData = id.getVersionPreReleaseData();
+    if (!preReleaseData) return [];
+    const maybeIdentifier = preReleaseData[0]; // it can be numeric as in 1.0.0-0.
+    if (typeof maybeIdentifier !== 'string') return [];
+    return ['--tag', maybeIdentifier];
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {

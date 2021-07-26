@@ -16,11 +16,11 @@ export class ScopeComponentLoader {
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
-    const idStr = id.toString();
-    const fromCache = this.componentsCache.get(idStr);
+    const fromCache = this.getFromCache(id);
     if (fromCache) {
       return fromCache;
     }
+    const idStr = id.toString();
     this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
@@ -78,7 +78,21 @@ export class ScopeComponentLoader {
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    const version = (await this.scope.legacyScope.objects.load(new Ref(hash), true)) as Version;
+    const getVersionObject = async (): Promise<Version> => {
+      try {
+        const snap = await this.scope.legacyScope.objects.load(new Ref(hash), true);
+        return snap as Version;
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          const errMsg = `fatal: snap "${hash}" file for component "${id.toString()}" was not found in the filesystem`;
+          this.logger.error(errMsg, err);
+          throw new Error(errMsg);
+        } else {
+          throw err;
+        }
+      }
+    };
+    const version = await getVersionObject();
     return this.createSnapFromVersion(version);
   }
 
@@ -86,10 +100,26 @@ export class ScopeComponentLoader {
     this.componentsCache.deleteAll();
   }
 
+  /**
+   * make sure that not only the id-str match, but also the legacy-id.
+   * this is needed because the ComponentID.toString() is the same whether or not the legacy-id has
+   * scope-name, as it includes the defaultScope if the scope is empty.
+   * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
+   * legacy-id, the component is the cache has the old id.
+   */
+  private getFromCache(id: ComponentID): Component | undefined {
+    const idStr = id.toString();
+    const fromCache = this.componentsCache.get(idStr);
+    if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
+      return fromCache;
+    }
+    return undefined;
+  }
+
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+    Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
       tagMap.set(tag.version, tag);
     });
     return tagMap;

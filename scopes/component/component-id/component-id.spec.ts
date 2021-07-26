@@ -38,6 +38,54 @@ describe('component id', () => {
     });
   });
 
+  describe('equality', () => {
+    it('should equal when both are undefined', () => {
+      expect(ComponentID.isEqual(undefined, undefined)).to.be.true;
+      expect(ComponentID.isEqualObj(undefined, undefined)).to.be.true;
+    });
+
+    it('should not equal when one is undefined', () => {
+      const bObj = { name: 'button', scope: 'base-ui' };
+      const bId = ComponentID.fromObject({ name: 'button', scope: 'base-ui' });
+
+      expect(ComponentID.isEqual(undefined, bId)).to.be.false;
+      expect(ComponentID.isEqualObj(undefined, bObj)).to.be.false;
+    });
+
+    it('should equal when name and scope match', () => {
+      const aObj = { name: 'button', scope: 'base-ui' };
+      const aId = ComponentID.fromObject(aObj);
+      const bObj = { name: 'button', scope: 'base-ui' };
+      const bId = ComponentID.fromObject(bObj);
+
+      expect(ComponentID.isEqual(aId, bId)).to.be.true;
+      expect(ComponentID.isEqualObj(aId, bId)).to.be.true;
+      expect(aId.isEqual(bId)).to.be.true;
+    });
+
+    it('should equal when versions dont match, but ignored by options', () => {
+      const aObj = { name: 'button', scope: 'base-ui', version: '0.0.1' };
+      const aId = ComponentID.fromObject(aObj);
+      const bObj = { name: 'button', scope: 'base-ui', version: '0.0.2' };
+      const bId = ComponentID.fromObject(bObj);
+
+      expect(ComponentID.isEqual(aId, bId, { ignoreVersion: true })).to.be.true;
+      expect(ComponentID.isEqualObj(aObj, bObj, { ignoreVersion: true })).to.be.true;
+      expect(aId.isEqual(bId, { ignoreVersion: true })).to.be.true;
+    });
+
+    it('should not equal when versions dont match', () => {
+      const aObj = { name: 'button', scope: 'base-ui', version: '0.0.1' };
+      const aId = ComponentID.fromObject(aObj);
+      const bObj = { name: 'button', scope: 'base-ui', version: '0.0.2' };
+      const bId = ComponentID.fromObject(bObj);
+
+      expect(ComponentID.isEqual(aId, bId)).to.be.false;
+      expect(ComponentID.isEqualObj(aObj, bObj)).to.be.false;
+      expect(aId.isEqual(bId)).to.be.false;
+    });
+  });
+
   it('should return false for non objects', () => {
     expect(ComponentID.isValidObject(undefined)).to.equal(false);
     expect(ComponentID.isValidObject('a-string')).to.equal(false);

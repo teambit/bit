@@ -35,7 +35,7 @@ export interface Command {
   group?: Group | string;
 
   /**
-   * should a command be exposed to the user (by bit --help).
+   * should a command be exposed to the user (by bit help).
    * e.g. experimental commands or commands created for the ssh communication should not be exposed
    */
   private?: boolean;
@@ -72,6 +72,12 @@ export interface Command {
    * for now, the only difference is that they get a "token" flag to authenticate anonymously.
    */
   remoteOp?: boolean;
+
+  /**
+   * if true, it indicates that it doesn't need the workspace to work and can be executed outside a
+   * workspace
+   */
+  skipWorkspace?: boolean;
 
   /**
    * do not set this. it is being set once the command run.

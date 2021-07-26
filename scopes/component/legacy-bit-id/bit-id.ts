@@ -1,13 +1,13 @@
 import decamelize from 'decamelize';
 import * as path from 'path';
 import * as semver from 'semver';
-import { is, head, tail } from 'ramda';
+import { head, tail } from 'lodash';
 import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
 import isValidIdChunk from './utils/is-valid-id-chunk';
 import isValidScopeName from './utils/is-valid-scope-name';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 
-type BitIdProps = {
+export type BitIdProps = {
   scope?: string | null | undefined;
   box?: string | undefined;
   name: string;
@@ -132,6 +132,18 @@ export default class BitId {
   }
 
   /**
+   * examples:
+   * 1.0.0 => null
+   * 1.0.0-dev.1 => ['dev', 1]
+   * 1.0.0-dev.1.alpha.2 => ['dev', 1, 'alpha', 2]
+   * 1.0.0-0 => [0]
+   */
+  getVersionPreReleaseData(): null | readonly string[] {
+    if (!this.version) return null;
+    return semver.prerelease(this.version);
+  }
+
+  /**
    * Get a string id and return a string without the version part
    * @param {string} id
    * @return {string} id - id without version
@@ -153,7 +165,7 @@ export default class BitId {
   }
 
   static parse(id: BitIdStr, hasScope = true, version: string = LATEST_VERSION): BitId {
-    if (!is(String, id)) {
+    if (typeof id !== 'string') {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
 

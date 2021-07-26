@@ -1,16 +1,23 @@
-import { useMemo, useEffect } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useMemo, useEffect, useRef } from 'react';
 import { gql } from '@apollo/client';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
+const componentIdFields = gql`
+  fragment componentIdFields on ComponentID {
+    name
+    version
+    scope
+  }
+`;
+
 const componentFields = gql`
   fragment componentFields on Component {
     id {
-      name
-      version
-      scope
+      ...componentIdFields
     }
     packageName
     displayName
@@ -18,6 +25,7 @@ const componentFields = gql`
       env
       url
     }
+    buildStatus
     compositions {
       identifier
     }
@@ -29,6 +37,7 @@ const componentFields = gql`
       icon
     }
   }
+  ${componentIdFields}
 `;
 
 const GET_COMPONENT = gql`
@@ -43,7 +52,18 @@ const GET_COMPONENT = gql`
   ${componentFields}
 `;
 
-const SUB_COMPONENT = gql`
+const SUB_SUBSCRIPTION_ADDED = gql`
+  subscription OnComponentAdded {
+    componentAdded {
+      component {
+        ...componentFields
+      }
+    }
+  }
+  ${componentFields}
+`;
+
+const SUB_COMPONENT_CHANGED = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
@@ -54,8 +74,21 @@ const SUB_COMPONENT = gql`
   ${componentFields}
 `;
 
+const SUB_COMPONENT_REMOVED = gql`
+  subscription OnComponentRemoved {
+    componentRemoved {
+      componentIds {
+        ...componentIdFields
+      }
+    }
+  }
+  ${componentIdFields}
+`;
+
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(componentId: string, host: string) {
+  const idRef = useRef(componentId);
+  idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host },
   });
@@ -66,27 +99,81 @@ export function useComponentQuery(componentId: string, host: string) {
       return () => {};
     }
 
-    const unsub = subscribeToMore({
-      document: SUB_COMPONENT,
+    const unsubAddition = subscribeToMore({
+      document: SUB_SUBSCRIPTION_ADDED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const prevComponent = prev?.getHost?.get;
+        const addedComponent = subscriptionData?.data?.componentAdded?.component;
+
+        if (!addedComponent || prevComponent) return prev;
+
+        if (idRef.current === addedComponent.id.name) {
+          return {
+            ...prev,
+            getHost: {
+              ...prev.getHost,
+              get: addedComponent,
+            },
+          };
+        }
+
+        return prev;
+      },
+    });
+
+    const unsubChanges = subscribeToMore({
+      document: SUB_COMPONENT_CHANGED,
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
 
+        const prevComponent = prev?.getHost?.get;
         const updatedComponent = subscriptionData?.data?.componentChanged?.component;
-        // TODO -  add `id` param to componentChanged subscription, and pre-filter on server side
-        if (!updatedComponent || prev.getHost.get.id.name !== updatedComponent.id.name) return prev;
 
-        return {
-          ...prev,
-          getHost: {
-            ...prev.getHost,
-            get: updatedComponent,
-          },
-        };
+        const isUpdated = updatedComponent && ComponentID.isEqualObj(prevComponent?.id, updatedComponent?.id);
+
+        if (isUpdated) {
+          return {
+            ...prev,
+            getHost: {
+              ...prev.getHost,
+              get: updatedComponent,
+            },
+          };
+        }
+
+        return prev;
+      },
+    });
+
+    const unsubRemoval = subscribeToMore({
+      document: SUB_COMPONENT_REMOVED,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+
+        const prevComponent = prev?.getHost?.get;
+        const removedIds: ComponentIdObj[] | undefined = subscriptionData?.data?.componentRemoved?.componentIds;
+        if (!prevComponent || !removedIds?.length) return prev;
+
+        const isRemoved = removedIds.some((removedId) => ComponentID.isEqualObj(removedId, prevComponent.id));
+
+        if (isRemoved) {
+          return {
+            ...prev,
+            getHost: {
+              ...prev.getHost,
+              get: null,
+            },
+          };
+        }
+
+        return prev;
       },
     });
 
     return () => {
-      unsub();
+      unsubChanges();
+      unsubAddition();
+      unsubRemoval();
     };
   }, []);
 
