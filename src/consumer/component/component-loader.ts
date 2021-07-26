@@ -4,7 +4,7 @@ import * as path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
+import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -59,6 +59,7 @@ export default class ComponentLoader {
       const pathsToCheck = [
         path.join(this.consumer.getPath(), 'node_modules'),
         path.join(this.consumer.getPath(), 'package.json'),
+        path.join(this.consumer.getPath(), BIT_MAP),
         this.consumer.config.path,
       ];
       const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
