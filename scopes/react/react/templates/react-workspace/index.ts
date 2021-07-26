@@ -1,9 +1,9 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
 import { workspaceConfig } from './files/workspace-config';
 import { readme } from './files/readme-file';
-import { gitIgnore } from './files/git-ignore';
-import { assetTypes } from './files/types/asset';
-import { styleTypes } from './files/types/style';
+import { gitIgnore } from '../common-files/git-ignore';
+import { assetTypes } from '../common-files/types/asset';
+import { styleTypes } from '../common-files/types/style';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react',
