@@ -166,6 +166,13 @@ export class ReactEnv
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const defaultTransformer: EslintConfigTransformer = (configMutator) => {
+      configMutator.addExtensionTypes(['.md', '.mdx']);
+      return configMutator;
+    };
+
+    const allTransformers = [defaultTransformer, ...transformers];
+
     return this.eslint.createLinter(
       context,
       {
@@ -173,7 +180,7 @@ export class ReactEnv
         // resolve all plugins from the react environment.
         pluginPath: __dirname,
       },
-      transformers
+      allTransformers
     );
   }
 

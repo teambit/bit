@@ -6,7 +6,8 @@ import { mainRuntime } from './files/main-runtime';
 
 export const componentGeneratorTemplate: ComponentTemplate = {
   name: 'component-generator',
-  description: 'create your own component generator',
+  description:
+    'create your own component generator \nDocs: https://harmony-docs.bit.dev/extending-bit/creating-a-custom-generator',
   generateFiles: (context: ComponentContext) => {
     return [
       {

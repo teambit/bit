@@ -21,16 +21,17 @@ export class ESLintLinter implements Linter {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
-      const mergedOpts = this.getOptions(this.options, context);
-      const eslint = this.createEslintByCalculatedOptions(mergedOpts, this.ESLint);
+      const eslint = this.createEslint(this.options.config, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
+        // The eslint api ignore extensions by default when using lintText, so we do it manually
+        if (!this.options.extensions?.includes(file.extname)) return undefined;
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
           filePath: file.path,
           warnIgnored: true,
         });
 
-        if (eslint && mergedOpts.fix && lintResults) {
+        if (eslint && this.options.config.fix && lintResults) {
           await ESLintLib.outputFixes(lintResults);
         }
 
@@ -70,36 +71,16 @@ export class ESLintLinter implements Linter {
     });
   }
 
-  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLintLib {
-    // eslint-disable-next-line no-new
-    if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
-    return new ESLintLib(this.getOptions(options, context));
-  }
-
   /**
    * Create the eslint instance by options that was already merged with context
    * @param options
    * @param ESLintModule
    * @returns
    */
-  private createEslintByCalculatedOptions(options: ESLintLib.Options, ESLintModule?: any): ESLintLib {
+  private createEslint(options: ESLintLib.Options, ESLintModule?: any): ESLintLib {
     // eslint-disable-next-line no-new
     if (ESLintModule) new ESLintModule.ESLint(options);
     return new ESLintLib(options);
-  }
-
-  /**
-   * get options for eslint.
-   */
-  private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
-    return {
-      overrideConfig: options.config,
-      extensions: context.extensionFormats,
-      useEslintrc: false,
-      cwd: options.pluginPath,
-      fix: !!context.fix,
-      fixTypes: context.fixTypes,
-    };
   }
 
   version() {
