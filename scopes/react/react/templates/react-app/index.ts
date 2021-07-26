@@ -31,10 +31,6 @@ export const reactAppTemplate: ComponentTemplate = {
         content: compositionsFile(context),
       },
       {
-        relativePath: `${context.name}.compositions.tsx`,
-        content: compositionsFile(context),
-      },
-      {
         relativePath: `${context.name}.aspect.ts`,
         content: aspectFile(context),
       },
