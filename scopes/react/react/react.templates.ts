@@ -7,6 +7,8 @@ import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
 import { reactAppTemplate } from './templates/react-app';
 import { reactWorkspaceTemplate } from './templates/react-workspace';
+import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
+import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -19,4 +21,9 @@ export const componentTemplates: ComponentTemplate[] = [
   deprecatedReactComponentJS,
 ];
 
-export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate, reactWorkspaceEmptyTemplate];
+export const workspaceTemplates: WorkspaceTemplate[] = [
+  reactWorkspaceTemplate,
+  reactWorkspaceAppTemplate,
+  reactWorkspaceLibTemplate,
+  reactWorkspaceEmptyTemplate,
+];
