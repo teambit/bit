@@ -35,7 +35,6 @@ export type ComponentStatus = {
   id: BitId;
   failureMessage?: string;
   mergeResults?: MergeResultsThreeWay | null;
-  mergeSnaps?: Ref[];
 };
 
 /**
@@ -134,24 +133,20 @@ export async function merge({
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
-  const componentsResults = await mapSeries(
-    succeededComponents,
-    ({ componentFromFS, id, mergeResults, mergeSnaps }) => {
-      return applyVersion({
-        consumer,
-        componentFromFS,
-        id,
-        mergeResults,
-        mergeSnaps,
-        mergeStrategy,
-        remoteHead: new Ref(id.version as string),
-        // @ts-ignore
-        remoteName: remoteName || componentFromFS.scope,
-        laneId,
-        localLane,
-      });
-    }
-  );
+  const componentsResults = await mapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
+    return applyVersion({
+      consumer,
+      componentFromFS,
+      id,
+      mergeResults,
+      mergeStrategy,
+      remoteHead: new Ref(id.version as string),
+      // @ts-ignore
+      remoteName: remoteName || componentFromFS.scope,
+      laneId,
+      localLane,
+    });
+  });
 
   if (localLane) consumer.scope.objects.add(localLane);
 
@@ -236,7 +231,6 @@ export async function getComponentStatus(
         componentFromModel: componentOnLane,
         id,
         mergeResults: null,
-        mergeSnaps: divergeData.snapsOnRemoteOnly,
       };
     }
     // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
@@ -257,7 +251,7 @@ export async function getComponentStatus(
     currentLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
     baseComponent,
   });
-  return { componentFromFS: component, id, mergeResults, mergeSnaps: divergeData.snapsOnRemoteOnly };
+  return { componentFromFS: component, id, mergeResults };
 }
 
 export async function applyVersion({
@@ -265,7 +259,6 @@ export async function applyVersion({
   componentFromFS,
   id,
   mergeResults,
-  mergeSnaps,
   mergeStrategy,
   remoteHead,
   remoteName,
@@ -276,7 +269,6 @@ export async function applyVersion({
   componentFromFS: Component | null | undefined;
   id: BitId;
   mergeResults: MergeResultsThreeWay | null | undefined;
-  mergeSnaps?: Ref[];
   mergeStrategy: MergeStrategy;
   remoteHead: Ref;
   remoteName: string | null;
@@ -376,7 +368,6 @@ export async function applyVersion({
     // this is main
     const modelComponent = await consumer.scope.getModelComponent(id);
     if (!consumer.isLegacy) modelComponent.setHead(remoteHead);
-    mergeSnaps?.forEach((ref) => modelComponent.markVersionAsLocal(ref.toString()));
     consumer.scope.objects.add(modelComponent);
   }
 
