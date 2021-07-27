@@ -106,11 +106,11 @@ export default class Status implements LegacyCommand {
       if (component instanceof BitId) {
         return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
       }
-      if (!(component instanceof ModelComponent)) {
-        throw new Error(`expect "${component}" to be instance of ModelComponent`);
-      }
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
+        if (!(component instanceof ModelComponent)) {
+          throw new Error(`expect "${component}" to be instance of ModelComponent`);
+        }
         const localVersions = component.getLocalTagsOrHashes();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
