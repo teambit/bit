@@ -167,6 +167,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (filesToCompile.length) {
       try {
         await this.compilerInstance.transpileComponent?.({
+          component,
           componentDir: this.componentDir,
           outputDir: this.workspace.getComponentPackagePath(component),
         });
