@@ -55,6 +55,7 @@ type ExportParams = {
   force: boolean;
   lanes: boolean;
   resumeExportId: string | undefined;
+  ignoreMissingArtifacts: boolean;
 };
 
 export default async function exportAction(params: ExportParams) {
@@ -81,15 +82,13 @@ export default async function exportAction(params: ExportParams) {
 async function exportComponents({
   ids,
   remote,
-  includeDependencies,
   setCurrentScope,
   includeNonStaged,
   codemod,
   force,
   lanes,
-  allVersions,
   originDirectly,
-  resumeExportId,
+  ...params
 }: ExportParams): Promise<{
   updatedIds: BitId[];
   nonExistOnBitMap: BitId[];
@@ -125,18 +124,16 @@ async function exportComponents({
   }
 
   const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
+    ...params,
     scope: consumer.scope,
     isLegacy: consumer.isLegacy,
     ids: idsToExport,
     remoteName: remote,
-    includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
     lanesObjects,
-    allVersions,
     originDirectly,
     idsWithFutureScope,
-    resumeExportId,
   });
   if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);

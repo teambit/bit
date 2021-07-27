@@ -50,6 +50,11 @@ ${WILDCARD_HELP('export remote-scope')}`;
       'resume <string>',
       'in case the previous export failed and suggested to resume with an export-id, enter the id',
     ],
+    [
+      '',
+      'ignore-missing-artifacts',
+      "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -69,6 +74,7 @@ ${WILDCARD_HELP('export remote-scope')}`;
       force = false,
       rewire = false,
       lanes = false,
+      ignoreMissingArtifacts = false,
       resume,
     }: any
   ): Promise<string> {
@@ -94,6 +100,7 @@ ${WILDCARD_HELP('export remote-scope')}`;
       force,
       lanes,
       resumeExportId: resume,
+      ignoreMissingArtifacts,
     });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
