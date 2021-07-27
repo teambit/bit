@@ -981,6 +981,18 @@ describe('bit lane command', function () {
           const mergedLanes = helper.command.showLanes('--merged');
           expect(mergedLanes).to.include('dev');
         });
+        it('should show the merged components as staged', () => {
+          const status = helper.command.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(2);
+        });
+        describe('tagging the components', () => {
+          before(() => {
+            helper.command.tagScope();
+          });
+          it('should be able to export with no errors', () => {
+            expect(() => helper.command.export()).not.to.throw();
+          });
+        });
       });
     });
   });
