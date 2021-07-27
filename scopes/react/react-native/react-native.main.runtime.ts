@@ -68,8 +68,8 @@ export class ReactNativeMain {
    */
   useWebpack(modifiers?: UseWebpackModifiers) {
     const mergedModifiers: UseWebpackModifiers = {
-      previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
-      devServerConfig: (modifiers?.devServerConfig ?? []).concat(devServerConfigTransformer),
+      previewConfig: [previewConfigTransformer].concat(modifiers?.previewConfig ?? []),
+      devServerConfig: [devServerConfigTransformer].concat(modifiers?.devServerConfig ?? []),
     };
     return this.react.useWebpack(mergedModifiers);
   }
