@@ -41,6 +41,7 @@ import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
+import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 
 type State = {
   versions?: {
@@ -578,22 +579,26 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
-  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<ObjectItem[]> {
-    const collectRefs = async (): Promise<Ref[]> => {
-      const refsCollection: Ref[] = [];
-      const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
-      refsCollection.push(...versionsRefs);
-      // @ts-ignore
-      const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
-      versionsObjects.forEach((versionObject) => {
-        const refs = versionObject.refsWithOptions(false, true);
-        refsCollection.push(...refs);
-      });
-      return refsCollection;
-    };
-    const refs = await collectRefs();
+  async collectVersionsObjects(
+    repo: Repository,
+    versions: string[],
+    ignoreMissingArtifacts?: boolean
+  ): Promise<ObjectItem[]> {
+    const refsWithoutArtifacts: Ref[] = [];
+    const artifactsRefs: Ref[] = [];
+    const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
+    refsWithoutArtifacts.push(...versionsRefs);
+    // @ts-ignore
+    const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
+    versionsObjects.forEach((versionObject) => {
+      const refs = versionObject.refsWithOptions(false, false);
+      refsWithoutArtifacts.push(...refs);
+      artifactsRefs.push(...getRefsFromExtensions(versionObject.extensions));
+    });
+    const loadedRefs: ObjectItem[] = [];
     try {
-      return await repo.loadManyRaw(refs);
+      const loaded = await repo.loadManyRaw(refsWithoutArtifacts);
+      loadedRefs.push(...loaded);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
@@ -601,6 +606,20 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
       }
       throw err;
     }
+    try {
+      const loaded = ignoreMissingArtifacts
+        ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
+        : await repo.loadManyRaw(artifactsRefs);
+      loadedRefs.push(...loaded);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`unable to find an artifact object file "${err.path}"
+for a component "${this.id()}", versions: ${versions.join(', ')}
+consider using --ignore-missing-artifacts flag if you're sure the artifacts are in the remote`);
+      }
+      throw err;
+    }
+    return loadedRefs;
   }
 
   async collectObjects(repo: Repository): Promise<ComponentObjects> {

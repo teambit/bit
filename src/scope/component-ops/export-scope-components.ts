@@ -87,6 +87,7 @@ export async function exportMany({
   originDirectly,
   idsWithFutureScope,
   resumeExportId,
+  ignoreMissingArtifacts,
 }: {
   scope: Scope;
   isLegacy: boolean;
@@ -101,6 +102,7 @@ export async function exportMany({
   originDirectly?: boolean;
   idsWithFutureScope: BitIds;
   resumeExportId?: string | undefined;
+  ignoreMissingArtifacts?: boolean;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   if (lanesObjects.length && !remoteName) {
@@ -299,7 +301,11 @@ export async function exportMany({
     const processModelComponent = async (modelComponent: ModelComponent) => {
       const versionToExport = await getVersionsToExport(modelComponent);
       modelComponent.clearStateData();
-      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, versionToExport);
+      const objectItems = await modelComponent.collectVersionsObjects(
+        scope.objects,
+        versionToExport,
+        ignoreMissingArtifacts
+      );
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);

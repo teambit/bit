@@ -5,9 +5,9 @@ import { gitIgnore } from '../common-files/git-ignore';
 import { assetTypes } from '../common-files/types/asset';
 import { styleTypes } from '../common-files/types/style';
 
-export const reactWorkspaceTemplate: WorkspaceTemplate = {
-  name: 'react',
-  description: 'EXPERIMENTAL. react workspace with sample components',
+export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
+  name: 'react-app',
+  description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return [
@@ -35,11 +35,11 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
+      { id: 'teambit.react/templates/apps/my-app', path: 'apps/my-app' },
       { id: 'teambit.react/templates/envs/my-react', path: 'envs/my-react' },
-      { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
+      { id: 'teambit.react/templates/themes/theme', path: 'themes/theme' },
+      { id: 'teambit.react/templates/styles/colors', path: 'styles/colors' },
       { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
-      { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
-      { id: 'teambit.react/templates/pages/welcome', path: 'pages/welcome' },
     ];
   },
 };

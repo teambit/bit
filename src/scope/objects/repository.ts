@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
-import { uniqBy } from 'lodash';
+import { compact, uniqBy } from 'lodash';
 import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
@@ -238,10 +238,28 @@ export default class Repository {
     return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
+  async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {
+    const concurrency = concurrentIOLimit();
+    const results = await pMap(
+      refs,
+      async (ref) => {
+        try {
+          const buffer = await this.loadRaw(ref);
+          return { ref, buffer };
+        } catch (err) {
+          if (err.code === 'ENOENT') return null;
+          throw err;
+        }
+      },
+      { concurrency }
+    );
+    return compact(results);
+  }
+
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
     const buffer = await this.loadRaw(ref);
     const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
-    return (bitRawObject as any) as BitRawObject;
+    return bitRawObject as any as BitRawObject;
   }
 
   /**
