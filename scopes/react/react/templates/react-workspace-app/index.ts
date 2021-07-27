@@ -5,7 +5,7 @@ import { gitIgnore } from '../common-files/git-ignore';
 import { assetTypes } from '../common-files/types/asset';
 import { styleTypes } from '../common-files/types/style';
 
-export const reactWorkspaceTemplate: WorkspaceTemplate = {
+export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   name: 'react-app',
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
