@@ -605,7 +605,6 @@
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
             "mz": "2.7.0",
-            "react-refresh": "0.9.0",
             // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)

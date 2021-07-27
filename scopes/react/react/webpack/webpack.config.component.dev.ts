@@ -4,13 +4,13 @@ import { ComponentID } from '@teambit/component-id';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/react.babel.bit-react-transformer';
-// import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
 // export default function (workDir: string, envId: string): Configuration {
-export default function (workDir: string): Configuration {
+export default function (workDir: string, envId: string): Configuration {
   return {
     module: {
       rules: [
@@ -40,7 +40,7 @@ export default function (workDir: string): Configuration {
                 plugins: [
                   // for component highlighting in preview.
                   [require.resolve('@teambit/react.babel.bit-react-transformer')],
-                  // [require.resolve('react-refresh/babel')],
+                  [require.resolve('react-refresh/babel')],
                 ],
                 // turn off all optimizations (only slow down for node_modules)
                 compact: false,
@@ -76,20 +76,21 @@ export default function (workDir: string): Configuration {
     // 1. enable/uncomment - react-refresh/babel above
     // 2. make sure the react-refresh is a dependency of the react env via component.json
     // 3. pass the envId to this function from react env
-    // plugins: [
-    //   new ReactRefreshWebpackPlugin({
-    //     overlay: {
-    //       sockPath: `_hmr/${envId}`,
-    //       // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
-    //       // errors
-    //       entry: require.resolve('./react-hot-dev-client'),
-    //       module: require.resolve('./refresh'),
-    //     },
-    //     // include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
-    //     include: path.join(workDir, 'node_modules'),
-    //     // TODO: use a more specific exclude for our selfs
-    //     // exclude: [/dist/, /node_modules/],
-    //   }),
-    // ],
+    plugins: [
+      new ReactRefreshWebpackPlugin({
+        overlay: {
+          sockPath: `_hmr/${envId}`,
+          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
+          // errors
+          entry: require.resolve('./react-hot-dev-client'),
+          module: require.resolve('./refresh'),
+        },
+        // include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
+        include: path.join(workDir, 'node_modules'),
+        // TODO: use a more specific exclude for our selfs
+        // exclude: [/dist/, /node_modules/],
+        exclude: /asdfasdfs/,
+      }),
+    ],
   };
 }

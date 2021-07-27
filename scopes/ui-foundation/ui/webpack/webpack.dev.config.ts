@@ -3,7 +3,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+// const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
@@ -318,10 +318,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     },
 
     plugins: [
-      new ReactRefreshWebpackPlugin({
-        // exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
-        include: aspectPaths,
-      }),
+      // new ReactRefreshWebpackPlugin({
+      //   // exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
+      //   include: aspectPaths,
+      // }),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the
       // filename output defined above.

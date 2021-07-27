@@ -239,7 +239,7 @@ export class ReactEnv
     // const fileMapPath = this.writeFileMap(context.components, true);
     // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
     // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
