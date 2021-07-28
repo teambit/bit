@@ -35,11 +35,11 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
-      { id: 'teambit.react/templates/envs/my-react', path: 'envs/my-react' },
-      { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
-      { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
-      { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
-      { id: 'teambit.react/templates/pages/welcome', path: 'pages/welcome' },
+      { id: 'teambit.react/templates/envs/my-react', path: 'templates/envs/my-react' },
+      { id: 'teambit.react/templates/ui/text', path: 'templates/ui/text' },
+      { id: 'teambit.react/templates/ui/heading', path: 'templates/ui/heading' },
+      { id: 'teambit.react/templates/ui/card', path: 'templates/ui/card' },
+      { id: 'teambit.react/templates/pages/welcome', path: 'templates/pages/welcome' },
     ];
   },
 };

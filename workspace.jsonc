@@ -133,6 +133,7 @@
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "5.11.10",
+        "@testing-library/jest-native": "4.0.1",
         "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",
         "@types/classnames": "2.2.11",
