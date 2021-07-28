@@ -4,7 +4,7 @@ import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@tea
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
-  configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'company.collection';
+  configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'company.scope';
   configParsed['teambit.dependencies/dependency-resolver'].packageManager = 'teambit.dependencies/pnpm';
   configParsed['teambit.dependencies/dependency-resolver'].policy = {
     dependencies: {},
