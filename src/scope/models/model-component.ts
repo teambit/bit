@@ -847,6 +847,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
+  hasLocalChanges(): boolean {
+    return Boolean(this.getLocalVersions().length);
+  }
+
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');

@@ -260,11 +260,11 @@ export default class ComponentsList {
       await component.setDivergeData(this.scope.objects);
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
-        // be considered as staged and should be exported. notice that we use `getLocalVersions`
+        // be considered as staged and should be exported. notice that we use `hasLocalChanges`
         // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
         // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
         // be exported unexpectedly.
-        return component.getLocalVersions().length;
+        return component.hasLocalChanges();
       }
       return component.isLocallyChanged(lane, this.scope.objects);
     });

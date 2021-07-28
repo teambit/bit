@@ -572,7 +572,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
     const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
-    await existingComp.setDivergeData(this.objects());
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,

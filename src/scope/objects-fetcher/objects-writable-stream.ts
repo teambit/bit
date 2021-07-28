@@ -78,7 +78,6 @@ export class ObjectsWritable extends Writable {
       if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
       return incomingComp;
     }
-    await existingComp.setDivergeData(this.repo);
     const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
     const { mergedComponent } = await modelComponentMerger.merge();
     if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
