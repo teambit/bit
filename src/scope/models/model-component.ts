@@ -857,6 +857,11 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
+    if (!this.divergeData) {
+      throw new Error(
+        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
+      );
+    }
     const localVersions = this.getLocalTagsOrHashes();
     if (localVersions.length) return true;
     // @todo: why this is needed? on main, the localVersion must be populated if changed locally

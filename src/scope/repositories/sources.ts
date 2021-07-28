@@ -534,16 +534,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * It doesn't save anything to the file-system.
-   * Only if the returned mergedVersions is not empty, the mergedComponent has changed.
+   * this gets called only during export. for import, the merge is different, see
+   * objects-writable-stream.mergeModelComponent()
    *
-   * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
-   * discrepancies, but simply override the existing component.
-   * In this context, "discrepancy" means, same version but different hashes.
-   * When using import command, it makes sense to override a component in case of discrepancies because the source of
-   * truth should be the remote scope from where the import fetches the component.
-   * When the same component has different versions in the remote and the local, it merges the two
-   * by calling this.mergeTwoComponentsObjects().
+   * it doesn't save anything to the file-system.
+   * only if the returned mergedVersions is not empty, the mergedComponent has changed.
    *
    * when dealing with lanes, exporting/importing lane's components, this function doesn't do much
    * if any. that's because the head is not saved on the ModelComponent but on the lane object.
@@ -577,6 +572,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
     const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
+    await existingComp.setDivergeData(this.objects());
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
