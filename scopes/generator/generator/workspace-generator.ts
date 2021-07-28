@@ -83,6 +83,7 @@ export class WorkspaceGenerator {
   }
 
   private async addComponentsFromRemote() {
+    if (this.options.empty) return;
     const componentsToImport = this.template?.importComponents?.();
     if (!componentsToImport || !componentsToImport.length) return;
     const dependencyResolver = this.harmony.get<DependencyResolverMain>(DependencyResolverAspect.id);

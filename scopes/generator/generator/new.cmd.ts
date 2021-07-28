@@ -7,6 +7,7 @@ export type NewOptions = {
   defaultScope?: string;
   standalone?: boolean;
   loadFrom?: string;
+  empty?: boolean;
 };
 
 export class NewCmd implements Command {
@@ -24,6 +25,7 @@ export class NewCmd implements Command {
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
+    ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
     [
       '',
       'load-from <string>',
