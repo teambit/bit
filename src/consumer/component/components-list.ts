@@ -259,7 +259,12 @@ export default class ComponentsList {
     const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
       await component.setDivergeData(this.scope.objects);
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
-        return false; // it's not on the FS
+        // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
+        // be considered as staged and should be exported. notice that we use `getLocalVersions`
+        // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
+        // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
+        // be exported unexpectedly.
+        return component.getLocalVersions().length;
       }
       return component.isLocallyChanged(lane, this.scope.objects);
     });

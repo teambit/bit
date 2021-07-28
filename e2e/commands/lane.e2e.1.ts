@@ -350,7 +350,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show the components as staged', () => {
         const status = helper.command.statusJson();
-        expect(status.stagedComponents).to.have.lengthOf(2);
+        expect(status.stagedComponents).to.have.lengthOf(3);
       });
       it('bit lane should show that all components are belong to main', () => {
         const lanes = helper.command.showLanesParsed();
