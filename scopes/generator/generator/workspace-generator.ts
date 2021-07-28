@@ -97,7 +97,12 @@ export class WorkspaceGenerator {
     // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
     const components = await Promise.all(componentIds.map((id) => this.workspace.scope.getRemoteComponent(id)));
     const oldAndNewPackageNames = this.getNewPackageNames(components);
-    await Promise.all(components.map((comp) => this.replaceOriginalPackageNameWithNew(comp, oldAndNewPackageNames)));
+    const oldAndNewComponentIds = this.getNewComponentIds(components);
+    await Promise.all(
+      components.map((comp) =>
+        this.replaceOriginalPackageNameWithNew(comp, oldAndNewPackageNames, oldAndNewComponentIds)
+      )
+    );
     await pMapSeries(components, async (comp) => {
       const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
       if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
@@ -145,7 +150,21 @@ export class WorkspaceGenerator {
     return packageToReplace;
   }
 
-  private async replaceOriginalPackageNameWithNew(comp: Component, packageToReplace: Record<string, string>) {
+  private getNewComponentIds(components: Component[]): { [oldComponentId: string]: string } {
+    const componentToReplace = {};
+    const scopeToReplace = this.workspace.defaultScope;
+    components.forEach((comp) => {
+      const newId = comp.id.changeScope(scopeToReplace).toStringWithoutVersion();
+      componentToReplace[comp.id.toStringWithoutVersion()] = newId;
+    });
+    return componentToReplace;
+  }
+
+  private async replaceOriginalPackageNameWithNew(
+    comp: Component,
+    packageToReplace: Record<string, string>,
+    oldAndNewComponentIds: Record<string, string>
+  ) {
     await Promise.all(
       comp.filesystem.files.map(async (file) => {
         const isBinary = await isBinaryFile(file.contents);
@@ -156,6 +175,12 @@ export class WorkspaceGenerator {
           if (strContent.includes(currentPackage)) {
             const currentPkgRegex = new RegExp(currentPackage, 'g');
             newContent = newContent.replace(currentPkgRegex, packageToReplace[currentPackage]);
+          }
+        });
+        Object.keys(oldAndNewComponentIds).forEach((currentId) => {
+          if (strContent.includes(currentId)) {
+            const currentIdRegex = new RegExp(currentId, 'g');
+            newContent = newContent.replace(currentIdRegex, oldAndNewComponentIds[currentId]);
           }
         });
         if (strContent !== newContent) {
