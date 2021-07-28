@@ -348,9 +348,9 @@ describe('bit lane command', function () {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(appOutput);
       });
-      it('bit status should show clean state', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      it('bit status should show the components as staged', () => {
+        const status = helper.command.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(2);
       });
       it('bit lane should show that all components are belong to main', () => {
         const lanes = helper.command.showLanesParsed();
