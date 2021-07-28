@@ -187,6 +187,9 @@ export class GeneratorMain {
   }
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
+    if (this.workspace) {
+      throw new BitError("error: unable generating a new workspace, you're in a workspace already");
+    }
     const { aspect: aspectId, loadFrom } = options;
     const template = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
