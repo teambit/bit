@@ -25,6 +25,30 @@ export default function (workDir: string, envId: string): Configuration {
           use: [require.resolve('source-map-loader')],
         },
         {
+          test: /\.composition?s\.js$/,
+          // limit loader to files in the current project,
+          // to skip any files linked from other projects (like Bit itself)
+          include: path.join(workDir, 'node_modules'),
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                plugins: [
+                  // for component highlighting in preview.
+                  // [require.resolve('@teambit/react.babel.bit-react-transformer')],
+                  [require.resolve('react-refresh/babel')],
+                ],
+                // turn off all optimizations (only slow down for node_modules)
+                compact: false,
+                minified: false,
+              },
+            },
+          ],
+        },
+        {
           test: /\.js$/,
           // limit loader to files in the current project,
           // to skip any files linked from other projects (like Bit itself)
@@ -63,6 +87,7 @@ export default function (workDir: string, envId: string): Configuration {
                 babelrc: false,
                 configFile: false,
                 presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
+                plugins: [require.resolve('react-refresh/babel')],
               },
             },
             {
@@ -82,14 +107,28 @@ export default function (workDir: string, envId: string): Configuration {
           sockPath: `_hmr/${envId}`,
           // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
           // errors
-          entry: require.resolve('./react-hot-dev-client'),
-          module: require.resolve('./refresh'),
+          // entry: require.resolve('./react-hot-dev-client'),
+          // module: require.resolve('./refresh'),
         },
         // include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
-        include: path.join(workDir, 'node_modules'),
+        // include: path.join(workDir, 'node_modules'),
+        // include: /node_modules/i,
+        // include: /node_modules/i,
+        include: [
+          new RegExp('node_modules/@my-scope', 'i'),
+          // new RegExp('node_modules/.cache', 'i'),
+          path.join(workDir, 'node_modules', '@my-scope'),
+          // path.join(workDir, 'node_modules', '.cache'),
+          // path.join('.', 'node_modules', '@my-scope'),
+          // path.join('.', 'node_modules', '.cache'),
+          // /__composition.*/i,
+        ],
+
         // TODO: use a more specific exclude for our selfs
         // exclude: [/dist/, /node_modules/],
-        exclude: /asdfasdfs/,
+        // exclude: new RegExp('node_modules/\@pmmmwh', 'i'),
+        exclude: '/react-refresh-webpack-plugin/i',
+        // exclude: 'fdasfdafd',
       }),
     ],
   };
