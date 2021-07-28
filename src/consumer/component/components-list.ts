@@ -254,9 +254,13 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
+    const fromBitMap = this.bitMap.getAuthoredAndImportedBitIds();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
       await component.setDivergeData(this.scope.objects);
+      if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
+        return false; // it's not on the FS
+      }
       return component.isLocallyChanged(lane, this.scope.objects);
     });
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
