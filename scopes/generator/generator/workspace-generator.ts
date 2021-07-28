@@ -68,7 +68,11 @@ export class WorkspaceGenerator {
    * writes the generated template files to the default directory set in the workspace config
    */
   private async writeWorkspaceFiles(): Promise<void> {
-    const workspaceContext = { name: this.workspaceName, defaultScope: this.options.defaultScope };
+    const workspaceContext = {
+      name: this.workspaceName,
+      defaultScope: this.options.defaultScope,
+      empty: this.options.empty,
+    };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
@@ -83,6 +87,7 @@ export class WorkspaceGenerator {
   }
 
   private async addComponentsFromRemote() {
+    if (this.options.empty) return;
     const componentsToImport = this.template?.importComponents?.();
     if (!componentsToImport || !componentsToImport.length) return;
     const dependencyResolver = this.harmony.get<DependencyResolverMain>(DependencyResolverAspect.id);
