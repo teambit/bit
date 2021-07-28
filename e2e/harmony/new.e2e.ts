@@ -56,4 +56,12 @@ describe('new command', function () {
       expect(dependencies).to.not.have.property('@types/node');
     });
   });
+  describe('running inside workspace', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+    });
+    it('should throw an error', () => {
+      expect(() => helper.command.new('react')).to.throw();
+    });
+  });
 });
