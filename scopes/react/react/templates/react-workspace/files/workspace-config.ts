@@ -1,7 +1,7 @@
 import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
-export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
+export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'company.scope';
@@ -14,14 +14,21 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
       'react-dom': '16.13.1',
     },
   };
-  configParsed['teambit.workspace/variants'] = {
-    '{ui/**}, {pages/**}': {
-      'teambit.react/react': {},
-    },
-    '{envs/*}': {
-      'teambit.harmony/aspect': {},
-    },
-  };
+
+  configParsed['teambit.workspace/variants'] = empty
+    ? {
+        '*': {
+          'teambit.react/react': {},
+        },
+      }
+    : {
+        '{ui/**}, {pages/**}': {
+          'teambit.react/react': {},
+        },
+        '{envs/*}': {
+          'teambit.harmony/aspect': {},
+        },
+      };
 
   return stringifyWorkspaceConfig(configParsed);
 }
