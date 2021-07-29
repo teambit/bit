@@ -121,7 +121,7 @@ export default class ImportComponents {
     await Promise.all(
       componentsWithDependencies.map(async ({ component }) => {
         const modelComponent = await this.scope.getModelComponent(component.id);
-        await modelComponent.setDivergeData(this.scope.objects);
+        await modelComponent.setDivergeData(this.scope.objects, undefined, false);
         this.divergeData.push(modelComponent);
       })
     );
