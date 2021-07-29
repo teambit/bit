@@ -39,8 +39,12 @@ export default class Lanes {
     return laneName;
   }
 
+  getCurrentLaneId(): LocalLaneId {
+    return LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE);
+  }
+
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.loadLane(LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE));
+    return this.loadLane(this.getCurrentLaneId());
   }
 
   setCurrentLane(laneName: string): void {
