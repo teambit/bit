@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
-import { merge, omit } from 'lodash';
+import { camelCase, merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
 import {
@@ -32,12 +32,10 @@ import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Configuration } from 'webpack';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ReactMainConfig } from './react.main.runtime';
-import { ReactAspect } from './react.aspect';
+import docs from '@teambit/react.ui.docs-app';
 
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
@@ -45,11 +43,16 @@ import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
 
 // webpack configs for envs only
 // import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import envPreviewBaseConfigFactory from './webpack/webpack.config.env.base';
 import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 
 // webpack configs for components only
+import componentPreviewBaseConfigFactory from './webpack/webpack.config.component.base';
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+
+import { ReactMainConfig } from './react.main.runtime';
+import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -234,54 +237,124 @@ export class ReactEnv
    * required for `bit start`
    */
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+    console.log('context.entry', context.entry);
     const baseConfig = basePreviewConfigFactory(false);
-    const envDevConfig = envPreviewDevConfigFactory(context.id);
-    // const fileMapPath = this.writeFileMap(context.components, true);
-    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
-    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+    const mfName = camelCase(`${context.id.toString()}_MF`);
+    // TODO: take the port dynamically
+    const port = context.port;
+    const rootPath = context.rootPath;
 
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'http://localhost', port, rootPath || '');
+    console.log('envBaseConfig', require('util').inspect(envBaseConfig, { depth: 10 }));
+
+    const envDevConfig = envPreviewDevConfigFactory(context.id);
+
+    // const fileMapPath = this.writeFileMap(context.components, true);
+
+    const componentBaseConfig = componentPreviewBaseConfigFactory(mfName, context.exposes);
+    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+    // const defaultConfig = this.getDevWebpackConfig(context);
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
+      const merged = configMutator.merge([
+        baseConfig,
+        envBaseConfig,
+        envDevConfig,
+        componentBaseConfig,
+        componentDevConfig,
+      ]);
+      const allMfInstances = merged.raw.plugins?.filter(
+        (plugin) => plugin.constructor.name === 'ModuleFederationPlugin'
+      );
+      if (!allMfInstances || allMfInstances?.length < 2) {
+        return merged;
+      }
+      const mergedMfConfig = allMfInstances.reduce((acc, curr) => {
+        // @ts-ignore
+        return Object.assign(acc, curr._options);
+      }, {});
+      // @ts-ignore
+      allMfInstances[0]._options = mergedMfConfig;
+      const mutatedPlugins = merged.raw.plugins?.filter(
+        (plugin) => plugin.constructor.name !== 'ModuleFederationPlugin'
+      );
+      mutatedPlugins?.push(allMfInstances[0]);
+      merged.raw.plugins = mutatedPlugins;
       return merged;
     };
 
     return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
-  async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    // const fileMapPath = this.writeFileMap(context.components);
+  /**
+   * returns and configures the React component dev server.
+   */
+  // getEnvDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  //   console.log('context.entry', context.entry);
+  //   const baseConfig = basePreviewConfigFactory(false);
+  //   const envBaseConfig = envPreviewBaseConfigFactory();
+  //   const envDevConfig = envPreviewDevConfigFactory(context.id);
+  //   // const defaultConfig = this.getDevWebpackConfig(context);
+  //   const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+  //     return configMutator.merge([baseConfig, envBaseConfig, envDevConfig]);
+  //   };
+
+  //   return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+  // }
+
+  /**
+   * returns and configures the React component dev server.
+   */
+  // getComponentsDevServers(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  //   // const defaultConfig = this.getDevWebpackConfig(context);
+  //   const fileMapPath = this.writeFileMap(context.components, true);
+  //   const mfName = camelCase(`${context.id.toString()}_MF`);
+  //   const baseConfig = basePreviewConfigFactory(false);
+
+  //   const componentBaseConfig = componentPreviewBaseConfigFactory(mfName);
+  //   const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
+  //   const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+  //     return configMutator.merge([baseConfig, componentBaseConfig, componentDevConfig]);
+  //   };
+
+  //   return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+  // }
+
+  async getEnvBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
-    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
-    const componentProdConfig = componentPreviewProdConfigFactory();
+    const mfName = camelCase(`${context.id.toString()}_MF`);
+    // TODO: take the port dynamically
+    const port = 3000;
+    const rootPath = context.rootPath;
+    const envBaseConfig = envPreviewBaseConfigFactory(mfName, 'http://localhost', port, rootPath || '');
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
-      return merged;
+      return configMutator.merge([baseConfig, baseProdConfig, envBaseConfig]);
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
   }
 
-  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
-    if (!config || !config.entry) {
-      return [];
-    }
-    if (typeof config.entry === 'string') {
-      return [config.entry];
-    }
-    if (Array.isArray(config.entry)) {
-      let entries: string[] = [];
-      entries = config.entry.reduce((acc, entry) => {
-        if (typeof entry === 'string') {
-          acc.push(entry);
-        }
-        return acc;
-      }, entries);
-      return entries;
-    }
-    return [];
+  async getComponentBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    // const fileMapPath = this.writeFileMap(context.components);
+    const baseConfig = basePreviewConfigFactory(true);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    // const prodComponentConfig = componentPreviewProdConfigFactory(fileMapPath);
+    const prodComponentConfig = componentPreviewProdConfigFactory();
+    const defaultTransformer: WebpackConfigTransformer = (configMutator, mutatorContext) => {
+      if (!mutatorContext.target?.mfName) {
+        throw new Error(`missing module federation name for ${mutatorContext.target?.components[0].id.toString()}`);
+      }
+      const baseComponentConfig = componentPreviewBaseConfigFactory(
+        mutatorContext.target?.mfName,
+        mutatorContext.target?.mfExposes
+      );
+
+      return configMutator.merge([baseConfig, baseProdConfig, baseComponentConfig, prodComponentConfig]);
+    };
+
+    return this.webpack.createComponentsBundler(context, [defaultTransformer, ...transformers]);
   }
 
   /**

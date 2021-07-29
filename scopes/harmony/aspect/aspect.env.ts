@@ -1,10 +1,12 @@
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { Environment, EnvsMain } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
+import { PreviewMain } from '@teambit/preview';
 import { ReactEnv } from '@teambit/react';
 import { babelConfig } from './babel/babel-config';
+// import { BundleEnvTask } from './bundle-env.task';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -14,7 +16,13 @@ export const AspectEnvType = 'aspect';
  * a component environment built for [Aspects](https://reactjs.org) .
  */
 export class AspectEnv implements Environment {
-  constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
+  constructor(
+    private reactEnv: ReactEnv,
+    private babel: BabelMain,
+    private compiler: CompilerMain,
+    private envs: EnvsMain,
+    private preview: PreviewMain
+  ) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -76,10 +84,13 @@ export class AspectEnv implements Environment {
 
     const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
 
+    // const bundleEnvTask = new BundleEnvTask(this.envs, this.preview);
+
     return [
       this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
       this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
       ...pipeWithoutCompiler,
+      // bundleEnvTask,
     ];
   }
 }

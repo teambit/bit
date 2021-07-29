@@ -1,4 +1,6 @@
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { sha1 } from '@teambit/legacy/dist/utils';
+import { Compiler } from '@teambit/compiler';
+import { BuilderAspect, BuilderMain, BuildContext } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
@@ -8,15 +10,16 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import objectHash from 'object-hash';
-import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
-import { join } from 'path';
+import { uniq, groupBy } from 'lodash';
+import fs, { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { join, resolve } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
+import { generateMfLink } from './generate-mf-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
@@ -26,6 +29,13 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
+import { computeExposes } from './compute-exposes';
+import { generateBootstrapFile } from './generate-bootstrap-file';
+import { EnvMfBundlingStrategy } from './strategies/env-mf-strategy';
+import { GenerateEnvPreviewTask } from './bundle-env.task';
+import { createHostRoot } from './create-host-root';
+import { createCoreRoot } from './create-core-root';
+import { createRootBootstrap } from './create-root-bootstrap';
 
 const noopResult = {
   results: [],
@@ -103,6 +113,29 @@ export class PreviewMain {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
     const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    console.log('targetPath', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+
+    return targetPath;
+  }
+
+  async writeMfLink(
+    prefix: string,
+    // context: ExecutionContext,
+    moduleMap: ComponentMap<string[]>,
+    defaultModule: string | undefined,
+    dirName: string
+  ) {
+    // const exposes = await this.computeExposesFromExecutionContext(context);
+
+    const contents = generateMfLink(prefix, moduleMap, defaultModule);
+    const hash = objectHash(contents);
+    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -115,6 +148,7 @@ export class PreviewMain {
 
   private executionRefs = new Map<string, ExecutionRef>();
 
+  // TODO: consolidate code duplication with the env-strategy computePaths logic
   private async getPreviewTarget(
     /** execution context (of the specific env) */
     context: ExecutionContext
@@ -127,11 +161,13 @@ export class PreviewMain {
 
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
-
-    return [...linkFiles, previewRuntime];
+    // throw new Error('g');
+    const { bootstrapFileName } = this.createBootstrapFile([...linkFiles, previewRuntime], context);
+    const indexEntryPath = this.createIndexEntryFile(bootstrapFileName, context);
+    return [indexEntryPath];
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
+  private async updateLinkFiles(components: Component[] = [], context: ExecutionContext, useMf = true) {
     const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
       const templatePath = await previewDef.renderTemplatePath?.(context);
@@ -153,23 +189,134 @@ export class PreviewMain {
       });
 
       const dirPath = join(this.tempFolder, context.id);
+      console.log('dirPath', dirPath);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
+      const link = useMf
+        ? await this.writeMfLink(previewDef.prefix, withPaths, templatePath, dirPath)
+        : this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
       return link;
     });
 
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime(context: { components: Component[] }) {
+  public createIndexEntryFile(bootstrapFileName: string, context: ExecutionContext, rootDir = this.tempFolder) {
+    const dirName = join(rootDir, context.id);
+    const contents = `import('./${bootstrapFileName}')`;
+    const hash = objectHash(contents);
+    const targetPath = join(dirName, `__index-${this.timestamp}.js`);
+    console.log('createIndexEntryFile', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+    return targetPath;
+  }
+
+  public createBootstrapFile(entryFilesPaths: string[], context: ExecutionContext, rootDir = this.tempFolder) {
+    const contents = generateBootstrapFile(entryFilesPaths);
+    const dirName = join(rootDir, context.id);
+    const hash = objectHash(contents);
+    const fileName = `__bootstrap-${this.timestamp}.js`;
+    const targetPath = join(dirName, fileName);
+    console.log('createBootstrapFile', targetPath);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
+    return { bootstrapPath: targetPath, bootstrapFileName: fileName };
+  }
+
+  async writePreviewRuntime(context: { components: Component[] }, rootDir = this.tempFolder) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
+    const filePath = await this.generateRootForMf(filteredAspects, name, 'preview', PreviewAspect.id, rootDir);
+    console.log('filePath', filePath);
     return filePath;
+  }
+
+  /**
+   * generate the root file of the UI runtime.
+   */
+  async generateRootForMf(
+    aspectDefs: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = PreviewRuntime.name,
+    rootAspect = UIAspect.id,
+    rootTempDir = this.tempFolder
+  ) {
+    // const rootRelativePath = `${runtimeName}.root${sha1(contents)}.js`;
+    // const filepath = resolve(join(__dirname, rootRelativePath));
+    const aspectsGroups = groupBy(aspectDefs, (def) => {
+      const id = def.getId;
+      if (!id) return 'host';
+      if (this.aspectLoader.isCoreAspect(id)) return 'core';
+      return 'host';
+    });
+
+    // const coreRootFilePath = this.writeCoreUiRoot(aspectsGroups.core, rootExtensionName, runtimeName, rootAspect);
+    const { fullPath: coreRootFilePath } = this.writeCoreUiRoot(
+      aspectsGroups.core,
+      rootExtensionName,
+      runtimeName,
+      rootAspect
+    );
+    const hostRootFilePath = this.writeHostUIRoot(aspectsGroups.host, coreRootFilePath, runtimeName, rootTempDir);
+
+    const rootBootstrapContents = await createRootBootstrap(hostRootFilePath.relativePath);
+    const rootBootstrapRelativePath = `${runtimeName}.root${sha1(rootBootstrapContents)}-bootstrap.js`;
+    const rootBootstrapPath = resolve(join(rootTempDir, rootBootstrapRelativePath));
+    if (fs.existsSync(rootBootstrapPath)) return rootBootstrapPath;
+    fs.outputFileSync(rootBootstrapPath, rootBootstrapContents);
+    console.log('rootBootstrapPath', rootBootstrapPath);
+    throw new Error('g');
+    return rootBootstrapPath;
+  }
+
+  /**
+   * Generate a file which contains all the core ui aspects and the harmony config to load them
+   * This will get an harmony config, and host specific aspects to load
+   * and load the harmony instance
+   */
+  private writeCoreUiRoot(
+    coreAspects: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = UIRuntime.name,
+    rootAspect = UIAspect.id
+  ) {
+    const contents = createCoreRoot(coreAspects, rootExtensionName, rootAspect, runtimeName);
+    const rootRelativePath = `${runtimeName}.core.root.${sha1(contents)}.js`;
+    const filepath = resolve(join(__dirname, rootRelativePath));
+    console.log('core ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
+    fs.outputFileSync(filepath, contents);
+    return { fullPath: filepath, relativePath: rootRelativePath };
+  }
+
+  /**
+   * Generate a file which contains host (workspace/scope) specific ui aspects. and the harmony config to load them
+   */
+  private writeHostUIRoot(
+    hostAspects: AspectDefinition[] = [],
+    coreRootPath: string,
+    runtimeName = UIRuntime.name,
+    rootTempDir = this.tempFolder
+  ) {
+    const contents = createHostRoot(hostAspects, coreRootPath, this.harmony.config.toObject());
+    const rootRelativePath = `${runtimeName}.host.root.${sha1(contents)}.js`;
+    const filepath = resolve(join(rootTempDir, rootRelativePath));
+    console.log('host ui root', filepath);
+    if (fs.existsSync(filepath)) return { fullPath: filepath, relativePath: rootRelativePath };
+    fs.outputFileSync(filepath, contents);
+    return { fullPath: filepath, relativePath: rootRelativePath };
   }
 
   /**
@@ -197,7 +344,7 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(), new EnvMfBundlingStrategy(this)];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -236,9 +383,8 @@ export class PreviewMain {
   /**
    * return the configured bundling strategy.
    */
-  getBundlingStrategy(): BundlingStrategy {
+  getBundlingStrategy(strategyName = this.config.bundlingStrategy): BundlingStrategy {
     const defaultStrategies = this.getDefaultStrategies();
-    const strategyName = this.config.bundlingStrategy;
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;
@@ -262,6 +408,25 @@ export class PreviewMain {
    */
   registerDefinition(previewDef: PreviewDefinition) {
     this.previewSlot.register(previewDef);
+  }
+
+  async computeExposesFromExecutionContext(
+    context: ExecutionContext
+    // context: BuildContext
+  ): Promise<Record<string, string>> {
+    const defs = this.getDefs();
+    const components = context.components;
+    const compiler = context.envRuntime.env.getCompiler();
+    const allExposes = {};
+    const promises = components.map(async (component) => {
+      const componentModulePath = this.workspace.componentModulePath(component);
+      const exposes = await computeExposes(componentModulePath, defs, component, compiler);
+      Object.assign(allExposes, exposes);
+      return undefined;
+    });
+    await Promise.all(promises);
+
+    return allExposes;
   }
 
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
@@ -324,10 +489,12 @@ export class PreviewMain {
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),
+        exposes: preview.computeExposesFromExecutionContext.bind(preview),
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+    if (!config.disabled)
+      builder.registerBuildTasks([new PreviewTask(bundler, preview), new GenerateEnvPreviewTask(envs, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>

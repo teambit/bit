@@ -6,6 +6,8 @@ import { ComponentServer } from './component-server';
 import { DevServer } from './dev-server';
 import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
+import { getExposes } from './get-exposes';
+import { selectPort } from './select-port';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
@@ -56,16 +58,25 @@ export class DevServerService implements EnvService<ComponentServer> {
       acc[envId] = [context];
       return acc;
     }, {});
+    const portRange = [3300, 3400];
+    const usedPorts: number[] = [];
 
     const servers = await Promise.all(
       Object.entries(byOriginalEnv).map(async ([id, contextList]) => {
         let mainContext = contextList.find((context) => context.envDefinition.id === id);
         if (!mainContext) mainContext = contextList[0];
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
-        const devServerContext = await this.buildContext(mainContext, additionalContexts);
-        const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
+        this.enrichContextWithComponentsAndRelatedContext(mainContext, additionalContexts);
+        const envDevServerContext = await this.buildEnvServerContext(mainContext);
+        const envDevServer: DevServer = envDevServerContext.envRuntime.env.getDevServer(envDevServerContext);
+        const port = await selectPort(portRange, usedPorts);
+        usedPorts.push(port);
+        envDevServerContext.port = port;
 
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
+        // TODO: consider change this to a new class called EnvServer
+        const componentServer = new ComponentServer(this.pubsub, envDevServerContext, portRange, envDevServer);
+        componentServer.port = port;
+        return componentServer;
       })
     );
 
@@ -85,18 +96,26 @@ export class DevServerService implements EnvService<ComponentServer> {
   /**
    * builds the execution context for the dev server.
    */
-  private async buildContext(
+  private enrichContextWithComponentsAndRelatedContext(
     context: ExecutionContext,
     additionalContexts: ExecutionContext[] = []
-  ): Promise<DevServerContext> {
+  ): void {
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
+  }
 
+  /**
+   * builds the execution context for the dev server.
+   */
+  private async buildEnvServerContext(context: ExecutionContext): Promise<DevServerContext> {
+    const entry = await getEntry(context, this.runtimeSlot);
+    const exposes = await getExposes(context, this.runtimeSlot);
     return Object.assign(context, {
-      entry: await getEntry(context, this.runtimeSlot),
+      entry,
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `/public`,
+      exposes,
     });
   }
 }

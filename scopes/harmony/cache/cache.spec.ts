@@ -3,8 +3,6 @@ import { rmdirSync } from 'fs';
 import { expect } from 'chai';
 import { Logger } from '@teambit/logger';
 import { CacheMain } from './cache.main.runtime';
- 
-
 
 describe('Cache Aspect', () => {
   const cacheDirectory = `/tmp/bit/${v4()}`;

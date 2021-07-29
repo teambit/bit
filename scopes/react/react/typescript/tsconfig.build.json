@@ -3,8 +3,8 @@
     "lib": [
       "es2019", "DOM", "ES6" ,"DOM.Iterable"
     ],
-    "target": "es2015",
-    "module": "commonjs",
+    "target": "es5",
+    "module": "es6",
     "jsx": "react",
     "allowJs": true,
     "composite": true,

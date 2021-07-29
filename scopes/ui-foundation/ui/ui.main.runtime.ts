@@ -2,11 +2,13 @@ import type { AspectMain } from '@teambit/aspect';
 import { ComponentType } from 'react';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
+import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
@@ -19,7 +21,6 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-import { createRoot } from './create-root';
 import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
@@ -30,8 +31,19 @@ import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
+import { createRoot } from './create-root';
 
-export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [
+  PubsubMain,
+  CLIMain,
+  GraphqlMain,
+  ExpressMain,
+  ComponentMain,
+  CacheMain,
+  LoggerMain,
+  AspectLoaderMain,
+  AspectMain
+];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -113,6 +125,8 @@ export type RuntimeOptions = {
   rebuild?: boolean;
 };
 
+const DEFAULT_TEMP_DIR = join(CACHE_ROOT, UIAspect.id);
+
 export class UiMain {
   constructor(
     /**
@@ -172,10 +186,16 @@ export class UiMain {
      */
     private logger: Logger,
 
+    private aspectLoader: AspectLoaderMain,
+
     private harmony: Harmony,
 
     private startPluginSlot: StartPluginSlot
   ) {}
+
+  get tempFolder(): string {
+    return this.componentExtension.getHost()?.getTempDir(UIAspect.id) || DEFAULT_TEMP_DIR;
+  }
 
   async publicDir(uiRoot: UIRoot) {
     const overwriteFn = this.getOverwritePublic();
@@ -213,7 +233,7 @@ export class UiMain {
     const [name, uiRoot] = maybeUiRoot;
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const ssr = uiRoot.buildOptions?.ssr || false;
+    const ssr = false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
 
     const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
@@ -410,6 +430,7 @@ export class UiMain {
       this.harmony.config.toObject()
     );
     const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
+    console.log('generateRoot path', filepath);
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;
@@ -510,6 +531,7 @@ export class UiMain {
     ComponentAspect,
     CacheAspect,
     LoggerAspect,
+    AspectLoaderAspect,
   ];
 
   static slots = [
@@ -522,7 +544,7 @@ export class UiMain {
   ];
 
   static async provider(
-    [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
+    [pubsub, cli, graphql, express, componentExtension, cache, loggerMain, aspectLoader]: UIDeps,
     config,
     [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
@@ -550,6 +572,7 @@ export class UiMain {
       componentExtension,
       cache,
       logger,
+      aspectLoader,
       harmony,
       proxyGetterSlot
     );

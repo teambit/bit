@@ -119,7 +119,6 @@ export default function (isEnvProduction = false): Configuration {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
-
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
@@ -170,7 +169,7 @@ export default function (isEnvProduction = false): Configuration {
             // MDX support (move to the mdx aspect and extend from there)
             {
               test: /\.mdx?$/,
-              exclude: [/node_modules/],
+              // exclude: [/node_modules/],
               use: [
                 {
                   loader: require.resolve('babel-loader'),
@@ -337,6 +336,27 @@ export default function (isEnvProduction = false): Configuration {
       ],
     },
     plugins: [
+      new webpack.container.ModuleFederationPlugin({
+        // library: {
+        //   type: 'var',
+        //   name: 'module_federation_namespace',
+        // },
+        // TODO: add the version of button to the name
+        // remoteType: 'commonjs',
+        // TODO: think about it (maybe we want eager in component level but not in env level)
+        shared: {
+          react: {
+            eager: true,
+            singleton: true,
+            requiredVersion: '^17.0.0',
+          },
+          'react-dom': {
+            eager: true,
+            singleton: true,
+            requiredVersion: '^17.0.0',
+          },
+        },
+      }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
@@ -348,6 +368,7 @@ export default function (isEnvProduction = false): Configuration {
       // solution that requires the user to opt into importing specific locales.
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
+
       new webpack.IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,

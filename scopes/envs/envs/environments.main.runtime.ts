@@ -3,6 +3,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentID, AspectData } fr
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { flatten } from 'lodash';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { EnvService } from './services';
@@ -79,6 +80,20 @@ export class EnvsMain {
    */
   async createEnvironment(components: Component[]): Promise<Runtime> {
     return this.createRuntime(components);
+  }
+
+  /**
+   * list all registered envs.
+   */
+  listEnvs(): Environment[] {
+    return flatten(this.envSlot.values());
+  }
+
+  /**
+   * list all registered envs ids.
+   */
+  listEnvsIds(): string[] {
+    return this.envSlot.toArray().map(([envId]) => envId);
   }
 
   /**

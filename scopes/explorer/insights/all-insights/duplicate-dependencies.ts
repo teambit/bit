@@ -68,9 +68,10 @@ export default class DuplicateDependencies implements Insight {
     return formatted;
   }
 
-  private getDependents(
-    priorVersions: VersionSubgraph[]
-  ): { totalOutdatedDependents: number; dependentsByVersion: VersionWithDependents[] } {
+  private getDependents(priorVersions: VersionSubgraph[]): {
+    totalOutdatedDependents: number;
+    dependentsByVersion: VersionWithDependents[];
+  } {
     let totalOutdatedDependents = 0;
     const dependentsByVersion: VersionWithDependents[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {

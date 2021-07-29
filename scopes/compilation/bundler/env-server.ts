@@ -6,14 +6,17 @@ import { AddressInfo } from 'net';
 
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
-import { ComponentsServerStartedEvent } from './events';
+import { EnvsServerStartedEvent } from './events';
 import { BundlerAspect } from './bundler.aspect';
 import { selectPort } from './select-port';
 
-export class ComponentServer {
+export class EnvServer {
   // why is this here
   errors?: Error[];
   constructor(
+    /**
+     * browser runtime slot
+     */
     private pubsub: PubsubMain,
 
     /**
@@ -45,13 +48,9 @@ export class ComponentServer {
     return this._port;
   }
 
-  set port(port: number) {
-    this._port = port;
-  }
-
   _port: number;
   async listen() {
-    const port = this.port ?? (await selectPort(this.portRange));
+    const port = await selectPort(this.portRange);
     this._port = port;
     const server = await this.devServer.listen(port);
     const address = server.address();
@@ -59,7 +58,7 @@ export class ComponentServer {
     if (!address) throw new BindError();
     this.hostname = hostname;
 
-    this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
+    this.pubsub.pub(BundlerAspect.id, this.cresateEnvServerStartedEvent(server, this.context, hostname, port));
   }
 
   private getHostname(address: string | AddressInfo | null) {
@@ -76,13 +75,13 @@ export class ComponentServer {
 
   private onChange() {}
 
-  private createComponentsServerStartedEvent: (
-    DevServer,
-    ExecutionContext,
-    string,
-    number
-  ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {
-    return new ComponentsServerStartedEvent(Date.now(), componentsServer, context, hostname, port);
+  private cresateEnvServerStartedEvent: (DevServer, ExecutionContext, string, number) => EnvsServerStartedEvent = (
+    envServer,
+    context,
+    hostname,
+    port
+  ) => {
+    return new EnvsServerStartedEvent(Date.now(), envServer, context, hostname, port);
   };
 
   /**
