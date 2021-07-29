@@ -847,10 +847,20 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  hasLocalChanges(): boolean {
+  /**
+   * for most cases, use `isLocallyChanged`, which takes into account lanes.
+   * this is for cases when we only care about the versions exist in the `state` prop.
+   */
+  isLocallyChangedRegardlessOfLanes(): boolean {
     return Boolean(this.getLocalVersions().length);
   }
 
+  /**
+   * whether the component was locally changed, either by adding a new snap/tag or by merging
+   * components from different lanes.
+   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
+   * (it'll throw otherwise).
+   */
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');

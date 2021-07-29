@@ -264,7 +264,7 @@ export default class ComponentsList {
         // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
         // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
         // be exported unexpectedly.
-        return component.hasLocalChanges();
+        return component.isLocallyChangedRegardlessOfLanes();
       }
       return component.isLocallyChanged(lane, this.scope.objects);
     });
