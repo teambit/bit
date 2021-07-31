@@ -10,6 +10,8 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
     dependencies: {},
     peerDependencies: {
       '@testing-library/react': '11.2.6',
+      '@testing-library/jest-dom': '5.11.4',
+      '@testing-library/user-event': '12.1.10',
       react: '16.13.1',
       'react-dom': '16.13.1',
     },
