@@ -69,7 +69,6 @@ export class WebpackMain {
     const configMutator = new WebpackConfigMutator(config);
     const transformerContext: WebpackConfigTransformContext = { mode: 'dev' };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
-    console.log(require('util').inspect(afterMutation.raw, { depth: 5 }));
     // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
