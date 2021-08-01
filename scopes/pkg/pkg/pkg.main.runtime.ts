@@ -181,8 +181,11 @@ export class PkgMain {
   getModulePath(component: Component, options: { absPath: boolean }) {
     const pkgName = this.getPackageName(component);
     const relativePath = join('node_modules', pkgName);
-    if (options?.absPath && this.workspace) {
-      return join(this.workspace.path, relativePath);
+    if (options?.absPath) {
+      if (this.workspace) {
+        return join(this.workspace.path, relativePath);
+      }
+      throw new Error('getModulePath with abs path option is not implemented for scope');
     }
     return relativePath;
   }

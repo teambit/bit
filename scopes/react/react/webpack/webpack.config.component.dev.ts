@@ -85,12 +85,10 @@ export default function (workDir: string, envId: string, componentsDirs: string[
           module: require.resolve('./refresh'),
         },
         include: componentsDirs,
-        // TODO: use a more specific exclude for our selfs
-        // exclude: [/dist/, /node_modules/],
-        // exclude: new RegExp('node_modules/\@pmmmwh', 'i'),
-        exclude: '/react-refresh-webpack-plugin/i',
-        // exclude: /\.composition?s\.js$/,
-        // exclude: 'fdasfdafd',
+        // Excluding react-refresh-webpack-plugin
+        // it's important to put any exclude here to prevent from the default exclude (which is /node_modules/ to be applied)
+        // as all the component modules dirs are inside node_modules
+        exclude: /react-refresh-webpack-plugin/i,
       }),
     ],
   };
