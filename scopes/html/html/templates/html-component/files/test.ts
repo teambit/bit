@@ -1,7 +1,7 @@
 import { ComponentContext } from '@teambit/generator';
 
 export const testFile = (context: ComponentContext) => {
-  const { name, namePascalCase: Name } = context;
+  const { name } = context;
 
   return {
     relativePath: `${name}.spec.tsx`,
