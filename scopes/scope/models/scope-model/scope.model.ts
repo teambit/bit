@@ -1,4 +1,12 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, ComponentModelProps } from '@teambit/component';
+
+export type ScopeModelProps = {
+  name: string;
+  icon: string;
+  backgroundIconColor: string;
+  description: string;
+  components: ComponentModelProps[];
+};
 
 export class ScopeModel {
   constructor(
@@ -13,6 +21,11 @@ export class ScopeModel {
     readonly icon: string,
 
     /**
+     * background icon color
+     */
+    readonly backgroundIconColor: string,
+
+    /**
      * description of the scope
      */
     readonly description: string,
@@ -23,17 +36,18 @@ export class ScopeModel {
     readonly components: ComponentModel[]
   ) {}
 
-  static from(object: any) {
-    const components = object.scope.components || [];
+  static from({ scope }: { scope: ScopeModelProps }) {
+    const components = scope.components || [];
     return new ScopeModel(
-      object.scope.name,
-      object.scope.icon,
-      object.scope.description,
+      scope.name,
+      scope.icon,
+      scope.description,
+      scope.backgroundIconColor,
       components.map((component) => ComponentModel.from(component))
     );
   }
 
   static empty() {
-    return new ScopeModel('', '', '', []);
+    return new ScopeModel('', '', '', '', []);
   }
 }
