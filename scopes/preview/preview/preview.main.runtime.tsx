@@ -78,9 +78,9 @@ export class PreviewMain {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
 
-  async getPreview(component: Component): Promise<PreviewArtifact> {
+  async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
     const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
-    if (!artifacts.length) throw new PreviewArtifactNotFound(component.id);
+    if (!artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
   }
@@ -321,13 +321,11 @@ export class PreviewMain {
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
-    bundler.registerTarget([
-      {
-        entry: preview.getPreviewTarget.bind(preview),
-      },
-    ]);
+    bundler.registerTarget({
+      entry: preview.getPreviewTarget.bind(preview),
+    });
 
-    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+    // if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>

@@ -1171,6 +1171,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/owner-avatar"
     },
+    "ui/pages/preview-not-found": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/pages/preview-not-found"
+    },
     "ui/pages/not-found": {
         "scope": "teambit.design",
         "version": "0.0.349",
@@ -1254,6 +1260,12 @@
         "version": "0.0.413",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query"
+    },
+    "ui/rendering/full-page": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/rendering/full-page"
     },
     "ui/rendering/html": {
         "scope": "",
