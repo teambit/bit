@@ -35,7 +35,7 @@ export class EslintConfigMutator {
   }
 
   setRule(ruleName: string, ruleEntry: Linter.RuleEntry): EslintConfigMutator {
-    set(this.raw, ['config', 'rules', ruleName], ruleEntry);
+    set(this.raw, ['config', 'overrideConfig', 'rules', ruleName], ruleEntry);
     return this;
   }
 
@@ -45,7 +45,7 @@ export class EslintConfigMutator {
   }
 
   addExtends(extendsToAdd: string[]): EslintConfigMutator {
-    addToArrayInPath(this.raw, ['config', 'extends'], extendsToAdd);
+    addToArrayInPath(this.raw, ['config', 'overrideConfig', 'extends'], extendsToAdd);
     return this;
   }
 
