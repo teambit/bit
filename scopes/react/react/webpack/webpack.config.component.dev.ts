@@ -25,30 +25,6 @@ export default function (workDir: string, envId: string, componentsDirs: string[
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.composition?s\.js$/,
-          // limit loader to files in the current project,
-          // to skip any files linked from other projects (like Bit itself)
-          include: path.join(workDir, 'node_modules'),
-          // only apply to packages with componentId in their package.json (ie. bit components)
-          use: [
-            {
-              loader: require.resolve('babel-loader'),
-              options: {
-                babelrc: false,
-                configFile: false,
-                plugins: [
-                  // for component highlighting in preview.
-                  // [require.resolve('@teambit/react.babel.bit-react-transformer')],
-                  [require.resolve('react-refresh/babel')],
-                ],
-                // turn off all optimizations (only slow down for node_modules)
-                compact: false,
-                minified: false,
-              },
-            },
-          ],
-        },
-        {
           test: /\.js$/,
           // limit loader to files in the current project,
           // to skip any files linked from other projects (like Bit itself)
