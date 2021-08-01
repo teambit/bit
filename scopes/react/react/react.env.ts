@@ -236,10 +236,11 @@ export class ReactEnv
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
+    const componentsDirs = this.getComponentsModulesDirectories(context.components);
     // const fileMapPath = this.writeFileMap(context.components, true);
     // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
     // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id, componentsDirs);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
@@ -262,6 +263,13 @@ export class ReactEnv
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
+  }
+
+  private getComponentsModulesDirectories(components: Component[]): string[] {
+    const dirs = components.map((component) => {
+      return this.pkg.getModulePath(component, { absPath: true });
+    });
+    return dirs;
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {
