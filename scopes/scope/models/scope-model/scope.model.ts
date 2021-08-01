@@ -41,8 +41,8 @@ export class ScopeModel {
     return new ScopeModel(
       scope.name,
       scope.icon,
-      scope.description,
       scope.backgroundIconColor,
+      scope.description,
       components.map((component) => ComponentModel.from(component))
     );
   }
