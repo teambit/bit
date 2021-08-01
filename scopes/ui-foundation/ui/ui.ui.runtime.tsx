@@ -3,6 +3,7 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
+import { Html, MountPoint, mountPointId, ssrCleanup, Assets } from '@teambit/ui-foundation.ui.rendering.html';
 
 import { merge } from 'webpack-merge';
 import React, { ReactNode, ComponentType } from 'react';
@@ -14,8 +15,9 @@ import { Compose, Wrapper } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
+import type { RequestServer } from './ssr/request-server';
+import type { BrowserData } from './ssr/request-browser';
 import { RenderLifecycle } from './render-lifecycle';
 
 export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
@@ -43,19 +45,19 @@ export class UiUI {
     private lifecycleSlot: renderLifecycleSlot
   ) {}
 
-  async render(rootExtension: string) {
+  /** render and rehydrate client-side */
+  async render(rootExtension: string): Promise<void> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
     const uiRoot = rootFactory();
     const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation });
     const hudItems = this.hudSlot.values();
-
     const lifecycleHooks = this.lifecycleSlot.toArray();
+
+    // TODO - extract the logic from here down as reusable ssr machine
     const deserializedState = await this.deserialize(lifecycleHooks);
-    let renderContexts = await Promise.all(
-      lifecycleHooks.map(([, hooks], idx) => hooks.browserInit?.(deserializedState[idx]))
-    );
+    let renderContexts = await this.triggerBrowserInit(lifecycleHooks, deserializedState);
     const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     const app = (
@@ -67,20 +69,21 @@ export class UiUI {
       </Compose>
     );
 
-    renderContexts = await this.onAfterHydrate(renderContexts, lifecycleHooks, app);
+    renderContexts = await this.triggerBeforeHydrateHook(renderContexts, lifecycleHooks, app);
 
-    const mountPoint = document.getElementById('root');
-    // .render() should already run .hydrate() if possible.
+    const mountPoint = document.getElementById(mountPointId);
+    // .render() already runs `.hydrate()` behind the scenes.
     // in the future, we may want to replace it with .hydrate()
     ReactDOM.render(app, mountPoint);
 
-    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(renderContexts[idx], mountPoint)));
+    await this.triggerHydrateHook(renderContexts, lifecycleHooks, mountPoint);
 
     // remove ssr only styles
-    document.getElementById('before-hydrate-styles')?.remove();
+    ssrCleanup();
   }
 
-  async renderSsr(rootExtension: string, { assets, browser, server }: SsrContent = {}) {
+  /** render dehydrated server-side */
+  async renderSsr(rootExtension: string, { assets, browser, server }: SsrContent = {}): Promise<string> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
@@ -88,22 +91,25 @@ export class UiUI {
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.url });
     const hudItems = this.hudSlot.values();
 
+    const appBody = (
+      <ClientContext>
+        {hudItems}
+        {routes}
+      </ClientContext>
+    );
+
     // create array once to keep consistent indexes
     const lifecycleHooks = this.lifecycleSlot.toArray();
 
+    // TODO - extract the logic from here down as reusable ssr machine
     // (1) init
-    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.serverInit?.({ browser, server })));
+    let renderContexts = await this.triggerServerInit(lifecycleHooks, browser, server);
     const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     // (2) make (virtual) dom
     const app = (
       <MountPoint>
-        <Compose components={reactContexts}>
-          <ClientContext>
-            {hudItems}
-            {routes}
-          </ClientContext>
-        </Compose>
+        <Compose components={reactContexts}>{appBody}</Compose>
       </MountPoint>
     );
 
@@ -117,7 +123,7 @@ export class UiUI {
     // @ts-ignore // TODO upgrade 'webpack-merge'
     const totalAssets = merge(assets, realtimeAssets) as Assets;
 
-    const html = <Html assets={totalAssets} />;
+    const html = <Html assets={totalAssets} withDevTools fullHeight ssr />;
     const renderedHtml = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(html)}`;
     const fullHtml = Html.fillContent(renderedHtml, renderedApp);
 
@@ -148,6 +154,18 @@ export class UiUI {
     return this.lifecycleSlot.register(hooks);
   }
 
+  private triggerBrowserInit(lifecycleHooks: [string, RenderLifecycle<any, any>][], deserializedState: any[]) {
+    return Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.browserInit?.(deserializedState[idx])));
+  }
+
+  private triggerServerInit(
+    lifecycleHooks: [string, RenderLifecycle<any, any>][],
+    browser?: BrowserData,
+    server?: RequestServer
+  ) {
+    return Promise.all(lifecycleHooks.map(([, hooks]) => hooks.serverInit?.({ browser, server })));
+  }
+
   private getReactContexts(lifecycleHooks: [string, RenderLifecycle<any>][], renderContexts: any[]): Wrapper[] {
     return compact(
       lifecycleHooks.map(([, hooks], idx) => {
@@ -173,7 +191,11 @@ export class UiUI {
     return renderContexts;
   }
 
-  private onAfterHydrate(renderContexts: any[], lifecycleHooks: [string, RenderLifecycle<any>][], app: JSX.Element) {
+  private triggerBeforeHydrateHook(
+    renderContexts: any[],
+    lifecycleHooks: [string, RenderLifecycle<any>][],
+    app: JSX.Element
+  ) {
     return Promise.all(
       lifecycleHooks.map(async ([, hooks], idx) => {
         const ctx = renderContexts[idx];
@@ -181,6 +203,14 @@ export class UiUI {
         return nextCtx || ctx;
       })
     );
+  }
+
+  private async triggerHydrateHook(
+    renderContexts: any[],
+    lifecycleHooks: [string, RenderLifecycle<any, any>][],
+    mountPoint: HTMLElement | null
+  ) {
+    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(renderContexts[idx], mountPoint)));
   }
 
   private async serialize(
@@ -205,20 +235,12 @@ export class UiUI {
   }
 
   private async deserialize(lifecycleHooks: [string, RenderLifecycle][]) {
-    const elements: Record<string, Element | undefined> = {};
-
-    const inDom = Array.from(document.querySelectorAll('body > .state > *'));
-    inDom.forEach((elem) => {
-      const aspectName = elem.getAttribute('data-aspect');
-      if (!aspectName) return;
-
-      elements[aspectName] = elem;
-    });
+    const rawAssets = Html.popAssets();
 
     const deserialized = await Promise.all(
       lifecycleHooks.map(async ([key, hooks]) => {
         try {
-          const raw = elements[key]?.innerHTML;
+          const raw = rawAssets.get(key);
           return hooks.deserialize?.(raw);
         } catch (e) {
           // eslint-disable-next-line no-console
@@ -227,8 +249,6 @@ export class UiUI {
         }
       })
     );
-
-    document.querySelector('body > .state')?.remove();
 
     return deserialized;
   }
