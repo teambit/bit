@@ -178,9 +178,16 @@ export class PkgMain {
   /**
    * returns the package path in the /node_modules/ folder
    */
-  getModulePath(component: Component) {
+  getModulePath(component: Component, options: { absPath?: boolean } = {}) {
     const pkgName = this.getPackageName(component);
-    return join('node_modules', pkgName);
+    const relativePath = join('node_modules', pkgName);
+    if (options?.absPath) {
+      if (this.workspace) {
+        return join(this.workspace.path, relativePath);
+      }
+      throw new Error('getModulePath with abs path option is not implemented for scope');
+    }
+    return relativePath;
   }
 
   /**
