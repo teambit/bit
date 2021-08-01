@@ -6,17 +6,17 @@ export const testFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.spec.tsx`,
     content: `import { renderTemplate } from '@teambit/html.modules.render-template';
-import { createElementFromString } from '@teambit/html.modules.create-element-from-string';
-import { Basic${Name} } from './${name}.composition';
-
-it('should render with the correct text', () => {
-  const testString = "test string";
-  const element = createElementFromString(${Name}(testString));
-  const wrapper = document.createElement('div');
-  renderTemplate(wrapper, element);
-  const renderedElement = document.getElementsByTagName("div").find(el => el.textContent === testString);
-  expect(renderedElement).toBeTruthy();
-});
+    import { TestHtml } from './index';
+    
+    it('should render with the correct text', () => {
+      const testString = "test string";
+      const element = TestHtml(testString);
+      const body = document.body;
+      renderTemplate(body, element);
+      debugger;
+      const renderedElement = [...document.getElementsByTagName("div")].find(el => el.textContent === testString);
+      expect(renderedElement).toBeTruthy();
+    });
 `,
   };
 };
