@@ -6,6 +6,7 @@ export const testFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.spec.tsx`,
     content: `import { renderTemplate } from '@teambit/html.modules.render-template';
+import { createElementFromString } from '@teambit/html.modules.create-element-from-string';
 import { Basic${Name} } from './${name}.composition';
 
 it('should render with the correct text', () => {
