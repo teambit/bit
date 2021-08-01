@@ -178,7 +178,7 @@ export class PkgMain {
   /**
    * returns the package path in the /node_modules/ folder
    */
-  getModulePath(component: Component, options: { absPath: boolean }) {
+  getModulePath(component: Component, options: { absPath?: boolean } = {}) {
     const pkgName = this.getPackageName(component);
     const relativePath = join('node_modules', pkgName);
     if (options?.absPath) {
