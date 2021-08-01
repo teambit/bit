@@ -20,7 +20,8 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
 
     /**
-     * default directory for all components in workspace, the following placeholders are available:
+     * default directory to place a component during `bit import` and `bit create`.
+     * the following placeholders are available:
      * name - component name includes namespace, e.g. 'ui/button'.
      * scopeId - full scope-id includes the owner, e.g. 'teambit.compilation'.
      * scope - scope name only, e.g. 'compilation'.

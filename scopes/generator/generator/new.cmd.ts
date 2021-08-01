@@ -7,6 +7,7 @@ export type NewOptions = {
   defaultScope?: string;
   standalone?: boolean;
   loadFrom?: string;
+  empty?: boolean;
 };
 
 export class NewCmd implements Command {
@@ -24,6 +25,7 @@ export class NewCmd implements Command {
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
     ['s', 'standalone <string>', 'skip generation of Git repository'],
+    ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
     [
       '',
       'load-from <string>',
@@ -35,6 +37,37 @@ export class NewCmd implements Command {
 
   async report([templateName, workspaceName]: [string, string], options: NewOptions) {
     const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
-    return chalk.green(`a new workspace has been created successfully at ${results}`);
+    return chalk.white(
+      `${chalk.green(`Congrats! A new workspace has been created successfully at ${results}`)}
+
+      Inside the directory ${workspaceName} you can run various commands including:
+
+      ${chalk.yellow('bit start')}
+        Starts the workspace in development mode
+
+      ${chalk.yellow('bit install')}
+        Installs any missing dependencies
+
+      ${chalk.yellow('bit status')}
+        Shows the status of the components
+
+      ${chalk.yellow('bit compile')}
+        Compiles the components
+
+      ${chalk.yellow('bit test')}
+        Runs the tests on all your components
+
+      ${chalk.yellow('bit templates')}
+        Shows all available component templates
+
+      ${chalk.yellow('bit help')}
+        Shows all available commands
+
+
+      ${chalk.green.bold("Let's get started!")}
+
+      ${chalk.yellow(`cd ${workspaceName}`)}
+      ${chalk.yellow(`bit start`)}`
+    );
   }
 }

@@ -68,8 +68,8 @@ export class ReactNativeMain {
    */
   useWebpack(modifiers?: UseWebpackModifiers) {
     const mergedModifiers: UseWebpackModifiers = {
-      previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
-      devServerConfig: (modifiers?.devServerConfig ?? []).concat(devServerConfigTransformer),
+      previewConfig: [previewConfigTransformer].concat(modifiers?.previewConfig ?? []),
+      devServerConfig: [devServerConfigTransformer].concat(modifiers?.devServerConfig ?? []),
     };
     return this.react.useWebpack(mergedModifiers);
   }
@@ -135,6 +135,7 @@ function getReactNativeDeps() {
       '@types/react': '^17.0.8',
       '@types/react-dom': '^17.0.5',
       '@types/react-native': '^0.64.1',
+      'babel-jest': '^25.1.0',
     },
     peerDependencies: {
       react: '^16.8.0 || ^17.0.0',

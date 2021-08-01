@@ -254,10 +254,20 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
+    const fromBitMap = this.bitMap.getAuthoredAndImportedBitIds();
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, (component: ModelComponent) =>
-      component.isLocallyChanged(lane, this.scope.objects)
-    );
+    const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
+      await component.setDivergeData(this.scope.objects);
+      if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
+        // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
+        // be considered as staged and should be exported. notice that we use `hasLocalChanges`
+        // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
+        // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
+        // be exported unexpectedly.
+        return component.isLocallyChangedRegardlessOfLanes();
+      }
+      return component.isLocallyChanged(lane, this.scope.objects);
+    });
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
