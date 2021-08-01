@@ -13,7 +13,6 @@ export const testFile = (context: ComponentContext) => {
       const element = TestHtml(testString);
       const body = document.body;
       renderTemplate(body, element);
-      debugger;
       const renderedElement = [...document.getElementsByTagName("div")].find(el => el.textContent === testString);
       expect(renderedElement).toBeTruthy();
     });
