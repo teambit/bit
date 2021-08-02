@@ -91,13 +91,6 @@ export class UiUI {
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.url });
     const hudItems = this.hudSlot.values();
 
-    const appBody = (
-      <ClientContext>
-        {hudItems}
-        {routes}
-      </ClientContext>
-    );
-
     // create array once to keep consistent indexes
     const lifecycleHooks = this.lifecycleSlot.toArray();
 
@@ -109,7 +102,12 @@ export class UiUI {
     // (2) make (virtual) dom
     const app = (
       <MountPoint>
-        <Compose components={reactContexts}>{appBody}</Compose>
+        <Compose components={reactContexts}>
+          <ClientContext>
+            {hudItems}
+            {routes}
+          </ClientContext>
+        </Compose>
       </MountPoint>
     );
 
