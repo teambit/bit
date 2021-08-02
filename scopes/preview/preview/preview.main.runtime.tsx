@@ -321,9 +321,11 @@ export class PreviewMain {
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
-    bundler.registerTarget({
-      entry: preview.getPreviewTarget.bind(preview),
-    });
+    bundler.registerTarget([
+      {
+        entry: preview.getPreviewTarget.bind(preview),
+      },
+    ]);
 
     // if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
 

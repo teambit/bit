@@ -34,5 +34,5 @@ export function PreviewNotFoundPage() {
 }
 
 export function stringifiedPreviewNotFoundPage(): string {
-  return fullPageToStaticString(<PreviewNotFoundPage />);
+  return fullPageToStaticString(<PreviewNotFoundPage />, { title: 'Preview not found' });
 }

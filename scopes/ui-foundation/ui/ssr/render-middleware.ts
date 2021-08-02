@@ -1,10 +1,10 @@
+import type { Assets } from '@teambit/ui-foundation.rendering.html';
 import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
 import type { Logger } from '@teambit/logger';
 import { requestToObj } from './request-browser';
 import { SsrContent } from './ssr-content';
-import type { Assets } from './html';
 
 const denyList = /^\/favicon.ico$/;
 
