@@ -307,7 +307,7 @@
         "vscode-ws-jsonrpc": "0.2.0",
         "webpack": "5.36.2",
         "webpack-dev-middleware": "4.1.0",
-        "webpack-dev-server": "4.0.0-rc.0",
+        "webpack-dev-server": "4.0.0-beta.2",
         "webpack-hot-middleware": "2.25.0",
         "webpack-manifest-plugin": "3.1.1",
         "webpack-merge": "5.7.3",
