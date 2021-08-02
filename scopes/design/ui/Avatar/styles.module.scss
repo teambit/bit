@@ -53,5 +53,5 @@
 
 :export {
   //text without hash
-  defaultAvatarBgColor: str-slice(inspect(var(--bit-border-color-lightest, #ededed)), 2);
+  defaultAvatarBgColor: 'ededed';
 }
