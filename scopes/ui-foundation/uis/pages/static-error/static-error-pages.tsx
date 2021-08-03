@@ -1,4 +1,5 @@
 import React from 'react';
+import { staticBookFontClass, staticBookFontUrl } from '@teambit/base-ui.theme.fonts.book';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 import { PreviewNotFoundPage } from '@teambit/ui-foundation.ui.pages.preview-not-found';
@@ -18,17 +19,17 @@ const center = `
 
 const assets = {
   style: [center],
-  css: ['https://static.bit.dev/fonts/book-font.css'],
+  css: [staticBookFontUrl],
 };
 
 export function notFound(): string {
-  return fullPageToStaticString(<NotFoundPage className="bit-book-font" />, assets);
+  return fullPageToStaticString(<NotFoundPage className={staticBookFontClass} />, assets);
 }
 
 export function serverError(): string {
-  return fullPageToStaticString(<ServerErrorPage className="bit-book-font" />, assets);
+  return fullPageToStaticString(<ServerErrorPage className={staticBookFontClass} />, assets);
 }
 
 export function noPreview(): string {
-  return fullPageToStaticString(<PreviewNotFoundPage className="bit-book-font" />, assets);
+  return fullPageToStaticString(<PreviewNotFoundPage className={staticBookFontClass} />, assets);
 }
