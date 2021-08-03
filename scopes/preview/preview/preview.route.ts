@@ -26,7 +26,7 @@ export class PreviewRoute implements Route {
       }
 
       let artifact: PreviewArtifact | undefined;
-      // TODO - prevent error `getVinylsAndImportIfMissing is not a function`
+      // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
       try {
         artifact = await this.preview.getPreview(component);
       } catch (e) {
