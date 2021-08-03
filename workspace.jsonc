@@ -76,6 +76,7 @@
         "@teambit/base-ui.theme.accent-color": "1.1.0",
         "@teambit/base-ui.theme.colors": "1.0.0",
         "@teambit/base-ui.theme.dark-theme": "1.0.2",
+        "@teambit/base-ui.theme.fonts.book": "1.0.2",
         "@teambit/base-ui.theme.fonts.roboto": "1.0.0",
         "@teambit/base-ui.theme.sizes": "1.0.0",
         "@teambit/base-ui.theme.theme-provider": "1.0.1",
