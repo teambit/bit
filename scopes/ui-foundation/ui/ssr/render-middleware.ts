@@ -1,4 +1,4 @@
-import type { Assets } from '@teambit/ui-foundation.rendering.html';
+import type { Assets } from '@teambit/ui-foundation.ui.rendering.html';
 import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
