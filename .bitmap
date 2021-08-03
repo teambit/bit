@@ -1195,6 +1195,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pages/standalone-not-found-page"
     },
+    "ui/pages/static-error": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/pages/static-error"
+    },
     "ui/pill-label": {
         "scope": "teambit.design",
         "version": "0.0.346",
