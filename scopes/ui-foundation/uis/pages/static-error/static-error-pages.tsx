@@ -4,7 +4,7 @@ import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 import { PreviewNotFoundPage } from '@teambit/ui-foundation.ui.pages.preview-not-found';
 
-import { fullPageToStaticString } from '@teambit/ui-foundation.ui.rendering.full-page';
+import { fullPageToStaticString } from './render-page';
 
 const center = `
   body { 

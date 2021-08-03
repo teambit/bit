@@ -1267,12 +1267,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query"
     },
-    "ui/rendering/full-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/rendering/full-page"
-    },
     "ui/rendering/html": {
         "scope": "",
         "version": "",
