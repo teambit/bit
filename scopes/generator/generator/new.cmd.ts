@@ -38,9 +38,11 @@ export class NewCmd implements Command {
   async report([templateName, workspaceName]: [string, string], options: NewOptions) {
     const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
     return chalk.white(
-      `${chalk.green(`Congrats! A new workspace has been created successfully at ${results}`)}
+      `${chalk.green(`
 
-      Inside the directory ${workspaceName} you can run various commands including:
+Congrats! A new workspace has been created successfully at '${results}'`)}
+
+Inside the directory '${workspaceName}' you can run various commands including:
 
       ${chalk.yellow('bit start')}
         Starts the workspace in development mode
@@ -64,10 +66,12 @@ export class NewCmd implements Command {
         Shows all available commands
 
 
-      ${chalk.green.bold("Let's get started!")}
+${chalk.green.bold("Let's get started!")}
 
       ${chalk.yellow(`cd ${workspaceName}`)}
-      ${chalk.yellow(`bit start`)}`
+      ${chalk.yellow(`bit start`)}
+
+      `
     );
   }
 }
