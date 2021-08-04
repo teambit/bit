@@ -73,6 +73,7 @@ export type ScopeConfig = {
   httpTimeOut: number;
   description?: string;
   icon?: string;
+  backgroundIconColor?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -128,6 +129,10 @@ export class ScopeMain implements ComponentFactory {
 
   get icon(): string | undefined {
     return this.config.icon;
+  }
+
+  get backgroundIconColor(): string | undefined {
+    return this.config.backgroundIconColor;
   }
 
   get description(): string | undefined {
