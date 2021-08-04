@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Html, Assets } from '@teambit/ui-foundation.ui.rendering.html';
 
