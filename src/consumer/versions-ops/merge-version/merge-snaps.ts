@@ -226,7 +226,12 @@ export async function getComponentStatus(
     }
     if (divergeData.isRemoteAhead()) {
       // just override with the model data
-      return { componentFromFS: component, componentFromModel: componentOnLane, id, mergeResults: null };
+      return {
+        componentFromFS: component,
+        componentFromModel: componentOnLane,
+        id,
+        mergeResults: null,
+      };
     }
     // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
     return returnFailure(`component ${component.id.toString()} is already merged`);

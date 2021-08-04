@@ -1,8 +1,8 @@
-export function readmeTemplate() {
-  return `export function readme() {
-  return \`## Workspace Generator
-
-Easily generate a new workspace with a single command.
+export function docsFile() {
+  return `---
+description: Generator for generating a workspace
+labels: ['generator', 'templates', 'workspace']
+---
 
 ## Registering your Workspace
 
@@ -33,7 +33,5 @@ How to use this generator after exporting to a remote scope:
 \`\`\`js
 bit new <template-name> <workspace-name> --aspect <workspace-template-id>
 \`\`\`
-\`;
-}
 `;
 }

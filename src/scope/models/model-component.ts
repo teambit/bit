@@ -41,6 +41,7 @@ import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
+import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 
 type State = {
   versions?: {
@@ -217,8 +218,8 @@ export default class Component extends BitObject {
     }
   }
 
-  async setDivergeData(repo: Repository, throws = true): Promise<void> {
-    if (!this.divergeData) {
+  async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
+    if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
       this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
     }
@@ -578,22 +579,26 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
-  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<ObjectItem[]> {
-    const collectRefs = async (): Promise<Ref[]> => {
-      const refsCollection: Ref[] = [];
-      const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
-      refsCollection.push(...versionsRefs);
-      // @ts-ignore
-      const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
-      versionsObjects.forEach((versionObject) => {
-        const refs = versionObject.refsWithOptions(false, true);
-        refsCollection.push(...refs);
-      });
-      return refsCollection;
-    };
-    const refs = await collectRefs();
+  async collectVersionsObjects(
+    repo: Repository,
+    versions: string[],
+    ignoreMissingArtifacts?: boolean
+  ): Promise<ObjectItem[]> {
+    const refsWithoutArtifacts: Ref[] = [];
+    const artifactsRefs: Ref[] = [];
+    const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
+    refsWithoutArtifacts.push(...versionsRefs);
+    // @ts-ignore
+    const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
+    versionsObjects.forEach((versionObject) => {
+      const refs = versionObject.refsWithOptions(false, false);
+      refsWithoutArtifacts.push(...refs);
+      artifactsRefs.push(...getRefsFromExtensions(versionObject.extensions));
+    });
+    const loadedRefs: ObjectItem[] = [];
     try {
-      return await repo.loadManyRaw(refs);
+      const loaded = await repo.loadManyRaw(refsWithoutArtifacts);
+      loadedRefs.push(...loaded);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
@@ -601,6 +606,20 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
       }
       throw err;
     }
+    try {
+      const loaded = ignoreMissingArtifacts
+        ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
+        : await repo.loadManyRaw(artifactsRefs);
+      loadedRefs.push(...loaded);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`unable to find an artifact object file "${err.path}"
+for a component "${this.id()}", versions: ${versions.join(', ')}
+consider using --ignore-missing-artifacts flag if you're sure the artifacts are in the remote`);
+      }
+      throw err;
+    }
+    return loadedRefs;
   }
 
   async collectObjects(repo: Repository): Promise<ComponentObjects> {
@@ -828,6 +847,20 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
+  /**
+   * for most cases, use `isLocallyChanged`, which takes into account lanes.
+   * this is for cases when we only care about the versions exist in the `state` prop.
+   */
+  isLocallyChangedRegardlessOfLanes(): boolean {
+    return Boolean(this.getLocalVersions().length);
+  }
+
+  /**
+   * whether the component was locally changed, either by adding a new snap/tag or by merging
+   * components from different lanes.
+   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
+   * (it'll throw otherwise).
+   */
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
@@ -838,7 +871,12 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
-    const localVersions = this.getLocalVersions();
+    if (!this.divergeData) {
+      throw new Error(
+        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
+      );
+    }
+    const localVersions = this.getLocalTagsOrHashes();
     if (localVersions.length) return true;
     // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.

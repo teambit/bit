@@ -1,6 +1,7 @@
 import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
 import { aspectFile } from './files/aspect-file';
+import { docsFile } from './files/docs-file';
 import { mainRuntime } from './files/main-runtime';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
 import { readmeTemplate } from './files/readme-tpl';
@@ -25,6 +26,10 @@ export const workspaceGeneratorTemplate: ComponentTemplate = {
       {
         relativePath: `${context.name}.main.runtime.ts`,
         content: mainRuntime(context),
+      },
+      {
+        relativePath: `${context.name}.docs.mdx`,
+        content: docsFile(),
       },
       {
         relativePath: 'template/files/git-ignore.ts',
