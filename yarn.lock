@@ -5401,6 +5401,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.theme.fonts.book@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@teambit/base-ui.theme.fonts.book@npm:1.0.2"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: dac31411e95f134f09bffa7112403cff827a3d2732e01796dcb0f35fa85ddcc9648146ce2e6f05bd1efd86f74f64fe9d6774bb71330ca063c41c4079fa8681f6
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.theme.fonts.roboto@npm:0.6.2":
   version: 0.6.2
   resolution: "@teambit/base-ui.theme.fonts.roboto@npm:0.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.roboto%2F-%2Fbase-ui.theme.fonts.roboto-0.6.2.tgz"
@@ -6923,6 +6935,7 @@ __metadata:
     "@teambit/base-ui.theme.accent-color": 1.1.0
     "@teambit/base-ui.theme.colors": 1.0.0
     "@teambit/base-ui.theme.dark-theme": 1.0.2
+    "@teambit/base-ui.theme.fonts.book": 1.0.2
     "@teambit/base-ui.theme.fonts.roboto": 1.0.0
     "@teambit/base-ui.theme.sizes": 1.0.0
     "@teambit/base-ui.theme.theme-provider": 1.0.1
@@ -19912,6 +19925,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"html-ac6c79@workspace:scopes/ui-foundation/uis/rendering/html":
+  version: 0.0.0-use.local
+  resolution: "html-ac6c79@workspace:scopes/ui-foundation/uis/rendering/html"
+  languageName: unknown
+  linkType: soft
+
 "html-encoding-sniffer@npm:^1.0.2":
   version: 1.0.2
   resolution: "html-encoding-sniffer@npm:1.0.2"
@@ -27758,6 +27777,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"preview-not-found-988050@workspace:scopes/ui-foundation/uis/pages/preview-not-found":
+  version: 0.0.0-use.local
+  resolution: "preview-not-found-988050@workspace:scopes/ui-foundation/uis/pages/preview-not-found"
+  languageName: unknown
+  linkType: soft
+
 "preview-placeholder-b6c245@workspace:scopes/preview/ui/preview-placeholder":
   version: 0.0.0-use.local
   resolution: "preview-placeholder-b6c245@workspace:scopes/preview/ui/preview-placeholder"
@@ -31356,6 +31381,12 @@ __metadata:
   checksum: 17398af928413e8d8b866cf0c81fd1b1348bb7d65d8983126ff6ff2317a80d6ee023484fba0c54d8169f5aa544f125434a650ae3a71eddc935cae307d4692b4f
   languageName: node
   linkType: hard
+
+"static-error-10ef27@workspace:scopes/ui-foundation/uis/pages/static-error":
+  version: 0.0.0-use.local
+  resolution: "static-error-10ef27@workspace:scopes/ui-foundation/uis/pages/static-error"
+  languageName: unknown
+  linkType: soft
 
 "static-extend@npm:^0.1.1":
   version: 0.1.2
