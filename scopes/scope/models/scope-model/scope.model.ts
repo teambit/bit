@@ -21,14 +21,14 @@ export class ScopeModel {
     readonly icon: string,
 
     /**
-     * background icon color
-     */
-    readonly backgroundIconColor: string,
-
-    /**
      * description of the scope
      */
     readonly description: string,
+
+    /**
+     * background icon color
+     */
+    readonly backgroundIconColor: string,
 
     /**
      * components contained in the scope.
