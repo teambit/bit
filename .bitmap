@@ -1171,6 +1171,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/owner-avatar"
     },
+    "ui/pages/preview-not-found": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/pages/preview-not-found"
+    },
     "ui/pages/not-found": {
         "scope": "teambit.design",
         "version": "0.0.349",
@@ -1188,6 +1194,12 @@
         "version": "0.0.351",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pages/standalone-not-found-page"
+    },
+    "ui/pages/static-error": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/pages/static-error"
     },
     "ui/pill-label": {
         "scope": "teambit.design",
@@ -1254,6 +1266,12 @@
         "version": "0.0.417",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query"
+    },
+    "ui/rendering/html": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/rendering/html"
     },
     "ui/round-loader": {
         "scope": "teambit.design",

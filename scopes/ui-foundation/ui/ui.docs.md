@@ -4,10 +4,10 @@ Server side rendering (or SSR) is done in the following form:
 
 ```tsx
 /** at server: */
- // renderToString
 const dom = ReactDom.renderToString(<MountPoint>{app}</MountPoint>);
 const assets = { headers, scripts, ... };
-const html = ReactDom.renderStaticMarkup(<Html assets={assets}>{dom}</Html>);
+const html = ReactDom.renderStaticMarkup(<Html assets={assets}/>);
+Html.fillContent(html, dom);
 send(html);
 
 /** at client: */
