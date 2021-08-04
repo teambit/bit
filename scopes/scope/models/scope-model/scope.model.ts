@@ -21,14 +21,14 @@ export class ScopeModel {
     readonly icon: string,
 
     /**
-     * description of the scope
-     */
-    readonly description: string,
-
-    /**
      * background icon color
      */
     readonly backgroundIconColor: string,
+
+    /**
+     * description of the scope
+     */
+    readonly description: string,
 
     /**
      * components contained in the scope.
@@ -41,8 +41,8 @@ export class ScopeModel {
     return new ScopeModel(
       scope.name,
       scope.icon,
-      scope.description,
       scope.backgroundIconColor,
+      scope.description,
       components.map((component) => ComponentModel.from(component))
     );
   }
