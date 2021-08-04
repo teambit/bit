@@ -76,6 +76,7 @@
         "@teambit/base-ui.theme.accent-color": "1.1.0",
         "@teambit/base-ui.theme.colors": "1.0.0",
         "@teambit/base-ui.theme.dark-theme": "1.0.2",
+        "@teambit/base-ui.theme.fonts.book": "1.0.2",
         "@teambit/base-ui.theme.fonts.roboto": "1.0.0",
         "@teambit/base-ui.theme.sizes": "1.0.0",
         "@teambit/base-ui.theme.theme-provider": "1.0.1",
@@ -317,7 +318,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.130",
+        "@teambit/legacy": "1.0.131",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -432,7 +433,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.130"
+            "@teambit/legacy": "1.0.131"
           }
         }
       },
@@ -601,12 +602,11 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.130",
+            "@teambit/legacy": "1.0.131",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
             "mz": "2.7.0",
-            "react-refresh": "0.9.0",
             // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)

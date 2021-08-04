@@ -15,7 +15,7 @@ import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
+import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
@@ -78,9 +78,9 @@ export class PreviewMain {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
 
-  async getPreview(component: Component): Promise<PreviewArtifact> {
+  async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
     const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
-    if (!artifacts.length) throw new PreviewArtifactNotFound(component.id);
+    if (!artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
   }

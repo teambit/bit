@@ -1,6 +1,6 @@
 import React from 'react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
-import { IconFont } from '@teambit/design.theme.icons-font';
+// import { IconFont } from '@teambit/design.theme.icons-font';
 import { NotFoundPage, NotFoundPageProps } from '@teambit/design.ui.pages.not-found';
 
 export type StandaloneNotFoundProps = NotFoundPageProps;
@@ -9,7 +9,7 @@ export type StandaloneNotFoundProps = NotFoundPageProps;
 export function StandaloneNotFoundPage() {
   return (
     <Theme>
-      <IconFont query="jyyv17" />
+      {/* <IconFont query="jyyv17" /> */}
       <NotFoundPage />
     </Theme>
   );

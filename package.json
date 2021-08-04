@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.130",
+  "version": "1.0.131",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -285,7 +285,7 @@
     "chai-arrays": "1.1.0",
     "chai-fs": "1.0.0",
     "chai-string": "1.5.0",
-    "eslint": "7.20.0",
+    "eslint": "7.32.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jsx-a11y": "6.4.1",

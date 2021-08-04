@@ -1,20 +1,20 @@
-export function readmeTemplate() {
-  return `export function readme() {
-  return \`## Workspace Generator
-
-Easily generate a new workspace with a single command.
+export function docsFile() {
+  return `---
+description: Generator for generating a workspace
+labels: ['generator', 'templates', 'workspace']
+---
 
 ## Registering your Workspace
 
 Register your workspace template under the aspect environment in the variants section of the workspace.jsonc file.
 
-\\\`\\\`\\\`json
+\`\`\`json
 "teambit.workspace/variants": {
     "{workspace-name}": {
       "teambit.harmony/aspect": {}
     }
   }
-\\\`\\\`\\\`
+\`\`\`
 
 ## Customizing your Workspace
 
@@ -24,16 +24,14 @@ See the docs for more info on [Customizing your Generator](https://harmony-docs.
 
 How to use this generator locally, essentially for development purposes:
 
-\\\`\\\`\\\`js
+\`\`\`js
 bit new <template-name> <workspace-name> --load-from /Users/me/path/to/this/dir --aspect <workspace-template-id>
-\\\`\\\`\\\`
+\`\`\`
 
 How to use this generator after exporting to a remote scope:
 
-\\\`\\\`\\\`js
+\`\`\`js
 bit new <template-name> <workspace-name> --aspect <workspace-template-id>
-\\\`\\\`\\\`
-\`;
-}
+\`\`\`
 `;
 }
