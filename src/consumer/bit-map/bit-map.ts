@@ -7,7 +7,14 @@ import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import { BIT_MAP, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
+import {
+  BIT_MAP,
+  COMPONENT_ORIGINS,
+  DEFAULT_LANE,
+  OLD_BIT_MAP,
+  VERSION_DELIMITER,
+  BITMAP_PREFIX_MESSAGE,
+} from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
@@ -915,7 +922,7 @@ export default class BitMap {
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
-    await outputFile({ filePath: this.mapPath, content: this.contentToString() });
+    await outputFile({ filePath: this.mapPath, content: this.contentToString(), prefixMessage: BITMAP_PREFIX_MESSAGE });
     this.hasChanged = false;
   }
 
