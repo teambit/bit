@@ -82,7 +82,7 @@ function useComponentNotifications() {
     () => ({
       onComponentAdded: (comps: ComponentModel[]) => {
         const notificationId = notifications.log(
-          `new ${pluralize('component', comps.length)}: ${comps.map((comp) => comp.id.toString()).join(', ')}`
+          `added ${pluralize('component', comps.length)}: ${comps.map((comp) => comp.id.toString()).join(', ')}`
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
       },
