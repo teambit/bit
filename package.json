@@ -305,7 +305,7 @@
     "prettier-eslint": "11.0.0",
     "rewire": "4.0.1",
     "sinon": "5.1.1",
-    "tar": "4.4.13",
+    "tar": "6.1.6",
     "type-coverage": "2.15.1",
     "typescript": "4.1.5",
     "verdaccio": "4.11.0"
