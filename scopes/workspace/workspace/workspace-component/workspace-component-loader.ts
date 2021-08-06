@@ -182,7 +182,7 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent> {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent | undefined> {
     try {
       return forCapsule
         ? // eslint-disable-next-line @typescript-eslint/return-await
