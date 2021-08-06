@@ -24,7 +24,7 @@ export class NewCmd implements Command {
       'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
-    ['s', 'standalone <string>', 'skip generation of Git repository'],
+    ['s', 'standalone', 'skip generation of Git repository'],
     ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
     [
       '',
