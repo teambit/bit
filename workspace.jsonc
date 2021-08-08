@@ -312,7 +312,7 @@
         "webpack-hot-middleware": "2.25.0",
         "webpack-manifest-plugin": "3.1.1",
         "webpack-merge": "5.7.3",
-        "workbox-webpack-plugin": "6.1.5",
+        "workbox-webpack-plugin": "6.2.2",
         "ws": "7.4.2",
         "yaml": "1.10.2"
       },
