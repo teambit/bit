@@ -4,11 +4,24 @@ import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
+import { TypescriptConfigMutator } from '@teambit/typescript.config.config-mutator';
+
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
+
+export type TsMode = "build" | "dev"; 
+
+export type TsConfigTransformContext = {
+  mode: TsMode;
+};
+
+export type TsConfigTransformer = (
+  config: TypescriptConfigMutator,
+  context: TsConfigTransformContext
+) => TypescriptConfigMutator;
 
 export class TypescriptMain {
   constructor(private logger: Logger) {}

@@ -13,7 +13,7 @@ import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
-import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
+import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig, TsConfigTransformer } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
@@ -33,6 +33,7 @@ import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
+import { TypescriptConfigMutator } from '../../typescript/modules/config-mutator';
 
 type ReactDeps = [
   EnvsMain,
@@ -74,6 +75,11 @@ export type UseWebpackModifiers = {
   devServerConfig?: WebpackConfigTransformer[];
 };
 
+export type UseTypescriptModifiers = {
+  buildConfig?: TsConfigTransformer[];
+  devServerConfig?: TsConfigTransformer[];
+};
+
 export type UseEslintModifiers = {
   transformers: EslintConfigTransformer[];
 };
@@ -98,6 +104,12 @@ export class ReactMain {
   readonly env = this.reactEnv;
 
   private tsConfigOverride: TsConfigSourceFile | undefined;
+
+  useTypescript(
+    tsModifiers?: UseTypescriptModifiers
+  ){
+    let overrides
+  }
 
   /**
    * override the TS config of the React environment.

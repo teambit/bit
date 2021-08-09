@@ -1,69 +1,62 @@
+import { CompilerOptions, ModuleKind } from 'typescript';
+import { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { TypescriptConfigMutator } from './config-mutator';
 
 class MyPlugin {
   apply() {}
 }
 
-const cssRule = {
-  test: /\.css$/,
-  exclude: /\.module\.css$/,
-  use: ['style-loader', 'css-loader'],
+const baseTypescriptConfig: TypeScriptCompilerOptions = {
+  tsconfig: {
+    compilerOptions: {},
+    exclude: []
+  },
+  types: []
 };
 
-describe('add entry', () => {
-  it('add simple entry', () => {
-    const config = new WebpackConfigMutator({});
-    config.addEntry('./entry1');
-    expect(config.raw.entry).toContain('./entry1');
+const simpleCompilerOptions: CompilerOptions = {
+  module: ModuleKind.CommonJS
+}
+
+describe('ts config mutator test', () => {
+  it('add types', () => {
+    const path = './typesPath1';
+    const config = new TypescriptConfigMutator(baseTypescriptConfig);
+    config.addTypes([path]);
+    expect(config.raw.types).toContain(path);
   });
-  it('prepend entry', () => {
-    const config = new WebpackConfigMutator({});
-    config.addEntry('./entry1');
-    config.addEntry('./entry2', { position: 'prepend' });
-    expect(config.raw.entry).toContain('./entry1');
-    expect(config.raw.entry).toContain('./entry2');
-    expect(config.raw.entry?.[0]).toEqual('./entry2');
+
+  it('set experimental decorators', () => {
+    const config = new TypescriptConfigMutator(baseTypescriptConfig);
+    config.setExperimentalDecorators(true);
+    expect(config.raw.tsconfig.compilerOptions.experimentalDecorators).toEqual(true);
+  });
+
+  it('set target', () => {
+    const config = new TypescriptConfigMutator(baseTypescriptConfig);
+    config.setTarget("ES2015");
+    expect(config.raw.tsconfig.compilerOptions.target).toEqual("ES2015");
+  });
+
+  it('add exclude', () => {
+    const config = new TypescriptConfigMutator(baseTypescriptConfig);
+    config.addExclude([
+      "dist"
+    ]);
+    expect(config.raw.tsconfig.exclude[0]).toContain("dist");
   });
 });
 
-describe('add plugin', () => {
-  it('add simple plugin', () => {
-    const config = new WebpackConfigMutator({});
-    config.addPlugin(new MyPlugin());
-    expect(config.raw.plugins?.[0]).toBeInstanceOf(MyPlugin);
-  });
-});
 
-describe('add aliases', () => {
-  it('add simple alias', () => {
-    const config = new WebpackConfigMutator({});
-    config.addAliases({ react: 'custom-react-path' });
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw.resolve?.alias).toHaveProperty('react', 'custom-react-path');
-  });
-});
+describe('ts config mutator combination', () => {
+  it('add types and set target', () => {
+    const path = './typesPath1';
+    const config = new TypescriptConfigMutator(baseTypescriptConfig);
+    config
+      .addTypes([path])
+      .setTarget("ES2015");
+    expect(config.raw.types).toContain(path);
+    expect(config.raw.tsconfig.compilerOptions.target).toEqual("ES2015");
 
-describe('add top level', () => {
-  it('add simple alias', () => {
-    const config = new WebpackConfigMutator({});
-    config.addTopLevel('output', { publicPath: 'my-public-path' });
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw).toHaveProperty('output');
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw.output).toHaveProperty('publicPath', 'my-public-path');
-  });
-});
-
-describe('add module rule', () => {
-  it('add css rule', () => {
-    const config = new WebpackConfigMutator({});
-    config.addModuleRule(cssRule);
-    expect(config.raw.module?.rules?.length).toEqual(1);
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw.module?.rules?.[0]).toHaveProperty('test', /\.css$/);
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw.module?.rules?.[0]).toHaveProperty('exclude', /\.module\.css$/);
-    // @ts-ignore - error since there is mix between mocha and jest types
-    expect(config.raw.module?.rules?.[0]).toHaveProperty('use', ['style-loader', 'css-loader']);
   });
 });

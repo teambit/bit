@@ -12,7 +12,7 @@ export class TypescriptConfigMutator {
   }
 
   addTypes(typesPaths: string[]): TypescriptConfigMutator {
-      this.raw.types.concat(typesPaths);
+      this.raw.types.push(...typesPaths);
       return this;
   }
 
