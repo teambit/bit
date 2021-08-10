@@ -4,7 +4,7 @@ export const compositionFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
 
   return {
-    relativePath: `${name}.composition.tsx`,
+    relativePath: `${name}.composition.ts`,
     content: `
 import { ${Name} } from './${name}';
 

@@ -485,10 +485,10 @@ export default class Scope {
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
     const modelComponent = await this.sources.get(id);
     if (modelComponent) {
-      // @todo: what about the remote head
       // @todo: what about other places the model-component is loaded
       const currentLane = await this.lanes.getCurrentLaneObject();
-      modelComponent.setLaneHeadLocal(currentLane);
+      const laneId = this.lanes.getCurrentLaneId();
+      await modelComponent.populateLocalAndRemoteHeads(this.objects, laneId, currentLane);
     }
     return modelComponent;
   }

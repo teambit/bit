@@ -9,6 +9,7 @@ const SCOPE = gql`
       name
       description
       icon
+      backgroundIconColor
       components {
         id {
           name

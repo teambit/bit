@@ -103,11 +103,14 @@ export default class Status implements LegacyCommand {
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (component instanceof BitId)
+      if (component instanceof BitId) {
         return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
+      }
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        if (!(component instanceof ModelComponent)) {
+          throw new Error(`expect "${component}" to be instance of ModelComponent`);
+        }
         const localVersions = component.getLocalTagsOrHashes();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }

@@ -218,8 +218,8 @@ export default class Component extends BitObject {
     }
   }
 
-  async setDivergeData(repo: Repository, throws = true): Promise<void> {
-    if (!this.divergeData) {
+  async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
+    if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
       this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
     }
@@ -847,6 +847,20 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
+  /**
+   * for most cases, use `isLocallyChanged`, which takes into account lanes.
+   * this is for cases when we only care about the versions exist in the `state` prop.
+   */
+  isLocallyChangedRegardlessOfLanes(): boolean {
+    return Boolean(this.getLocalVersions().length);
+  }
+
+  /**
+   * whether the component was locally changed, either by adding a new snap/tag or by merging
+   * components from different lanes.
+   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
+   * (it'll throw otherwise).
+   */
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
@@ -857,7 +871,12 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
-    const localVersions = this.getLocalVersions();
+    if (!this.divergeData) {
+      throw new Error(
+        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
+      );
+    }
+    const localVersions = this.getLocalTagsOrHashes();
     if (localVersions.length) return true;
     // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.

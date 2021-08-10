@@ -39,13 +39,18 @@ export class WorkspaceGenerator {
       throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
     }
     await fs.ensureDir(this.workspacePath);
-    process.chdir(this.workspacePath);
-    await this.initGit();
-    await init(this.workspacePath, this.options.standalone, false, false, false, false, {});
-    await this.writeWorkspaceFiles();
-    await this.reloadBitInWorkspaceDir();
-    await this.addComponentsFromRemote();
-    await this.workspace.install();
+    try {
+      process.chdir(this.workspacePath);
+      await this.initGit();
+      await init(this.workspacePath, this.options.standalone, false, false, false, false, {});
+      await this.writeWorkspaceFiles();
+      await this.reloadBitInWorkspaceDir();
+      await this.addComponentsFromRemote();
+      await this.workspace.install();
+    } catch (err) {
+      await fs.remove(this.workspacePath);
+      throw err;
+    }
 
     return this.workspacePath;
   }

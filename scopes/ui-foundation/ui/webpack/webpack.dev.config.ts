@@ -319,8 +319,9 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        // exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
         include: aspectPaths,
+        // exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
+        exclude: '/react-refresh-webpack-plugin/i',
       }),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the

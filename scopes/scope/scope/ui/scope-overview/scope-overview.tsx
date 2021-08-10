@@ -24,6 +24,7 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
       <ScopeDetails
         scopeName={scope.name}
         icon={scope.icon}
+        backgroundIconColor={scope.backgroundIconColor}
         badgeSlot={badgeSlot}
         overviewSlot={overviewSlot}
         description={scope.description}

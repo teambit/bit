@@ -17,6 +17,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # icon of the scope.
         icon: String
 
+        # background color of the icon.
+        backgroundIconColor: String
+
         # path of the scope.
         path: String
 
@@ -70,6 +73,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         },
         icon: (scope: ScopeMain) => {
           return scope.icon;
+        },
+        backgroundIconColor: (scope: ScopeMain) => {
+          return scope.backgroundIconColor;
         },
         components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
           if (!props) return scope.list();

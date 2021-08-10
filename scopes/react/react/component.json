@@ -48,7 +48,8 @@
           "less": "^4.1.1",
           "less-loader": "8.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "^7.12.18"
+          "@babel/runtime": "^7.12.18",
+          "react-refresh": "0.10.0"
         },
         "devDependencies": {
           "react": "-",
@@ -62,7 +63,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.129"
+          "@teambit/legacy": "1.0.133"
         }
       }
     }

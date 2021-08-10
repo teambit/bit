@@ -3,17 +3,9 @@ import { ComponentContext } from '@teambit/generator';
 export const componentFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
-    relativePath: `${name}.tsx`,
+    relativePath: `${name}.ts`,
     content: `
-
-export type ${Name}Props = {
-  /**
-   * a text to be rendered in the component.
-   */
-  text: string
-};
-
-export function ${Name}({ text }: ${Name}Props) {
+    export function ${Name}(text : string) {
   return \`<div>\${text}</div>\`;
 }
 `,

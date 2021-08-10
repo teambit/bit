@@ -450,17 +450,17 @@ export class UiMain {
       this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
       return hash;
     }
-    if (hash !== hashed) {
-      this.logger.console(
-        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
-          uiRoot.name
-        )} in target directory: ${chalk.cyan(await this.publicDir(uiRoot))}'`
-      );
-    } else {
+    if (!hashed) {
       this.logger.console(
         `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
-        )}`
+        )}. The first time we build the UI it may take a few minutes.`
+      );
+    } else {
+      this.logger.console(
+        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+          await this.publicDir(uiRoot)
+        )}' as ${uiRoot.configFile} has been changed.`
       );
     }
 
