@@ -140,8 +140,9 @@ export class ApplicationMain {
 
   private async createAppContext(appName: string) {
     const host = this.componentAspect.getHost();
+    const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
-    const component = await host.get(id);
+    const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
 
     const env = await this.envs.createEnvironment([component]);
