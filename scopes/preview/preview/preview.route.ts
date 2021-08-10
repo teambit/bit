@@ -13,7 +13,6 @@ export class PreviewRoute implements Route {
      * preview extension.
      */
     private preview: PreviewMain,
-
     private logger: Logger
   ) {}
 
