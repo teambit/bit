@@ -7,7 +7,7 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/dist/svg-arrow.css';
 
 import { getMountPoint } from './mount-point';
-import './tooltip.scss';
+import './tippy.module.scss';
 import { useCtxTooltipInstance } from './shared-instance';
 
 const THEME = 'teambit';
