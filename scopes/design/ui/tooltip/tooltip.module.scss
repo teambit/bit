@@ -1,9 +1,9 @@
 $bg: var(--bit-bg-tooltip, #2b2b2b);
 $textColor: var(--bit-text-color, #fff);
 
+// using global '.tippy-box' from TippyJS
 :global {
   .tippy-box[data-theme~='teambit'] {
-    // using global '.tippy-box' from TippyJS
     color: $textColor;
     background: $bg;
     border-radius: 8px;
