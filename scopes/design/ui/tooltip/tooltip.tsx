@@ -7,7 +7,7 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/dist/svg-arrow.css';
 
 import { getMountPoint } from './mount-point';
-import './tooltip.scss';
+import styles from './tooltip.module.scss';
 import { useCtxTooltipInstance } from './shared-instance';
 
 const THEME = 'teambit';
@@ -41,7 +41,7 @@ export function Tooltip({ children, singleton, className, ...rest }: TooltipProp
   return (
     <Tippy
       arrow={roundArrow}
-      className={classnames(darkMode, className)}
+      className={classnames(darkMode, styles.tooltip, className)}
       theme={THEME}
       interactive
       appendTo={getMountPoint}
