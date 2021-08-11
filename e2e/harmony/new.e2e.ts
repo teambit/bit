@@ -64,4 +64,15 @@ describe('new command', function () {
       expect(() => helper.command.new('react')).to.throw();
     });
   });
+  describe('creating a new react workspace', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
+      helper.command.new('react');
+    });
+    it('bit status should be clean', () => {
+      const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
+      helper.command.expectStatusToNotHaveIssues(wsPath);
+    });
+  });
 });
