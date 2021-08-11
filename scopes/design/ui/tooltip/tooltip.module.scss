@@ -1,18 +1,20 @@
 $bg: var(--bit-bg-tooltip, #2b2b2b);
 $textColor: var(--bit-text-color, #fff);
 
-:global(.tippy-box[data-theme~='teambit']) {
-  // using global '.tippy-box' from TippyJS
-  color: $textColor;
-  background: $bg;
-  border-radius: 8px;
+:global {
+  .tippy-box[data-theme~='teambit'] {
+    // using global '.tippy-box' from TippyJS
+    color: $textColor;
+    background: $bg;
+    border-radius: 8px;
 
-  > div:first-child {
-    padding: 0.85em;
-    white-space: nowrap;
-  }
+    .tippy-content {
+      padding: 0.85em;
+      white-space: nowrap;
+    }
 
-  > div:last-child {
-    fill: $bg;
+    .tippy-svg-arrow {
+      fill: $bg;
+    }
   }
 }
