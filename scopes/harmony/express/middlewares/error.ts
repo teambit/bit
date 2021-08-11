@@ -1,6 +1,5 @@
 import * as express from 'express';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { notFound, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 
 interface ResponseError {
   status?: number;
@@ -21,12 +20,10 @@ export function errorHandle(
   next: express.NextFunction
 ) {
   logger.error(`express.errorHandle, url ${req.url}, error:`, err);
-  res.status(err.status || 500);
-
-  switch (err.status) {
-    case 404:
-      return res.send(notFound());
-    default:
-      return res.send(serverError());
-  }
+  err.status = err.status || 500;
+  res.status(err.status);
+  return res.jsonp({
+    message: err.message,
+    error: err,
+  });
 }
