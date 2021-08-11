@@ -21,6 +21,12 @@ import { NewOptions } from './new.cmd';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
+type CompToImportResolved = {
+  id: ComponentID;
+  path: string;
+  targetName?: string;
+};
+
 export class WorkspaceGenerator {
   private workspacePath: string;
   private harmony: Harmony;
@@ -101,13 +107,14 @@ export class WorkspaceGenerator {
       componentsToImport.map(async (c) => ({
         id: ComponentID.fromLegacy(BitId.parse(c.id, true)),
         path: c.path,
+        targetName: c.targetName,
       }))
     );
     const componentIds = componentsToImportResolved.map((c) => c.id);
     // @todo: improve performance by changing `getRemoteComponent` api to accept multiple ids
     const components = await Promise.all(componentIds.map((id) => this.workspace.scope.getRemoteComponent(id)));
-    const oldAndNewPackageNames = this.getNewPackageNames(components);
-    const oldAndNewComponentIds = this.getNewComponentIds(components);
+    const oldAndNewPackageNames = this.getNewPackageNames(components, componentsToImportResolved);
+    const oldAndNewComponentIds = this.getNewComponentIds(components, componentsToImportResolved);
     await Promise.all(
       components.map((comp) =>
         this.replaceOriginalPackageNameWithNew(comp, oldAndNewPackageNames, oldAndNewComponentIds)
@@ -119,7 +126,7 @@ export class WorkspaceGenerator {
       await this.workspace.write(compData.path, comp);
       await this.workspace.track({
         rootDir: compData.path,
-        componentName: compData.id.fullName,
+        componentName: compData.targetName || compData.id.fullName,
         mainFile: comp.state._consumer.mainFile,
       });
       const deps = await dependencyResolver.getDependencies(comp);
@@ -138,9 +145,10 @@ export class WorkspaceGenerator {
         .filter((entry) => !currentPackages.includes(entry.dependencyId)); // remove components that are now imported
       dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
     });
-    await this.compileComponents();
-    await dependencyResolver.persistConfig(this.workspace.path);
     await this.workspace.writeBitMap();
+    await dependencyResolver.persistConfig(this.workspace.path);
+    this.workspace.clearCache();
+    await this.compileComponents();
   }
 
   private async compileComponents() {
@@ -148,26 +156,44 @@ export class WorkspaceGenerator {
     await compiler.compileOnWorkspace();
   }
 
-  private getNewPackageNames(components: Component[]): { [oldPackageName: string]: string } {
+  private getNewPackageNames(
+    components: Component[],
+    compsData: CompToImportResolved[]
+  ): { [oldPackageName: string]: string } {
     const pkg = this.harmony.get<PkgMain>(PkgAspect.id);
     const packageToReplace = {};
     const scopeToReplace = this.workspace.defaultScope.replace('.', '/');
     components.forEach((comp) => {
+      const newId = this.resolveNewCompId(comp, compsData);
       const currentPackageName = pkg.getPackageName(comp);
-      const newPackageName = currentPackageName.replace(comp.id.scope.replace('.', '/'), scopeToReplace);
+      const newName = newId.fullName.replace(/\//g, '.');
+      const newPackageName = `${scopeToReplace}.${newName}`;
       packageToReplace[currentPackageName] = newPackageName;
     });
     return packageToReplace;
   }
 
-  private getNewComponentIds(components: Component[]): { [oldComponentId: string]: string } {
+  private getNewComponentIds(
+    components: Component[],
+    compsData: CompToImportResolved[]
+  ): { [oldComponentId: string]: string } {
     const componentToReplace = {};
-    const scopeToReplace = this.workspace.defaultScope;
     components.forEach((comp) => {
-      const newId = comp.id.changeScope(scopeToReplace).toStringWithoutVersion();
-      componentToReplace[comp.id.toStringWithoutVersion()] = newId;
+      const newId = this.resolveNewCompId(comp, compsData);
+      componentToReplace[comp.id.toStringWithoutVersion()] = newId.toStringWithoutVersion();
     });
     return componentToReplace;
+  }
+
+  private resolveNewCompId(comp: Component, compsData: CompToImportResolved[]): ComponentID {
+    const scopeToReplace = this.workspace.defaultScope;
+    const compData = compsData.find((c) => c.id._legacy.isEqualWithoutScopeAndVersion(comp.id._legacy));
+    if (!compData) {
+      throw new Error(`workspace-generator: unable to find data for "${comp.id._legacy.toString()}"`);
+    }
+    return compData.targetName
+      ? ComponentID.fromLegacy(BitId.parse(compData.targetName, false).changeScope(scopeToReplace))
+      : comp.id.changeScope(scopeToReplace);
   }
 
   private async replaceOriginalPackageNameWithNew(
