@@ -167,7 +167,7 @@ export class WorkspaceGenerator {
       const newId = this.resolveNewCompId(comp, compsData);
       const currentPackageName = pkg.getPackageName(comp);
       const newName = newId.fullName.replace(/\//g, '.');
-      const newPackageName = `${scopeToReplace}.${newName}`;
+      const newPackageName = `@${scopeToReplace}.${newName}`;
       packageToReplace[currentPackageName] = newPackageName;
     });
     return packageToReplace;
