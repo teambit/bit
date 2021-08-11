@@ -40,7 +40,6 @@ export function Tooltip({ children, singleton, className, ...rest }: TooltipProp
 
   return (
     <Tippy
-      visible
       arrow={roundArrow}
       className={classnames(darkMode, className)}
       theme={THEME}
