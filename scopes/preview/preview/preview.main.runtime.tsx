@@ -320,7 +320,7 @@ export class PreviewMain {
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
 
-    componentExtension.registerRoute([new PreviewRoute(preview)]);
+    componentExtension.registerRoute([new PreviewRoute(preview, logger)]);
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),
