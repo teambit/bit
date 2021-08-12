@@ -99,7 +99,7 @@ export class WorkspaceComponentLoader {
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     // in case of out-of-sync, the id may changed during the load process
-    const updatedId = ComponentID.fromLegacy(consumerComponent.id, id.scope);
+    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent);
     if (storeInCache) {
       this.saveInCache(component, forCapsule);
