@@ -4,6 +4,7 @@ import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
 import tar from 'tar-stream';
+import { getHarmonyVersion } from '../../../bootstrap';
 
 import { BIT_VERSION, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
@@ -42,7 +43,7 @@ export type DoctorRunOneResult = {
 
 let runningTimeStamp;
 
-export default (async function runAll({ filePath }: { filePath?: string }): Promise<DoctorRunAllResults> {
+export default async function runAll({ filePath }: { filePath?: string }): Promise<DoctorRunAllResults> {
   registerCoreAndExtensionsDiagnoses();
   runningTimeStamp = _getTimeStamp();
   const doctorRegistrar = DoctorRegistrar.getInstance();
@@ -51,7 +52,7 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
   const envMeta = await _getEnvMeta();
   const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
   return { examineResults, savedFilePath, metaData: envMeta };
-});
+}
 
 export async function runOne({
   diagnosisName,
@@ -171,7 +172,7 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     nodeVersion: process.version,
     runningTimestamp: runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
-    bitVersion: BIT_VERSION,
+    bitVersion: getHarmonyVersion(),
     npmVersion: await npmClient.getNpmVersion(),
     yarnVersion: await npmClient.getYarnVersion(),
     userDetails: _getUserDetails(),
