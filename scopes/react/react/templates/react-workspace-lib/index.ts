@@ -35,12 +35,12 @@ export const reactWorkspaceLibTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
-      { id: 'teambit.react/templates/envs/my-react', path: 'envs/my-react' },
-      { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
-      { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
-      { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
-      { id: 'teambit.react/templates/styles/colors', path: 'styles/colors' },
-      { id: 'teambit.react/templates/themes/theme', path: 'themes/theme' },
+      { id: 'teambit.react/templates/envs/my-react', path: 'demo/envs/my-react', targetName: 'demo/envs/my-react' },
+      { id: 'teambit.react/templates/ui/text', path: 'demo/ui/text', targetName: 'demo/ui/text' },
+      { id: 'teambit.react/templates/ui/heading', path: 'demo/ui/heading', targetName: 'demo/ui/heading' },
+      { id: 'teambit.react/templates/ui/card', path: 'demo/ui/card', targetName: 'demo/ui/card' },
+      { id: 'teambit.react/templates/styles/colors', path: 'demo/styles/colors', targetName: 'demo/styles/colors' },
+      { id: 'teambit.react/templates/themes/theme', path: 'demo/themes/theme', targetName: 'demo/themes/theme' },
     ];
   },
 };

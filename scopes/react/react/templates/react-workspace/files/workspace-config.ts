@@ -22,10 +22,10 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
         },
       }
     : {
-        '{templates/ui/**}, {templates/pages/**}': {
+        '{**/ui/**}, {**/pages/**}': {
           'company.scope/templates/envs/my-react': {},
         },
-        '{templates/envs/**}': {
+        '{**/envs/**}': {
           'teambit.harmony/aspect': {},
         },
       };
