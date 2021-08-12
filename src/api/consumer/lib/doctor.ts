@@ -6,7 +6,7 @@ import Stream from 'stream';
 import tar from 'tar-stream';
 import { getHarmonyVersion } from '../../../bootstrap';
 
-import { BIT_VERSION, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
 import WorkspaceConfig from '../../../consumer/config/workspace-config';
 import { ConsumerInfo, getConsumerInfo } from '../../../consumer/consumer-locator';
