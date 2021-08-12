@@ -22,7 +22,7 @@ export class ReactApp implements Application {
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
-        configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
+        // configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
         return configMutator;
       },
     ]);
