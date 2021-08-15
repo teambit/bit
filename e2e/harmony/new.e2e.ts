@@ -64,4 +64,16 @@ describe('new command', function () {
       expect(() => helper.command.new('react')).to.throw();
     });
   });
+  // @todo: fix. it throws an error on Circle only - "GET https://node.bit.dev/@teambit%2Freact.templates.env.templates: Not Found - 404"
+  describe.skip('creating a new react workspace', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
+      helper.command.new('react');
+    });
+    it('bit status should be clean', () => {
+      const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
+      helper.command.expectStatusToNotHaveIssues(wsPath);
+    });
+  });
 });

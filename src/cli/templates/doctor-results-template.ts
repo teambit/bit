@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { table } from 'table';
 
-import { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
+import { DoctorMetaData, DoctorRunAllResults } from '../../api/consumer/lib/doctor';
 import { ExamineResult } from '../../doctor/diagnosis';
 
 // const NAME_COLUMN_WIDTH = 100;
@@ -82,7 +82,7 @@ function _createWrittenFileSection(savedFilePath) {
   return `File written to ${savedFilePath}`;
 }
 
-function _createMetaSection(metaData) {
+function _createMetaSection(metaData: DoctorMetaData) {
   return `
   bit version   : ${metaData.bitVersion}
   node version  : ${metaData.nodeVersion}
