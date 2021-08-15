@@ -38,6 +38,7 @@
         "@pnpm/tarball-fetcher": "8.2.8",
         "@pnpm/tarball-resolver": "4.0.7",
         "@popperjs/core": "2.6.0",
+        "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
@@ -158,6 +159,7 @@
         "@types/mime": "2.0.3",
         "@types/mousetrap": "1.6.5",
         "@types/node": "14.14.13",
+        "@types/pluralize": "0.0.29",
         "@types/puppeteer": "3.0.5",
         "@types/react": "17.0.8",
         "@types/react-dom": "17.0.5",
@@ -256,6 +258,7 @@
         "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
         "penpal": "5.3.0",
+        "pluralize": "8.0.0",
         "postcss": "8.2.9",
         "postcss-flexbugs-fixes": "5.0.2",
         "postcss-loader": "5.2.0",
@@ -312,13 +315,13 @@
         "webpack-hot-middleware": "2.25.0",
         "webpack-manifest-plugin": "3.1.1",
         "webpack-merge": "5.7.3",
-        "workbox-webpack-plugin": "6.1.5",
+        "workbox-webpack-plugin": "6.2.2",
         "ws": "7.4.2",
         "yaml": "1.10.2"
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.132",
+        "@teambit/legacy": "1.0.134",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -433,7 +436,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.132"
+            "@teambit/legacy": "1.0.134"
           }
         }
       },
@@ -602,7 +605,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.132",
+            "@teambit/legacy": "1.0.134",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

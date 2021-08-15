@@ -30,8 +30,20 @@ export interface WorkspaceContext {
 }
 
 export interface ComponentToImport {
+  /**
+   * full component id
+   */
   id: string;
+
+  /**
+   * path where to write the component
+   */
   path: string;
+
+  /**
+   * a new component name. if not specified, use the original id (without the scope)
+   */
+  targetName?: string;
 }
 
 export interface WorkspaceTemplate {

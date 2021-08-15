@@ -84,11 +84,17 @@ export default function (workDir: string, envId: string, componentsDirs: string[
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
-        include: componentsDirs,
+        include: componentsDirs, // original default value was /\.([cm]js|[jt]sx?|flow)$/i
         // Excluding react-refresh-webpack-plugin
-        // it's important to put any exclude here to prevent from the default exclude (which is /node_modules/ to be applied)
+        // it's important to put any exclude here to prevent from the default exclude (which is /node_modules/) to be applied
         // as all the component modules dirs are inside node_modules
-        exclude: /react-refresh-webpack-plugin/i,
+        exclude: [
+          // prevent recursion:
+          /react-refresh-webpack-plugin/i,
+          // file type filtering was done by `include`, so need to negative-filter them out here
+          // A lookbehind assertion (`?<!`) has to be fixed width
+          /(?<!(\.mdx|.\.js))$/i,
+        ],
       }),
     ],
   };
