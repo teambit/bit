@@ -7,6 +7,11 @@ import type { Logger } from '@teambit/logger';
 import { PreviewMain } from './preview.main.runtime';
 import { PreviewArtifact } from './preview-artifact';
 
+type UrlParams = {
+  /** `/preview/:previewPath(*)` */
+  previewPath?: string;
+};
+
 export class PreviewRoute implements Route {
   constructor(
     /**
@@ -20,7 +25,7 @@ export class PreviewRoute implements Route {
   method = 'get';
 
   middlewares = [
-    async (req: Request, res: Response) => {
+    async (req: Request<UrlParams>, res: Response) => {
       try {
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
