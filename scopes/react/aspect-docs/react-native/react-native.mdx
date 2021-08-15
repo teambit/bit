@@ -823,7 +823,7 @@ If not, the second way to solve this is to search for a parallel library with We
 If for some reason a library doesn't have a parallel library for the web and doesn't have built in Websupport, you can't make the composition work on the local Bit dev server.
 
 For example, [`react-native-svg`](https://github.com/react-native-svg/react-native-svg) library has a parallel library called [`react-native-svg-web`](https://github.com/bakerface/react-native-svg-web).  
-Let's create a React Native extension and add a `webpack-transformers.ts` file in the extension under `webpack` folder, the file looks like this:
+Let's [create a React Native extension](#create-an-extension) and add a `webpack-transformers.ts` file in the extension under `webpack` folder, the file looks like this:
 
 ```ts
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
