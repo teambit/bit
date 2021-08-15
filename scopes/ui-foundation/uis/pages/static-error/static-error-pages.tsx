@@ -25,7 +25,7 @@ const sizing = `
 
   @media screen and (max-width: 250px) {
     body {
-      font-size: 13px;
+      font-size: 14px;
       color: #c7c7c7;
     }
   }
