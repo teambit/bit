@@ -9,7 +9,7 @@ In general it is a sugar syntax to do common operation on the config like add op
 
 You can also mutate the raw config itself by accessing `mutator.raw`.
 
-import { TypescriptConfigMutator } from './config-mutator';
+import { TypescriptConfigMutator } from './ts-config-mutator';
 import JSONFormatter from 'json-formatter-js';
 
 ```js live
@@ -23,7 +23,7 @@ import JSONFormatter from 'json-formatter-js';
     .addTypes(['path1/types.d.ts', 'path2/types.d.ts'])
     .setExperimentalDecorators(true)
     .setTarget('es2015')
-    .addExclude(['dist'])
+    .addExclude(['dist']);
 
   const dataContent = new JSONFormatter(config.raw, 2);
   return (

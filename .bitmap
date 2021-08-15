@@ -507,11 +507,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
-    "modules/config/config-mutator": {
+    "modules/ts-config-mutator": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/modules/config-mutator"
+        "rootDir": "scopes/typescript/modules/ts-config-mutator"
     },
     "modules/create-element-from-string": {
         "scope": "teambit.html",

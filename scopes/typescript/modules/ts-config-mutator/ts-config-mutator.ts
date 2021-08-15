@@ -2,7 +2,7 @@ import { clone } from 'lodash';
 import { CompilerOptions } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 
-export type Target = "ES3" | "ES5" | "ES2015" | "ES2016" | "ES2017" | "ES2018" | "ES2019" | "ES2020" | "ESNext";
+export type Target = 'ES3' | 'ES5' | 'ES2015' | 'ES2016' | 'ES2017' | 'ES2018' | 'ES2019' | 'ES2020' | 'ESNext';
 
 export class TypescriptConfigMutator {
   constructor(public raw: TypeScriptCompilerOptions) {}
@@ -12,13 +12,13 @@ export class TypescriptConfigMutator {
   }
 
   addTypes(typesPaths: string[]): TypescriptConfigMutator {
-      this.raw.types.push(...typesPaths);
-      return this;
+    this.raw.types.push(...typesPaths);
+    return this;
   }
 
   setExperimentalDecorators(value: boolean): TypescriptConfigMutator {
-      this.raw.tsconfig.compilerOptions.experimentalDecorators = value;
-      return this;
+    this.raw.tsconfig.compilerOptions.experimentalDecorators = value;
+    return this;
   }
 
   setTarget(target: Target): TypescriptConfigMutator {
@@ -35,5 +35,4 @@ export class TypescriptConfigMutator {
     this.raw.tsconfig.exclude.push(exclusions);
     return this;
   }
-  
 }

@@ -33,7 +33,7 @@ import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
-import { TypescriptConfigMutator } from '../../typescript/modules/config-mutator';
+import { TypescriptConfigMutator } from '../../typescript/modules/ts-config-mutator';
 
 type ReactDeps = [
   EnvsMain,
@@ -77,7 +77,7 @@ export type UseWebpackModifiers = {
 
 export type UseTypescriptModifiers = {
   buildConfig?: TsConfigTransformer[];
-  devServerConfig?: TsConfigTransformer[];
+  devConfig?: TsConfigTransformer[];
 };
 
 export type UseEslintModifiers = {
@@ -105,10 +105,8 @@ export class ReactMain {
 
   private tsConfigOverride: TsConfigSourceFile | undefined;
 
-  useTypescript(
-    tsModifiers?: UseTypescriptModifiers
-  ){
-    let overrides
+  useTypescript(tsModifiers?: UseTypescriptModifiers) {
+    let overrides;
   }
 
   /**
