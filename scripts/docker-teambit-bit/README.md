@@ -22,7 +22,7 @@ The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hu
 
 ### Run the cli container
 
-1. `docker run -it bitcli/bit-server:latest /bin/bash`
+1. `docker run -it bitcli/bit:latest /bin/bash`
 1. `bit -v` to see bit's version to make sure it works
 
 ### Run the server container
