@@ -28,7 +28,7 @@ describe('new command', function () {
 
       const indexPath = path.join(helper.scopes.remote, 'workspace-example/template/index.ts');
       const indexContent = helper.fs.readFile(indexPath);
-      const updatedIndex = indexContent.replace('teambit.react/templates/ui/title', `${helper.scopes.remote}/comp1`);
+      const updatedIndex = indexContent.replace('teambit.react/templates/ui/text', `${helper.scopes.remote}/comp1`);
       helper.fs.outputFile(indexPath, updatedIndex);
 
       helper.command.tagAllComponents();
@@ -54,6 +54,26 @@ describe('new command', function () {
       expect(dependencies).to.not.have.property('@babel/runtime');
       expect(dependencies).to.not.have.property('@types/jest');
       expect(dependencies).to.not.have.property('@types/node');
+    });
+  });
+  describe('running inside workspace', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+    });
+    it('should throw an error', () => {
+      expect(() => helper.command.new('react')).to.throw();
+    });
+  });
+  // @todo: fix. it throws an error on Circle only - "GET https://node.bit.dev/@teambit%2Freact.templates.env.templates: Not Found - 404"
+  describe.skip('creating a new react workspace', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
+      helper.command.new('react');
+    });
+    it('bit status should be clean', () => {
+      const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
+      helper.command.expectStatusToNotHaveIssues(wsPath);
     });
   });
 });

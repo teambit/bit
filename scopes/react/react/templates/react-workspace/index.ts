@@ -1,9 +1,9 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
 import { workspaceConfig } from './files/workspace-config';
 import { readme } from './files/readme-file';
-import { gitIgnore } from './files/git-ignore';
-import { assetTypes } from './files/types/asset';
-import { styleTypes } from './files/types/style';
+import { gitIgnore } from '../common-files/git-ignore';
+import { assetTypes } from '../common-files/types/asset';
+import { styleTypes } from '../common-files/types/style';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react',
@@ -35,11 +35,11 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
-      { id: 'teambit.react/templates/env/templates', path: 'env/templates' },
-      { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
-      { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
-      { id: 'teambit.react/templates/ui/card', path: 'ui/card' },
-      { id: 'teambit.react/templates/pages/welcome', path: 'pages/welcome' },
+      { id: 'teambit.react/templates/envs/my-react', path: 'templates/envs/my-react' },
+      { id: 'teambit.react/templates/ui/text', path: 'templates/ui/text' },
+      { id: 'teambit.react/templates/ui/heading', path: 'templates/ui/heading' },
+      { id: 'teambit.react/templates/ui/card', path: 'templates/ui/card' },
+      { id: 'teambit.react/templates/pages/welcome', path: 'templates/pages/welcome' },
     ];
   },
 };

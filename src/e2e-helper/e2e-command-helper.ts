@@ -170,7 +170,7 @@ export default class CommandHelper {
     this.linkAndRewire();
     return this.tagAllComponents(options, version, assertTagged);
   }
-  tagScope(version: string, message = 'tag-message', options = '') {
+  tagScope(version = '', message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
   }
   tagScopeWithoutBuild(version = '', options = '') {

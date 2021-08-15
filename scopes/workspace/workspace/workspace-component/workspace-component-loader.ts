@@ -98,7 +98,9 @@ export class WorkspaceComponentLoader {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
-    const component = await this.loadOne(id, consumerComponent);
+    // in case of out-of-sync, the id may changed during the load process
+    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
+    const component = await this.loadOne(updatedId, consumerComponent);
     if (storeInCache) {
       this.saveInCache(component, forCapsule);
     }
@@ -182,11 +184,13 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent | undefined> {
     try {
       return forCapsule
-        ? await this.workspace.consumer.loadComponentForCapsule(id._legacy)
-        : await this.workspace.consumer.loadComponent(id._legacy);
+        ? // eslint-disable-next-line @typescript-eslint/return-await
+          await this.workspace.consumer.loadComponentForCapsule(id._legacy)
+        : // eslint-disable-next-line @typescript-eslint/return-await
+          await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it

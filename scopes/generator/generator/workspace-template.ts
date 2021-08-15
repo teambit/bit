@@ -19,14 +19,31 @@ export interface WorkspaceContext {
 
   /**
    * default scope as entered by the user.
-   * it will be set in the workspace.jsonc and be used for componens
+   * it will be set in the workspace.jsonc and be used for components
    */
   defaultScope?: string;
+
+  /**
+   * whether user entered `--empty` flag in `bit new` to avoid creating components.
+   */
+  empty?: boolean;
 }
 
 export interface ComponentToImport {
+  /**
+   * full component id
+   */
   id: string;
+
+  /**
+   * path where to write the component
+   */
   path: string;
+
+  /**
+   * a new component name. if not specified, use the original id (without the scope)
+   */
+  targetName?: string;
 }
 
 export interface WorkspaceTemplate {

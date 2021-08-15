@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.126",
+  "version": "1.0.134",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -275,9 +275,9 @@
     "@types/semver": "7.3.4",
     "@types/uuid": "3.4.9",
     "@types/yargs": "17.0.0",
-    "@typescript-eslint/eslint-plugin": "4.25.0",
-    "@typescript-eslint/parser": "4.25.0",
-    "@typescript-eslint/typescript-estree": "4.25.0",
+    "@typescript-eslint/eslint-plugin": "4.29.0",
+    "@typescript-eslint/parser": "4.29.0",
+    "@typescript-eslint/typescript-estree": "4.29.0",
     "babel-eslint": "9.0.0",
     "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
@@ -285,7 +285,7 @@
     "chai-arrays": "1.1.0",
     "chai-fs": "1.0.0",
     "chai-string": "1.5.0",
-    "eslint": "7.20.0",
+    "eslint": "7.32.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jsx-a11y": "6.4.1",
@@ -305,9 +305,9 @@
     "prettier-eslint": "11.0.0",
     "rewire": "4.0.1",
     "sinon": "5.1.1",
-    "tar": "4.4.13",
+    "tar": "6.1.6",
     "type-coverage": "2.15.1",
-    "typescript": "4.1.5",
+    "typescript": "4.3.5",
     "verdaccio": "4.11.0"
   }
 }
