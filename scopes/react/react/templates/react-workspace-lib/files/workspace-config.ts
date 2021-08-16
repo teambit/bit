@@ -2,9 +2,10 @@ import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
+  const scope = defaultScope || 'company.scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
-  configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'company.scope';
+  configParsed['teambit.workspace/workspace'].defaultScope = scope;
   configParsed['teambit.dependencies/dependency-resolver'].packageManager = 'teambit.dependencies/pnpm';
   configParsed['teambit.dependencies/dependency-resolver'].policy = {
     dependencies: {},
@@ -15,16 +16,19 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     },
   };
   configParsed['teambit.workspace/variants'] = {
-    '{**/ui/**}': {
-      'teambit.react/templates/envs/my-react': {},
+    '{ui/**}': {
+      // uses the custom env
+      [`${scope}/envs/my-react`]: {},
+      // uncomment the line below if you remove the custom env and remove the line above
+      // 'teambit.react/react': {},
     },
-    '{**/styles/**}': {
+    '{styles/**}': {
       'teambit.react/react': {},
     },
-    '{**/themes/**}': {
+    '{themes/**}': {
       'teambit.react/react': {},
     },
-    '{**/envs/*}': {
+    '{envs/*}': {
       'teambit.harmony/aspect': {},
     },
   };
