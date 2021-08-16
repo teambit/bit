@@ -46,4 +46,43 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
   });
+  describe('consumer with a tagged component and scope with no components', () => {
+    let scopeOutOfSync;
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.fs.deletePath('.bit');
+      scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('bit build', () => {
+      it('should build the component successfully', () => {
+        expect(() => helper.command.build()).to.not.throw();
+      });
+    });
+    describe('bit status', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.command.status();
+      });
+      it('should show the component as new', () => {
+        expect(output).to.have.string('new components');
+        const bitMap = helper.bitMap.read();
+        const newId = 'bar/foo';
+        expect(bitMap).to.have.property(newId);
+        const oldId = 'bar/foo@0.0.1';
+        expect(bitMap).to.not.have.property(oldId);
+      });
+    });
+    describe('bit show', () => {
+      it('should not show the component with the version', () => {
+        helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
+        const show = helper.command.showComponent('bar/foo');
+        expect(show).to.not.have.string('0.0.1');
+      });
+    });
+  });
 });

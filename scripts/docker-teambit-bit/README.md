@@ -5,7 +5,7 @@ _This dockers are not dealing with legacy bit (pre-harmony) for legacy bit pleas
 ## Structure
 
 - Dockerfile-bit: A docker file which installs bvm and then use bvm to install bit. this docker is usually useful for runnig bit commands like tag and export on CI machine
-- Dcokerfil-bit-server: A docker file based on the `Dockerfile-bit` (using from) which create a bare scope, and initialized the bit server on it (bit start)
+- Dockerfile-bit-server: A docker file based on the `Dockerfile-bit` (using from) which create a bare scope, and initialized the bit server on it (bit start)
 - Dockerfile-symphony: for internal use only
 
 ## Using from dockerhub
@@ -22,7 +22,7 @@ The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hu
 
 ### Run the cli container
 
-1. `docker run -it bitcli/bit-server:latest /bin/bash`
+1. `docker run -it bitcli/bit:latest /bin/bash`
 1. `bit -v` to see bit's version to make sure it works
 
 ### Run the server container

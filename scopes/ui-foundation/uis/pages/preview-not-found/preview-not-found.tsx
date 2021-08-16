@@ -9,10 +9,6 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
 
     height: '100%',
-    color: '#878c9a',
-
-    fontSize: '18px',
-    fontFamily: 'sans-serif', // TODO - replace
   },
   image: {
     width: '2.6em',
@@ -20,6 +16,7 @@ const styles: Record<string, CSSProperties> = {
   },
   message: {
     fontSize: '1em',
+    textAlign: 'center',
   },
 };
 

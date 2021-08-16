@@ -17,8 +17,27 @@ const center = `
   }
 `;
 
+const sizing = `
+  body {
+    font-size: 18px;
+    color: #878c9a;
+  }
+
+  @media screen and (max-width: 250px) {
+    body {
+      font-size: 14px;
+      color: #c7c7c7;
+    }
+  }
+`;
+
 const assets = {
   style: [center],
+  css: [staticBookFontUrl],
+};
+
+const noPreviewAssets = {
+  style: [center, sizing],
   css: [staticBookFontUrl],
 };
 
@@ -31,5 +50,5 @@ export function serverError(): string {
 }
 
 export function noPreview(): string {
-  return fullPageToStaticString(<PreviewNotFoundPage className={staticBookFontClass} />, assets);
+  return fullPageToStaticString(<PreviewNotFoundPage className={staticBookFontClass} />, noPreviewAssets);
 }
