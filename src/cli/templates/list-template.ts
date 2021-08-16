@@ -18,8 +18,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     }
     const data: Row = {
       id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      localVersion: version,
+      localVersion: version || 'N/A',
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
     };
 
@@ -41,7 +40,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     const version = listScopeResult.id.version;
     const data = {
       id,
-      localVersion: version,
+      localVersion: version || 'N/A',
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
