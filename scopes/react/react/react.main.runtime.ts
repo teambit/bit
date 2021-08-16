@@ -1,4 +1,5 @@
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
+import { omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -21,7 +22,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
@@ -33,7 +34,6 @@ import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
-import { TypescriptConfigMutator } from '../../typescript/modules/ts-config-mutator';
 
 type ReactDeps = [
   EnvsMain,
@@ -103,42 +103,65 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
-  private tsConfigOverride: TsConfigSourceFile | undefined;
-
-  useTypescript(tsModifiers?: UseTypescriptModifiers) {
-    let overrides;
+  /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript(modifiers?: UseTypescriptModifiers, tsModule: any = ts) {
+    const overrides: any = {};
+    const devTransformers = modifiers?.devConfig;
+    if (devTransformers) {
+      overrides.getCompiler = () => this.reactEnv.getCompiler(devTransformers, tsModule);
+    }
+    const buildTransformers = modifiers?.buildConfig;
+    if (buildTransformers) {
+      overrides.getBuildPipe = () => this.reactEnv.getBuildPipe(buildTransformers, tsModule);
+    }
+    return this.envs.override(overrides);
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(
-    tsconfig?: TsConfigSourceFile,
+    tsconfig: Record<string, any> = {},
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
-    this.tsConfigOverride = tsconfig;
-
+    const transformer: TsConfigTransformer = (configMutator) => {
+      configMutator.mergeTsConfig(tsconfig);
+      configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
+      configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
+      configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
+      return configMutator;
+    };
     return this.envs.override({
-      getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, compilerOptions, tsModule);
-      },
+      getCompiler: () => this.reactEnv.getCompiler([transformer], tsModule),
     });
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the build tsconfig.
    */
   overrideBuildTsConfig(
-    tsconfig?: TsConfigSourceFile,
+    tsconfig: Record<string, any> = {},
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
+    const transformer: TsConfigTransformer = (configMutator) => {
+      configMutator.mergeTsConfig(tsconfig);
+      configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
+      configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
+      configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
+      return configMutator;
+    };
     return this.envs.override({
-      getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions, tsModule);
-      },
+      getBuildPipe: () => this.reactEnv.getBuildPipe([transformer], tsModule),
     });
   }
 
@@ -254,13 +277,6 @@ export class ReactMain {
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
     });
-  }
-
-  /**
-   * return the computed tsconfig.
-   */
-  getTsConfig() {
-    return this.reactEnv.getTsConfig(this.tsConfigOverride);
   }
 
   /**
