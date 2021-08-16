@@ -75,6 +75,10 @@ export default class CommandHelper {
   list(options = '') {
     return this.runCmd(`bit list ${options}`);
   }
+  listParsed(options = ''): Record<string, any>[] {
+    const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
   listLocalScope(options = '') {
     return this.runCmd(`bit list --scope ${options}`);
   }

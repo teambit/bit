@@ -517,7 +517,7 @@ describe('bit lane command', function () {
         expect(status).to.not.have.string('bar/foo');
       });
       it('bit list should not show lane-b components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(2);
       });
       // @todo: test each one of the commands on bar/foo
@@ -528,7 +528,7 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('bit list should only show main components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
@@ -546,7 +546,7 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('bit list should only show main components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
@@ -591,7 +591,7 @@ describe('bit lane command', function () {
           helper.command.switchLocalLane('main');
         });
         it('bit list should not show the component', () => {
-          const list = helper.command.listLocalScopeParsed();
+          const list = helper.command.listParsed();
           expect(list).to.have.lengthOf(0);
         });
       });
