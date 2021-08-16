@@ -27,6 +27,7 @@ export class HtmlMain {
   static runtime = MainRuntime;
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -56,6 +57,7 @@ export class HtmlMain {
   overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
 
   /**
+   * @deprecated use useTypescript()
    * override the build ts config.
    */
   overrideBuildTsConfig: (

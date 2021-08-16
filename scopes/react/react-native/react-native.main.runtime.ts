@@ -29,6 +29,7 @@ export class ReactNativeMain {
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -48,6 +49,7 @@ export class ReactNativeMain {
   overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
 
   /**
+   * @deprecated use useTypescript()
    * override the build ts config.
    */
   overrideBuildTsConfig: (
