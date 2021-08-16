@@ -2,10 +2,6 @@ import { CompilerOptions, ModuleKind } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { TypescriptConfigMutator } from './ts-config-mutator';
 
-class MyPlugin {
-  apply() {}
-}
-
 const baseTypescriptConfig: TypeScriptCompilerOptions = {
   tsconfig: {
     compilerOptions: {},
@@ -14,9 +10,9 @@ const baseTypescriptConfig: TypeScriptCompilerOptions = {
   types: [],
 };
 
-const simpleCompilerOptions: CompilerOptions = {
-  module: ModuleKind.CommonJS,
-};
+// const simpleCompilerOptions: CompilerOptions = {
+//   module: ModuleKind.CommonJS,
+// };
 
 describe('ts config mutator test', () => {
   it('add types', () => {

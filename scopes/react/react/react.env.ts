@@ -15,6 +15,8 @@ import {
   PackageEnv,
   TesterEnv,
   FormatterEnv,
+  PipeServiceModifier,
+  PipeServiceModifiersMap,
 } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
@@ -59,6 +61,10 @@ const prettierConfig = require('./prettier/prettier.config.js');
 
 // TODO: move to be taken from the key mode of compiler context
 type CompilerMode = 'build' | 'dev';
+
+type GetBuildPipeModifiers = PipeServiceModifiersMap & {
+  tsModifier?: PipeServiceModifier;
+};
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -338,8 +344,10 @@ export class ReactEnv
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(transformers: TsConfigTransformer[] = [], tsModule = ts): BuildTask[] {
-    return [this.getCompilerTask(transformers, tsModule), this.tester.task];
+  getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
+    const transformers: TsConfigTransformer[] =
+      (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
+    return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
   private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {

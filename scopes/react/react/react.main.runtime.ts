@@ -115,7 +115,13 @@ export class ReactMain {
     }
     const buildTransformers = modifiers?.buildConfig;
     if (buildTransformers) {
-      overrides.getBuildPipe = () => this.reactEnv.getBuildPipe(buildTransformers, tsModule);
+      const buildPipeModifiers = {
+        tsModifier: {
+          transformers: buildTransformers,
+          module: tsModule,
+        },
+      };
+      overrides.getBuildPipe = () => this.reactEnv.getBuildPipe(buildPipeModifiers);
     }
     return this.envs.override(overrides);
   }
@@ -138,9 +144,10 @@ export class ReactMain {
       configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
       return configMutator;
     };
-    return this.envs.override({
-      getCompiler: () => this.reactEnv.getCompiler([transformer], tsModule),
-    });
+    // return this.envs.override({
+    //   getCompiler: () => this.reactEnv.getCompiler([transformer], tsModule),
+    // });
+    return this.useTypescript({ devConfig: [transformer] }, tsModule);
   }
 
   /**
@@ -160,9 +167,10 @@ export class ReactMain {
       configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
       return configMutator;
     };
-    return this.envs.override({
-      getBuildPipe: () => this.reactEnv.getBuildPipe([transformer], tsModule),
-    });
+    // return this.envs.override({
+    //   getBuildPipe: () => this.reactEnv.getBuildPipe([transformer], tsModule),
+    // });
+    return this.useTypescript({ buildConfig: [transformer] }, tsModule);
   }
 
   /**
