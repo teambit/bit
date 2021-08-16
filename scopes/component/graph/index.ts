@@ -8,3 +8,4 @@ export type { GraphMain } from './graph.main.runtime';
 export { EdgeType } from './edge-type';
 export type { GraphUI, ComponentWidget, ComponentWidgetSlot, ComponentWidgetProps } from './graph.ui.runtime';
 export { useGraph, useGraphQuery, GraphModel, EdgeModel, NodeModel } from './ui/query';
+export { objectListToGraph, IdGraph } from './object-list-to-graph';
