@@ -31,7 +31,7 @@ describe('graph aspect', function () {
         const objectList = await scope.toObjectList();
         graph = await objectListToGraph(objectList);
       });
-      it.only('should include the dependencies correctly', () => {
+      it('should include the dependencies correctly', () => {
         const jsonGraph = graph.toJson();
         expect(jsonGraph.nodes).to.have.lengthOf(3);
         expect(jsonGraph.edges).to.have.lengthOf(2);
