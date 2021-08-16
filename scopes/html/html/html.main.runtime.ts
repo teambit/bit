@@ -71,6 +71,12 @@ export class HtmlMain {
   );
 
   /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript = this.react.useTypescript.bind(this.react);
+
+  /**
    * override the env's dev server and preview webpack configurations.
    * Replaces both overrideDevServerConfig and overridePreviewConfig
    */
@@ -95,7 +101,7 @@ export class HtmlMain {
     });
   }
 
-    /**
+  /**
    * create a new composition of the html environment.
    */
   compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
