@@ -3,8 +3,6 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
-import { TsConfigTransformer } from '@teambit/typescript';
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 
 const babelConfig = require('./babel.config.json');
 const tsconfig = require('./tsconfig.json');
@@ -27,7 +25,7 @@ export class MultipleCompilersEnv {
       },
     });
 
-    const transformer: TsConfigTransformer = (config: TypescriptConfigMutator) => {
+    const transformer = (config) => {
       config
         .mergeTsConfig(tsconfig)
         .setArtifactName('declaration')
