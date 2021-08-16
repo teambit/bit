@@ -695,6 +695,26 @@
           }
         }
       }
+    },
+    "scopes/harmony/graphql": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "@teambit/legacy": "-",
+            // subscriptions-transport-ws --> ws --> utf-8-validate, bufferutil see https://github.com/websockets/ws/issues/659
+            "bufferutil": "4.0.3",
+            // subscriptions-transport-ws --> ws --> utf-8-validate, bufferutil see https://github.com/websockets/ws/issues/659
+            "utf-8-validate": "5.0.5"
+          },
+          "devDependencies": {
+            "@types/mocha": "5.2.7",
+            "@teambit/legacy": "-"
+          },
+          "peerDependencies": {
+            "@teambit/legacy": "1.0.76"
+          }
+        }
+      }
     }
   }
 }
