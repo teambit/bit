@@ -20,8 +20,8 @@ export async function listScope({
   strategiesNames,
 }: {
   scopeName?: string;
-  showAll: boolean;
-  showRemoteVersion: boolean;
+  showAll?: boolean;
+  showRemoteVersion?: boolean;
   namespacesUsingWildcards?: string;
   strategiesNames?: SSHConnectionStrategyName[];
 }): Promise<ListScopeResult[]> {
