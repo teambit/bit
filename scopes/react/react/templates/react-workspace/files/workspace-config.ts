@@ -6,7 +6,6 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = scope;
-  // configParsed['teambit.workspace/workspace'].defaultDirectory = scope;
   configParsed['teambit.dependencies/dependency-resolver'].packageManager = 'teambit.dependencies/pnpm';
   configParsed['teambit.dependencies/dependency-resolver'].policy = {
     dependencies: {},
