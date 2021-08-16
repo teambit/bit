@@ -107,5 +107,7 @@ dist
 
 .history
 
+.DS_Store
+
 `;
 }

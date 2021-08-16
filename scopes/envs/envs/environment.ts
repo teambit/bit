@@ -8,7 +8,6 @@ import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import type { TsConfigSourceFile } from 'typescript';
 
 export type EnvDescriptor = {
   type: string;
@@ -99,6 +98,13 @@ export interface PreviewEnv extends Environment {
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 }
 
+export type PipeServiceModifiersMap = Record<string, PipeServiceModifier>;
+
+export interface PipeServiceModifier {
+  transformers?: Function[];
+  module?: any;
+}
+
 export interface BuilderEnv extends PreviewEnv {
   /**
    * @deprecated Fatal: a breaking API was introduced. Use getBuildPipe() instead.
@@ -109,19 +115,19 @@ export interface BuilderEnv extends PreviewEnv {
    * Returns the component build pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getBuildPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getBuildPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 
   /**
    * Returns the component tag pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getTagPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getTagPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 
   /**
    * Returns the component snap pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getSnapPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getSnapPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 }
 
 export interface TesterEnv extends Environment {
