@@ -24,11 +24,16 @@ export class MultipleCompilersEnv {
         return babelCompiler;
       },
     });
-    const tsCompiler = react.env.getCompiler(tsconfig, {
-      artifactName: 'declaration',
-      distGlobPatterns: [`dist/**/*.d.ts`],
-      shouldCopyNonSupportedFiles: false,
-    });
+
+    const transformer = (config) => {
+      config
+        .mergeTsConfig(tsconfig)
+        .setArtifactName('declaration')
+        .setDistGlobPatterns([`dist/**/*.d.ts`])
+        .setShouldCopyNonSupportedFiles(false);
+      return config;
+    };
+    const tsCompiler = react.env.getCompiler([transformer]);
 
     const buildPipeOverride = react.overrideBuildPipe([
       compiler.createTask('BabelCompiler', babelCompiler),
