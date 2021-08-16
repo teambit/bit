@@ -1,4 +1,4 @@
-import { CompilerOptions, ModuleKind } from 'typescript';
+// import { CompilerOptions, ModuleKind } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { TypescriptConfigMutator } from './ts-config-mutator';
 
