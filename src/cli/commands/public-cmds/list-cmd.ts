@@ -12,13 +12,13 @@ import listTemplate from '../../templates/list-template';
 
 export default class List implements LegacyCommand {
   name = 'list [remote-scope]';
-  shortDescription = 'list components on a local or a remote scope.';
+  shortDescription = 'list components on a workspace, local scope or a remote scope.';
   group: Group = 'discover';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
-    ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
+    ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
     ['b', 'bare', 'DEPRECATED. use --raw instead'],
     ['r', 'raw', 'show raw output (only components ids, no styling)'],
     ['o', 'outdated', 'show latest versions from remotes'],

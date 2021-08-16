@@ -72,11 +72,14 @@ export default class CommandHelper {
   listRemoteScope(raw = true, options = '') {
     return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
   }
-  listLocalScope(options = '') {
+  list(options = '') {
     return this.runCmd(`bit list ${options}`);
   }
+  listLocalScope(options = '') {
+    return this.runCmd(`bit list --scope ${options}`);
+  }
   listLocalScopeParsed(options = ''): Record<string, any>[] {
-    const output = this.runCmd(`bit list --json ${options}`);
+    const output = this.runCmd(`bit list --scope --json ${options}`);
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options = '') {

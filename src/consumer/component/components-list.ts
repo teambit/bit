@@ -401,15 +401,16 @@ export default class ComponentsList {
    */
   async listAll(
     showRemoteVersion: boolean,
-    includeNested: boolean,
+    listScope: boolean,
     namespacesUsingWildcards?: string
   ): Promise<ListScopeResult[]> {
     const modelComponents: ModelComponent[] = await this.getModelComponents();
     const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
-    const allIds = BitIds.uniqFromArray([
-      ...authoredAndImportedIds.map((id) => id.changeVersion(undefined)),
-      ...modelComponents.map((c) => c.toBitId()),
-    ]);
+    const authoredAndImportedIdsNoVer = authoredAndImportedIds.map((id) => id.changeVersion(undefined));
+    const modelComponentsIds = modelComponents.map((c) => c.toBitId());
+    const allIds = listScope
+      ? modelComponentsIds
+      : BitIds.uniqFromArray([...authoredAndImportedIdsNoVer, ...modelComponentsIds]);
     const idsFilteredByWildcards = namespacesUsingWildcards
       ? ComponentsList.filterComponentsByWildcard(allIds, namespacesUsingWildcards)
       : allIds;
@@ -438,7 +439,9 @@ export default class ComponentsList {
         listResult.currentlyUsedVersion = existingBitMapId.hasVersion() ? existingBitMapId.version : undefined;
       }
     });
-    if (includeNested) return listAllResults;
+    if (listScope) {
+      return listAllResults;
+    }
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
       if (!componentMap.onLanesOnly) return true; // component is on main, always show it
