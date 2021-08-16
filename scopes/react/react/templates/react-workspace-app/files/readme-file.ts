@@ -20,10 +20,10 @@ This is an auto-generated file and includes the mapping of your components. Ther
 
 - **Demo Components**
 
-A demo folder containing demo components are included in this workspace. These components are used to demonstrate the different features of Bit. If you would like to remove these components you can run the following command.
+A folder containing demo components are included in this workspace. These components are used to demonstrate the different features of Bit. If you would like to remove these components you can run the following command.
 
 \`\`\`jsx
-bit remove demo/* --delete files
+bit remove "ui/*" --delete files
 \`\`\`
 
 This removes the components from the bitmap as well as removes the files.

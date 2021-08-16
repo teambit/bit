@@ -15,16 +15,16 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     },
   };
   configParsed['teambit.workspace/variants'] = {
-    '{**/ui/**}, {**/pages/**}': {
+    '{ui/**}, {pages/**}': {
       'teambit.react/templates/envs/my-react': {},
     },
-    '{**/styles/**}': {
+    '{styles/**}': {
       'teambit.react/react': {},
     },
-    '{**/themes/**}': {
+    '{themes/**}': {
       'teambit.react/react': {},
     },
-    '{**/envs/*}, {**/apps/*}': {
+    '{envs/*}, {apps/*}': {
       'teambit.harmony/aspect': {},
     },
   };
