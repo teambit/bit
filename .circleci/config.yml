@@ -575,7 +575,7 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=4096
+            NODE_OPTIONS: --max_old_space_size=8096
 
   bit_tag:
     resource_class: large
@@ -631,7 +631,7 @@ jobs:
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max_old_space_size=4096
+            NODE_OPTIONS: --max_old_space_size=8096
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
