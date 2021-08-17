@@ -9,7 +9,7 @@ type Row = { id: string; localVersion: string; currentVersion: string; remoteVer
 export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) => {
   function tabulateComponent(listScopeResult: ListScopeResult): Row {
     const id = listScopeResult.id.toStringWithoutVersion();
-    let version = listScopeResult.id.version;
+    let version = listScopeResult.id.version || '<new>';
     if (!json && showRemoteVersion) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
@@ -18,7 +18,6 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     }
     const data: Row = {
       id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       localVersion: version,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
     };
@@ -41,7 +40,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     const version = listScopeResult.id.version;
     const data = {
       id,
-      localVersion: version,
+      localVersion: version || '<new>',
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',

@@ -849,13 +849,13 @@ describe('bit import', function () {
     });
     describe('bit list', () => {
       it('should show only the components and not the dependencies when --scope is not used', () => {
-        const listScope = helper.command.listLocalScope();
+        const listScope = helper.command.list();
         expect(listScope).to.have.string('bar/foo');
         expect(listScope).to.not.have.string('utils/is-string');
         expect(listScope).to.not.have.string('utils/is-type');
       });
       it('should show the components and the dependencies when --scope is used', () => {
-        const listScope = helper.command.listLocalScope('--scope');
+        const listScope = helper.command.listLocalScope();
         expect(listScope).to.have.string('bar/foo');
         expect(listScope).to.have.string('utils/is-string');
         expect(listScope).to.have.string('utils/is-type');

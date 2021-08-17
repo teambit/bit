@@ -399,46 +399,56 @@ export default class ComponentsList {
   /**
    * get called when the Consumer is available, shows also components from remote scopes
    */
-  async listScope(
+  async listAll(
     showRemoteVersion: boolean,
-    includeNested: boolean,
+    listScope: boolean,
     namespacesUsingWildcards?: string
   ): Promise<ListScopeResult[]> {
-    const components: ModelComponent[] = await this.getModelComponents();
-    const componentsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
-      : components;
-    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
-      id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated,
-    }));
-    const componentsIds = listScopeResults.map((result) => result.id);
+    const modelComponents: ModelComponent[] = await this.getModelComponents();
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const authoredAndImportedIdsNoVer = authoredAndImportedIds.map((id) => id.changeVersion(undefined));
+    const modelComponentsIds = modelComponents.map((c) => c.toBitId());
+    const allIds = listScope
+      ? modelComponentsIds
+      : BitIds.uniqFromArray([...authoredAndImportedIdsNoVer, ...modelComponentsIds]);
+    const idsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(allIds, namespacesUsingWildcards)
+      : allIds;
+    const idsSorted = ComponentsList.sortComponentsByName(idsFilteredByWildcards);
+    const listAllResults: ListScopeResult[] = idsSorted.map((id: BitId) => {
+      const component = modelComponents.find((c) => c.toBitId().isEqualWithoutVersion(id));
+      return {
+        id: component ? component.toBitIdWithLatestVersion() : id,
+        deprecated: component ? component.deprecated : false,
+      };
+    });
+    const componentsIds = listAllResults.map((result) => result.id);
     if (showRemoteVersion) {
       const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
       latestVersionsInfo.forEach((componentId) => {
-        const listResult = listScopeResults.find((c) => c.id.isEqualWithoutVersion(componentId));
+        const listResult = listAllResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }
-    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
-    listScopeResults.forEach((listResult) => {
+    listAllResults.forEach((listResult) => {
       const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
       if (existingBitMapId) {
-        listResult.currentlyUsedVersion = existingBitMapId.version;
+        listResult.currentlyUsedVersion = existingBitMapId.hasVersion() ? existingBitMapId.version : undefined;
       }
     });
-    if (includeNested) return listScopeResults;
+    if (listScope) {
+      return listAllResults;
+    }
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
       if (!componentMap.onLanesOnly) return true; // component is on main, always show it
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };
-    return listScopeResults.filter((listResult) => {
+    return listAllResults.filter((listResult) => {
       const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
       return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && isIdOnCurrentLane(componentMap);
     });
