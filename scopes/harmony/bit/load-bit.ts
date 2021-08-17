@@ -114,7 +114,14 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
 }
 
 function getVersionFromBitMapIds(allBitmapIds: BitIds, aspectId: string): string | undefined {
-  const aspectBitId = BitId.parse(aspectId, true);
+  let aspectBitId: BitId;
+  try {
+    aspectBitId = BitId.parse(aspectId, true);
+  } catch (err) {
+    throw new Error(
+      `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`
+    );
+  }
   // start by searching id in the bitmap with exact match (including scope name)
   // in case the aspect is not exported yet, it will be in the bitmap without a scope,
   // while in the aspect id it will have the default scope
