@@ -924,12 +924,13 @@ export class Workspace implements ComponentFactory {
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
+    // load the scope first because we might need it for custom envs that extend external aspects
+    if (scopeComps.length) {
+      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
+    }
     if (workspaceComps.length) {
       const requireableExtensions: any = await this.requireComponents(workspaceComps);
       await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
-    }
-    if (scopeComps.length) {
-      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
     }
   }
 
