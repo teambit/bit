@@ -125,7 +125,12 @@ export class GeneratorMain {
   async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
     if (!aspectId) throw new BitError(`to load template from a different workspace, please provide the aspect-id`);
     const harmony = await loadBit(workspacePath);
-    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+    let workspace: Workspace;
+    try {
+      workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+    } catch (err) {
+      throw new Error(`fatal: "${workspacePath}" is not a valid Bit workspace, make sure the path is correct`);
+    }
     const aspectComponentId = await workspace.resolveComponentId(aspectId);
     await workspace.loadAspects([aspectId], true);
     const aspectFullId = aspectComponentId.toString();
