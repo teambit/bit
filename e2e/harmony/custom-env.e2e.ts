@@ -74,11 +74,12 @@ describe('custom env', function () {
         expect(() => helper.command.status()).not.to.throw();
       });
     });
-    describe('change an env', () => {
+    describe('change an env after tag', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(wsAllNew);
-        envId = 'teambit.react/react';
-        helper.extensions.addExtensionToVariant('*', envId, undefined, true);
+        helper.command.tagAllWithoutBuild();
+        const newEnvId = 'teambit.react/react';
+        helper.extensions.addExtensionToVariant('*', newEnvId, undefined, true);
       });
       it.only('should not show the previous env as an extension', () => {
         const comp3 = helper.command.showComponent('comp3');
