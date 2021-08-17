@@ -32,8 +32,8 @@ export default class ExtensionsHelper {
     this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
   }
 
-  addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
-    this.bitJsonc.addToVariant(variant, extName, extConfig);
+  addExtensionToVariant(variant: string, extName: string, extConfig = {}, replaceExisting = false) {
+    this.bitJsonc.addToVariant(variant, extName, extConfig, replaceExisting);
   }
 
   removeAllExtensionsFromVariant(variant: string) {

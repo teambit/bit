@@ -74,6 +74,17 @@ describe('custom env', function () {
         expect(() => helper.command.status()).not.to.throw();
       });
     });
+    describe('change an env', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        envId = 'teambit.react/react';
+        helper.extensions.addExtensionToVariant('*', envId, undefined, true);
+      });
+      it.only('should not show the previous env as an extension', () => {
+        const comp3 = helper.command.showComponent('comp3');
+        expect(comp3).to.not.include(envId);
+      });
+    });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
