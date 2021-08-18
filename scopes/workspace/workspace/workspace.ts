@@ -191,7 +191,7 @@ export class Workspace implements ComponentFactory {
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver);
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
   }
 

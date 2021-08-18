@@ -6,10 +6,11 @@ import { compact } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
+import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
@@ -23,7 +24,8 @@ export class WorkspaceComponentLoader {
   constructor(
     private workspace: Workspace,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private envs: EnvsMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -102,9 +104,18 @@ export class WorkspaceComponentLoader {
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent);
     if (storeInCache) {
+      this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, forCapsule);
     }
     return component;
+  }
+
+  private addMultipleEnvsIssueIfNeeded(component: Component) {
+    const envs = this.envs.getAllEnvsConfiguredOnComponent(component);
+    if (envs.length < 2) {
+      return;
+    }
+    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envs.map((e) => e.id);
   }
 
   clearCache() {

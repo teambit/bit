@@ -470,6 +470,7 @@
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
+      "teambit.harmony/aspect": "-",
       "defaultScope": "teambit.toolbox"
     },
     "scopes/workspace": {

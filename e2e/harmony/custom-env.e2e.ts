@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { IssuesClasses } from '../../scopes/component/component-issues';
 
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -72,6 +73,17 @@ describe('custom env', function () {
       });
       it('bit status should not throw ComponentNotFound error', () => {
         expect(() => helper.command.status()).not.to.throw();
+      });
+    });
+    describe('change an env after tag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        helper.command.tagAllWithoutBuild();
+        const newEnvId = 'teambit.react/react';
+        helper.extensions.addExtensionToVariant('*', newEnvId, undefined, true);
+      });
+      it('bit status should show it as an issue because the previous env was not removed', () => {
+        helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
       });
     });
   });
