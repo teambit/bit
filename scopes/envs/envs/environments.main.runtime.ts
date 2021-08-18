@@ -288,6 +288,14 @@ export class EnvsMain {
     return this.getDefaultEnv();
   }
 
+  getAllEnvsConfiguredOnComponent(component: Component): EnvDefinition[] {
+    return component.state.aspects.entries.reduce((acc: EnvDefinition[], aspectEntry) => {
+      const envDef = this.getEnvDefinitionById(aspectEntry.id);
+      if (envDef) acc.push(envDef);
+      return acc;
+    }, []);
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */

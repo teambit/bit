@@ -13,6 +13,7 @@ import { relativeComponentsAuthored } from './relative-components-authored';
 import { ResolveErrors } from './resolve-errors';
 import { UntrackedDependencies } from './untracked-dependencies';
 import { LegacyInsideHarmony } from './legacy-inside-harmony';
+import { MultipleEnvs } from './multiple-envs';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -29,6 +30,7 @@ export const IssuesClasses = {
   MissingCustomModuleResolutionLinks,
   ImportNonMainFiles,
   CustomModuleResolutionUsed,
+  MultipleEnvs,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
