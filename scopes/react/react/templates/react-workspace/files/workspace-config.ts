@@ -1,5 +1,6 @@
 import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
+import { parse, assign } from 'comment-json';
 
 export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceContext) {
   const scope = defaultScope || 'company.scope';
@@ -16,23 +17,27 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
     },
   };
 
-  configParsed['teambit.workspace/variants'] = empty
-    ? {
-        '*': {
-          'teambit.react/react': {},
-        },
-      }
-    : {
-        '{ui/**}, {pages/**}': {
-          // uses the custom env
-          [`${scope}/envs/my-react`]: {},
-          // uncomment the line below if you remove the custom env and remove the line above
-          // 'teambit.react/react': {},
-        },
-        '{envs/**}': {
-          'teambit.harmony/aspect': {},
-        },
-      };
+  const variants = {
+    'teambit.workspace/variants': empty
+      ? {
+          '*': {
+            'teambit.react/react': {},
+          },
+        }
+      : parse(`{
+      "{ui/**}, {pages/**}": {
+        // uses the custom env
+        "${scope}/envs/my-react": {},
+        // uncomment the line below if you remove the custom env and remove the line above
+        // "teambit.react/react": {},
+      },
+      "{envs/**}": {
+        "teambit.harmony/aspect": {},
+      },
+    }`),
+  };
 
-  return stringifyWorkspaceConfig(configParsed);
+  const configMerged = assign(configParsed, variants);
+
+  return stringifyWorkspaceConfig(configMerged);
 }

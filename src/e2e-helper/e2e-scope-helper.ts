@@ -73,6 +73,10 @@ export default class ScopeHelper {
     this.cleanLocalScope();
     this.initHarmonyWorkspace();
   }
+  newLocalScopeHarmony(templateName: string, flags?: string) {
+    fs.removeSync(this.scopes.localPath);
+    this.command.new(templateName, flags, this.scopes.local, this.scopes.e2eDir);
+  }
 
   initHarmonyWorkspace() {
     this.command.runCmd('bit init');
