@@ -2,7 +2,7 @@ import { ComponentTemplate, WorkspaceTemplate } from '@teambit/generator';
 import { reactComponent, deprecatedReactComponent } from './templates/react-component';
 import { reactComponentJS, deprecatedReactComponentJS } from './templates/react-component-js';
 import { reactEnvTemplate } from './templates/react-env';
-import { reactWorkspaceEmptyTemplate } from './templates/react-workspace-empty';
+import { deprecatedReactWorkspaceTemplate } from './templates/react-workspace-deprecated';
 import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
 import { reactAppTemplate } from './templates/react-app';
@@ -25,5 +25,5 @@ export const workspaceTemplates: WorkspaceTemplate[] = [
   reactWorkspaceTemplate,
   reactWorkspaceAppTemplate,
   reactWorkspaceLibTemplate,
-  reactWorkspaceEmptyTemplate,
+  deprecatedReactWorkspaceTemplate,
 ];
