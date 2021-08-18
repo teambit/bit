@@ -52,7 +52,13 @@ export class WorkspaceGenerator {
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       await this.addComponentsFromRemote();
-      await this.workspace.install();
+      await this.workspace.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
     } catch (err) {
       await fs.remove(this.workspacePath);
       throw err;
