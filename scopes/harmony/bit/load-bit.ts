@@ -186,6 +186,7 @@ function shouldLoadInSafeMode() {
     'cat-lane',
     'login',
     'logout',
+    'config',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
