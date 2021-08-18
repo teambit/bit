@@ -513,8 +513,8 @@ export default class CommandHelper {
   create(templateName: string, componentName: string, flags = '') {
     return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
-  new(templateName: string, flags = '', workspaceName = 'my-workspace') {
-    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`);
+  new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

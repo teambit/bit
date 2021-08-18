@@ -11,6 +11,7 @@ import {
 import Scope from '../../scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
 import logger from '../../logger/logger';
+import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
@@ -47,11 +48,11 @@ async function getScope(name: string) {
     return res;
   } catch (err) {
     logger.error('getScope has failed', err);
-    throw new Error(
-      `${name}: ${
-        err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error."
-      }`
-    );
+    const msg = err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error.";
+    if (msg === 'access denied') {
+      throw new ScopeNotFoundOrDenied(name);
+    }
+    throw new Error(`${name}: ${msg}`);
   }
 }
 
