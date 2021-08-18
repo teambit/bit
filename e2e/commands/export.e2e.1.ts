@@ -97,7 +97,7 @@ describe('bit export command', function () {
     });
     it('bit list locally should display 2 components', () => {
       const output = helper.command.listLocalScope();
-      expect(output.includes('found 2 components in local scope')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
     });
   });
 

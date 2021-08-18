@@ -898,7 +898,7 @@ describe('bit import', function () {
       });
       it('local scope should be empty', () => {
         const output = helper.command.listLocalScope();
-        expect(output).to.have.string('found 0 components in local scope');
+        expect(output).to.have.string('found 0 components');
       });
       describe('after running bit import (without --merge flag)', () => {
         before(() => {
@@ -906,7 +906,7 @@ describe('bit import', function () {
         });
         it('local scope should contain all the components', () => {
           const output = helper.command.listLocalScope('--scope');
-          expect(output).to.have.string('found 3 components in local scope');
+          expect(output).to.have.string('found 3 components');
         });
         it('bit status should show missing links because the symlinks from the component node_modules to the dependencies are missing', () => {
           helper.command.expectStatusToHaveIssue(IssuesClasses.MissingLinks.name);
