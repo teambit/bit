@@ -64,16 +64,23 @@ describe('new command', function () {
       expect(() => helper.command.new('react')).to.throw();
     });
   });
-  // @todo: fix. it throws an error on Circle only - "GET https://node.bit.dev/@teambit%2Freact.templates.env.templates: Not Found - 404"
-  describe.skip('creating a new react workspace', () => {
+  describe('creating a new react workspace', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
-      helper.command.new('react');
+      helper.scopeHelper.newLocalScopeHarmony('react');
     });
     it('bit status should be clean', () => {
-      const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
-      helper.command.expectStatusToNotHaveIssues(wsPath);
+      helper.command.expectStatusToNotHaveIssues();
+    });
+    describe('removing the env', () => {
+      before(() => {
+        helper.command.removeComponent('envs/my-react', '-d');
+      });
+      // before, it was throwing: "company.scope: access denied"
+      it('bit status should show a descriptive error', () => {
+        expect(() => helper.command.status()).to.throw(
+          'unable to import the following component(s): company.scope/envs/my-react'
+        );
+      });
     });
   });
 });
