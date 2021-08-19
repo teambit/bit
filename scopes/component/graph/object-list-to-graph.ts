@@ -36,7 +36,9 @@ export async function objectListToGraph(objectList: ObjectList): Promise<IdGraph
         }
         const { dependencies, devDependencies, extensionDependencies } = versionInfo.version.depsIdsGroupedByType;
         const addDep = (depId: BitId, edge: Dependency) => {
-          edges.push({ sourceId: idStr, targetId: depId.toString(), edge });
+          const depIdStr = depId.toString();
+          nodes.push({ id: depIdStr, node: depId });
+          edges.push({ sourceId: idStr, targetId: depIdStr, edge });
         };
         const runTime = new Dependency('runtime');
         const dev = new Dependency('dev');
