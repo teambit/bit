@@ -48,7 +48,7 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.standalone, false, false, false, false, {});
+      await init(this.workspacePath, this.options.skipGit, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       await this.addComponentsFromRemote();
@@ -68,7 +68,7 @@ export class WorkspaceGenerator {
   }
 
   private async initGit() {
-    if (this.options.standalone) return;
+    if (this.options.skipGit) return;
     const gitExecutablePath = getGitExecutablePath();
     const params = ['init'];
     try {
