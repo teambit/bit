@@ -12,7 +12,12 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // const tsconfig = this.tsconfig;
     const paths = component.state.filesystem.files.map((file) => file.path).filter((path) => path.endsWith('index.ts'));
     // const paths = ['/Users/ranmizrahi/Bit/bit/scopes/workspace/workspace/index.ts'];
-    const typedocApp = new Application();
+    const app = new Application();
+    app.bootstrap({
+      // typedoc options here
+      entryPoints: paths,
+    });
+    const project = app.convert();
     // typedocApp.options.setValues({
     //   inputFiles: paths,
     //   allowJs: true,
@@ -22,8 +27,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     //   exclude: ['node_modules', '*.scss'],
     //   esModuleInterop: true,
     // });
-    const docs = typedocApp.convert(paths);
-    if (!docs) throw new Error();
-    return typedocApp.serializer.projectToObject(docs) as any as Module;
+    if (!project) throw new Error('typedoc failed generating docs');
+    return app.serializer.projectToObject(project) as any as Module;
   }
 }

@@ -295,7 +295,7 @@
         "supi": "0.44.3",
         "terser-webpack-plugin": "5.1.1",
         "tippy.js": "6.2.7",
-        "typedoc": "0.18.0",
+        "typedoc": "0.21.5",
         "typescript-language-server": "0.4.0",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
