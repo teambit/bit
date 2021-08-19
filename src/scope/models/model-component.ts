@@ -935,5 +935,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
         );
       }
     });
+    if (!this.head) {
+      throw new ValidationError(`${message}, the "head" prop is missing`);
+    }
   }
 }
