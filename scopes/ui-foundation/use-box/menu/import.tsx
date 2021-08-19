@@ -1,8 +1,8 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
 
 export type ImportProps = {
@@ -37,9 +37,9 @@ export function Import({ componentId, packageName, componentName = '', back, ...
     >
       <div className={styles.importContent}>
         <div>{`Add ${componentName} as a dependency`}</div>
-        <CopyBox>{`bit install ${packageName}`}</CopyBox>
+        <TooltipCopybox content={`bit install ${packageName}`} />
         <div>{`Import ${componentName} to your workspace`}</div>
-        <CopyBox>{`bit import ${componentId}`}</CopyBox>
+        <TooltipCopybox content={`bit import ${componentId}`} />
       </div>
     </TabContent>
   );
