@@ -1,13 +1,14 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from './files/workspace-config';
-import { readme } from './files/readme-file';
+import { workspaceConfig } from '../react-workspace/files/workspace-config';
+import { readme } from '../react-workspace/files/readme-file';
 import { gitIgnore } from '../common-files/git-ignore';
 import { assetTypes } from '../common-files/types/asset';
 import { styleTypes } from '../common-files/types/style';
 
-export const reactWorkspaceTemplate: WorkspaceTemplate = {
-  name: 'react',
+export const deprecatedReactWorkspaceTemplate: WorkspaceTemplate = {
+  name: 'react-workspace',
   description: 'React workspace with demo components',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return [
       {

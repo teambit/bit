@@ -87,7 +87,7 @@ export default class List implements LegacyCommand {
   }): string {
     function decideHeaderSentence() {
       if (json) return '';
-      if (!scope) return `found ${listScopeResults.length} components in local scope\n`;
+      if (!scope) return `found ${listScopeResults.length} components\n`;
       return chalk.white(`found ${listScopeResults.length} components in ${chalk.bold(scope)}\n`);
     }
 

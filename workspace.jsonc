@@ -295,7 +295,7 @@
         "supi": "0.44.3",
         "terser-webpack-plugin": "5.1.1",
         "tippy.js": "6.2.7",
-        "typedoc": "0.18.0",
+        "typedoc": "0.21.5",
         "typescript-language-server": "0.4.0",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
@@ -319,7 +319,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.136",
+        "@teambit/legacy": "1.0.137",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -396,6 +396,7 @@
     },
     // Only component with at least one namespace
     "{*/**}": {
+      "teambit.harmony/aspect": "-",
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
@@ -434,7 +435,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.136"
+            "@teambit/legacy": "1.0.137"
           }
         }
       },
@@ -464,12 +465,14 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
+      "teambit.harmony/node": "-",
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
+      "teambit.harmony/aspect": "-",
       "defaultScope": "teambit.toolbox"
     },
     "scopes/workspace": {
@@ -579,6 +582,7 @@
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"
       },
+      "teambit.harmony/node": "-",
       "teambit.mdx/mdx": {}
     },
     "scopes/semantics": {
@@ -603,7 +607,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.136",
+            "@teambit/legacy": "1.0.137",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

@@ -53,8 +53,12 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     return JSON.stringify(jsonResults, null, 2);
   }
   const rows = listScopeResults.map(tabulateComponent);
+  const head = ['component ID', 'latest in scope', 'used in workspace'];
+  if (showRemoteVersion) {
+    head.push('latest in remove scope');
+  }
 
-  const table = new Table({ head: ['component ID', 'local version', 'used version'], style: { head: ['cyan'] } });
+  const table = new Table({ head, style: { head: ['cyan'] } });
   rows.map((row) => table.push(Object.values(row)));
   return table.toString();
 };
