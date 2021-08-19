@@ -396,6 +396,7 @@
     },
     // Only component with at least one namespace
     "{*/**}": {
+      "teambit.harmony/aspect": "-",
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
@@ -464,6 +465,7 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
+      "teambit.harmony/node": "-",
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
@@ -580,6 +582,7 @@
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"
       },
+      "teambit.harmony/node": "-",
       "teambit.mdx/mdx": {}
     },
     "scopes/semantics": {
