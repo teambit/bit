@@ -72,36 +72,26 @@ bvm install
 Start a [Bit workspace](https://harmony-docs.bit.dev/getting-started/initializing-workspace):
 
 ```bash
-bit new react-workspace <my-workspace-name>
+bit new react <my-workspace-name>
 ```
 
 Install dependencies:
 
 ```bash
 cd <my-workspace-name>
-bit install
-```
-
-Create a component:
-
-```bash
-bit create react-component ui/button     # TypeScript
-bit create react-component-js ui/button  # JavaScript
-```
-
-Install dependencies for test files:
-
-```bash
-bit install @testing-library/react
-```
-
-Start the dev server
-
-```bash
 bit start
 ```
+ 
+Open-up your browser on localhost:3000, or any other available port, and view the demo components.
 
-Open-up your browser on localhost:3000, or any other available port, and display your workspace with your components.
+  
+Create components:
+
+```bash
+bit create react ui/button     # TypeScript
+bit create react-js ui/button  # JavaScript
+```
+
 
 ### Popular Onboarding Use-Cases
 
