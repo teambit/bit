@@ -2,7 +2,6 @@ import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
 import { Consumer, loadConsumer } from '../../../consumer';
-import createLane from '../../../consumer/lanes/create-lane';
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import switchLanes, { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
@@ -18,15 +17,8 @@ export default async function switchAction(
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy) throw new LanesIsDisabled();
-  let results;
-  if (switchProps.create) {
-    await createLane(consumer, switchProps.laneName);
-    consumer.scope.lanes.setCurrentLane(switchProps.laneName);
-    results = { added: switchProps.laneName };
-  } else {
-    await populateSwitchProps(consumer, switchProps);
-    results = await switchLanes(consumer, switchProps, checkoutProps);
-  }
+  await populateSwitchProps(consumer, switchProps);
+  const results = await switchLanes(consumer, switchProps, checkoutProps);
 
   await consumer.onDestroy();
   return results;

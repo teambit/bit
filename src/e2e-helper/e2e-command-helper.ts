@@ -209,16 +209,16 @@ export default class CommandHelper {
     return result;
   }
   createLane(laneName = 'dev') {
-    return this.runCmd(`bit switch ${laneName} --create`);
+    return this.runCmd(`bit lane create ${laneName}`);
   }
   clearCache() {
     return this.runCmd('bit clear-cache');
   }
   removeLane(laneName = 'dev', options = '') {
-    return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
+    return this.runCmd(`bit lane remove ${laneName} ${options} --silent`);
   }
   removeRemoteLane(laneName = 'dev', options = '') {
-    return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
+    return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
   showLanes(options = '') {
     const results = this.runCmd(`bit lane list ${options}`);
@@ -494,7 +494,7 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${values}`);
   }
   mergeLane(laneName: string, options = '') {
-    return this.runCmd(`bit merge ${laneName} ${options} --lane`);
+    return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
