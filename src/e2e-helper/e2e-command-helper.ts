@@ -168,7 +168,7 @@ export default class CommandHelper {
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
-  tagWithoutBuild(id: string, options = '') {
+  tagWithoutBuild(id = '', options = '') {
     const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
@@ -409,9 +409,10 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
-  expectStatusToBeClean() {
+  expectStatusToBeClean(exclude: string[] = []) {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
+      if (exclude.includes(key)) return;
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
