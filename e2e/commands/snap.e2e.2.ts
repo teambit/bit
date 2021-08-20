@@ -89,6 +89,25 @@ describe('bit snap command', function () {
       expect(barFoo.dependencies).to.have.lengthOf(1);
       expect(barFoo.dependencies[0].id.version).to.be.a('string').and.have.lengthOf(HASH_SIZE);
     });
+    it('bit status should show them in the "snapped" section', () => {
+      const status = helper.command.statusJson();
+      expect(status.snappedComponents).to.have.lengthOf(3);
+    });
+    describe('tagging the components', () => {
+      let scopeBeforeTag: string;
+      before(() => {
+        scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      });
+      it('--all flag should include the snapped components', () => {
+        const output = helper.command.tagAllWithoutBuild();
+        expect(output).to.include('3 component(s) tagged');
+      });
+      it('--snapped flag should include the snapped components', () => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        const output = helper.command.tagWithoutBuild(undefined, '--snapped');
+        expect(output).to.include('3 component(s) tagged');
+      });
+    });
   });
   describe('untag a snap', () => {
     let firstSnap: string;

@@ -205,6 +205,14 @@ export default class Component extends BitObject {
   }
 
   /**
+   * whether the head is a snap (not a tag)
+   */
+  isHeadSnap() {
+    const tagsHashes = this.versionArray.map((ref) => ref.toString());
+    return this.head && !tagsHashes.includes(this.head.toString());
+  }
+
+  /**
    * add a new remote if it is not there already
    */
   addScopeListItem(scopeListItem: ScopeListItem): void {
