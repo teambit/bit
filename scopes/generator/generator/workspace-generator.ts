@@ -63,7 +63,7 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
-      await this.buildUI();
+      // await this.buildUI(); // disabled for now. it takes too long
     } catch (err) {
       await fs.remove(this.workspacePath);
       throw err;
