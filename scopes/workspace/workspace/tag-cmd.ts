@@ -27,6 +27,7 @@ ${WILDCARD_HELP('tag')}`;
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
     ['s', 'scope [version]', 'tag all components of the current scope'],
+    ['', 'snapped [version]', 'tag components that their head is a snap (not a tag)'],
     ['', 'ver <version>', 'tag specified components with the given version'],
     ['p', 'patch', 'increment the patch version number'],
     ['', 'minor', 'increment the minor version number'],
@@ -61,6 +62,7 @@ ${WILDCARD_HELP('tag')}`;
       message = '',
       ver,
       all = false,
+      snapped = false,
       patch,
       minor,
       major,
@@ -82,6 +84,7 @@ ${WILDCARD_HELP('tag')}`;
       incrementBy = 1,
     }: {
       all?: boolean | string;
+      snapped?: boolean | string;
       ver?: string;
       patch?: boolean;
       minor?: boolean;
@@ -99,10 +102,11 @@ ${WILDCARD_HELP('tag')}`;
     function getVersion(): string | undefined {
       if (scope && isString(scope)) return scope;
       if (all && isString(all)) return all;
+      if (snapped && isString(snapped)) return snapped;
       return ver;
     }
 
-    if (!id.length && !all && !scope && !persist) {
+    if (!id.length && !all && !snapped && !scope && !persist) {
       throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id.length && all) {
@@ -147,6 +151,7 @@ ${WILDCARD_HELP('tag')}`;
     const params = {
       ids: id,
       all: Boolean(all),
+      snapped: Boolean(snapped),
       message,
       exactVersion: getVersion(),
       releaseType,
