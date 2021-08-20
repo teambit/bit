@@ -74,7 +74,7 @@ export class LanesMain {
     await createNewLane(this.workspace.consumer, name);
     this.scope.legacyScope.lanes.setCurrentLane(name);
     const results = { added: name };
-    await this.workspace.writeBitMap();
+    await this.workspace.consumer.onDestroy();
 
     return results;
   }
