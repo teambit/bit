@@ -2,6 +2,7 @@
 
 import fs from 'fs-extra';
 import * as path from 'path';
+import { IS_WINDOWS } from '../constants';
 
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
@@ -212,7 +213,7 @@ export default class ScopeHelper {
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
    * cloned scope.
    */
-  cloneLocalScope(dereferenceSymlinks = true) {
+  cloneLocalScope(dereferenceSymlinks = IS_WINDOWS) {
     const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
