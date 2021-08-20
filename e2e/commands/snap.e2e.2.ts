@@ -225,8 +225,7 @@ describe('bit snap command', function () {
           helper.bitMap.expectToHaveIdHarmony('bar/foo', secondSnap, helper.scopes.remote);
         });
         it('bit status should be clean', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean(['snappedComponents']);
         });
       });
     });

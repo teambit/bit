@@ -147,6 +147,8 @@ export default class ComponentsList {
   /**
    * list components that their head is a snap, not a tag.
    * this is relevant only when the lane is the default (main), otherwise, the head is always a snap.
+   * components that are during-merge are filtered out, we don't want them during tag and don't want
+   * to show them in the "snapped" section in bit-status.
    */
   async listSnappedComponentsOnMain() {
     if (!this.scope.lanes.isOnDefaultLane()) {
@@ -154,8 +156,10 @@ export default class ComponentsList {
     }
     const componentsFromModel = await this.getModelComponents();
     const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const compsDuringMerge = this.listDuringMergeStateComponents();
     return componentsFromModel
       .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toBitId()))
       .filter((c) => c.isHeadSnap());
   }
 
