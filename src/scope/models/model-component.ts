@@ -945,7 +945,9 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
         );
       }
     });
-    if (!this.isLegacy && !this.head) {
+    if (!this.isLegacy && !this.head && this.versionArray.length) {
+      // legacy don't have head. also, when snapping on a lane the first time, there is no head.
+      // tags are done on default lane only, so if there are versions (tag), it must have head
       throw new ValidationError(`${message}, the "head" prop is missing`);
     }
   }
