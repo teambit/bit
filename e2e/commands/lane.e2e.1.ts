@@ -341,7 +341,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        helper.command.merge(`${helper.scopes.remote} dev --lane`);
+        helper.command.mergeRemoteLane(`dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -364,7 +364,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane --existing`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--existing`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -408,7 +408,7 @@ describe('bit lane command', function () {
       describe('merging the remote lane', () => {
         let mergeOutput;
         before(() => {
-          mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
+          mergeOutput = helper.command.mergeRemoteLane(`dev`);
         });
         it('should succeed', () => {
           expect(mergeOutput).to.have.string('successfully merged components');
