@@ -81,7 +81,7 @@ export class LanesMain {
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
     const results = await removeLanes(this.workspace?.consumer, laneNames, remote, force);
-    if (this.workspace) await this.workspace.writeBitMap();
+    if (this.workspace) await this.workspace.consumer.onDestroy();
 
     return results.laneResults;
   }
@@ -95,7 +95,7 @@ export class LanesMain {
       laneName,
       ...options,
     });
-    await this.workspace.writeBitMap();
+    await this.workspace.consumer.onDestroy();
 
     return mergeResults;
   }
