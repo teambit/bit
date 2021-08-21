@@ -152,7 +152,7 @@
     "execa": "2.1.0",
     "find-up": "5.0.0",
     "firstline": "2.0.2",
-    "fs-extra": "9.1.0",
+    "fs-extra": "10.0.0",
     "gitconfig": "2.0.8",
     "glob": "7.1.6",
     "globby": "11.0.1",
