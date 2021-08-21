@@ -2,6 +2,7 @@
 
 import fs from 'fs-extra';
 import * as path from 'path';
+import { IS_WINDOWS } from '../constants';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
@@ -216,7 +217,14 @@ export default class ScopeHelper {
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
     fs.removeSync(path.join(this.scopes.localPath, 'node_modules/@teambit/legacy'));
-    fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: dereferenceSymlinks });
+    try {
+      fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: dereferenceSymlinks });
+    } catch (err) {
+      if (err.code === 'EPERM' && IS_WINDOWS && !dereferenceSymlinks) {
+        fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: true });
+      }
+      throw err;
+    }
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
