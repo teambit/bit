@@ -7133,7 +7133,7 @@ __metadata:
     find-up: 5.0.0
     firstline: 2.0.2
     flatted: 3.1.0
-    fs-extra: 9.1.0
+    fs-extra: 10.0.0
     fuse.js: 6.4.6
     get-port: 5.1.1
     gh-release: 3.5.0
@@ -18363,6 +18363,17 @@ __metadata:
   version: 1.0.0
   resolution: "fs-constants@npm:1.0.0"
   checksum: 18f5b718371816155849475ac36c7d0b24d39a11d91348cfcb308b4494824413e03572c403c86d3a260e049465518c4f0d5bd00f0371cdfcad6d4f30a85b350d
+  languageName: node
+  linkType: hard
+
+"fs-extra@npm:10.0.0":
+  version: 10.0.0
+  resolution: "fs-extra@npm:10.0.0"
+  dependencies:
+    graceful-fs: ^4.2.0
+    jsonfile: ^6.0.1
+    universalify: ^2.0.0
+  checksum: 5285a3d8f34b917cf2b66af8c231a40c1623626e9d701a20051d3337be16c6d7cac94441c8b3732d47a92a2a027886ca93c69b6a4ae6aee3c89650d2a8880c0a
   languageName: node
   linkType: hard
 

@@ -858,7 +858,7 @@ describe('bit export command', function () {
         forkScope = scopeName;
         forkScopePath = scopePath;
         helper.scopeHelper.addRemoteScope(forkScopePath);
-        localScope = helper.scopeHelper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneLocalScope(true);
       });
       describe('with id and --include-dependencies flag', () => {
         let forkScopeIds;
