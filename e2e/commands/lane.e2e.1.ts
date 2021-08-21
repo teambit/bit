@@ -668,11 +668,11 @@ describe('bit lane command', function () {
         expect(lane.components).to.have.lengthOf(1);
       });
       it('should not alow removing the current lane', () => {
-        const output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+        const output = helper.general.runWithTryCatch('bit lane remove dev -s');
         expect(output).to.have.string('unable to remove the currently used lane');
       });
       it('should not alow removing the default lane', () => {
-        const output = helper.general.runWithTryCatch(`bit remove ${DEFAULT_LANE} --lane -s`);
+        const output = helper.general.runWithTryCatch(`bit lane remove ${DEFAULT_LANE} -s`);
         expect(output).to.have.string('unable to remove the default lane');
       });
       describe('switching back to default lane', () => {
@@ -684,7 +684,7 @@ describe('bit lane command', function () {
         describe('then removing without --force flag', () => {
           let output;
           before(() => {
-            output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+            output = helper.general.runWithTryCatch('bit lane remove dev -s');
           });
           it('should throw an error saying it is not fully merged', () => {
             expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
@@ -730,9 +730,7 @@ describe('bit lane command', function () {
         expect(lanes.lanes).to.have.lengthOf(1);
       });
       it('should not remove without --force flag as the lane is not merged', () => {
-        const output = helper.general.runWithTryCatch(
-          `bit remove ${helper.scopes.remote}/dev --lane --remote --silent`
-        );
+        const output = helper.general.runWithTryCatch(`bit lane remove ${helper.scopes.remote}/dev --remote --silent`);
         expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
       });
       describe('remove with --force flag', () => {
@@ -751,7 +749,7 @@ describe('bit lane command', function () {
           let removeOutput;
           before(() => {
             removeOutput = helper.general.runWithTryCatch(
-              `bit remove ${helper.scopes.remote}/dev --lane --remote --silent --force`
+              `bit lane remove ${helper.scopes.remote}/dev --remote --silent --force`
             );
           });
           it('should indicate that the lane was not found', () => {
