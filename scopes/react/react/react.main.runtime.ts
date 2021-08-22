@@ -140,6 +140,9 @@ export class ReactMain {
       configMutator.mergeTsConfig(tsconfig);
       configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
       configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      if (compilerOptions.types) {
+        configMutator.addTypes(compilerOptions.types);
+      }
       const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
       configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
       return configMutator;
@@ -163,6 +166,9 @@ export class ReactMain {
       configMutator.mergeTsConfig(tsconfig);
       configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
       configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      if (compilerOptions.types) {
+        configMutator.addTypes(compilerOptions.types);
+      }
       const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
       configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
       return configMutator;
