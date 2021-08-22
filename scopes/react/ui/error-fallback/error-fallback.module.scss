@@ -26,6 +26,10 @@
 
   color: var(--bit-error-color, #e62e5c);
   font-family: sans-serif;
+
+  > * {
+    flex: none; // prevent squashing in low res
+  }
 }
 
 @keyframes enter {
