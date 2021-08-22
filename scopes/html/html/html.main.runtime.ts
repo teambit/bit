@@ -6,7 +6,7 @@ import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { htmlEnvTemplate } from './templates/html-env';
@@ -27,6 +27,7 @@ export class HtmlMain {
   static runtime = MainRuntime;
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -56,6 +57,7 @@ export class HtmlMain {
   overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
 
   /**
+   * @deprecated use useTypescript()
    * override the build ts config.
    */
   overrideBuildTsConfig: (
@@ -69,6 +71,12 @@ export class HtmlMain {
   overridePackageJsonProps: (props: PackageJsonProps) => EnvTransformer = this.react.overridePackageJsonProps.bind(
     this.react
   );
+
+  /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript = this.react.useTypescript.bind(this.react);
 
   /**
    * override the env's dev server and preview webpack configurations.
@@ -93,6 +101,13 @@ export class HtmlMain {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.htmlEnv.getDependencies()),
     });
+  }
+
+  /**
+   * create a new composition of the html environment.
+   */
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {

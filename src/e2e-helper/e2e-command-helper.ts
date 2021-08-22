@@ -72,11 +72,18 @@ export default class CommandHelper {
   listRemoteScope(raw = true, options = '') {
     return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
   }
-  listLocalScope(options = '') {
+  list(options = '') {
     return this.runCmd(`bit list ${options}`);
   }
-  listLocalScopeParsed(options = ''): Record<string, any>[] {
+  listParsed(options = ''): Record<string, any>[] {
     const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
+  listLocalScope(options = '') {
+    return this.runCmd(`bit list --scope ${options}`);
+  }
+  listLocalScopeParsed(options = ''): Record<string, any>[] {
+    const output = this.runCmd(`bit list --scope --json ${options}`);
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options = '') {
@@ -161,7 +168,7 @@ export default class CommandHelper {
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
-  tagWithoutBuild(id: string, options = '') {
+  tagWithoutBuild(id = '', options = '') {
     const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
@@ -202,16 +209,16 @@ export default class CommandHelper {
     return result;
   }
   createLane(laneName = 'dev') {
-    return this.runCmd(`bit switch ${laneName} --create`);
+    return this.runCmd(`bit lane create ${laneName}`);
   }
   clearCache() {
     return this.runCmd('bit clear-cache');
   }
   removeLane(laneName = 'dev', options = '') {
-    return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
+    return this.runCmd(`bit lane remove ${laneName} ${options} --silent`);
   }
   removeRemoteLane(laneName = 'dev', options = '') {
-    return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
+    return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
   showLanes(options = '') {
     const results = this.runCmd(`bit lane list ${options}`);
@@ -402,9 +409,10 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
-  expectStatusToBeClean() {
+  expectStatusToBeClean(exclude: string[] = []) {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
+      if (exclude.includes(key)) return;
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -486,7 +494,10 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${values}`);
   }
   mergeLane(laneName: string, options = '') {
-    return this.runCmd(`bit merge ${laneName} ${options} --lane`);
+    return this.runCmd(`bit lane merge ${laneName} ${options}`);
+  }
+  mergeRemoteLane(laneName: string, remoteName = this.scopes.remote, options = '') {
+    return this.runCmd(`bit lane merge ${laneName} ${options} --remote ${remoteName}`);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -506,8 +517,8 @@ export default class CommandHelper {
   create(templateName: string, componentName: string, flags = '') {
     return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
-  new(templateName: string, flags = '', workspaceName = 'my-workspace') {
-    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`);
+  new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.134",
+  "version": "1.0.139",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -152,7 +152,7 @@
     "execa": "2.1.0",
     "find-up": "5.0.0",
     "firstline": "2.0.2",
-    "fs-extra": "9.1.0",
+    "fs-extra": "10.0.0",
     "gitconfig": "2.0.8",
     "glob": "7.1.6",
     "globby": "11.0.1",
@@ -275,9 +275,9 @@
     "@types/semver": "7.3.4",
     "@types/uuid": "3.4.9",
     "@types/yargs": "17.0.0",
-    "@typescript-eslint/eslint-plugin": "4.25.0",
-    "@typescript-eslint/parser": "4.25.0",
-    "@typescript-eslint/typescript-estree": "4.25.0",
+    "@typescript-eslint/eslint-plugin": "4.29.0",
+    "@typescript-eslint/parser": "4.29.0",
+    "@typescript-eslint/typescript-estree": "4.29.0",
     "babel-eslint": "9.0.0",
     "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
@@ -307,7 +307,7 @@
     "sinon": "5.1.1",
     "tar": "6.1.6",
     "type-coverage": "2.15.1",
-    "typescript": "4.1.5",
+    "typescript": "4.3.5",
     "verdaccio": "4.11.0"
   }
 }

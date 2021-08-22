@@ -341,7 +341,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        helper.command.merge(`${helper.scopes.remote} dev --lane`);
+        helper.command.mergeRemoteLane(`dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -364,7 +364,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane --existing`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--existing`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -408,7 +408,7 @@ describe('bit lane command', function () {
       describe('merging the remote lane', () => {
         let mergeOutput;
         before(() => {
-          mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
+          mergeOutput = helper.command.mergeRemoteLane(`dev`);
         });
         it('should succeed', () => {
           expect(mergeOutput).to.have.string('successfully merged components');
@@ -517,7 +517,7 @@ describe('bit lane command', function () {
         expect(status).to.not.have.string('bar/foo');
       });
       it('bit list should not show lane-b components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(2);
       });
       // @todo: test each one of the commands on bar/foo
@@ -528,7 +528,7 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('bit list should only show main components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
@@ -546,7 +546,7 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('bit list should only show main components', () => {
-        const list = helper.command.listLocalScopeParsed();
+        const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
@@ -591,7 +591,7 @@ describe('bit lane command', function () {
           helper.command.switchLocalLane('main');
         });
         it('bit list should not show the component', () => {
-          const list = helper.command.listLocalScopeParsed();
+          const list = helper.command.listParsed();
           expect(list).to.have.lengthOf(0);
         });
       });
@@ -668,11 +668,11 @@ describe('bit lane command', function () {
         expect(lane.components).to.have.lengthOf(1);
       });
       it('should not alow removing the current lane', () => {
-        const output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+        const output = helper.general.runWithTryCatch('bit lane remove dev -s');
         expect(output).to.have.string('unable to remove the currently used lane');
       });
       it('should not alow removing the default lane', () => {
-        const output = helper.general.runWithTryCatch(`bit remove ${DEFAULT_LANE} --lane -s`);
+        const output = helper.general.runWithTryCatch(`bit lane remove ${DEFAULT_LANE} -s`);
         expect(output).to.have.string('unable to remove the default lane');
       });
       describe('switching back to default lane', () => {
@@ -684,7 +684,7 @@ describe('bit lane command', function () {
         describe('then removing without --force flag', () => {
           let output;
           before(() => {
-            output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+            output = helper.general.runWithTryCatch('bit lane remove dev -s');
           });
           it('should throw an error saying it is not fully merged', () => {
             expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
@@ -730,9 +730,7 @@ describe('bit lane command', function () {
         expect(lanes.lanes).to.have.lengthOf(1);
       });
       it('should not remove without --force flag as the lane is not merged', () => {
-        const output = helper.general.runWithTryCatch(
-          `bit remove ${helper.scopes.remote}/dev --lane --remote --silent`
-        );
+        const output = helper.general.runWithTryCatch(`bit lane remove ${helper.scopes.remote}/dev --remote --silent`);
         expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
       });
       describe('remove with --force flag', () => {
@@ -751,7 +749,7 @@ describe('bit lane command', function () {
           let removeOutput;
           before(() => {
             removeOutput = helper.general.runWithTryCatch(
-              `bit remove ${helper.scopes.remote}/dev --lane --remote --silent --force`
+              `bit lane remove ${helper.scopes.remote}/dev --remote --silent --force`
             );
           });
           it('should indicate that the lane was not found', () => {

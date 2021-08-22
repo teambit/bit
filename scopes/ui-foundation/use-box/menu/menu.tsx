@@ -26,7 +26,7 @@ export type MenuProps = {
   componentName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Menu({ packageName, componentId, registryName, componentName }: MenuProps) {
+export function Menu({ packageName, componentId, registryName, componentName, ...rest }: MenuProps) {
   const [activeTab, setActiveTab] = useState('bit');
   const [activeRegistry, setActiveRegistry] = useState<string | undefined>(undefined);
 
@@ -46,7 +46,7 @@ export function Menu({ packageName, componentId, registryName, componentName }: 
   }
 
   return (
-    <div>
+    <div {...rest}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon of="terminal" />

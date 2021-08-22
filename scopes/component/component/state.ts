@@ -1,3 +1,4 @@
+import { IssuesList } from '@teambit/component-issues';
 import ComponentFS from './component-fs';
 import Config from './config';
 import { AspectList } from './aspect-list';
@@ -37,6 +38,10 @@ export class State {
    */
   get hash() {
     return '';
+  }
+
+  get issues(): IssuesList {
+    return (this._consumer.issues ||= new IssuesList());
   }
 
   /**

@@ -2,9 +2,9 @@ import React from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
 
 export type InstallProps = {
@@ -32,7 +32,7 @@ export function Install({ componentName, copyString, back, registryName, package
       }
     >
       <div>{`Install ${componentName} with ${packageManager}`}</div>
-      <CopyBox>{copyString}</CopyBox>
+      <TooltipCopybox content={copyString} />
     </TabContent>
   );
 }

@@ -17,7 +17,6 @@ import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-versi
 import createNewLane from './create-lane';
 
 export type SwitchProps = {
-  create: boolean;
   laneName: string;
   remoteScope?: string;
   ids?: BitId[];

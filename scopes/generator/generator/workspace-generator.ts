@@ -6,6 +6,8 @@ import { Component } from '@teambit/component';
 import execa from 'execa';
 import { BitId } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
+import UIAspect, { UiMain } from '@teambit/ui';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { init } from '@teambit/legacy/dist/api/consumer';
@@ -18,6 +20,7 @@ import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/depen
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewOptions } from './new.cmd';
+import { GeneratorAspect } from './generator.aspect';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
@@ -31,6 +34,7 @@ export class WorkspaceGenerator {
   private workspacePath: string;
   private harmony: Harmony;
   private workspace: Workspace;
+  private logger: Logger;
   constructor(
     private workspaceName: string,
     private options: NewOptions,
@@ -48,11 +52,18 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.standalone, false, false, false, false, {});
+      await init(this.workspacePath, this.options.skipGit, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       await this.addComponentsFromRemote();
-      await this.workspace.install();
+      await this.workspace.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
+      // await this.buildUI(); // disabled for now. it takes too long
     } catch (err) {
       await fs.remove(this.workspacePath);
       throw err;
@@ -62,7 +73,7 @@ export class WorkspaceGenerator {
   }
 
   private async initGit() {
-    if (this.options.standalone) return;
+    if (this.options.skipGit) return;
     const gitExecutablePath = getGitExecutablePath();
     const params = ['init'];
     try {
@@ -73,6 +84,11 @@ export class WorkspaceGenerator {
       }
       throw err;
     }
+  }
+
+  private async buildUI() {
+    const uiMain = this.harmony.get<UiMain>(UIAspect.id);
+    await uiMain.createRuntime({});
   }
 
   /**
@@ -95,6 +111,8 @@ export class WorkspaceGenerator {
   private async reloadBitInWorkspaceDir() {
     this.harmony = await loadBit(this.workspacePath);
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
+    const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
+    this.logger = loggerMain.createLogger(GeneratorAspect.id);
   }
 
   private async addComponentsFromRemote() {

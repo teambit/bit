@@ -57,7 +57,7 @@ describe('ComponentList', function () {
       const modelComponent = getModelComponent();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope.listIncludeRemoteHead = async () => [modelComponent];
-      const results = await componentList.listScope(false, true);
+      const results = await componentList.listAll(false, true);
       const result = results[0];
       expect(result).to.have.property('id');
       expect(result.id).to.be.an.instanceOf(BitId);

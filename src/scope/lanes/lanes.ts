@@ -39,6 +39,11 @@ export default class Lanes {
     return laneName;
   }
 
+  isOnDefaultLane(): boolean {
+    const currentLane = this.getCurrentLaneName();
+    return currentLane === DEFAULT_LANE;
+  }
+
   getCurrentLaneId(): LocalLaneId {
     return LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE);
   }

@@ -49,13 +49,15 @@ type TagParams = {
   ignoreNewestVersion: boolean;
   ids: string[];
   all: boolean;
+  snapped: boolean;
   scope?: string | boolean;
   includeImported: boolean;
   incrementBy: number;
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams): Promise<TagResults | null> {
-  const { ids, all, exactVersion, releaseType, force, ignoreIssues, scope, includeImported, persist } = tagParams;
+  const { ids, all, exactVersion, releaseType, force, ignoreIssues, scope, includeImported, persist, snapped } =
+    tagParams;
   const idsHasWildcard = hasWildcard(ids);
   const isAll = Boolean(all || scope || idsHasWildcard);
   const validExactVersion = validateVersion(exactVersion);
@@ -72,7 +74,8 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
     includeImported,
     persist,
     force,
-    ids
+    ids,
+    snapped
   );
   if (R.isEmpty(bitIds)) return null;
 
@@ -108,7 +111,8 @@ async function getComponentsToTag(
   includeImported: boolean,
   persist: boolean,
   force: boolean,
-  ids: string[]
+  ids: string[],
+  snapped: boolean
 ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
   const warnings: string[] = [];
   const componentsList = new ComponentsList(consumer);
@@ -120,6 +124,9 @@ async function getComponentsToTag(
   const tagPendingComponents = isAllScope
     ? await componentsList.listTagPendingOfAllScope(includeImported)
     : await componentsList.listTagPendingComponents();
+
+  const snappedComponents = await componentsList.listSnappedComponentsOnMain();
+  const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
 
   if (ids.length) {
     const bitIds = await Promise.all(
@@ -141,6 +148,12 @@ async function getComponentsToTag(
 
     return { bitIds: compact(bitIds.flat()), warnings };
   }
+
+  if (snapped) {
+    return { bitIds: snappedComponentsIds, warnings };
+  }
+
+  tagPendingComponents.push(...snappedComponentsIds);
 
   if (isAllScope && exactVersion) {
     const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
