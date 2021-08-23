@@ -12,7 +12,7 @@ import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import { isSupportedExtension } from '../../../../links/link-content';
 import logger from '../../../../logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
+import { getExt, isDirEmptySync, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
@@ -120,6 +120,7 @@ export default class DependencyResolver {
     this.processedFiles = [];
     this.issues = new IssuesList();
     this.setMissingDistsIssue();
+    this.setMissingLinksFromNodeModulesToSrcIssue();
     this.setLegacyInsideHarmonyIssue();
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
@@ -367,9 +368,11 @@ export default class DependencyResolver {
    * on Harmony, during the execution of this function, it recognizes the use of relative-paths, enter
    * it to the "issues", then, later, it shows a warning on bit-status and block tagging.
    */
-  getComponentIdByDepFile(
-    depFile: PathLinux
-  ): { componentId: BitId | null | undefined; depFileRelative: PathLinux; destination: string | null | undefined } {
+  getComponentIdByDepFile(depFile: PathLinux): {
+    componentId: BitId | null | undefined;
+    depFileRelative: PathLinux;
+    destination: string | null | undefined;
+  } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
     let componentId: BitId | null | undefined;
     let destination: string | null | undefined;
@@ -771,7 +774,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       // it requires the main-file. all is good.
       return;
     }
-    if (!this.isDistDirExists(dependencyPkgData.name)) {
+    if (this.areDistsMissing(dependencyPkgData.name)) {
       // if dists is missing (bit compile was not running), then depFullPath points to the source
       return;
     }
@@ -1191,9 +1194,19 @@ either, use the ignore file syntax or change the require statement to have a mod
   private setMissingDistsIssue() {
     if (this.consumer.isLegacy) return;
     const pkgName = componentIdToPackageName(this.component);
-    const isMissing = !this.isDistDirExists(pkgName);
+    const isMissing = this.areDistsMissing(pkgName);
     if (isMissing) {
       this.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
+    }
+  }
+
+  private setMissingLinksFromNodeModulesToSrcIssue() {
+    if (this.consumer.isLegacy) return;
+    const pkgName = componentIdToPackageName(this.component);
+    const pkgDir = path.join(this.consumerPath, 'node_modules', pkgName);
+    const exists = fs.existsSync(pkgDir);
+    if (!exists) {
+      this.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
     }
   }
 
@@ -1204,9 +1217,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  private isDistDirExists(pkgName: string) {
+  private areDistsMissing(pkgName: string) {
     const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return fs.existsSync(distDir);
+    return !fs.existsSync(distDir) || isDirEmptySync(distDir);
   }
 
   /**
