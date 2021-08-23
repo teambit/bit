@@ -145,20 +145,9 @@ describe('bit snap command', function () {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         expect(barFoo.parents).to.have.lengthOf(1);
         expect(barFoo.parents[0]).to.equal(firstSnap);
-
-        helper.command.untag(`bar/foo ${firstSnap}`);
       });
-      it('should not change the head', () => {
-        const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(compAfterUntag.head).to.equal(secondSnap);
-      });
-      it('should remove the snap from the state.versions array', () => {
-        const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(Object.keys(compAfterUntag.state.versions)).to.have.lengthOf(1);
-      });
-      it('should remove the first snap from the parents of the second snap', () => {
-        const barFoo = helper.command.catComponent('bar/foo@latest');
-        expect(barFoo.parents).to.have.lengthOf(0);
+      it('should not allow it', () => {
+        expect(() => helper.command.untag(`bar/foo ${firstSnap}`)).to.throw();
       });
     });
   });

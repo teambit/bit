@@ -4,7 +4,6 @@ import ComponentsList from '../../consumer/component/components-list';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import ModelComponent from '../models/model-component';
-import { getAllVersionsObjects } from './traverse-versions';
 
 export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
