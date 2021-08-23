@@ -205,14 +205,14 @@ export default class ScopeComponentsImporter {
    * delta between the local head and the remote head. mainly to improve performance
    * not applicable and won't work for legacy. for legacy, refer to importManyWithAllVersions
    */
-  async importManyDeltaWithoutDeps(ids: BitIds): Promise<void> {
+  async importManyDeltaWithoutDeps(ids: BitIds, allHistory = false): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
 
     const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest(), true);
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
-      if (!component) {
+      if (!component || allHistory) {
         // remove the version to fetch it with all versions.
         return id.changeVersion(undefined);
       }

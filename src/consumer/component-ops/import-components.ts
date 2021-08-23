@@ -48,6 +48,7 @@ export type ImportOptions = {
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   skipLane?: boolean; // save on main instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
+  allHistory?: boolean;
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies;
@@ -261,7 +262,11 @@ export default class ImportComponents {
       const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
       componentsAndDependencies =
         !this.consumer.isLegacy && this.options.objectsOnly
-          ? await this.consumer.importComponentsObjectsHarmony(componentsIdsToImport, this.options.fromOriginalScope)
+          ? await this.consumer.importComponentsObjectsHarmony(
+              componentsIdsToImport,
+              this.options.fromOriginalScope,
+              this.options.allHistory
+            )
           : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
