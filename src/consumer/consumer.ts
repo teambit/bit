@@ -400,18 +400,13 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
-  async importComponentsObjectsHarmony(ids: BitIds, fromOriginalScope = false): Promise<ComponentWithDependencies[]> {
+  async importComponentsObjectsHarmony(
+    ids: BitIds,
+    fromOriginalScope = false,
+    allHistory = false
+  ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    try {
-      await scopeComponentsImporter.importManyDeltaWithoutDeps(ids);
-    } catch (err) {
-      loader.stop();
-      // @todo: remove once the server is deployed with this new "component-delta" type
-      if (err && err.message && err.message.includes('type component-delta was not implemented')) {
-        return this.importComponents(ids.toVersionLatest(), true);
-      }
-      throw err;
-    }
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory);
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
