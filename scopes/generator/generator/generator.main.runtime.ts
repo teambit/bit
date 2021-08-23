@@ -123,7 +123,10 @@ export class GeneratorMain {
   }
 
   async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
-    if (!aspectId) throw new BitError(`to load template from a different workspace, please provide the aspect-id`);
+    if (!aspectId)
+      throw new BitError(
+        `to load a template from a different workspace, please provide the aspect-id using --aspect flag`
+      );
     const harmony = await loadBit(workspacePath);
     let workspace: Workspace;
     try {
