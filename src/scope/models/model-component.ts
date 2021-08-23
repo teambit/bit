@@ -160,6 +160,11 @@ export default class Component extends BitObject {
     return this.head;
   }
 
+  getHeadAsTagIfExist(): string | undefined {
+    if (!this.head) return undefined;
+    return this.getTagOfRefIfExists(this.head) || this.head.toString();
+  }
+
   hasHead() {
     return Boolean(this.head);
   }
