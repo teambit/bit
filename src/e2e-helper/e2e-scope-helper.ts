@@ -222,8 +222,9 @@ export default class ScopeHelper {
     } catch (err) {
       if (err.code === 'EPERM' && IS_WINDOWS && !dereferenceSymlinks) {
         fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: true });
+      } else {
+        throw err;
       }
-      throw err;
     }
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
