@@ -486,31 +486,40 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   removeComponentVersions(component: ModelComponent, versions: string[], allVersionsObjects: Version[]): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
-    versions.forEach((version) => {
+    const componentHadHead = component.hasHead();
+    const removedRefs = versions.map((version) => {
       const ref = component.removeVersion(version);
-      const refStr = ref.toString();
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
+      const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
       // update the snap head if needed
       if (component.getHeadStr() === refStr) {
-        if (versionObject.parents.length > 1)
+        if (versionObject.parents.length > 1) {
           throw new Error(
             `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
           );
+        }
         const head = versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
         component.setHead(head);
       }
-      // update other versions parents if they point to the deleted version
-      allVersionsObjects.forEach((obj) => {
-        if (obj.hasParent(ref)) {
-          obj.removeParent(ref);
-          objectRepo.add(obj);
-        }
-      });
 
       objectRepo.removeObject(ref);
+      return ref;
     });
-
+    const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
+    allVersionsObjects.forEach((versionObj) => {
+      const wasDeleted = refWasDeleted(versionObj.hash());
+      if (!wasDeleted && versionObj.parents.some((parent) => refWasDeleted(parent))) {
+        throw new Error(
+          `fatal: version "${versionObj
+            .hash()
+            .toString()}" of "${component.id()}" has parents that got deleted, which makes the history invalid.`
+        );
+      }
+    });
+    if (componentHadHead && !component.hasHead() && component.versionArray.length) {
+      throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
+    }
     if (component.versionArray.length || component.hasHead()) {
       objectRepo.add(component); // add the modified component object
     } else {

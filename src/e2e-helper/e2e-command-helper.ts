@@ -262,8 +262,11 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string) {
-    return this.runCmd(`bit untag ${id}`);
+  untag(id: string, version = '') {
+    return this.runCmd(`bit untag ${id} ${version}`);
+  }
+  untagAll() {
+    return this.runCmd(`bit untag --all`);
   }
   untagSoft(id: string) {
     return this.runCmd(`bit untag ${id} --soft`);
