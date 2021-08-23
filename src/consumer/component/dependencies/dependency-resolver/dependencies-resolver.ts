@@ -25,7 +25,6 @@ import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependen
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
-import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 
 export type AllDependencies = {
@@ -118,9 +117,7 @@ export default class DependencyResolver {
       peerPackageDependencies: {},
     };
     this.processedFiles = [];
-    this.issues = new IssuesList();
-    this.setMissingDistsIssue();
-    this.setMissingLinksFromNodeModulesToSrcIssue();
+    this.issues = component.issues;
     this.setLegacyInsideHarmonyIssue();
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
@@ -774,7 +771,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       // it requires the main-file. all is good.
       return;
     }
-    if (this.areDistsMissing(dependencyPkgData.name)) {
+    if (this.issues.getIssue(IssuesClasses.MissingDists)) {
       // if dists is missing (bit compile was not running), then depFullPath points to the source
       return;
     }
@@ -1189,25 +1186,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       return packageJson.packageJsonObject;
     }
     return undefined;
-  }
-
-  private setMissingDistsIssue() {
-    if (this.consumer.isLegacy) return;
-    const pkgName = componentIdToPackageName(this.component);
-    const isMissing = this.areDistsMissing(pkgName);
-    if (isMissing) {
-      this.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
-    }
-  }
-
-  private setMissingLinksFromNodeModulesToSrcIssue() {
-    if (this.consumer.isLegacy) return;
-    const pkgName = componentIdToPackageName(this.component);
-    const pkgDir = path.join(this.consumerPath, 'node_modules', pkgName);
-    const exists = fs.existsSync(pkgDir);
-    if (!exists) {
-      this.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
-    }
   }
 
   private setLegacyInsideHarmonyIssue() {
