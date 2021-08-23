@@ -31,9 +31,9 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
         // uncomment the line below if you remove the custom env and remove the line above
         // "teambit.react/react": {},
       },
-      '{themes/**}': {
-      'teambit.react/react': {},
-    },
+      "{themes/**}": {
+        "teambit.react/react": {},
+      },
       "{content/**}": {
         "teambit.mdx/mdx": {},
       },
