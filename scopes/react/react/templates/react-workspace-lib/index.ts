@@ -1,6 +1,6 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from './files/workspace-config';
-import { readme } from './files/readme-file';
+import { workspaceConfig } from '../common-files/workspace-config';
+import { readme } from '../common-files/readme-file';
 import { gitIgnore } from '../common-files/git-ignore';
 import { assetTypes } from '../common-files/types/asset';
 import { styleTypes } from '../common-files/types/style';

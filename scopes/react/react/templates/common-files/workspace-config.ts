@@ -11,9 +11,9 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
   configParsed['teambit.dependencies/dependency-resolver'].policy = {
     dependencies: {},
     peerDependencies: {
-      '@testing-library/react': '11.2.6',
-      react: '16.13.1',
-      'react-dom': '16.13.1',
+      '@testing-library/react': '12.0.0',
+      react: '17.0.2',
+      'react-dom': '17.0.2',
     },
   };
 
@@ -31,7 +31,13 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
         // uncomment the line below if you remove the custom env and remove the line above
         // "teambit.react/react": {},
       },
-      "{envs/**}": {
+      '{themes/**}': {
+      'teambit.react/react': {},
+    },
+      "{content/**}": {
+        "teambit.mdx/mdx": {},
+      },
+      "{envs/**}, {extensions/**}": {
         "teambit.harmony/aspect": {},
       },
     }`),
