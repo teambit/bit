@@ -88,7 +88,7 @@ describe('bit lane command', function () {
         expect(diffOutput).to.not.have.string('+++ Id');
       });
     });
-    describe('exporting the lane by explicitly entering the lane to the cli', () => {
+    describe('exporting the lane', () => {
       before(() => {
         helper.command.exportLane();
       });
@@ -99,6 +99,10 @@ describe('bit lane command', function () {
       it('bit status should show a clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('should change .bitmap to have the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane --remote should show the exported lane', () => {
         const remoteLanes = helper.command.showRemoteLanesParsed();
@@ -117,30 +121,6 @@ describe('bit lane command', function () {
           expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
           expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
         });
-      });
-    });
-    describe('exporting the lane implicitly (no lane-name entered)', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeExport);
-        helper.scopeHelper.reInitRemoteScope();
-        helper.command.export();
-      });
-      it('should export components on that lane', () => {
-        const list = helper.command.listRemoteScopeParsed();
-        expect(list).to.have.lengthOf(1);
-      });
-      it('bit status should show a clean state', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
-      });
-      it('should change .bitmap to have the remote lane', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
-      });
-      it('bit lane --remote should show the exported lane', () => {
-        const remoteLanes = helper.command.showRemoteLanesParsed();
-        expect(remoteLanes.lanes).to.have.lengthOf(1);
-        expect(remoteLanes.lanes[0].name).to.equal('dev');
       });
     });
   });
