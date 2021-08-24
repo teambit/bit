@@ -36,6 +36,7 @@ export class HttpHelper {
       });
       this.httpProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
+        reject(new Error(`http exited with code ${code}`));
       });
     });
   }
