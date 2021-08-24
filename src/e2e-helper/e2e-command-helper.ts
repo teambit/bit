@@ -211,6 +211,10 @@ export default class CommandHelper {
   createLane(laneName = 'dev') {
     return this.runCmd(`bit lane create ${laneName}`);
   }
+  trackLane(localName: string, remoteScope: string, remoteName = '') {
+    const results = this.runCmd(`bit lane track ${localName} ${remoteScope} ${remoteName}`);
+    return removeChalkCharacters(results) as string;
+  }
   clearCache() {
     return this.runCmd('bit clear-cache');
   }

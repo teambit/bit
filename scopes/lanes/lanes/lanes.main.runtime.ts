@@ -5,14 +5,24 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { mergeLanes } from '@teambit/legacy/dist/consumer/lanes/merge-lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { LanesAspect } from './lanes.aspect';
-import { LaneCmd, LaneCreateCmd, LaneListCmd, LaneMergeCmd, LaneRemoveCmd, LaneShowCmd } from './lane.cmd';
+import {
+  LaneCmd,
+  LaneCreateCmd,
+  LaneListCmd,
+  LaneMergeCmd,
+  LaneRemoveCmd,
+  LaneShowCmd,
+  LaneTrackCmd,
+} from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 
 export type LaneResults = {
@@ -27,6 +37,11 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
+};
+
+export type CreateLaneOptions = {
+  remoteScope?: string; // default to the defaultScope in workspace.jsonc
+  remoteName?: string; // default to the local lane
 };
 
 export class LanesMain {
@@ -67,16 +82,46 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneName();
   }
 
-  async createLane(name: string) {
+  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
     await createNewLane(this.workspace.consumer, name);
     this.scope.legacyScope.lanes.setCurrentLane(name);
-    const results = { added: name };
+    const trackLaneData = {
+      localLane: name,
+      remoteLane: remoteName || name,
+      remoteScope: remoteScope || this.workspace.defaultScope,
+    };
+    this.scope.legacyScope.lanes.trackLane(trackLaneData);
     await this.workspace.consumer.onDestroy();
 
-    return results;
+    return trackLaneData;
+  }
+
+  async trackLane(
+    localName: string,
+    remoteScope: string,
+    remoteName?: string
+  ): Promise<{ beforeTrackData?: TrackLane; afterTrackData: TrackLane }> {
+    if (!this.workspace) {
+      throw new BitError(`unable to track a lane outside of Bit workspace`);
+    }
+    const lane = await this.scope.legacyScope.lanes.loadLane(LaneId.from(localName));
+    if (!lane) {
+      throw new BitError(`unable to find a local lane "${localName}"`);
+    }
+    const beforeTrackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(localName);
+    const beforeTrackDataCloned = beforeTrackData ? { ...beforeTrackData } : undefined;
+    const afterTrackData = {
+      localLane: localName,
+      remoteLane: remoteName || beforeTrackData?.remoteLane || localName,
+      remoteScope,
+    };
+    this.scope.legacyScope.lanes.trackLane(afterTrackData);
+    await this.workspace.consumer.onDestroy();
+
+    return { beforeTrackData: beforeTrackDataCloned, afterTrackData };
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -137,6 +182,7 @@ export class LanesMain {
         new LaneCreateCmd(lanesMain),
         new LaneMergeCmd(lanesMain),
         new LaneRemoveCmd(lanesMain),
+        new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
       ];
       cli.register(laneCmd);
