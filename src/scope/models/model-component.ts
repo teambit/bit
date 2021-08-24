@@ -838,7 +838,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
   }
 
   /**
-   * local versions that are not exported. to get also local snaps, use `getLocalTagsOrHashes()`.
+   * local versions that are not exported on the main lane.
+   * @see `this.getLocalTagsOrHashes()`, to get local snaps on the current lane
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];

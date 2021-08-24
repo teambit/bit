@@ -1020,4 +1020,21 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('untag on a lane', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      output = helper.command.untagAll();
+    });
+    it('should untag successfully', () => {
+      expect(output).to.have.string('1 component(s) were untagged');
+    });
+    it('should change the component to be new', () => {
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
+    });
+  });
 });
