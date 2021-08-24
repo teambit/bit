@@ -10,7 +10,7 @@ import { mergeReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
-import { LanesMain } from './lanes.main.runtime';
+import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 
 type LaneOptions = {
   details?: boolean;
@@ -163,6 +163,39 @@ export class LaneCreateCmd implements Command {
   name = 'create <name>';
   description = `create and switch to a new lane`;
   alias = '';
+  options = [
+    [
+      '',
+      'remote-scope <string>',
+      'remote scope where this lane will be exported to (can be changed later with "bit lane track")',
+    ],
+    [
+      '',
+      'remote-name <string>',
+      'lane name on the remote, default to the local name (can be changed later with "bit lane track")',
+    ],
+  ] as CommandOptions;
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([name]: [string], createLaneOptions: CreateLaneOptions): Promise<string> {
+    const result = await this.lanes.createLane(name, createLaneOptions);
+    const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
+      ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
+      : `the default-scope ${chalk.bold(result.remoteScope)}. to change it, please run "bit lane track" command`;
+    const title = chalk.green(`successfully added a new lane ${chalk.bold(result.localLane)}`);
+    const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
+    return `${title}\n${remoteScopeOutput}`;
+  }
+}
+
+export class LaneTrackCmd implements Command {
+  name = 'track <local-name> <remote-scope> [remote-name]';
+  description = `change the remote scope or remote lane of the local lane`;
+  alias = '';
   options = [] as CommandOptions;
   loader = true;
   private = true;
@@ -170,9 +203,22 @@ export class LaneCreateCmd implements Command {
 
   constructor(private lanes: LanesMain) {}
 
-  async report([name]: [string]): Promise<string> {
-    const result = await this.lanes.createLane(name);
-    return chalk.green(`successfully added a new lane ${chalk.bold(result.added)}`);
+  async report([localName, remoteScope, remoteName]: [string, string, string]): Promise<string> {
+    const { beforeTrackData, afterTrackData } = await this.lanes.trackLane(localName, remoteScope, remoteName);
+    const remoteScopeChanges =
+      afterTrackData.remoteScope === beforeTrackData?.remoteScope
+        ? `the remote-scope has not been changed`
+        : `the remote-scope has been changed from ${chalk.bold(
+            beforeTrackData?.remoteScope || '<n/a>'
+          )} to ${chalk.bold(afterTrackData.remoteScope)}`;
+    const remoteNameChanges =
+      afterTrackData.remoteLane === beforeTrackData?.remoteLane
+        ? `the remote-name has not been changed`
+        : `the remote-name has been changed from ${chalk.bold(beforeTrackData?.remoteLane || '<n/a>')} to ${chalk.bold(
+            afterTrackData.remoteLane
+          )}`;
+
+    return `${remoteScopeChanges}\n${remoteNameChanges}`;
   }
 }
 

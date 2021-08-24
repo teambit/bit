@@ -117,11 +117,14 @@ export class ScopeJson {
   }
 
   trackLane(trackLaneData: TrackLane) {
-    this.lanes.tracking.push({
-      localLane: trackLaneData.localLane,
-      remoteLane: trackLaneData.remoteLane,
-      remoteScope: trackLaneData.remoteScope,
-    });
+    const existing = this.lanes.tracking.find((t) => t.localLane === trackLaneData.localLane);
+    if (existing) {
+      existing.remoteLane = trackLaneData.remoteLane;
+      existing.remoteScope = trackLaneData.remoteScope;
+    } else {
+      this.lanes.tracking.push(trackLaneData);
+    }
+
     this.hasChanged = true;
   }
   setCurrentLane(laneName: string): void {
