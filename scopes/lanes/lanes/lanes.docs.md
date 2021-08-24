@@ -15,7 +15,6 @@ The following describes the final implementation, which differs from the specifi
 - remove a lane `bit lane remove <name>`.
 - fetch lane objects (without the components): `bit fetch --lanes`.
 - import a lane: `bit switch <name> --remote`.
-- export a lane: `bit export <name> --lanes`.
 - export current lane: `bit export`.
 - (internal) cat lane object: `bit cat-lane <name>`.
 

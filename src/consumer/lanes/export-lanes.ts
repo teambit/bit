@@ -1,5 +1,3 @@
-import R from 'ramda';
-
 import { Consumer } from '..';
 import { BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
