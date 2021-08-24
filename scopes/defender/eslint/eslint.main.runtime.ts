@@ -93,6 +93,7 @@ export function runTransformersWithContext(
   transformers: EslintConfigTransformer[] = [],
   context: EslintConfigTransformContext
 ): EslintConfigMutator {
+  if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
     return transformer(acc, context);
   }, config);
