@@ -34,7 +34,6 @@ describe('bit lane command', function () {
     });
   });
   describe('create a snap on main then on a new lane', () => {
-    let beforeExport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -44,7 +43,6 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponents();
-      beforeExport = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
