@@ -1,86 +1,52 @@
-import R from 'ramda';
-
 import { Consumer } from '..';
 import { BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../cli/loader/loader-messages';
-import GeneralError from '../../error/general-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 import { Lane } from '../../scope/models';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ComponentsList from '../component/components-list';
 
-export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) {
-  const lanesToUpdate = lanes.filter((l) => l.remoteLaneId);
+export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
   // lanes that don't have remoteLaneId should not be updated. it happens when updating to a
   // different remote with no intention to save the remote.
-  if (!lanesToUpdate.length) return;
+  if (!lane.remoteLaneId) return;
   const currentLane = consumer.getCurrentLaneId();
+  const isCurrentLane = lane.name === currentLane.name;
+  if (!isCurrentLane) {
+    throw new Error(
+      `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
+    );
+  }
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
-  lanesToUpdate.forEach((lane) => {
-    const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
-    consumer.scope.lanes.trackLane({
-      localLane: lane.name,
-      remoteLane: remoteLaneId.name,
-      remoteScope: remoteLaneId.scope,
-    });
-    const isCurrentLane = lane.name === currentLane.name;
-    if (isCurrentLane) {
-      consumer.bitMap.setRemoteLane(remoteLaneId);
-    }
-    const workspaceLane = isCurrentLane
-      ? (consumer.bitMap.workspaceLane as WorkspaceLane) // bitMap.workspaceLane is empty only when is on main
-      : WorkspaceLane.load(lane.name, consumer.scope.path);
-    if (!isCurrentLane) workspaceLanesToUpdate.push(workspaceLane);
-    consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
-    workspaceLane.reset();
-  });
+  const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
+  consumer.bitMap.setRemoteLane(remoteLaneId);
+  const workspaceLane = consumer.bitMap.workspaceLane as WorkspaceLane; // bitMap.workspaceLane is empty only when is on main
+  consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
+  workspaceLane.reset();
   await Promise.all(workspaceLanesToUpdate.map((l) => l.write()));
 }
 
 export async function getLaneCompIdsToExport(
   consumer: Consumer,
-  ids: string[],
   includeNonStaged: boolean
-): Promise<{ componentsToExport: BitIds; lanesObjects: Lane[] }> {
+): Promise<{ componentsToExport: BitIds; laneObject: Lane }> {
   const currentLaneId = consumer.getCurrentLaneId();
-  const laneIds = ids.length ? ids.map((laneName) => new LaneId({ name: laneName })) : [currentLaneId];
-  const nonExistingLanes: string[] = [];
-  const lanesObjects: Lane[] = [];
-  await Promise.all(
-    laneIds.map(async (laneId) => {
-      const laneObject = await consumer.scope.loadLane(laneId);
-      if (laneObject) {
-        lanesObjects.push(laneObject);
-      } else if (!laneId.isDefault()) {
-        nonExistingLanes.push(laneId.name);
-      }
-    })
-  );
-  if (nonExistingLanes.length) {
-    throw new GeneralError(
-      `unable to export the following lanes ${nonExistingLanes.join(', ')}. they don't exist or are empty`
-    );
+  const laneObject = await consumer.scope.loadLane(currentLaneId);
+  if (!laneObject) {
+    throw new Error(`fatal: unable to load the current lane object (${currentLaneId.toString()})`);
   }
   loader.start(BEFORE_LOADING_COMPONENTS);
   const componentsList = new ComponentsList(consumer);
-  const compsToExportP = lanesObjects.map(async (laneObject: Lane | null) => {
-    // null in case of default-lane
-    return includeNonStaged
-      ? componentsList.listNonNewComponentsIds()
-      : componentsList.listExportPendingComponentsIds(laneObject);
-  });
-  const componentsToExport = BitIds.fromArray(R.flatten(await Promise.all(compsToExportP)));
-  return { componentsToExport, lanesObjects };
+  const componentsToExport = includeNonStaged
+    ? await componentsList.listNonNewComponentsIds()
+    : await componentsList.listExportPendingComponentsIds(laneObject);
+  return { componentsToExport, laneObject };
 }
 
-export function isUserTryingToExportLanes(consumer: Consumer, ids: string[], lanes: boolean) {
-  if (!ids.length) {
-    const currentLaneId = consumer.getCurrentLaneId();
-    // if no ids entered, when a user checked out to a lane, we should export the lane
-    return !currentLaneId.isDefault();
-  }
-  return lanes;
+export function isUserTryingToExportLanes(consumer: Consumer) {
+  const currentLaneId = consumer.getCurrentLaneId();
+  return !currentLaneId.isDefault();
 }
 
 // leave this here in case we do want to guess whether a user wants to export a lane.
