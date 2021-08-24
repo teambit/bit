@@ -4,7 +4,7 @@ import path from 'path';
 
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE, IS_WINDOWS } from '../../src/constants';
+import { DEFAULT_LANE, IS_WINDOWS, LANE_REMOTE_DELIMITER } from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -1035,6 +1035,33 @@ describe('bit lane command', function () {
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();
       expect(status.newComponents).to.have.lengthOf(1);
+    });
+  });
+  describe('default tracking data', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+    });
+    it('should set the remote-scope to the default-scope and remote-name to the local-lane', () => {
+      const laneData = helper.command.showOneLane('dev');
+      expect(laneData).to.have.string(`${helper.scopes.remote}${LANE_REMOTE_DELIMITER}dev`);
+    });
+  });
+  describe('change tracking data', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+      output = helper.command.trackLane('dev', 'my-remote');
+    });
+    it('should output the changes', () => {
+      expect(output).to.have.string(`the remote-scope has been changed from ${helper.scopes.remote} to my-remote`);
+    });
+    it('bit lane show should show the changed values', () => {
+      const laneData = helper.command.showOneLane('dev');
+      expect(laneData).to.have.string(`my-remote${LANE_REMOTE_DELIMITER}dev`);
     });
   });
 });
