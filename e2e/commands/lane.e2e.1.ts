@@ -34,7 +34,6 @@ describe('bit lane command', function () {
     });
   });
   describe('create a snap on main then on a new lane', () => {
-    let beforeExport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -44,7 +43,6 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponents();
-      beforeExport = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
@@ -88,9 +86,9 @@ describe('bit lane command', function () {
         expect(diffOutput).to.not.have.string('+++ Id');
       });
     });
-    describe('exporting the lane by explicitly entering the lane to the cli', () => {
+    describe('exporting the lane', () => {
       before(() => {
-        helper.command.exportLane('dev');
+        helper.command.exportLane();
       });
       it('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();
@@ -99,6 +97,10 @@ describe('bit lane command', function () {
       it('bit status should show a clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('should change .bitmap to have the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane --remote should show the exported lane', () => {
         const remoteLanes = helper.command.showRemoteLanesParsed();
@@ -119,30 +121,6 @@ describe('bit lane command', function () {
         });
       });
     });
-    describe('exporting the lane implicitly (no lane-name entered)', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeExport);
-        helper.scopeHelper.reInitRemoteScope();
-        helper.command.export(`${helper.command.scopes.remote} --lanes`);
-      });
-      it('should export components on that lane', () => {
-        const list = helper.command.listRemoteScopeParsed();
-        expect(list).to.have.lengthOf(1);
-      });
-      it('bit status should show a clean state', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
-      });
-      it('should change .bitmap to have the remote lane', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
-      });
-      it('bit lane --remote should show the exported lane', () => {
-        const remoteLanes = helper.command.showRemoteLanesParsed();
-        expect(remoteLanes.lanes).to.have.lengthOf(1);
-        expect(remoteLanes.lanes[0].name).to.equal('dev');
-      });
-    });
   });
   describe('importing lanes', () => {
     let appOutput: string;
@@ -152,7 +130,7 @@ describe('bit lane command', function () {
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
-      helper.command.exportLane('dev');
+      helper.command.exportLane();
     });
     describe('fetching lanes objects', () => {
       before(() => {
@@ -245,7 +223,7 @@ describe('bit lane command', function () {
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
-        helper.command.exportLane('dev');
+        helper.command.exportLane();
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
@@ -333,7 +311,7 @@ describe('bit lane command', function () {
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
-      helper.command.exportLane('dev');
+      helper.command.exportLane();
       authorScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('merging remote lane into main', () => {
@@ -396,7 +374,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedLocalScope(authorScope);
         helper.fixtures.populateComponents(undefined, undefined, ' v2');
         helper.command.snapAllComponents();
-        helper.command.exportLane('dev');
+        helper.command.exportLane();
 
         helper.scopeHelper.getClonedLocalScope(importedScope);
         helper.command.fetchRemoteLane('dev');
@@ -723,7 +701,7 @@ describe('bit lane command', function () {
         helper.command.createLane();
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
-        helper.command.export(`${helper.command.scopes.remote} --lanes`);
+        helper.command.export();
       });
       it('as an intermediate step, make sure the lane is on the remote', () => {
         const lanes = helper.command.showRemoteLanesParsed();
@@ -819,7 +797,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponents();
-      helper.command.exportLane('dev');
+      helper.command.exportLane();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.switchRemoteLane('dev');
@@ -828,7 +806,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponents();
     });
     it('should export with no errors about missing artifact files from the first snap', () => {
-      expect(() => helper.command.export(`${helper.command.scopes.remote} --lanes`)).to.not.throw();
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
   describe('auto-snap when on a lane', () => {
