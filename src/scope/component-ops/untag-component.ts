@@ -4,7 +4,6 @@ import ComponentsList from '../../consumer/component/components-list';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import ModelComponent from '../models/model-component';
-import { getAllVersionsObjects } from './traverse-versions';
 
 export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
@@ -31,6 +30,13 @@ export async function removeLocalVersion(
   if (version && !localVersions.includes(version)) {
     throw new GeneralError(`unable to untag ${idStr}, the version ${version} was exported already`);
   }
+  if (version && component.hasHead()) {
+    const headTagOrSnap = component.getHeadAsTagIfExist();
+    if (version !== headTagOrSnap && version !== component.laneHeadLocal?.toString()) {
+      throw new GeneralError(`unable to untag "${idStr}", the version "${version}" is not the head.
+as a result, newer versions have this version as part of their history`);
+    }
+  }
   const versionsToRemove = version ? [version] : localVersions;
 
   if (!force) {
@@ -49,7 +55,9 @@ export async function removeLocalVersion(
     });
   }
 
-  const allVersionsObjects = await getAllVersionsObjects(component, scope.objects);
+  const allVersionsObjects = await Promise.all(
+    localVersions.map((localVer) => component.loadVersion(localVer, scope.objects))
+  );
   scope.sources.removeComponentVersions(component, versionsToRemove, allVersionsObjects);
 
   return { id, versions: versionsToRemove, component };
