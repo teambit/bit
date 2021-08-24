@@ -23,4 +23,32 @@ describe('status command on Harmony', function () {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
+  describe('dists dir is deleted after caching the components', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.status(); // to populate the cache
+      // as an intermediate step, make sure the missing-dist is not an issue.
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
+      const distDir = 'node_modules/@my-scope/comp1/dist';
+      helper.fs.deletePath(distDir);
+    });
+    it('should show an issue of missing-dists', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingDists.name);
+    });
+  });
+  describe('package dir is deleted from node-modules', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.status(); // to populate the cache
+      // as an intermediate step, make sure the missing-links is not an issue.
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingLinksFromNodeModulesToSrc.name);
+      const pkgDir = 'node_modules/@my-scope/comp1';
+      helper.fs.deletePath(pkgDir);
+    });
+    it('should show an issue of missing-links-from-node-modules-to-src', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingLinksFromNodeModulesToSrc.name);
+    });
+  });
 });
