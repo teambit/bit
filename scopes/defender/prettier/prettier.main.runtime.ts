@@ -58,6 +58,7 @@ export function runTransformersWithContext(
   transformers: PrettierConfigTransformer[] = [],
   context: PrettierConfigTransformContext
 ): PrettierConfigMutator {
+  if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
     return transformer(acc, context);
   }, config);
