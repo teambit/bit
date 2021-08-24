@@ -11,10 +11,8 @@ export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
 
   description = `export components to a remote scope.
-bit export => export all staged components to their current scope
-\`bit export [id...]\` => export (optionally given ids) to their current scope
-\`bit export <remote> --lanes\` => export the current lane to the specified remote
-\`bit export <remote> <lane...> --lanes\` => export the specified lanes to the specified remote
+bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+\`bit export [id...]\` => export the given ids to their current scope
 
 https://${BASE_DOCS_DOMAIN}/docs/export
 ${WILDCARD_HELP('export remote-scope')}`;
@@ -38,7 +36,6 @@ ${WILDCARD_HELP('export remote-scope')}`;
       'LEGACY ONLY. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    ['l', 'lanes', 'HARMONY ONLY. export lanes'],
     ['', 'all-versions', 'export not only staged versions but all of them'],
     [
       '',
@@ -73,7 +70,6 @@ ${WILDCARD_HELP('export remote-scope')}`;
       originDirectly = false,
       force = false,
       rewire = false,
-      lanes = false,
       ignoreMissingArtifacts = false,
       resume,
     }: any
@@ -98,7 +94,6 @@ ${WILDCARD_HELP('export remote-scope')}`;
       originDirectly,
       codemod: rewire,
       force,
-      lanes,
       resumeExportId: resume,
       ignoreMissingArtifacts,
     });
