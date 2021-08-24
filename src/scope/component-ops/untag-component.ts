@@ -1,5 +1,6 @@
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
+import { Consumer } from '../../consumer';
 import ComponentsList from '../../consumer/component/components-list';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
@@ -18,7 +19,7 @@ export async function removeLocalVersion(
   force? = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
-  const localVersions = component.getLocalVersions();
+  const localVersions = component.getLocalTagsOrHashes();
   const idStr = id.toString();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   if (version) {
@@ -64,27 +65,25 @@ as a result, newer versions have this version as part of their history`);
 }
 
 export async function removeLocalVersionsForAllComponents(
-  scope: Scope,
+  consumer: Consumer,
   version?: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force? = false
+  force = false
 ): Promise<untagResult[]> {
-  const componentsToUntag = await getComponentsWithOptionToUntag(scope, version);
-  return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, scope);
+  const componentsToUntag = await getComponentsWithOptionToUntag(consumer, version);
+  return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, consumer.scope);
 }
 
 export async function removeLocalVersionsForComponentsMatchedByWildcard(
-  scope: Scope,
+  consumer: Consumer,
   version?: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force? = false,
+  force = false,
   idWithWildcard?: string
 ): Promise<untagResult[]> {
-  const candidateComponents = await getComponentsWithOptionToUntag(scope, version);
+  const candidateComponents = await getComponentsWithOptionToUntag(consumer, version);
   const componentsToUntag = idWithWildcard
     ? ComponentsList.filterComponentsByWildcard(candidateComponents, idWithWildcard)
     : candidateComponents;
-  return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, scope);
+  return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, consumer.scope);
 }
 
 async function removeLocalVersionsForMultipleComponents(
@@ -123,10 +122,12 @@ async function removeLocalVersionsForMultipleComponents(
   );
 }
 
-async function getComponentsWithOptionToUntag(scope, version): Promise<ModelComponent[]> {
-  const components: ModelComponent[] = await scope.list();
+async function getComponentsWithOptionToUntag(consumer: Consumer, version?: string): Promise<ModelComponent[]> {
+  const componentList = new ComponentsList(consumer);
+  const laneObj = await consumer.getCurrentLaneObject();
+  const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);
   const candidateComponents = components.filter((component: ModelComponent) => {
-    const localVersions = component.getLocalVersions();
+    const localVersions = component.getLocalTagsOrHashes();
     if (!localVersions.length) return false;
     return version ? localVersions.includes(version) : true;
   });

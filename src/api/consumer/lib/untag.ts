@@ -20,7 +20,7 @@ export default async function unTagAction(
   const idHasWildcard = hasWildcard(id);
   const untag = async (): Promise<untagResult[]> => {
     if (idHasWildcard) {
-      return removeLocalVersionsForComponentsMatchedByWildcard(consumer.scope, version, force, id);
+      return removeLocalVersionsForComponentsMatchedByWildcard(consumer, version, force, id);
     }
     if (id) {
       const bitId = consumer.getParsedId(id);
@@ -31,7 +31,7 @@ export default async function unTagAction(
       return [result];
     }
     // untag all
-    return removeLocalVersionsForAllComponents(consumer.scope, version, force);
+    return removeLocalVersionsForAllComponents(consumer, version, force);
   };
   const softUntag = () => {
     const getIds = (): BitId[] => {
