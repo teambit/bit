@@ -75,6 +75,7 @@ export function runTransformersWithContext(
   transformers: TsConfigTransformer[] = [],
   context: TsConfigTransformContext
 ): TypescriptConfigMutator {
+  if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
     return transformer(acc, context);
   }, config);
