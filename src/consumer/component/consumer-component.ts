@@ -165,7 +165,7 @@ export default class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
-  issues?: IssuesList;
+  issues: IssuesList;
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;
@@ -266,6 +266,7 @@ export default class Component {
     this.componentFromModel = componentFromModel;
     this.schema = schema;
     this.buildStatus = buildStatus;
+    this.issues = new IssuesList();
   }
 
   validateComponent() {
