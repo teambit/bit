@@ -313,8 +313,8 @@ export default class CommandHelper {
     const jsonResult = result.substring(jsonStart);
     return JSON.parse(jsonResult);
   }
-  importComponent(id: string) {
-    return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
+  importComponent(id: string, flags = '') {
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags}`);
   }
   import(value = '') {
     return this.runCmd(`bit import ${value}`);

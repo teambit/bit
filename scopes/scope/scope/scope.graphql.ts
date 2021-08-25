@@ -105,6 +105,10 @@ export function scopeSchema(scopeMain: ScopeMain) {
           return listData;
         },
 
+        getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
+          return scope.getLogs(ComponentID.fromString(id));
+        },
+
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
           return scope.getMany(ids.map((str) => ComponentID.fromString(str)));
         },
