@@ -7,18 +7,18 @@ import Helper from '../src/e2e-helper/e2e-helper';
 
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
 
-const HTTP_SERVER_READY_MSG = 'Bit server is running on';
+const HTTP_SERVER_READY_MSG = 'UI server of teambit.scope/scope is listening to port';
 
 export class HttpHelper {
   httpProcess: ChildProcess;
   constructor(private helper: Helper) {}
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const cmd = `${this.helper.command.bitBin} start --verbose`;
+      const cmd = `${this.helper.command.bitBin} start --verbose --log`;
       const cwd = this.helper.scopes.remotePath;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-      this.httpProcess = childProcess.spawn(this.helper.command.bitBin, ['start', '--verbose'], { cwd });
+      this.httpProcess = childProcess.spawn(this.helper.command.bitBin, ['start', '--verbose', '--log'], { cwd });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
