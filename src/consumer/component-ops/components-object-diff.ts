@@ -233,7 +233,7 @@ export function diffBetweenComponentsObjects(
       oneDiff.right = oneDiff.right || '---';
     });
     const diffTable = new Table({
-      head: ['name', 'diif', `${leftVersion}`, `${rightVersion}`],
+      head: ['name', 'diff', `${leftVersion}`, `${rightVersion}`],
       style: { head: ['cyan'] },
     });
     diffs.map((dif) => diffTable.push(Object.values(dif)));
