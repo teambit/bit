@@ -763,16 +763,22 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
-    if (this.consumer.isLegacy) return; // this is relevant for Harmony only
-    const depMain = dependencyPkgData.packageJsonContent?.main;
-    if (!depMain) return;
+    if (this.consumer.isLegacy) {
+      return; // this is relevant for Harmony only
+    }
+    const depMain: PathLinuxRelative | undefined = dependencyPkgData.packageJsonContent?.main;
+    if (!depMain) {
+      return;
+    }
     const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
+
     if (depFullPath.endsWith(depMain)) {
       // it requires the main-file. all is good.
       return;
     }
-    if (this.issues.getIssue(IssuesClasses.MissingDists)) {
-      // if dists is missing (bit compile was not running), then depFullPath points to the source
+    if (depMain.startsWith(`${DEFAULT_DIST_DIRNAME}/`) && !depFullPath.includes(`/${DEFAULT_DIST_DIRNAME}/`)) {
+      // main prop points to the dists, however, the depFullPath goes to the source.
+      // this is probably happening because the dependency wasn't compiled yet.
       return;
     }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
