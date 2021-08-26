@@ -776,14 +776,15 @@ either, use the ignore file syntax or change the require statement to have a mod
       // it requires the main-file. all is good.
       return;
     }
-    if (depMain.startsWith(`${DEFAULT_DIST_DIRNAME}/`) && !depFullPath.includes(`/${DEFAULT_DIST_DIRNAME}/`)) {
-      // main prop points to the dists, however, the depFullPath goes to the source.
-      // this is probably happening because the dependency wasn't compiled yet.
-      return;
-    }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
     if (!extDisallowNonMain.includes(path.extname(depFullPath))) {
       // some files such as scss/json are needed to be imported as non-main
+      return;
+    }
+    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
+      // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
+      // and depFullPath is in the source.
       return;
     }
     const nonMainFileSplit = depFullPath.split(`node_modules/`);
