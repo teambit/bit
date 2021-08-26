@@ -33,4 +33,16 @@ describe('importing internal files flow (component imports from a non-index file
       helper.command.expectStatusToHaveIssue(IssuesClasses.ImportNonMainFiles.name);
     });
   });
+  describe('importing from a main file when the dependency was not compiled yet', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(2, true, undefined, false);
+      helper.command.compile('comp1');
+    });
+    // a previous bug showed the non-main issue because the dependency resolved to the source
+    // instead of the dist
+    it('should not show the import-non-main-file issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.ImportNonMainFiles.name);
+    });
+  });
 });

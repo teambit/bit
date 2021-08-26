@@ -763,21 +763,28 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
-    if (this.consumer.isLegacy) return; // this is relevant for Harmony only
-    const depMain = dependencyPkgData.packageJsonContent?.main;
-    if (!depMain) return;
-    const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
-    if (depFullPath.endsWith(depMain)) {
-      // it requires the main-file. all is good.
+    if (this.consumer.isLegacy) {
+      return; // this is relevant for Harmony only
+    }
+    const depMain: PathLinuxRelative | undefined = dependencyPkgData.packageJsonContent?.main;
+    if (!depMain) {
       return;
     }
-    if (this.issues.getIssue(IssuesClasses.MissingDists)) {
-      // if dists is missing (bit compile was not running), then depFullPath points to the source
+    const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
+
+    if (depFullPath.endsWith(depMain)) {
+      // it requires the main-file. all is good.
       return;
     }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
     if (!extDisallowNonMain.includes(path.extname(depFullPath))) {
       // some files such as scss/json are needed to be imported as non-main
+      return;
+    }
+    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
+      // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
+      // and depFullPath is in the source.
       return;
     }
     const nonMainFileSplit = depFullPath.split(`node_modules/`);
