@@ -1,7 +1,7 @@
 import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-
+import fs from 'fs-extra';
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { resolvePackageData } from '../../../../utils/packages';
 import generateTree, { MadgeTree } from './generate-tree-madge';
@@ -39,6 +39,9 @@ function groupDependencyList(
   const isBitLegacyComponent = (str: string) =>
     isLegacyProject &&
     (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
+  const isBitLegacyInsideHarmony = (str: string) =>
+    !isLegacyProject &&
+    (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
   dependenciesPaths.forEach((dependencyPath) => {
     if (!isPackage(dependencyPath)) {
       resultGroups.files.push({ file: dependencyPath });
@@ -61,6 +64,15 @@ function groupDependencyList(
     if (isBitLegacyComponent(dependencyPath)) {
       resultGroups.components.push(resolvedPackage);
       return;
+    }
+    if (isBitLegacyInsideHarmony(dependencyPath)) {
+      const pkgRootDir = resolvedPackage.packageJsonContent?.componentRootFolder;
+      const hasLegacyBitFiles = pkgRootDir && fs.existsSync(path.join(pkgRootDir, '.bit_env_has_installed'));
+      if (hasLegacyBitFiles) {
+        throw new Error(`error: legacy dependency "${resolvedPackage.name}" was imported to one of the files in "${componentDir}".
+this workspace is Harmony and therefore legacy components/packages are unsupported.
+remove the import statement to fix this error`);
+      }
     }
     const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
     const packageWithVersion = {
