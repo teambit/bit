@@ -12,7 +12,7 @@ import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import { isSupportedExtension } from '../../../../links/link-content';
 import logger from '../../../../logger/logger';
-import { getExt, isDirEmptySync, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
+import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
@@ -1200,11 +1200,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (this.componentFromModel && this.componentFromModel.isLegacy) {
       this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
     }
-  }
-
-  private areDistsMissing(pkgName: string) {
-    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return !fs.existsSync(distDir) || isDirEmptySync(distDir);
   }
 
   /**
