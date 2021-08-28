@@ -316,13 +316,18 @@ export default class SSH implements Network {
 
   errorHandler(code: number, err: string) {
     let parsedError;
+    let remoteIsLegacy = false;
     try {
       const { headers, payload } = this._unpack(err, false);
       checkVersionCompatibility(headers.version);
       parsedError = payload;
+      remoteIsLegacy = headers.version === '14.8.8' && parsedError.message.includes('Please update your Bit client');
     } catch (e) {
       // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
+    }
+    if (remoteIsLegacy) {
+      return new GeneralError(`fatal: unable to connect to a remote legacy SSH server from Harmony client`);
     }
     return remoteErrorHandler(code, parsedError, `${this.host}:${this.path}`, err);
   }

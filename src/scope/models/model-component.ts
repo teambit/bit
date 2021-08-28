@@ -42,6 +42,7 @@ import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
+import { SchemaName } from '../../consumer/component/component-schema';
 
 type State = {
   versions?: {
@@ -72,6 +73,7 @@ export type ComponentProps = {
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   head?: Ref;
+  schema?: string | undefined;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -105,6 +107,7 @@ export default class Component extends BitObject {
    */
   laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  schema: string | undefined;
   private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
@@ -121,6 +124,7 @@ export default class Component extends BitObject {
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.head = props.head;
+    this.schema = props.schema;
   }
 
   get versionArray(): Ref[] {
@@ -154,6 +158,11 @@ export default class Component extends BitObject {
 
   getHead(): Ref | undefined {
     return this.head;
+  }
+
+  getHeadAsTagIfExist(): string | undefined {
+    if (!this.head) return undefined;
+    return this.getTagOfRefIfExists(this.head) || this.head.toString();
   }
 
   hasHead() {
@@ -202,6 +211,14 @@ export default class Component extends BitObject {
 
   hasTagIncludeOrphaned(version: string): boolean {
     return Boolean(this.versions[version] || this.orphanedVersions[version]);
+  }
+
+  /**
+   * whether the head is a snap (not a tag)
+   */
+  isHeadSnap() {
+    const tagsHashes = this.versionArray.map((ref) => ref.toString());
+    return this.head && !tagsHashes.includes(this.head.toString());
   }
 
   /**
@@ -550,6 +567,7 @@ export default class Component extends BitObject {
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
+      schema: this.schema,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -820,7 +838,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
   }
 
   /**
-   * local versions that are not exported. to get also local snaps, use `getLocalTagsOrHashes()`.
+   * local versions that are not exported on the main lane.
+   * @see `this.getLocalTagsOrHashes()`, to get local snaps on the current lane
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
@@ -898,6 +917,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
+      schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
     });
   }
 
@@ -912,6 +932,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       name: bitId.name,
       scope: bitId.scope,
     });
+  }
+
+  get isLegacy(): boolean {
+    return !this.schema || this.schema === SchemaName.Legacy;
   }
 
   validate(): void {
@@ -935,5 +959,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
         );
       }
     });
+    if (!this.isLegacy && !this.head && this.versionArray.length) {
+      // legacy don't have head. also, when snapping on a lane the first time, there is no head.
+      // tags are done on default lane only, so if there are versions (tag), it must have head
+      throw new ValidationError(`${message}, the "head" prop is missing`);
+    }
   }
 }

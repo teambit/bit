@@ -15,7 +15,6 @@ export default class Switch implements LegacyCommand {
   private = true;
   alias = '';
   opts = [
-    ['c', 'create', 'create a new lane'],
     ['r', 'remote <scope>', 'fetch remote lane objects and switch to a local lane tracked to the remote'],
     ['n', 'as <as>', 'relevant when --remote flag is used. name a local lane differently than the remote lane'],
     [
@@ -26,31 +25,19 @@ export default class Switch implements LegacyCommand {
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    [
-      '',
-      'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
-    ],
-    ['', 'skip-npm-install', 'do not install packages of the imported components'],
-    ['', 'ignore-dist', 'do not write dist files (when exist)'],
   ] as CommandOptions;
   loader = true;
 
   action(
     [lane]: [string],
     {
-      create = false,
       remote,
       as,
       merge,
       getAll = false,
       verbose = false,
       json = false,
-      ignorePackageJson = false,
-      skipNpmInstall = false,
-      ignoreDist = false,
     }: {
-      create?: boolean;
       remote?: string;
       as?: string;
       merge?: MergeStrategy;
@@ -58,9 +45,6 @@ export default class Switch implements LegacyCommand {
       verbose?: boolean;
       override?: boolean;
       json?: boolean;
-      ignorePackageJson?: boolean;
-      skipNpmInstall?: boolean;
-      ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
     let mergeStrategy;
@@ -72,7 +56,6 @@ export default class Switch implements LegacyCommand {
       mergeStrategy = merge;
     }
     const switchProps: SwitchProps = {
-      create,
       laneName: lane,
       remoteScope: remote,
       existingOnWorkspaceOnly: !getAll,
@@ -81,34 +64,29 @@ export default class Switch implements LegacyCommand {
     const checkoutProps: CheckoutProps = {
       mergeStrategy,
       verbose,
-      skipNpmInstall,
-      ignorePackageJson,
-      ignoreDist,
+      skipNpmInstall: false, // not relevant in Harmony
+      ignorePackageJson: true, // not relevant in Harmony
+      ignoreDist: true, // not relevant in Harmony
       isLane: true,
       promptMergeOptions: false,
       writeConfig: false,
       reset: false,
       all: false,
     };
-    return switchAction(switchProps, checkoutProps).then((results) => ({ ...results, lane, create, json }));
+    return switchAction(switchProps, checkoutProps).then((results) => ({ ...results, lane, json }));
   }
 
   report({
     components,
     failedComponents,
     lane,
-    create,
     json,
   }: {
     components: ApplyVersionResults['components'];
     failedComponents: ApplyVersionResults['failedComponents'];
     lane: string;
-    create: boolean;
     json: boolean;
   }): string {
-    if (create) {
-      return chalk.green(`successfully added a new lane ${chalk.bold(lane)}`);
-    }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }

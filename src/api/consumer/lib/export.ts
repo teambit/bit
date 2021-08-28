@@ -30,7 +30,6 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
-import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import { Scope } from '../../../scope';
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -53,7 +52,6 @@ type ExportParams = {
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
-  lanes: boolean;
   resumeExportId: string | undefined;
   ignoreMissingArtifacts: boolean;
 };
@@ -86,7 +84,6 @@ async function exportComponents({
   includeNonStaged,
   codemod,
   force,
-  lanes,
   originDirectly,
   ...params
 }: ExportParams): Promise<{
@@ -98,19 +95,17 @@ async function exportComponents({
   newIdsOnRemote: BitId[];
 }> {
   const consumer: Consumer = await loadConsumer();
-  if (consumer.isLegacy && lanes) throw new LanesIsDisabled();
-  if (!consumer.isLegacy && !lanes && remote) {
+  if (!consumer.isLegacy && remote) {
     // on Harmony, we don't allow to specify a remote (except lanes), it exports to the default-scope
     ids.push(remote);
     remote = null;
   }
-  const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
+  const { idsToExport, missingScope, idsWithFutureScope, laneObject } = await getComponentsToExport(
     ids,
     consumer,
     remote,
     includeNonStaged,
-    force,
-    lanes
+    force
   );
 
   if (R.isEmpty(idsToExport)) {
@@ -131,11 +126,11 @@ async function exportComponents({
     remoteName: remote,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
-    lanesObjects,
+    laneObject,
     originDirectly,
     idsWithFutureScope,
   });
-  if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
+  if (laneObject) await updateLanesAfterExport(consumer, laneObject);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
@@ -148,7 +143,14 @@ async function exportComponents({
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote, exportedLanes: lanesObjects || [] };
+  return {
+    updatedIds,
+    nonExistOnBitMap,
+    missingScope,
+    exported,
+    newIdsOnRemote,
+    exportedLanes: laneObject ? [laneObject] : [],
+  };
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
@@ -168,9 +170,8 @@ async function getComponentsToExport(
   consumer: Consumer,
   remote: string | null | undefined,
   includeNonStaged: boolean,
-  force: boolean,
-  lanes: boolean
-): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; lanesObjects?: Lane[] }> {
+  force: boolean
+): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; laneObject?: Lane }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
   const filterNonScopeIfNeeded = async (
@@ -195,13 +196,16 @@ async function getComponentsToExport(
       throw new GeneralError('the operation has been canceled');
     }
   };
-  if (isUserTryingToExportLanes(consumer, ids, lanes)) {
-    const { componentsToExport, lanesObjects } = await getLaneCompIdsToExport(consumer, ids, includeNonStaged);
+  if (isUserTryingToExportLanes(consumer)) {
+    if (ids.length) {
+      throw new GeneralError(`when checked out to a lane, all its components are exported. please omit the ids`);
+    }
+    const { componentsToExport, laneObject } = await getLaneCompIdsToExport(consumer, includeNonStaged);
     await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
     const filtered = await filterNonScopeIfNeeded(componentsToExport);
-    return { ...filtered, lanesObjects: lanesObjects.filter((l) => l) };
+    return { ...filtered, laneObject };
   }
   if (!ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);

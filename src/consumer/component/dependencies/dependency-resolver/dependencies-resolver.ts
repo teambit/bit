@@ -25,7 +25,6 @@ import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependen
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
-import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 
 export type AllDependencies = {
@@ -118,8 +117,7 @@ export default class DependencyResolver {
       peerPackageDependencies: {},
     };
     this.processedFiles = [];
-    this.issues = new IssuesList();
-    this.setMissingDistsIssue();
+    this.issues = component.issues;
     this.setLegacyInsideHarmonyIssue();
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
@@ -367,9 +365,11 @@ export default class DependencyResolver {
    * on Harmony, during the execution of this function, it recognizes the use of relative-paths, enter
    * it to the "issues", then, later, it shows a warning on bit-status and block tagging.
    */
-  getComponentIdByDepFile(
-    depFile: PathLinux
-  ): { componentId: BitId | null | undefined; depFileRelative: PathLinux; destination: string | null | undefined } {
+  getComponentIdByDepFile(depFile: PathLinux): {
+    componentId: BitId | null | undefined;
+    depFileRelative: PathLinux;
+    destination: string | null | undefined;
+  } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
     let componentId: BitId | null | undefined;
     let destination: string | null | undefined;
@@ -763,21 +763,28 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
-    if (this.consumer.isLegacy) return; // this is relevant for Harmony only
-    const depMain = dependencyPkgData.packageJsonContent?.main;
-    if (!depMain) return;
-    const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
-    if (depFullPath.endsWith(depMain)) {
-      // it requires the main-file. all is good.
+    if (this.consumer.isLegacy) {
+      return; // this is relevant for Harmony only
+    }
+    const depMain: PathLinuxRelative | undefined = dependencyPkgData.packageJsonContent?.main;
+    if (!depMain) {
       return;
     }
-    if (!this.isDistDirExists(dependencyPkgData.name)) {
-      // if dists is missing (bit compile was not running), then depFullPath points to the source
+    const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
+
+    if (depFullPath.endsWith(depMain)) {
+      // it requires the main-file. all is good.
       return;
     }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
     if (!extDisallowNonMain.includes(path.extname(depFullPath))) {
       // some files such as scss/json are needed to be imported as non-main
+      return;
+    }
+    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
+      // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
+      // and depFullPath is in the source.
       return;
     }
     const nonMainFileSplit = depFullPath.split(`node_modules/`);
@@ -1188,25 +1195,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     return undefined;
   }
 
-  private setMissingDistsIssue() {
-    if (this.consumer.isLegacy) return;
-    const pkgName = componentIdToPackageName(this.component);
-    const isMissing = !this.isDistDirExists(pkgName);
-    if (isMissing) {
-      this.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
-    }
-  }
-
   private setLegacyInsideHarmonyIssue() {
     if (this.consumer.isLegacy) return;
     if (this.componentFromModel && this.componentFromModel.isLegacy) {
       this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
     }
-  }
-
-  private isDistDirExists(pkgName: string) {
-    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return fs.existsSync(distDir);
   }
 
   /**

@@ -415,8 +415,41 @@ export class Http implements Network {
     return data.scope._legacyLatestVersions;
   }
 
-  graph(): Promise<DependencyGraph> {
-    throw new Error('Method not implemented.');
+  async graph(bitId?: BitId): Promise<DependencyGraph> {
+    const GRAPH_QUERY = gql`
+      query graph($ids: [String], $filter: String) {
+        graph(ids: $ids, filter: $filter) {
+          nodes {
+            id
+            component {
+              id {
+                name
+                version
+                scope
+              }
+            }
+          }
+          edges {
+            sourceId
+            targetId
+            dependencyLifecycleType
+          }
+        }
+      }
+    `;
+
+    const { graph } = await this.graphClientRequest(GRAPH_QUERY, Verb.READ, {
+      ids: bitId ? [bitId.toString()] : [],
+    });
+
+    const nodes = graph.nodes.map((node) => ({ idStr: node.id, bitId: new BitId(node.component.id) }));
+    const edges = graph.edges.map((edge) => ({
+      src: edge.sourceId,
+      target: edge.targetId,
+      depType: edge.dependencyLifecycleType === 'DEV' ? 'devDependencies' : 'dependencies',
+    }));
+    const oldGraph = DependencyGraph.buildFromNodesAndEdges(nodes, edges);
+    return new DependencyGraph(oldGraph);
   }
 
   // TODO: ran (TBD)

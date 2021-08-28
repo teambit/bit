@@ -1,14 +1,13 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from './files/workspace-config';
-import { readme } from './files/readme-file';
+import { workspaceConfig } from '../common-files/workspace-config';
+import { readme } from '../common-files/readme-file';
 import { gitIgnore } from '../common-files/git-ignore';
 import { assetTypes } from '../common-files/types/asset';
 import { styleTypes } from '../common-files/types/style';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react',
-  description: 'EXPERIMENTAL. react workspace with sample components',
-  hidden: true,
+  description: 'React workspace with demo components',
   generateFiles: async (context: WorkspaceContext) => {
     return [
       {
@@ -35,11 +34,19 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   },
   importComponents: () => {
     return [
-      { id: 'teambit.react/templates/envs/my-react', path: 'templates/envs/my-react' },
-      { id: 'teambit.react/templates/ui/text', path: 'templates/ui/text' },
-      { id: 'teambit.react/templates/ui/heading', path: 'templates/ui/heading' },
-      { id: 'teambit.react/templates/ui/card', path: 'templates/ui/card' },
-      { id: 'teambit.react/templates/pages/welcome', path: 'templates/pages/welcome' },
+      {
+        id: 'teambit.react/templates/envs/my-react',
+        targetName: 'envs/my-react',
+        path: 'demo/envs/my-react',
+      },
+      { id: 'teambit.react/templates/ui/text', targetName: 'ui/text', path: 'demo/ui/text' },
+      { id: 'teambit.react/templates/ui/heading', targetName: 'ui/heading', path: 'demo/ui/heading' },
+      { id: 'teambit.react/templates/ui/card', targetName: 'ui/card', path: 'demo/ui/card' },
+      {
+        id: 'teambit.react/templates/pages/welcome',
+        targetName: 'pages/welcome',
+        path: 'demo/pages/welcome',
+      },
     ];
   },
 };

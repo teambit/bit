@@ -1,3 +1,5 @@
+import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
+import { TsConfigTransformer } from '@teambit/typescript';
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
@@ -65,12 +67,19 @@ export class AspectEnv implements Environment {
     };
   }
 
+  // TODO: move this to be in the aspect.main.runtime and use the react.overrideBuildPipe API.
+  // TODO: see example in e2e/fixtures/extensions/multiple-compilers-env/multiple-compilers-env.extension.ts
+  // TODO: or maybe even use the - react.overrideCompilerTasks
   getBuildPipe() {
-    const tsCompiler = this.reactEnv.createTsCompiler(tsconfig, {
-      artifactName: 'declaration',
-      distGlobPatterns: [`dist/**/*.d.ts`],
-      shouldCopyNonSupportedFiles: false,
-    });
+    const transformer: TsConfigTransformer = (config: TypescriptConfigMutator) => {
+      config
+        .mergeTsConfig(tsconfig)
+        .setArtifactName('declaration')
+        .setDistGlobPatterns([`dist/**/*.d.ts`])
+        .setShouldCopyNonSupportedFiles(false);
+      return config;
+    };
+    const tsCompiler = this.reactEnv.getCompiler([transformer]);
 
     const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
 

@@ -39,21 +39,21 @@ export class StartCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report([uiRootName, userPattern]: StartArgs, { dev, port, rebuild, verbose }: StartFlags): Promise<string> {
-    this.logger.off();
-    const pattern = userPattern && userPattern.toString();
+  // async report([uiRootName, userPattern]: StartArgs, { dev, port, rebuild, verbose }: StartFlags): Promise<string> {
+  //   this.logger.off();
+  //   const pattern = userPattern && userPattern.toString();
 
-    const uiServer = await this.ui.createRuntime({
-      uiRootName,
-      pattern,
-      dev,
-      port: port ? parseInt(port) : undefined,
-      rebuild,
-      verbose,
-    });
+  //   const uiServer = await this.ui.createRuntime({
+  //     uiRootName,
+  //     pattern,
+  //     dev,
+  //     port: port ? parseInt(port) : undefined,
+  //     rebuild,
+  //     verbose,
+  //   });
 
-    return `Bit server has started on port ${uiServer.port}`;
-  }
+  //   return `Bit server has started on port ${uiServer.port}`;
+  // }
 
   async render(
     [uiRootName, userPattern]: StartArgs,

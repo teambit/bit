@@ -5,18 +5,16 @@ The following describes the final implementation, which differs from the specifi
 ## Synopsis
 
 - create a snap: `bit snap` (synopsis similar to the `bit tag`).
-- create a new lane: `bit switch <name> --create`
+- create a new lane: `bit lane create <name>`
 - list lanes: `bit lane list`.
 - switch between lanes: `bit switch <name>`
-- merge lanes: `bit merge --lane`.
+- merge lanes: `bit lane merge`.
 - show lane details: `bit lane show <name>`
 - diff between lanes: `bit lane diff <values>`
 - track local lane to a remote lane: `bit switch --as`
-- rename a lane `bit switch --rename`
-- remove a lane `bit remove --lane`.
+- remove a lane `bit lane remove <name>`.
 - fetch lane objects (without the components): `bit fetch --lanes`.
 - import a lane: `bit switch <name> --remote`.
-- export a lane: `bit export <name> --lanes`.
 - export current lane: `bit export`.
 - (internal) cat lane object: `bit cat-lane <name>`.
 
@@ -27,7 +25,6 @@ The following describes the final implementation, which differs from the specifi
 - [ ] Tag dependencies to include them in a lane.
 - [ ] Test bit-fetch components
 - [ ] Rename lanes.
-- [ ] "Bit diff" between lanes
 - [ ] Fix performance issue. Now it fetches all parents every time. It doesn't make sense.
 - [ ] Fix performance issue. Now it traverses all parents to see if a hash in there.
 

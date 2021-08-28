@@ -115,6 +115,8 @@ export class UIServer {
     server.listen(port);
     this._port = port;
 
+    // important: we use the string of the following message for the http.e2e.ts. if you change the message,
+    // please make sure you change the `HTTP_SERVER_READY_MSG` const.
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
   }
 

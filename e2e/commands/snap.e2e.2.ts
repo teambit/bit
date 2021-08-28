@@ -2,7 +2,6 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { HASH_SIZE } from '../../src/constants';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -89,6 +88,25 @@ describe('bit snap command', function () {
       expect(barFoo.dependencies).to.have.lengthOf(1);
       expect(barFoo.dependencies[0].id.version).to.be.a('string').and.have.lengthOf(HASH_SIZE);
     });
+    it('bit status should show them in the "snapped" section', () => {
+      const status = helper.command.statusJson();
+      expect(status.snappedComponents).to.have.lengthOf(3);
+    });
+    describe('tagging the components', () => {
+      let scopeBeforeTag: string;
+      before(() => {
+        scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      });
+      it('--all flag should include the snapped components', () => {
+        const output = helper.command.tagAllWithoutBuild();
+        expect(output).to.include('3 component(s) tagged');
+      });
+      it('--snapped flag should include the snapped components', () => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        const output = helper.command.tagWithoutBuild(undefined, '--snapped');
+        expect(output).to.include('3 component(s) tagged');
+      });
+    });
   });
   describe('untag a snap', () => {
     let firstSnap: string;
@@ -127,20 +145,9 @@ describe('bit snap command', function () {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         expect(barFoo.parents).to.have.lengthOf(1);
         expect(barFoo.parents[0]).to.equal(firstSnap);
-
-        helper.command.untag(`bar/foo ${firstSnap}`);
       });
-      it('should not change the head', () => {
-        const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(compAfterUntag.head).to.equal(secondSnap);
-      });
-      it('should remove the snap from the state.versions array', () => {
-        const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(Object.keys(compAfterUntag.state.versions)).to.have.lengthOf(1);
-      });
-      it('should remove the first snap from the parents of the second snap', () => {
-        const barFoo = helper.command.catComponent('bar/foo@latest');
-        expect(barFoo.parents).to.have.lengthOf(0);
+      it('should not allow it', () => {
+        expect(() => helper.command.untag(`bar/foo ${firstSnap}`)).to.throw();
       });
     });
   });
@@ -206,8 +213,7 @@ describe('bit snap command', function () {
           helper.bitMap.expectToHaveIdHarmony('bar/foo', secondSnap, helper.scopes.remote);
         });
         it('bit status should be clean', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean(['snappedComponents']);
         });
       });
     });

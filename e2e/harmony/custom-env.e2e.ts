@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { IssuesClasses } from '../../scopes/component/component-issues';
 
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -73,6 +74,24 @@ describe('custom env', function () {
       it('bit status should not throw ComponentNotFound error', () => {
         expect(() => helper.command.status()).not.to.throw();
       });
+    });
+  });
+  describe('change an env after tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(3);
+      helper.extensions.addExtensionToVariant('*', envId);
+      helper.command.compile();
+      helper.command.tagAllWithoutBuild();
+      const newEnvId = 'teambit.react/react';
+      helper.extensions.addExtensionToVariant('*', newEnvId, undefined, true);
+    });
+    it('bit status should show it as an issue because the previous env was not removed', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {

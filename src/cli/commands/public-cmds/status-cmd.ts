@@ -58,6 +58,7 @@ export default class Status implements LegacyCommand {
     componentsWithIndividualFiles,
     componentsWithTrackDirs,
     softTaggedComponents,
+    snappedComponents,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -78,6 +79,7 @@ export default class Status implements LegacyCommand {
           componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
           componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
           softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
+          snappedComponents: snappedComponents.map((s) => s.toString()),
         },
         null,
         2
@@ -217,6 +219,13 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
+    const snappedDesc = '\n(use "bit tag --all [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedComponentsOutput = immutableUnshift(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      snappedComponents.map((c) => format(c, true)),
+      snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+    ).join('\n');
+
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
     return (
@@ -227,6 +236,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
           compWithConflictsStr,
           newComponentsOutput,
           modifiedComponentOutput,
+          snappedComponentsOutput,
           stagedComponentsOutput,
           autoTagPendingOutput,
           invalidComponentOutput,

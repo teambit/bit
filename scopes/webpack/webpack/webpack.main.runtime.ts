@@ -123,6 +123,7 @@ export function runTransformersWithContext(
   transformers: WebpackConfigTransformer[] = [],
   context: WebpackConfigTransformContext
 ): WebpackConfigMutator {
+  if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
     return transformer(acc, context);
   }, config);

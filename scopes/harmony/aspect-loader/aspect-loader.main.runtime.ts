@@ -336,9 +336,11 @@ export class AspectLoaderMain {
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const hasVersions = ids.every((id) => id.hasVersion());
+    const useCache = hasVersions; // if all components has versions, try to use the cached aspects
     // @todo: Gilad make this work
     // const ids = await scope.resolveMultipleComponentIds(aspectIds);
-    const components = await scope.import(ids, undefined, true);
+    const components = await scope.import(ids, useCache, true);
     const resolvedAspects = await scope.getResolvedAspects(components);
     await this.loadRequireableExtensions(resolvedAspects, true);
     return components;

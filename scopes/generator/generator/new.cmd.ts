@@ -5,14 +5,14 @@ import { GeneratorMain } from './generator.main.runtime';
 export type NewOptions = {
   aspect?: string;
   defaultScope?: string;
-  standalone?: boolean;
+  skipGit?: boolean;
   loadFrom?: string;
   empty?: boolean;
 };
 
 export class NewCmd implements Command {
   name = 'new <templateName> <workspaceName>';
-  description = 'EXPERIMENTAL. create a new workspace from a template';
+  description = 'Create a new workspace from a template';
   shortDescription = '';
   alias = '';
   loader = true;
@@ -24,7 +24,8 @@ export class NewCmd implements Command {
       'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
     ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
-    ['s', 'standalone', 'skip generation of Git repository'],
+    ['', 'standalone', 'DEPRECATED. use --skip-git instead'],
+    ['s', 'skip-git', 'skip generation of Git repository'],
     ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
     [
       '',
@@ -35,7 +36,8 @@ export class NewCmd implements Command {
 
   constructor(private generator: GeneratorMain) {}
 
-  async report([templateName, workspaceName]: [string, string], options: NewOptions) {
+  async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
+    options.skipGit = options.skipGit ?? options.standalone;
     const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
     return chalk.white(
       `${chalk.green(`
