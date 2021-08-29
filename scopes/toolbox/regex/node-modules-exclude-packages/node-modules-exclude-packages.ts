@@ -5,6 +5,11 @@ type NodeModulesExcludePackagesOptions = {
   packages: string[];
 };
 
+/**
+ * A function that receive an array of packages name to include with node modules regex.
+ * @param {string[]} packages - array of packages.
+ * @returns {string} node modules regex with the packages to exclude.
+ */
 export function nodeModulesExcludePackages({ packages }: NodeModulesExcludePackagesOptions): string {
   const negativeLookahead = packages.reduce((acc, curr) => {
     const yarnPattern = curr;
