@@ -699,6 +699,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
+    "regex/node-modules-exclude-packages": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/regex/node-modules-exclude-packages"
+    },
     "schema": {
         "scope": "teambit.semantics",
         "version": "0.0.496",
