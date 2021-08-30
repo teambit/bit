@@ -25120,6 +25120,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-modules-exclude-packages-39ea9a@workspace:scopes/toolbox/regex/node-modules-exclude-packages":
+  version: 0.0.0-use.local
+  resolution: "node-modules-exclude-packages-39ea9a@workspace:scopes/toolbox/regex/node-modules-exclude-packages"
+  languageName: unknown
+  linkType: soft
+
 "node-modules-regexp@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-modules-regexp@npm:1.0.0"
