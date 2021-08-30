@@ -6,33 +6,47 @@ describe('generateNodeModulesPattern()', () => {
   });
   it('should work with more than one packages', () => {
     const packagesToTransform = ['react', '@myorg', 'testing-library__dom'];
-    expect(generateNodeModulesPattern({ packages: packagesToTransform })).toEqual(
+    const pattern = generateNodeModulesPattern({ packages: packagesToTransform });
+    const regex = new RegExp(pattern);
+    expect(pattern).toEqual(
       'node_modules/(?!(react|.pnpm/registry.npmjs.org/react.*|.pnpm/react.*|@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*|testing-library__dom|.pnpm/registry.npmjs.org/testing-library__dom.*|.pnpm/testing-library__dom.*)/)'
     );
+    expect(regex.test('node_modules/react')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/registry.npmjs.org/react')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/react')).toBeTruthy();
+
+    expect(regex.test('node_modules/@myorg')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/registry.npmjs.org/@myorg')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/@myorg')).toBeTruthy();
+
+    expect(regex.test('node_modules/testing-library__dom')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/registry.npmjs.org/testing-library__dom')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/testing-library__dom')).toBeTruthy();
   });
   it('should work with one package', () => {
-    const packagesToTransform = ['@myorg'];
-    expect(generateNodeModulesPattern({ packages: packagesToTransform })).toEqual(
-      'node_modules/(?!(@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*)/)'
-    );
+    const pattern = generateNodeModulesPattern({ packages: ['@myorg'] });
+    const regex = new RegExp(pattern);
+    expect(pattern).toEqual('node_modules/(?!(@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*)/)');
+    expect(regex.test('node_modules/@myorg')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/registry.npmjs.org/@myorg')).toBeTruthy();
+    expect(regex.test('node_modules/.pnpm/@myorg')).toBeTruthy();
   });
   it('should have old pnpm structure exlucded', () => {
-    expect(generateNodeModulesPattern({ packages: ['@myorg'] })).toContain('.pnpm/registry.npmjs.org/@myorg.*');
-    expect(generateNodeModulesPattern({ packages: ['@myorg', '@mypackage'] })).toContain(
-      '.pnpm/registry.npmjs.org/@myorg.*'
-    );
-    expect(generateNodeModulesPattern({ packages: ['@myorg', '@mypackage'] })).toContain(
-      '.pnpm/registry.npmjs.org/@mypackage.*'
-    );
+    const pattern = generateNodeModulesPattern({ packages: ['@myorg'] });
+    const regex = new RegExp(pattern);
+    expect(pattern).toEqual('node_modules/(?!(@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*)/)');
+    expect(regex.test('node_modules/.pnpm/registry.npmjs.org/@myorg')).toBeTruthy();
   });
   it('should have new pnpm structure excluded', () => {
-    expect(generateNodeModulesPattern({ packages: ['@myorg'] })).toContain('.pnpm/@myorg.*');
-    expect(generateNodeModulesPattern({ packages: ['react', '@myorg'] })).toContain('.pnpm/@myorg.*');
-    expect(generateNodeModulesPattern({ packages: ['react', '@myorg'] })).toContain('.pnpm/react.*');
+    const pattern = generateNodeModulesPattern({ packages: ['@myorg'] });
+    const regex = new RegExp(pattern);
+    expect(pattern).toEqual('node_modules/(?!(@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*)/)');
+    expect(regex.test('node_modules/.pnpm/@myorg')).toBeTruthy();
   });
   it('should have yarn structure excluded', () => {
-    expect(generateNodeModulesPattern({ packages: ['@myorg'] })).toContain('@myorg');
-    expect(generateNodeModulesPattern({ packages: ['mypackage', '@myorg'] })).toContain('mypackage');
-    expect(generateNodeModulesPattern({ packages: ['mypackage', '@myorg'] })).toContain('@myorg');
+    const pattern = generateNodeModulesPattern({ packages: ['@myorg'] });
+    const regex = new RegExp(pattern);
+    expect(pattern).toEqual('node_modules/(?!(@myorg|.pnpm/registry.npmjs.org/@myorg.*|.pnpm/@myorg.*)/)');
+    expect(regex.test('node_modules/@myorg')).toBeTruthy();
   });
 });
