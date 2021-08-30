@@ -321,8 +321,10 @@ export default class ComponentsList {
 
   async listAutoTagPendingComponents(): Promise<Component[]> {
     const modifiedComponents = (await this.listModifiedComponents()) as BitId[];
+    const newComponents = (await this.listNewComponents()) as BitIds;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    return this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
+    const autoTagPending = await this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
+    return autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.id));
   }
 
   idsFromBitMap(origin?: ComponentOrigin): BitIds {
