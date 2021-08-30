@@ -1,4 +1,4 @@
-type generateNodeModulesPatternsOptions = {
+type generateNodeModulesPatternOptions = {
   /**
    * An array of packages name to exclude in the regex.
    */
@@ -10,7 +10,7 @@ type generateNodeModulesPatternsOptions = {
  * @param {string[]} packages - array of packages.
  * @returns {string} node modules catched packages regex.
  */
-export function generateNodeModulesPatterns({ packages }: generateNodeModulesPatternsOptions): string {
+export function generateNodeModulesPattern({ packages }: generateNodeModulesPatternOptions): string {
   const negativeLookahead = packages.reduce((acc, curr) => {
     const yarnPattern = curr;
     const pnpmPattern = `.pnpm/registry.npmjs.org/${curr}.*`;
@@ -23,6 +23,6 @@ export function generateNodeModulesPatterns({ packages }: generateNodeModulesPat
     }
     return `${yarnPattern}|${pnpmPattern}|${newPnpmPattern}`;
   }, '');
-  const transformIgnorePatterns = `node_modules/(?!(${negativeLookahead})/)`;
-  return transformIgnorePatterns;
+  const transformIgnorePattern = `node_modules/(?!(${negativeLookahead})/)`;
+  return transformIgnorePattern;
 }

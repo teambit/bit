@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateNodeModulesPatterns } from './generate-node-modules-patterns';
+import { generateNodeModulesPattern } from './generate-node-modules-pattern';
 
 export function LiveExample() {
   const [text, setText] = useState('react,@myorg,some-lib');
@@ -10,7 +10,7 @@ export function LiveExample() {
       <input value={text} onChange={(e) => setText(e.target.value)} style={{ width: 500 }} />
       <br />
       <div style={{ backgroundColor: '#ededed', padding: 8 }}>
-        {text && generateNodeModulesPatterns({ packages: text.split(',') })}
+        {text && generateNodeModulesPattern({ packages: text.split(',') })}
       </div>
     </div>
   );
