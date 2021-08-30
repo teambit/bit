@@ -113,7 +113,7 @@ export class ComponentGenerator {
   }
 
   private getComponentPath(componentId: ComponentID) {
-    if (this.options.path) return path.join(this.options.path, componentId.fullName);
+    if (this.options.path) return this.options.path;
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }
