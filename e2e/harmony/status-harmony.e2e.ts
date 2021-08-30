@@ -1,4 +1,5 @@
 import { IssuesClasses } from '@teambit/component-issues';
+import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('status command on Harmony', function () {
@@ -49,6 +50,19 @@ describe('status command on Harmony', function () {
     });
     it('should show an issue of missing-links-from-node-modules-to-src', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingLinksFromNodeModulesToSrc.name);
+    });
+  });
+  describe('components that are both: new and auto-tag-pending', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild('comp3');
+      helper.fixtures.populateComponents(3, undefined, 'v2');
+    });
+    it('should be shown in the newComponents section only and not in the autoTagPendingComponents', () => {
+      const status = helper.command.statusJson();
+      expect(status.autoTagPendingComponents).to.have.lengthOf(0);
+      expect(status.newComponents).to.have.lengthOf(2);
     });
   });
 });
