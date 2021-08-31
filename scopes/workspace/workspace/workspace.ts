@@ -16,7 +16,7 @@ import {
   AspectData,
   InvalidComponent,
 } from '@teambit/component';
-import { ComponentScopeDirMap } from '@teambit/config';
+import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
   DependencyLifecycleType,
   DependencyResolverMain,
@@ -51,6 +51,7 @@ import type {
   AddActionResults,
   Warnings,
 } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -58,6 +59,7 @@ import { buildOneGraphForComponents } from '@teambit/legacy/dist/scope/graph/com
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference } from 'lodash';
 import path from 'path';
@@ -890,7 +892,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
-    const components = await this.importAndGetMany(componentIds);
+    const components = await this.importAndGetAspects(componentIds);
     const graph = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
@@ -1209,6 +1211,26 @@ export class Workspace implements ComponentFactory {
       });
       return filtered;
     };
+  }
+
+  /**
+   * same as `this.importAndGetMany()` with a specific error handling of ComponentNotFound
+   */
+  private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
+    try {
+      return await this.importAndGetMany(componentIds);
+    } catch (err) {
+      if (err instanceof ComponentNotFound) {
+        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+        if (configStr.includes(err.id)) {
+          throw new BitError(`error: a component "${err.id}" was not found
+your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+        }
+      }
+
+      throw err;
+    }
   }
 
   // TODO: replace with a proper import API on the workspace
