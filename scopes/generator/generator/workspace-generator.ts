@@ -15,7 +15,6 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import path from 'path';
-import { EnvsMain } from '@teambit/envs';
 import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceTemplate } from './workspace-template';
@@ -39,7 +38,7 @@ export class WorkspaceGenerator {
     private workspaceName: string,
     private options: NewOptions,
     private template: WorkspaceTemplate,
-    private envs: EnvsMain
+    private aspectComponent?: Component
   ) {
     this.workspacePath = path.resolve(this.workspaceName);
   }
@@ -99,6 +98,7 @@ export class WorkspaceGenerator {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
+      aspectComponent: this.aspectComponent,
     };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
