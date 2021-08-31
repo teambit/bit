@@ -1,36 +1,11 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from '../common-files/workspace-config';
-import { readme } from '../common-files/readme-file';
-import { gitIgnore } from '../common-files/git-ignore';
-import { assetTypes } from '../common-files/types/asset';
-import { styleTypes } from '../common-files/types/style';
+import { generateFiles as generateCommonFiles } from '../workspace-common';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react',
   description: 'React workspace with demo components',
   generateFiles: async (context: WorkspaceContext) => {
-    return [
-      {
-        relativePath: 'workspace.jsonc',
-        content: await workspaceConfig(context),
-      },
-      {
-        relativePath: `.gitignore`,
-        content: gitIgnore(),
-      },
-      {
-        relativePath: `README.md`,
-        content: readme(),
-      },
-      {
-        relativePath: `types/asset.d.ts`,
-        content: assetTypes,
-      },
-      {
-        relativePath: `types/style.d.ts`,
-        content: styleTypes,
-      },
-    ];
+    return generateCommonFiles(context);
   },
   importComponents: () => {
     return [
