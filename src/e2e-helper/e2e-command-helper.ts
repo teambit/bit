@@ -359,7 +359,7 @@ export default class CommandHelper {
    */
   createCapsuleHarmony(id: string, options?: Record<string, any>): string {
     const parsedOpts = this.parseOptions(options);
-    const output = this.runCmd(`bit capsule-create ${id} ${parsedOpts}`);
+    const output = this.runCmd(`bit capsule create ${id} ${parsedOpts}`);
     if (options?.json || options?.j) {
       const capsules = JSON.parse(output);
       const capsule = capsules.find((c) => c.id.includes(id));
@@ -373,7 +373,7 @@ export default class CommandHelper {
   }
 
   getCapsuleOfComponent(id: string) {
-    const capsulesJson = this.runCmd('bit capsule-list -j');
+    const capsulesJson = this.runCmd('bit capsule list -j');
     const capsules = JSON.parse(capsulesJson);
     const idWithUnderScore = id.replace(/\//, '_');
     const capsulePath = capsules.capsules.find((c) => c.endsWith(idWithUnderScore));
