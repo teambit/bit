@@ -1,0 +1,21 @@
+export function typescriptConfigFile() {
+  return `{
+  // add your compiler options here
+
+  "compilerOptions": {
+    // "target": "es2017",
+    // "module": "es2015",
+    // "moduleResolution": "node",
+    // "lib": ["es2017", "dom"],
+    // "experimentalDecorators": true,
+    // "esModuleInterop": true,
+    // "outDir": "dist",
+    // "sourceMap": true,
+    // "emitDecoratorMetadata": true,
+    // "allowJs": true,
+    // "baseUrl": ".",
+    // "jsx": "react"
+  }
+}
+`;
+}
