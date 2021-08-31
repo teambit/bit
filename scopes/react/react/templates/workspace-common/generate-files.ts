@@ -4,6 +4,9 @@ import { readme } from './files/readme-file';
 import { gitIgnore } from './files/git-ignore';
 import { assetTypes } from './files/types/asset';
 import { styleTypes } from './files/types/style';
+import { eslintConfig } from './files/eslint-config';
+import { tsConfig } from './files/ts-config';
+import { prettierConfig } from './files/prettier-config';
 
 type GeneratedFile = {
   relativePath: string;
@@ -23,6 +26,18 @@ export async function generateFiles(context: WorkspaceContext): Promise<Generate
     {
       relativePath: `README.md`,
       content: readme(),
+    },
+    {
+      relativePath: `.eslintrc.js`,
+      content: eslintConfig,
+    },
+    {
+      relativePath: `tsconfig.json`,
+      content: tsConfig,
+    },
+    {
+      relativePath: `.prettierrc.js`,
+      content: prettierConfig,
     },
     {
       relativePath: `types/asset.d.ts`,
