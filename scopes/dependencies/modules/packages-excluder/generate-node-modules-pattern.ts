@@ -6,7 +6,7 @@ type generateNodeModulesPatternOptions = {
 };
 
 /**
- * A function that receive an array of packages name to catch in node modules and return a regex of it.
+ * A function that receives an array of packages names and returns a pattern (string) of a regex that matches any node_modules/package-name except the provided package-names.
  * @param {string[]} packages - array of packages.
  * @returns {string} node modules catched packages regex.
  */
