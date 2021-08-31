@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
 import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import chalk from 'chalk';
@@ -13,7 +14,7 @@ type CreateOpts = {
 };
 
 export class CapsuleCreateCmd implements Command {
-  name = 'capsule-create [componentIds...]';
+  name = 'create [componentIds...]';
   description = `create capsules`;
   group = 'capsules';
   alias = '';
@@ -66,5 +67,51 @@ export class CapsuleCreateCmd implements Command {
       id: c.component.id.toString(),
       path: c.path,
     }));
+  }
+}
+
+export class CapsuleListCmd implements Command {
+  name = 'list';
+  description = `list all capsules`;
+  shortDescription = 'list all capsules';
+  group = 'capsules';
+  alias = '';
+  options = [['j', 'json', 'json format']] as CommandOptions;
+
+  constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
+
+  async report() {
+    const list = await this.isolator.list(this.workspace.path);
+    const workspaceRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
+    const scopeRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
+    const scopeAspectsRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
+    // TODO: improve output
+    return chalk.green(`found ${chalk.cyan(list.capsules.length.toString())} capsule(s) for workspace:  ${chalk.cyan(
+      list.workspace
+    )}
+workspace capsules root-dir:       ${chalk.cyan(workspaceRootDir)}
+scope capsules root-dir:           ${chalk.cyan(scopeRootDir)}
+scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsRootDir)}
+use --json to get the list of all workspace capsules`);
+  }
+
+  async json() {
+    const list = await this.isolator.list(this.workspace.path);
+    return list;
+  }
+}
+
+export class CapsuleCmd implements Command {
+  name = 'capsule <sub-command>';
+  description = 'manage capsules';
+  alias = '';
+  group = 'capsules';
+  commands: Command[] = [];
+  options = [] as CommandOptions;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async report(args: [string]) {
+    // it should never be here. Yargs throws an error before reaching this method.
+    return `Please specify a sub-command`;
   }
 }

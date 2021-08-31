@@ -19,8 +19,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { CapsuleCreateCmd } from './capsule-create.cmd';
-import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
@@ -33,6 +31,7 @@ import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { Tag } from './tag-cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleListCmd } from './capsule.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -179,14 +178,9 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
-  const capsuleCreateCmd = new CapsuleCreateCmd(workspace, isolator);
-  const commands: CommandList = [
-    new InstallCmd(workspace, logger),
-    new EjectConfCmd(workspace),
-    capsuleListCmd,
-    capsuleCreateCmd,
-  ];
+  const capsuleCmd = new CapsuleCmd();
+  capsuleCmd.commands = [new CapsuleListCmd(isolator, workspace), new CapsuleCreateCmd(workspace, isolator)];
+  const commands: CommandList = [new InstallCmd(workspace, logger), new EjectConfCmd(workspace), capsuleCmd];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
