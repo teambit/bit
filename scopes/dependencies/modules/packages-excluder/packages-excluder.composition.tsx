@@ -17,14 +17,14 @@ export function LiveExample() {
 }
 
 export function RegexExample() {
-  const [packagesToExclude, setPackagesToExclude] = useState('react,@myorg,some-lib');
-  const [packageToCheck, setPackageToCheck] = useState('');
+  const [packagesToExclude, setPackagesToExclude] = useState('@myorg,react,some-lib');
+  const [packageToCheck, setPackageToCheck] = useState('@myorg/something');
   const [regexResult, setRegexResult] = useState(true);
 
   useEffect(() => {
     const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(',') });
     const regex = new RegExp(pattern);
-    setRegexResult(regex.test(`node_modules/${packageToCheck}/something`) === false);
+    setRegexResult(regex.test(`node_modules/${packageToCheck}`) === false);
   }, [packagesToExclude, packageToCheck]);
 
   return (
