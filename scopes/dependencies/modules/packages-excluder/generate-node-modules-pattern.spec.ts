@@ -2,7 +2,7 @@ import { generateNodeModulesPattern } from './generate-node-modules-pattern';
 
 describe('generateNodeModulesPattern()', () => {
   describe('should work with empty array', () => {
-    it('should return an empty regex', () => {
+    it('include any package in the node_modules', () => {
       expect(generateNodeModulesPattern({ packages: [] })).toEqual('node_modules/(?!()/)');
     });
   });
