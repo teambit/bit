@@ -373,7 +373,7 @@ export default class CommandHelper {
   }
 
   getCapsuleOfComponent(id: string) {
-    const capsulesJson = this.runCmd('bit capsule-list -j');
+    const capsulesJson = this.runCmd('bit capsule list -j');
     const capsules = JSON.parse(capsulesJson);
     const idWithUnderScore = id.replace(/\//, '_');
     const capsulePath = capsules.capsules.find((c) => c.endsWith(idWithUnderScore));
