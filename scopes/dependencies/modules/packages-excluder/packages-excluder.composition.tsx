@@ -24,8 +24,7 @@ export function RegexExample() {
   useEffect(() => {
     const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(',') });
     const regex = new RegExp(pattern);
-    console.log(regex.test(`node_modules/${packageToCheck}`));
-    setRegexResult(regex.test(`node_modules/${packageToCheck}`));
+    setRegexResult(regex.test(`node_modules/${packageToCheck}/something`) === false);
   }, [packagesToExclude, packageToCheck]);
 
   return (
@@ -39,7 +38,7 @@ export function RegexExample() {
       <input value={packageToCheck} onChange={(e) => setPackageToCheck(e.target.value)} style={{ width: 500 }} />
       <br />
       <div style={{ backgroundColor: '#ededed', padding: 8 }}>
-        regex exclude {packageToCheck} package: {regexResult}
+        regex exclude {packageToCheck} package: {regexResult.toString()}
       </div>
     </div>
   );
