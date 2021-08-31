@@ -4825,6 +4825,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.layout.grid-component@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@teambit/base-ui.layout.grid-component@npm:1.0.1"
+  dependencies:
+    "@teambit/base-ui.layout.breakpoints": 1.0.0
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: f53b20ba285e678764bc9bd40991d18b0bfab8fe6b4f86385d9cb99f98336ff3d37d50c3c1b3e38a0822a5a57646566edd06369c5e2c54fb85ad70cb25baf6e7
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.layout.page-frame@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.layout.page-frame@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.layout.page-frame%2F-%2Fbase-ui.layout.page-frame-1.0.0.tgz"
@@ -6278,19 +6292,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.property-table@npm:4.1.2":
-  version: 4.1.2
-  resolution: "@teambit/documenter.ui.property-table@npm:4.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.property-table%2F-%2Fdocumenter.ui.property-table-4.1.2.tgz"
+"@teambit/documenter.ui.property-table@npm:4.1.3":
+  version: 4.1.3
+  resolution: "@teambit/documenter.ui.property-table@npm:4.1.3"
   dependencies:
-    "@teambit/documenter.ui.table": 4.1.1
-    "@teambit/documenter.ui.table-row": 4.1.1
+    "@teambit/documenter.ui.table": 4.1.2
+    "@teambit/documenter.ui.table-row": 4.1.2
     core-js: ^3.0.0
     react-use-dimensions: ^1.2.1
     use-debounce: ^3.4.3
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: dabf4ebc0583900a250aecb3b89c5b399c2af662cefeaade79540090fe3f8c556e95c19d572305478b08d5fcc835af66689574c364108f98b63477a91eed3175
+  checksum: 29f72b24f3b08b7904db830d5d72f97bb70868a42f95ea13e3eecfa6812fc283cd2d03b5bdf99f8d4f14e1d4631332363dba653fa387e004401a4846bb2e281b
   languageName: node
   linkType: hard
 
@@ -6385,41 +6399,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-heading-column@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@teambit/documenter.ui.table-heading-column@npm:4.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-heading-column%2F-%2Fdocumenter.ui.table-heading-column-4.0.3.tgz"
+"@teambit/documenter.ui.table-heading-column@npm:4.0.4":
+  version: 4.0.4
+  resolution: "@teambit/documenter.ui.table-heading-column@npm:4.0.4"
   dependencies:
-    "@teambit/documenter.ui.heading": 4.1.1
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 40cb8de05aeb81fb3642d487bb8d03e6c6cadf05c10b7ac02ed8f290916b5fdf85adeefc327c6cfb630650f3c86a4aaa7accadc776d6185a419cdeeb05ea3831
+  checksum: 18debe7ebf98280ef3340228a280bcb1349786c04797d6b4482d6263100db41d910f1a6ff3978816355aacdfc578ac36192b0f1ba166517d238272a7dc3f52ab
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-heading-row@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@teambit/documenter.ui.table-heading-row@npm:4.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-heading-row%2F-%2Fdocumenter.ui.table-heading-row-4.0.3.tgz"
+"@teambit/documenter.ui.table-heading-row@npm:4.0.4":
+  version: 4.0.4
+  resolution: "@teambit/documenter.ui.table-heading-row@npm:4.0.4"
   dependencies:
-    "@teambit/base-ui.layout.grid-component": 1.0.0
-    "@teambit/documenter.ui.table": 4.1.1
-    "@teambit/documenter.ui.table-heading-column": 4.0.3
+    "@teambit/base-ui.layout.grid-component": 1.0.1
+    "@teambit/documenter.ui.table": 4.1.2
+    "@teambit/documenter.ui.table-heading-column": 4.0.4
     classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 821154e43cd029294a9ec6f3fbcb2df17c1156c880242a62190d6a75043104794377baa39cf9619d6cfed812a7335a22aeb7ef8b59d2468c74ba6942fb278056
+  checksum: ef2d114b57ec0530c51230f454609488a9dc0008f0af0667bef6d8a09f0182f1e8283958aadfa0d49f77ec2e6a6083afb57c450a131afcf68560434b0de6113e
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table-row@npm:4.1.1":
-  version: 4.1.1
-  resolution: "@teambit/documenter.ui.table-row@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table-row%2F-%2Fdocumenter.ui.table-row-4.1.1.tgz"
+"@teambit/documenter.ui.table-row@npm:4.1.2":
+  version: 4.1.2
+  resolution: "@teambit/documenter.ui.table-row@npm:4.1.2"
   dependencies:
-    "@teambit/base-ui.layout.grid-component": 1.0.0
+    "@teambit/base-ui.layout.grid-component": 1.0.1
     "@teambit/documenter.ui.table-column": 4.0.0
     classnames: ^2.2.6
     core-js: ^3.0.0
@@ -6427,7 +6440,7 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 3778def72cd955c87c684eb657d0d7cddd213cac0addf66150792b483c21a0037de07cd996089627eade598d70c66f2dd0d0cfd9937273c95142d30147703a54
+  checksum: 436145c8757a2ee8eb68c57d6710d7f87e51a70dbcf189ac0600848c0e75bdc41e814d044659f989bc3b906aa1fc9beec939fe850532c5f63908485ccfb8870c
   languageName: node
   linkType: hard
 
@@ -6470,17 +6483,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.table@npm:4.1.1":
-  version: 4.1.1
-  resolution: "@teambit/documenter.ui.table@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.table%2F-%2Fdocumenter.ui.table-4.1.1.tgz"
+"@teambit/documenter.ui.table@npm:4.1.2":
+  version: 4.1.2
+  resolution: "@teambit/documenter.ui.table@npm:4.1.2"
   dependencies:
-    "@teambit/documenter.ui.table-heading-row": 4.0.3
-    "@teambit/documenter.ui.table-row": 4.1.1
+    "@teambit/documenter.ui.table-heading-row": 4.0.4
+    "@teambit/documenter.ui.table-row": 4.1.2
+    classnames: ^2.2.6
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 63441e7a32855aae965439eb7df513d32ac5d8d0a457d070094e71d744d3bb35ee1956bc8a9aa80c8a56f7ed189a3310357b64593d0abf2537ab4819a9102da1
+  checksum: 3904bf444b97a27ae03cd481cb3e3af16032e4fdc7d78f1aaf9443aad445f8b030dc9f436ac49d60f4c74f8b06d9ea06030f03e1ce8298cb3dc9ecc1b0511eeb
   languageName: node
   linkType: hard
 
@@ -6944,7 +6958,7 @@ __metadata:
     "@teambit/documenter.ui.linked-heading": 4.1.1
     "@teambit/documenter.ui.ol": 4.1.1
     "@teambit/documenter.ui.paragraph": 1.0.3
-    "@teambit/documenter.ui.property-table": 4.1.2
+    "@teambit/documenter.ui.property-table": 4.1.3
     "@teambit/documenter.ui.section": 1.0.3
     "@teambit/documenter.ui.separator": 1.0.3
     "@teambit/documenter.ui.sub-title": 4.1.1
