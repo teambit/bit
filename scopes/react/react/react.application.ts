@@ -28,7 +28,7 @@ export class ReactApp implements Application {
     ]);
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
-    devServer.listen(port);
+    await devServer.listen(port);
     return port;
   }
 
