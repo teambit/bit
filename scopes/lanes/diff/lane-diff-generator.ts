@@ -25,7 +25,7 @@ export class LaneDiffGenerator {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  async generate(values: string[], diffOptions: DiffOptions) {
+  async generate(values: string[], diffOptions: DiffOptions = {}) {
     const { fromLaneName, toLaneName } = this.getLaneNames(values);
     if (fromLaneName === toLaneName) {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
