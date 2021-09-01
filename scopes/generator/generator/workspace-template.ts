@@ -75,5 +75,8 @@ export interface WorkspaceTemplate {
    */
   generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
+  /**
+   * populate existing components into the new workspace and add them as new components
+   */
   importComponents?: () => ComponentToImport[];
 }
