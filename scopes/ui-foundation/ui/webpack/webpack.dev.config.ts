@@ -171,10 +171,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       //   // Public path is root of content base
       //   publicPath: publicUrlOrPath.slice(0, -1),
       // },
-      // devMiddleware: {
-      //   // Public path is root of content base
-      //   publicPath: publicUrlOrPath.slice(0, -1),
-      // },
+      devMiddleware: {
+        // Public path is root of content base
+        publicPath: publicUrlOrPath.slice(0, -1),
+      },
     },
 
     resolve: {
