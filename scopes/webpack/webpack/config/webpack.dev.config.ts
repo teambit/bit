@@ -102,10 +102,6 @@ export function configFactory(
       // Enable compression
       compress: true,
 
-      // Use 'ws' instead of 'sockjs-node' on server since we're using native
-      // websockets in `webpackHotDevClient`.
-      transportMode: 'ws',
-
       // Enable hot reloading
       hot: true,
 
@@ -117,11 +113,16 @@ export function configFactory(
       },
 
       client: {
-        needClientEntry: false,
         overlay: false,
-        host: clientHost,
-        path: clientPath,
-        port,
+        webSocketURL: {
+          // WS is now the default
+          // // Use 'ws' instead of 'sockjs-node' on server since we're using native
+          // webSocketTransport: 'ws',
+          hostname: clientHost,
+          pathname: clientPath,
+          port,
+        },
+        progress: true,
       },
 
       onBeforeSetupMiddleware({ app, server }) {
@@ -145,8 +146,9 @@ export function configFactory(
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      dev: {
-        // Public path is root of content base
+      // fs, index, mimeTypes, publicPath, serverSideRender, stats, and writeToDisk (related to webpack-dev-middleware) were moved to devMiddleware option.
+      devMiddleware: {
+        // forward static files
         publicPath: path.join('/', publicRoot),
       },
     },
