@@ -4,7 +4,7 @@ import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { EnvsExecutionResult } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, omit } from 'lodash';
 import { LinterMain } from './linter.main.runtime';
 import { ComponentLintResult, LintResults } from './linter';
 import { FixTypes, LinterOptions } from './linter-context';
@@ -28,9 +28,12 @@ export type JsonLintDataResults = Omit<LintResults, 'results'> & { results: Json
  * A type for result with componentId instead of the entire component, as when output to console, we don't want to print all the component
  */
 export type JsonLintResults = {
-  duration: TimerResponse;
-  data: JsonLintDataResults;
-  componentsIdsToLint: string[];
+  code: number;
+  data: {
+    duration: TimerResponse;
+    lintResults: JsonLintDataResults;
+    componentsIdsToLint: string[];
+  };
 };
 
 export class LintCmd implements Command {
@@ -47,14 +50,15 @@ export class LintCmd implements Command {
   constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
 
   async report([components = []]: [string[]], linterOptions: LintCmdOptions) {
-    const { duration, data, componentsIdsToLint } = await this.json([components], linterOptions);
+    const { code, data } = await this.json([components], linterOptions);
+    const { duration, lintResults, componentsIdsToLint } = data;
     const title = chalk.bold(
       `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} component(s) in workspace '${chalk.cyan(
         this.componentHost.name
       )}'`
     );
 
-    const componentsOutputs = data.results
+    const componentsOutputs = lintResults.results
       .map((lintRes) => {
         const compTitle = chalk.bold.cyan(lintRes.componentId.toString({ ignoreVersion: true }));
         const compOutput = lintRes.output;
@@ -66,7 +70,7 @@ export class LintCmd implements Command {
     const summery = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
       seconds.toString()
     )}.`;
-    return `${title}\n\n${componentsOutputs}\n\n${summery}`;
+    return { code, data: `${title}\n\n${componentsOutputs}\n\n${summery}` };
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
@@ -80,11 +84,19 @@ export class LintCmd implements Command {
     };
     const linterResults = await this.linter.lint(componentsToLint, opts);
     const jsonLinterResults = toJsonLintResults(linterResults);
+    // console.log('jsonLinterResults', JSON.stringify(jsonLinterResults, null, 2));
     const timerResponse = timer.stop();
+    let code = 0;
+    if (jsonLinterResults.totalErrorCount || jsonLinterResults.totalFatalErrorCount) {
+      code = 1;
+    }
     return {
-      duration: timerResponse,
-      data: jsonLinterResults,
-      componentsIdsToLint: componentsToLint.map((comp) => comp.id.toString()),
+      code,
+      data: {
+        duration: timerResponse,
+        lintResults: jsonLinterResults,
+        componentsIdsToLint: componentsToLint.map((comp) => comp.id.toString()),
+      },
     };
   }
 
@@ -100,18 +112,33 @@ export class LintCmd implements Command {
 }
 
 function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintDataResults {
+  let totalErrorCount = 0;
+  let totalFatalErrorCount = 0;
+  let totalFixableErrorCount = 0;
+  let totalFixableWarningCount = 0;
+  let totalWarningCount = 0;
   const newResults = results.results.map((res) => {
     const resultsWithoutComponent = res.data?.results.map((result) => {
-      return {
-        componentId: result.component.id,
-        output: result.output,
-        results: result.results,
-      };
+      return Object.assign({}, { componentId: result.component.id }, omit(result, ['component']));
     });
+
+    if (res.data) {
+      totalErrorCount += res.data.totalErrorCount ?? 0;
+      totalFatalErrorCount += res.data.totalFatalErrorCount ?? 0;
+      totalFixableErrorCount += res.data.totalFixableErrorCount ?? 0;
+      totalFixableWarningCount += res.data.totalFixableWarningCount ?? 0;
+      totalWarningCount += res.data.totalWarningCount ?? 0;
+    }
+
     return compact(resultsWithoutComponent);
   });
   return {
     results: compact(flatten(newResults)),
+    totalErrorCount,
+    totalFatalErrorCount,
+    totalFixableErrorCount,
+    totalFixableWarningCount,
+    totalWarningCount,
     errors: results?.errors,
   };
 }
