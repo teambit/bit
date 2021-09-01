@@ -12,7 +12,13 @@ export type ComponentLintResult = {
    */
   output: string;
 
-  results: LintResults;
+  totalErrorCount: number;
+  totalFatalErrorCount?: number;
+  totalFixableErrorCount?: number;
+  totalFixableWarningCount?: number;
+  totalWarningCount: number;
+
+  results: LintResult[];
 };
 
 export type LintResult = {
@@ -25,6 +31,21 @@ export type LintResult = {
    * numbers of errors found.
    */
   errorCount: number;
+
+  /**
+   * numbers of errors found.
+   */
+  fatalErrorCount?: number;
+
+  /**
+   * numbers of fixable errors found.
+   */
+  fixableErrorCount?: number;
+
+  /**
+   * numbers of fixable warning found.
+   */
+  fixableWarningCount?: number;
 
   /**
    * number of found warnings.
@@ -80,6 +101,11 @@ export type LintMessage = {
 
 export type LintResults = {
   results: ComponentLintResult[];
+  totalErrorCount: number;
+  totalFatalErrorCount?: number;
+  totalFixableErrorCount?: number;
+  totalFixableWarningCount?: number;
+  totalWarningCount: number;
   errors: Error[];
 };
 
