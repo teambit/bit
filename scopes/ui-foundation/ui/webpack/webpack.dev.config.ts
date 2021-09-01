@@ -172,7 +172,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       //   publicPath: publicUrlOrPath.slice(0, -1),
       // },
       devMiddleware: {
-        // Public path is root of content base
+        // forward static files
         publicPath: publicUrlOrPath.slice(0, -1),
       },
     },
