@@ -184,7 +184,7 @@ export class LanesMain {
         new LaneMergeCmd(lanesMain),
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
-        new LaneDiffCmd(lanesMain),
+        new LaneDiffCmd(workspace, scope),
       ];
       cli.register(laneCmd);
       graphql.register(lanesSchema(lanesMain));
