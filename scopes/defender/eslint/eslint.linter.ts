@@ -43,32 +43,104 @@ export class ESLintLinter implements Linter {
       const results: ESLintLib.LintResult[] = compact(flatten(files));
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
+      const {
+        totalErrorCount,
+        totalFatalErrorCount,
+        totalFixableErrorCount,
+        totalFixableWarningCount,
+        totalWarningCount,
+        componentsResults,
+      } = this.computeComponentResultsWithTotals(results);
 
       return {
         component,
         output,
-        results: this.computeResults(results),
+        totalErrorCount,
+        totalFatalErrorCount,
+        totalFixableErrorCount,
+        totalFixableWarningCount,
+        totalWarningCount,
+        results: componentsResults,
       };
     });
 
     const results = (await resultsP) as any as ComponentLintResult[];
+    const {
+      totalErrorCount,
+      totalFatalErrorCount,
+      totalFixableErrorCount,
+      totalFixableWarningCount,
+      totalWarningCount,
+    } = this.computeManyComponentsTotals(results);
 
     return {
+      totalErrorCount,
+      totalFatalErrorCount,
+      totalFixableErrorCount,
+      totalFixableWarningCount,
+      totalWarningCount,
       results,
       errors: [],
     };
   }
 
-  private computeResults(results: ESLintLib.LintResult[]) {
-    return results.map((result) => {
+  private computeComponentResultsWithTotals(results: ESLintLib.LintResult[]) {
+    let totalErrorCount = 0;
+    let totalFatalErrorCount = 0;
+    let totalFixableErrorCount = 0;
+    let totalFixableWarningCount = 0;
+    let totalWarningCount = 0;
+    const componentsResults = results.map((result) => {
+      totalErrorCount += result.errorCount ?? 0;
+      // @ts-ignore - missing from the @types/eslint lib
+      totalFatalErrorCount += result.fatalErrorCount ?? 0;
+      totalFixableErrorCount += result.fixableErrorCount ?? 0;
+      totalFixableWarningCount += result.fixableWarningCount ?? 0;
+      totalWarningCount += result.warningCount ?? 0;
       return {
         filePath: result.filePath,
         errorCount: result.errorCount,
+        // @ts-ignore - missing from the @types/eslint lib
+        fatalErrorCount: result.fatalErrorCount,
+        fixableErrorCount: result.fixableErrorCount,
+        fixableWarningCount: result.fixableWarningCount,
         warningCount: result.warningCount,
         messages: result.messages,
         raw: result,
       };
     });
+    return {
+      totalErrorCount,
+      totalFatalErrorCount,
+      totalFixableErrorCount,
+      totalFixableWarningCount,
+      totalWarningCount,
+      componentsResults,
+    };
+  }
+
+  private computeManyComponentsTotals(componentsResults: ComponentLintResult[]) {
+    let totalErrorCount = 0;
+    let totalFatalErrorCount = 0;
+    let totalFixableErrorCount = 0;
+    let totalFixableWarningCount = 0;
+    let totalWarningCount = 0;
+    componentsResults.forEach((result) => {
+      totalErrorCount += result.totalErrorCount ?? 0;
+      // @ts-ignore - missing from the @types/eslint lib
+      totalFatalErrorCount += result.totalFatalErrorCount ?? 0;
+      totalFixableErrorCount += result.totalFixableErrorCount ?? 0;
+      totalFixableWarningCount += result.totalFixableWarningCount ?? 0;
+      totalWarningCount += result.totalWarningCount ?? 0;
+    });
+    return {
+      totalErrorCount,
+      totalFatalErrorCount,
+      totalFixableErrorCount,
+      totalFixableWarningCount,
+      totalWarningCount,
+      componentsResults,
+    };
   }
 
   /**
