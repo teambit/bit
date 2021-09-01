@@ -561,6 +561,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/merge-component-results"
     },
+    "modules/packages-excluder": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/modules/packages-excluder"
+    },
     "modules/render-template": {
         "scope": "teambit.html",
         "version": "0.0.42",
