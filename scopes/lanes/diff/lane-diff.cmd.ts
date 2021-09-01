@@ -1,9 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { ScopeMain } from '@teambit/scope';
-import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { LaneDiffGenerator } from './lane-diff-generator';
 import { LanesMain } from '../lanes';
 
 export class LaneDiffCmd implements Command {
