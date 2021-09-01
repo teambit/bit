@@ -1,3 +1,5 @@
+import type { Component } from '@teambit/component';
+
 export interface WorkspaceFile {
   /**
    * relative path of the file within the workspace.
@@ -27,6 +29,12 @@ export interface WorkspaceContext {
    * whether user entered `--empty` flag in `bit new` to avoid creating components.
    */
   empty?: boolean;
+
+  /**
+   * in case the "--aspect" flag used to import a remote aspect, this is populated with that aspect.
+   * useful to get the aspect-id and other info.
+   */
+  aspectComponent?: Component;
 }
 
 export interface ComponentToImport {
@@ -67,5 +75,8 @@ export interface WorkspaceTemplate {
    */
   generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
+  /**
+   * populate existing components into the new workspace and add them as new components
+   */
   importComponents?: () => ComponentToImport[];
 }
