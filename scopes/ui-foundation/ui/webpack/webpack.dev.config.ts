@@ -100,7 +100,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     devServer: {
       allowedHosts: 'all',
 
-      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicUrlOrPath),
@@ -136,13 +135,15 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       },
 
       client: {
-        // TODO - check, migth be the default
-        // Use 'ws' instead of 'sockjs-node' on server since we're using native
-        // websockets in `webpackHotDevClient`.
-        webSocketTransport: 'ws',
-        //   host: clientHost,
-        //   path: clientPath,
-        //   port,
+        webSocketURL: {
+          // 'ws' is now the default
+          // // Use 'ws' instead of 'sockjs-node' on server since we're using native
+          // // websockets in `webpackHotDevClient`.
+          // webSocketTransport: 'ws',
+          hostname: clientHost,
+          pathname: clientPath,
+          port,
+        },
       },
 
       onBeforeSetupMiddleware({ app, server }) {
