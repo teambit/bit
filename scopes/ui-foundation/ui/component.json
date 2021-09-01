@@ -23,7 +23,7 @@
           "style-loader": "^2.0.0",
           "css-loader": "5.2.0",
           "postcss": "8.2.9",
-          "postcss-loader": "5.2.0",
+          "postcss-loader": "6.1.1",
           "postcss-flexbugs-fixes": "5.0.2",
           "sass-loader": "11.0.1",
           "less": "^4.1.1",
