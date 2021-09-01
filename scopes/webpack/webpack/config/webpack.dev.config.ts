@@ -79,8 +79,7 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
-      // @ts-ignore - temp until types of webpack-dev-server v4
-      firewall: false,
+      allowedHosts: 'all',
 
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
@@ -125,7 +124,7 @@ export function configFactory(
         port,
       },
 
-      onBeforeSetupMiddleware(app, server) {
+      onBeforeSetupMiddleware({ app, server }) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -134,7 +133,7 @@ export function configFactory(
         app.use(errorOverlayMiddleware());
       },
 
-      onAfterSetupMiddleware(app) {
+      onAfterSetupMiddleware({ app }) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
