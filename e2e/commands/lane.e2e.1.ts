@@ -743,12 +743,12 @@ describe('bit lane command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.command.createLane();
       helper.fixtures.populateComponents(undefined, undefined, ' v2');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
     });
     it('as an intermediate step, make sure the snapped components are part of the lane', () => {
       const lane = helper.command.showOneLaneParsed('dev');

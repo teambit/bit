@@ -129,12 +129,11 @@ async function removeLocal(
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane, removedDependencies } =
     await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
-
   if (!removedFromLane) {
     // otherwise, components should still be in .bitmap file
     idsToCleanFromWorkspace.push(...removedComponentIds);
   }
-  if (!R.isEmpty(idsToCleanFromWorkspace)) {
+  if (idsToCleanFromWorkspace.length) {
     await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
@@ -149,7 +148,7 @@ async function removeLocal(
     }
   }
   return new RemovedLocalObjects(
-    idsToCleanFromWorkspace,
+    BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),
     missingComponents,
     modifiedComponents,
     removedDependencies,
