@@ -25,6 +25,7 @@ export type DiffResults = {
 export type DiffOptions = {
   verbose?: boolean; // whether show internal components diff, such as sourceRelativePath
   formatDepsAsTable?: boolean; // show dependencies output as table
+  color?: boolean; // pass this option to git to return a colorful diff, default = true.
 };
 
 export default async function componentsDiff(
@@ -138,7 +139,8 @@ export async function diffBetweenVersionsObjects(
   const repository = scope.objects;
   const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
   const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
-  diffResult.filesDiff = await getFilesDiff(fromVersionFiles, toVersionFiles, fromVersion, toVersion);
+  const color = diffOpts.color ?? true;
+  diffResult.filesDiff = await getFilesDiff(fromVersionFiles, toVersionFiles, fromVersion, toVersion, undefined, color);
   const fromVersionComponent = await modelComponent.toConsumerComponent(
     fromVersionObject.hash().toString(),
     scope.name,
@@ -172,9 +174,10 @@ async function getOneFileDiff(
   filePathB: PathOsBased,
   fileALabel: string,
   fileBLabel: string,
-  fileName: PathLinux
+  fileName: PathLinux,
+  color = true
 ): Promise<string> {
-  const fileDiff = await diffFiles(filePathA, filePathB);
+  const fileDiff = await diffFiles(filePathA, filePathB, color);
   if (!fileDiff) return '';
   const diffStartsString = '--- '; // the part before this string is not needed for our purpose
   const diffStart = fileDiff.indexOf(diffStartsString);
@@ -195,8 +198,8 @@ async function getFilesDiff(
   filesB: SourceFile[],
   filesAVersion: string,
   filesBVersion: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  fileNameAttribute? = 'relative'
+  fileNameAttribute = 'relative',
+  color = true
 ): Promise<FileDiff[]> {
   const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
   const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
@@ -210,7 +213,7 @@ async function getFilesDiff(
       return saveIntoOsTmp(fileContent);
     };
     const [fileAPath, fileBPath] = await Promise.all([getFilePath(filesA), getFilePath(filesB)]);
-    const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath);
+    const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath, color);
     return { filePath: relativePath, diffOutput };
   });
   return Promise.all(filesDiffP);
