@@ -24,7 +24,6 @@ export class WebpackDevServer implements DevServer {
     // Prevent different port between the config port and the listen arg port
     this.config.devServer.port = port;
 
-    // (node:40446) [DEP_WEBPACK_DEV_SERVER_CONSTRUCTOR] DeprecationWarning: Using 'compiler' as the first argument is deprecated. Please use 'options' as the first argument and 'compiler' as the second argument.
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const webpackDs: WDS = new this.WsDevServer(this.config.devServer, this.getCompiler());
     await webpackDs.start();

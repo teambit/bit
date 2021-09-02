@@ -38,7 +38,7 @@ export default function (workDir: string, envId: string, componentsDirs: string[
                 babelrc: false,
                 configFile: false,
                 plugins: [
-                  [require.resolve('react-refresh/babel')],
+                  require.resolve('react-refresh/babel'),
                   // for component highlighting in preview.
                   [require.resolve('@teambit/react.babel.bit-react-transformer')],
                 ],
@@ -79,6 +79,8 @@ export default function (workDir: string, envId: string, componentsDirs: string[
       new ReactRefreshWebpackPlugin({
         overlay: {
           sockPath: `_hmr/${envId}`,
+          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
+          // errors
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },

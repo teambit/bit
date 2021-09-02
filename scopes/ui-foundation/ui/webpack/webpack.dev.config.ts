@@ -120,10 +120,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       // Enable compression
       compress: true,
 
-      // // Use 'ws' instead of 'sockjs-node' on server since we're using native
-      // // websockets in `webpackHotDevClient`.
-      // transportMode: 'ws',
-
       // Enable hot reloading
       hot: true,
 
@@ -136,10 +132,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
 
       client: {
         webSocketURL: {
-          // 'ws' is now the default
-          // // Use 'ws' instead of 'sockjs-node' on server since we're using native
-          // // websockets in `webpackHotDevClient`.
-          // webSocketTransport: 'ws',
           hostname: clientHost,
           pathname: clientPath,
           port,
@@ -167,10 +159,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // dev: {
-      //   // Public path is root of content base
-      //   publicPath: publicUrlOrPath.slice(0, -1),
-      // },
       devMiddleware: {
         // forward static files
         publicPath: publicUrlOrPath.slice(0, -1),
@@ -333,7 +321,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
           /react-refresh-webpack-plugin/i,
           // file type filtering was done by `include`, so need to negative-filter them out here
           // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!(\.jsx|.\.js|\.tsx|.\.ts))$/i,
+          /(?<!\.jsx)(?<!\.js)(?<!\.tsx)(?<!\.ts)$/i,
         ],
       }),
       // Re-generate index.html with injected script tag.

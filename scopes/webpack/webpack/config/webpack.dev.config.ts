@@ -30,9 +30,6 @@ export function configFactory(
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
-  // Host
-  const host = process.env.HOST || 'localhost';
-
   // Required for babel-preset-react-app
   process.env.NODE_ENV = 'development';
 
@@ -101,8 +98,6 @@ export function configFactory(
       // Enable hot reloading
       hot: true,
 
-      host,
-
       historyApiFallback: {
         disableDotRule: true,
         index: resolveWorkspacePath(publicDirectory),
@@ -133,7 +128,6 @@ export function configFactory(
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // fs, index, mimeTypes, publicPath, serverSideRender, stats, and writeToDisk (related to webpack-dev-middleware) were moved to devMiddleware option.
       devMiddleware: {
         // forward static files
         publicPath: path.join('/', publicRoot),

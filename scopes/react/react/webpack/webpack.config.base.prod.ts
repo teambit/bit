@@ -50,8 +50,6 @@ export default function (): Configuration {
           },
         }),
         new CssMinimizerPlugin({
-          // removed, respecting `devtool` option
-          // sourceMap: shouldUseSourceMap,
           minimizerOptions: {
             preset: [
               'default',

@@ -75,8 +75,6 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
           },
         }),
         new CssMinimizerPlugin({
-          // removed, respecting `devtool` option
-          // sourceMap: shouldUseSourceMap,
           minimizerOptions: {
             preset: [
               'default',
