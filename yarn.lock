@@ -6708,9 +6708,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.145":
-  version: 1.0.145
-  resolution: "@teambit/legacy@npm:1.0.145"
+"@teambit/legacy@npm:1.0.146":
+  version: 1.0.146
+  resolution: "@teambit/legacy@npm:1.0.146"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6835,7 +6835,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 6dd5c841f5c4c87ad41109584c42a91d6d5623ac77868bda9b38f3f11e69f6828ac80b2e0d9ed3b42f1b11de5eb56d724c8d603c0198fc4df703fd8d04832d20
+  checksum: b04b16acdf976f52879b09b00aa775155437385e697a239b142bd489b8e1b6d1b27ef76e6b89c633f7f7017cca2c144a05ef38a5cb30de1795a554a014c76c7e
   languageName: node
   linkType: hard
 
@@ -6977,7 +6977,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.145
+    "@teambit/legacy": 1.0.146
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7381,7 +7381,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.145
+    "@teambit/legacy": 1.0.146
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -25134,12 +25134,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-modules-exclude-packages-39ea9a@workspace:scopes/toolbox/regex/node-modules-exclude-packages":
-  version: 0.0.0-use.local
-  resolution: "node-modules-exclude-packages-39ea9a@workspace:scopes/toolbox/regex/node-modules-exclude-packages"
-  languageName: unknown
-  linkType: soft
-
 "node-modules-regexp@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-modules-regexp@npm:1.0.0"
@@ -26079,6 +26073,12 @@ __metadata:
   checksum: 920bd8280f9f42e0ebce69ecdc08327e716eec92127c4ff1dd4087dce236c7b29ad38e440bf40726a3d7b9e546d20ac0702cd82c8efe5390a84f9f2434ebd5b5
   languageName: node
   linkType: hard
+
+"packages-excluder-8d6045@workspace:scopes/dependencies/modules/packages-excluder":
+  version: 0.0.0-use.local
+  resolution: "packages-excluder-8d6045@workspace:scopes/dependencies/modules/packages-excluder"
+  languageName: unknown
+  linkType: soft
 
 "pad-right@npm:0.2.2":
   version: 0.2.2
