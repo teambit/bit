@@ -35,7 +35,7 @@ export const reactEnvTemplate: ComponentTemplate = {
         content: aspectFile(context),
       },
       {
-        relativePath: `webpack/webpack.config.js`,
+        relativePath: `webpack/webpack-transformers.ts`,
         content: webpackConfigFile(),
       },
       {
