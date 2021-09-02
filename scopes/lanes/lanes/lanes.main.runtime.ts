@@ -10,6 +10,7 @@ import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { mergeLanes } from '@teambit/legacy/dist/consumer/lanes/merge-lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
+import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
@@ -151,9 +152,9 @@ export class LanesMain {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  public getDiff(values: string[]) {
+  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    return laneDiffGenerator.generate(values);
+    return laneDiffGenerator.generate(values, diffOptions);
   }
 
   private getLaneDataOfDefaultLane(): LaneData | null {

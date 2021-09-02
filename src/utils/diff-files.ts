@@ -8,7 +8,7 @@ import getGitExecutablePath from './git/git-executable';
 /**
  * get diff between files using git diff command
  */
-export default (async function diffFiles(fileA: PathOsBased, fileB: PathOsBased, colors = true): Promise<string> {
+export default async function diffFiles(fileA: PathOsBased, fileB: PathOsBased, colors = true): Promise<string> {
   const params = ['diff'];
   params.push('--no-index'); // ignores the working tree (in case the project is managed by git)
   if (colors) params.push('--color');
@@ -29,4 +29,4 @@ export default (async function diffFiles(fileA: PathOsBased, fileB: PathOsBased,
     }
     throw err;
   }
-});
+}
