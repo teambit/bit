@@ -743,12 +743,12 @@ describe('bit lane command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.command.createLane();
       helper.fixtures.populateComponents(undefined, undefined, ' v2');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
     });
     it('as an intermediate step, make sure the snapped components are part of the lane', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -784,6 +784,18 @@ describe('bit lane command', function () {
       it('should not delete the files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.file();
       });
+    });
+  });
+  describe('remove a new component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove the component from the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
     });
   });
   // this makes sure that when exporting lanes, it only exports the local snaps.
