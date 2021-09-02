@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'react-native',
-  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@react-native|react-native)/).*/'],
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@react-native|react-native|react-native-button)/).*/'],
   transform: { '^.+\\.(js|jsx|ts|tsx)$': '<rootDir>/node_modules/react-native/jest/preprocessor.js' },
   setupFilesAfterEnv: [require.resolve('./setupTests.js')],
   moduleNameMapper: {
