@@ -127,16 +127,14 @@ async function removeLocal(
     idsToRemove.filter((id) => newComponents.hasWithoutScopeAndVersion(id))
   );
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
-  const {
-    removedComponentIds,
-    missingComponents,
-    dependentBits,
-    removedFromLane,
-    removedDependencies,
-  } = await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
-  idsToCleanFromWorkspace.push(...removedComponentIds);
+  const { removedComponentIds, missingComponents, dependentBits, removedFromLane, removedDependencies } =
+    await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
 
-  if (!R.isEmpty(idsToCleanFromWorkspace) && !removedFromLane) {
+  if (!removedFromLane) {
+    // otherwise, components should still be in .bitmap file
+    idsToCleanFromWorkspace.push(...removedComponentIds);
+  }
+  if (!R.isEmpty(idsToCleanFromWorkspace)) {
     await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {

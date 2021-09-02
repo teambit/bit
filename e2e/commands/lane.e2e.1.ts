@@ -786,6 +786,18 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('remove a new component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove the component from the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+  });
   // this makes sure that when exporting lanes, it only exports the local snaps.
   // in this test, the second snap is done on a clean scope without the objects of the first snap.
   describe('snap on lane, export, clear project, snap and export', () => {
