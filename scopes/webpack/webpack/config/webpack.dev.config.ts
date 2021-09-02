@@ -17,10 +17,6 @@ import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-const clientHost = process.env.WDS_SOCKET_HOST;
-const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
-const port = process.env.WDS_SOCKET_PORT;
-
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
 export function configFactory(
@@ -114,15 +110,6 @@ export function configFactory(
 
       client: {
         overlay: false,
-        webSocketURL: {
-          // WS is now the default
-          // // Use 'ws' instead of 'sockjs-node' on server since we're using native
-          // webSocketTransport: 'ws',
-          hostname: clientHost,
-          pathname: clientPath,
-          port,
-        },
-        progress: true,
       },
 
       onBeforeSetupMiddleware({ app, server }) {

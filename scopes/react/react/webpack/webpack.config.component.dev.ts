@@ -74,26 +74,27 @@ export default function (workDir: string, envId: string, componentsDirs: string[
       ],
     },
     plugins: [
-      // No need here as we have hot true in the dev server
+      // No need here as we have `hot: true` in the dev server
       // new webpack.HotModuleReplacementPlugin({}),
       new ReactRefreshWebpackPlugin({
         overlay: {
           sockPath: `_hmr/${envId}`,
-          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
-          // errors
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
-        include: componentsDirs, // original default value was /\.([cm]js|[jt]sx?|flow)$/i
-        // Excluding react-refresh-webpack-plugin
-        // it's important to put any exclude here to prevent from the default exclude (which is /node_modules/) to be applied
-        // as all the component modules dirs are inside node_modules
+
+        // // having no value for include, exclude === revert to the defaults!
+        // // original/defaults values:
+        // include: /\.([cm]js|[jt]sx?|flow)$/i,
+        // exclude: /node_modules/,
+
+        include: componentsDirs,
         exclude: [
           // prevent recursion:
           /react-refresh-webpack-plugin/i,
           // file type filtering was done by `include`, so need to negative-filter them out here
           // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!(\.mdx|.\.js))$/i,
+          /(?<!\.mdx)(?<!\.js)$/i,
         ],
       }),
     ],

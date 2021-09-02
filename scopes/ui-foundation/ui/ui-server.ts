@@ -187,7 +187,7 @@ export class UIServer {
     return Port.getPortFromRange(portRange || [3100, 3200]);
   }
 
-  private async getProxyFromPlugins() {
+  private async getProxyFromPlugins(): Promise<ProxyEntry[]> {
     const proxiesByPlugin = this.plugins.map((plugin) => {
       return plugin.getProxy ? plugin.getProxy() : [];
     });
@@ -214,7 +214,7 @@ export class UIServer {
     return gqlProxies.concat(proxyEntries);
   }
 
-  private async getDevServerConfig(port: number, config?: webpack.Configuration): Promise<webpack.Configuration> {
+  private async getDevServerConfig(port: number, config?: WdsConfiguration): Promise<WdsConfiguration> {
     const proxy = await this.getProxy(port);
     const devServerConf = { ...config, proxy };
 
