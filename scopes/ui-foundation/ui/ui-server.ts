@@ -9,7 +9,7 @@ import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
+import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
 import { createSsrMiddleware } from './ssr/render-middleware';
 import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
