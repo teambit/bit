@@ -10,7 +10,7 @@ import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-lo
 import { postCssConfig } from './postcss.config';
 
 const baseStyleLoadersOptions = {
-  miniCssExtractPlugin: MiniCssExtractPlugin.loader,
+  injectingLoader: MiniCssExtractPlugin.loader,
   cssLoaderPath: require.resolve('css-loader'),
   postCssLoaderPath: require.resolve('postcss-loader'),
   postCssConfig,

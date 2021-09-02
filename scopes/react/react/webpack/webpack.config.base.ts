@@ -45,7 +45,7 @@ export default function (isEnvProduction = false): Configuration {
   const isEnvProductionProfile = process.argv.includes('--profile');
 
   const baseStyleLoadersOptions = {
-    miniCssExtractPlugin: isEnvProduction ? MiniCssExtractPlugin.loader : styleLoaderPath,
+    injectingLoader: isEnvProduction ? MiniCssExtractPlugin.loader : styleLoaderPath,
     cssLoaderPath: require.resolve('css-loader'),
     postCssLoaderPath: require.resolve('postcss-loader'),
     postCssConfig,
