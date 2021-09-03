@@ -204,7 +204,7 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (err.code && err.code === 'MODULE_NOT_FOUND') {
+    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
       await this.compileComponents([id.toString()], {}, true);
       return true;
     }

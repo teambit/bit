@@ -235,4 +235,10 @@ export default class EnvHelper {
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
   }
+
+  getComponentEnv(id: string): string {
+    const show = this.command.showComponentParsedHarmony(id);
+    const env = show.find((fragment) => fragment.title === 'env');
+    return env.json;
+  }
 }

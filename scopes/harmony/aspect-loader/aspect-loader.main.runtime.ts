@@ -335,14 +335,28 @@ export class AspectLoaderMain {
     await globalScope.ensureDir();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    // @todo: Gilad make this work
+    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    // @todo: Gilad make this work
-    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const components = await scope.import(ids, useCache, true);
+
+    // don't use `await scope.loadAspectsFromCapsules(components, true);`
+    // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
+    // is not the same as the aspectLoader instance Scope has)
     const resolvedAspects = await scope.getResolvedAspects(components);
-    await this.loadRequireableExtensions(resolvedAspects, true);
+    try {
+      await this.loadRequireableExtensions(resolvedAspects, true);
+    } catch (err) {
+      if (err?.error.code === 'MODULE_NOT_FOUND') {
+        const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
+        await this.loadRequireableExtensions(resolvedAspectsAgain, true);
+      } else {
+        throw err;
+      }
+    }
+
     return components;
   }
 
