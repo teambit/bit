@@ -7,7 +7,7 @@ export default async function removeEmptyDir(dirPath: string): Promise<boolean> 
   let isEmpty: boolean;
   try {
     isEmpty = await isDirEmpty(dirPath);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') return false;
     throw err;
   }

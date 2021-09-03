@@ -171,7 +171,7 @@ export default class BaseExtension {
       this.initOptions = await Promise.resolve(initOptions);
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`initialized extension ${this.name} failed`, err);
       if (throws) {
         throw new ExtensionLoadError(err, this.name);
@@ -410,7 +410,7 @@ export default class BaseExtension {
         }
       }
       // Make sure to not kill the process if an extension didn't load correctly
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'MODULE_NOT_FOUND') {
         const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
         logger.warn(msg);
@@ -440,7 +440,7 @@ export default class BaseExtension {
           rawConfig: extensionProps.rawConfig,
         });
         return dynamicConfig;
-      } catch (err) {
+      } catch (err: any) {
         throw new ExtensionGetDynamicConfigError(err, extensionProps.name);
       }
     }
@@ -470,7 +470,7 @@ function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPat
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // todo: make sure it always has a scope
-  } catch (err) {
+  } catch (err: any) {
     throw new ExtensionNameNotValid(name);
   }
   if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
@@ -487,7 +487,7 @@ function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPat
       resolvedPath: typeof resolved === 'string' ? resolved : componentPath,
       componentPath,
     };
-  } catch (e) {
+  } catch (e: any) {
     return {
       resolvedPath: componentPath,
       componentPath,
@@ -510,7 +510,7 @@ function _addVersionToNameFromPathIfMissing(name: string, componentPath: string,
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // @todo: make sure it always has a scope name
-  } catch (err) {
+  } catch (err: any) {
     throw new ExtensionNameNotValid(name);
   }
   if (bitId.getVersion().latest) {
@@ -524,7 +524,10 @@ const baseApi = {
   /**
    * API to get logger
    */
-  getLogger: (name): Function => () => createExtensionLogger(name),
+  getLogger:
+    (name): Function =>
+    () =>
+      createExtensionLogger(name),
 };
 
 /**

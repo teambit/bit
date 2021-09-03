@@ -174,7 +174,7 @@ export default class EnvExtension extends BaseExtension {
         dynamicConfig: envExtensionProps.dynamicConfig,
         context: envExtensionProps.context,
       });
-    } catch (err) {
+    } catch (err: any) {
       throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
     }
     if (!dynamicPackageDependencies) return undefined;
@@ -202,7 +202,7 @@ export default class EnvExtension extends BaseExtension {
           context: envExtensionProps.context,
         });
         return dynamicConfig;
-      } catch (err) {
+      } catch (err: any) {
         throw new ExtensionGetDynamicConfigError(err, envExtensionProps.name);
       }
     }

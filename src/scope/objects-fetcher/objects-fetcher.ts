@@ -85,7 +85,7 @@ ${failedScopesErr.join('\n')}`);
     let remote: Remote;
     try {
       remote = await this.remotes.resolve(scopeName, this.scope);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ScopeNotFoundOrDenied) {
         throw new Error(`unable to import the following component(s): ${ids.join(', ')}.
 the remote scope "${scopeName}" was not found`);
@@ -94,7 +94,7 @@ the remote scope "${scopeName}" was not found`);
     }
     try {
       return await remote.fetch(ids, this.fetchOptions as FETCH_OPTIONS, this.context);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
         logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
       } else if (err instanceof UnexpectedNetworkError) {
@@ -123,7 +123,7 @@ the remote scope "${scopeName}" was not found`);
     });
     try {
       await pipelinePromise(objectsStream, writable);
-    } catch (err) {
+    } catch (err: any) {
       if (readableError) {
         if (!readableError.message) {
           logger.error(`error coming from a remote has no message, please fix!`, readableError);

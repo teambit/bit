@@ -24,7 +24,7 @@ require('module-definition');
 try {
   // eslint-disable-next-line global-require
   require('module-lookup-amd');
-} catch (err) {
+} catch (err: any) {
   // eslint-disable-next-line no-console
   console.log(`mocha suppresses the error, so console.error is needed to show the error on the screen.
 the problem is with module-lookup-amd that calls requirejs package and uses rewire package.

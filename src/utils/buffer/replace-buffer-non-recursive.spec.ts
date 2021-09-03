@@ -23,7 +23,7 @@ describe('ReplaceBuffer', () => {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       replaceBuffer('hello world', 'l', '!');
-    } catch (err) {
+    } catch (err: any) {
       expect(err.message).to.equal('replaceBuffer expect to get Buffer, got string instead');
     }
   });

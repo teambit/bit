@@ -75,7 +75,7 @@ describe('bit test command', function () {
       let output;
       try {
         helper.command.testComponent('utils/is-type');
-      } catch (err) {
+      } catch (err: any) {
         output = err.stdout.toString();
         statusCode = err.status;
       }
@@ -89,7 +89,7 @@ describe('bit test command', function () {
       let output;
       try {
         helper.command.testComponent('bar/foo');
-      } catch (err) {
+      } catch (err: any) {
         output = err.message;
       }
       expect(output).to.have.string(
@@ -109,7 +109,7 @@ describe('bit test command', function () {
       let statusCode;
       try {
         helper.command.testComponent('utils/is-type --verbose');
-      } catch (err) {
+      } catch (err: any) {
         output = err.stdout.toString();
         statusCode = err.status;
       }
@@ -121,7 +121,7 @@ describe('bit test command', function () {
       let statusCode;
       try {
         helper.command.testComponent('utils/is-type');
-      } catch (err) {
+      } catch (err: any) {
         output = err.stdout.toString();
         statusCode = err.status;
       }
@@ -133,7 +133,7 @@ describe('bit test command', function () {
       before(() => {
         try {
           helper.command.tagAllComponents();
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -148,7 +148,7 @@ describe('bit test command', function () {
       before(() => {
         try {
           helper.command.tagAllComponents('--verbose');
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -182,7 +182,7 @@ describe('bit test command', function () {
       });
       try {
         helper.command.testComponent('utils/is-type');
-      } catch (err) {
+      } catch (err: any) {
         output = err.stdout.toString();
         statusCode = err.status;
       }
@@ -198,7 +198,7 @@ describe('bit test command', function () {
       let outputVerbose;
       try {
         helper.command.testComponentWithOptions('utils/is-type', { v: '' });
-      } catch (err) {
+      } catch (err: any) {
         outputVerbose = err.stdout.toString();
       }
       expect(outputVerbose).to.have.string('utils/is-type-before-fail.spec.js');
@@ -311,7 +311,7 @@ describe('bit test command', function () {
       let statusCode;
       try {
         helper.command.testComponent('utils/is-type -v');
-      } catch (err) {
+      } catch (err: any) {
         output = err.stdout.toString();
         statusCode = err.status;
       }

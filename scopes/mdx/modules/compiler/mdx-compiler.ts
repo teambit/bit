@@ -129,7 +129,7 @@ function extractMetadata() {
     visit(tree, 'yaml', (node: any) => {
       try {
         file.data.frontmatter = yaml.parse(node.value);
-      } catch (err) {
+      } catch (err: any) {
         throw new Error(`failed extracting metadata/front-matter using Yaml lib, due to an error: ${err.message}`);
       }
     });

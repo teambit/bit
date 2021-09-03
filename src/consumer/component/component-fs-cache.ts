@@ -89,7 +89,7 @@ export class ComponentFsCache {
     try {
       const results = await cacache.get(cachePath, key);
       return results;
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         return null; // cache doesn't exists
       }

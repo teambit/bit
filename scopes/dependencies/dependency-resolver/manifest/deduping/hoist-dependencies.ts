@@ -147,7 +147,7 @@ function handlePeersOnly(
     intersect(...allRanges);
     // Add to peers for each component to make sure we are getting warning from the package manager about missing peers
     indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
-  } catch (e) {
+  } catch (e: any) {
     indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
     // There are peer version with conflicts, let the user know about it
     const conflictedComponents = indexItems.map((item) => {
@@ -300,7 +300,7 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
       result.ranges = combinationWithTotal.combination;
       result.count = combinationWithTotal.total;
       // eslint-disable-next-line
-    } catch (e) {}
+    } catch (e: any) {}
     i += 1;
   }
   return result;
@@ -483,7 +483,7 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
 function intersectNoThrow(...args): string | undefined {
   try {
     return intersect(...args);
-  } catch (e) {
+  } catch (e: any) {
     return undefined;
   }
 }

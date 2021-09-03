@@ -60,7 +60,7 @@ ${results.depsUpdateItems.map((d) => componentOutput(d)).join('\n\n')}`;
     let dataParsed: unknown;
     try {
       dataParsed = JSON.parse(data);
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(`failed parsing the data entered as JSON. err ${err.message}`);
     }
     if (!Array.isArray(dataParsed)) {

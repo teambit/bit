@@ -440,7 +440,7 @@ you can add the directory these files are located at and it'll change the root d
   async _getComponentFromScopeIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
     try {
       return await this.consumer.scope.getModelComponentIgnoreScope(id);
-    } catch (err) {
+    } catch (err: any) {
       return null;
     }
   }
@@ -842,7 +842,7 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
           try {
             const addedComponent = await this.addOrUpdateComponentInBitMap(component);
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
-          } catch (err) {
+          } catch (err: any) {
             if (!(err instanceof MissingMainFile)) throw err;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             missingMainFiles.push(err);
@@ -877,7 +877,7 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
       try {
         const addedComponent = await this.addOneComponent(oneComponentPathStat);
         return addedComponent;
-      } catch (err) {
+      } catch (err: any) {
         if (!(err instanceof EmptyDirectory)) throw err;
         this.warnings.emptyDirectory.push(onePath);
         return null;

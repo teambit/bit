@@ -113,7 +113,7 @@ export class DocsMain {
         if (!docReader) throw new FileExtensionNotSupported(docFile.relative, docFile.extname);
         const doc = await docReader.read(docFile.relative, docFile.contents, component);
         return doc;
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error('docs.main.runtime.computeDoc caught an error', err);
         return null;
       }

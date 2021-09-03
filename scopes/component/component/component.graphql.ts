@@ -165,7 +165,7 @@ export function componentSchema(componentExtension: ComponentMain) {
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
             return component;
-          } catch (error) {
+          } catch (error: any) {
             return null;
           }
         },

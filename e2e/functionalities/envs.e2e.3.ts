@@ -306,7 +306,7 @@ describe.skip('envs', function () {
             let statusCode;
             try {
               helper.command.testComponent('comp/my-comp');
-            } catch (err) {
+            } catch (err: any) {
               output = err.stdout.toString();
               statusCode = err.status;
             }
@@ -321,7 +321,7 @@ describe.skip('envs', function () {
             let statusCode;
             try {
               helper.command.testComponentWithOptions('comp/my-comp', { v: '' });
-            } catch (err) {
+            } catch (err: any) {
               output = err.stdout.toString();
               statusCode = err.status;
             }
@@ -348,7 +348,7 @@ describe.skip('envs', function () {
             try {
               helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponent('comp/my-comp');
-            } catch (e) {
+            } catch (e: any) {
               output = e.message;
             }
             expect(output).to.have.string('bit failed to test');
@@ -367,7 +367,7 @@ describe.skip('envs', function () {
             let statusCode;
             try {
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
-            } catch (err) {
+            } catch (err: any) {
               output = err.stdout.toString();
               statusCode = err.status;
             }
@@ -382,7 +382,7 @@ describe.skip('envs', function () {
             try {
               helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
-            } catch (e) {
+            } catch (e: any) {
               output = e.message;
             }
             expect(output).to.have.string('bit failed to test');
@@ -401,7 +401,7 @@ describe.skip('envs', function () {
             let statusCode;
             try {
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
-            } catch (err) {
+            } catch (err: any) {
               output = err.stdout.toString();
               statusCode = err.status;
             }
@@ -416,7 +416,7 @@ describe.skip('envs', function () {
             try {
               helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
-            } catch (e) {
+            } catch (e: any) {
               output = e.message;
             }
             expect(output).to.have.string('bit failed to test');
@@ -435,7 +435,7 @@ describe.skip('envs', function () {
             let statusCode;
             try {
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
-            } catch (err) {
+            } catch (err: any) {
               output = err.stdout.toString();
               statusCode = err.status;
             }
@@ -450,7 +450,7 @@ describe.skip('envs', function () {
             try {
               helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
-            } catch (e) {
+            } catch (e: any) {
               output = e.message;
             }
             expect(output).to.have.string('bit failed to test');
@@ -605,7 +605,7 @@ describe.skip('envs', function () {
               let statusCode;
               try {
                 helper.command.testComponent('comp/my-comp');
-              } catch (err) {
+              } catch (err: any) {
                 output = err.stdout.toString();
                 statusCode = err.status;
               }
@@ -622,7 +622,7 @@ describe.skip('envs', function () {
               try {
                 helper.command.addComponent(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
                 helper.command.testComponent('comp/my-comp');
-              } catch (e) {
+              } catch (e: any) {
                 output = e.message;
               }
               expect(output).to.have.string('bit failed to test');
@@ -739,7 +739,7 @@ describe.skip('envs', function () {
                 let statusCode;
                 try {
                   helper.command.testComponent('comp/my-comp');
-                } catch (err) {
+                } catch (err: any) {
                   output = err.stdout.toString();
                   statusCode = err.status;
                 }
@@ -755,7 +755,7 @@ describe.skip('envs', function () {
                 let output;
                 try {
                   helper.command.testComponent('comp/my-comp');
-                } catch (e) {
+                } catch (e: any) {
                   output = e.message;
                 }
                 expect(output).to.have.string('bit failed to test');

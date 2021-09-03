@@ -300,7 +300,7 @@ export class ScopeMain implements ComponentFactory {
     await mapSeries(fns, async (fn) => {
       try {
         await fn({ ids: componentIds }, metadata);
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error('failed to run delete slot', err);
       }
     });

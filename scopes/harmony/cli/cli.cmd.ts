@@ -59,7 +59,7 @@ export class CliCmd implements Command {
         const cmd = line.trim().split(' ');
         try {
           await cliParser.parse(cmd);
-        } catch (err) {
+        } catch (err: any) {
           await handleErrorAndExit(err, cmd[0]);
         }
         rl.prompt();

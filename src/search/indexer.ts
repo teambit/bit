@@ -99,7 +99,7 @@ async function index(component: Component, scopePath: string): Promise<Component
   try {
     indexInstance = await serverlessIndex.initializeIndex(scopePath);
     return addToLocalIndex(component);
-  } catch (err) {
+  } catch (err: any) {
     logger.error(`search.indexer found an issue while indexing. Error: ${err}`);
     console.warn(err); // eslint-disable-line // TODO - handle this error
     return Promise.resolve(component);

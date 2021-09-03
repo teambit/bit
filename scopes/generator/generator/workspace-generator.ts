@@ -63,7 +63,7 @@ export class WorkspaceGenerator {
         updateExisting: false,
       });
       // await this.buildUI(); // disabled for now. it takes too long
-    } catch (err) {
+    } catch (err: any) {
       await fs.remove(this.workspacePath);
       throw err;
     }
@@ -77,7 +77,7 @@ export class WorkspaceGenerator {
     const params = ['init'];
     try {
       await execa(gitExecutablePath, params);
-    } catch (err) {
+    } catch (err: any) {
       if (err.exitCodeName === 'ENOENT') {
         throw new GitNotFound(gitExecutablePath, err);
       }

@@ -28,7 +28,7 @@ export class ObjectsReadableGenerator {
         this.pushComponentObjects(componentWithOptions)
       );
       this.readable.push(null);
-    } catch (err) {
+    } catch (err: any) {
       this.readable.destroy(err);
     }
   }
@@ -42,7 +42,7 @@ export class ObjectsReadableGenerator {
         })
       );
       this.readable.push(null);
-    } catch (err) {
+    } catch (err: any) {
       this.readable.destroy(err);
     }
   }
@@ -54,7 +54,7 @@ export class ObjectsReadableGenerator {
         this.push(objectItem);
       });
       this.readable.push(null);
-    } catch (err) {
+    } catch (err: any) {
       this.readable.destroy(err);
     }
   }
@@ -119,7 +119,7 @@ export class ObjectsReadableGenerator {
       const versionObjects = await collectVersionObjects(version);
       this.pushManyObjects(versionObjects);
       this.push(componentData);
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`component-version.toObjects ${componentWithOptions.component.id()} got an error`, err);
       // @ts-ignore
       const originalVersionHash = component.getRef(componentWithOptions.version).toString();

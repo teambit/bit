@@ -158,7 +158,7 @@ describe('auto tagging functionality', function () {
         before(() => {
           try {
             tagOutput = helper.command.tagComponent('utils/is-type');
-          } catch (err) {
+          } catch (err: any) {
             tagOutput = err.toString();
           }
         });
@@ -172,7 +172,7 @@ describe('auto tagging functionality', function () {
         before(() => {
           try {
             tagOutput = helper.command.tagComponent('utils/is-type --verbose');
-          } catch (err) {
+          } catch (err: any) {
             tagOutput = err.toString() + err.stdout.toString();
           }
         });

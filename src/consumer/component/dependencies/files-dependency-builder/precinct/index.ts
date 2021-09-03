@@ -57,7 +57,7 @@ function precinct(content, options) {
       ast = walker.parse(content);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       precinct.ast = ast;
-    } catch (e) {
+    } catch (e: any) {
       // In case a previous call had it populated
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       precinct.ast = null;

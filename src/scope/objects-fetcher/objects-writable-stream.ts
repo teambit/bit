@@ -37,7 +37,7 @@ export class ObjectsWritable extends Writable {
     try {
       await this.writeObjectToFs(obj);
       return callback();
-    } catch (err) {
+    } catch (err: any) {
       return callback(err);
     }
   }

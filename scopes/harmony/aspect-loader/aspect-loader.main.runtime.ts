@@ -140,7 +140,7 @@ export class AspectLoaderMain {
     if (this.failedAspects.includes(id)) return true;
     try {
       return this.harmony.get(id);
-    } catch (err) {
+    } catch (err: any) {
       return false;
     }
   }
@@ -274,7 +274,7 @@ export class AspectLoaderMain {
       const idStr = requireableExtension.component.id.toString();
       try {
         return await doRequire(requireableExtension, idStr);
-      } catch (e) {
+      } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
         this.logger.error(errorMsg, e);
@@ -284,7 +284,7 @@ export class AspectLoaderMain {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
             return await doRequire(requireableExtension, idStr);
-          } catch (err) {
+          } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
           }
@@ -371,7 +371,7 @@ export class AspectLoaderMain {
       const preparedManifests = this.prepareManifests(manifests);
       // @ts-ignore TODO: fix this
       await this.harmony.load(preparedManifests);
-    } catch (e) {
+    } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);

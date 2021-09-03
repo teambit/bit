@@ -571,7 +571,7 @@ export default class CommandHelper {
       let resultParsed;
       try {
         resultParsed = JSON.parse(result);
-      } catch (e) {
+      } catch (e: any) {
         // TODO: this is a temp hack to remove the pnpm install line which looks something like
         // ...5c35e2f15af94460bf455f4c4e82b67991042 | Progress: resolved 19, reused 18, downloaded 0, added 0, doned 0
         // it should be resolved by controlling the pnpm output correctly and don't print it in json mode

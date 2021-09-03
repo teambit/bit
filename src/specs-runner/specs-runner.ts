@@ -186,7 +186,7 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
     if (failure.err) {
       try {
         deserializedFailure.err = deserializeError(failure.err);
-      } catch (e) {
+      } catch (e: any) {
         logger.debug(`fail parsing error ${deserializedFailure.err}`);
       }
     }

@@ -44,7 +44,7 @@ describe('bit add command', function () {
       try {
         helper.fs.createFile('bar', 'foo.js');
         helper.fixtures.addComponentBarFoo();
-      } catch (err) {
+      } catch (err: any) {
         error = err.message;
       }
       expect(error).to.have.string('workspace not found. to initiate a new workspace, please use `bit init');
@@ -267,7 +267,7 @@ describe('bit add command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.addComponent(path.normalize('bar/foo2.js'));
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
@@ -542,7 +542,7 @@ describe('bit add command', function () {
       helper.fs.createFile('test/bar', 'foo2.spec.js');
       try {
         helper.command.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
-      } catch (err) {
+      } catch (err: any) {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string('Please wrap tests with quotes');
@@ -853,7 +853,7 @@ describe('bit add command', function () {
         helper.fs.createFile('bar', 'foo2.js');
         try {
           helper.command.addComponent(path.join('bar', 'foo2.js'), { i: 'bar/foo' });
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -911,7 +911,7 @@ describe('bit add command', function () {
       helper.git.writeGitIgnore(['bar/foo2.js']);
       try {
         helper.command.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
-      } catch (err) {
+      } catch (err: any) {
         errorMessage = err.message;
       }
       expect(errorMessage).to.contain(

@@ -332,7 +332,7 @@ console.log(barFoo.default());`;
       helper.fs.createFile('components/utils/is-string', 'is-string.js', isStringWithDepsFixture); // modify utils/is-string
       try {
         output = helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -366,7 +366,7 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       try {
         output = helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -699,7 +699,7 @@ console.log(barFoo.default());`;
       before(() => {
         try {
           helper.command.importComponent('bar/foo');
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });

@@ -224,7 +224,7 @@ describe('ModelComponentMerger', () => {
         try {
           await merge(existing, incoming, true, true);
           expect.fail();
-        } catch (err) {
+        } catch (err: any) {
           expect(err).to.be.instanceOf(MergeConflict);
         }
       });
@@ -382,7 +382,7 @@ describe('ModelComponentMerger', () => {
         try {
           await merge(existing, incoming, false, true);
           expect.fail();
-        } catch (err) {
+        } catch (err: any) {
           expect(err).to.be.instanceOf(MergeConflict);
         }
       });
@@ -404,7 +404,7 @@ describe('ModelComponentMerger', () => {
         try {
           await merge(existing, incoming, false, true, true);
           expect.fail();
-        } catch (err) {
+        } catch (err: any) {
           expect(err).to.be.instanceOf(ComponentNeedsUpdate);
         }
       });
@@ -426,7 +426,7 @@ describe('ModelComponentMerger', () => {
         try {
           await merge(existing, incoming, false, true, true);
           expect.fail();
-        } catch (err) {
+        } catch (err: any) {
           expect(err).to.be.instanceOf(MergeConflict);
         }
       });
