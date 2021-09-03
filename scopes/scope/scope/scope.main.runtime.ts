@@ -421,7 +421,7 @@ export class ScopeMain implements ComponentFactory {
     const resolvedAspects = await this.getResolvedAspects(components);
     try {
       await this.aspectLoader.loadRequireableExtensions(resolvedAspects, true);
-    } catch (err) {
+    } catch (err: any) {
       if (err?.error.code === 'MODULE_NOT_FOUND') {
         this.logger.warn(
           'failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again'

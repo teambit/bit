@@ -348,7 +348,7 @@ export class AspectLoaderMain {
     const resolvedAspects = await scope.getResolvedAspects(components);
     try {
       await this.loadRequireableExtensions(resolvedAspects, true);
-    } catch (err) {
+    } catch (err: any) {
       if (err?.error.code === 'MODULE_NOT_FOUND') {
         const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
         await this.loadRequireableExtensions(resolvedAspectsAgain, true);
