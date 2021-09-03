@@ -340,7 +340,6 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
-    // @ts-ignore - TODO FIXME
     plugins: compact([
       isEnvProduction &&
         new MiniCssExtractPlugin({
