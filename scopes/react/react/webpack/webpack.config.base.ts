@@ -3,7 +3,7 @@ import compact from 'lodash.compact';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
-import webpack, { Configuration } from 'webpack';
+import { Configuration, IgnorePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { postCssConfig } from './postcss.config';
@@ -340,6 +340,7 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
+    // @ts-ignore - TODO FIXME
     plugins: compact([
       isEnvProduction &&
         new MiniCssExtractPlugin({
@@ -353,7 +354,7 @@ export default function (isEnvProduction = false): Configuration {
       // solution that requires the user to opt into importing specific locales.
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
-      new webpack.IgnorePlugin({
+      new IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
       }),
