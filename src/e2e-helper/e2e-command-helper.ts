@@ -372,9 +372,13 @@ export default class CommandHelper {
     return output;
   }
 
-  getCapsuleOfComponent(id: string) {
+  capsuleListParsed() {
     const capsulesJson = this.runCmd('bit capsule list -j');
-    const capsules = JSON.parse(capsulesJson);
+    return JSON.parse(capsulesJson);
+  }
+
+  getCapsuleOfComponent(id: string) {
+    const capsules = this.capsuleListParsed();
     const idWithUnderScore = id.replace(/\//, '_');
     const capsulePath = capsules.capsules.find((c) => c.endsWith(idWithUnderScore));
     if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
@@ -462,6 +466,11 @@ export default class CommandHelper {
 
   showComponentParsed(id = 'bar/foo') {
     const output = this.runCmd(`bit show ${id} --json --legacy`);
+    return JSON.parse(output);
+  }
+
+  showComponentParsedHarmony(id = 'bar/foo') {
+    const output = this.runCmd(`bit show ${id} --json`);
     return JSON.parse(output);
   }
 
