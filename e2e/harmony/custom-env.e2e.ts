@@ -136,6 +136,9 @@ describe('custom env', function () {
     });
     describe('missing modules in the env capsule', () => {
       before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('*', `${envId}@0.0.1`);
         const capsules = helper.command.capsuleListParsed();
