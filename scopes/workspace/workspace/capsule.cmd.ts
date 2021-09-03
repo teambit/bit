@@ -82,22 +82,29 @@ export class CapsuleListCmd implements Command {
 
   async report() {
     const list = await this.isolator.list(this.workspace.path);
-    const workspaceRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
-    const scopeRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
-    const scopeAspectsRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
+    const { workspaceCapsulesRootDir, scopeCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
     // TODO: improve output
     return chalk.green(`found ${chalk.cyan(list.capsules.length.toString())} capsule(s) for workspace:  ${chalk.cyan(
       list.workspace
     )}
-workspace capsules root-dir:       ${chalk.cyan(workspaceRootDir)}
-scope capsules root-dir:           ${chalk.cyan(scopeRootDir)}
-scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsRootDir)}
+workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}
+scope capsules root-dir:           ${chalk.cyan(scopeCapsulesRootDir)}
+scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}
 use --json to get the list of all workspace capsules`);
   }
 
   async json() {
     const list = await this.isolator.list(this.workspace.path);
-    return list;
+    const rootDirs = this.getCapsulesRootDirs();
+    return { ...list, ...rootDirs };
+  }
+
+  private getCapsulesRootDirs() {
+    const workspaceCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
+    const scopeCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
+    const scopeAspectsCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
+
+    return { workspaceCapsulesRootDir, scopeCapsulesRootDir, scopeAspectsCapsulesRootDir };
   }
 }
 
