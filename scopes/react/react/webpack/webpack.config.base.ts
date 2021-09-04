@@ -339,8 +339,8 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
+    // @ts-ignore
     plugins: [
-      // @ts-ignore
       isEnvProduction &&
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
@@ -357,7 +357,7 @@ export default function (isEnvProduction = false): Configuration {
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
       }),
-    ],
+    ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,
