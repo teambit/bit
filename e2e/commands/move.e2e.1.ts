@@ -138,7 +138,7 @@ describe('bit move command', function () {
       helper.fixtures.addComponentBarFoo();
       try {
         helper.command.runCmd('bit move bar/non-exist-source.js utils/non-exist-dest.js');
-      } catch (err) {
+      } catch (err: any) {
         output = err.message;
       }
     });
@@ -162,7 +162,7 @@ describe('bit move command', function () {
       filesBeforeMove = helper.fs.getConsumerFiles();
       try {
         helper.command.runCmd(`bit move ${fromPath} ${toPath}`);
-      } catch (err) {
+      } catch (err: any) {
         output = err.message;
       }
       filesAfterMove = helper.fs.getConsumerFiles();

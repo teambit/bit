@@ -138,7 +138,7 @@ export default class EjectComponents {
             if (componentStatus.modified) this.failedComponents.modifiedComponents.push(id);
             else if (componentStatus.staged) this.failedComponents.stagedComponents.push(id);
             else this.idsToEject.push(id);
-          } catch (err) {
+          } catch (err: any) {
             this.throwEjectError(
               `eject operation failed getting the status of ${id.toString()}, no action has been done.
             please fix the issue to continue.`,
@@ -160,7 +160,7 @@ export default class EjectComponents {
     try {
       logger.debugAndAddBreadCrumb('eject', action);
       await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
-    } catch (err) {
+    } catch (err: any) {
       logger.warn(`eject: failed ${action}, restoring package.json`);
       await this.rollBack(action);
       this.throwEjectError(this._buildExceptionMessageWithRollbackData(action), err);
@@ -185,7 +185,7 @@ export default class EjectComponents {
       // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       await Promise.all(this.notEjectedDependents.map(({ dependent }) => dependent.packageJsonFile.write()));
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`eject: failed ${action}, restoring package.json`, err);
       await this.rollBack(action);
       this.throwEjectError(this._buildExceptionMessageWithRollbackData(action), err);
@@ -202,7 +202,7 @@ export default class EjectComponents {
         .map(({ dependent }) => dependent.componentMap.rootDir)
         .filter((x) => x);
       await installPackages(this.consumer, dirs, true, true);
-    } catch (err) {
+    } catch (err: any) {
       await this.rollBack(action);
       this.throwEjectError(this._buildExceptionMessageWithRollbackData(action), err);
     }
@@ -230,7 +230,7 @@ your package.json (if existed) has been restored, however, some bit generated da
     try {
       logger.debug('eject: removing the components files from the filesystem');
       await this.removeLocalComponents();
-    } catch (err) {
+    } catch (err: any) {
       this.throwEjectError(
         `eject operation has installed your components successfully using the NPM client.
 however, it failed removing the old components from the filesystem.

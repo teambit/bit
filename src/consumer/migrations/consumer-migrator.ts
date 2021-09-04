@@ -72,31 +72,33 @@ const _runAllMigrationsForStore = (storeType: string, store: BitMap, migrations:
  * @param {string} storeType - type of store (bitmap / bitjson etc)
  * @param {string} store - store data
  */
-const _runAllVersionMigrationsForStore = (storeType: string, store: BitMap): Function => (
-  migrations: VersionMigrations
-): BitMap => {
-  const versionNumber = Object.keys(migrations)[0];
-  logger.debug(`updating store ${storeType} to version ${versionNumber}`);
-  const migrationForStoreType = migrations[versionNumber][storeType];
-  // There is no migration for this type of object for this version
-  if (!migrationForStoreType) return store;
-  R.forEach(_runOneMigrationForStore(storeType, store), migrationForStoreType);
-  return store;
-};
+const _runAllVersionMigrationsForStore =
+  (storeType: string, store: BitMap): Function =>
+  (migrations: VersionMigrations): BitMap => {
+    const versionNumber = Object.keys(migrations)[0];
+    logger.debug(`updating store ${storeType} to version ${versionNumber}`);
+    const migrationForStoreType = migrations[versionNumber][storeType];
+    // There is no migration for this type of object for this version
+    if (!migrationForStoreType) return store;
+    R.forEach(_runOneMigrationForStore(storeType, store), migrationForStoreType);
+    return store;
+  };
 
 /**
  * Run specific migration function on a store
  * @param {string} storeType - type of store (bitmap / bitjson etc)
  * @param {string} store - store data
  */
-const _runOneMigrationForStore = (storeType: string, store: BitMap): Function => (migration: MigrationDeclaration) => {
-  logger.debug(`running migration: ${migration.name} on ${storeType}`);
-  if (globalVerbose) console.log(`running migration: ${migration.name} on ${storeType}`);
-  try {
-    const migratedStore = migration.migrate(store);
-    return migratedStore;
-  } catch (err) {
-    logger.error(`FAILED - running migration: ${migration.name} on ${storeType}`);
-    throw err;
-  }
-};
+const _runOneMigrationForStore =
+  (storeType: string, store: BitMap): Function =>
+  (migration: MigrationDeclaration) => {
+    logger.debug(`running migration: ${migration.name} on ${storeType}`);
+    if (globalVerbose) console.log(`running migration: ${migration.name} on ${storeType}`);
+    try {
+      const migratedStore = migration.migrate(store);
+      return migratedStore;
+    } catch (err: any) {
+      logger.error(`FAILED - running migration: ${migration.name} on ${storeType}`);
+      throw err;
+    }
+  };

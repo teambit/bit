@@ -27,7 +27,7 @@ export default function buildInScope({
       try {
         const scope = await loadScope(scopePath || process.cwd());
         return scope;
-      } catch (err) {
+      } catch (err: any) {
         throw new Error(initialError || err);
       }
     };

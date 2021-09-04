@@ -328,7 +328,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('bar/foo');
       try {
         output = helper.command.exportComponent('bar/foo', undefined, false);
-      } catch (err) {
+      } catch (err: any) {
         errorOutput = err.message;
       }
     });
@@ -392,7 +392,7 @@ describe('bit export command', function () {
       let isType;
       try {
         isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
-      } catch (err) {
+      } catch (err: any) {
         isType = err.toString();
       }
       expect(isType).to.have.string('component');

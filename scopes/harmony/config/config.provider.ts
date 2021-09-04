@@ -34,7 +34,7 @@ async function tryToGetConfig(dirPath: string): Promise<Config | any> {
   try {
     const config: Config = await Config.loadIfExist(dirPath);
     return config;
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof InvalidBitJson) && !(err instanceof InvalidConfigFile)) {
       throw err;
     }

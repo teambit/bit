@@ -15,7 +15,7 @@ function formatProperties(props) {
     try {
       const descriptionAST = doctrine.parse(description, { unwrap: true, recoverable: true, sloppy: true });
       if (descriptionAST && descriptionAST.tags[0]) return descriptionAST.tags[0].description;
-    } catch (err) {
+    } catch (err: any) {
       // failed to parse the react property, that's fine, it'll return the original description
     }
     return description;
@@ -117,7 +117,7 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
         return formatted;
       });
     }
-  } catch (err) {
+  } catch (err: any) {
     logger.trace(`failed parsing docs using docgen on path ${filePath} with error`, err);
   }
   return undefined;

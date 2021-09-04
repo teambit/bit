@@ -203,7 +203,7 @@ export class JestTester implements Tester {
           context.rootPath,
           this.jestModulePath
         );
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error('jest.tester.watch() caught an error', err);
       }
     });

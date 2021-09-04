@@ -83,7 +83,7 @@ export default function loginToBitSrc(
             }
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             actualNpmrcPath = npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
-          } catch (e) {
+          } catch (e: any) {
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;
           }
@@ -99,7 +99,7 @@ export default function loginToBitSrc(
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           writeToNpmrcError,
         });
-      } catch (err) {
+      } catch (err: any) {
         logger.error(`err on login: ${err}`);
         closeConnection(ERROR_RESPONSE);
         reject(new LoginFailed());

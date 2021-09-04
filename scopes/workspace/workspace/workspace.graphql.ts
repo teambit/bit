@@ -120,7 +120,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
             const componentID = await ws.resolveComponentId(id);
             const component = await ws.get(componentID);
             return component;
-          } catch (error) {
+          } catch (error: any) {
             return null;
           }
         },

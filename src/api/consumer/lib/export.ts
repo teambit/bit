@@ -282,7 +282,7 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
   // get the id including the scope from the consumer.
   try {
     return consumer.getParsedId(id);
-  } catch (err) {
+  } catch (err: any) {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
@@ -303,7 +303,7 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
   try {
     const ejectComponents = new EjectComponents(consumer, componentsIds);
     ejectResults = await ejectComponents.eject();
-  } catch (err) {
+  } catch (err: any) {
     const ejectErr = `The components ${componentsIds.map((c) => c.toString()).join(', ')} were exported successfully.
     However, the eject operation has failed due to an error: ${err.msg || err}`;
     logger.error(ejectErr, err);

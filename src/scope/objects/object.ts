@@ -50,7 +50,7 @@ export default class BitObject {
       let objs;
       try {
         objs = await Promise.all(refs.map((ref) => ref.load(repo, true)));
-      } catch (err) {
+      } catch (err: any) {
         if (err.code === 'ENOENT') {
           throw new Error(`failed finding an object file required by ${object.constructor.name} object, originated from ${objectId}
 path: ${err.path}`);

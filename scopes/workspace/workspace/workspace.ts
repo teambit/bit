@@ -1219,7 +1219,7 @@ export class Workspace implements ComponentFactory {
   private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
     try {
       return await this.importAndGetMany(componentIds);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ComponentNotFound) {
         const config = this.harmony.get<Config>('teambit.harmony/config');
         const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
@@ -1252,7 +1252,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     try {
       const res = await importAction({ tester: false, compiler: false }, importOptions, []);
       return res;
-    } catch (err) {
+    } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
       if (err instanceof NothingToImport) {
         // Do not write nothing to import warning
@@ -1365,7 +1365,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         }
         // Handle use case 3
         return await this.scope.resolveComponentId(idWithVersion);
-      } catch (error) {
+      } catch (error: any) {
         legacyId = BitId.parse(id.toString(), true);
         return ComponentID.fromLegacy(legacyId);
       }

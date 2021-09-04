@@ -92,7 +92,7 @@ export class ComponentConfigFile {
 function parseComponentJsonContent(str: string, dir: string) {
   try {
     return JSON.parse(str);
-  } catch (err) {
+  } catch (err: any) {
     throw new Error(`failed parsing component.json file at ${dir}. original error: ${err.message}`);
   }
 }

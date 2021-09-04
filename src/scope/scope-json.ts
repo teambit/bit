@@ -147,7 +147,7 @@ export class ScopeJson {
     let rawScopeJson;
     try {
       rawScopeJson = await fs.readFile(scopeJsonPath);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') throw new ScopeJsonNotFound(scopeJsonPath);
       throw err;
     }

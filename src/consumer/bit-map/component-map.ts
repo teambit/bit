@@ -408,7 +408,7 @@ export default class ComponentMap {
     const addComponents = new AddComponents(addContext, addParams);
     try {
       await addComponents.add();
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof NoFiles || err instanceof EmptyDirectory) {
         // it might happen that a component is imported and current .gitignore configuration
         // are effectively removing all files from bitmap. we should ignore the error in that

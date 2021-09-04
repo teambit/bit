@@ -131,7 +131,7 @@ export function getHarmonyVersion() {
       return `last-tag ${packageJson.componentId.version}`;
     }
     return null;
-  } catch (err) {
+  } catch (err: any) {
     return null;
   }
 }

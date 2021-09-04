@@ -106,7 +106,7 @@ async function removeLocal(
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else nonModifiedComponents.push(id);
-        } catch (err) {
+        } catch (err: any) {
           // if a component has an error, such as, missing main file, we do want to allow removing that component
           if (Component.isComponentInvalidByErrorType(err)) {
             nonModifiedComponents.push(id);

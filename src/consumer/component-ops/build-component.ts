@@ -140,9 +140,7 @@ async function _updateComponentPackageJson(
   }
 }
 
-function _extractAndVerifyCompilerResults(
-  compilerResults: CompilerResults
-): {
+function _extractAndVerifyCompilerResults(compilerResults: CompilerResults): {
   builtFiles: Vinyl[];
   mainDist: string | null | undefined;
   packageJson: Record<string, any> | null | undefined;
@@ -230,7 +228,7 @@ async function _build({
     const result = await _runBuild({ ...runBuildParams, componentRoot: isolatedComponent.writtenPath });
     if (!keep) await isolatedEnvironment.destroy();
     return result;
-  } catch (err) {
+  } catch (err: any) {
     await isolatedEnvironment.destroy();
     throw err;
   }
@@ -345,7 +343,7 @@ async function _runBuild({
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return compiler.oldAction(files, rootDistDir, context);
-    } catch (e) {
+    } catch (e: any) {
       if (tmpFolderFullPath) {
         logger.info(`build-components, deleting ${tmpFolderFullPath}`);
         fs.removeSync(tmpFolderFullPath);

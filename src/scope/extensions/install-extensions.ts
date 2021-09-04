@@ -79,7 +79,7 @@ export default function installExtensions({
         logger.console(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`), 'debug');
       }
       return isolatedComponent;
-    } catch (e) {
+    } catch (e: any) {
       if (e instanceof ComponentNotFound) {
         e.dependentId = dependentId ? dependentId.toString() : null;
       }
@@ -112,7 +112,7 @@ export function isEnvironmentInstalled(scope: Scope, bitId: BitId) {
   let envPath;
   try {
     envPath = componentResolver(bitId.toString(), null, scope.getPath());
-  } catch (err) {
+  } catch (err: any) {
     return notFound();
   }
   if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) return notFound();

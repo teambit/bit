@@ -81,7 +81,7 @@ export default class PackageJson {
     try {
       const componentJsonObject = fs.readJsonSync(composedPath);
       return new PackageJson(componentRootFolder, componentJsonObject);
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`failed parsing ${composedPath}, the file content is ${fs.readFileSync(composedPath)}`);
       throw err;
     }

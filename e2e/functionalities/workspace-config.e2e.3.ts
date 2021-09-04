@@ -854,7 +854,7 @@ describe('workspace config', function () {
             helper.packageJson.write(packageJson);
             try {
               helper.command.importComponent('bar/foo --skip-npm-install');
-            } catch (err) {
+            } catch (err: any) {
               // ignore. it shows an error because chai is missing, which is missing by purpose
             }
           });

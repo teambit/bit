@@ -71,7 +71,7 @@ export async function mergeVersion(
       );
       await tmp.clear();
       return componentsStatus;
-    } catch (err) {
+    } catch (err: any) {
       await tmp.clear();
       throw err;
     }
@@ -222,7 +222,7 @@ export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
     const result = await resolveConflictPrompt();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return mergeOptionsCli[result.mergeStrategy];
-  } catch (err) {
+  } catch (err: any) {
     // probably user clicked ^C
     throw new GeneralError('the action has been canceled');
   }

@@ -96,7 +96,7 @@ export class OpenBrowser {
             stdio: 'ignore',
           });
           return true;
-        } catch (err) {
+        } catch (err: any) {
           // Ignore errors.
         }
       }
@@ -121,7 +121,7 @@ export class OpenBrowser {
       const options = { app: browser, wait: false, url: true };
       open(url, options).catch(() => {}); // Prevent `unhandledRejection` error.
       return true;
-    } catch (err) {
+    } catch (err: any) {
       return false;
     }
   }

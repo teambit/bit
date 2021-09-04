@@ -173,7 +173,7 @@ export default class BitMap {
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), undefined, true);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(`invalid bitmap at ${currentLocation}`, e);
       throw new InvalidBitMap(currentLocation, e.message);
     }
@@ -204,7 +204,7 @@ export default class BitMap {
         try {
           componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
           componentMap.recentlyTracked = true;
-        } catch (err) {
+        } catch (err: any) {
           componentMap.files = [];
           componentMap.noFilesError = err;
         }
@@ -253,7 +253,7 @@ export default class BitMap {
       const mapFileContent = BitMap.loadRawSync(dirPath);
       if (!mapFileContent) return;
       json.parse(mapFileContent.toString('utf8'), undefined, true);
-    } catch (err) {
+    } catch (err: any) {
       deleteBitMapFile();
     }
   }
@@ -446,7 +446,7 @@ export default class BitMap {
     try {
       const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return existingBitId;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
@@ -480,7 +480,7 @@ export default class BitMap {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return componentMap;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }

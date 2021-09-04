@@ -26,7 +26,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     try {
       const json = readFileSync(mapPath, 'utf-8');
       componentMap = JSON.parse(json);
-    } catch (e) {
+    } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error('bit-react-transformer: error reading map file ', e);
     }

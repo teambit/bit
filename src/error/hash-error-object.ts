@@ -10,7 +10,7 @@ export default function hashErrorIfNeeded(error: Error) {
   let clonedError = error;
   try {
     clonedError = cloneErrorObject(error);
-  } catch (e) {
+  } catch (e: any) {
     logger.warn('could not clone error', error);
   }
 
@@ -23,7 +23,7 @@ export default function hashErrorIfNeeded(error: Error) {
   fieldToHash.forEach((field) => {
     try {
       clonedError[field] = hashValue(clonedError[field]);
-    } catch (e) {
+    } catch (e: any) {
       logger.debug(`could not hash field ${field}`);
     }
   });

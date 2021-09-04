@@ -38,7 +38,7 @@ export default class LinkFile extends AbstractVinyl {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       await fs.outputFile(this.path, data);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'EISDIR') {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         logger.debug(`deleting a directory ${this.path} in order to write a link file with the same name`);
