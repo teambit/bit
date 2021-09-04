@@ -53,7 +53,7 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
       res.set('Cache-Control', 'no-cache');
       res.send(rendered);
       logger.debug(`[ssr] success '${url}'`);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(`[ssr] failed at '${url}'`, e);
       next();
     }
@@ -90,7 +90,7 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
       logger.warn('[ssr] - index file does not export a render() function. Skipping setup.');
       return undefined;
     }
-  } catch (e) {
+  } catch (e: any) {
     logger.error(e);
     return undefined;
   }
@@ -109,7 +109,7 @@ async function parseManifest(filepath: string) {
     const assets = getAssets(parsed);
 
     return assets;
-  } catch (e) {
+  } catch (e: any) {
     return undefined;
   }
 }

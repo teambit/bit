@@ -117,7 +117,7 @@ export default async function checkoutVersion(
       const componentsStatus = await Promise.all(componentsStatusP);
       await tmp.clear();
       return componentsStatus;
-    } catch (err) {
+    } catch (err: any) {
       await tmp.clear();
       throw err;
     }

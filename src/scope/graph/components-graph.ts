@@ -188,7 +188,7 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
       return matchDependency;
     });
     componentWithDependencies.dependencies = dependencies;
-  } catch (err) {
+  } catch (err: any) {
     throw new GeneralError(`unable to topological sort dependencies of ${componentId}. Original error: ${err.message}`);
   }
 }

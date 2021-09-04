@@ -92,13 +92,13 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
             const vueDocs = await vuedoc.parse(options);
             const formattedDocs = fromVueDocs(vueDocs, filePath);
             resolve([formattedDocs]);
-          } catch (e) {
+          } catch (e: any) {
             logger.debug(`failed parsing vue docs on path ${filePath} with error`, e);
             // never mind, ignore the doc of this source
             resolve([]);
           }
         });
-    } catch (e) {
+    } catch (e: any) {
       logger.debug(`failed parsing vue docs on path ${filePath} with error`, e);
       // never mind, ignore the doc of this source
       resolve([]);

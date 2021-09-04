@@ -226,7 +226,7 @@ export class WorkspaceConfig implements HostConfig {
       }
       workspaceConfig = await this.create(workspaceConfigProps, dirPath, legacyInitProps);
       return workspaceConfig;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof InvalidBitJson || err instanceof InvalidConfigFile) {
         const workspaceConfig = this.create(workspaceConfigProps, dirPath);
         return workspaceConfig;
@@ -322,7 +322,7 @@ export class WorkspaceConfig implements HostConfig {
     let parsed;
     try {
       parsed = parse(contentBuffer.toString());
-    } catch (e) {
+    } catch (e: any) {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
     return WorkspaceConfig.fromObject(parsed);
@@ -473,7 +473,7 @@ export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONVal
   let fileContent: Buffer;
   try {
     fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-  } catch (err) {
+  } catch (err: any) {
     if (err.code !== 'ENOENT') throw err;
     // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
     fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));

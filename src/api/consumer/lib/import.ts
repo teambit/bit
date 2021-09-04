@@ -130,7 +130,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
   const getPackageJson = (dir) => {
     try {
       return fs.readJSONSync(path.join(dir, 'package.json'));
-    } catch (e) {
+    } catch (e: any) {
       return {};
     } // do we want to inform the use that he has no package.json
   };

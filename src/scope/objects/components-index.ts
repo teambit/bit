@@ -72,7 +72,7 @@ export default class ScopeIndex {
         [IndexType.lanes]: indexObject[IndexType.lanes].map((l) => new LaneItem(l.id, l.hash)),
       };
       return new ScopeIndex(indexPath, index);
-    } catch (err) {
+    } catch (err: any) {
       if (err.message.includes('Unexpected token')) {
         throw new InvalidIndexJson(indexPath, err.message);
       }

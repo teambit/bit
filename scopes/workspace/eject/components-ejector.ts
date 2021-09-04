@@ -103,7 +103,7 @@ export class ComponentsEjector {
             if (componentStatus.modified) this.failedComponents.modifiedComponents.push(id);
             else if (componentStatus.staged) this.failedComponents.stagedComponents.push(id);
             else this.idsToEject.push(id);
-          } catch (err) {
+          } catch (err: any) {
             this.throwEjectError(
               `eject operation failed getting the status of ${id.toString()}, no action has been done.
             please fix the issue to continue.`,

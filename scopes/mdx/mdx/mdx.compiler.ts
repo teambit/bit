@@ -80,7 +80,7 @@ export class MDXCompiler implements Compiler {
             );
           }
           return undefined;
-        } catch (err) {
+        } catch (err: any) {
           return err;
         }
       });

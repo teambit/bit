@@ -33,7 +33,7 @@ class CacheClearer {
   private async getConsumerGracefully(): Promise<Consumer | undefined> {
     try {
       return await loadConsumerIfExist();
-    } catch (err) {
+    } catch (err: any) {
       return undefined;
     }
   }
@@ -41,7 +41,7 @@ class CacheClearer {
   private async getScopeGracefully(): Promise<Scope | undefined> {
     try {
       return await loadScopeIfExist();
-    } catch (err) {
+    } catch (err: any) {
       return undefined;
     }
   }

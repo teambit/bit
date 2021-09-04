@@ -100,7 +100,7 @@ export default function cabinet(options: Options) {
       );
       try {
         result = resolver(options);
-      } catch (err) {
+      } catch (err: any) {
         debug(`unable to use the resolver of ${dependencyExt} for ${filename}. got an error ${err.message}`);
       }
     }
@@ -322,7 +322,7 @@ function commonJSLookup(options: Options) {
       moduleDirectory: ['node_modules'],
     });
     debug(`resolved path: ${result}`);
-  } catch (e) {
+  } catch (e: any) {
     debug(`could not resolve ${dependency}`);
   }
 
@@ -339,7 +339,7 @@ function resolveWebpackPath(dependency, filename, directory, webpackConfig) {
     if (typeof loadedConfig === 'function') {
       loadedConfig = loadedConfig();
     }
-  } catch (e) {
+  } catch (e: any) {
     debug(`error loading the webpack config at ${webpackConfig}`);
     debug(e.message);
     debug(e.stack);
@@ -374,7 +374,7 @@ function resolveWebpack(dependency, filename, directory, resolveConfig) {
     const lookupPath = isRelative(dependency) ? path.dirname(filename) : directory;
 
     return resolver(lookupPath, dependency);
-  } catch (e) {
+  } catch (e: any) {
     debug(`error when resolving ${dependency}`);
     debug(e.message);
     debug(e.stack);

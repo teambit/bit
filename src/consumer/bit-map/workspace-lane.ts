@@ -46,7 +46,7 @@ export default class WorkspaceLane {
       try {
         const laneFile = fs.readJsonSync(lanePath);
         return BitIds.fromArray(laneFile.map((id) => new BitId(id)));
-      } catch (err) {
+      } catch (err: any) {
         if (err.code === 'ENOENT') {
           return new BitIds();
         }

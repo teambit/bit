@@ -369,7 +369,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         );
         objectsPerRemote.exportedIds = exportedIds;
         pushedRemotes.push(remote);
-      } catch (err) {
+      } catch (err: any) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
         throw err;
       }
@@ -403,7 +403,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
           'successfully pushed all objects to the pending-dir directory on the remote'
         );
         pushedRemotes.push(remote);
-      } catch (err) {
+      } catch (err: any) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
         await removePendingDirs(pushedRemotes, clientId);
         throw err;
@@ -913,7 +913,7 @@ async function validateRemotes(remotes: Remote[], clientId: string, isResumingEx
         })
       )
     );
-  } catch (err) {
+  } catch (err: any) {
     logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
     if (!isResumingExport) {
       // when resuming export, we don't want to delete the pending-objects because some scopes
@@ -939,7 +939,7 @@ async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], clientI
         objectsPerRemote.exportedIds = exportedIds;
         succeed = true;
         break;
-      } catch (err) {
+      } catch (err: any) {
         lastErrMsg = err.message;
         logger.errorAndAddBreadCrumb(
           'persistRemotes',

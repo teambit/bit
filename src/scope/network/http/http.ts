@@ -243,7 +243,7 @@ export class Http implements Network {
   private async getJsonResponse(res: Response) {
     try {
       return await res.json();
-    } catch (err) {
+    } catch (err: any) {
       logger.error('failed response', res);
       throw new HttpInvalidJsonResponse(res.url);
     }
@@ -254,7 +254,7 @@ export class Http implements Network {
     let jsonResponse;
     try {
       jsonResponse = await res.json();
-    } catch (e) {
+    } catch (e: any) {
       // the response is not json, ignore the body.
     }
     logger.error(`parsed error from HTTP, url: ${res.url}`, jsonResponse);
@@ -274,7 +274,7 @@ export class Http implements Network {
     try {
       this.graphClient.setHeader('x-verb', verb);
       return await this.graphClient.request(query, variables);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ClientError) {
         throw new GraphQLClientError(err, this.url, this.scopeName);
       }

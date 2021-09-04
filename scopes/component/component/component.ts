@@ -93,7 +93,7 @@ export class Component {
     if (!this.head) return undefined;
     try {
       return this.tags.getLatest();
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof CouldNotFindLatest) {
         return this.head.toString();
       }

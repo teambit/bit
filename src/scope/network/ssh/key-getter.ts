@@ -9,7 +9,7 @@ async function readKey(keyPath: string | null | undefined) {
   try {
     const fileBuffer = await fs.readFile(keyPath);
     return fileBuffer;
-  } catch (e) {
+  } catch (e: any) {
     return '';
   }
 }

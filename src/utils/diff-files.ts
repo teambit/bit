@@ -18,7 +18,7 @@ export default async function diffFiles(fileA: PathOsBased, fileB: PathOsBased, 
   try {
     const result = await execa(gitExecutablePath, params);
     return result.stdout;
-  } catch (err) {
+  } catch (err: any) {
     if (err.exitCode && Number.isInteger(err.exitCode) && err.stdout) {
       // diff has been found, return the diff results.
       return err.stdout;

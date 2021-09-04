@@ -83,7 +83,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
       await tmp.clear();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return componentsStatus;
-    } catch (err) {
+    } catch (err: any) {
       await tmp.clear();
       throw err;
     }

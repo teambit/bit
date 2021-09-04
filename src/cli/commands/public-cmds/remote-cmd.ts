@@ -20,7 +20,7 @@ class RemoteAdd implements LegacyCommand {
     try {
       if (!url) return Promise.reject(new RemoteUndefined());
       return remoteAdd(url, global);
-    } catch (err) {
+    } catch (err: any) {
       return Promise.reject(err);
     }
   }

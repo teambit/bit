@@ -99,7 +99,7 @@ export class Watcher {
       const buildResults = await this.executeWatchOperationsOnComponent(componentId);
       this.completeWatch();
       return buildResults;
-    } catch (err) {
+    } catch (err: any) {
       const msg = `watcher found an error while handling ${filePath}`;
       logger.error(msg, err);
       logger.console(`${msg}, ${err.message}`);
@@ -161,7 +161,7 @@ export class Watcher {
       buildResults = isChange
         ? await this.workspace.triggerOnComponentChange(componentId)
         : await this.workspace.triggerOnComponentAdd(componentId);
-    } catch (err) {
+    } catch (err: any) {
       // do not exist the watch process on errors, just print them
       logger.console(err.message || err);
       return [];

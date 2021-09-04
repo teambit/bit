@@ -39,7 +39,7 @@ export default function validateVersionInstance(version: Version): void {
     let bitId;
     try {
       bitId = BitId.parse(bitIdStr, true);
-    } catch (err) {
+    } catch (err: any) {
       throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
     }
     validateBitId(bitId, field, validateVersion, validateScope);

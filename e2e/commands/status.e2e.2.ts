@@ -462,7 +462,7 @@ describe('bit status command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.runCmd('bit status');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
