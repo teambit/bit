@@ -1,5 +1,4 @@
 import { merge } from 'lodash';
-import compact from 'lodash.compact';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
@@ -340,8 +339,8 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
-    // @ts-ignore - TODO FIXME
-    plugins: compact([
+    plugins: [
+      // @ts-ignore
       isEnvProduction &&
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
@@ -358,7 +357,7 @@ export default function (isEnvProduction = false): Configuration {
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
       }),
-    ]),
+    ],
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,
