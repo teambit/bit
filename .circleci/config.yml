@@ -57,6 +57,11 @@ master_only_filter: &master_only_filter
     branches:
       only: master
 
+temp_filter: &temp_filter
+  filters:
+    branches:
+      only: temp-publish
+
 nightly_tag_only_filters: &nightly_tag_only_filters
   filters:
     # ignore any commit on any branch by default
@@ -1538,6 +1543,46 @@ workflows:
             - harmony_publish_to_gcloud
       - server_docker_build:
           requires:
+            - docker_build
+
+  temp_publish:
+    jobs:
+      - harmony_deploy_approval_job:
+          <<: *temp_filter
+          type: approval
+      - bundle_version_linux:
+          <<: *temp_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - bundle_version_windows:
+          <<: *temp_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - bundle_version_macos:
+          <<: *temp_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - harmony_publish_to_gcloud:
+          <<: *temp_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
+      - symphony_docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - harmony_deploy_approval_job
             - docker_build
 
   windows-nightly:
