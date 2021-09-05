@@ -72,7 +72,6 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
-      setupExitSignals: true,
       allowedHosts: 'all',
 
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
