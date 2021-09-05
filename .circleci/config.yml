@@ -1554,17 +1554,14 @@ workflows:
           <<: *temp_filter
           requires:
             - harmony_deploy_approval_job
-            - bit_tag
       - bundle_version_windows:
           <<: *temp_filter
           requires:
             - harmony_deploy_approval_job
-            - bit_tag
       - bundle_version_macos:
           <<: *temp_filter
           requires:
             - harmony_deploy_approval_job
-            - bit_tag
       - harmony_publish_to_gcloud:
           <<: *temp_filter
           requires:
@@ -1575,7 +1572,6 @@ workflows:
       - symphony_docker_build:
           requires:
             - harmony_deploy_approval_job
-            - bit_tag
       - docker_build:
           requires:
             - harmony_deploy_approval_job
