@@ -355,7 +355,7 @@
           "name": "@teambit/{name}",
           "private": false,
           "engines": {
-            "node": ">=12.15.0"
+            "node": ">=12.22.0"
           },
           "repository": {
             "type": "git",
@@ -406,7 +406,7 @@
           "name": "@teambit/{scope}.{name}",
           "private": false,
           "engines": {
-            "node": ">=12.15.0"
+            "node": ">=12.22.0"
           },
           "repository": {
             "type": "git",

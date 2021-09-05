@@ -11,7 +11,7 @@
     "/dist"
   ],
   "engines": {
-    "node": ">=12.15.0"
+    "node": ">=12.22.0"
   },
   "husky": {
     "hooks": {
