@@ -3,7 +3,7 @@ import { flatten } from 'lodash';
 import { PreviewServerStatus } from '@teambit/preview.cli.preview-server-status';
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
-import { StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
+import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
 import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
 
@@ -43,8 +43,8 @@ export class PreviewStartPlugin implements StartPlugin {
     this.previewServers = this.previewServers.concat(previewServers);
   }
 
-  getProxy() {
-    const proxyConfigs = this.previewServers.map((server) => {
+  getProxy(): ProxyEntry[] {
+    const proxyConfigs = this.previewServers.map<ProxyEntry[]>((server) => {
       return [
         {
           context: [`/preview/${server.context.envRuntime.id}`],

@@ -17,10 +17,6 @@ import { WebpackBitReporterPlugin } from '../plugins/webpack-bit-reporter-plugin
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-const clientHost = process.env.WDS_SOCKET_HOST;
-const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
-const port = process.env.WDS_SOCKET_PORT;
-
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
 export function configFactory(
@@ -33,9 +29,6 @@ export function configFactory(
   title?: string
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
-
-  // Host
-  const host = process.env.HOST || 'localhost';
 
   // Required for babel-preset-react-app
   process.env.NODE_ENV = 'development';
@@ -79,8 +72,7 @@ export function configFactory(
     stats: 'errors-only',
 
     devServer: {
-      // @ts-ignore - temp until types of webpack-dev-server v4
-      firewall: false,
+      allowedHosts: 'all',
 
       // @ts-ignore until types are updated with new options from webpack-dev-server v4
       static: [
@@ -103,14 +95,8 @@ export function configFactory(
       // Enable compression
       compress: true,
 
-      // Use 'ws' instead of 'sockjs-node' on server since we're using native
-      // websockets in `webpackHotDevClient`.
-      transportMode: 'ws',
-
       // Enable hot reloading
       hot: true,
-
-      host,
 
       historyApiFallback: {
         disableDotRule: true,
@@ -118,14 +104,10 @@ export function configFactory(
       },
 
       client: {
-        needClientEntry: false,
         overlay: false,
-        host: clientHost,
-        path: clientPath,
-        port,
       },
 
-      onBeforeSetupMiddleware(app, server) {
+      onBeforeSetupMiddleware({ app, server }) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -134,7 +116,7 @@ export function configFactory(
         app.use(errorOverlayMiddleware());
       },
 
-      onAfterSetupMiddleware(app) {
+      onAfterSetupMiddleware({ app }) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -146,8 +128,8 @@ export function configFactory(
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      dev: {
-        // Public path is root of content base
+      devMiddleware: {
+        // forward static files
         publicPath: path.join('/', publicRoot),
       },
     },

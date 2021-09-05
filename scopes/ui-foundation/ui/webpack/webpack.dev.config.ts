@@ -98,10 +98,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     stats: 'errors-only',
 
     devServer: {
-      // @ts-ignore - temp until types of webpack-dev-server v4
-      firewall: false,
+      allowedHosts: 'all',
 
-      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicUrlOrPath),
@@ -122,10 +120,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       // Enable compression
       compress: true,
 
-      // Use 'ws' instead of 'sockjs-node' on server since we're using native
-      // websockets in `webpackHotDevClient`.
-      transportMode: 'ws',
-
       // Enable hot reloading
       hot: true,
 
@@ -137,12 +131,14 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       },
 
       client: {
-        host: clientHost,
-        path: clientPath,
-        port,
+        webSocketURL: {
+          hostname: clientHost,
+          pathname: clientPath,
+          port,
+        },
       },
 
-      onBeforeSetupMiddleware(app, server) {
+      onBeforeSetupMiddleware({ app, server }) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -151,7 +147,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
         app.use(errorOverlayMiddleware());
       },
 
-      onAfterSetupMiddleware(app) {
+      onAfterSetupMiddleware({ app }) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -163,8 +159,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      dev: {
-        // Public path is root of content base
+      devMiddleware: {
+        // forward static files
         publicPath: publicUrlOrPath.slice(0, -1),
       },
     },
@@ -325,7 +321,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
           /react-refresh-webpack-plugin/i,
           // file type filtering was done by `include`, so need to negative-filter them out here
           // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!(\.jsx|.\.js|\.tsx|.\.ts))$/i,
+          /(?<!\.jsx)(?<!\.js)(?<!\.tsx)(?<!\.ts)$/i,
         ],
       }),
       // Re-generate index.html with injected script tag.

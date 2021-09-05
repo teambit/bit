@@ -7,5 +7,5 @@ export interface DevServer {
   /**
    * attach to given port and start an http server
    */
-  listen(port: number): Server;
+  listen(port: number): Server | Promise<Server>;
 }
