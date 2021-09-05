@@ -24,10 +24,22 @@ export class WebpackDevServer implements DevServer {
     // Prevent different port between the config port and the listen arg port
     this.config.devServer.port = port;
 
+    // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
+    this.addSignalListener();
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const webpackDs: WDS = new this.WsDevServer(this.config.devServer, this.getCompiler());
     await webpackDs.start();
 
     return webpackDs.server;
+  }
+
+  private addSignalListener() {
+    process.on('SIGTERM', () => {
+      process.exit();
+    });
+
+    process.on('SIGINT', () => {
+      process.exit();
+    });
   }
 }
