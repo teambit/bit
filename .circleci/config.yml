@@ -1572,13 +1572,16 @@ workflows:
             - bundle_version_macos
       - symphony_docker_build:
           requires:
+            - checkout_code
             - harmony_deploy_approval_job
       - docker_build:
           requires:
+            - checkout_code
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
       - server_docker_build:
           requires:
+            - checkout_code
             - harmony_deploy_approval_job
             - docker_build
 
