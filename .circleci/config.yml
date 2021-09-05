@@ -1547,6 +1547,7 @@ workflows:
 
   temp_publish:
     jobs:
+      - checkout_code
       - harmony_deploy_approval_job:
           <<: *temp_filter
           type: approval
