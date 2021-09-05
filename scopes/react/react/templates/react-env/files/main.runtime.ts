@@ -11,7 +11,6 @@ import { ${Name}Aspect } from './${name}.aspect';
  * Uncomment to include config files for overrides of Typescript or Webpack
  */
 // const tsconfig = require('./typescript/tsconfig');
-// const webpackConfig = require('./webpack/webpack.config');
 
 export class ${Name}Main {
   static slots = [];
