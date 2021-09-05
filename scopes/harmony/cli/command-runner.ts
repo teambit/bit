@@ -32,7 +32,7 @@ export class CommandRunner {
       if (this.command.report) {
         return await this.runReportHandler();
       }
-    } catch (err) {
+    } catch (err: any) {
       return handleErrorAndExit(err, this.commandName, this.command.internal);
     }
 

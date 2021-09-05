@@ -617,7 +617,7 @@ export default class Component extends BitObject {
     try {
       const loaded = await repo.loadManyRaw(refsWithoutArtifacts);
       loadedRefs.push(...loaded);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
 for a component "${this.id()}", versions: ${versions.join(', ')}`);
@@ -629,7 +629,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
         ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
         : await repo.loadManyRaw(artifactsRefs);
       loadedRefs.push(...loaded);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an artifact object file "${err.path}"
 for a component "${this.id()}", versions: ${versions.join(', ')}
@@ -647,7 +647,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
         rawComponent,
         objects.map((o) => o.buffer)
       );
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(
           `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`

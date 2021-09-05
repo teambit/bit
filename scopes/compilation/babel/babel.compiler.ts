@@ -115,7 +115,7 @@ export class BabelCompiler implements Compiler {
           if (result.length > 1) {
             await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
           }
-        } catch (err) {
+        } catch (err: any) {
           componentResult.errors?.push(err);
         }
       })

@@ -209,7 +209,7 @@ export default class ComponentConfig extends AbstractConfig {
           return file;
         }
         return {};
-      } catch (e) {
+      } catch (e: any) {
         throw new ShowDoctorError(
           `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
         );
@@ -228,7 +228,7 @@ export default class ComponentConfig extends AbstractConfig {
           return packageJsonConfig;
         }
         return {};
-      } catch (e) {
+      } catch (e: any) {
         throw new ShowDoctorError(
           `package.json at ${AbstractConfig.composePackageJsonPath(
             componentDir
@@ -326,7 +326,7 @@ export default class ComponentConfig extends AbstractConfig {
         const func = subscribers[extId];
         return func(id, config);
       });
-    } catch (err) {
+    } catch (err: any) {
       if (!ignoreLoadingExtensionsErrors) {
         throw err;
       }
@@ -355,7 +355,7 @@ export default class ComponentConfig extends AbstractConfig {
         return func(id);
       });
       return res;
-    } catch (err) {
+    } catch (err: any) {
       if (!ignoreLoadingExtensionsErrors) {
         throw err;
       }

@@ -41,7 +41,7 @@ async function linkBitLegacyInCapsule(capsule: Capsule) {
   // and we need it in order to perform the linking
   try {
     capsule.fs.mkdirSync('node_modules');
-  } catch (e) {
+  } catch (e: any) {
     // fail silently - we only need to create it if it doesn't already exist
   }
 

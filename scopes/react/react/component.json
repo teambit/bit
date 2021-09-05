@@ -20,8 +20,8 @@
           "@svgr/webpack": "5.5.0",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
-          "@typescript-eslint/parser": "4.29.0",
-          "@typescript-eslint/eslint-plugin": "4.29.0",
+          "@typescript-eslint/parser": "4.30.0",
+          "@typescript-eslint/eslint-plugin": "4.30.0",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
           "eslint-plugin-react-hooks": "4.2.0",
@@ -39,14 +39,14 @@
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
           "style-loader": "^2.0.0",
-          "css-loader": "5.2.0",
+          "css-loader": "6.2.0",
           "postcss": "8.2.9",
-          "postcss-loader": "5.2.0",
+          "postcss-loader": "6.1.1",
           "postcss-preset-env": "6.7.0",
           "postcss-flexbugs-fixes": "5.0.2",
-          "sass-loader": "11.0.1",
+          "sass-loader": "12.1.0",
           "less": "^4.1.1",
-          "less-loader": "8.0.0",
+          "less-loader": "10.0.0",
           "@teambit/legacy": "-",
           "@babel/runtime": "^7.12.18",
           "react-refresh": "0.10.0"
@@ -63,7 +63,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.144"
+          "@teambit/legacy": "1.0.149"
         }
       }
     }

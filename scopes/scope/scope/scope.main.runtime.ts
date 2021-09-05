@@ -300,7 +300,7 @@ export class ScopeMain implements ComponentFactory {
     await mapSeries(fns, async (fn) => {
       try {
         await fn({ ids: componentIds }, metadata);
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error('failed to run delete slot', err);
       }
     });
@@ -363,9 +363,8 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
-    const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
-    // Always throw an error when can't load scope extension
-    await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
+    const components = await this.import(componentIds);
+    await this.loadAspectsFromCapsules(components, throwOnError);
   }
 
   private async resolveLocalAspects(ids: string[], runtime?: string) {
@@ -383,14 +382,14 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async getResolvedAspects(components: Component[]) {
+  async getResolvedAspects(components: Component[], { skipIfExists = true } = {}): Promise<RequireableComponent[]> {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
         baseDir: this.getAspectCapsulePath(),
-        skipIfExists: true,
+        skipIfExists,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
       },
@@ -412,6 +411,34 @@ export class ScopeMain implements ComponentFactory {
         return aspect;
       });
     });
+  }
+
+  /**
+   * if capsules already exist for these aspects, use them. otherwise, isolate them first.
+   * in case of module-not-found error, give it another try by re-creating the capsules and re-loading.
+   */
+  async loadAspectsFromCapsules(components: Component[], throwOnError: boolean) {
+    const resolvedAspects = await this.getResolvedAspects(components);
+    try {
+      await this.aspectLoader.loadRequireableExtensions(resolvedAspects, true);
+    } catch (err: any) {
+      if (err?.error.code === 'MODULE_NOT_FOUND') {
+        this.logger.warn(
+          'failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again'
+        );
+        const resolvedAspectsAgain = await this.getResolvedAspects(components, { skipIfExists: false });
+        await this.aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, throwOnError);
+      } else {
+        if (throwOnError) {
+          throw err;
+        }
+        // throwOnError is false, it's not ideal, but we call loadRequireableExtensions again.
+        // otherwise, because it was throwing before, it didn't have the chance to log into the console
+        // as we caught that error. also, if the first aspect failed, it didn't load the second aspect
+        // but threw immediately.
+        await this.aspectLoader.loadRequireableExtensions(resolvedAspects, false);
+      }
+    }
   }
 
   getAspectCapsulePath() {

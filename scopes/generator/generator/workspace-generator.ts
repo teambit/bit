@@ -15,7 +15,6 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import path from 'path';
-import { EnvsMain } from '@teambit/envs';
 import { DependencyResolverMain, DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceTemplate } from './workspace-template';
@@ -39,7 +38,7 @@ export class WorkspaceGenerator {
     private workspaceName: string,
     private options: NewOptions,
     private template: WorkspaceTemplate,
-    private envs: EnvsMain
+    private aspectComponent?: Component
   ) {
     this.workspacePath = path.resolve(this.workspaceName);
   }
@@ -64,7 +63,7 @@ export class WorkspaceGenerator {
         updateExisting: false,
       });
       // await this.buildUI(); // disabled for now. it takes too long
-    } catch (err) {
+    } catch (err: any) {
       await fs.remove(this.workspacePath);
       throw err;
     }
@@ -78,7 +77,7 @@ export class WorkspaceGenerator {
     const params = ['init'];
     try {
       await execa(gitExecutablePath, params);
-    } catch (err) {
+    } catch (err: any) {
       if (err.exitCodeName === 'ENOENT') {
         throw new GitNotFound(gitExecutablePath, err);
       }
@@ -99,6 +98,7 @@ export class WorkspaceGenerator {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
+      aspectComponent: this.aspectComponent,
     };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(

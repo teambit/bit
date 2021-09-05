@@ -70,7 +70,7 @@ module.exports._getDependencies = function (config) {
 
   try {
     dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
-  } catch (e) {
+  } catch (e: any) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
     e.code = 'PARSING_ERROR';
@@ -117,7 +117,7 @@ module.exports._getDependencies = function (config) {
     let result;
     try {
       result = cabinet(cabinetParams);
-    } catch (err) {
+    } catch (err: any) {
       debug(`error resolving dependencies: ${err.message}`);
       debug(err.stack);
       err.code = 'RESOLVE_ERROR';

@@ -122,7 +122,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (isFileSupported) {
       try {
         compileResults = this.compilerInstance.transpileFile?.(file.contents.toString(), options);
-      } catch (error) {
+      } catch (error: any) {
         this.compileErrors.push({ path: file.path, error });
         return;
       }
@@ -171,7 +171,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
           componentDir: this.componentDir,
           outputDir: this.workspace.getComponentPackagePath(component),
         });
-      } catch (error) {
+      } catch (error: any) {
         this.compileErrors.push({ path: this.componentDir, error });
       }
     }
@@ -204,7 +204,7 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (err.code && err.code === 'MODULE_NOT_FOUND') {
+    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
       await this.compileComponents([id.toString()], {}, true);
       return true;
     }

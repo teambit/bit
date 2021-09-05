@@ -75,7 +75,7 @@ export async function mergeLanes({
       );
       await tmp.clear();
       return componentsStatus;
-    } catch (err) {
+    } catch (err: any) {
       await tmp.clear();
       throw err;
     }

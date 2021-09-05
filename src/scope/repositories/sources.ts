@@ -158,7 +158,7 @@ export default class SourceRepository {
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (foundComponent) return foundComponent;
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
     logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
@@ -633,7 +633,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         try {
           const result = await this.merge(component, versions);
           mergeResults.push(result);
-        } catch (err) {
+        } catch (err: any) {
           if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
             // don't throw. instead, get all components with merge-conflicts
             errors.push(err);

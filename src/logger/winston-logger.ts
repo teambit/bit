@@ -60,7 +60,7 @@ function getMetadata(info) {
   }
   try {
     return JSON.stringify(info.metadata, null, 2);
-  } catch (err) {
+  } catch (err: any) {
     return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
   }
 }

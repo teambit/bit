@@ -32,7 +32,7 @@ describe('compile extension', function () {
         helper.command.runCmd('bit compile');
       });
       it('should not create a capsule as it is not needed for development', () => {
-        const capsulesJson = helper.command.runCmd('bit capsule-list -j');
+        const capsulesJson = helper.command.runCmd('bit capsule list -j');
         const capsules = JSON.parse(capsulesJson);
         capsules.capsules.forEach((c) => expect(c).to.not.have.string('comp1'));
       });

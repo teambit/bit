@@ -289,7 +289,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.command.tagAllComponents('--force');
         try {
           helper.command.exportAllComponents();
-        } catch (err) {
+        } catch (err: any) {
           expect(err.toString()).to.have.string('conflict');
         }
 

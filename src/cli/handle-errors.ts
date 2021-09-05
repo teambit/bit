@@ -12,7 +12,7 @@ export async function handleErrorAndExit(err: Error, commandName: string, should
     const { message, error } = defaultHandleError(err);
     if (shouldSerialize) serializeErrAndExit(error, commandName);
     else await logErrAndExit(message, commandName);
-  } catch (e) {
+  } catch (e: any) {
     // eslint-disable-next-line no-console
     console.error('failed to log the error properly, failure error', e);
     // eslint-disable-next-line no-console

@@ -27,7 +27,7 @@ export default function createSymlinkOrCopy(
     );
     if (avoidHardLink) symlink();
     else link();
-  } catch (err) {
+  } catch (err: any) {
     const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
     throw new ShowDoctorError(`${errorHeader}.
@@ -47,7 +47,7 @@ Original error: ${err}`);
     try {
       fs.symlinkSync(srcPath, destPath);
       logger.trace(`createSymlinkOrCopy, symlinkOrHardLink() successfully created the symlink`);
-    } catch (err) {
+    } catch (err: any) {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
       link();
     }
@@ -58,7 +58,7 @@ Original error: ${err}`);
     try {
       hardLinkOrJunctionByFsExtra(srcPath);
       logger.trace(`createSymlinkOrCopy, link() successfully created the link`);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'EXDEV') {
         logger.trace(`createSymlinkOrCopy, link() found EXDEV error, trying fs native`);
         // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
@@ -87,7 +87,7 @@ Original error: ${err}`);
   function hardLinkOrJunctionByFsExtra(src: PathOsBased) {
     try {
       fs.linkSync(src, destPath);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'EPERM') {
         logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsExtra() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
@@ -101,7 +101,7 @@ Original error: ${err}`);
   function hardLinkOrJunctionByFsNative(src: PathOsBased) {
     try {
       fsNative.linkSync(src, destPath);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'EPERM' || err.code === 'EXDEV') {
         logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsNative() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win

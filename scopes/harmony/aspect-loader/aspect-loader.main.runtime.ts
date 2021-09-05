@@ -140,7 +140,7 @@ export class AspectLoaderMain {
     if (this.failedAspects.includes(id)) return true;
     try {
       return this.harmony.get(id);
-    } catch (err) {
+    } catch (err: any) {
       return false;
     }
   }
@@ -274,7 +274,7 @@ export class AspectLoaderMain {
       const idStr = requireableExtension.component.id.toString();
       try {
         return await doRequire(requireableExtension, idStr);
-      } catch (e) {
+      } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
         this.logger.error(errorMsg, e);
@@ -284,7 +284,7 @@ export class AspectLoaderMain {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
             return await doRequire(requireableExtension, idStr);
-          } catch (err) {
+          } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
           }
@@ -335,14 +335,28 @@ export class AspectLoaderMain {
     await globalScope.ensureDir();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    // @todo: Gilad make this work
+    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    // @todo: Gilad make this work
-    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const components = await scope.import(ids, useCache, true);
+
+    // don't use `await scope.loadAspectsFromCapsules(components, true);`
+    // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
+    // is not the same as the aspectLoader instance Scope has)
     const resolvedAspects = await scope.getResolvedAspects(components);
-    await this.loadRequireableExtensions(resolvedAspects, true);
+    try {
+      await this.loadRequireableExtensions(resolvedAspects, true);
+    } catch (err: any) {
+      if (err?.error.code === 'MODULE_NOT_FOUND') {
+        const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
+        await this.loadRequireableExtensions(resolvedAspectsAgain, true);
+      } else {
+        throw err;
+      }
+    }
+
     return components;
   }
 
@@ -371,7 +385,7 @@ export class AspectLoaderMain {
       const preparedManifests = this.prepareManifests(manifests);
       // @ts-ignore TODO: fix this
       await this.harmony.load(preparedManifests);
-    } catch (e) {
+    } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);

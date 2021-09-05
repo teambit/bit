@@ -115,7 +115,7 @@ export default class Repository {
     let fileContentsRaw: Buffer;
     try {
       fileContentsRaw = await fs.readFile(this.objectPath(ref));
-    } catch (err) {
+    } catch (err: any) {
       if (err.code !== 'ENOENT') {
         logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
         throw err;
@@ -165,7 +165,7 @@ export default class Repository {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
           return bitRawObject;
-        } catch (err) {
+        } catch (err: any) {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
           return null;
         }
@@ -214,7 +214,7 @@ export default class Repository {
     try {
       const scopeIndex = await ScopeIndex.load(this.scopePath);
       return scopeIndex;
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         const bitObjects: BitObject[] = await this.list();
         const scopeIndex = ScopeIndex.create(this.scopePath);
@@ -246,7 +246,7 @@ export default class Repository {
         try {
           const buffer = await this.loadRaw(ref);
           return { ref, buffer };
-        } catch (err) {
+        } catch (err: any) {
           if (err.code === 'ENOENT') return null;
           throw err;
         }
@@ -271,7 +271,7 @@ export default class Repository {
       // Run hook to transform content pre reading
       const transformedContent = this.onRead(objectFile);
       return BitObject.parseSync(transformedContent);
-    } catch (err) {
+    } catch (err: any) {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }

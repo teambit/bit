@@ -143,7 +143,7 @@ export class Packer {
         metadata.checksum = checksum;
       }
       return { metadata, warnings, errors, startTime, endTime: Date.now() };
-    } catch (err) {
+    } catch (err: any) {
       const errorMsg = `failed running ${packageManager} ${args} at ${cwd}`;
       logger.error(`${errorMsg}`);
       if (err.stderr) logger.error(`${err.stderr}`);

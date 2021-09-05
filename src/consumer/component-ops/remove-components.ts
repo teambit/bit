@@ -106,7 +106,7 @@ async function removeLocal(
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else nonModifiedComponents.push(id);
-        } catch (err) {
+        } catch (err: any) {
           // if a component has an error, such as, missing main file, we do want to allow removing that component
           if (Component.isComponentInvalidByErrorType(err)) {
             nonModifiedComponents.push(id);
@@ -127,16 +127,13 @@ async function removeLocal(
     idsToRemove.filter((id) => newComponents.hasWithoutScopeAndVersion(id))
   );
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
-  const {
-    removedComponentIds,
-    missingComponents,
-    dependentBits,
-    removedFromLane,
-    removedDependencies,
-  } = await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
-  idsToCleanFromWorkspace.push(...removedComponentIds);
-
-  if (!R.isEmpty(idsToCleanFromWorkspace) && !removedFromLane) {
+  const { removedComponentIds, missingComponents, dependentBits, removedFromLane, removedDependencies } =
+    await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
+  if (!removedFromLane) {
+    // otherwise, components should still be in .bitmap file
+    idsToCleanFromWorkspace.push(...removedComponentIds);
+  }
+  if (idsToCleanFromWorkspace.length) {
     await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
@@ -151,7 +148,7 @@ async function removeLocal(
     }
   }
   return new RemovedLocalObjects(
-    idsToCleanFromWorkspace,
+    BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),
     missingComponents,
     modifiedComponents,
     removedDependencies,

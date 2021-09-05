@@ -101,7 +101,7 @@ export default class SSH implements Network {
       try {
         const strategyResult = await strategyFunc(); // eslint-disable-line
         if (strategyResult) return strategyResult as SSH;
-      } catch (err) {
+      } catch (err: any) {
         logger.debug(`ssh, failed to connect using ${strategyName}. ${err.message}`);
         if (err instanceof AuthenticationStrategyFailed) {
           strategiesFailures.push(err.message);
@@ -222,7 +222,7 @@ export default class SSH implements Network {
       Analytics.setExtraData('authentication_method', authenticationType);
       logger.debug(`ssh, authenticated successfully using ${authenticationType}`);
       return this;
-    } catch (err) {
+    } catch (err: any) {
       if (err.message === AUTH_FAILED_MESSAGE) {
         throw new AuthenticationStrategyFailed(authFailedMsg);
       }
@@ -322,7 +322,7 @@ export default class SSH implements Network {
       checkVersionCompatibility(headers.version);
       parsedError = payload;
       remoteIsLegacy = headers.version === '14.8.8' && parsedError.message.includes('Please update your Bit client');
-    } catch (e) {
+    } catch (e: any) {
       // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
     }
@@ -336,7 +336,7 @@ export default class SSH implements Network {
     try {
       const unpacked = unpackCommand(data, base64);
       return unpacked;
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`unpackCommand found on error "${err}", while parsing the following string: ${data}`);
       throw new SSHInvalidResponse(data);
     }
@@ -496,7 +496,7 @@ export default class SSH implements Network {
       try {
         const results = JSON.parse(str);
         return results;
-      } catch (err) {
+      } catch (err: any) {
         throw new SSHInvalidResponse(str);
       }
     };

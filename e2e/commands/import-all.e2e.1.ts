@@ -130,7 +130,7 @@ describe('bit import command with no ids', function () {
     it('should not try to import that component as it was not exported yet', () => {
       try {
         helper.command.importAllComponents(true);
-      } catch (err) {
+      } catch (err: any) {
         expect(err.toString()).to.have.string('nothing to import');
       }
     });

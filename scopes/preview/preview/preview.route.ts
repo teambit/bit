@@ -35,7 +35,7 @@ export class PreviewRoute implements Route {
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
           artifact = await this.preview.getPreview(component);
-        } catch (e) {
+        } catch (e: any) {
           return res.status(404).send(noPreview());
         }
         // TODO: please fix file path concatenation here.
@@ -47,7 +47,7 @@ export class PreviewRoute implements Route {
         const contentType = mime.getType(str);
         if (contentType) res.set('Content-Type', contentType);
         return res.send(contents);
-      } catch (e) {
+      } catch (e: any) {
         this.logger.error('failed getting preview', e);
         return res.status(500).send(serverError());
       }

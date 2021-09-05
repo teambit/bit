@@ -278,7 +278,7 @@ export default async function tagModelComponent({
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         testsResults = await testsResultsP;
-      } catch (err) {
+      } catch (err: any) {
         // if force is true, ignore the tests and continue
         if (!force) {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

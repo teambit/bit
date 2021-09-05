@@ -65,7 +65,7 @@ export class ComponentStatusLoader {
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
       componentFromFileSystem = await this.consumer.loadComponent(id.changeVersion(LATEST));
-    } catch (err) {
+    } catch (err: any) {
       if (
         err instanceof MissingFilesFromComponent ||
         err instanceof ComponentNotFoundInPath ||

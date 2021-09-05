@@ -44,7 +44,7 @@ describe('loadBit()', function () {
     let error: Error;
     try {
       await loadBit(helper.scopes.localPath);
-    } catch (err) {
+    } catch (err: any) {
       error = err;
     }
     // @ts-ignore

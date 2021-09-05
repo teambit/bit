@@ -3,6 +3,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
 import { loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -131,7 +132,7 @@ export class GeneratorMain {
     let workspace: Workspace;
     try {
       workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(`fatal: "${workspacePath}" is not a valid Bit workspace, make sure the path is correct`);
     }
     const aspectComponentId = await workspace.resolveComponentId(aspectId);
@@ -144,16 +145,23 @@ export class GeneratorMain {
   /**
    * returns a specific workspace template.
    */
-  async getWorkspaceTemplate(name: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
+  async getWorkspaceTemplate(
+    name: string,
+    aspectId?: string
+  ): Promise<{ workspaceTemplate: WorkspaceTemplate; aspect?: Component }> {
     const registeredTemplate = await this.searchRegisteredWorkspaceTemplate(name, aspectId);
     if (registeredTemplate) {
-      return registeredTemplate;
+      return { workspaceTemplate: registeredTemplate };
     }
-    if (!aspectId)
+    if (!aspectId) {
       throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
-    const fromGlobal = await this.findTemplateInGlobalScope(aspectId, name);
+    }
+    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const aspect = aspects[0];
+    const fullAspectId = aspect.id.toString();
+    const fromGlobal = await this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
     if (fromGlobal) {
-      return fromGlobal;
+      return { workspaceTemplate: fromGlobal, aspect };
     }
     throw new BitError(`template "${name}" was not found`);
   }
@@ -196,14 +204,20 @@ export class GeneratorMain {
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
     if (this.workspace) {
-      throw new BitError("error: unable generating a new workspace, you're in a workspace already");
+      throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
     const { aspect: aspectId, loadFrom } = options;
-    const template = loadFrom
-      ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
-      : await this.getWorkspaceTemplate(templateName, aspectId);
+    let template: WorkspaceTemplate | undefined;
+    let aspectComponent: Component | undefined;
+    if (loadFrom) {
+      template = await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId);
+    } else {
+      const { workspaceTemplate, aspect } = await this.getWorkspaceTemplate(templateName, aspectId);
+      template = workspaceTemplate;
+      aspectComponent = aspect;
+    }
     if (!template) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, aspectComponent);
     const workspacePath = await workspaceGenerator.generate();
 
     return workspacePath;

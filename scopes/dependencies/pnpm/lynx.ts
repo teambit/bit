@@ -214,7 +214,7 @@ export async function resolveRemoteVersion(
       isSemver: true,
       resolvedVia: val.resolvedVia,
     };
-  } catch (e) {
+  } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
       throw e;
     }

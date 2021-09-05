@@ -172,7 +172,7 @@ export default class ComponentLoader {
         id,
         consumer: this.consumer,
       });
-    } catch (err) {
+    } catch (err: any) {
       return handleError(err);
     }
     component.loadedFromFileSystem = true;
@@ -202,7 +202,7 @@ export default class ComponentLoader {
     try {
       await loadDependencies();
       await runOnComponentLoadEvent();
-    } catch (err) {
+    } catch (err: any) {
       return handleError(err);
     }
 

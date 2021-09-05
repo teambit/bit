@@ -26,7 +26,7 @@ export async function loadConsumerIfExist(
 ): Promise<Consumer | undefined> {
   try {
     return await loadConsumer(currentPath, newInstance);
-  } catch (err) {
+  } catch (err: any) {
     if (err instanceof ConsumerNotFound) {
       return undefined;
     }

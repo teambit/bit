@@ -34,7 +34,7 @@ describe('bit tag command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.tagComponent('bar/foo2');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
@@ -52,7 +52,7 @@ describe('bit tag command', function () {
       helper.bitMap.write(bitMap);
       try {
         helper.command.tagComponent('bar/foo');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -272,7 +272,7 @@ describe('bit tag command', function () {
       let output;
       try {
         helper.command.tagWithoutMessage('non/existing');
-      } catch (err) {
+      } catch (err: any) {
         output = err.message;
       }
       expect(output).to.have.string(
@@ -287,7 +287,7 @@ describe('bit tag command', function () {
       before(() => {
         try {
           helper.command.tagWithoutMessage('bar/foo');
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -306,7 +306,7 @@ describe('bit tag command', function () {
       before(() => {
         try {
           helper.command.tagWithoutMessage('bar/foo --verbose');
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString() + err.stdout.toString();
         }
       });
@@ -582,7 +582,7 @@ describe('bit tag command', function () {
       helper.fixtures.addComponentUtilsIsString();
       try {
         helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -622,7 +622,7 @@ describe('bit tag command', function () {
         const tagAll = () => helper.command.tagAllComponents();
         try {
           tagAll();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -677,7 +677,7 @@ describe('bit tag command', function () {
         const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
         try {
           output = tagOne();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -708,7 +708,7 @@ describe('bit tag command', function () {
         const tagAll = () => helper.command.tagAllComponents('--ignore-unresolved-dependencies');
         try {
           output = tagAll();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -809,7 +809,7 @@ describe('bit tag command', function () {
       helper.fs.deletePath('bar/foo.js');
       try {
         helper.command.runCmd('bit tag -a');
-      } catch (err) {
+      } catch (err: any) {
         errMsg = err.message;
       }
       const output = helper.command.listLocalScope();
@@ -872,7 +872,7 @@ describe('bit tag command', function () {
           helper.command.tagComponent('bar/foo@0.0.8', 'msg', '--force');
           try {
             helper.command.tagAllComponents('--scope 0.0.8');
-          } catch (err) {
+          } catch (err: any) {
             output = err.toString();
           }
         });

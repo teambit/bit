@@ -12,12 +12,27 @@ module.exports = {
         'import/prefer-default-export': 'off',
       },
     },
+    {
+      files: ['*.md', '*.mdx'],
+      extends: ['plugin:mdx/recommended'],
+      parserOptions: {
+        // parser: '@typescript-eslint/parser',
+        ecmaVersion: 6,
+        sourceType: 'module',
+        ecmaFeatures: {
+          modules: true,
+        },
+        extensions: ['.md', '.mdx'],
+      },
+    },
   ],
   parserOptions: {
     warnOnUnsupportedTypeScriptVersion: false,
     ecmaFeatures: {
       jsx: true,
     },
+    parser: require.resolve('@typescript-eslint/parser'),
+    createDefaultProgram: true,
     // Should be provided by the extender eslint
     // we can't calculate the tsconfig path here
     // createDefaultProgram: true,

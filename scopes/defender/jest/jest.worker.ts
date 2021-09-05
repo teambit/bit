@@ -44,7 +44,7 @@ export class JestWorker {
                   this.onTestCompleteCb(json);
                   // disable eslint because we want to catch error but not print it on worker
                   // eslint-disable-next-line
-                } catch (error) {}
+                } catch (error: any) {}
               },
             },
           ],

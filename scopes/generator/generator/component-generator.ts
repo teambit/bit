@@ -40,7 +40,7 @@ export class ComponentGenerator {
         }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
-      } catch (err) {
+      } catch (err: any) {
         await this.deleteGeneratedComponents(dirsToDeleteIfFailed);
         throw err;
       }
@@ -57,7 +57,7 @@ export class ComponentGenerator {
         const absoluteDir = path.join(this.workspace.path, dir);
         try {
           await fs.remove(absoluteDir);
-        } catch (err) {
+        } catch (err: any) {
           if (err.code !== 'ENOENT') {
             // if not exist, it's fine
             throw err;
@@ -113,7 +113,7 @@ export class ComponentGenerator {
   }
 
   private getComponentPath(componentId: ComponentID) {
-    if (this.options.path) return path.join(this.options.path, componentId.fullName);
+    if (this.options.path) return this.options.path;
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }

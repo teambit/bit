@@ -312,7 +312,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.removePath(new RemovePath(linkPath));
       }
       return undefined;
-    } catch (err) {
+    } catch (err: any) {
       return undefined; // probably file does not exist
     }
   }

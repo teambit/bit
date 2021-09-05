@@ -80,7 +80,7 @@ export default class RemoteLanes {
         id: new BitId({ scope: id.scope, name: id.name }),
         head: new Ref(head),
       }));
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
         this.remotes[remoteName][laneName] = [];

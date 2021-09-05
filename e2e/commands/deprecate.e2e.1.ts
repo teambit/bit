@@ -23,7 +23,7 @@ describe('bit deprecate and undeprecate commands', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.deprecateComponent('bar/foo2');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');

@@ -69,7 +69,7 @@ export class WorkspaceComponentLoader {
       longProcessLogger.logProgress(id.toString());
       try {
         await this.workspace.consumer.loadComponent(id._legacy);
-      } catch (err) {
+      } catch (err: any) {
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           errors.push({
             id,
@@ -202,7 +202,7 @@ export class WorkspaceComponentLoader {
           await this.workspace.consumer.loadComponentForCapsule(id._legacy)
         : // eslint-disable-next-line @typescript-eslint/return-await
           await this.workspace.consumer.loadComponent(id._legacy);
-    } catch (err) {
+    } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.

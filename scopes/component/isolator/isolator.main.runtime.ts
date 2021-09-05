@@ -382,7 +382,7 @@ export class IsolatorMain {
         workspace: workspacePath,
         capsules: capsuleFullPaths,
       };
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === 'ENOENT') {
         return { workspace: workspacePath, capsules: [] };
       }
@@ -422,7 +422,7 @@ export class IsolatorMain {
         try {
           const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
           previousPackageJson = JSON.parse(previousPackageJsonRaw);
-        } catch (e) {
+        } catch (e: any) {
           // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
         }
         return {

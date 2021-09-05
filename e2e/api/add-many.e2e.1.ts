@@ -276,7 +276,7 @@ describe.skip('bit add many programmatically', function () {
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.scopes.localPath);
-      } catch (err) {
+      } catch (err: any) {
         expect(err.name).to.equal('NoFiles');
         nodeStartOutput = err.message;
       }
@@ -312,7 +312,7 @@ describe.skip('bit add many programmatically', function () {
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsRootLevel, helper.scopes.localPath);
-      } catch (err) {
+      } catch (err: any) {
         expect(err.name).to.equal('ExcludedMainFile');
       }
 
@@ -330,7 +330,7 @@ describe.skip('bit add many programmatically', function () {
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsInner, helper.scopes.localPath);
-      } catch (err) {
+      } catch (err: any) {
         expect(err.name).to.equal('ExcludedMainFile');
       }
       expect(addMany).to.be.undefined;
@@ -350,7 +350,7 @@ describe.skip('bit add many programmatically', function () {
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsIgnoreConst, helper.scopes.localPath);
-      } catch (err) {
+      } catch (err: any) {
         expect(err.name).to.equal('NoFiles');
       }
       expect(addMany).to.be.undefined;

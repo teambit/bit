@@ -82,7 +82,7 @@ export class ScopeComponentLoader {
       try {
         const snap = await this.scope.legacyScope.objects.load(new Ref(hash), true);
         return snap as Version;
-      } catch (err) {
+      } catch (err: any) {
         if (err.code === 'ENOENT') {
           const errMsg = `fatal: snap "${hash}" file for component "${id.toString()}" was not found in the filesystem`;
           this.logger.error(errMsg, err);
