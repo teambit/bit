@@ -110,7 +110,9 @@ export function configFactory(
       onBeforeSetupMiddleware({ app, server }) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
+
         // This lets us fetch source contents from webpack for the error overlay
+        // @ts-ignore - #4860
         app.use(evalSourceMapMiddleware(server));
         // This lets us open files from the runtime error overlay.
         app.use(errorOverlayMiddleware());
