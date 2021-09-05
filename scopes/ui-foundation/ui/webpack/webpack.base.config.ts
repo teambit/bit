@@ -1,4 +1,3 @@
-import { merge } from 'lodash';
 import webpack, { Configuration } from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
@@ -6,15 +5,7 @@ import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
-import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { postCssConfig } from './postcss.config';
-
-const baseStyleLoadersOptions = {
-  injectingLoader: MiniCssExtractPlugin.loader,
-  cssLoaderPath: require.resolve('css-loader'),
-  postCssLoaderPath: require.resolve('postcss-loader'),
-  postCssConfig,
-};
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -29,9 +20,6 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
 ];
-
-// Source maps are resource heavy and can cause out of memory issue for large source files.
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
@@ -128,32 +116,43 @@ export default function createWebpackConfig(
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
           oneOf: [
-            // "postcss" loader applies autoprefixer to our CSS.
-            // "css" loader resolves paths in CSS and adds assets as dependencies.
-            // "style" loader turns CSS into JS modules that inject <style> tags.
-            // In production, we use MiniCSSExtractPlugin to extract that CSS
-            // to a file, but in development "style" loader enables hot editing
-            // of CSS.
-            // By default we support CSS Modules with the extension .module.css
+            // load styles, including scss, less, and
+            // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
+            // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
             {
-              test: stylesRegexps.cssNoModulesRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 1,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                  },
-                })
-              ),
-              // Don't consider CSS imports dead code even if the
-              // containing package claims to have no side effects.
-              // Remove this when webpack adds a warning or an error for this.
-              // See https://github.com/webpack/webpack/issues/6571
+              test: stylesRegexps.allCssregex,
               sideEffects: true,
+              use: [
+                isEnvProduction ? MiniCssExtractPlugin.loader : require.resolve('style-loader'),
+                {
+                  loader: require.resolve('css-loader'),
+                  options: {
+                    importLoaders: 3,
+                    modules: {
+                      auto: true, // handle *.module.* as css-modules
+                      getLocalIdent: getCSSModuleLocalIdent, // pretty class names
+                    },
+                  },
+                },
+                {
+                  loader: require.resolve('postcss-loader'),
+                  options: {
+                    postcssOptions: postCssConfig,
+                  },
+                },
+              ],
+              // dialects
+              rules: [
+                {
+                  test: stylesRegexps.sassRegex,
+                  use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
+                },
+                {
+                  test: stylesRegexps.lessRegex,
+                  use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
+                },
+              ],
             },
-            // "url" loader works like "file" loader except that it embeds assets
-            // smaller than specified limit in bytes as data URLs to avoid requests.
-            // A missing `test` is equivalent to a match.
             {
               test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/],
               type: 'asset',
@@ -204,109 +203,6 @@ export default function createWebpackConfig(
             //     inputSourceMap: shouldUseSourceMap,
             //   },
             // },
-
-            // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
-            // using the extension .module.css
-            {
-              test: stylesRegexps.cssModuleRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 1,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                    modules: {
-                      getLocalIdent: getCSSModuleLocalIdent,
-                    },
-                  },
-                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
-                })
-              ),
-            },
-            // Opt-in support for SASS (using .scss or .sass extensions).
-            // By default we support SASS Modules with the
-            // extensions .module.scss or .module.sass
-            {
-              test: stylesRegexps.sassNoModuleRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 3,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                  },
-                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
-                  preProcessOptions: {
-                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
-                    preProcessorPath: require.resolve('sass-loader'),
-                  },
-                })
-              ),
-              // Don't consider CSS imports dead code even if the
-              // containing package claims to have no side effects.
-              // Remove this when webpack adds a warning or an error for this.
-              // See https://github.com/webpack/webpack/issues/6571
-              sideEffects: true,
-            },
-            // Adds support for CSS Modules, but using SASS
-            // using the extension .module.scss or .module.sass
-            {
-              test: stylesRegexps.sassModuleRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 3,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                    modules: {
-                      getLocalIdent: getCSSModuleLocalIdent,
-                    },
-                  },
-                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
-                  preProcessOptions: {
-                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
-                    preProcessorPath: require.resolve('sass-loader'),
-                  },
-                })
-              ),
-            },
-            {
-              test: stylesRegexps.lessNoModuleRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 1,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                  },
-                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
-                  preProcessOptions: {
-                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
-                    preProcessorPath: require.resolve('less-loader'),
-                  },
-                })
-              ),
-              // Don't consider CSS imports dead code even if the
-              // containing package claims to have no side effects.
-              // Remove this when webpack adds a warning or an error for this.
-              // See https://github.com/webpack/webpack/issues/6571
-              sideEffects: true,
-            },
-            {
-              test: stylesRegexps.lessModuleRegex,
-              use: generateStyleLoaders(
-                merge({}, baseStyleLoadersOptions, {
-                  cssLoaderOpts: {
-                    importLoaders: 1,
-                    sourceMap: isEnvProduction || shouldUseSourceMap,
-                    modules: {
-                      getLocalIdent: getCSSModuleLocalIdent,
-                    },
-                  },
-                  shouldUseSourceMap: isEnvProduction || shouldUseSourceMap,
-                  preProcessOptions: {
-                    resolveUrlLoaderPath: require.resolve('resolve-url-loader'),
-                    preProcessorPath: require.resolve('less-loader'),
-                  },
-                })
-              ),
-            },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
             // In production, they would get copied to the `build` folder.
@@ -327,12 +223,11 @@ export default function createWebpackConfig(
       ],
     },
     plugins: [
-      new MiniCssExtractPlugin({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: 'static/css/[name].[contenthash:8].css',
-        chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
+      isEnvProduction &&
+        new MiniCssExtractPlugin({
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+        }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
       //   output file so that tools can pick it up without having to parse

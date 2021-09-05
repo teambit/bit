@@ -1,5 +1,7 @@
 // style files regexps
 
+export const allCssregex = /\.(le|sc|c)ss$/;
+
 // css
 export const cssRegex = /\.css$/;
 // css regex - will catch .css but not .module.css

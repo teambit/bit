@@ -1,16 +1,16 @@
+import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
-
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
-const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
-const path = require('path');
-const { html } = require('./html');
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { html } from './html';
 
 /*
  * Webpack config for the bit ui
@@ -20,11 +20,6 @@ const { html } = require('./html');
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
-
-// const reactRefreshRuntimeEntry = require.resolve('react-refresh/runtime');
-// const reactRefreshWebpackPluginRuntimeEntry = require.resolve(
-//   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
-// );
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
@@ -42,12 +37,7 @@ const moduleFileExtensions = [
   'jsx',
 ];
 
-module.exports = {
-  createWebpackConfig,
-  devConfig: createWebpackConfig,
-};
-
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
+export function devConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -223,92 +213,36 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
             plugins: [require.resolve('react-refresh/babel')],
           },
         },
+        // load styles, including scss, less, and
+        // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
+        // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
         {
-          test: stylesRegexps.sassModuleRegex,
+          test: stylesRegexps.allCssregex,
+          sideEffects: true,
           use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
               options: {
+                importLoaders: 3,
                 modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                  auto: true, // handle *.module.* as css-modules
+                  getLocalIdent: getCSSModuleLocalIdent, // pretty class names
                 },
-                sourceMap: true,
-              },
-            },
-            {
-              loader: require.resolve('sass-loader'),
-              options: {
-                sourceMap: true,
               },
             },
           ],
-        },
-        {
-          test: stylesRegexps.sassNoModuleRegex,
-          use: [
-            require.resolve('style-loader'),
-            require.resolve('css-loader'),
+          // dialects
+          rules: [
             {
-              loader: require.resolve('sass-loader'),
-              options: {
-                sourceMap: true,
-              },
+              test: stylesRegexps.sassRegex,
+              use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
+            },
+            {
+              test: stylesRegexps.lessRegex,
+              use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
             },
           ],
-        },
-        {
-          test: stylesRegexps.lessModuleRegex,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
-                },
-                sourceMap: true,
-              },
-            },
-            {
-              loader: require.resolve('less-loader'),
-              options: {
-                sourceMap: true,
-              },
-            },
-          ],
-        },
-        {
-          test: stylesRegexps.lessNoModuleRegex,
-          use: [
-            require.resolve('style-loader'),
-            require.resolve('css-loader'),
-            {
-              loader: require.resolve('less-loader'),
-              options: {
-                sourceMap: true,
-              },
-            },
-          ],
-        },
-        {
-          test: stylesRegexps.cssModuleRegex,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
-                },
-                sourceMap: true,
-              },
-            },
-          ],
-        },
-        {
-          test: stylesRegexps.cssNoModulesRegex,
-          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },

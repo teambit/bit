@@ -15,8 +15,7 @@ import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
-
-const { devConfig } = require('./webpack/webpack.dev.config');
+import { devConfig } from './webpack/webpack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
