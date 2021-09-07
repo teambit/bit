@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -12,81 +13,99 @@ describe('custom aspects', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('create custom aspect', () => {
-    before(() => {
+  // current workspace has my-env and comp1 that uses my-env.
+  // my-env depends on external aspect 'main-aspect', which installed as a package, and therefore exists only
+  // in the scope, not in the workspace.
+  // previously, aspects from workspace were loaded first and as a result, this main-aspect wasn't loaded, causing
+  // my-env load to fail.
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('workspace aspects using external aspects', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.command.create('aspect', 'dep-aspect');
+      helper.command.create('aspect', 'main-aspect');
+      helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`, getMainAspect(helper.scopes.remoteWithoutOwner));
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.tagAllComponents();
+      helper.command.export();
 
-      // Create first aspect that will be used as a dependency
-      helper.command.create('aspect', 'dep');
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
 
-      // Create second env aspect that will depend upon "aspect-dep"
-      helper.command.create('aspect', 'env');
-      helper.extensions.addExtensionToWorkspace('my-scope/env', {
-        'teambit.dependencies/dependency-resolver': {
-          policy: {
-            dependencies: {
-              dep: '^0.0.0',
-            },
-          },
-        },
-      });
-      helper.fs.outputFile('my-scope/env/env.main.runtime.ts', getEnvRuntime());
+      helper.command.install(`@ci/${helper.scopes.remoteWithoutOwner}.main-aspect`);
 
-      // Set all scope aspects as aspects
-      helper.extensions.addExtensionToVariant('my-scope/env', 'teambit.harmony/aspect');
-      helper.extensions.addExtensionToVariant('my-scope/dep', 'teambit.harmony/aspect');
-
-      // Create test component using the env
+      helper.command.create('react-env', 'my-env', '--path my-env');
+      helper.fs.outputFile('my-env/my-env.main.runtime.ts', getEnvRuntimeMain(helper.scopes.remoteWithoutOwner));
       helper.fixtures.populateComponents(1);
-      helper.extensions.addExtensionToVariant('comp1', 'my-scope/env');
 
-      // helper.command.tagAllWithoutBuild();
-      // helper.command.export();
+      helper.extensions.addExtensionToVariant(`comp1`, `${helper.scopes.remote}/my-env`);
+      helper.extensions.addExtensionToVariant(`my-env`, 'teambit.harmony/aspect');
+
+      helper.command.compile();
+      helper.command.install();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
     });
 
-    it.only('should compile without error', async () => {
-      expect(() => {
-        helper.command.link();
-        helper.command.compile();
-        helper.command.install();
-      }).to.not.throw();
-
-      helper.command.list();
-
-      const comp1 = helper.command.catComponent('comp1');
-      const compEnv = getEnvIdFromModel(comp1);
-      console.log(compEnv);
-      // const builder = harmony.get<BuilderMain>(BuilderAspect.id);
-      // const tasks = builder.listTasks(component);
-      // expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
+    it('should load the env correctly and use it for the consuming component', async () => {
+      const envId = helper.env.getComponentEnv('comp1');
+      expect(envId).to.equal(`ci.${helper.scopes.remoteWithoutOwner}/my-env`);
     });
   });
 });
 
-function getEnvRuntime() {
+function getEnvRuntimeMain(remoteScope: string) {
   return `import { MainRuntime } from '@teambit/cli';
-import { EnvAspect } from './env.aspect';
-import { DepAspect, DepMain } from '@my-scope/dep';
+  import { ReactAspect, ReactMain } from '@teambit/react';
+  import { EnvsAspect, EnvsMain } from '@teambit/envs';
+  import { MyEnvAspect } from './my-env.aspect';
+  import { MainAspectAspect, MainAspectMain } from '@ci/${remoteScope}.main-aspect'
 
-export class EnvMain {
-  static slots = [];
-  static dependencies = [
-    DepAspect
-  ];
-  static runtime = MainRuntime;
-  static async provider([dep]: [DepMain]) {
-    if(!dep) {
-      throw new Error('Dep dependency is missing');
+  export class EnvMain {
+    static slots = [];
+    static dependencies = [ReactAspect, EnvsAspect, MainAspectAspect];
+    static runtime = MainRuntime;
+    static async provider([react, envs, main]: [ReactMain, EnvsMain, MainAspectMain]) {
+      if (!main) {
+        throw new Error('MainAspect dependency is missing');
+      }
+      const templatesReactEnv = envs.compose(react.reactEnv, []);
+      envs.registerEnv(templatesReactEnv);
+      return new EnvMain();
     }
-    return new EnvMain();
   }
+
+  MyEnvAspect.addRuntime(EnvMain);
+  `;
 }
 
-EnvAspect.addRuntime(EnvMain);`;
-}
+function getMainAspect(remoteScope: string) {
+  return `import { MainRuntime } from '@teambit/cli';
+  import { DepAspectAspect, DepAspectMain } from '@ci/${remoteScope}.dep-aspect';
+  import { MainAspectAspect } from './main-aspect.aspect';
 
-function getEnvIdFromModel(compModel: any): string {
-  const envEntry = compModel.extensions.find((ext) => ext.name === 'teambit.envs/envs');
-  const envId = envEntry.data.id;
-  return envId;
+  export class MainAspectMain {
+    static slots = [];
+    static dependencies = [DepAspectAspect];
+    static runtime = MainRuntime;
+    static async provider(depAspect: [DepAspectMain]) {
+      if (!depAspect) {
+        throw new Error('unable to load the depAspect');
+      }
+      return new MainAspectMain();
+    }
+  }
+
+  MainAspectAspect.addRuntime(MainAspectMain);
+  `;
 }
