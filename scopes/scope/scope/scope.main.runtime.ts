@@ -27,6 +27,7 @@ import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { RemoteScopeAspect, RemoteScopeMain } from '@teambit/remote-scope';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -749,6 +750,7 @@ export class ScopeMain implements ComponentFactory {
     AspectLoaderAspect,
     ExpressAspect,
     LoggerAspect,
+    RemoteScopeAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -756,7 +758,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, remoteScope]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -764,7 +766,8 @@ export class ScopeMain implements ComponentFactory {
       IsolatorMain,
       AspectLoaderMain,
       ExpressMain,
-      LoggerMain
+      LoggerMain,
+      RemoteScopeMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -803,6 +806,7 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
+    remoteScope.registerRemotes(legacyScope.scopeJson.remotes);
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

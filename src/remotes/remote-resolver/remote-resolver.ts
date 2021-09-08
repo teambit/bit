@@ -71,15 +71,10 @@ const hubResolver = async (scopeName) => {
 const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> => {
   const token = getSync(CFG_USER_TOKEN_KEY);
   const resolverPath = thisScope?.scopeJson.resolverPath;
-  let resolverFunction: ResolverFunction;
-  if (!resolverPath) {
-    // use the default resolver
-    resolverFunction = hubResolver;
-  } else {
-    // use the resolver described in the scopeJson
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    resolverFunction = require(resolverPath);
-  }
+
+  // use the resolver described in the scopeJson if exists, otherwise, use the default resolver
+  // eslint-disable-next-line import/no-dynamic-require, global-require
+  const resolverFunction: ResolverFunction = resolverPath ? require(resolverPath) : hubResolver;
 
   return resolverFunction(scopeName, thisScope ? thisScope.name : undefined, token); // should return promise<string>
 };

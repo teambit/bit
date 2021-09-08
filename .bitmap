@@ -705,6 +705,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
+    "remote-scope": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/remote-scope"
+    },
     "schema": {
         "scope": "teambit.semantics",
         "version": "0.0.502",

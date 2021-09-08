@@ -263,7 +263,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
     const multipleStreams = Object.values(objectsStreamPerRemote);
-    const bitObjects = await this.multipleStreamsToBitObjects(multipleStreams);
+    const bitObjects = await multipleStreamsToBitObjects(multipleStreams);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     return lanes;
@@ -291,7 +291,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
 
-    const bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(multipleStreams));
+    const bitObjectsList = await multipleStreamsToBitObjects(Object.values(multipleStreams));
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
@@ -376,19 +376,12 @@ export default class ScopeComponentsImporter {
     let bitObjectsList: BitObjectList;
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
-      bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
+      bitObjectsList = await multipleStreamsToBitObjects(Object.values(streams));
     } catch (err: any) {
       return null; // probably doesn't exist
     }
 
     return bitObjectsList;
-  }
-
-  private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
-    const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
-    const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
-    const bitObjects = await objectList.toBitObjects();
-    return bitObjects;
   }
 
   private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {
@@ -657,4 +650,11 @@ export function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
   });
   return grouped;
+}
+
+export async function multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
+  const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
+  const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
+  const bitObjects = await objectList.toBitObjects();
+  return bitObjects;
 }
