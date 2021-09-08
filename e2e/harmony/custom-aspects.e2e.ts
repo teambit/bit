@@ -30,7 +30,10 @@ describe('custom aspects', function () {
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.command.create('aspect', 'dep-aspect');
       helper.command.create('aspect', 'main-aspect');
-      helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`, getMainAspect(helper.scopes.remoteWithoutOwner));
+      helper.fs.outputFile(
+        `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
+        getMainAspect(helper.scopes.remoteWithoutOwner)
+      );
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/aspect');
       helper.command.compile();
       helper.command.install();
@@ -56,10 +59,19 @@ describe('custom aspects', function () {
     after(() => {
       npmCiRegistry.destroy();
     });
-
     it('should load the env correctly and use it for the consuming component', async () => {
       const envId = helper.env.getComponentEnv('comp1');
-      expect(envId).to.equal(`ci.${helper.scopes.remoteWithoutOwner}/my-env`);
+      expect(envId).to.equal(`${helper.scopes.remote}/my-env`);
+    });
+    // @todo: FIX!
+    describe.skip('when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope', () => {
+      before(() => {
+        helper.command.importComponent('dep-aspect');
+      });
+      it('should load the env correctly and use it for the consuming component', async () => {
+        const envId = helper.env.getComponentEnv('comp1');
+        expect(envId).to.equal(`${helper.scopes.remote}/my-env`);
+      });
     });
   });
 });
@@ -98,7 +110,7 @@ function getMainAspect(remoteScope: string) {
     static slots = [];
     static dependencies = [DepAspectAspect];
     static runtime = MainRuntime;
-    static async provider(depAspect: [DepAspectMain]) {
+    static async provider([depAspect]: [DepAspectMain]) {
       if (!depAspect) {
         throw new Error('unable to load the depAspect');
       }
