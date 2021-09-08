@@ -168,7 +168,7 @@ function _getJSType(options) {
  * @return {String}
  */
 function jsLookup(options: Options) {
-  const { configPath, dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
+  const { dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
   const type = _getJSType({
     config,
     webpackConfig,
