@@ -430,28 +430,6 @@ describe('dependencyTree', function () {
       dependencyTreeRewired._getDependencies.restore();
     });
 
-    it('accepts a cache object for memoization (#2)', () => {
-      const filename = path.normalize(`${fixtures}/amd/a.js`);
-      const directory = path.normalize(`${fixtures}/amd`);
-      const cache = {};
-
-      cache[path.normalize(`${fixtures}/amd/b.js`)] = {
-        pathMap: {
-          dependencies: [path.normalize(`${fixtures}/amd/b.js`), path.normalize(`${fixtures}/amd/c.js`)],
-        },
-      };
-
-      const tree = dependencyTree({
-        filename,
-        directory,
-        visited: cache,
-      });
-
-      assert.equal(Object.keys(tree[filename]).length, 2);
-      // @ts-ignore
-      assert(this._spy.neverCalledWith(path.normalize(`${fixtures}/amd/b.js`)));
-    });
-
     it('returns the precomputed list of a cached entry point', () => {
       const filename = `${fixtures}/amd/a.js`;
       const directory = `${fixtures}/amd`;
@@ -472,10 +450,6 @@ describe('dependencyTree', function () {
   });
 
   describe('module formats', () => {
-    describe('amd', () => {
-      testTreesForFormat('amd');
-    });
-
     describe('commonjs', () => {
       testTreesForFormat('commonjs');
     });
@@ -585,70 +559,10 @@ describe('dependencyTree', function () {
       };
     });
 
-    it('resolves aliased modules', () => {
-      this.timeout(5000);
-      // @ts-ignore
-      this._testResolution('aliased');
-    });
-
     it('resolves unaliased modules', () => {
       this.timeout(5000);
       // @ts-ignore
       this._testResolution('unaliased');
-    });
-  });
-
-  describe('requirejs', () => {
-    beforeEach(() => {
-      mockfs({
-        root: {
-          'lodizzle.js': 'define({})',
-          'require.config.js': `
-            requirejs.config({
-              baseUrl: './',
-              paths: {
-                F: './lodizzle.js'
-              }
-            });
-          `,
-          'a.js': `
-            define([
-              'F'
-            ], function(F) {
-
-            });
-          `,
-          'b.js': `
-            define([
-              './lodizzle'
-            ], function(F) {
-
-            });
-          `,
-        },
-      });
-    });
-
-    it('resolves aliased modules', () => {
-      const tree = dependencyTree({
-        filename: 'root/a.js',
-        directory: 'root',
-        config: 'root/require.config.js',
-      });
-
-      const filename = path.resolve(process.cwd(), 'root/a.js');
-      assert(tree[filename].includes(path.normalize('root/lodizzle.js')));
-    });
-
-    it('resolves non-aliased paths', () => {
-      const tree = dependencyTree({
-        filename: 'root/b.js',
-        directory: 'root',
-        config: 'root/require.config.js',
-      });
-
-      const filename = path.resolve(process.cwd(), 'root/b.js');
-      assert.ok(tree[filename].includes(path.normalize('root/lodizzle.js')));
     });
   });
 
