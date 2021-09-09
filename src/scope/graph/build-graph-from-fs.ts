@@ -106,7 +106,7 @@ export class GraphFromFsBuilder {
         const component = await this.loadComponent(comp);
         this.graph.setNode(idStr, component);
         return component;
-      } catch (err) {
+      } catch (err: any) {
         if (err instanceof ComponentNotFound) {
           throw new GeneralError(
             `error: component "${idStr}" was not found.\nthis component is a dependency of "${dependenciesOf}" and is needed as part of the graph generation`

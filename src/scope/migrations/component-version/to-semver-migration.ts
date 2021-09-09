@@ -65,7 +65,7 @@ function _getUpdatedId(id) {
     }
     const newId = `${parsedId.toStringWithoutVersion()}${VERSION_DELIMITER}${version}`;
     return newId;
-  } catch (err) {
+  } catch (err: any) {
     logger.error(`couldn't parse the id ${id} in order to migrate it to semver`);
     throw err;
   }

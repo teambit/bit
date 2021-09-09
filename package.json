@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.148",
+  "version": "1.0.151",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -11,7 +11,7 @@
     "/dist"
   ],
   "engines": {
-    "node": ">=12.15.0"
+    "node": ">=12.22.0"
   },
   "husky": {
     "hooks": {
@@ -184,7 +184,6 @@
     "minimatch": "3.0.4",
     "mockery": "2.1.0",
     "module-definition": "3.3.1",
-    "module-lookup-amd": "6.2.0",
     "moment": "2.29.1",
     "node-fetch": "2.6.1",
     "node-source-walk": "4.2.0",
@@ -275,9 +274,9 @@
     "@types/semver": "7.3.4",
     "@types/uuid": "3.4.9",
     "@types/yargs": "17.0.0",
-    "@typescript-eslint/eslint-plugin": "4.29.0",
-    "@typescript-eslint/parser": "4.29.0",
-    "@typescript-eslint/typescript-estree": "4.29.0",
+    "@typescript-eslint/eslint-plugin": "4.30.0",
+    "@typescript-eslint/parser": "4.30.0",
+    "@typescript-eslint/typescript-estree": "4.30.0",
     "babel-eslint": "9.0.0",
     "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
@@ -307,7 +306,7 @@
     "sinon": "5.1.1",
     "tar": "6.1.6",
     "type-coverage": "2.15.1",
-    "typescript": "4.3.5",
+    "typescript": "4.4.2",
     "verdaccio": "4.11.0"
   }
 }

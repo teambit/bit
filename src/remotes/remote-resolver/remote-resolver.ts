@@ -46,7 +46,7 @@ async function getScope(name: string) {
     });
     scopeCache[name] = res;
     return res;
-  } catch (err) {
+  } catch (err: any) {
     logger.error('getScope has failed', err);
     const msg = err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error.";
     if (msg === 'access denied') {

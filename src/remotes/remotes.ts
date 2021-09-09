@@ -67,7 +67,7 @@ export default class Remotes extends Map<string, Remote> {
           objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
           objectsStreamPerRemote[scopeName] = objectsStream;
           return objectsStream;
-        } catch (err) {
+        } catch (err: any) {
           if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
             logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
           } else if (err instanceof UnexpectedNetworkError) {

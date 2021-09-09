@@ -68,7 +68,7 @@ export default class GeneralHelper {
     let output;
     try {
       output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
-    } catch (err) {
+    } catch (err: any) {
       output = err.toString() + err.stdout.toString();
     }
     return output;
@@ -85,7 +85,7 @@ export default class GeneralHelper {
     let output;
     try {
       cmdFunc();
-    } catch (err) {
+    } catch (err: any) {
       output = err.toString();
     }
 

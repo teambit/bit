@@ -699,7 +699,7 @@ export default class Component {
               const results = await tester.oldAction(testFilePath, context);
               results.specPath = testFile.relative;
               return results;
-            } catch (err) {
+            } catch (err: any) {
               const failures = [
                 {
                   title: err.message,
@@ -718,7 +718,7 @@ export default class Component {
           const specsResultsP = testFilesList.map(oneFileSpecResult);
           specsResults = await Promise.all(specsResultsP);
         }
-      } catch (e) {
+      } catch (e: any) {
         if (tmpFolderFullPath) {
           logger.info(`consumer-component.runSpecs, deleting ${tmpFolderFullPath}`);
           fs.removeSync(tmpFolderFullPath);
@@ -788,7 +788,7 @@ export default class Component {
       if (!keep) await isolatedEnvironment.destroy();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return results;
-    } catch (e) {
+    } catch (e: any) {
       if (!keep) await isolatedEnvironment.destroy();
       return Promise.reject(e);
     }
@@ -800,7 +800,7 @@ export default class Component {
       await isolatedEnvironment.create();
       await isolatedEnvironment.isolateComponent(this.id, opts);
       return isolatedEnvironment.path;
-    } catch (err) {
+    } catch (err: any) {
       await isolatedEnvironment.destroy();
       throw new GeneralError(err);
     }
@@ -1182,7 +1182,7 @@ async function getLoadedFilesLegacy(
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       sourceFiles.push(sourceFile);
-    } catch (err) {
+    } catch (err: any) {
       if (!(err instanceof FileSourceNotFound)) throw err;
       logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

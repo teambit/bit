@@ -55,7 +55,7 @@ export class Port {
         lockedPorts.young.add(availablePort);
 
         return availablePort;
-      } catch (error) {
+      } catch (error: any) {
         if (!['EADDRINUSE', 'EACCES'].includes(error.code) && !(error instanceof Locked)) {
           throw error;
         }

@@ -104,7 +104,7 @@ describe('bit untrack command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.untrackComponent();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');

@@ -237,7 +237,7 @@ export default class PackageJsonFile {
   static parsePackageJsonStr(str: string, dir: string) {
     try {
       return JSON.parse(str);
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(`failed parsing package.json file at ${dir}. original error: ${err.message}`);
     }
   }
@@ -245,7 +245,7 @@ export default class PackageJsonFile {
   static async getPackageJsonStrIfExist(filePath: PathOsBased) {
     try {
       return await fs.readFile(filePath, 'utf-8');
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         return null; // file not found
       }
@@ -256,7 +256,7 @@ export default class PackageJsonFile {
   static getPackageJsonStrIfExistSync(filePath: PathOsBased) {
     try {
       return fs.readFileSync(filePath, 'utf-8');
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         return null; // file not found
       }

@@ -272,6 +272,8 @@ export class UiMain {
       startPlugins: plugins,
     });
 
+    // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
+    this.addSignalListener();
     if (dev) {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
@@ -282,6 +284,16 @@ export class UiMain {
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
 
     return uiServer;
+  }
+
+  private addSignalListener() {
+    process.on('SIGTERM', () => {
+      process.exit();
+    });
+
+    process.on('SIGINT', () => {
+      process.exit();
+    });
   }
 
   async getPort(port?: number): Promise<number> {

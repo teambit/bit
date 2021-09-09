@@ -131,7 +131,7 @@ class BitLogger implements IBitLogger {
     if (color) {
       try {
         messageStr = chalk.keyword(color)(messageStr);
-      } catch (e) {
+      } catch (e: any) {
         this.trace('a wrong color provided to logger.console method');
       }
     }

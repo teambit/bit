@@ -60,7 +60,7 @@ export class BuilderMain {
         artifactMap.toArray().map(async ([component, artifactList]) => {
           try {
             return await artifactList.store(component);
-          } catch (err) {
+          } catch (err: any) {
             throw new ArtifactStorageError(err, component);
           }
         })

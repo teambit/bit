@@ -154,7 +154,7 @@ edit the file to fix the error, or delete it and run "bit init" to recreate it`)
     let rawScopeJson;
     try {
       rawScopeJson = await fs.readFile(scopeJsonPath);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') throw new ScopeJsonNotFound(scopeJsonPath);
       throw err;
     }

@@ -10,7 +10,7 @@ export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbso
   }
   try {
     fs.moveSync(src, dest, options);
-  } catch (err) {
+  } catch (err: any) {
     if (err.message.includes('Cannot move') && err.message.includes('into itself')) {
       throw new GeneralError(`unable to move '${src}' into itself '${dest}'`);
     }

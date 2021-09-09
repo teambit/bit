@@ -5,12 +5,12 @@ export function mainRuntimeFile({ namePascalCase: Name, name }: ComponentContext
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ${Name}Aspect } from './${name}.aspect';
+// import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 
 /**
  * Uncomment to include config files for overrides of Typescript or Webpack
  */
 // const tsconfig = require('./typescript/tsconfig');
-// const webpackConfig = require('./webpack/webpack.config');
 
 export class ${Name}Main {
   static slots = [];
@@ -27,7 +27,10 @@ export class ${Name}Main {
        */
 
       // react.overrideTsConfig(tsconfig),
-      // react.overrideDevServerConfig(webpackConfig),
+      // react.useWebpack({
+      //   previewConfig: [previewConfigTransformer],
+      //   devServerConfig: [devServerConfigTransformer],
+      // }),
       // react.overrideJestConfig(require.resolve('./jest/jest.config')),
 
       /**

@@ -243,7 +243,7 @@ describe('bit checkout command', function () {
           before(() => {
             try {
               helper.command.checkoutVersion('0.0.1', 'bar/foo');
-            } catch (err) {
+            } catch (err: any) {
               output = err.toString();
             }
           });

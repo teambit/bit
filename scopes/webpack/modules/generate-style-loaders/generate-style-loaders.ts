@@ -4,7 +4,8 @@ type PreProcessOptions = {
 };
 
 export type GenerateStyleLoadersOptions = {
-  miniCssExtractPlugin: any;
+  /** the loader injecting the css to the html. style-loader / mini-css-extract-plugin */
+  injectingLoader: any;
   cssLoaderPath: string;
   cssLoaderOpts: any;
   postCssLoaderPath: string;
@@ -16,7 +17,7 @@ export type GenerateStyleLoadersOptions = {
 export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
   const loaders = [
     {
-      loader: options.miniCssExtractPlugin,
+      loader: options.injectingLoader,
     },
     {
       loader: options.cssLoaderPath,

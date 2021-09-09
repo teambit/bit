@@ -237,7 +237,7 @@ async function parseNpmListJsonGracefully(str: string, packageManager: string): 
   try {
     const json = JSON.parse(str);
     return json;
-  } catch (err) {
+  } catch (err: any) {
     logger.error('npm-client got an error', err);
     if (packageManager === 'npm') {
       const version = await getNpmVersion();
@@ -382,7 +382,7 @@ async function getNpmVersion(): Promise<string | null | undefined> {
   try {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
-  } catch (err) {
+  } catch (err: any) {
     logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
   }
   return null;
@@ -392,7 +392,7 @@ async function getYarnVersion(): Promise<string | null | undefined> {
   try {
     const { stdout } = await execa('yarn', ['-v']);
     return stdout;
-  } catch (e) {
+  } catch (e: any) {
     logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
   }
   return null;
@@ -419,7 +419,7 @@ async function getPackageLatestVersion(packageName: string): Promise<string | nu
   try {
     const { stdout } = await execa('npm', ['show', packageName, 'version']);
     return stdout;
-  } catch (e) {
+  } catch (e: any) {
     logger.debugAndAddBreadCrumb(
       'npm-client',
       `can't find ${packageName} version by running npm show ${packageName} version. ${e.message}`

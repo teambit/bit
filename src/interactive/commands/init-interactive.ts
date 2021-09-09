@@ -55,7 +55,7 @@ function _generateChooseEnvQ(
         return false;
       }
       return true;
-    } catch (e) {
+    } catch (e: any) {
       // eslint-disable-next-line no-console
       //  console.log(
       //  chalk.yellow(`could not retrieve compilers list.

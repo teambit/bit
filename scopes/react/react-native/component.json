@@ -12,7 +12,7 @@
         "name": "@teambit/{name}",
         "private": false,
         "engines": {
-          "node": ">=12.15.0"
+          "node": ">=12.22.0"
         },
         "repository": {
           "type": "git",
@@ -46,7 +46,7 @@
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
           "react-native-web": "^0.16.0",
-          "@teambit/legacy": "1.0.148"
+          "@teambit/legacy": "1.0.151"
         }
       }
     },

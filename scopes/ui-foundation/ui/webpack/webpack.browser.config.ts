@@ -8,8 +8,6 @@ import { merge } from 'webpack-merge';
 import { html } from './html';
 import createBaseConfig from './webpack.base.config';
 
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
-
 export default function createWebpackConfig(
   workspaceDir: string,
   entryFiles: string[],
@@ -77,7 +75,6 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
           },
         }),
         new CssMinimizerPlugin({
-          sourceMap: shouldUseSourceMap,
           minimizerOptions: {
             preset: [
               'default',

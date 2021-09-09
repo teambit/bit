@@ -58,7 +58,7 @@ export async function get(key: string): Promise<string | undefined> {
     const gitVal = await gitconfig.get(key);
     return gitVal;
     // Ignore error from git config get
-  } catch (err) {
+  } catch (err: any) {
     return undefined;
   }
 }
@@ -85,7 +85,7 @@ export function getSync(key: string): string | undefined {
   try {
     const gitVal = gitconfig.get.sync(key);
     gitConfigCache[key] = gitVal;
-  } catch (err) {
+  } catch (err: any) {
     // Ignore error from git config get
     gitConfigCache[key] = undefined;
   }

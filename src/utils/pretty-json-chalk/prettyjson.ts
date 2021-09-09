@@ -265,7 +265,7 @@ function renderString(data, options, indentation) {
 
   try {
     parsedData = JSON.parse(data);
-  } catch (e) {
+  } catch (e: any) {
     // Return an error in case of an invalid JSON
     return `${colors.red('Error:')} Not valid JSON!`;
   }

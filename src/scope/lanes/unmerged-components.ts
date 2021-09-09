@@ -33,7 +33,7 @@ export default class UnmergedComponents {
     try {
       const fileContent = await fs.readJson(filePath);
       unmerged = fileContent.map((item) => ({ ...item, head: Ref.from(item.head) }));
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         unmerged = [];
       } else {

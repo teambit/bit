@@ -377,7 +377,7 @@ export default class ScopeComponentsImporter {
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
       bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
-    } catch (err) {
+    } catch (err: any) {
       return null; // probably doesn't exist
     }
 
