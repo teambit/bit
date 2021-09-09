@@ -567,6 +567,7 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
+      "teambit.harmony/node": "-",
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "devDependencies": {
