@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.150":
-  version: 1.0.150
-  resolution: "@teambit/legacy@npm:1.0.150"
+"@teambit/legacy@npm:1.0.152":
+  version: 1.0.152
+  resolution: "@teambit/legacy@npm:1.0.152"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6761,7 +6761,6 @@ __metadata:
     minimatch: 3.0.4
     mockery: 2.1.0
     module-definition: 3.3.1
-    module-lookup-amd: 6.2.0
     moment: 2.29.1
     node-fetch: 2.6.1
     node-source-walk: 4.2.0
@@ -6821,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 069d574e161f3a2864b9afb0a407fc6c17e77c3eac95f6cbc98a635cb950939eb6c1cb4c8e7355bf56f44f9777673d0c1e16268f4c039240cf451cfb72200f5a
+  checksum: ee0772c8870b9e5b741f910355d249172bf2b3fe488bfc3651ace99d5349bd5248e5b01c5fe78f157bbc5375d4f8da0207729812431c69c894315bbe95c0cd46
   languageName: node
   linkType: hard
 
@@ -6963,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.150
+    "@teambit/legacy": 1.0.152
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7318,7 +7317,7 @@ __metadata:
     supi: 0.44.3
     symlink-or-copy: 1.3.1
     table: 5.4.6
-    tar: 6.1.6
+    tar: 6.1.11
     tar-stream: 2.2.0
     terser-webpack-plugin: 5.2.0
     timers-browserify: 2.0.12
@@ -7367,7 +7366,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.150
+    "@teambit/legacy": 1.0.152
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -18140,13 +18139,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-exists-dazinatorfork@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "file-exists-dazinatorfork@npm:1.0.2"
-  checksum: 04773ec2b6ce839e54d7a5bcba089162a120e01be2063b87b83159ff0d93847fc013922d8dd3d7d7b0e3aed6d148075f44e4e0f5ce12cc26b68ef6fa26f826c4
-  languageName: node
-  linkType: hard
-
 "file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree":
   version: 0.0.0-use.local
   resolution: "file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree"
@@ -18294,15 +18286,6 @@ __metadata:
   dependencies:
     semver-regex: ^3.1.2
   checksum: 2b4c749dc33e3fa73a457ca4df616ac13b4b32c53f6297bc862b0814d402a6cfec93a0d308d5502eeb47f2c125906e0f861bf01b756f08395640892186357711
-  languageName: node
-  linkType: hard
-
-"find@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "find@npm:0.3.0"
-  dependencies:
-    traverse-chain: ~0.1.0
-  checksum: 1cc321b24e13b11e088e2c951edef125faefdbd6ecab34d92c22a2d121af4a99b2feaee7712ad9ab38226da793702ab59a6c8a6343db63a0ab3901589241ec8c
   languageName: node
   linkType: hard
 
@@ -18686,6 +18669,15 @@ __metadata:
   version: 1.0.0
   resolution: "fs.realpath@npm:1.0.0"
   checksum: 99ddea01a7e75aa276c250a04eedeffe5662bce66c65c07164ad6264f9de18fb21be9433ead460e54cff20e31721c811f4fb5d70591799df5f85dce6d6746fd0
+  languageName: node
+  linkType: hard
+
+"fsevents@^2.1.2, fsevents@~2.3.1, fsevents@~2.3.2":
+  version: 2.3.2
+  resolution: "fsevents@npm:2.3.2"
+  dependencies:
+    node-gyp: latest
+  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
   languageName: node
   linkType: hard
 
@@ -24742,22 +24734,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"module-lookup-amd@npm:6.2.0":
-  version: 6.2.0
-  resolution: "module-lookup-amd@npm:6.2.0"
-  dependencies:
-    commander: ^2.8.1
-    debug: ^4.1.0
-    file-exists-dazinatorfork: ^1.0.2
-    find: ^0.3.0
-    requirejs: ^2.3.5
-    requirejs-config-file: ^3.1.1
-  bin:
-    lookup-amd: bin/cli.js
-  checksum: b0ed7850ee29e8e23e4c7ea5507efbc3676dc19d1feab89efad5ccfbd7a9337d8fce25696fd994767a9637399e8af0a37cb092b6a0d612f4333e2fc1ababb94a
-  languageName: node
-  linkType: hard
-
 "moment@npm:2.29.1, moment@npm:^2.19.3":
   version: 2.29.1
   resolution: "moment@npm:2.29.1"
@@ -29667,27 +29643,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"requirejs-config-file@npm:^3.1.1":
-  version: 3.1.2
-  resolution: "requirejs-config-file@npm:3.1.2"
-  dependencies:
-    esprima: ^4.0.0
-    make-dir: ^2.1.0
-    stringify-object: ^3.2.1
-  checksum: 584afc0db6fa02ebb8cd49fc3c92dd619a3b5b6a1e7e25942e792c76c7eb72f0c6c2ec41574f539c981d0cee81f7ed34ac6b2c8d40d36187a8d41a921aa35833
-  languageName: node
-  linkType: hard
-
-"requirejs@npm:^2.3.5":
-  version: 2.3.6
-  resolution: "requirejs@npm:2.3.6"
-  bin:
-    r.js: ./bin/r.js
-    r_js: ./bin/r.js
-  checksum: 7c3c006bf5e1887d93ac7adb7f600328918d23cf3d28282a505a2873d4ddde499c7ec560e55cee3440d17fe1205cb4dcb72b07f35b39e8940372eca850e49b62
-  languageName: node
-  linkType: hard
-
 "requires-port@npm:^1.0.0":
   version: 1.0.0
   resolution: "requires-port@npm:1.0.0"
@@ -29791,6 +29746,16 @@ __metadata:
   version: 1.0.2
   resolution: "resolve.exports@npm:1.0.2"
   checksum: 1de1e50dc61dfe0abfdcbe658aaffce108662b007a1879406cbcf32a8199358ed4a2b86ca4606a53d9978f2bc7e5e1321edf6cca36081ae0b845334f28c29cf3
+  languageName: node
+  linkType: hard
+
+"resolve@1.20.0, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.20.0, resolve@^1.3.2, resolve@^1.8.1":
+  version: 1.20.0
+  resolution: "resolve@npm:1.20.0"
+  dependencies:
+    is-core-module: ^2.2.0
+    path-parse: ^1.0.6
+  checksum: 40cf70b2cde00ef57f99daf2dc63c6a56d6c14a1b7fc51735d06a6f0a3b97cb67b4fb7ef6c747b4e13a7baba83b0ef625d7c4ce92a483cd5af923c3b65fd16fe
   languageName: node
   linkType: hard
 
@@ -31754,7 +31719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stringify-object@npm:^3.2.1, stringify-object@npm:^3.3.0":
+"stringify-object@npm:^3.3.0":
   version: 3.3.0
   resolution: "stringify-object@npm:3.3.0"
   dependencies:
@@ -32329,9 +32294,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:6.1.6":
-  version: 6.1.6
-  resolution: "tar@npm:6.1.6"
+"tar@npm:6.1.11":
+  version: 6.1.11
+  resolution: "tar@npm:6.1.11"
   dependencies:
     chownr: ^2.0.0
     fs-minipass: ^2.0.0
@@ -32339,7 +32304,7 @@ __metadata:
     minizlib: ^2.1.1
     mkdirp: ^1.0.3
     yallist: ^4.0.0
-  checksum: 583f1165281746b4c48adee4ff7bab4895e73999eeda3c8d59779e47c29dc1dc714d832608a491fead4fd794bf9e0bd51b3d4a4fbad87f487a8b360321d70e8c
+  checksum: a04c07bb9e2d8f46776517d4618f2406fb977a74d914ad98b264fc3db0fe8224da5bec11e5f8902c5b9bcb8ace22d95fbe3c7b36b8593b7dfc8391a25898f32f
   languageName: node
   linkType: hard
 
@@ -32883,13 +32848,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"traverse-chain@npm:~0.1.0":
-  version: 0.1.0
-  resolution: "traverse-chain@npm:0.1.0"
-  checksum: dea79231a429a3dd80a829ff83e8914b6d0032d55dd0971f69d5273e95155869fca400dd9e22f0d91c3b0dda9668aaeeb694f525d7e5a55ca7f695cc149088a2
-  languageName: node
-  linkType: hard
-
 "tree-node-4805f0@workspace:scopes/ui-foundation/tree/tree-node":
   version: 0.0.0-use.local
   resolution: "tree-node-4805f0@workspace:scopes/ui-foundation/tree/tree-node"
@@ -33294,6 +33252,46 @@ __metadata:
   bin:
     typescript-language-server: ./lib/cli.js
   checksum: e133ff7625c71f448b09c0dd58cc335c29d0f489b793ff8d096c72d8a475f599cfc7e3b696206c46d83df516a0b3580906192c0c32802d1f038fdf664287892a
+  languageName: node
+  linkType: hard
+
+typescript@3.9.7:
+  version: 3.9.7
+  resolution: "typescript@npm:3.9.7"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: d549bf1d3a93796b45be9d1dbebbef63777f8cc4d788461f4bfdb6cb07371a97d3e471c7f39dbe31107e8a25d6d8b2ef5e967af7e8e1768d9560bd95095b360b
+  languageName: node
+  linkType: hard
+
+typescript@4.4.2:
+  version: 4.4.2
+  resolution: "typescript@npm:4.4.2"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 194e08e9d1971d667d6fd1a0554616b7022312a2319d70e81a64e502a265992061ee7817ed9a69b52bbabe7a9b85e7938cb8c11c433e40a516b277f8c4dacd51
+  languageName: node
+  linkType: hard
+
+typescript@^2.6.2:
+  version: 2.9.2
+  resolution: "typescript@npm:2.9.2"
+  bin:
+    tsc: ./bin/tsc
+    tsserver: ./bin/tsserver
+  checksum: 88be998ac339b6e45f1cd15e22e4a0fedcdb5320d8d1d736e3996a0b9dff03728ebb2580a0658f0c52152b139ea9a405443f42a4ff8a2c4a1a6f4d58e0320132
+  languageName: node
+  linkType: hard
+
+typescript@^3.9.3:
+  version: 3.9.10
+  resolution: "typescript@npm:3.9.10"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 46c842e2cd4797b88b66ef06c9c41dd21da48b95787072ccf39d5f2aa3124361bc4c966aa1c7f709fae0509614d76751455b5231b12dbb72eb97a31369e1ff92
   languageName: node
   linkType: hard
 
