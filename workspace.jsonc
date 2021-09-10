@@ -466,7 +466,6 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
-      "teambit.harmony/node": "-",
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
@@ -567,7 +566,6 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
-      "teambit.harmony/node": "-",
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "devDependencies": {
@@ -584,7 +582,6 @@
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"
       },
-      "teambit.harmony/node": "-",
       "teambit.mdx/mdx": {}
     },
     "scopes/semantics": {
