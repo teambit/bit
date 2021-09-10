@@ -233,8 +233,7 @@ export class EnvsMain {
    */
   calculateEnv(component: Component): EnvDefinition {
     // Search first for env configured via envs aspect itself
-    const envsAspect = component.state.aspects.get(EnvsAspect.id);
-    const envIdFromEnvsConfig = envsAspect?.config.env;
+    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
     let envIdFromEnvsConfigWithoutVersion;
     if (envIdFromEnvsConfig) {
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
@@ -268,8 +267,8 @@ export class EnvsMain {
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString()).message;
-      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
+      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig as string, component.id.toString()).message;
+      this.printWarningIfFirstTime(envIdFromEnvsConfig as string, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -289,6 +288,17 @@ export class EnvsMain {
   }
 
   getAllEnvsConfiguredOnComponent(component: Component): EnvDefinition[] {
+    // if a component has "envs" config, use it and ignore other components that are set up
+    // in this components which happen to be envs.
+    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
+    if (envIdFromEnvsConfig) {
+      const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+      if (envDef) {
+        return [envDef];
+      }
+    }
+
     return component.state.aspects.entries.reduce((acc: EnvDefinition[], aspectEntry) => {
       const envDef = this.getEnvDefinitionById(aspectEntry.id);
       if (envDef) acc.push(envDef);
@@ -365,6 +375,11 @@ export class EnvsMain {
       return envDefFromList;
     }
     return this.getDefaultEnv();
+  }
+
+  private getEnvIdFromEnvsConfig(component: Component): string | undefined {
+    const envsAspect = component.state.aspects.get(EnvsAspect.id);
+    return envsAspect?.config.env;
   }
 
   private getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {

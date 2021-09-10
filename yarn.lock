@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.150":
-  version: 1.0.150
-  resolution: "@teambit/legacy@npm:1.0.150"
+"@teambit/legacy@npm:1.0.152":
+  version: 1.0.152
+  resolution: "@teambit/legacy@npm:1.0.152"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6761,7 +6761,6 @@ __metadata:
     minimatch: 3.0.4
     mockery: 2.1.0
     module-definition: 3.3.1
-    module-lookup-amd: 6.2.0
     moment: 2.29.1
     node-fetch: 2.6.1
     node-source-walk: 4.2.0
@@ -6821,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 069d574e161f3a2864b9afb0a407fc6c17e77c3eac95f6cbc98a635cb950939eb6c1cb4c8e7355bf56f44f9777673d0c1e16268f4c039240cf451cfb72200f5a
+  checksum: ee0772c8870b9e5b741f910355d249172bf2b3fe488bfc3651ace99d5349bd5248e5b01c5fe78f157bbc5375d4f8da0207729812431c69c894315bbe95c0cd46
   languageName: node
   linkType: hard
 
@@ -6963,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.150
+    "@teambit/legacy": 1.0.152
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7318,7 +7317,7 @@ __metadata:
     supi: 0.44.3
     symlink-or-copy: 1.3.1
     table: 5.4.6
-    tar: 6.1.6
+    tar: 6.1.11
     tar-stream: 2.2.0
     terser-webpack-plugin: 5.2.0
     timers-browserify: 2.0.12
@@ -7367,7 +7366,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.150
+    "@teambit/legacy": 1.0.152
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -18140,13 +18139,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-exists-dazinatorfork@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "file-exists-dazinatorfork@npm:1.0.2"
-  checksum: 04773ec2b6ce839e54d7a5bcba089162a120e01be2063b87b83159ff0d93847fc013922d8dd3d7d7b0e3aed6d148075f44e4e0f5ce12cc26b68ef6fa26f826c4
-  languageName: node
-  linkType: hard
-
 "file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree":
   version: 0.0.0-use.local
   resolution: "file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree"
@@ -18294,15 +18286,6 @@ __metadata:
   dependencies:
     semver-regex: ^3.1.2
   checksum: 2b4c749dc33e3fa73a457ca4df616ac13b4b32c53f6297bc862b0814d402a6cfec93a0d308d5502eeb47f2c125906e0f861bf01b756f08395640892186357711
-  languageName: node
-  linkType: hard
-
-"find@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "find@npm:0.3.0"
-  dependencies:
-    traverse-chain: ~0.1.0
-  checksum: 1cc321b24e13b11e088e2c951edef125faefdbd6ecab34d92c22a2d121af4a99b2feaee7712ad9ab38226da793702ab59a6c8a6343db63a0ab3901589241ec8c
   languageName: node
   linkType: hard
 
@@ -24751,22 +24734,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"module-lookup-amd@npm:6.2.0":
-  version: 6.2.0
-  resolution: "module-lookup-amd@npm:6.2.0"
-  dependencies:
-    commander: ^2.8.1
-    debug: ^4.1.0
-    file-exists-dazinatorfork: ^1.0.2
-    find: ^0.3.0
-    requirejs: ^2.3.5
-    requirejs-config-file: ^3.1.1
-  bin:
-    lookup-amd: bin/cli.js
-  checksum: b0ed7850ee29e8e23e4c7ea5507efbc3676dc19d1feab89efad5ccfbd7a9337d8fce25696fd994767a9637399e8af0a37cb092b6a0d612f4333e2fc1ababb94a
-  languageName: node
-  linkType: hard
-
 "moment@npm:2.29.1, moment@npm:^2.19.3":
   version: 2.29.1
   resolution: "moment@npm:2.29.1"
@@ -29676,27 +29643,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"requirejs-config-file@npm:^3.1.1":
-  version: 3.1.2
-  resolution: "requirejs-config-file@npm:3.1.2"
-  dependencies:
-    esprima: ^4.0.0
-    make-dir: ^2.1.0
-    stringify-object: ^3.2.1
-  checksum: 584afc0db6fa02ebb8cd49fc3c92dd619a3b5b6a1e7e25942e792c76c7eb72f0c6c2ec41574f539c981d0cee81f7ed34ac6b2c8d40d36187a8d41a921aa35833
-  languageName: node
-  linkType: hard
-
-"requirejs@npm:^2.3.5":
-  version: 2.3.6
-  resolution: "requirejs@npm:2.3.6"
-  bin:
-    r.js: ./bin/r.js
-    r_js: ./bin/r.js
-  checksum: 7c3c006bf5e1887d93ac7adb7f600328918d23cf3d28282a505a2873d4ddde499c7ec560e55cee3440d17fe1205cb4dcb72b07f35b39e8940372eca850e49b62
-  languageName: node
-  linkType: hard
-
 "requires-port@npm:^1.0.0":
   version: 1.0.0
   resolution: "requires-port@npm:1.0.0"
@@ -31773,7 +31719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stringify-object@npm:^3.2.1, stringify-object@npm:^3.3.0":
+"stringify-object@npm:^3.3.0":
   version: 3.3.0
   resolution: "stringify-object@npm:3.3.0"
   dependencies:
@@ -32348,9 +32294,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:6.1.6":
-  version: 6.1.6
-  resolution: "tar@npm:6.1.6"
+"tar@npm:6.1.11":
+  version: 6.1.11
+  resolution: "tar@npm:6.1.11"
   dependencies:
     chownr: ^2.0.0
     fs-minipass: ^2.0.0
@@ -32358,7 +32304,7 @@ __metadata:
     minizlib: ^2.1.1
     mkdirp: ^1.0.3
     yallist: ^4.0.0
-  checksum: 583f1165281746b4c48adee4ff7bab4895e73999eeda3c8d59779e47c29dc1dc714d832608a491fead4fd794bf9e0bd51b3d4a4fbad87f487a8b360321d70e8c
+  checksum: a04c07bb9e2d8f46776517d4618f2406fb977a74d914ad98b264fc3db0fe8224da5bec11e5f8902c5b9bcb8ace22d95fbe3c7b36b8593b7dfc8391a25898f32f
   languageName: node
   linkType: hard
 
@@ -32899,13 +32845,6 @@ __metadata:
   dependencies:
     punycode: ^2.1.1
   checksum: ffe6049b9dca3ae329b059aada7f515b0f0064c611b39b51ff6b53897e954650f6f63d9319c6c008d36ead477c7b55e5f64c9dc60588ddc91ff720d64eb710b3
-  languageName: node
-  linkType: hard
-
-"traverse-chain@npm:~0.1.0":
-  version: 0.1.0
-  resolution: "traverse-chain@npm:0.1.0"
-  checksum: dea79231a429a3dd80a829ff83e8914b6d0032d55dd0971f69d5273e95155869fca400dd9e22f0d91c3b0dda9668aaeeb694f525d7e5a55ca7f695cc149088a2
   languageName: node
   linkType: hard
 
