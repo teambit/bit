@@ -1,5 +1,5 @@
 import type { RuleSetRule } from 'webpack';
-import type { SassLoaderOptions } from 'sass-loader';
+import type { Options as SassLoaderOptions } from 'sass-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { allCssRegex, cssRegex, sassRegex, lessRegex } from '@teambit/webpack.modules.style-regexps';
