@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: circleci/node:12.15.0
+    - image: circleci/node:12.22.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -756,7 +756,7 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 12.16.0
+      - run: choco install nodejs --version 12.22.0
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1120,7 +1120,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.15.0
+      - run: cinst nodejs --version 12.22.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1174,7 +1174,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.15.0
+      - run: cinst nodejs --version 12.22.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt

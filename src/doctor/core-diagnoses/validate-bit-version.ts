@@ -1,8 +1,5 @@
 import semver from 'semver';
-
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import packageFile from '../../../package.json';
-import { BIT_VERSION } from '../../constants';
+import { getHarmonyVersion } from '../../bootstrap';
 import npmClient from '../../npm-client';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
@@ -18,9 +15,8 @@ export default class ValidateBitVersion extends Diagnosis {
       return 'could not fetch bit latest version';
     }
     return `bit is not up to date.
-    your version: ${BIT_VERSION}
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    latest version: ${bareResult.data.latestVersion}`;
+  your version: ${bareResult.data.currentVersion}
+  latest version: ${bareResult.data.latestVersion}`;
   }
 
   _formatManualTreat(bareResult: ExamineBareResult) {
@@ -29,18 +25,19 @@ export default class ValidateBitVersion extends Diagnosis {
     if (!bareResult.data.latestVersion) {
       return 'please make sure you have an internet connection';
     }
-    return 'please upgrade your bit version';
+    return 'please upgrade your bit version (bvm upgrade)';
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    const bitLatestVersion = await npmClient.getPackageLatestVersion(packageFile.name);
-    const bitCurrentVersion = BIT_VERSION;
+    const bitLatestVersion = await npmClient.getPackageLatestVersion('@teambit/bit');
+    const bitCurrentVersion = getHarmonyVersion(true);
     if (bitLatestVersion) {
       if (semver.lt(bitCurrentVersion, bitLatestVersion)) {
         return {
           valid: false,
           data: {
             latestVersion: bitLatestVersion,
+            currentVersion: bitCurrentVersion,
           },
         };
       }

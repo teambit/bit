@@ -320,7 +320,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.149",
+        "@teambit/legacy": "1.0.153",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -355,7 +355,7 @@
           "name": "@teambit/{name}",
           "private": false,
           "engines": {
-            "node": ">=12.15.0"
+            "node": ">=12.22.0"
           },
           "repository": {
             "type": "git",
@@ -406,7 +406,7 @@
           "name": "@teambit/{scope}.{name}",
           "private": false,
           "engines": {
-            "node": ">=12.15.0"
+            "node": ">=12.22.0"
           },
           "repository": {
             "type": "git",
@@ -436,7 +436,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.149"
+            "@teambit/legacy": "1.0.153"
           }
         }
       },
@@ -466,7 +466,6 @@
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
-      "teambit.harmony/node": "-",
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
@@ -583,7 +582,6 @@
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"
       },
-      "teambit.harmony/node": "-",
       "teambit.mdx/mdx": {}
     },
     "scopes/semantics": {
@@ -608,7 +606,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.149",
+            "@teambit/legacy": "1.0.153",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

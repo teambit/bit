@@ -151,7 +151,7 @@ export class ComponentID {
   /**
    * generate a component ID from a string.
    */
-  static fromString(idStr: string, scope?: string) {
+  static fromString(idStr: string, scope?: string): ComponentID {
     const legacyId = BitId.parse(idStr, true);
     if (!scope && !legacyId.scope) throw new MissingScope(idStr);
     return new ComponentID(legacyId, scope);

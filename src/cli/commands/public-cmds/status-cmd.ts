@@ -32,16 +32,25 @@ export default class Status implements LegacyCommand {
   group: Group = 'development';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
-  opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
+  opts = [
+    ['j', 'json', 'return a json version of the component'],
+    ['', 'strict', 'in case issues found, exit with code 1'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   json = false;
 
   // eslint-disable-next-line no-empty-pattern
-  action([], { json }: { json?: boolean }): Promise<Record<string, any>> {
+  async action([], { json, strict }: { json?: boolean; strict?: boolean }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.json = json;
-    return status();
+    const results = await status();
+    const exitCode = results.componentsWithIssues.length && strict ? 1 : 0;
+
+    return {
+      data: results,
+      __code: exitCode,
+    };
   }
 
   report({

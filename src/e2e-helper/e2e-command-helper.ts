@@ -127,6 +127,9 @@ export default class CommandHelper {
   sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
   }
+  artifacts(id = '', flags = '') {
+    return this.runCmd(`bit artifacts ${id} ${flags}`);
+  }
   updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
   }
