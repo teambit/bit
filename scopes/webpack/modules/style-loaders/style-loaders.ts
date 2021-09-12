@@ -1,4 +1,5 @@
 import type { RuleSetRule } from 'webpack';
+import type { SassLoaderOptions } from 'sass-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { allCssRegex, cssRegex, sassRegex, lessRegex } from '@teambit/webpack.modules.style-regexps';
@@ -9,8 +10,6 @@ const styleLoaderPath = require.resolve('style-loader');
 // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
 
 export type StyleLoadersOptions = {
-  /** options for postcss-loader (skipped if undefined) */
-  postcssOptions?: any;
   /**
    * type of style injecctor to use.
    * style-loader has better hot reloading support but is inline,
@@ -22,30 +21,62 @@ export type StyleLoadersOptions = {
    * @default true
    */
   modules?: boolean;
+
+  /** override specific path to css-loader */
+  cssLoader?: string;
+
+  postcssLoader?: string;
+  resolveUrlLoader?: string;
+  sassLoader?: string;
+  lessLoader?: string;
+  cssLoaderOptions?: any;
+  injectorOptions?: any;
+  /** options for postcss-loader (skipped if undefined) */
+  postcssOptions?: any;
+  sassLoaderOptions?: SassLoaderOptions;
+  lessLoaderOptions?: any;
+  resolveUrlOptions?: any;
 };
 
 export const cssLoaders = ({
-  postcssOptions,
   styleInjector = 'mini-css-extract-plugin',
   modules = true,
+
+  cssLoader = require.resolve('css-loader'),
+  postcssLoader = require.resolve('postcss-loader'),
+  resolveUrlLoader = require.resolve('resolve-url-loader'),
+  sassLoader = require.resolve('sass-loader'),
+  lessLoader = require.resolve('less-loader'),
+
+  cssLoaderOptions,
+  injectorOptions,
+  postcssOptions,
+  sassLoaderOptions,
+  lessLoaderOptions,
+  resolveUrlOptions,
 }: StyleLoadersOptions) => {
   const styleLoaders: RuleSetRule[] = [
     {
       test: allCssRegex,
       use: [
-        styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
         {
-          loader: require.resolve('css-loader'),
+          loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
+          options: injectorOptions,
+        },
+        {
+          loader: cssLoader,
           options: {
             importLoaders: 3,
             modules: {
               auto: modules,
               getLocalIdent: getCSSModuleLocalIdent, // pretty class names
             },
+
+            ...cssLoaderOptions,
           },
         },
         postcssOptions && {
-          loader: require.resolve('postcss-loader'),
+          loader: postcssLoader,
           options: {
             postcssOptions,
           },
@@ -55,19 +86,37 @@ export const cssLoaders = ({
         // dialects
         {
           test: sassRegex,
-          use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
+          use: [
+            {
+              loader: resolveUrlLoader,
+              options: resolveUrlOptions,
+            },
+            {
+              loader: sassLoader,
+              options: sassLoaderOptions,
+            },
+          ],
         },
         {
           test: lessRegex,
-          use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
+          use: [
+            {
+              loader: resolveUrlLoader,
+              options: resolveUrlOptions,
+            },
+            {
+              loader: lessLoader,
+              options: lessLoaderOptions,
+            },
+          ],
         },
       ],
     },
   ];
 
-  const stylePlugins: any[] = [styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any)].filter(
-    Boolean
-  );
+  const stylePlugins: any[] = [
+    styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any),
+  ].filter(Boolean);
 
   return {
     styleLoaders,

@@ -50,7 +50,8 @@
           "@types/mocha": "5.2.7",
           "@types/node": "12.20.4",
           "@types/react": "^17.0.8",
-          "@types/react-dom": "^17.0.5"
+          "@types/react-dom": "^17.0.5",
+          "@types/postcss-normalize": "9.0.1"
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",

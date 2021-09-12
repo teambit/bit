@@ -4,29 +4,30 @@
     "scope": "teambit.webpack"
   },
   "propagate": false,
-  "extensions": {},
-  "teambit.dependencies/dependency-resolver": {
-    "policy": {
-      "dependencies": {
-        "css-loader": "6.2.0",
-        "less": "4.1.1",
-        "less-loader": "10.0.0",
-        "mini-css-extract-plugin": "2.2.2",
-        "postcss": "8.2.9",
-        "postcss-loader": "6.1.1",
-        "postcss-safe-parser": "5.0.2",
-        "react-dev-utils": "11.0.4",
-        "resolve-url-loader": "4.0.0",
-        "sass-loader": "12.1.0",
-        "style-loader": "3.2.1"
-      },
-      "devDependencies": {
-        "@types/mini-css-extract-plugin": "2.2.0",
-        "@types/react-dev-utils": "9.0.8",
-        "@types/sass-loader": "8.0.2"
-      },
-      "peerDependencies": {
-        "@types/webpack": "^5.0.0 || ^4.0.0"
+  "extensions": {
+    "teambit.dependencies/dependency-resolver": {
+      "policy": {
+        "dependencies": {
+          "css-loader": "6.2.0",
+          "less": "4.1.1",
+          "less-loader": "10.0.0",
+          "mini-css-extract-plugin": "2.2.2",
+          "postcss": "8.2.9",
+          "postcss-loader": "6.1.1",
+          "postcss-safe-parser": "5.0.2",
+          "react-dev-utils": "11.0.4",
+          "resolve-url-loader": "4.0.0",
+          "sass-loader": "12.1.0",
+          "style-loader": "3.2.1"
+        },
+        "devDependencies": {
+          "@types/mini-css-extract-plugin": "2.2.0",
+          "@types/react-dev-utils": "9.0.8",
+          "@types/sass-loader": "8.0.2"
+        },
+        "peerDependencies": {
+          "@types/webpack": "^5.0.0 || ^4.0.0"
+        }
       }
     }
   }
