@@ -1,7 +1,5 @@
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { Configuration, IgnorePlugin } from 'webpack';
-import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
@@ -34,6 +32,11 @@ export default function (isEnvProduction = false): Configuration {
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
+
+  const { styleLoaders, stylePlugins } = cssLoaders({
+    postcssOptions: postCssConfig,
+    styleInjector: isEnvProduction ? 'mini-css-extract-plugin' : 'style-loader',
+  });
 
   // We will provide `paths.publicUrlOrPath` to our app
   // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
@@ -84,43 +87,8 @@ export default function (isEnvProduction = false): Configuration {
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
           oneOf: [
-            // load styles, including scss, less, and
-            // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
-            // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
-            {
-              test: stylesRegexps.allCssregex,
-              sideEffects: true,
-              use: [
-                isEnvProduction ? MiniCssExtractPlugin.loader : require.resolve('style-loader'),
-                {
-                  loader: require.resolve('css-loader'),
-                  options: {
-                    importLoaders: 3,
-                    modules: {
-                      auto: true, // handle *.module.* as css-modules
-                      getLocalIdent: getCSSModuleLocalIdent, // pretty class names
-                    },
-                  },
-                },
-                {
-                  loader: require.resolve('postcss-loader'),
-                  options: {
-                    postcssOptions: postCssConfig,
-                  },
-                },
-              ],
-              // dialects
-              rules: [
-                {
-                  test: stylesRegexps.sassRegex,
-                  use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
-                },
-                {
-                  test: stylesRegexps.lessRegex,
-                  use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
-                },
-              ],
-            },
+            // load styles, including scss, less
+            ...styleLoaders,
 
             // MDX support (move to the mdx aspect and extend from there)
             {
@@ -191,13 +159,7 @@ export default function (isEnvProduction = false): Configuration {
     },
     // @ts-ignore
     plugins: [
-      isEnvProduction &&
-        new MiniCssExtractPlugin({
-          // Options similar to the same options in webpackOptions.output
-          // both options are optional
-          filename: 'static/css/[name].[contenthash:8].css',
-          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-        }),
+      ...stylePlugins,
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.

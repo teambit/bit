@@ -1,15 +1,15 @@
 import path from 'path';
-import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { postCssConfig } from './postcss.config';
 import { html } from './html';
 
 /*
@@ -40,6 +40,10 @@ const moduleFileExtensions = [
 export function devConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
+  const { styleLoaders, stylePlugins } = cssLoaders({
+    postcssOptions: postCssConfig,
+    styleInjector: 'style-loader',
+  });
   // Host
   const host = process.env.HOST || 'localhost';
 
@@ -215,41 +219,13 @@ export function devConfig(workspaceDir, entryFiles, title, aspectPaths): Webpack
             plugins: [require.resolve('react-refresh/babel')],
           },
         },
-        // load styles, including scss, less, and
-        // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
-        // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
-        {
-          test: stylesRegexps.allCssregex,
-          sideEffects: true,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 3,
-                modules: {
-                  auto: true, // handle *.module.* as css-modules
-                  getLocalIdent: getCSSModuleLocalIdent, // pretty class names
-                },
-              },
-            },
-          ],
-          // dialects
-          rules: [
-            {
-              test: stylesRegexps.sassRegex,
-              use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
-            },
-            {
-              test: stylesRegexps.lessRegex,
-              use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
-            },
-          ],
-        },
+        ...styleLoaders,
       ],
     },
 
     plugins: [
+      ...stylePlugins,
+
       new ReactRefreshWebpackPlugin({
         include: aspectPaths, // original default value was /\.([cm]js|[jt]sx?|flow)$/i
         // replaces the default value of `/node_modules/`

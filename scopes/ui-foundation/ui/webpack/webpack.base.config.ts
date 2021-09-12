@@ -1,10 +1,8 @@
 import webpack, { Configuration } from 'webpack';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
-import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { postCssConfig } from './postcss.config';
 
 const moduleFileExtensions = [
@@ -23,6 +21,10 @@ const moduleFileExtensions = [
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
+/**
+ * this file is the base for "webpack.browser.config", and "webpack.ssr.config".
+ * webpack.dev.config will be used in --dev mode.
+ */
 const isEnvProduction = true;
 
 // This is the production and development configuration.
@@ -36,6 +38,11 @@ export default function createWebpackConfig(
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
+
+  const { styleLoaders, stylePlugins } = cssLoaders({
+    postcssOptions: postCssConfig,
+    styleInjector: isEnvProduction ? undefined : 'style-loader',
+  });
 
   // We will provide `paths.publicUrlOrPath` to our app
   // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
@@ -116,43 +123,7 @@ export default function createWebpackConfig(
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
           oneOf: [
-            // load styles, including scss, less, and
-            // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
-            // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
-            {
-              test: stylesRegexps.allCssregex,
-              sideEffects: true,
-              use: [
-                isEnvProduction ? MiniCssExtractPlugin.loader : require.resolve('style-loader'),
-                {
-                  loader: require.resolve('css-loader'),
-                  options: {
-                    importLoaders: 3,
-                    modules: {
-                      auto: true, // handle *.module.* as css-modules
-                      getLocalIdent: getCSSModuleLocalIdent, // pretty class names
-                    },
-                  },
-                },
-                {
-                  loader: require.resolve('postcss-loader'),
-                  options: {
-                    postcssOptions: postCssConfig,
-                  },
-                },
-              ],
-              // dialects
-              rules: [
-                {
-                  test: stylesRegexps.sassRegex,
-                  use: [require.resolve('resolve-url-loader'), require.resolve('sass-loader')],
-                },
-                {
-                  test: stylesRegexps.lessRegex,
-                  use: [require.resolve('resolve-url-loader'), require.resolve('less-loader')],
-                },
-              ],
-            },
+            ...styleLoaders,
             {
               test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/],
               type: 'asset',
@@ -223,11 +194,8 @@ export default function createWebpackConfig(
       ],
     },
     plugins: [
-      isEnvProduction &&
-        new MiniCssExtractPlugin({
-          filename: 'static/css/[name].[contenthash:8].css',
-          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-        }),
+      ...stylePlugins,
+
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
       //   output file so that tools can pick it up without having to parse

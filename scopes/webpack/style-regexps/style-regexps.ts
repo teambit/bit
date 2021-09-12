@@ -1,6 +1,6 @@
 // style files regexps
 
-export const allCssregex = /\.(le|sc|c)ss$/;
+export const allCssRegex = /\.(le|sc|c)ss$/;
 
 // css
 export const cssRegex = /\.css$/;
