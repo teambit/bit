@@ -25,16 +25,28 @@ export type StyleLoadersOptions = {
   /** override specific path to css-loader */
   cssLoader?: string;
 
+  /** override specific path to postcss-loader */
   postcssLoader?: string;
-  resolveUrlLoader?: string;
-  sassLoader?: string;
-  lessLoader?: string;
+  /** override css loader options */
   cssLoaderOptions?: any;
+  /** override css injector options */
   injectorOptions?: any;
   /** options for postcss-loader (skipped if undefined) */
   postcssOptions?: any;
+};
+
+export type CssDialectOptiosn = {
+  /** override specific path to resolve-url-loader */
+  resolveUrlLoader?: string;
+  /** override specific path to sass-loader */
+  sassLoader?: string;
+  /** override specific path to less-loader */
+  lessLoader?: string;
+  /** override sass loader options */
   sassLoaderOptions?: SassLoaderOptions;
+  /** override less loader options */
   lessLoaderOptions?: any;
+  /** override resolveUrl loader options */
   resolveUrlOptions?: any;
 };
 
@@ -54,7 +66,7 @@ export const cssLoaders = ({
   sassLoaderOptions,
   lessLoaderOptions,
   resolveUrlOptions,
-}: StyleLoadersOptions) => {
+}: StyleLoadersOptions & CssDialectOptiosn) => {
   const styleLoaders: RuleSetRule[] = [
     {
       test: allCssRegex,
@@ -124,23 +136,43 @@ export const cssLoaders = ({
   };
 };
 
-export const pureCssLoaders = ({ postcssOptions, styleInjector = 'mini-css-extract-plugin' }: StyleLoadersOptions) => {
+export const pureCssLoaders = ({
+  styleInjector = 'mini-css-extract-plugin',
+  modules = true,
+
+  cssLoader = require.resolve('css-loader'),
+  postcssLoader = require.resolve('postcss-loader'),
+  // resolveUrlLoader = require.resolve('resolve-url-loader'),
+  // sassLoader = require.resolve('sass-loader'),
+  // lessLoader = require.resolve('less-loader'),
+
+  cssLoaderOptions,
+  injectorOptions,
+  postcssOptions,
+}: // sassLoaderOptions,
+// lessLoaderOptions,
+// resolveUrlOptions,
+StyleLoadersOptions) => {
   const styleLoaders: RuleSetRule = {
     test: cssRegex,
     use: [
-      styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
       {
-        loader: require.resolve('css-loader'),
+        loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
+        options: injectorOptions,
+      },
+      {
+        loader: cssLoader,
         options: {
           importLoaders: 3,
           modules: {
-            auto: true, // handle *.module.* as css modules
+            auto: modules, // handle *.module.* as css modules
             getLocalIdent: getCSSModuleLocalIdent, // pretty class names
           },
+          ...cssLoaderOptions,
         },
       },
       postcssOptions && {
-        loader: require.resolve('postcss-loader'),
+        loader: postcssLoader,
         options: {
           postcssOptions,
         },
