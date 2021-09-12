@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.149",
+  "version": "1.0.153",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -184,7 +184,6 @@
     "minimatch": "3.0.4",
     "mockery": "2.1.0",
     "module-definition": "3.3.1",
-    "module-lookup-amd": "6.2.0",
     "moment": "2.29.1",
     "node-fetch": "2.6.1",
     "node-source-walk": "4.2.0",
@@ -305,7 +304,7 @@
     "prettier-eslint": "11.0.0",
     "rewire": "4.0.1",
     "sinon": "5.1.1",
-    "tar": "6.1.6",
+    "tar": "6.1.11",
     "type-coverage": "2.15.1",
     "typescript": "4.4.2",
     "verdaccio": "4.11.0"

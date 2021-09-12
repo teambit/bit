@@ -422,7 +422,7 @@ export class ScopeMain implements ComponentFactory {
     try {
       await this.aspectLoader.loadRequireableExtensions(resolvedAspects, true);
     } catch (err: any) {
-      if (err?.error.code === 'MODULE_NOT_FOUND') {
+      if (err?.error?.code === 'MODULE_NOT_FOUND') {
         this.logger.warn(
           'failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again'
         );
@@ -568,18 +568,16 @@ export class ScopeMain implements ComponentFactory {
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
-    let modelComponents = await this.legacyScope.list();
-    const ids = modelComponents.map((component) => ComponentID.fromLegacy(component.toBitIdWithLatestVersion()));
-    this.logger.debug(`scope listIds: modelComponents ids: ${JSON.stringify(ids)}`);
-    if (!includeCache) {
-      modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
-    }
+    const allModelComponents = await this.legacyScope.list();
+    const modelComponentsToList = includeCache
+      ? allModelComponents
+      : allModelComponents.filter((modelComponent) => this.exists(modelComponent));
 
-    const componentsIds = modelComponents.map((component) =>
-      ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
+    const ids = modelComponentsToList.map((component) =>
+      ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );
-    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(componentsIds)}`);
-    return componentsIds;
+    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
+    return ids;
   }
 
   /**

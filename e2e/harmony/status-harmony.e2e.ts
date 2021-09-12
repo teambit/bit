@@ -37,6 +37,15 @@ describe('status command on Harmony', function () {
     it('should show an issue of missing-dists', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingDists.name);
     });
+    it('should exit with non zero exit-code if --strict flag is used', () => {
+      let error;
+      try {
+        helper.command.runCmd('bit status --strict');
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error.status).to.equal(1);
+    });
   });
   describe('package dir is deleted from node-modules', () => {
     before(() => {

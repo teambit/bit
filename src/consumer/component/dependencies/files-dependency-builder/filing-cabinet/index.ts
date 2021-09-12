@@ -7,7 +7,6 @@ import appModulePath from 'app-module-path';
 import webpackResolve from 'enhanced-resolve';
 import isRelative from 'is-relative-path';
 import getModuleType from 'module-definition';
-import amdLookup from 'module-lookup-amd';
 import objectAssign from 'object-assign';
 import path from 'path';
 import resolve from 'resolve';
@@ -169,7 +168,7 @@ function _getJSType(options) {
  * @return {String}
  */
 function jsLookup(options: Options) {
-  const { configPath, dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
+  const { dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
   const type = _getJSType({
     config,
     webpackConfig,
@@ -181,15 +180,7 @@ function jsLookup(options: Options) {
 
   switch (type) {
     case 'amd':
-      debug('using amd resolver');
-      return amdLookup({
-        config,
-        // Optional in case a pre-parsed config is being passed in
-        configPath,
-        partial: dependency,
-        directory,
-        filename,
-      });
+      throw new Error('AMD is not supported');
 
     case 'webpack':
       debug('using webpack resolver for es6');
