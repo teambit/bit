@@ -3,7 +3,7 @@
     "name": "modules/style-loaders",
     "scope": "teambit.webpack"
   },
-  "propagate": false,
+  "propagate": true,
   "extensions": {
     "teambit.dependencies/dependency-resolver": {
       "policy": {

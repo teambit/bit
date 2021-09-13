@@ -9,7 +9,7 @@ const styleLoaderPath = require.resolve('style-loader');
 // * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
 // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
 
-export type StyleLoadersOptions = {
+export type CssOptions = {
   /**
    * type of style injecctor to use.
    * style-loader has better hot reloading support but is inline,
@@ -35,7 +35,7 @@ export type StyleLoadersOptions = {
   postcssOptions?: any;
 };
 
-export type CssDialectOptiosn = {
+export type CssDialectOptions = {
   /** override specific path to resolve-url-loader */
   resolveUrlLoader?: string;
   /** override specific path to sass-loader */
@@ -49,6 +49,8 @@ export type CssDialectOptiosn = {
   /** override resolveUrl loader options */
   resolveUrlOptions?: any;
 };
+
+export type StyleLoadersOptions = CssOptions & CssDialectOptions;
 
 export const cssLoaders = ({
   styleInjector = 'mini-css-extract-plugin',
@@ -66,10 +68,15 @@ export const cssLoaders = ({
   sassLoaderOptions,
   lessLoaderOptions,
   resolveUrlOptions,
-}: StyleLoadersOptions & CssDialectOptiosn) => {
+}: StyleLoadersOptions) => {
   const styleLoaders: RuleSetRule[] = [
     {
       test: allCssRegex,
+      // Don't consider CSS imports dead code even if the
+      // containing package claims to have no side effects.
+      // Remove this when webpack adds a warning or an error for this.
+      // See https://github.com/webpack/webpack/issues/6571
+      sideEffects: true,
       use: [
         {
           loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
@@ -142,17 +149,11 @@ export const pureCssLoaders = ({
 
   cssLoader = require.resolve('css-loader'),
   postcssLoader = require.resolve('postcss-loader'),
-  // resolveUrlLoader = require.resolve('resolve-url-loader'),
-  // sassLoader = require.resolve('sass-loader'),
-  // lessLoader = require.resolve('less-loader'),
 
   cssLoaderOptions,
   injectorOptions,
   postcssOptions,
-}: // sassLoaderOptions,
-// lessLoaderOptions,
-// resolveUrlOptions,
-StyleLoadersOptions) => {
+}: CssOptions) => {
   const styleLoaders: RuleSetRule = {
     test: cssRegex,
     use: [
