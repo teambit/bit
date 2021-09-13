@@ -7,7 +7,7 @@ export const postCssConfig = {
   ident: 'postcss',
   plugins: [
     // eslint-disable-next-line global-require
-    require('postcss-flexbugs-fixes'),
+    require.resolve('postcss-flexbugs-fixes'),
     // eslint-disable-next-line global-require
     require('postcss-preset-env')({
       autoprefixer: {
@@ -18,6 +18,6 @@ export const postCssConfig = {
     // Adds PostCSS Normalize as the reset css with default options,
     // so that it honors browserslist config in package.json
     // which in turn let's users customize the target behavior as per their needs.
-    postcssNormalize(),
+    require.resolve('postcss-normalize'),
   ],
 };
