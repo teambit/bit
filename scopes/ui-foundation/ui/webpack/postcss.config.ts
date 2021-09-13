@@ -1,4 +1,3 @@
-import postcssNormalize from 'postcss-normalize';
 // import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 
 export const postCssConfig = {
