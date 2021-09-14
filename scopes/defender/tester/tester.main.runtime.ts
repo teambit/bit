@@ -1,7 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import stripAnsi from 'strip-ansi';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
@@ -9,8 +10,8 @@ import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { TestsResult } from '@teambit/tests-results';
-
-import { ComponentsResults, CallbackFn } from './tester';
+import junitReportBuilder from 'junit-report-builder';
+import { ComponentsResults, CallbackFn, Tests } from './tester';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
@@ -51,6 +52,11 @@ export type TesterOptions = {
    * initiate the tester on given env.
    */
   env?: string;
+
+  /**
+   * generate JUnit files on the specified dir
+   */
+  junit?: string;
 
   callback?: CallbackFn;
 };
@@ -101,14 +107,43 @@ export class TesterMain {
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
-  async test(components: Component[], opts?: TesterOptions) {
+  async test(components: Component[], opts?: TesterOptions): Promise<EnvsExecutionResult<Tests>> {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
     if (opts?.env) {
       return envsRuntime.runEnv(opts.env, this.service, options);
     }
     const results = await envsRuntime.run(this.service, options);
+    if (opts?.junit) {
+      await this.generateJUnit(opts?.junit, results);
+    }
     return results;
+  }
+
+  private async generateJUnit(outDir: string, testsResults: EnvsExecutionResult<Tests>) {
+    testsResults.results.forEach((envResult) => {
+      envResult.data?.components.forEach((compResult) => {
+        const suite = junitReportBuilder.testSuite().name(compResult.componentId.toString());
+        compResult.results?.testFiles.forEach((testFile) => {
+          testFile.tests.forEach((test) => {
+            const testCase = suite.testCase().className(testFile.file).name(test.name);
+            if (test.error) {
+              testCase.error(stripAnsi(test.error));
+            }
+            if (test.failure) {
+              testCase.failure(stripAnsi(test.failure));
+            }
+            if (test.status === 'skipped' || test.status === 'pending') {
+              testCase.skipped();
+            }
+            if (test.duration) {
+              testCase.time(test.duration / 1000);
+            }
+          });
+        });
+      });
+    });
+    junitReportBuilder.writeTo(`${outDir}/junit.xml`);
   }
 
   /**

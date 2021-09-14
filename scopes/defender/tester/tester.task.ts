@@ -62,6 +62,7 @@ export class TesterTask implements BuildTask {
           }
           file.tests.forEach((test) => {
             if (test.error) errors.push(test.error);
+            if (test.failure) errors.push(test.failure);
           });
 
           return errors;

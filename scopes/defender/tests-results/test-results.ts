@@ -7,12 +7,15 @@ export class TestResult {
     public name: string,
 
     /*  the status of test (passing, skipped, failed) */
-    public status: string,
+    public status: 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled',
 
-    /** test object data  */
+    /** test duration in milliseconds */
     public duration?: number | null,
 
-    /*  error log */
-    public error?: string
+    /*  error message */
+    public error?: string,
+
+    /*  failure message */
+    public failure?: string
   ) {}
 }
