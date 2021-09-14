@@ -37,6 +37,7 @@
           "babel-plugin-named-asset-import": "0.3.7",
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
+          "postcss-normalize": "10.0.0",
           "postcss-preset-env": "6.7.0",
           "postcss-flexbugs-fixes": "5.0.2",
           "@teambit/legacy": "-",
@@ -49,8 +50,10 @@
           "@teambit/legacy": "-",
           "@types/mocha": "5.2.7",
           "@types/node": "12.20.4",
+          "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
           "@types/react-dom": "^17.0.5"
+          
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
