@@ -1,5 +1,5 @@
 import { Configuration, IgnorePlugin } from 'webpack';
-import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
+import { cssLoaders } from '@teambit/react.modules.webpack.fragments.style-preset';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json

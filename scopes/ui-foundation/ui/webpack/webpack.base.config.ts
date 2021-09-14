@@ -1,5 +1,5 @@
 import webpack, { Configuration } from 'webpack';
-import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
+import { cssLoaders } from '@teambit/react.modules.webpack.fragments.style-preset';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import path from 'path';

@@ -1,5 +1,5 @@
 import path from 'path';
-import { cssLoaders } from '@teambit/webpack.modules.style-loaders';
+import { cssLoaders } from '@teambit/react.modules.webpack.fragments.style-preset';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';

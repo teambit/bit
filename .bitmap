@@ -7,7 +7,7 @@
  * If you want to delete components you can use the "bit remove <component-id>" command.
  * See the docs (https://harmony-docs.bit.dev/building-with-bit/removing-components) for more information, or use "bit remove --help".
  */
-
+ 
 {
     "application": {
         "scope": "teambit.harmony",
@@ -585,11 +585,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
-    "modules/style-loaders": {
+    "modules/webpack/fragments/style-preset": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/style-loaders"
+        "rootDir": "scopes/react/modules/webpack/fragments/style-preset",
     },
     "modules/style-regexps": {
         "scope": "teambit.webpack",
