@@ -59,6 +59,11 @@ export interface TesterContext extends ExecutionContext {
   watch?: boolean;
 
   /**
+   * whether the tester should show code coverage
+   */
+  coverage?: boolean;
+
+  /**
    * array of patterns to test.
    */
   patterns: ComponentPatternsMap;

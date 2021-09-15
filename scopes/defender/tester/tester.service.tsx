@@ -130,6 +130,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       debug: options.debug,
       watch: options.watch,
       ui: options.ui,
+      coverage: options.coverage,
     });
 
     if (options.watch && options.ui && tester.watch) {

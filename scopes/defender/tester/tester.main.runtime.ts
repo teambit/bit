@@ -59,6 +59,11 @@ export type TesterOptions = {
    */
   junit?: string;
 
+  /**
+   * show code coverage
+   */
+  coverage?: boolean;
+
   callback?: CallbackFn;
 };
 

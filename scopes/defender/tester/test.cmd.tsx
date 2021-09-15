@@ -16,6 +16,7 @@ type TestFlags = {
   env?: string;
   scope?: string;
   junit?: string;
+  coverage?: boolean;
 };
 
 export class TestCmd implements Command {
@@ -28,6 +29,7 @@ export class TestCmd implements Command {
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
+    ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only the given env'],
     ['s', 'scope <scope>', 'name of the scope to test'],
     // TODO: we need to reduce this redundant casting every time.
@@ -35,7 +37,10 @@ export class TestCmd implements Command {
 
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
-  async render([userPattern]: [string], { watch = false, debug = false, env, scope, junit }: TestFlags) {
+  async render(
+    [userPattern]: [string],
+    { watch = false, debug = false, env, scope, junit, coverage = false }: TestFlags
+  ) {
     this.logger.off();
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
@@ -57,6 +62,7 @@ export class TestCmd implements Command {
         watch,
         debug,
         env,
+        coverage,
       });
     } else {
       const tests = await this.tester.test(components, {
@@ -64,6 +70,7 @@ export class TestCmd implements Command {
         debug,
         env,
         junit,
+        coverage,
       });
       tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
     }
