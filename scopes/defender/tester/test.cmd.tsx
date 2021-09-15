@@ -27,7 +27,7 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
-    ['', 'junit <dir>', 'generate JUnit XML files of the tests results in the specified dir'],
+    ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['e', 'env <id>', 'test only the given env'],
     ['s', 'scope <scope>', 'name of the scope to test'],
     // TODO: we need to reduce this redundant casting every time.

@@ -1,10 +1,14 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import fs from 'fs-extra';
 import { join } from 'path';
 import { Compiler, CompilerAspect } from '@teambit/compiler';
 import { DevFilesMain } from '@teambit/dev-files';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
+import { testsResultsToJUnitFormat } from './utils/junit-generator';
+
+const JUNIT_PATH = '__bit_junit.xml';
 
 /**
  * tester build task. Allows to test components during component build.
@@ -53,8 +57,26 @@ export class TesterTask implements BuildTask {
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
 
+    // write junit files
+    await Promise.all(
+      testsResults.components.map(async (compResult) => {
+        const junit = testsResultsToJUnitFormat([compResult]);
+        const capsule = context.capsuleNetwork.graphCapsules.getCapsule(compResult.componentId);
+        if (!capsule) {
+          throw new Error(`unable to find ${compResult.componentId.toString()} in capsules`);
+        }
+        await fs.writeFile(join(capsule.path, JUNIT_PATH), junit);
+        await this.writeNpmIgnore(capsule.path);
+      })
+    );
+
     return {
-      artifacts: [], // @ts-ignore
+      artifacts: [
+        {
+          name: 'junit',
+          globPatterns: [JUNIT_PATH],
+        },
+      ], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
         const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
           if (file?.error?.failureMessage) {
@@ -67,12 +89,23 @@ export class TesterTask implements BuildTask {
 
           return errors;
         }, []);
+        const component = context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component;
+        if (!component) {
+          throw new Error(`unable to find ${componentTests.componentId.toString()} in capsules`);
+        }
         return {
-          component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
+          component,
           metadata: { tests: componentTests.results },
           errors: componentErrors,
         };
       }),
     };
+  }
+
+  private async writeNpmIgnore(dir: string) {
+    const NPM_IGNORE_FILE = '.npmignore';
+    const npmIgnorePath = join(dir, NPM_IGNORE_FILE);
+    const npmIgnoreEntriesStr = `\n${JUNIT_PATH}\n`;
+    await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
   }
 }
