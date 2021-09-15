@@ -139,6 +139,7 @@ export class JestTester implements Tester {
     };
 
     if (context.debug) config.runInBand = true;
+    if (context.coverage) config.coverage = true;
     config.runInBand = true;
 
     if (context.watch) {
