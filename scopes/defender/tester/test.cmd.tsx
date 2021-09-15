@@ -1,4 +1,4 @@
-import { Command, CommandOptions, Flags } from '@teambit/cli';
+import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
