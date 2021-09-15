@@ -6,7 +6,14 @@ export function testsResultsToJUnitFormat(components: ComponentsResults[]): stri
   const builder = junitReportBuilder.newBuilder();
   components.forEach((compResult) => {
     const suite = builder.testSuite().name(compResult.componentId.toString());
+    if (compResult.results?.start) {
+      suite.timestamp(new Date(compResult.results?.start).toISOString());
+    }
     compResult.results?.testFiles.forEach((testFile) => {
+      if (testFile.error) {
+        const testCase = suite.testCase().className(testFile.file).name(testFile.file);
+        testCase.error(stripAnsi(testFile.error.error as string));
+      }
       testFile.tests.forEach((test) => {
         const testCase = suite.testCase().className(testFile.file).name(test.name);
         if (test.error) {
