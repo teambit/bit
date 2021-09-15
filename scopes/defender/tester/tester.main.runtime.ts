@@ -1,6 +1,8 @@
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import compact from 'lodash.compact';
+import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -9,14 +11,14 @@ import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { TestsResult } from '@teambit/tests-results';
-
-import { ComponentsResults, CallbackFn } from './tester';
+import { ComponentsResults, CallbackFn, Tests } from './tester';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
 import { detectTestFiles } from './utils';
 import { testerSchema } from './tester.graphql';
+import { testsResultsToJUnitFormat } from './utils/junit-generator';
 
 export type TesterExtensionConfig = {
   /**
@@ -51,6 +53,11 @@ export type TesterOptions = {
    * initiate the tester on given env.
    */
   env?: string;
+
+  /**
+   * generate JUnit files on the specified dir
+   */
+  junit?: string;
 
   callback?: CallbackFn;
 };
@@ -101,14 +108,23 @@ export class TesterMain {
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
-  async test(components: Component[], opts?: TesterOptions) {
+  async test(components: Component[], opts?: TesterOptions): Promise<EnvsExecutionResult<Tests>> {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
     if (opts?.env) {
       return envsRuntime.runEnv(opts.env, this.service, options);
     }
     const results = await envsRuntime.run(this.service, options);
+    if (opts?.junit) {
+      await this.generateJUnit(opts?.junit, results);
+    }
     return results;
+  }
+
+  private async generateJUnit(filePath: string, testsResults: EnvsExecutionResult<Tests>) {
+    const components = testsResults.results.map((envResult) => envResult.data?.components).flat();
+    const jUnit = testsResultsToJUnitFormat(compact(components));
+    await fs.outputFile(filePath, jUnit);
   }
 
   /**

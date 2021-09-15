@@ -7180,6 +7180,7 @@ __metadata:
     join-path: 1.1.1
     json-formatter-js: 2.3.4
     jsx-to-string: 1.4.0
+    junit-report-builder: 3.0.0
     less: ^4.1.1
     less-loader: 10.0.0
     lint-staged: ">=10"
@@ -8632,13 +8633,13 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:^17.0.8":
-  version: 17.0.18
-  resolution: "@types/react@npm:17.0.18"
+  version: 17.0.20
+  resolution: "@types/react@npm:17.0.20"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 0b3d5fe0466b57c5539169671e29c4bdad2e2cf5b3eea25d443845d0153b2ddfbe0ef6d017f2f0a7ae49732d6fd14db189f9578ba0629790b896abe3a3ee44f3
+  checksum: e342bfaa4fe052fc3a445ea49f746f3fd82cfc9c8028eae139a3e0763ead1871f353bd40da2a472f23d2b52544d2781d40e3159c0703e7e2ff08c13f067a3b9c
   languageName: node
   linkType: hard
 
@@ -15399,6 +15400,13 @@ __metadata:
   version: 2.0.0
   resolution: "dataloader@npm:2.0.0"
   checksum: 9f10b9d2e35225b08a72435facfe40c0c124e329f43bd0fe4d67411ee667d12145f7ce63f9b74f73af8556dc6a98bae59147a5cca2171315dc1de509d4db04c0
+  languageName: node
+  linkType: hard
+
+"date-format@npm:0.0.2":
+  version: 0.0.2
+  resolution: "date-format@npm:0.0.2"
+  checksum: 01a95d6b5522a4af928462ff4e9f3ee787c20059029afe5a72ff0296459082842c33ff7e8de6d54e9b8e8632408c6ef621b336095678f43b959d2cf11b466f4d
   languageName: node
   linkType: hard
 
@@ -22727,6 +22735,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"junit-report-builder@npm:3.0.0":
+  version: 3.0.0
+  resolution: "junit-report-builder@npm:3.0.0"
+  dependencies:
+    date-format: 0.0.2
+    lodash: ^4.17.15
+    make-dir: ^1.3.0
+    xmlbuilder: ^15.1.1
+  checksum: deb7d2af9767ea1de6fb9a5035c749f09461094b149b0c872353e713aca599cf57362d522e16b3410e48561d073ce7fed4e4b9f75a47991f599739193c489898
+  languageName: node
+  linkType: hard
+
 "just-extend@npm:^4.0.2":
   version: 4.2.1
   resolution: "just-extend@npm:4.2.1"
@@ -23814,7 +23834,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"make-dir@npm:^1.0.0":
+"make-dir@npm:^1.0.0, make-dir@npm:^1.3.0":
   version: 1.3.0
   resolution: "make-dir@npm:1.3.0"
   dependencies:
@@ -35485,6 +35505,13 @@ __metadata:
   version: 1.0.1
   resolution: "xml@npm:1.0.1"
   checksum: 11b5545ef3f8fec3fa29ce251f50ad7b6c97c103ed4d851306ec23366f5fa4699dd6a942262df52313a0cd1840ab26256da253c023bad3309d8ce46fe6020ca0
+  languageName: node
+  linkType: hard
+
+"xmlbuilder@npm:^15.1.1":
+  version: 15.1.1
+  resolution: "xmlbuilder@npm:15.1.1"
+  checksum: 14f7302402e28d1f32823583d121594a9dca36408d40320b33f598bd589ca5163a352d076489c9c64d2dc1da19a790926a07bf4191275330d4de2b0d85bb1843
   languageName: node
   linkType: hard
 
