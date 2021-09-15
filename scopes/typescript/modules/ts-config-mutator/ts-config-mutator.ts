@@ -96,7 +96,7 @@ export class TypescriptConfigMutator {
   }
 
   addExclude(exclusions: string[]): TypescriptConfigMutator {
-    this.raw.tsconfig.exclude.push(exclusions);
+    this.raw.tsconfig.exclude.push(...exclusions);
     return this;
   }
 
