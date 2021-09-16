@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.153":
-  version: 1.0.153
-  resolution: "@teambit/legacy@npm:1.0.153"
+"@teambit/legacy@npm:1.0.154":
+  version: 1.0.154
+  resolution: "@teambit/legacy@npm:1.0.154"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 6a7396b81e1e14a007bc5be67eb21e16876313fa44bdef25b32d87ccb18a7f9806290acffc5ec4d7f0dbbcb5ff3f81cdfa26111ce7beaa6a973a23e895299469
+  checksum: feb795f048ac94e44a2136e506683b43570a15aefe22488f490735215b16e95dd72754244dc19c6a3d92f987ebf2e57fe18b69d8402d4cbdf08f47df4deb0c12
   languageName: node
   linkType: hard
 
@@ -6962,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.153
+    "@teambit/legacy": 1.0.154
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7292,6 +7292,7 @@ __metadata:
     resolve-from: 5.0.0
     resolve-url-loader: 3.1.2
     rewire: 4.0.1
+    sanitize.css: 12.0.1
     sass: 1.32.8
     sass-loader: 12.1.0
     sass-lookup: 3.0.0
@@ -7367,7 +7368,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.153
+    "@teambit/legacy": 1.0.154
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -30134,7 +30135,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sanitize.css@npm:*":
+"sanitize.css@npm:*, sanitize.css@npm:12.0.1":
   version: 12.0.1
   resolution: "sanitize.css@npm:12.0.1"
   checksum: 9d1e26d5ae941a1c7dc92c6b0d93c66f0365bf786cd6eef549c0089666da9216171064410f692fc7c73085c8795c550fe64bc2642e19a540d2dbe032b460f112
