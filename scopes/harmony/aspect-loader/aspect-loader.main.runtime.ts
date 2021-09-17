@@ -241,7 +241,10 @@ export class AspectLoaderMain {
     this.failedLoadAspect.push(id);
   }
 
-  async doRequire(requireableExtension: RequireableComponent) {
+  /**
+   * run "require" of the component code to get the manifest
+   */
+  async doRequire(requireableExtension: RequireableComponent): Promise<ExtensionManifest | Aspect> {
     const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
