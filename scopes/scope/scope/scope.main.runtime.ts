@@ -461,22 +461,26 @@ export class ScopeMain implements ComponentFactory {
     if (!requireableExtensions) {
       return [];
     }
-    let manifests: Array<ExtensionManifest | Aspect | undefined> = [];
     let error: any;
     let erroredId = '';
     const requireWithCatch = async (requireableAspects: RequireableComponent[]) => {
       error = undefined;
-      manifests = await mapSeries(requireableAspects, async (requireableExtension) => {
-        try {
-          return await this.aspectLoader.doRequire(requireableExtension);
-        } catch (err: any) {
-          erroredId = requireableExtension.component.id.toString();
-          error = err;
-          throw err;
-        }
-      });
+      try {
+        const manifests = await mapSeries(requireableAspects, async (requireableExtension) => {
+          try {
+            return await this.aspectLoader.doRequire(requireableExtension);
+          } catch (err: any) {
+            erroredId = requireableExtension.component.id.toString();
+            error = err;
+            throw err;
+          }
+        });
+        return manifests;
+      } catch (err) {
+        return null;
+      }
     };
-    await requireWithCatch(requireableExtensions);
+    const manifests = await requireWithCatch(requireableExtensions);
     if (!error) {
       return compact(manifests);
     }
@@ -487,9 +491,9 @@ export class ScopeMain implements ComponentFactory {
       const resolvedAspectsAgain = await this.getResolvedAspects(components, {
         skipIfExists: false,
       });
-      await requireWithCatch(resolvedAspectsAgain);
+      const manifestAgain = await requireWithCatch(resolvedAspectsAgain);
       if (!error) {
-        return compact(manifests);
+        return compact(manifestAgain);
       }
     }
     this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
