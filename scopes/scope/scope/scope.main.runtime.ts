@@ -469,7 +469,7 @@ export class ScopeMain implements ComponentFactory {
       try {
         return await this.aspectLoader.doRequire(requireableExtension, idStr);
       } catch (err: any) {
-        if (err?.error?.code === 'MODULE_NOT_FOUND') {
+        if (err?.error?.code === 'MODULE_NOT_FOUND' || err?.code === 'MODULE_NOT_FOUND') {
           this.logger.warn(
             `failed loading aspect ${idStr} from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
           );
