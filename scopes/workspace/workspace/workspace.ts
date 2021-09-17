@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { alg } from 'graphlib';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -886,7 +885,10 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
   }
 
-  // remove this function
+  /**
+   * load aspects from the workspace and if not exists in the workspace, load from the scope.
+   * keep in mind that the graph may have circles.
+   */
   async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
     this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -896,9 +898,7 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
     const graph = await this.getGraphWithoutCore(components);
-    // @todo: check if the sort is needed
-    const sorted = alg.topsort(graph).reverse();
-    const allIdsP = sorted.map(async (id) => {
+    const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
     const allIds = await Promise.all(allIdsP);
