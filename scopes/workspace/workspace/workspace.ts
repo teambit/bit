@@ -930,7 +930,7 @@ export class Workspace implements ComponentFactory {
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
-    await this.scope.loadAspectsRecursively(scopeIds);
+    await this.scope.loadAspects(scopeIds, throwOnError);
 
     const workspaceAspects = await this.requireComponents(workspaceComps);
     await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);

@@ -353,14 +353,6 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    await this.loadAspectsRecursively(ids, throwOnError);
-    // this.logger.debug(`loading ${ids.length} aspects`);
-    // const components = await this.getNonLoadedAspects(ids);
-    // if (!components.length) return;
-    // await this.loadAspectsFromCapsules(components, throwOnError);
-  }
-
-  async loadAspectsRecursively(ids: string[], throwOnError = false) {
     const scopeManifests = await this.getManifestsGraphRecursively(ids, throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
   }
@@ -392,7 +384,7 @@ export class ScopeMain implements ComponentFactory {
     return manifests;
   }
 
-  async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
+  private async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -498,34 +490,6 @@ export class ScopeMain implements ComponentFactory {
     }
     this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
     return [];
-  }
-
-  /**
-   * if capsules already exist for these aspects, use them. otherwise, isolate them first.
-   * in case of module-not-found error, give it another try by re-creating the capsules and re-loading.
-   */
-  async loadAspectsFromCapsules(components: Component[], throwOnError: boolean) {
-    const resolvedAspects = await this.getResolvedAspects(components);
-    try {
-      await this.aspectLoader.loadRequireableExtensions(resolvedAspects, true);
-    } catch (err: any) {
-      if (err?.error?.code === 'MODULE_NOT_FOUND') {
-        this.logger.warn(
-          'failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again'
-        );
-        const resolvedAspectsAgain = await this.getResolvedAspects(components, { skipIfExists: false });
-        await this.aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, throwOnError);
-      } else {
-        if (throwOnError) {
-          throw err;
-        }
-        // throwOnError is false, it's not ideal, but we call loadRequireableExtensions again.
-        // otherwise, because it was throwing before, it didn't have the chance to log into the console
-        // as we caught that error. also, if the first aspect failed, it didn't load the second aspect
-        // but threw immediately.
-        await this.aspectLoader.loadRequireableExtensions(resolvedAspects, false);
-      }
-    }
   }
 
   getAspectCapsulePath() {
