@@ -374,8 +374,7 @@ export class ScopeMain implements ComponentFactory {
   async getManifestsGraphRecursively(ids: string[]): Promise<ManifestOrAspect[]> {
     if (!ids.length) return [];
     const components = await this.getNonLoadedAspects(ids);
-    const resolvedAspects = await this.getResolvedAspects(components);
-    const manifests = await this.requireAspects(resolvedAspects);
+    const manifests = await this.requireAspects(components);
     await mapSeries(manifests, async (manifest) => {
       if (manifest.dependencies) {
         const depIds = manifest.dependencies.map((d) => d.id).filter((id) => id);
@@ -462,28 +461,26 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async requireAspects(requireableExtensions: RequireableComponent[]): Promise<Array<ExtensionManifest | Aspect>> {
-    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
-      const aspect = await requireableExtension.require();
-      const manifest = aspect.default || aspect;
-      manifest.id = idStr;
-      const newManifest = await this.aspectLoader.runOnLoadRequireableExtensionSubscribers(
-        requireableExtension,
-        manifest
-      );
-      return newManifest;
-    };
-    const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
+  async requireAspects(components: Component[]): Promise<Array<ExtensionManifest | Aspect>> {
+    const requireableExtensions = await this.getResolvedAspects(components);
+    const manifests = await mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await doRequire(requireableExtension, idStr);
-      } catch (e: any) {
-        // @todo: handle failure - re-create capsules maybe. See this.loadAspectsFromCapsules()
+        return await this.aspectLoader.doRequire(requireableExtension, idStr);
+      } catch (err: any) {
+        if (err?.error?.code === 'MODULE_NOT_FOUND') {
+          this.logger.warn(
+            `failed loading aspect ${idStr} from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
+          );
+          const resolvedAspectsAgain = await this.getResolvedAspects([requireableExtension.component], {
+            skipIfExists: false,
+          });
+          return await this.aspectLoader.doRequire(resolvedAspectsAgain[0], idStr);
+        }
       }
       return undefined;
     });
-    const manifests = await manifestsP;
 
     // Remove empty manifests as a result of loading issue
     const filteredManifests = compact(manifests);

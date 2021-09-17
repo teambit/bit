@@ -241,6 +241,14 @@ export class AspectLoaderMain {
     this.failedLoadAspect.push(id);
   }
 
+  async doRequire(requireableExtension: RequireableComponent, idStr: string) {
+    const aspect = await requireableExtension.require();
+    const manifest = aspect.default || aspect;
+    manifest.id = idStr;
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+    return newManifest;
+  }
+
   /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
@@ -262,18 +270,11 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
-    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
-      const aspect = await requireableExtension.require();
-      const manifest = aspect.default || aspect;
-      manifest.id = idStr;
-      const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
-      return newManifest;
-    };
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await doRequire(requireableExtension, idStr);
+        return await this.doRequire(requireableExtension, idStr);
       } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
@@ -283,7 +284,7 @@ export class AspectLoaderMain {
         if (isFixed) {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
-            return await doRequire(requireableExtension, idStr);
+            return await this.doRequire(requireableExtension, idStr);
           } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
