@@ -353,21 +353,11 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    this.logger.debug(`loading ${ids.length} aspects`);
-    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return;
-    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
-    const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
-    // TODO: use diff instead of filter twice
-    const localAspects = ids.filter((id) => id.startsWith('file://'));
-    this.localAspects = this.localAspects.concat(localAspects);
-    // load local aspects for debugging purposes.
-    await this.loadAspectFromPath(localAspects);
-    const componentIds = await this.resolveMultipleComponentIds(aspectIds);
-    if (!componentIds || !componentIds.length) return;
-    const components = await this.import(componentIds);
-    await this.loadAspectsFromCapsules(components, throwOnError);
+    await this.loadAspectsRecursively(ids, throwOnError);
+    // this.logger.debug(`loading ${ids.length} aspects`);
+    // const components = await this.getNonLoadedAspects(ids);
+    // if (!components.length) return;
+    // await this.loadAspectsFromCapsules(components, throwOnError);
   }
 
   async loadAspectsRecursively(ids: string[], throwOnError = false) {
