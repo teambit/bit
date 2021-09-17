@@ -10,7 +10,7 @@ import type { ComponentMain, ComponentMap } from '@teambit/component';
 import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
@@ -48,6 +48,8 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
+
+type ManifestOrAspect = ExtensionManifest | Aspect;
 
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
@@ -351,6 +353,7 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -365,6 +368,52 @@ export class ScopeMain implements ComponentFactory {
     if (!componentIds || !componentIds.length) return;
     const components = await this.import(componentIds);
     await this.loadAspectsFromCapsules(components, throwOnError);
+  }
+
+  // @todo: improve performance by caching the visited manifests.
+  async getManifestsGraphRecursively(ids: string[]): Promise<ManifestOrAspect[]> {
+    if (!ids.length) return [];
+    const components = await this.getNonLoadedAspects(ids);
+    const resolvedAspects = await this.getResolvedAspects(components);
+    const manifests = await this.requireAspects(resolvedAspects);
+    await mapSeries(manifests, async (manifest) => {
+      if (manifest.dependencies) {
+        const depIds = manifest.dependencies.map((d) => d.id).filter((id) => id);
+        const loaded = await this.getManifestsGraphRecursively(depIds);
+        manifests.push(...loaded);
+      }
+      // @ts-ignore
+      if (manifest._runtimes) {
+        // @ts-ignore
+        await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
+          const runtimeDeps = runtime.dependencies as Aspect[];
+          if (runtimeDeps) {
+            const depIds = runtimeDeps.map((d) => d.id).filter((id) => id);
+            const loaded = await this.getManifestsGraphRecursively(depIds);
+            manifests.push(...loaded);
+          }
+        });
+      }
+    });
+    return manifests;
+  }
+
+  async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return [];
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
+    // TODO: use diff instead of filter twice
+    const localAspects = ids.filter((id) => id.startsWith('file://'));
+    this.localAspects = this.localAspects.concat(localAspects);
+    // load local aspects for debugging purposes.
+    await this.loadAspectFromPath(localAspects);
+    const componentIds = await this.resolveMultipleComponentIds(aspectIds);
+    if (!componentIds || !componentIds.length) return [];
+    const components = await this.import(componentIds);
+
+    return components;
   }
 
   private async resolveLocalAspects(ids: string[], runtime?: string) {
@@ -411,6 +460,35 @@ export class ScopeMain implements ComponentFactory {
         return aspect;
       });
     });
+  }
+
+  async requireAspects(requireableExtensions: RequireableComponent[]): Promise<Array<ExtensionManifest | Aspect>> {
+    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
+      const aspect = await requireableExtension.require();
+      const manifest = aspect.default || aspect;
+      manifest.id = idStr;
+      const newManifest = await this.aspectLoader.runOnLoadRequireableExtensionSubscribers(
+        requireableExtension,
+        manifest
+      );
+      return newManifest;
+    };
+    const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
+      if (!requireableExtensions) return undefined;
+      const idStr = requireableExtension.component.id.toString();
+      try {
+        return await doRequire(requireableExtension, idStr);
+      } catch (e: any) {
+        // @todo: handle failure - re-create capsules maybe. See this.loadAspectsFromCapsules()
+      }
+      return undefined;
+    });
+    const manifests = await manifestsP;
+
+    // Remove empty manifests as a result of loading issue
+    const filteredManifests = compact(manifests);
+
+    return filteredManifests;
   }
 
   /**

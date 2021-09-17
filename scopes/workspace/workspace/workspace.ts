@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { alg } from 'graphlib';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -887,6 +888,7 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+    this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -894,11 +896,11 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
     const graph = await this.getGraphWithoutCore(components);
-
-    const allIdsP = graph.nodes().map(async (id) => {
+    // @todo: check if the sort is needed
+    const sorted = alg.topsort(graph).reverse();
+    const allIdsP = sorted.map(async (id) => {
       return this.resolveComponentId(id);
     });
-
     const allIds = await Promise.all(allIdsP);
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
@@ -927,13 +929,12 @@ export class Workspace implements ComponentFactory {
     // here we are trying to load extensions from the workspace.
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
-    if (scopeComps.length) {
-      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
-    }
-    if (workspaceComps.length) {
-      const requireableExtensions: any = await this.requireComponents(workspaceComps);
-      await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
-    }
+    const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
+    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds);
+    await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
+
+    const workspaceAspects = await this.requireComponents(workspaceComps);
+    await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {

@@ -63,8 +63,7 @@ describe('custom aspects', function () {
       const envId = helper.env.getComponentEnv('comp1');
       expect(envId).to.equal(`${helper.scopes.remote}/my-env`);
     });
-    // @todo: FIX!
-    describe.skip('when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope', () => {
+    describe('when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope', () => {
       before(() => {
         helper.command.importComponent('dep-aspect');
       });
