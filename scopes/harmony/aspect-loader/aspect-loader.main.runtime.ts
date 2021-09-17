@@ -241,7 +241,8 @@ export class AspectLoaderMain {
     this.failedLoadAspect.push(id);
   }
 
-  async doRequire(requireableExtension: RequireableComponent, idStr: string) {
+  async doRequire(requireableExtension: RequireableComponent) {
+    const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
@@ -274,7 +275,7 @@ export class AspectLoaderMain {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await this.doRequire(requireableExtension, idStr);
+        return await this.doRequire(requireableExtension);
       } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
@@ -284,23 +285,14 @@ export class AspectLoaderMain {
         if (isFixed) {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
-            return await this.doRequire(requireableExtension, idStr);
+            return await this.doRequire(requireableExtension);
           } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
           }
         }
         const error = errAfterReLoad || e;
-        if (throwOnError) {
-          this.logger.console(error);
-          throw new CannotLoadExtension(idStr, error);
-        }
-        if (this.logger.isLoaderStarted) {
-          this.logger.consoleFailure(errorMsg);
-        } else {
-          this.logger.console(errorMsg);
-          this.logger.console(error.message);
-        }
+        this.handleExtensionLoadingError(error, idStr, throwOnError);
       }
       return undefined;
     });
@@ -309,6 +301,21 @@ export class AspectLoaderMain {
     // Remove empty manifests as a result of loading issue
     const filteredManifests = compact(manifests);
     return this.loadExtensionsByManifests(filteredManifests, throwOnError);
+  }
+
+  handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
+    const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
+    if (throwOnError) {
+      // @ts-ignore
+      this.logger.console(error);
+      throw new CannotLoadExtension(idStr, error);
+    }
+    if (this.logger.isLoaderStarted) {
+      this.logger.consoleFailure(errorMsg);
+    } else {
+      this.logger.console(errorMsg);
+      this.logger.console(error.message);
+    }
   }
 
   async runOnLoadRequireableExtensionSubscribers(

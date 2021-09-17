@@ -370,15 +370,20 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectsFromCapsules(components, throwOnError);
   }
 
+  async loadAspectsRecursively(ids: string[], throwOnError = false) {
+    const scopeManifests = await this.getManifestsGraphRecursively(ids, throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
+  }
+
   // @todo: improve performance by caching the visited manifests.
-  async getManifestsGraphRecursively(ids: string[]): Promise<ManifestOrAspect[]> {
+  async getManifestsGraphRecursively(ids: string[], throwOnError = false): Promise<ManifestOrAspect[]> {
     if (!ids.length) return [];
     const components = await this.getNonLoadedAspects(ids);
-    const manifests = await this.requireAspects(components);
+    const manifests = await this.requireAspects(components, throwOnError);
     await mapSeries(manifests, async (manifest) => {
       if (manifest.dependencies) {
         const depIds = manifest.dependencies.map((d) => d.id).filter((id) => id);
-        const loaded = await this.getManifestsGraphRecursively(depIds);
+        const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
         manifests.push(...loaded);
       }
       // @ts-ignore
@@ -388,7 +393,7 @@ export class ScopeMain implements ComponentFactory {
           const runtimeDeps = runtime.dependencies as Aspect[];
           if (runtimeDeps) {
             const depIds = runtimeDeps.map((d) => d.id).filter((id) => id);
-            const loaded = await this.getManifestsGraphRecursively(depIds);
+            const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
             manifests.push(...loaded);
           }
         });
@@ -461,31 +466,44 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async requireAspects(components: Component[]): Promise<Array<ExtensionManifest | Aspect>> {
+  async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
     const requireableExtensions = await this.getResolvedAspects(components);
-    const manifests = await mapSeries(requireableExtensions, async (requireableExtension) => {
-      if (!requireableExtensions) return undefined;
-      const idStr = requireableExtension.component.id.toString();
-      try {
-        return await this.aspectLoader.doRequire(requireableExtension, idStr);
-      } catch (err: any) {
-        if (err?.error?.code === 'MODULE_NOT_FOUND' || err?.code === 'MODULE_NOT_FOUND') {
-          this.logger.warn(
-            `failed loading aspect ${idStr} from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
-          );
-          const resolvedAspectsAgain = await this.getResolvedAspects([requireableExtension.component], {
-            skipIfExists: false,
-          });
-          return await this.aspectLoader.doRequire(resolvedAspectsAgain[0], idStr);
+    if (!requireableExtensions) {
+      return [];
+    }
+    let manifests: Array<ExtensionManifest | Aspect | undefined> = [];
+    let error: any;
+    let erroredId = '';
+    const requireWithCatch = async (requireableAspects: RequireableComponent[]) => {
+      error = undefined;
+      manifests = await mapSeries(requireableAspects, async (requireableExtension) => {
+        try {
+          return await this.aspectLoader.doRequire(requireableExtension);
+        } catch (err: any) {
+          erroredId = requireableExtension.component.id.toString();
+          error = err;
+          throw err;
         }
+      });
+    };
+    await requireWithCatch(requireableExtensions);
+    if (!error) {
+      return compact(manifests);
+    }
+    if (error.code === 'MODULE_NOT_FOUND') {
+      this.logger.warn(
+        `failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
+      );
+      const resolvedAspectsAgain = await this.getResolvedAspects(components, {
+        skipIfExists: false,
+      });
+      await requireWithCatch(resolvedAspectsAgain);
+      if (!error) {
+        return compact(manifests);
       }
-      return undefined;
-    });
-
-    // Remove empty manifests as a result of loading issue
-    const filteredManifests = compact(manifests);
-
-    return filteredManifests;
+    }
+    this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
+    return [];
   }
 
   /**
