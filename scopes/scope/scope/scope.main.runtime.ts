@@ -361,16 +361,24 @@ export class ScopeMain implements ComponentFactory {
     if (!ids.length) return [];
     const components = await this.getNonLoadedAspects(ids);
     const manifests = await this.requireAspects(components, throwOnError);
-    const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
-      depsToLoad.push(...(manifest.dependencies || []));
+      if (manifest.dependencies) {
+        const depIds = manifest.dependencies.map((d) => d.id).filter((id) => id);
+        const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
+        manifests.push(...loaded);
+      }
       // @ts-ignore
-      (manifest._runtimes || []).forEach((runtime) => {
-        depsToLoad.push(...(runtime.dependencies || []));
-      });
-      const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
-      const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
-      manifests.push(...loaded);
+      if (manifest._runtimes) {
+        // @ts-ignore
+        await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
+          const runtimeDeps = runtime.dependencies as Aspect[];
+          if (runtimeDeps) {
+            const depIds = runtimeDeps.map((d) => d.id).filter((id) => id);
+            const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
+            manifests.push(...loaded);
+          }
+        });
+      }
     });
     return manifests;
   }
