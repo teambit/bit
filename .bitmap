@@ -537,6 +537,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
+    "modules/jest-utils": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/modules/jest-utils"
+    },
     "modules/match-pattern": {
         "scope": "teambit.workspace",
         "version": "0.0.439",
