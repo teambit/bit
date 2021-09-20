@@ -39,7 +39,7 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import { compact, slice, uniqBy, difference } from 'lodash';
+import { compact, uniq, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -353,32 +353,33 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const scopeManifests = await this.getManifestsGraphRecursively(ids, throwOnError);
+    const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
   }
 
-  async getManifestsGraphRecursively(ids: string[], throwOnError = false): Promise<ManifestOrAspect[]> {
-    if (!ids.length) return [];
-    const components = await this.getNonLoadedAspects(ids);
+  async getManifestsGraphRecursively(
+    ids: string[],
+    visited: string[] = [],
+    throwOnError = false
+  ): Promise<ManifestOrAspect[]> {
+    ids = uniq(ids);
+    const nonVisitedId = ids.filter((id) => !visited.includes(id));
+    if (!nonVisitedId.length) {
+      return [];
+    }
+    const components = await this.getNonLoadedAspects(nonVisitedId);
+    visited.push(...nonVisitedId);
     const manifests = await this.requireAspects(components, throwOnError);
+    const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
-      if (manifest.dependencies) {
-        const depIds = manifest.dependencies.map((d) => d.id).filter((id) => id);
-        const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
-        manifests.push(...loaded);
-      }
+      depsToLoad.push(...(manifest.dependencies || []));
       // @ts-ignore
-      if (manifest._runtimes) {
-        // @ts-ignore
-        await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
-          const runtimeDeps = runtime.dependencies as Aspect[];
-          if (runtimeDeps) {
-            const depIds = runtimeDeps.map((d) => d.id).filter((id) => id);
-            const loaded = await this.getManifestsGraphRecursively(depIds, throwOnError);
-            manifests.push(...loaded);
-          }
-        });
-      }
+      (manifest._runtimes || []).forEach((runtime) => {
+        depsToLoad.push(...(runtime.dependencies || []));
+      });
+      const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
+      const loaded = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
+      manifests.push(...loaded);
     });
     return manifests;
   }
