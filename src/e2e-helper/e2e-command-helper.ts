@@ -403,8 +403,12 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id} ${value}`, cwd);
   }
 
-  testComponent(id = '') {
-    return this.runCmd(`bit test ${id}`);
+  testComponent(id = '', flags = '') {
+    return this.runCmd(`bit test ${id} ${flags}`);
+  }
+
+  testAllWithJunit() {
+    return this.testComponent(undefined, '--junit junit.xml');
   }
 
   testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
