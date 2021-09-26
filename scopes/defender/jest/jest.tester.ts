@@ -73,13 +73,15 @@ export class JestTester implements Tester {
       const tests = testsFiles.map((test) => {
         const file = new AbstractVinyl({ path: test.testFilePath, contents: readFileSync(test.testFilePath) });
         const testResults = test.testResults.map((testResult) => {
-          const error = formatResultsErrors([testResult], config, { noStackTrace: true });
+          const error = formatResultsErrors([testResult], config, { noStackTrace: true }) || undefined;
+          const isFailure = testResult.status === 'failed';
           return new TestResult(
             testResult.ancestorTitles,
             testResult.title,
             testResult.status,
             testResult.duration,
-            error || undefined
+            isFailure ? undefined : error,
+            isFailure ? error : undefined
           );
         });
         const filePath = file?.basename || test.testFilePath;
@@ -137,6 +139,7 @@ export class JestTester implements Tester {
     };
 
     if (context.debug) config.runInBand = true;
+    if (context.coverage) config.coverage = true;
     config.runInBand = true;
 
     if (context.watch) {
