@@ -30,7 +30,7 @@ const defaultDocs = {
 };
 
 /**
- * base template for react component documentation.
+ * base template for react component documentation
  */
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useFetchDocs(componentId);
