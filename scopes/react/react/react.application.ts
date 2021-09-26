@@ -23,6 +23,16 @@ export class ReactApp implements Application {
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
         // configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
+        configMutator.addTopLevel('devServer', {
+          historyApiFallback: {
+            index: '/index.html',
+            disableDotRule: true,
+          },
+        });
+
+        if (!configMutator.raw.output) configMutator.raw.output = {};
+        configMutator.raw.output.publicPath = '/';
+
         return configMutator;
       },
     ]);
