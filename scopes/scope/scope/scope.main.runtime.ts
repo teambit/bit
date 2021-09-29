@@ -10,7 +10,7 @@ import type { ComponentMain, ComponentMap } from '@teambit/component';
 import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
@@ -39,7 +39,7 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import { compact, slice, uniqBy, difference } from 'lodash';
+import { compact, uniq, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -48,6 +48,8 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
+
+type ManifestOrAspect = ExtensionManifest | Aspect;
 
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
@@ -351,8 +353,40 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
+  }
+
+  async getManifestsGraphRecursively(
+    ids: string[],
+    visited: string[] = [],
+    throwOnError = false
+  ): Promise<ManifestOrAspect[]> {
+    ids = uniq(ids);
+    const nonVisitedId = ids.filter((id) => !visited.includes(id));
+    if (!nonVisitedId.length) {
+      return [];
+    }
+    const components = await this.getNonLoadedAspects(nonVisitedId);
+    visited.push(...nonVisitedId);
+    const manifests = await this.requireAspects(components, throwOnError);
+    const depsToLoad: Array<ExtensionManifest | Aspect> = [];
+    await mapSeries(manifests, async (manifest) => {
+      depsToLoad.push(...(manifest.dependencies || []));
+      // @ts-ignore
+      (manifest._runtimes || []).forEach((runtime) => {
+        depsToLoad.push(...(runtime.dependencies || []));
+      });
+      const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
+      const loaded = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
+      manifests.push(...loaded);
+    });
+    return manifests;
+  }
+
+  private async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return;
+    if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
@@ -362,9 +396,10 @@ export class ScopeMain implements ComponentFactory {
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
-    if (!componentIds || !componentIds.length) return;
+    if (!componentIds || !componentIds.length) return [];
     const components = await this.import(componentIds);
-    await this.loadAspectsFromCapsules(components, throwOnError);
+
+    return components;
   }
 
   private async resolveLocalAspects(ids: string[], runtime?: string) {
@@ -413,32 +448,48 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  /**
-   * if capsules already exist for these aspects, use them. otherwise, isolate them first.
-   * in case of module-not-found error, give it another try by re-creating the capsules and re-loading.
-   */
-  async loadAspectsFromCapsules(components: Component[], throwOnError: boolean) {
-    const resolvedAspects = await this.getResolvedAspects(components);
-    try {
-      await this.aspectLoader.loadRequireableExtensions(resolvedAspects, true);
-    } catch (err: any) {
-      if (err?.error?.code === 'MODULE_NOT_FOUND') {
-        this.logger.warn(
-          'failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again'
-        );
-        const resolvedAspectsAgain = await this.getResolvedAspects(components, { skipIfExists: false });
-        await this.aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, throwOnError);
-      } else {
-        if (throwOnError) {
-          throw err;
-        }
-        // throwOnError is false, it's not ideal, but we call loadRequireableExtensions again.
-        // otherwise, because it was throwing before, it didn't have the chance to log into the console
-        // as we caught that error. also, if the first aspect failed, it didn't load the second aspect
-        // but threw immediately.
-        await this.aspectLoader.loadRequireableExtensions(resolvedAspects, false);
+  async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
+    const requireableExtensions = await this.getResolvedAspects(components);
+    if (!requireableExtensions) {
+      return [];
+    }
+    let error: any;
+    let erroredId = '';
+    const requireWithCatch = async (requireableAspects: RequireableComponent[]) => {
+      error = undefined;
+      try {
+        const manifests = await mapSeries(requireableAspects, async (requireableExtension) => {
+          try {
+            return await this.aspectLoader.doRequire(requireableExtension);
+          } catch (err: any) {
+            erroredId = requireableExtension.component.id.toString();
+            error = err;
+            throw err;
+          }
+        });
+        return manifests;
+      } catch (err) {
+        return null;
+      }
+    };
+    const manifests = await requireWithCatch(requireableExtensions);
+    if (!error) {
+      return compact(manifests);
+    }
+    if (error.code === 'MODULE_NOT_FOUND') {
+      this.logger.warn(
+        `failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
+      );
+      const resolvedAspectsAgain = await this.getResolvedAspects(components, {
+        skipIfExists: false,
+      });
+      const manifestAgain = await requireWithCatch(resolvedAspectsAgain);
+      if (!error) {
+        return compact(manifestAgain);
       }
     }
+    this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
+    return [];
   }
 
   getAspectCapsulePath() {
