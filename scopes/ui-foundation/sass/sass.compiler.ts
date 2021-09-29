@@ -36,7 +36,7 @@ export class SassCompiler implements Compiler {
     ];
   }
 
-  async build(context: BuildContext): Promise<BuiltTaskResult> {
+  async build(): Promise<BuiltTaskResult> {
     return {
       componentsResults: [],
     };

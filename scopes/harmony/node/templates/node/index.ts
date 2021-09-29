@@ -10,7 +10,7 @@ export const nodeEnvTemplate: ComponentTemplate = {
     return [
       {
         relativePath: 'index.ts',
-        content: indexFile(context),
+        content: indexFile(),
         isMain: true,
       },
       {

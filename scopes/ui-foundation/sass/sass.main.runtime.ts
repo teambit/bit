@@ -4,15 +4,17 @@ import { SassAspect } from './sass.aspect';
 import { SassCompiler } from './sass.compiler';
 
 export class SassMain {
-  static runtime = MainRuntime;
-  static dependencies = [CompilerAspect];
+  constructor(private compiler: CompilerMain) {}
 
   createCompiler() {
     return new SassCompiler(SassAspect.id);
   }
 
+  static runtime = MainRuntime;
+  static dependencies = [CompilerAspect];
+
   static async provider([compiler]: [CompilerMain]) {
-    return new SassMain();
+    return new SassMain(compiler);
   }
 }
 
