@@ -63,7 +63,7 @@ Example:
 To Override the Jest config to ignore transpiling from specific folders add this to the \`jestconfig.js\` file:
 
 \`\`\`js
-const reactJestConfig = require('@teambit/react').jestconfig;
+const reactJestConfig = require('@teambit/react').jestConfig;
 module.exports = {
   ...reactJestConfig,
   transformIgnorePatterns: ['/node_modules/(?!(prop-types|@teambit))']
