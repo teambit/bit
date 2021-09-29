@@ -1,5 +1,5 @@
 import { renderSync } from 'sass';
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { BuiltTaskResult } from '@teambit/builder';
 import { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 
 export class SassCompiler implements Compiler {
