@@ -141,6 +141,7 @@ describe('custom env', function () {
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('*', `${envId}@0.0.1`);
+        helper.command.status(); // populate capsules.
         const capsules = helper.command.capsuleListParsed();
         const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
         fs.removeSync(path.join(scopeAspectCapsulesPath, 'node_modules'));

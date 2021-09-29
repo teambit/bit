@@ -242,6 +242,18 @@ export class AspectLoaderMain {
   }
 
   /**
+   * run "require" of the component code to get the manifest
+   */
+  async doRequire(requireableExtension: RequireableComponent): Promise<ExtensionManifest | Aspect> {
+    const idStr = requireableExtension.component.id.toString();
+    const aspect = await requireableExtension.require();
+    const manifest = aspect.default || aspect;
+    manifest.id = idStr;
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+    return newManifest;
+  }
+
+  /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
    * there are cases when throwing an error blocks the user from doing anything else. for example,
@@ -262,18 +274,11 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
-    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
-      const aspect = await requireableExtension.require();
-      const manifest = aspect.default || aspect;
-      manifest.id = idStr;
-      const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
-      return newManifest;
-    };
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await doRequire(requireableExtension, idStr);
+        return await this.doRequire(requireableExtension);
       } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
@@ -283,23 +288,14 @@ export class AspectLoaderMain {
         if (isFixed) {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
-            return await doRequire(requireableExtension, idStr);
+            return await this.doRequire(requireableExtension);
           } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
           }
         }
         const error = errAfterReLoad || e;
-        if (throwOnError) {
-          this.logger.console(error);
-          throw new CannotLoadExtension(idStr, error);
-        }
-        if (this.logger.isLoaderStarted) {
-          this.logger.consoleFailure(errorMsg);
-        } else {
-          this.logger.console(errorMsg);
-          this.logger.console(error.message);
-        }
+        this.handleExtensionLoadingError(error, idStr, throwOnError);
       }
       return undefined;
     });
@@ -308,6 +304,21 @@ export class AspectLoaderMain {
     // Remove empty manifests as a result of loading issue
     const filteredManifests = compact(manifests);
     return this.loadExtensionsByManifests(filteredManifests, throwOnError);
+  }
+
+  handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
+    const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
+    if (throwOnError) {
+      // @ts-ignore
+      this.logger.console(error);
+      throw new CannotLoadExtension(idStr, error);
+    }
+    if (this.logger.isLoaderStarted) {
+      this.logger.consoleFailure(errorMsg);
+    } else {
+      this.logger.console(errorMsg);
+      this.logger.console(error.message);
+    }
   }
 
   async runOnLoadRequireableExtensionSubscribers(
