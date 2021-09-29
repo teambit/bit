@@ -12,15 +12,6 @@ labels: ['label1', 'label2', 'label3']
 
 import { ${Name} } from './index';
 
-## Static Content Page in MDX
-
-This is a simple MDX-file compiled by Bit to a reuseable component.
-
-### Features
-- Compiled output in JS, ready to render as a component in any React app (Gatsby, NextJS, CreateReactApp)
-- Customized theming with a [\`ThemeProvider\`](https://bit.dev/teambit/documenter/theme/theme-context)
-- Use your own [\`MDXProvider\`](https://mdxjs.com/getting-started/#mdxprovider) (or use this [MDXProvider component](https://bit.dev/teambit/mdx/ui/mdx-layout))
-
 ### Component usage
 \`\`\`js
 <${Name} />
