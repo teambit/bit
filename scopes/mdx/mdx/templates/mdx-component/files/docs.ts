@@ -7,7 +7,7 @@ export const docsFile = (context: ComponentContext) => {
     relativePath: `${name}.docs.mdx`,
     content: `---
 description: 'An MDX component.'
-labels: ['label1', 'label2', 'label3']
+labels: ['content', 'mdx']
 ---
 
 import { ${Name} } from './index';
