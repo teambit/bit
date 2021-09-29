@@ -885,8 +885,12 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
   }
 
-  // remove this function
+  /**
+   * load aspects from the workspace and if not exists in the workspace, load from the scope.
+   * keep in mind that the graph may have circles.
+   */
   async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+    this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -894,11 +898,9 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
     const graph = await this.getGraphWithoutCore(components);
-
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
-
     const allIds = await Promise.all(allIdsP);
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
@@ -927,13 +929,11 @@ export class Workspace implements ComponentFactory {
     // here we are trying to load extensions from the workspace.
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
-    if (scopeComps.length) {
-      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
-    }
-    if (workspaceComps.length) {
-      const requireableExtensions: any = await this.requireComponents(workspaceComps);
-      await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
-    }
+    const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
+    await this.scope.loadAspects(scopeIds, throwOnError);
+
+    const workspaceAspects = await this.requireComponents(workspaceComps);
+    await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {

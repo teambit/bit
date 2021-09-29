@@ -1,21 +1,19 @@
 import { PubsubMain } from '@teambit/pubsub';
-import { dirname } from 'path';
+import { dirname, sep } from 'path';
 import { difference } from 'lodash';
 import { ComponentID } from '@teambit/component';
-
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-
+import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { WorkspaceAspect } from '../';
 import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { Workspace } from '../workspace';
@@ -28,7 +26,7 @@ export class Watcher {
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
-    private trackDirs: { [dir: string]: ComponentID } = {},
+    private trackDirs: { [dir: PathLinux]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
@@ -243,7 +241,7 @@ export class Watcher {
       // https://github.com/paulmillr/chokidar/issues/724
       ignored: (path) => {
         // Ignore package.json temporarily since it cerates endless loop since it's re-written after each build
-        if (path.includes('dist') || path.includes('node_modules') || path.includes('package.json')) {
+        if (path.includes(`${sep}node_modules${sep}`) || path.includes(`${sep}package.json`)) {
           return true;
         }
         return false;
@@ -270,7 +268,7 @@ export class Watcher {
     );
   }
 
-  private async getPathsToWatch(): Promise<string[]> {
+  private async getPathsToWatch(): Promise<PathOsBasedAbsolute[]> {
     await this.setTrackDirs();
     const paths = [...Object.keys(this.trackDirs), BIT_MAP];
     const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
