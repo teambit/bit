@@ -58,13 +58,11 @@ export function \${context.namePascalCase}({ text }: \${context.namePascalCase}P
             {
               relativePath: \`\${context.name}.docs.mdx\`,
               content: \`---
-description: 'A \${context.namePascalCase} component.'
-labels: ['label1', 'label2', 'label3']
+description: 'A React Component for rendering text.'
+labels: ['text', 'ui']
 ---
 
 import { \${context.namePascalCase} } from './\${context.name}';
-
-## React Component for rendering text
 \`
             },
 

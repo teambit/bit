@@ -13,7 +13,7 @@ export const MDXComponent: ComponentTemplate = {
     const { name, namePascalCase: Name } = context;
     const indexFile = {
       relativePath: 'index.ts',
-      content: `export { default as ${Name} } from './${name}.mdx';
+      content: `export { default as ${Name}, default } from './${name}.mdx';
 `,
     };
 
