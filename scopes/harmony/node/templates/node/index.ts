@@ -19,7 +19,7 @@ export const nodeEnvTemplate: ComponentTemplate = {
       },
       {
         relativePath: `${context.name}.extension.ts`,
-        content: mainFile(context),
+        content: mainFile(),
       },
     ];
   },
