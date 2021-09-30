@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace } from '@teambit/workspace';
+import { SerializableResults, Workspace, WatchOptions } from '@teambit/workspace';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -189,6 +189,7 @@ export class WorkspaceCompiler {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
@@ -219,6 +220,30 @@ export class WorkspaceCompiler {
         return `${buildResults[0]?.buildResults?.join('\n\t')}`;
       },
     };
+  }
+
+  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    const compilerInstances: any[] = [];
+    const componentPackageDirs: string[] = [];
+    let tsCompiler: any;
+    await Promise.all(
+      components.map(async (comp) => {
+        const environment = this.envs.getEnv(comp).env;
+        const compilerInstance = environment.getCompiler?.();
+        compilerInstances.push(compilerInstance);
+        const packageName = componentIdToPackageName(comp.state._consumer);
+        const packageDir = path.join('node_modules', packageName);
+        const absPackageDir = this.workspace.consumer.toAbsolutePath(packageDir);
+        if (compilerInstance?.id === 'teambit.typescript/typescript') {
+          tsCompiler = compilerInstance;
+          componentPackageDirs.push(absPackageDir);
+        }
+        await compilerInstance?.preWatch?.(comp, absPackageDir);
+      })
+    );
+    if (watchOpts.checkTypes) {
+      tsCompiler.watchProjectReferences(componentPackageDirs);
+    }
   }
 
   async compileComponents(

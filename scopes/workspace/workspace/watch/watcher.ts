@@ -21,6 +21,8 @@ import { OnComponentEventResult } from '../on-component-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
+export type WatchOptions = { verbose?: boolean; checkTypes?: boolean };
+
 export class Watcher {
   private fsWatcher: FSWatcher;
   constructor(
@@ -31,51 +33,54 @@ export class Watcher {
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
 
-  async watch(opts: { msgs; verbose?: boolean }) {
+  async watch(opts: { msgs } & WatchOptions) {
     this.verbose = Boolean(opts.verbose);
-    await this.watchAll({ msgs: opts.msgs, verbose: this.verbose });
+    await this.watchAll(opts);
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll(opts?: { msgs; verbose?: boolean }) {
+  async watchAll(opts: { msgs } & WatchOptions) {
+    const { msgs, ...watchOpts } = opts;
     // TODO: run build in the beginning of process (it's work like this in other envs)
-    const _verbose = opts?.verbose || false;
-    await this.createWatcher();
+    const pathsToWatch = await this.getPathsToWatch();
+    const componentIds = Object.values(this.trackDirs);
+    await this.workspace.triggerOnPreWatch(componentIds, watchOpts);
+    await this.createWatcher(pathsToWatch);
     const watcher = this.fsWatcher;
-    opts?.msgs?.onStart(this.workspace);
+    msgs?.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
-        if (opts?.msgs?.onAll) watcher.on('all', opts?.msgs?.onAll);
+        if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
       watcher.on('ready', () => {
-        opts?.msgs?.onReady(this.workspace, this.trackDirs, _verbose);
+        msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
         const buildResults = (await this.handleChange(filePath)) || [];
         const duration = new Date().getTime() - startTime;
-        opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
+        msgs?.onChange(filePath, buildResults, this.verbose, duration);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
         const buildResults = (await this.handleChange(filePath)) || [];
         const duration = new Date().getTime() - startTime;
-        opts?.msgs?.onAdd(filePath, buildResults, _verbose, duration);
+        msgs?.onAdd(filePath, buildResults, this.verbose, duration);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('unlink', async (p) => {
-        opts?.msgs?.onUnlink(p);
+        msgs?.onUnlink(p);
         await this.handleChange(p);
       });
       watcher.on('error', (err) => {
-        opts?.msgs?.onError(err);
+        msgs?.onError(err);
         reject(err);
       });
     });
@@ -160,7 +165,7 @@ export class Watcher {
         ? await this.workspace.triggerOnComponentChange(componentId)
         : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err: any) {
-      // do not exist the watch process on errors, just print them
+      // do not exit the watch process on errors, just print them
       logger.console(err.message || err);
       return [];
     }
@@ -229,8 +234,7 @@ export class Watcher {
     return this.findTrackDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher() {
-    const pathsToWatch = await this.getPathsToWatch();
+  private async createWatcher(pathsToWatch: string[]) {
     this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // Using the function way since the regular way not working as expected

@@ -5,9 +5,11 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
+import { Component } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
+import { generateDocumentation } from './check-types';
 
 export class TypescriptCompiler implements Compiler {
   distDir: string;
@@ -83,6 +85,33 @@ export class TypescriptCompiler implements Compiler {
       });
     }
     return outputFiles;
+  }
+
+  async preWatch(component: Component, componentPackageDir: string) {
+    const tsconfigStr = this.stringifyTsconfig(this.options.tsconfig);
+    await fs.writeFile(path.join(componentPackageDir, 'tsconfig.json'), tsconfigStr);
+    await this.writeTypes([componentPackageDir]);
+  }
+
+  watchProjectReferences(dirs: string[]) {
+    const host = this.tsModule.createSolutionBuilderWithWatchHost(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      reportWatch
+    );
+    const solutionBuilder = this.tsModule.createSolutionBuilderWithWatch(host, dirs, { verbose: false });
+    solutionBuilder.build();
+
+    function reportWatch(diag: ts.Diagnostic) {
+      const proj = solutionBuilder.getNextInvalidatedProject();
+      if (proj && proj.getProgram) {
+        const progSource = /** @type {*} */ proj;
+        const program = progSource.getProgram();
+        generateDocumentation(program);
+      }
+    }
   }
 
   async preBuild(context: BuildContext) {

@@ -1,4 +1,5 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
+import { Component } from '@teambit/component';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 
 export type TranspileFileParams = {
@@ -105,6 +106,11 @@ export interface Compiler extends CompilerOptions {
    * run after the build pipeline completed for all envs. useful for some cleanups
    */
   postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void>;
+
+  /**
+   * run before "bit watch" starts
+   */
+  preWatch(component: Component, componentPackageDir: string): Promise<void>;
 
   /**
    * returns the version of the current compiler instance (e.g. '4.0.1').

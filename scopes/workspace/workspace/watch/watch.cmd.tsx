@@ -8,7 +8,7 @@ import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { Watcher } from './watcher';
+import { Watcher, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { OnComponentEventResult } from '../on-component-events';
 
@@ -55,7 +55,10 @@ export class WatchCommand implements Command {
   alias = '';
   group = 'development';
   shortDescription = '';
-  options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
+  options = [
+    ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['t', 'check-types', 'for typescript files, load the dependency graph and check types (takes longer)'],
+  ] as CommandOptions;
 
   constructor(
     /**
@@ -89,8 +92,8 @@ export class WatchCommand implements Command {
     }
   };
 
-  async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
-    await this.watcher.watch({ msgs: this.msgs, verbose });
+  async report(cliArgs: [], watchOpts: WatchOptions) {
+    await this.watcher.watch({ msgs: this.msgs, ...watchOpts });
     return 'watcher terminated';
   }
 }

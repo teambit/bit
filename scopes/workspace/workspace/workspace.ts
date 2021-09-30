@@ -76,13 +76,15 @@ import {
   SerializableResults,
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { Watcher } from './watch/watcher';
+import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
+  OnPreWatch,
+  OnPreWatchSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
@@ -189,6 +191,8 @@ export class Workspace implements ComponentFactory {
 
     private onComponentRemoveSlot: OnComponentRemoveSlot,
 
+    private onPreWatchSlot: OnPreWatchSlot,
+
     private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
@@ -242,6 +246,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
+    return this;
+  }
+
+  registerOnPreWatch(onPreWatchFunc: OnPreWatch) {
+    this.onPreWatchSlot.register(onPreWatchFunc);
     return this;
   }
 
@@ -800,6 +809,14 @@ export class Workspace implements ComponentFactory {
     }
 
     return mergedExtensions;
+  }
+
+  async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
+    const components = await this.getMany(componentIds);
+    const preWatchFunctions = this.onPreWatchSlot.values();
+    await mapSeries(preWatchFunctions, async (func) => {
+      await func(components, watchOpts);
+    });
   }
 
   /**
