@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-logo%20(2).png"/>
+  <img src="https://storage.googleapis.com/bit-docs/readme-logo%20(6).png"/>
 </p>
 
 <p align="center">
@@ -9,11 +9,11 @@
 </p>
 
 <h3 align="center">
-  Build components first.
+  Build anything in components
 </h3>
 
 <p align="center">
-Open infrastructure for component-driven applications to speed and scale development.
+  The component build and collaboration framework
 </p>
 
 <p align="center">
@@ -31,10 +31,26 @@ Open infrastructure for component-driven applications to speed and scale develop
   </a>
 </p>
 <p align="left">
-Bit is an OSS Infrastructure for building and composing components. It is an extensible toolchain for component-driven applications / systems which are faster to develop, simpler to understand, test, and maintain, more resilient and performant, and easier to collaborate on.
 
-Instead of building an application that has many components, Bit lets you develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.
+Bit is an open source build framework for components. It helps you build components that are independent and compose them into infinite features and apps. It allows you to build anything in a component-driven architecture: UI applications, backend services, and even CLI tools. It is a tool for advancing web development past the constraints of old monoliths.
+  
+**What are independent components?**
 
+- You can develop and use them anywhere an standalone modules.
+- Each component is versioned.
+- You can import and use any component inside other components.
+- Each component is built and tested independently from other components.
+- The dependencies between components is managed and defined automatically by Bit.
+- Each component has its own dev environment so you can develop it independently. You can customize and reuse your dev envs between components.
+
+**What are component-driven apps?**
+
+- Built from independent components that can be built in different codebase by different people.
+- Your apps is a composition of components represented by a graph.
+- You can add, change, or remove any component independently.
+- You build and test changes only to components and their dependencies.
+- You can have many components using different stacks in their dev environments or standardize your development. 
+  
 </p>
 
 ### Key Features
