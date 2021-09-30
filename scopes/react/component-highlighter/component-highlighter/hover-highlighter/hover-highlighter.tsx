@@ -7,14 +7,18 @@ import { hasComponentMeta } from '../bit-react-component';
 
 import styles from './hover-highlighter.module.scss';
 import { excludeHighlighterSelector } from '../../ignore-highlighter';
-import { ElementHighlighter, HighlightTarget } from '../../element-highlighter';
+import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../../element-highlighter';
 
 export interface HoverHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
+  /** default pop location for the label */
+  placement?: Placement;
+  /** customize styles */
+  classes?: HighlightClasses;
 }
 
 /** automatically highlight components on hover */
-export function HoverHighlighter({ children, disabled, ...rest }: HoverHighlighterProps) {
+export function HoverHighlighter({ children, disabled, classes, placement, ...rest }: HoverHighlighterProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
 
   const _handleElement = useCallback((element: HTMLElement | null) => {
@@ -58,8 +62,8 @@ export function HoverHighlighter({ children, disabled, ...rest }: HoverHighlight
         data-nullify-component-highlight
       >
         {children}
-        {target && <ElementHighlighter target={target} />}
       </HoverSelector>
+      {target && <ElementHighlighter target={target} classes={classes} placement={placement} />}
     </>
   );
 }

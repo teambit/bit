@@ -19,14 +19,16 @@ export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement
   flip?: boolean;
 }
 
+export type { Placement };
+
 // TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
 export function LabelContainer({ targetRef, offset, placement, flip = true, className, ...rest }: LabelContainerProps) {
   const [sourceRef, setSourceRef] = useState<HTMLDivElement | null>(null);
 
-  const modifiers = useMemo<Partial<Modifier<any, any>>[]>(() => [{ name: 'offset', options: { offset } }], [
-    flip,
-    offset,
-  ]);
+  const modifiers = useMemo<Partial<Modifier<any, any>>[]>(
+    () => [{ name: 'offset', options: { offset } }],
+    [flip, offset]
+  );
 
   const { styles, attributes, update } = usePopper(targetRef, sourceRef, {
     modifiers,
@@ -58,7 +60,12 @@ export interface LabelProps extends CardProps {
 export function Label({ componentId, link, scopeLink, local, ...rest }: LabelProps) {
   const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
 
-  if (!parsedId) return <DefaultLabel href={link}>{componentId}</DefaultLabel>;
+  if (!parsedId)
+    return (
+      <DefaultLabel {...rest} href={link}>
+        {componentId}
+      </DefaultLabel>
+    );
 
   return <ComponentLabel {...rest} local={local} componentId={parsedId} link={link} scopeLink={scopeLink} />;
 }
