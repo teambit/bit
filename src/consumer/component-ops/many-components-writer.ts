@@ -121,7 +121,7 @@ export default class ManyComponentsWriter {
   }
 
   static externalInstaller: ExternalPackageInstaller;
-  static externalCompiler: (ids: BitId[]) => Promise<any>;
+  static externalCompiler: (ids?: BitId[]) => Promise<any>;
   static registerExternalInstaller(installer: ExternalPackageInstaller) {
     this.externalInstaller = installer;
   }
@@ -404,7 +404,10 @@ to move all component files to a different directory, run bit remove and then bi
       });
     } else {
       await ManyComponentsWriter.externalInstaller?.install();
-      await ManyComponentsWriter.externalCompiler?.(this.componentsWithDependencies.map((c) => c.component.id));
+      // this compiles all components on the workspace, not only the imported ones.
+      // reason being is that a component has deps or indirect deps in the workspace, which the installed above deletes
+      // their dist directory.
+      await ManyComponentsWriter.externalCompiler?.();
     }
   }
   async _getAllLinks(): Promise<DataToPersist> {
