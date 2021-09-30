@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-logo%20(2).png"/>
+  <img src="https://storage.googleapis.com/bit-docs/readme-logo%20(6).png"/>
 </p>
 
 <p align="center">
