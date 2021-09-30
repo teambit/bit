@@ -20,11 +20,11 @@ export const HighlightedElement = ({ style, className }: { style?: Record<string
   };
 
   return (
-    <div className={className} style={{ padding: '16px 80px 40px 16px', ...style }}>
+    <div className={className} style={{ padding: '16px 160px 50px 16px' }}>
       <div ref={targetRef} style={{ width: 100 }}>
         highlight target
       </div>
-      {target && <ElementHighlighter target={target} placement="bottom" />}
+      {target && <ElementHighlighter target={target} style={style} placement="bottom" />}
     </div>
   );
 };
@@ -42,12 +42,5 @@ export const Customized = () => {
 };
 
 export const Sizes = () => {
-  return (
-    <HighlightedElement
-      style={{
-        fontSize: '20px',
-        padding: '16px 120px 50px 16px',
-      }}
-    />
-  );
+  return <HighlightedElement style={{ fontSize: '16px' }} />;
 };

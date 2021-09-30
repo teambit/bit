@@ -41,7 +41,7 @@ export function ElementHighlighter({
   ...props
 }: ElementHighlighterProps) {
   return (
-    <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, className)}>
+    <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, styles.container, className)}>
       <Frame targetRef={target.element} className={classes?.frame} />
 
       {target.id && (

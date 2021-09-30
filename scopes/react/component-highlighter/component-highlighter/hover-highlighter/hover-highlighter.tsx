@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, CSSProperties } from 'react';
 import classnames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
 import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
@@ -15,10 +15,19 @@ export interface HoverHighlighterProps extends React.HTMLAttributes<HTMLDivEleme
   placement?: Placement;
   /** customize styles */
   classes?: HighlightClasses;
+  /** customize highlighter */
+  highlightStyle?: CSSProperties;
 }
 
 /** automatically highlight components on hover */
-export function HoverHighlighter({ children, disabled, classes, placement, ...rest }: HoverHighlighterProps) {
+export function HoverHighlighter({
+  children,
+  disabled,
+  classes,
+  highlightStyle,
+  placement,
+  ...rest
+}: HoverHighlighterProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
 
   const _handleElement = useCallback((element: HTMLElement | null) => {
@@ -63,7 +72,7 @@ export function HoverHighlighter({ children, disabled, classes, placement, ...re
       >
         {children}
       </HoverSelector>
-      {target && <ElementHighlighter target={target} classes={classes} placement={placement} />}
+      {target && <ElementHighlighter target={target} classes={classes} style={highlightStyle} placement={placement} />}
     </>
   );
 }

@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { usePopper } from 'react-popper';
-import classnames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import type { CardProps } from '@teambit/base-ui.surfaces.card';
 import useAnimationFrame from 'use-animation-frame';
@@ -9,8 +8,6 @@ import '@popperjs/core';
 
 import { DefaultLabel } from './default-label';
 import { ComponentLabel } from './component-label';
-
-import classes from './label.module.scss';
 
 export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   targetRef: HTMLElement | null;
@@ -43,7 +40,7 @@ export function LabelContainer({ targetRef, offset, placement, flip = true, clas
     <div
       {...rest}
       ref={setSourceRef}
-      className={classnames(classes.label, className)}
+      className={className}
       style={styles.popper}
       {...attributes.popper}
     />
