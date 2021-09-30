@@ -405,8 +405,8 @@ to move all component files to a different directory, run bit remove and then bi
     } else {
       await ManyComponentsWriter.externalInstaller?.install();
       // this compiles all components on the workspace, not only the imported ones.
-      // reason being is that a component has deps or indirect deps in the workspace, which the installed above deletes
-      // their dist directory.
+      // reason being is that the installed above deletes all dists dir of components that are somehow part of the
+      // dependency graph. not only the imported components.
       await ManyComponentsWriter.externalCompiler?.();
     }
   }
