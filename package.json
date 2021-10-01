@@ -220,7 +220,7 @@
     "sass-lookup": "3.0.0",
     "semver": "7.3.4",
     "serialize-error": "5.0.0",
-    "ssh2": "0.8.9",
+    "ssh2": "1.4.0",
     "string-format": "0.5.0",
     "stringify-package": "1.0.1",
     "stylus-lookup": "3.0.2",
