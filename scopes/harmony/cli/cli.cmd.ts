@@ -31,7 +31,7 @@ export class CliGenerateCmd implements Command {
 
 export class CliCmd implements Command {
   name = 'cli';
-  description = 'EXPERIMENTAL. enters bit cli program and generate commands list';
+  description = 'EXPERIMENTAL. enters bit cli program and generates commands list';
   alias = '';
   commands: Command[] = [];
   loader = false;
