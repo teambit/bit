@@ -224,7 +224,7 @@ export class WorkspaceCompiler {
 
   async onPreWatch(components: Component[], watchOpts: WatchOptions) {
     const compilerInstances: any[] = [];
-    const componentPackageDirs: string[] = [];
+    const componentPackageDirs: Array<{ componentDir: string; componentID: ComponentID }> = [];
     let tsCompiler: any;
     await Promise.all(
       components.map(async (comp) => {
@@ -236,7 +236,7 @@ export class WorkspaceCompiler {
         const absPackageDir = this.workspace.consumer.toAbsolutePath(packageDir);
         if (compilerInstance?.id === 'teambit.typescript/typescript') {
           tsCompiler = compilerInstance;
-          componentPackageDirs.push(absPackageDir);
+          componentPackageDirs.push({ componentDir: absPackageDir, componentID: comp.id });
         }
         await compilerInstance?.preWatch?.(comp, absPackageDir);
       })

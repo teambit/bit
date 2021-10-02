@@ -110,7 +110,7 @@ export interface Compiler extends CompilerOptions {
   /**
    * run before "bit watch" starts
    */
-  preWatch(component: Component, componentPackageDir: string): Promise<void>;
+  preWatch?(component: Component, componentPackageDir: string): Promise<void>;
 
   /**
    * returns the version of the current compiler instance (e.g. '4.0.1').

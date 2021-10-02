@@ -48,6 +48,9 @@ export class Watcher {
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.workspace.triggerOnPreWatch(componentIds, watchOpts);
+    if (opts.checkTypes) {
+      // call semantic
+    }
     await this.createWatcher(pathsToWatch);
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);

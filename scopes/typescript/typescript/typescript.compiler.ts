@@ -10,6 +10,7 @@ import { BitError } from '@teambit/bit-error';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { generateDocumentation } from './check-types';
+import { ComponentPrograms } from './component-programs';
 
 export class TypescriptCompiler implements Compiler {
   distDir: string;
@@ -93,25 +94,9 @@ export class TypescriptCompiler implements Compiler {
     await this.writeTypes([componentPackageDir]);
   }
 
-  watchProjectReferences(dirs: string[]) {
-    const host = this.tsModule.createSolutionBuilderWithWatchHost(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      reportWatch
-    );
-    const solutionBuilder = this.tsModule.createSolutionBuilderWithWatch(host, dirs, { verbose: false });
-    solutionBuilder.build();
-
-    function reportWatch(diag: ts.Diagnostic) {
-      const proj = solutionBuilder.getNextInvalidatedProject();
-      if (proj && proj.getProgram) {
-        const progSource = /** @type {*} */ proj;
-        const program = progSource.getProgram();
-        generateDocumentation(program);
-      }
-    }
+  watchProjectReferences(componentsDirs) {
+    const componentPrograms = new ComponentPrograms(componentsDirs, this.tsModule);
+    componentPrograms.startWatch();
   }
 
   async preBuild(context: BuildContext) {
