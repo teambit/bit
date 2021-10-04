@@ -20,11 +20,13 @@ $textColor: var(--bit-text-color, #fff);
       }
     }
 
+    &.tippy-breakLine .tippy-content {
+      white-space: pre-line;
+      word-break: break-all;
+    }
+
     .tippy-svg-arrow {
       fill: $bg;
     }
   }
-}
-.breakline {
-  word-break: break-all;
 }
