@@ -37,5 +37,5 @@ export interface DevServer {
   /**
    * return the tester version.
    */
-  version(): string;
+  version?(): string;
 }
