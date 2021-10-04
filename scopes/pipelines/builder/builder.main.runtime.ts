@@ -214,9 +214,9 @@ export class BuilderMain {
 
   listTasks(component: Component) {
     const compEnv = this.envs.getEnv(component);
-    const buildTasks = this.buildService.getDescriptor(compEnv).tasks;
-    const tagTasks = this.tagService.getDescriptor(compEnv).tasks;
-    const snapTasks = this.snapService.getDescriptor(compEnv).tasks;
+    const buildTasks = this.buildService.getCurrentPipeTasks(compEnv);
+    const tagTasks = this.tagService.getCurrentPipeTasks(compEnv);
+    const snapTasks = this.snapService.getCurrentPipeTasks(compEnv);
     return { id: component.id, envId: compEnv.id, buildTasks, tagTasks, snapTasks };
   }
 

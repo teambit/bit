@@ -22,8 +22,6 @@ export type BuildServiceResults = {
 
 export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[]; skipTests?: boolean };
 
-export type BuilderDescriptor = Array<{ pipeName: string; tasks: string[] }>;
-
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
 const pipeNames = {
@@ -31,6 +29,12 @@ const pipeNames = {
   getTagPipe: 'tag',
   getSnapPipe: 'snap',
 };
+
+type PipeName = 'build' | 'tag' | 'snap';
+
+export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
+
+type PipeFunctionNames = keyof typeof pipeNames;
 export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
   name = 'builder';
 
@@ -53,7 +57,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     /**
      * a method with such name should be implemented on the env in order to run the pipe tasks.
      */
-    private pipeNameOnEnv: keyof typeof pipeNames,
+    private pipeNameOnEnv: PipeFunctionNames,
 
     /**
      * pipe name to display on the console during the execution
@@ -138,12 +142,22 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   }
 
   getDescriptor(env: EnvDefinition) {
-    const tasks = Object.keys(pipeNames).map((pipeName) => {
-      const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], pipeName).map(({ task }) =>
-        BuildTaskHelper.serializeId(task)
-      );
-      return { pipeName: pipeNames[pipeName], tasks: tasksQueue };
+    // @ts-ignore
+    const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
+      const tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
+      return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
     });
     return tasks;
+  }
+
+  private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {
+    const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], pipeFuncName).map(({ task }) =>
+      BuildTaskHelper.serializeId(task)
+    );
+    return tasksQueue;
+  }
+
+  getCurrentPipeTasks(env: EnvDefinition) {
+    return this.getTasksNamesByPipeFunc(env, this.pipeNameOnEnv);
   }
 }
