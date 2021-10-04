@@ -7,8 +7,8 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/dist/svg-arrow.css';
 
 import { getMountPoint } from './mount-point';
-import styles from './tippy.module.scss';
 import { useCtxTooltipInstance } from './shared-instance';
+import './tippy.module.scss';
 
 const THEME = 'teambit';
 const popperOptions = {
@@ -42,14 +42,13 @@ export function Tooltip({ children, breakline = false, singleton, className, ...
   return (
     <Tippy
       arrow={roundArrow}
-      className={classnames(darkMode, breakline && styles.breakline, className)}
+      className={classnames(darkMode, breakline && 'tippy-breakLine', className)}
       theme={THEME}
       interactive
       appendTo={getMountPoint}
       popperOptions={popperOptions}
       {...rest}
       singleton={_singleton}
-      data-breakline={breakline}
     >
       {child}
     </Tippy>
