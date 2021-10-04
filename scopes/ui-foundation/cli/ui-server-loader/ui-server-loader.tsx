@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
+// import Spinner from 'ink-spinner';
 
 export type UIServerLoaderProps = {
   /**
@@ -13,9 +13,9 @@ export function UIServerLoader({ name }: UIServerLoaderProps) {
   return (
     <Box paddingTop={1}>
       <Text>
-        <Text color="green">
+        {/* <Text color="green">
           <Spinner type="dots" />
-        </Text>{' '}
+        </Text>{' '} */}
         Starting UI servers{' '}
         {name && (
           <>
