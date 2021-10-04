@@ -125,7 +125,9 @@ export class BundlerMain {
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const bundler = new BundlerMain(config, pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
+    const devServerService = new DevServerService(pubsub, runtimeSlot);
+    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot);
+    envs.registerService(devServerService);
 
     graphql.register(devServerSchema(bundler));
 

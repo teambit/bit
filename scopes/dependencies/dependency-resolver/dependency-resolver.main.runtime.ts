@@ -68,6 +68,7 @@ import {
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
+import { DependenciesService } from './dependencies.service';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -976,6 +977,7 @@ export class DependencyResolverMain {
     );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
+    envs.registerService(new DependenciesService());
 
     return dependencyResolver;
   }
