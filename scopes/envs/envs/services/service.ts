@@ -33,12 +33,12 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
   /**
    * create a string to describe to service in the env cli.
    */
-  render?(env: Environment): JSX.Element;
+  render?(env: Environment): JSX.Element | Promise<JSX.Element>;
 
   /**
    * get service data from an environment.
    */
-  getDescriptor?(environment: Environment): TData | undefined;
+  getDescriptor?(environment: Environment): TData | undefined | Promise<TData | undefined>;
 
   /**
    * executes a service on a subset of components.

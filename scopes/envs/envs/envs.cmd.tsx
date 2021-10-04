@@ -21,7 +21,7 @@ export class EnvsCmd implements Command {
     if (!component) throw new Error(`component for env ${id} was not found`);
     const env = this.envs.getEnv(component);
     const services = this.envs.getServices(env);
-    const all = services.services.map(([serviceId, service]) => {
+    const allP = services.services.map(async ([serviceId, service]) => {
       if (service.render)
         return (
           <Text>
@@ -30,7 +30,7 @@ export class EnvsCmd implements Command {
             </Text>
             <Newline />
             <Newline />
-            {service.render(env)}
+            {await service.render(env)}
           </Text>
         );
       return (
@@ -41,6 +41,8 @@ export class EnvsCmd implements Command {
         </Text>
       );
     });
+
+    const all = await Promise.all(allP);
 
     return (
       <Text>
