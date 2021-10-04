@@ -147,7 +147,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       const tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
       return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
     });
-    return tasks;
+    return tasks as BuilderDescriptor;
   }
 
   private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {
