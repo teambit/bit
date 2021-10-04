@@ -38,6 +38,8 @@ export type TesterDescriptor = {
    * string containing the config for display.
    */
   config: string;
+
+  version?: string;
 };
 
 export class TesterService implements EnvService<Tests, TesterDescriptor> {

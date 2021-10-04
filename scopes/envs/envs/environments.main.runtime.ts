@@ -27,7 +27,7 @@ export type EnvOptions = {};
 
 export type EnvTransformer = (env: Environment) => Environment;
 
-export type ServiceSlot = SlotRegistry<EnvService<any>>;
+export type ServiceSlot = SlotRegistry<Array<EnvService<any>>>;
 
 export type Descriptor = {
   id: string;
@@ -414,8 +414,8 @@ export class EnvsMain {
   /**
    * register a new environment service.
    */
-  registerService(envService: EnvService<any>) {
-    this.serviceSlot.register(envService);
+  registerService(...envServices: EnvService<any>[]) {
+    this.serviceSlot.register(envServices);
     return this;
   }
 
@@ -424,10 +424,14 @@ export class EnvsMain {
    */
   getServices(env: EnvDefinition): EnvServiceList {
     const allServices = this.serviceSlot.toArray();
-    const services = allServices.filter(([, service]) => {
-      return this.implements(env, service);
+    const services: [string, EnvService<any>][] = [];
+    allServices.forEach(([id, currentServices]) => {
+      currentServices.forEach((service) => {
+        if (this.implements(env, service)) {
+          services.push([id, service]);
+        }
+      });
     });
-
     return new EnvServiceList(env, services);
   }
 
