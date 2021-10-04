@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ComponentType } from 'react';
 import { Text, Newline } from 'ink';
 import type { UIServer } from '@teambit/ui';
 import { UIServerLoader } from '@teambit/ui-foundation.cli.ui-server-loader';
@@ -20,21 +20,24 @@ export type UIServerConsoleProps = {
 
 export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
+  const [plugins, setPlugins] = useState<ComponentType[]>();
 
   useEffect(() => {
     futureUiServer
-      .then((server) => setUiServer(server))
+      .then((server) => {
+        setUiServer(server);
+        setPlugins(server.getPluginsComponents());
+      })
       .catch((err) => {
         throw err;
       });
-  });
+  }, []);
 
   if (!uiServer) return <UIServerLoader name={appName} />;
-  const plugins = uiServer.getPluginsComponents();
 
   return (
     <>
-      {plugins.map((Plugin, key) => {
+      {plugins?.map((Plugin, key) => {
         return <Plugin key={key} />;
       })}
       <Newline />
