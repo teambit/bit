@@ -12,11 +12,19 @@ $textColor: var(--bit-text-color, #fff);
 
     .tippy-content {
       padding: 0.85em;
-      white-space: nowrap;
+      &[data-breakline='false'] {
+        white-space: nowrap;
+      }
+      &[data-breakline='true'] {
+        white-space: pre-line;
+      }
     }
 
     .tippy-svg-arrow {
       fill: $bg;
     }
   }
+}
+.breakline {
+  word-break: break-all;
 }
