@@ -1,12 +1,13 @@
-import type { Linter } from '@teambit/linter';
+import type { Linter, LinterContext } from '@teambit/linter';
+import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
+import type { Compiler } from '@teambit/compiler';
 import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import type { TsConfigSourceFile } from 'typescript';
 
 export type EnvDescriptor = {
   type: string;
@@ -66,7 +67,15 @@ export interface LinterEnv extends Environment {
    * Returns & configures the linter to use (ESLint, ...)
    * Required for `bit lint`
    */
-  getLinter?: () => Linter;
+  getLinter?: (context: LinterContext, transformers: any[]) => Linter;
+}
+
+export interface FormatterEnv extends Environment {
+  /**
+   * Returns & configures the formatter to use (prettier, ...)
+   * Required for `bit format`
+   */
+  getFormatter?: (context: FormatterContext, transformers: any[]) => Formatter;
 }
 
 export interface PreviewEnv extends Environment {
@@ -89,6 +98,13 @@ export interface PreviewEnv extends Environment {
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 }
 
+export type PipeServiceModifiersMap = Record<string, PipeServiceModifier>;
+
+export interface PipeServiceModifier {
+  transformers?: Function[];
+  module?: any;
+}
+
 export interface BuilderEnv extends PreviewEnv {
   /**
    * @deprecated Fatal: a breaking API was introduced. Use getBuildPipe() instead.
@@ -99,19 +115,19 @@ export interface BuilderEnv extends PreviewEnv {
    * Returns the component build pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getBuildPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getBuildPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 
   /**
    * Returns the component tag pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getTagPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getTagPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 
   /**
    * Returns the component snap pipeline
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
-  getSnapPipe?: (tsconfig?: TsConfigSourceFile) => BuildTask[];
+  getSnapPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 }
 
 export interface TesterEnv extends Environment {
@@ -120,6 +136,18 @@ export interface TesterEnv extends Environment {
    * Required for `bit start` & `bit test`
    */
   getTester?: (path: string, tester: any) => Tester;
+}
+
+export interface CompilerEnv {
+  /**
+   * Returns a compiler
+   * Required for making and reading dists, especially for `bit compile`
+   */
+  getCompiler: () => Compiler;
+}
+
+export function hasCompiler(obj: Environment): obj is CompilerEnv {
+  return typeof obj.getCompiler === 'function';
 }
 
 export interface DevEnv extends PreviewEnv {

@@ -32,16 +32,25 @@ export default class Status implements LegacyCommand {
   group: Group = 'development';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
-  opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
+  opts = [
+    ['j', 'json', 'return a json version of the component'],
+    ['', 'strict', 'in case issues found, exit with code 1'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   json = false;
 
   // eslint-disable-next-line no-empty-pattern
-  action([], { json }: { json?: boolean }): Promise<Record<string, any>> {
+  async action([], { json, strict }: { json?: boolean; strict?: boolean }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.json = json;
-    return status();
+    const results = await status();
+    const exitCode = results.componentsWithIssues.length && strict ? 1 : 0;
+
+    return {
+      data: results,
+      __code: exitCode,
+    };
   }
 
   report({
@@ -58,6 +67,7 @@ export default class Status implements LegacyCommand {
     componentsWithIndividualFiles,
     componentsWithTrackDirs,
     softTaggedComponents,
+    snappedComponents,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -78,6 +88,7 @@ export default class Status implements LegacyCommand {
           componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
           componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
           softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
+          snappedComponents: snappedComponents.map((s) => s.toString()),
         },
         null,
         2
@@ -103,11 +114,14 @@ export default class Status implements LegacyCommand {
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (component instanceof BitId)
+      if (component instanceof BitId) {
         return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
+      }
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        if (!(component instanceof ModelComponent)) {
+          throw new Error(`expect "${component}" to be instance of ModelComponent`);
+        }
         const localVersions = component.getLocalTagsOrHashes();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
@@ -214,6 +228,13 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
+    const snappedDesc = '\n(use "bit tag --all [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedComponentsOutput = immutableUnshift(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      snappedComponents.map((c) => format(c, true)),
+      snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+    ).join('\n');
+
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
     return (
@@ -224,6 +245,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
           compWithConflictsStr,
           newComponentsOutput,
           modifiedComponentOutput,
+          snappedComponentsOutput,
           stagedComponentsOutput,
           autoTagPendingOutput,
           invalidComponentOutput,

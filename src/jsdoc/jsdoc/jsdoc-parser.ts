@@ -23,7 +23,7 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     docs.forEach((doc) => extractDataRegex(doc, doclets, filePath));
-  } catch (e) {
+  } catch (e: any) {
     // never mind, ignore the doc of this source
     logger.trace(`failed parsing docs using on path ${filePath} with error`, e);
   }

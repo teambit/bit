@@ -27,7 +27,7 @@ describe('bit remove command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.removeComponent('bar/foo2');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');

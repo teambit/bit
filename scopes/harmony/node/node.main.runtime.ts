@@ -27,6 +27,7 @@ export class NodeMain {
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -56,6 +57,7 @@ export class NodeMain {
   overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
 
   /**
+   * @deprecated use useTypescript()
    * override the build ts config.
    */
   overrideBuildTsConfig: (
@@ -83,10 +85,26 @@ export class NodeMain {
   overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
 
   /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript = this.react.useTypescript.bind(this.react);
+
+  /**
    * override the env's dev server and preview webpack configurations.
    * Replaces both overrideDevServerConfig and overridePreviewConfig
    */
   useWebpack = this.react.useWebpack.bind(this.react);
+
+  /**
+   * An API to mutate the prettier config
+   */
+  usePrettier = this.react.usePrettier.bind(this.react);
+
+  /**
+   * An API to mutate the eslint config
+   */
+  useEslint = this.react.useEslint.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.

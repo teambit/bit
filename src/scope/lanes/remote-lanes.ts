@@ -1,9 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
-import R from 'ramda';
 import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
-import { REMOTE_REFS_DIR } from '../../constants';
+import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import { glob } from '../../utils';
 import { Lane, ModelComponent } from '../models';
@@ -81,7 +80,7 @@ export default class RemoteLanes {
         id: new BitId({ scope: id.scope, name: id.name }),
         head: new Ref(head),
       }));
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
         this.remotes[remoteName][laneName] = [];
@@ -93,12 +92,12 @@ export default class RemoteLanes {
 
   async getAllRemoteLaneIds(): Promise<RemoteLaneId[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
-    return matches.map((match) => {
-      const split = match.split(path.sep);
-      // in the future, lane-name might have slashes, so until the first slash is the scope.
-      // the rest are the name
-      return RemoteLaneId.from(R.tail(split).join('/'), R.head(split));
-    });
+    // in the future, lane-name might have slashes, so until the first slash is the scope.
+    // the rest are the name
+    return matches
+      .map((match) => match.split(path.sep))
+      .map(([head, ...tail]) => RemoteLaneId.from(tail.join('/'), head))
+      .filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {

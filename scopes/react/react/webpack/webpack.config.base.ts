@@ -1,7 +1,8 @@
 import { merge } from 'lodash';
+import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
-import webpack, { Configuration } from 'webpack';
+import { Configuration, IgnorePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { postCssConfig } from './postcss.config';
@@ -10,6 +11,8 @@ import { postCssConfig } from './postcss.config';
 import '@teambit/react.babel.bit-react-transformer';
 // Make sure the mdx-loader is a dependency
 import '@teambit/mdx.modules.mdx-loader';
+
+const styleLoaderPath = require.resolve('style-loader');
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -32,13 +35,6 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
-const baseStyleLoadersOptions = {
-  miniCssExtractPlugin: MiniCssExtractPlugin.loader,
-  cssLoaderPath: require.resolve('css-loader'),
-  postCssLoaderPath: require.resolve('postcss-loader'),
-  postCssConfig,
-};
-
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
@@ -46,6 +42,13 @@ export default function (isEnvProduction = false): Configuration {
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
+
+  const baseStyleLoadersOptions = {
+    injectingLoader: isEnvProduction ? MiniCssExtractPlugin.loader : styleLoaderPath,
+    cssLoaderPath: require.resolve('css-loader'),
+    postCssLoaderPath: require.resolve('postcss-loader'),
+    postCssConfig,
+  };
 
   // We will provide `paths.publicUrlOrPath` to our app
   // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
@@ -135,18 +138,6 @@ export default function (isEnvProduction = false): Configuration {
                 configFile: false,
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
                 presets: [require.resolve('@babel/preset-react')],
-                plugins: [
-                  [
-                    require.resolve('babel-plugin-named-asset-import'),
-                    {
-                      loaderMap: {
-                        svg: {
-                          ReactComponent: '@svgr/webpack?-svgo,+titleProp,+ref![path]',
-                        },
-                      },
-                    },
-                  ],
-                ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
@@ -308,7 +299,27 @@ export default function (isEnvProduction = false): Configuration {
                 },
               },
             },
-
+            {
+              // loads svg as both inlineUrl and react component, like:
+              // import starUrl, { ReactComponent as StarIcon } from './star.svg';
+              // (remove when there is native support for both opitons from webpack5 / svgr)
+              test: /\.svg$/,
+              oneOf: [
+                {
+                  dependency: { not: ['url'] }, // exclude new URL calls
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options: { titleProp: true, ref: true },
+                    },
+                    require.resolve('new-url-loader'),
+                  ],
+                },
+                {
+                  type: 'asset', // export a data URI or emit a separate file
+                },
+              ],
+            },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
             // In production, they would get copied to the `build` folder.
@@ -328,19 +339,21 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
+    // @ts-ignore
     plugins: [
-      new MiniCssExtractPlugin({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: 'static/css/[name].[contenthash:8].css',
-        chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
+      isEnvProduction &&
+        new MiniCssExtractPlugin({
+          // Options similar to the same options in webpackOptions.output
+          // both options are optional
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+        }),
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
-      new webpack.IgnorePlugin({
+      new IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
       }),

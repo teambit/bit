@@ -62,48 +62,54 @@ export default async function migrate(
  * Runs all the migrations for all the versions for a given object
  * @param {VersionMigrations[]} migrations
  */
-const _runAllMigrationsForObject = (migrations: VersionMigrations[]): Function => (rawObject: BitRawObject) => {
-  // Make sure we got a rawObject (we might get a null object in case of corrupted object)
-  if (!rawObject) {
-    return null;
-  }
-  logger.debug(`start updating object ${rawObject.ref} (${rawObject.id})`);
-  // Skip Source files since we don't want the migration to run over them
-  if (rawObject.type === 'Source') return null;
-  // Add refs to index
-  _addObjectRefsToIndex(refsIndex, rawObject);
-  return R.forEach(_runAllVersionMigrationsForObject(rawObject), migrations);
-};
+const _runAllMigrationsForObject =
+  (migrations: VersionMigrations[]): Function =>
+  (rawObject: BitRawObject) => {
+    // Make sure we got a rawObject (we might get a null object in case of corrupted object)
+    if (!rawObject) {
+      return null;
+    }
+    logger.debug(`start updating object ${rawObject.ref} (${rawObject.id})`);
+    // Skip Source files since we don't want the migration to run over them
+    if (rawObject.type === 'Source') return null;
+    // Add refs to index
+    _addObjectRefsToIndex(refsIndex, rawObject);
+    return R.forEach(_runAllVersionMigrationsForObject(rawObject), migrations);
+  };
 
 /**
  * Runs all the the migration in specific version on object
  * @param {BitRawObject} rawObject - object to run migration on
  */
-const _runAllVersionMigrationsForObject = (rawObject: BitRawObject): Function => (migrations: VersionMigrations) => {
-  const versionNumber = Object.keys(migrations)[0];
-  logger.debug(`updating object ${rawObject.ref} (${rawObject.id}) to version ${versionNumber}`);
-  const migrationForObjectType = migrations[versionNumber][rawObject.type];
-  // There is no migration for this type of object for this version
-  if (!migrationForObjectType) return rawObject;
-  return R.forEach(_runOneMigrationForObject(rawObject), migrationForObjectType);
-};
+const _runAllVersionMigrationsForObject =
+  (rawObject: BitRawObject): Function =>
+  (migrations: VersionMigrations) => {
+    const versionNumber = Object.keys(migrations)[0];
+    logger.debug(`updating object ${rawObject.ref} (${rawObject.id}) to version ${versionNumber}`);
+    const migrationForObjectType = migrations[versionNumber][rawObject.type];
+    // There is no migration for this type of object for this version
+    if (!migrationForObjectType) return rawObject;
+    return R.forEach(_runOneMigrationForObject(rawObject), migrationForObjectType);
+  };
 
 /**
  * Run specific migration function on an object
  * @param {BitRawObject} rawObject
  */
-const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migration: MigrationDeclaration) => {
-  logger.debug(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
-  if (globalVerbose) console.log(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
-  try {
-    const migratedContent = migration.migrate(rawObject.getParsedContent());
-    rawObject.parsedContent = migratedContent;
-    return migratedContent;
-  } catch (err) {
-    logger.error(`FAILED - running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
-    throw err;
-  }
-};
+const _runOneMigrationForObject =
+  (rawObject: BitRawObject): Function =>
+  (migration: MigrationDeclaration) => {
+    logger.debug(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
+    if (globalVerbose) console.log(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
+    try {
+      const migratedContent = migration.migrate(rawObject.getParsedContent());
+      rawObject.parsedContent = migratedContent;
+      return migratedContent;
+    } catch (err: any) {
+      logger.error(`FAILED - running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
+      throw err;
+    }
+  };
 
 /**
  * Adds all the refs from the raw object to a global index
@@ -153,27 +159,29 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
  * @param {ScopeMigrationResultCache} result - results cache
  * @param {{ [string]: BitRawObject}} index - refs index in order to update refs if needed
  */
-const _getRealObjectWithUpdatedRefs = (
-  result: ScopeMigrationResultCache,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  index: { [string]: BitRawObject }
-): Function => (object: BitRawObject) => {
-  // Make sure we got a rawObject (we might get a null object in case of corrupted object)
-  if (!object) {
-    return null;
-  }
-  const realObject = object.toRealObject();
-  // Make sure to not ovveride result we already put during the updte ref process
-  if (result.newObjects[realObject.hash().hash]) return null;
-  result.newObjects[realObject.hash().hash] = realObject;
-  // Check if we need to update ref
-  if (realObject.hash().hash !== object.ref) {
-    result.refsToRemove.push(new Ref(object.ref));
-    const dependentObject = _updateRefsForObjects(index, object.ref, realObject.hash().hash);
-    // Update the dependent object only if found one
-    if (dependentObject) {
-      result.newObjects[dependentObject.hash().hash] = dependentObject;
+const _getRealObjectWithUpdatedRefs =
+  (
+    result: ScopeMigrationResultCache,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    index: { [string]: BitRawObject }
+  ): Function =>
+  (object: BitRawObject) => {
+    // Make sure we got a rawObject (we might get a null object in case of corrupted object)
+    if (!object) {
+      return null;
     }
-  }
-};
+    const realObject = object.toRealObject();
+    // Make sure to not ovveride result we already put during the updte ref process
+    if (result.newObjects[realObject.hash().hash]) return null;
+    result.newObjects[realObject.hash().hash] = realObject;
+    // Check if we need to update ref
+    if (realObject.hash().hash !== object.ref) {
+      result.refsToRemove.push(new Ref(object.ref));
+      const dependentObject = _updateRefsForObjects(index, object.ref, realObject.hash().hash);
+      // Update the dependent object only if found one
+      if (dependentObject) {
+        result.newObjects[dependentObject.hash().hash] = dependentObject;
+      }
+    }
+  };

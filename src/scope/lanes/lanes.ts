@@ -21,7 +21,7 @@ export default class Lanes {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    if (id.isDefault()) return null; // master lane is not saved
+    if (id.isDefault()) return null; // main lane is not saved
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
     const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
     if (!hash) return null;
@@ -33,11 +33,23 @@ export default class Lanes {
   }
 
   getCurrentLaneName(): string {
-    return this.scopeJson.lanes.current;
+    const laneName = this.scopeJson.lanes.current;
+    // backward compatibility, in the past, the default lane was master
+    if (laneName === 'master') return DEFAULT_LANE;
+    return laneName;
+  }
+
+  isOnDefaultLane(): boolean {
+    const currentLane = this.getCurrentLaneName();
+    return currentLane === DEFAULT_LANE;
+  }
+
+  getCurrentLaneId(): LocalLaneId {
+    return LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.loadLane(LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE));
+    return this.loadLane(this.getCurrentLaneId());
   }
 
   setCurrentLane(laneName: string): void {

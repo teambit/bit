@@ -37,7 +37,7 @@ export class ObjectsWritable extends Writable {
     try {
       await this.writeObjectToFs(obj);
       return callback();
-    } catch (err) {
+    } catch (err: any) {
       return callback(err);
     }
   }
@@ -68,7 +68,7 @@ export class ObjectsWritable extends Writable {
 
   /**
    * merge the imported component with the existing component in the local scope.
-   * when importing a component, save the remote head into the remote master ref file.
+   * when importing a component, save the remote head into the remote main ref file.
    * unless this component arrived as a cache of the dependent, which its head might be wrong
    */
   private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {

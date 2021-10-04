@@ -328,7 +328,7 @@ export default class Isolator {
     let npmList;
     try {
       npmList = await this._getNpmListOutput(packageManager);
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`failed running "${packageManager} list -j"`, err);
       throw new Error(
         `failed running "${packageManager} list -j" to find the peer dependencies due to an error: ${err}`
@@ -343,7 +343,7 @@ export default class Isolator {
       const { stdout, stderr } = await this.capsuleExecUsingExeca(packageManager, args, this.componentRootDir);
       if (stderr && stderr.startsWith('{')) return stderr;
       return stdout;
-    } catch (err) {
+    } catch (err: any) {
       if (err.stdout && err.stdout.startsWith('{')) {
         // it's probably a valid json with errors, that's fine, parse it.
         return err.stdout;

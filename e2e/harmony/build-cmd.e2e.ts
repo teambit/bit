@@ -33,6 +33,7 @@ describe('build command', function () {
       helper.command.link();
       helper.command.compile();
       helper.command.install('react');
+      helper.command.install('@teambit/documenter.theme.theme-compositions');
       helper.command.build(`--tasks teambit.compilation/compiler`);
     });
     // previously, the Babel compiler of the react-env used to run the copy process and then
@@ -59,7 +60,7 @@ describe('build command', function () {
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.have.lengthOf(0);
+      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });

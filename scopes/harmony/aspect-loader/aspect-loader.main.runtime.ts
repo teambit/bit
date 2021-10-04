@@ -1,4 +1,7 @@
 import { join } from 'path';
+import { BitId } from '@teambit/legacy-bit-id';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentID } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
@@ -6,6 +9,8 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { loadBit } from '@teambit/bit';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
 import { difference, compact } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
@@ -135,7 +140,7 @@ export class AspectLoaderMain {
     if (this.failedAspects.includes(id)) return true;
     try {
       return this.harmony.get(id);
-    } catch (err) {
+    } catch (err: any) {
       return false;
     }
   }
@@ -237,6 +242,18 @@ export class AspectLoaderMain {
   }
 
   /**
+   * run "require" of the component code to get the manifest
+   */
+  async doRequire(requireableExtension: RequireableComponent): Promise<ExtensionManifest | Aspect> {
+    const idStr = requireableExtension.component.id.toString();
+    const aspect = await requireableExtension.require();
+    const manifest = aspect.default || aspect;
+    manifest.id = idStr;
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+    return newManifest;
+  }
+
+  /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
    * there are cases when throwing an error blocks the user from doing anything else. for example,
@@ -257,19 +274,12 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
-    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
-      const aspect = await requireableExtension.require();
-      const manifest = aspect.default || aspect;
-      manifest.id = idStr;
-      const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
-      return newManifest;
-    };
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await doRequire(requireableExtension, idStr);
-      } catch (e) {
+        return await this.doRequire(requireableExtension);
+      } catch (e: any) {
         this.addFailure(idStr);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
         this.logger.error(errorMsg, e);
@@ -278,23 +288,14 @@ export class AspectLoaderMain {
         if (isFixed) {
           this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
           try {
-            return await doRequire(requireableExtension, idStr);
-          } catch (err) {
+            return await this.doRequire(requireableExtension);
+          } catch (err: any) {
             this.logger.error('re-load of the aspect failed as well', err);
             errAfterReLoad = err;
           }
         }
         const error = errAfterReLoad || e;
-        if (throwOnError) {
-          this.logger.console(error);
-          throw new CannotLoadExtension(idStr, error);
-        }
-        if (this.logger.isLoaderStarted) {
-          this.logger.consoleFailure(errorMsg);
-        } else {
-          this.logger.console(errorMsg);
-          this.logger.console(error.message);
-        }
+        this.handleExtensionLoadingError(error, idStr, throwOnError);
       }
       return undefined;
     });
@@ -303,6 +304,21 @@ export class AspectLoaderMain {
     // Remove empty manifests as a result of loading issue
     const filteredManifests = compact(manifests);
     return this.loadExtensionsByManifests(filteredManifests, throwOnError);
+  }
+
+  handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
+    const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
+    if (throwOnError) {
+      // @ts-ignore
+      this.logger.console(error);
+      throw new CannotLoadExtension(idStr, error);
+    }
+    if (this.logger.isLoaderStarted) {
+      this.logger.consoleFailure(errorMsg);
+    } else {
+      this.logger.console(errorMsg);
+      this.logger.console(error.message);
+    }
   }
 
   async runOnLoadRequireableExtensionSubscribers(
@@ -319,6 +335,40 @@ export class AspectLoaderMain {
 
   isAspect(manifest: any) {
     return !!(manifest.addRuntime && manifest.getRuntime);
+  }
+
+  /**
+   * get or create a global scope, import the non-core aspects, load bit from that scope, create
+   * capsules for the aspects and load them from the capsules.
+   */
+  async loadAspectsFromGlobalScope(aspectIds: string[]): Promise<Component[]> {
+    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
+    await globalScope.ensureDir();
+    const globalScopeHarmony = await loadBit(globalScope.path);
+    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    // @todo: Gilad make this work
+    // const ids = await scope.resolveMultipleComponentIds(aspectIds);
+    const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const hasVersions = ids.every((id) => id.hasVersion());
+    const useCache = hasVersions; // if all components has versions, try to use the cached aspects
+    const components = await scope.import(ids, useCache, true);
+
+    // don't use `await scope.loadAspectsFromCapsules(components, true);`
+    // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
+    // is not the same as the aspectLoader instance Scope has)
+    const resolvedAspects = await scope.getResolvedAspects(components);
+    try {
+      await this.loadRequireableExtensions(resolvedAspects, true);
+    } catch (err: any) {
+      if (err?.error.code === 'MODULE_NOT_FOUND') {
+        const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
+        await this.loadRequireableExtensions(resolvedAspectsAgain, true);
+      } else {
+        throw err;
+      }
+    }
+
+    return components;
   }
 
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {
@@ -346,7 +396,7 @@ export class AspectLoaderMain {
       const preparedManifests = this.prepareManifests(manifests);
       // @ts-ignore TODO: fix this
       await this.harmony.load(preparedManifests);
-    } catch (e) {
+    } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);

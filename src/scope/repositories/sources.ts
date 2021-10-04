@@ -138,11 +138,13 @@ export default class SourceRepository {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
-    const version = await this.objects().load(versionHash);
+    const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
       return undefined;
     }
+    // workaround an issue when a component has a dependency with the same id as the component itself
+    version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
 
     return returnComponent(version as Version);
   }
@@ -156,7 +158,7 @@ export default class SourceRepository {
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (foundComponent) return foundComponent;
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
     logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
@@ -484,31 +486,40 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   removeComponentVersions(component: ModelComponent, versions: string[], allVersionsObjects: Version[]): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
-    versions.forEach((version) => {
+    const componentHadHead = component.hasHead();
+    const removedRefs = versions.map((version) => {
       const ref = component.removeVersion(version);
-      const refStr = ref.toString();
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
+      const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
       // update the snap head if needed
       if (component.getHeadStr() === refStr) {
-        if (versionObject.parents.length > 1)
+        if (versionObject.parents.length > 1) {
           throw new Error(
             `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
           );
+        }
         const head = versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
         component.setHead(head);
       }
-      // update other versions parents if they point to the deleted version
-      allVersionsObjects.forEach((obj) => {
-        if (obj.hasParent(ref)) {
-          obj.removeParent(ref);
-          objectRepo.add(obj);
-        }
-      });
 
       objectRepo.removeObject(ref);
+      return ref;
     });
-
+    const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
+    allVersionsObjects.forEach((versionObj) => {
+      const wasDeleted = refWasDeleted(versionObj.hash());
+      if (!wasDeleted && versionObj.parents.some((parent) => refWasDeleted(parent))) {
+        throw new Error(
+          `fatal: version "${versionObj
+            .hash()
+            .toString()}" of "${component.id()}" has parents that got deleted, which makes the history invalid.`
+        );
+      }
+    });
+    if (componentHadHead && !component.hasHead() && component.versionArray.length) {
+      throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
+    }
     if (component.versionArray.length || component.hasHead()) {
       objectRepo.add(component); // add the modified component object
     } else {
@@ -532,16 +543,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * It doesn't save anything to the file-system.
-   * Only if the returned mergedVersions is not empty, the mergedComponent has changed.
+   * this gets called only during export. for import, the merge is different, see
+   * objects-writable-stream.mergeModelComponent()
    *
-   * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
-   * discrepancies, but simply override the existing component.
-   * In this context, "discrepancy" means, same version but different hashes.
-   * When using import command, it makes sense to override a component in case of discrepancies because the source of
-   * truth should be the remote scope from where the import fetches the component.
-   * When the same component has different versions in the remote and the local, it merges the two
-   * by calling this.mergeTwoComponentsObjects().
+   * it doesn't save anything to the file-system.
+   * only if the returned mergedVersions is not empty, the mergedComponent has changed.
    *
    * when dealing with lanes, exporting/importing lane's components, this function doesn't do much
    * if any. that's because the head is not saved on the ModelComponent but on the lane object.
@@ -627,7 +633,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         try {
           const result = await this.merge(component, versions);
           mergeResults.push(result);
-        } catch (err) {
+        } catch (err: any) {
           if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
             // don't throw. instead, get all components with merge-conflicts
             errors.push(err);

@@ -35,21 +35,20 @@ const _getGlobalBitJson = async (throws: boolean) => {
  * @param {string} consumerPath
  * @param {string} scopePath
  */
-const _loadExtension = (consumerPath: string | null | undefined, scopePath: string | null | undefined) => (
-  rawConfig: Record<string, any> = {},
-  name: string
-): Promise<Extension> => {
-  const loadArgs: LoadArgsProps = {
-    name,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    rawConfig: rawConfig.config,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    options: rawConfig.options,
-    consumerPath,
-    scopePath,
+const _loadExtension =
+  (consumerPath: string | null | undefined, scopePath: string | null | undefined) =>
+  (rawConfig: Record<string, any> = {}, name: string): Promise<Extension> => {
+    const loadArgs: LoadArgsProps = {
+      name,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      rawConfig: rawConfig.config,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      options: rawConfig.options,
+      consumerPath,
+      scopePath,
+    };
+    return Extension.load(loadArgs);
   };
-  return Extension.load(loadArgs);
-};
 
 /**
  * Load all extensions
@@ -62,7 +61,7 @@ export default async function loadExtensions(): Promise<Extension[]> {
       try {
         const consumer = await loadConsumer();
         return consumer;
-      } catch (err) {
+      } catch (err: any) {
         return null;
       }
     };
@@ -89,7 +88,7 @@ export default async function loadExtensions(): Promise<Extension[]> {
     }
     const extensions = R.values(R.mapObjIndexed(_loadExtension(consumerPath, scopePath), rawExtensions));
     return await Promise.all(extensions);
-  } catch (err) {
+  } catch (err: any) {
     logger.error('loading extensions failed', err);
     return [];
   }

@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, createRef, InputHTMLAttributes } from 'react';
 import classNames from 'classnames';
 import styles from './autocomplete-input.module.scss';
 
-type AutoCompleteInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
+type AutoCompleteInputProps = InputHTMLAttributes<HTMLInputElement> & {
   onEscape?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -22,7 +22,7 @@ export function AutoCompleteInput({
   focus,
   ...rest
 }: AutoCompleteInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = createRef<HTMLInputElement>();
 
   useEffect(() => {
     if (focus) inputRef.current?.focus();
@@ -57,5 +57,6 @@ export function AutoCompleteInput({
     [onEscape, onDown, onUp, onEnter]
   );
 
+  // @ts-ignore (https://github.com/teambit/bit/issues/4908)
   return <input {...rest} ref={inputRef} className={classNames(styles.input, className)} onKeyDown={handleKeyDown} />;
 }

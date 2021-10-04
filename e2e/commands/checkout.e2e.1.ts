@@ -243,7 +243,7 @@ describe('bit checkout command', function () {
           before(() => {
             try {
               helper.command.checkoutVersion('0.0.1', 'bar/foo');
-            } catch (err) {
+            } catch (err: any) {
               output = err.toString();
             }
           });
@@ -675,7 +675,7 @@ describe('bit checkout command', function () {
 
       helper.command.tagAllComponents('-m v1 -s 0.0.1');
       helper.command.tagAllComponents('-m v2 -s 0.0.2');
-      helper.command.tagComponent('bar/foo2', 'v3', '0.0.3 -f');
+      helper.command.tagComponent('bar/foo2@0.0.3', 'v3', '-f');
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('checkout all to a specific version', () => {

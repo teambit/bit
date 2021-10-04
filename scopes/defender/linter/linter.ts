@@ -3,7 +3,7 @@ import { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**
-   * id of the linted component.
+   * the linted component.
    */
   component: Component;
 
@@ -12,7 +12,31 @@ export type ComponentLintResult = {
    */
   output: string;
 
-  results: LintResults;
+  /**
+   * total errors count of the component (from all of the files).
+   */
+  totalErrorCount: number;
+  /**
+   * total fatal errors count of the component (from all of the files).
+   */
+  totalFatalErrorCount?: number;
+  /**
+   * total fixable errors count of the component (from all of the files).
+   */
+  totalFixableErrorCount?: number;
+  /**
+   * total fatal warning count of the component (from all of the files).
+   */
+  totalFixableWarningCount?: number;
+  /**
+   * total warning count of the component (from all of the files).
+   */
+  totalWarningCount: number;
+
+  /**
+   * lint results for each one of the component files
+   */
+  results: LintResult[];
 };
 
 export type LintResult = {
@@ -27,6 +51,21 @@ export type LintResult = {
   errorCount: number;
 
   /**
+   * numbers of errors found.
+   */
+  fatalErrorCount?: number;
+
+  /**
+   * numbers of fixable errors found.
+   */
+  fixableErrorCount?: number;
+
+  /**
+   * numbers of fixable warning found.
+   */
+  fixableWarningCount?: number;
+
+  /**
    * number of found warnings.
    */
   warningCount: number;
@@ -35,6 +74,11 @@ export type LintResult = {
    * lint messages.
    */
   messages: LintMessage[];
+
+  /**
+   * Raw data as returned from the linter
+   */
+  raw: any;
 };
 
 export type LintMessage = {
@@ -75,7 +119,27 @@ export type LintMessage = {
 
 export type LintResults = {
   results: ComponentLintResult[];
-  errors: [];
+  /**
+   * total errors count of the component (from all of the components).
+   */
+  totalErrorCount: number;
+  /**
+   * total fatal errors count of the component (from all of the components).
+   */
+  totalFatalErrorCount?: number;
+  /**
+   * total fixable errors count of the component (from all of the components).
+   */
+  totalFixableErrorCount?: number;
+  /**
+   * total fatal warning count of the component (from all of the components).
+   */
+  totalFixableWarningCount?: number;
+  /**
+   * total warning count of the component (from all of the components).
+   */
+  totalWarningCount: number;
+  errors: Error[];
 };
 
 export interface Linter {

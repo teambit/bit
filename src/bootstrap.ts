@@ -11,7 +11,7 @@ import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
 import loader from './cli/loader';
 
-const MINIMUM_NODE_VERSION = '12.15.0';
+const MINIMUM_NODE_VERSION = '12.22.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -119,8 +119,7 @@ function enableLoaderIfPossible() {
   }
 }
 
-// @todo: improve.
-export function getHarmonyVersion() {
+export function getHarmonyVersion(showValidSemver = false) {
   try {
     const teambitBit = require.resolve('@teambit/bit');
     // eslint-disable-next-line
@@ -128,10 +127,12 @@ export function getHarmonyVersion() {
     if (packageJson.version) return packageJson.version;
     // this is running locally
     if (packageJson.componentId && packageJson.componentId.version) {
-      return `last-tag ${packageJson.componentId.version}`;
+      return showValidSemver ? packageJson.componentId.version : `last-tag ${packageJson.componentId.version}`;
     }
+    if (showValidSemver) throw new Error(`unable to find Bit version`);
     return null;
-  } catch (err) {
+  } catch (err: any) {
+    if (showValidSemver) throw err;
     return null;
   }
 }

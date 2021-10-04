@@ -97,7 +97,7 @@ describe('bit export command', function () {
     });
     it('bit list locally should display 2 components', () => {
       const output = helper.command.listLocalScope();
-      expect(output.includes('found 2 components in local scope')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
     });
   });
 
@@ -328,7 +328,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('bar/foo');
       try {
         output = helper.command.exportComponent('bar/foo', undefined, false);
-      } catch (err) {
+      } catch (err: any) {
         errorOutput = err.message;
       }
     });
@@ -358,7 +358,7 @@ describe('bit export command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type');
-      helper.command.tagComponent('utils/is-type', undefined, '0.0.2 --force');
+      helper.command.tagComponent('utils/is-type@0.0.2', undefined, '--force');
       helper.command.exportAllComponents();
       const isType = helper.general.getRequireBitPath('utils', 'is-type');
       helper.fs.createFile(
@@ -392,7 +392,7 @@ describe('bit export command', function () {
       let isType;
       try {
         isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
-      } catch (err) {
+      } catch (err: any) {
         isType = err.toString();
       }
       expect(isType).to.have.string('component');
@@ -858,7 +858,7 @@ describe('bit export command', function () {
         forkScope = scopeName;
         forkScopePath = scopePath;
         helper.scopeHelper.addRemoteScope(forkScopePath);
-        localScope = helper.scopeHelper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneLocalScope(true);
       });
       describe('with id and --include-dependencies flag', () => {
         let forkScopeIds;

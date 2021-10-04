@@ -26,7 +26,7 @@ export default class ValidateGitExec extends Diagnosis {
       return {
         valid: true,
       };
-    } catch (err) {
+    } catch (err: any) {
       // if (err.code === 'ENOENT') {
       // }
       return {

@@ -41,6 +41,8 @@ import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
+import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
+import { SchemaName } from '../../consumer/component/component-schema';
 
 type State = {
   versions?: {
@@ -71,6 +73,7 @@ export type ComponentProps = {
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   head?: Ref;
+  schema?: string | undefined;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -96,14 +99,15 @@ export default class Component extends BitObject {
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
-  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote main head
   /**
    * doesn't get saved in the scope, used to easier access the local snap head data
-   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this
    * prop is undefined.
    */
   laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  schema: string | undefined;
   private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
@@ -120,6 +124,7 @@ export default class Component extends BitObject {
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.head = props.head;
+    this.schema = props.schema;
   }
 
   get versionArray(): Ref[] {
@@ -153,6 +158,11 @@ export default class Component extends BitObject {
 
   getHead(): Ref | undefined {
     return this.head;
+  }
+
+  getHeadAsTagIfExist(): string | undefined {
+    if (!this.head) return undefined;
+    return this.getTagOfRefIfExists(this.head) || this.head.toString();
   }
 
   hasHead() {
@@ -204,6 +214,14 @@ export default class Component extends BitObject {
   }
 
   /**
+   * whether the head is a snap (not a tag)
+   */
+  isHeadSnap() {
+    const tagsHashes = this.versionArray.map((ref) => ref.toString());
+    return this.head && !tagsHashes.includes(this.head.toString());
+  }
+
+  /**
    * add a new remote if it is not there already
    */
   addScopeListItem(scopeListItem: ScopeListItem): void {
@@ -217,8 +235,8 @@ export default class Component extends BitObject {
     }
   }
 
-  async setDivergeData(repo: Repository, throws = true): Promise<void> {
-    if (!this.divergeData) {
+  async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
+    if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
       this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
     }
@@ -245,7 +263,7 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
-      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
@@ -300,7 +318,7 @@ export default class Component extends BitObject {
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
-    // backward compatibility. components created before v15 have master without head
+    // backward compatibility. components created before v15 have main without head
     // @ts-ignore
     return semver.maxSatisfying(this.listVersions(), '*', { includePrerelease: true });
   }
@@ -309,9 +327,9 @@ export default class Component extends BitObject {
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
    * `this.head` may not be populated, e.g. when a component was created on
-   * this lane and never got snapped on master.
+   * this lane and never got snapped on main.
    * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
-   * on master, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
+   * on main, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async latestIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
@@ -320,7 +338,7 @@ export default class Component extends BitObject {
     if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
-    // either a user is on master or a lane, check whether the remote is ahead of the local
+    // either a user is on main or a lane, check whether the remote is ahead of the local
     const allLocalHashes = await getAllVersionHashes(this, repo, false);
     const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
     if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
@@ -461,7 +479,7 @@ export default class Component extends BitObject {
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new GeneralError(
-          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+          'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
       const versionToAddRef = Ref.from(versionToAdd);
@@ -475,7 +493,7 @@ export default class Component extends BitObject {
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;
     }
-    // user on master
+    // user on main
     const head = this.getHead();
     if (
       head &&
@@ -549,6 +567,7 @@ export default class Component extends BitObject {
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
+      schema: this.schema,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -578,29 +597,47 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
-  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<ObjectItem[]> {
-    const collectRefs = async (): Promise<Ref[]> => {
-      const refsCollection: Ref[] = [];
-      const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
-      refsCollection.push(...versionsRefs);
-      // @ts-ignore
-      const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
-      versionsObjects.forEach((versionObject) => {
-        const refs = versionObject.refsWithOptions(false, true);
-        refsCollection.push(...refs);
-      });
-      return refsCollection;
-    };
-    const refs = await collectRefs();
+  async collectVersionsObjects(
+    repo: Repository,
+    versions: string[],
+    ignoreMissingArtifacts?: boolean
+  ): Promise<ObjectItem[]> {
+    const refsWithoutArtifacts: Ref[] = [];
+    const artifactsRefs: Ref[] = [];
+    const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
+    refsWithoutArtifacts.push(...versionsRefs);
+    // @ts-ignore
+    const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
+    versionsObjects.forEach((versionObject) => {
+      const refs = versionObject.refsWithOptions(false, false);
+      refsWithoutArtifacts.push(...refs);
+      artifactsRefs.push(...getRefsFromExtensions(versionObject.extensions));
+    });
+    const loadedRefs: ObjectItem[] = [];
     try {
-      return await repo.loadManyRaw(refs);
-    } catch (err) {
+      const loaded = await repo.loadManyRaw(refsWithoutArtifacts);
+      loadedRefs.push(...loaded);
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
 for a component "${this.id()}", versions: ${versions.join(', ')}`);
       }
       throw err;
     }
+    try {
+      const loaded = ignoreMissingArtifacts
+        ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
+        : await repo.loadManyRaw(artifactsRefs);
+      loadedRefs.push(...loaded);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`unable to find an artifact object file "${err.path}"
+for a component "${this.id()}", versions: ${versions.join(', ')}
+consider using --ignore-missing-artifacts flag if you're sure the artifacts are in the remote`);
+      }
+      throw err;
+    }
+    return loadedRefs;
   }
 
   async collectObjects(repo: Repository): Promise<ComponentObjects> {
@@ -610,7 +647,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
         rawComponent,
         objects.map((o) => o.buffer)
       );
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(
           `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`
@@ -801,7 +838,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
   }
 
   /**
-   * local versions that are not exported. to get also local snaps, use `getLocalTagsOrHashes()`.
+   * local versions that are not exported on the main lane.
+   * @see `this.getLocalTagsOrHashes()`, to get local snaps on the current lane
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
@@ -828,6 +866,20 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
+  /**
+   * for most cases, use `isLocallyChanged`, which takes into account lanes.
+   * this is for cases when we only care about the versions exist in the `state` prop.
+   */
+  isLocallyChangedRegardlessOfLanes(): boolean {
+    return Boolean(this.getLocalVersions().length);
+  }
+
+  /**
+   * whether the component was locally changed, either by adding a new snap/tag or by merging
+   * components from different lanes.
+   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
+   * (it'll throw otherwise).
+   */
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
@@ -835,12 +887,17 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }
-    // when on master, no need to traverse the parents because local snaps/tags are saved in the
+    // when on main, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
-    const localVersions = this.getLocalVersions();
+    if (!this.divergeData) {
+      throw new Error(
+        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
+      );
+    }
+    const localVersions = this.getLocalTagsOrHashes();
     if (localVersions.length) return true;
-    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
@@ -860,6 +917,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
+      schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
     });
   }
 
@@ -874,6 +932,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       name: bitId.name,
       scope: bitId.scope,
     });
+  }
+
+  get isLegacy(): boolean {
+    return !this.schema || this.schema === SchemaName.Legacy;
   }
 
   validate(): void {
@@ -897,5 +959,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
         );
       }
     });
+    if (!this.isLegacy && !this.head && this.versionArray.length) {
+      // legacy don't have head. also, when snapping on a lane the first time, there is no head.
+      // tags are done on default lane only, so if there are versions (tag), it must have head
+      throw new ValidationError(`${message}, the "head" prop is missing`);
+    }
   }
 }

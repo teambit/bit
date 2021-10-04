@@ -29,6 +29,7 @@ export class ReactNativeMain {
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the environment.
    */
   overrideTsConfig: (
@@ -48,6 +49,7 @@ export class ReactNativeMain {
   overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
 
   /**
+   * @deprecated use useTypescript()
    * override the build ts config.
    */
   overrideBuildTsConfig: (
@@ -62,13 +64,33 @@ export class ReactNativeMain {
     this.react
   );
 
+  /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript = this.react.useTypescript.bind(this.react);
+
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers) {
     const mergedModifiers: UseWebpackModifiers = {
-      previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
-      devServerConfig: (modifiers?.devServerConfig ?? []).concat(devServerConfigTransformer),
+      previewConfig: [previewConfigTransformer].concat(modifiers?.previewConfig ?? []),
+      devServerConfig: [devServerConfigTransformer].concat(modifiers?.devServerConfig ?? []),
     };
     return this.react.useWebpack(mergedModifiers);
   }
+
+  /**
+   * An API to mutate the prettier config
+   */
+  usePrettier = this.react.usePrettier.bind(this.react);
+
+  /**
+   * An API to mutate the eslint config
+   */
+  useEslint = this.react.useEslint.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.
@@ -121,6 +143,7 @@ function getReactNativeDeps() {
       '@types/react': '^17.0.8',
       '@types/react-dom': '^17.0.5',
       '@types/react-native': '^0.64.1',
+      'babel-jest': '^25.1.0',
     },
     peerDependencies: {
       react: '^16.8.0 || ^17.0.0',

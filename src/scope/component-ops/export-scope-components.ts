@@ -82,11 +82,12 @@ export async function exportMany({
   includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
   changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
   codemod = false,
-  lanesObjects = [],
+  laneObject,
   allVersions,
   originDirectly,
   idsWithFutureScope,
   resumeExportId,
+  ignoreMissingArtifacts,
 }: {
   scope: Scope;
   isLegacy: boolean;
@@ -96,15 +97,21 @@ export async function exportMany({
   includeDependencies: boolean;
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
-  lanesObjects?: Lane[];
+  laneObject?: Lane;
   allVersions: boolean;
   originDirectly?: boolean;
   idsWithFutureScope: BitIds;
   resumeExportId?: string | undefined;
+  ignoreMissingArtifacts?: boolean;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  if (lanesObjects.length && !remoteName) {
-    throw new Error('todo: implement export lanes to default scopes after tracking lanes local:remote is implemented');
+  if (laneObject) {
+    const trackingData = scope.lanes.getRemoteTrackedDataByLocalLane(laneObject.name);
+    if (!trackingData) {
+      throw new Error(`error: unable to find tracking data for lane "${laneObject.name}".
+please run "bit lane track" command to specify a remote-scope for this lane`);
+    }
+    remoteName = trackingData.remoteScope;
   }
   if (includeDependencies) {
     const dependenciesIds = await getDependenciesImportIfNeeded();
@@ -120,15 +127,15 @@ export async function exportMany({
   let manyObjectsPerRemote: ObjectsPerRemote[];
   if (isLegacy) {
     manyObjectsPerRemote = remoteName
-      ? [await getUpdatedObjectsToExportLegacy(remoteName, ids, lanesObjects)]
+      ? [await getUpdatedObjectsToExportLegacy(remoteName, ids)]
       : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-          getUpdatedObjectsToExportLegacy(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+          getUpdatedObjectsToExportLegacy(scopeName, idsGroupedByScope[scopeName])
         );
   } else {
     manyObjectsPerRemote = remoteName
-      ? [await getUpdatedObjectsToExport(remoteName, ids, lanesObjects)]
+      ? [await getUpdatedObjectsToExport(remoteName, ids, laneObject)]
       : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-          getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+          getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
         );
   }
 
@@ -144,7 +151,7 @@ export async function exportMany({
   }
 
   loader.start('updating data locally...');
-  const results = await updateLocalObjects(lanesObjects);
+  const results = await updateLocalObjects(laneObject);
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
@@ -286,7 +293,7 @@ export async function exportMany({
   async function getUpdatedObjectsToExport(
     remoteNameStr: string,
     bitIds: BitIds,
-    lanes: Lane[] = []
+    lane?: Lane
   ): Promise<ObjectsPerRemote> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
@@ -299,7 +306,11 @@ export async function exportMany({
     const processModelComponent = async (modelComponent: ModelComponent) => {
       const versionToExport = await getVersionsToExport(modelComponent);
       modelComponent.clearStateData();
-      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, versionToExport);
+      const objectItems = await modelComponent.collectVersionsObjects(
+        scope.objects,
+        versionToExport,
+        ignoreMissingArtifacts
+      );
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
@@ -325,15 +336,13 @@ export async function exportMany({
     scope.objects.clearCache();
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
     await mapSeries(modelComponents, processModelComponent);
-    const lanesData = await Promise.all(
-      lanes.map(async (lane) => {
-        lane.components.forEach((c) => {
-          c.id = c.id.changeScope(remoteName);
-        });
-        return { ref: lane.hash(), buffer: await lane.compress() };
-      })
-    );
-    objectList.addIfNotExist(lanesData);
+    if (lane) {
+      lane.components.forEach((c) => {
+        c.id = c.id.changeScope(remoteName);
+      });
+      const laneData = { ref: lane.hash(), buffer: await lane.compress() };
+      objectList.addIfNotExist([laneData]);
+    }
 
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
@@ -360,7 +369,7 @@ export async function exportMany({
         );
         objectsPerRemote.exportedIds = exportedIds;
         pushedRemotes.push(remote);
-      } catch (err) {
+      } catch (err: any) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
         throw err;
       }
@@ -394,7 +403,7 @@ export async function exportMany({
           'successfully pushed all objects to the pending-dir directory on the remote'
         );
         pushedRemotes.push(remote);
-      } catch (err) {
+      } catch (err: any) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
         await removePendingDirs(pushedRemotes, clientId);
         throw err;
@@ -403,7 +412,7 @@ export async function exportMany({
   }
 
   async function updateLocalObjects(
-    lanes: Lane[]
+    lane?: Lane
   ): Promise<Array<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }>> {
     return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
@@ -421,21 +430,20 @@ export async function exportMany({
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
 
       // update lanes
-      await Promise.all(
-        lanes.map(async (lane) => {
-          if (idsToChangeLocally.length) {
-            // otherwise, we don't want to update scope-name of components in the lane object
-            scope.objects.add(lane);
-            // this is needed so later on we can add the tracking data and update .bitmap
-            // @todo: support having a different name on the remote by a flag
-            lane.remoteLaneId = RemoteLaneId.from(lane.name, remoteNameStr);
-          }
-          await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
-        })
-      );
+      if (lane) {
+        if (idsToChangeLocally.length) {
+          // otherwise, we don't want to update scope-name of components in the lane object
+          scope.objects.add(lane);
+          // this is needed so later on we can add the tracking data and update .bitmap
+          // @todo: support having a different name on the remote by a flag
+          lane.remoteLaneId = RemoteLaneId.from(lane.name, remoteNameStr);
+        }
+        await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
+      }
+
       const currentLane = scope.lanes.getCurrentLaneName();
-      if (currentLane === DEFAULT_LANE && !lanes.length) {
-        // all exported from master
+      if (currentLane === DEFAULT_LANE && !lane) {
+        // all exported from main
         const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
         await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
         await Promise.all(
@@ -905,7 +913,7 @@ async function validateRemotes(remotes: Remote[], clientId: string, isResumingEx
         })
       )
     );
-  } catch (err) {
+  } catch (err: any) {
     logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
     if (!isResumingExport) {
       // when resuming export, we don't want to delete the pending-objects because some scopes
@@ -931,7 +939,7 @@ async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], clientI
         objectsPerRemote.exportedIds = exportedIds;
         succeed = true;
         break;
-      } catch (err) {
+      } catch (err: any) {
         lastErrMsg = err.message;
         logger.errorAndAddBreadCrumb(
           'persistRemotes',

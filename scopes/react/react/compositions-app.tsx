@@ -3,6 +3,7 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { RenderingContext } from '@teambit/preview';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
+import { LoaderFallback } from '@teambit/react.ui.loader-fallback';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ReactAspect } from './react.aspect';
 
@@ -10,7 +11,7 @@ import { ReactAspect } from './react.aspect';
 const hideScrollbars = 'body::-webkit-scrollbar {display: none;}';
 
 export function CompositionsApp({
-  Composition = StandaloneNotFoundPage,
+  Composition,
   previewContext,
 }: {
   Composition?: React.ComponentType;
@@ -23,7 +24,7 @@ export function CompositionsApp({
     <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
       <Composer components={providers}>
         <style>{hideScrollbars}</style>
-        <Composition />
+        <LoaderFallback Target={Composition} DefaultComponent={StandaloneNotFoundPage} />
       </Composer>
     </ErrorBoundary>
   );

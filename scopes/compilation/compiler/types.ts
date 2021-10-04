@@ -1,4 +1,5 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 
 export type TranspileFileParams = {
   componentDir: string; // absolute path of the component's root directory
@@ -6,6 +7,7 @@ export type TranspileFileParams = {
 };
 
 export type TranspileComponentParams = {
+  component: ConsumerComponent;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
 };

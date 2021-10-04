@@ -1,7 +1,7 @@
 import { render } from 'ink';
 import { migrate } from '@teambit/legacy/dist/api/consumer';
 import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
+import { CLIArgs, Command, Flags, RenderResult } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
@@ -32,7 +32,7 @@ export class CommandRunner {
       if (this.command.report) {
         return await this.runReportHandler();
       }
-    } catch (err) {
+    } catch (err: any) {
       return handleErrorAndExit(err, this.commandName, this.command.internal);
     }
 
@@ -80,12 +80,9 @@ export class CommandRunner {
     if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
-    // @ts-ignore
-    // eslint-disable-next-line no-prototype-builtins
-    const data = result.data && result.hasOwnProperty('code') ? result.data : result;
-    // @ts-ignore
-    // eslint-disable-next-line no-prototype-builtins
-    const code = result.data && result.hasOwnProperty('code') ? result.code : 0;
+
+    const { data, code } = toRenderResult(result);
+
     const { waitUntilExit } = render(data);
     await waitUntilExit();
     return logger.exitAfterFlush(code, this.commandName);
@@ -133,4 +130,13 @@ export class CommandRunner {
     }
     return null;
   }
+}
+
+function toRenderResult(obj: RenderResult | React.ReactElement) {
+  return isRenderResult(obj) ? obj : { data: obj, code: 0 };
+}
+
+function isRenderResult(obj: RenderResult | any): obj is RenderResult {
+  // eslint-disable-next-line no-prototype-builtins
+  return typeof obj === 'object' && typeof obj.code === 'number' && obj.hasOwnProperty('data');
 }

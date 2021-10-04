@@ -1,24 +1,26 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from './files/workspace-config';
-import { readme } from './files/readme-file';
-import { gitIgnore } from './files/git-ignore';
+import { generateFiles as generateCommonFiles } from '../workspace-common';
 
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
-  name: 'react-workspace',
-  description: 'create a new React project',
-  generateFiles: (context: WorkspaceContext) => {
+  name: 'react',
+  description: 'React workspace with demo components',
+  generateFiles: async (context: WorkspaceContext) => {
+    return generateCommonFiles(context);
+  },
+  importComponents: () => {
     return [
       {
-        relativePath: 'workspace.jsonc',
-        content: workspaceConfig(context),
+        id: 'teambit.react/templates/envs/my-react',
+        targetName: 'envs/my-react',
+        path: 'demo/envs/my-react',
       },
+      { id: 'teambit.react/templates/ui/text', targetName: 'ui/text', path: 'demo/ui/text' },
+      { id: 'teambit.react/templates/ui/heading', targetName: 'ui/heading', path: 'demo/ui/heading' },
+      { id: 'teambit.react/templates/ui/card', targetName: 'ui/card', path: 'demo/ui/card' },
       {
-        relativePath: `.gitignore`,
-        content: gitIgnore(),
-      },
-      {
-        relativePath: `README.md`,
-        content: readme(),
+        id: 'teambit.react/templates/pages/welcome',
+        targetName: 'pages/welcome',
+        path: 'demo/pages/welcome',
       },
     ];
   },

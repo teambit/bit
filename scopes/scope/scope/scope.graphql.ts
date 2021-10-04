@@ -17,6 +17,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # icon of the scope.
         icon: String
 
+        # background color of the icon.
+        backgroundIconColor: String
+
         # path of the scope.
         path: String
 
@@ -71,6 +74,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         icon: (scope: ScopeMain) => {
           return scope.icon;
         },
+        backgroundIconColor: (scope: ScopeMain) => {
+          return scope.backgroundIconColor;
+        },
         components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
           if (!props) return scope.list();
           return scope.list({ offset: props.offset, limit: props.limit }, props.includeCache);
@@ -97,6 +103,10 @@ export function scopeSchema(scopeMain: ScopeMain) {
             data.id = data.id.toString();
           });
           return listData;
+        },
+
+        getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
+          return scope.getLogs(ComponentID.fromString(id));
         },
 
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {

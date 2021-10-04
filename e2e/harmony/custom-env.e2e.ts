@@ -1,8 +1,12 @@
+import fs from 'fs-extra';
+import path from 'path';
 import chai, { expect } from 'chai';
+import { IssuesClasses } from '../../scopes/component/component-issues';
 
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { UNABLE_TO_LOAD_EXTENSION } from '../../scopes/harmony/aspect-loader/constants';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -75,6 +79,24 @@ describe('custom env', function () {
       });
     });
   });
+  describe('change an env after tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(3);
+      helper.extensions.addExtensionToVariant('*', envId);
+      helper.command.compile();
+      helper.command.tagAllWithoutBuild();
+      const newEnvId = 'teambit.react/react';
+      helper.extensions.addExtensionToVariant('*', newEnvId, undefined, true);
+    });
+    it('bit status should show it as an issue because the previous env was not removed', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
     let envName;
@@ -110,6 +132,28 @@ describe('custom env', function () {
       describe('running any other command', () => {
         // @Gilad TODO
         it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
+      });
+    });
+    describe('missing modules in the env capsule', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.extensions.addExtensionToVariant('*', `${envId}@0.0.1`);
+        helper.command.status(); // populate capsules.
+        const capsules = helper.command.capsuleListParsed();
+        const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
+        fs.removeSync(path.join(scopeAspectCapsulesPath, 'node_modules'));
+      });
+      it('should re-create the capsule dir and should not show any warning/error about loading the env', () => {
+        const status = helper.command.status();
+        const errMsg = UNABLE_TO_LOAD_EXTENSION(`${envId}@0.0.1`);
+        expect(status).to.not.include(errMsg);
+      });
+      it('bit show should show the correct env', () => {
+        const env = helper.env.getComponentEnv('comp1');
+        expect(env).to.equal(`${envId}@0.0.1`);
       });
     });
     after(() => {

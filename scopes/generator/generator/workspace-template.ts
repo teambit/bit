@@ -1,3 +1,5 @@
+import type { Component } from '@teambit/component';
+
 export interface WorkspaceFile {
   /**
    * relative path of the file within the workspace.
@@ -16,11 +18,40 @@ export interface WorkspaceContext {
    * it is used as the directory name for the workspace.
    */
   name: string;
+
+  /**
+   * default scope as entered by the user.
+   * it will be set in the workspace.jsonc and be used for components
+   */
+  defaultScope?: string;
+
+  /**
+   * whether user entered `--empty` flag in `bit new` to avoid creating components.
+   */
+  empty?: boolean;
+
+  /**
+   * in case the "--aspect" flag used to import a remote aspect, this is populated with that aspect.
+   * useful to get the aspect-id and other info.
+   */
+  aspectComponent?: Component;
 }
 
 export interface ComponentToImport {
+  /**
+   * full component id
+   */
   id: string;
+
+  /**
+   * path where to write the component
+   */
   path: string;
+
+  /**
+   * a new component name. if not specified, use the original id (without the scope)
+   */
+  targetName?: string;
 }
 
 export interface WorkspaceTemplate {
@@ -42,7 +73,10 @@ export interface WorkspaceTemplate {
   /**
    * template function for generating the template files,
    */
-  generateFiles(context: WorkspaceContext): WorkspaceFile[];
+  generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
+  /**
+   * populate existing components into the new workspace and add them as new components
+   */
   importComponents?: () => ComponentToImport[];
 }

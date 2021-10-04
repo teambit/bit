@@ -29,7 +29,7 @@ bit lane diff from to => diff between "from" lane and "to" lane.
     const diffResultsStr = outputDiffResults(compsWithDiff);
     const newCompsIdsStr = newComps.map((id) => chalk.bold(id)).join('\n');
     const newCompsTitle = `The following components were introduced in ${chalk.bold(toLaneName)} lane`;
-    const newCompsStr = newComps.length ? `${chalk.green(newCompsTitle)}\n${newCompsIdsStr}` : '';
+    const newCompsStr = newComps.length ? `${chalk.inverse(newCompsTitle)}\n${newCompsIdsStr}` : '';
     return `${diffResultsStr}\n${newCompsStr}`;
   }
 }

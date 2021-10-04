@@ -136,6 +136,7 @@ function componentToPrintableForDiffCommand(component: Component, verbose = fals
   delete comp.dependencies;
   delete comp.devDependencies;
   delete comp.peerDependencies;
+  delete comp.id;
   if (!verbose) {
     delete comp.overridesDependencies;
     delete comp.overridesDevDependencies;
@@ -219,7 +220,7 @@ export function diffBetweenComponentsObjects(
     try {
       if (lt(left, right, opts)) return 'upgraded';
       if (gt(left, right, opts)) return 'downgraded';
-    } catch (err) {
+    } catch (err: any) {
       // the semver is probably a range, no need to compare, just fallback to the "changed"
     }
     return 'changed';
@@ -232,7 +233,7 @@ export function diffBetweenComponentsObjects(
       oneDiff.right = oneDiff.right || '---';
     });
     const diffTable = new Table({
-      head: ['name', 'diif', `${leftVersion}`, `${rightVersion}`],
+      head: ['name', 'diff', `${leftVersion}`, `${rightVersion}`],
       style: { head: ['cyan'] },
     });
     diffs.map((dif) => diffTable.push(Object.values(dif)));

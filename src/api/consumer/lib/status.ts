@@ -24,6 +24,7 @@ export type StatusResult = {
   componentsWithIndividualFiles: Component[];
   componentsWithTrackDirs: Component[];
   softTaggedComponents: BitId[];
+  snappedComponents: BitId[];
 };
 
 export default async function status(): Promise<StatusResult> {
@@ -55,6 +56,7 @@ export default async function status(): Promise<StatusResult> {
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
   const softTaggedComponents = componentsList.listSoftTaggedComponents();
+  const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
@@ -77,5 +79,6 @@ export default async function status(): Promise<StatusResult> {
     componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
     componentsWithTrackDirs: await componentsList.listComponentsWithTrackDir(),
     softTaggedComponents,
+    snappedComponents,
   };
 }

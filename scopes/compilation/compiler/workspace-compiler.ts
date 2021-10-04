@@ -16,6 +16,8 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { UiMain } from '@teambit/ui';
+import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
@@ -120,7 +122,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (isFileSupported) {
       try {
         compileResults = this.compilerInstance.transpileFile?.(file.contents.toString(), options);
-      } catch (error) {
+      } catch (error: any) {
         this.compileErrors.push({ path: file.path, error });
         return;
       }
@@ -165,10 +167,11 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (filesToCompile.length) {
       try {
         await this.compilerInstance.transpileComponent?.({
+          component,
           componentDir: this.componentDir,
           outputDir: this.workspace.getComponentPackagePath(component),
         });
-      } catch (error) {
+      } catch (error: any) {
         this.compileErrors.push({ path: this.componentDir, error });
       }
     }
@@ -180,19 +183,28 @@ export class WorkspaceCompiler {
     private workspace: Workspace,
     private envs: EnvsMain,
     private pubsub: PubsubMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private ui: UiMain
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
       this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
     }
   }
 
+  async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
+    if (preStartOpts.skipCompilation) {
+      return;
+    }
+    await this.compileComponents([], { changed: true, verbose: false, deleteDistDir: false });
+  }
+
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (err.code && err.code === 'MODULE_NOT_FOUND') {
+    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
       await this.compileComponents([id.toString()], {}, true);
       return true;
     }

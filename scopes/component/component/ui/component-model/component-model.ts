@@ -1,7 +1,7 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
@@ -12,11 +12,7 @@ import { TagProps } from '../../tag/tag';
 // HOOK FROM YOUR ASPECT!!!
 // TODO: remove all properties from here to their rightful place in their aspects.
 export type ComponentModelProps = {
-  id: {
-    name: string;
-    version?: string;
-    scope?: string;
-  };
+  id: ComponentIdObj;
   description: string;
   buildStatus?: string;
   server?: ComponentServer;

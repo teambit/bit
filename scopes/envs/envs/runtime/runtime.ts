@@ -73,7 +73,7 @@ export class Runtime {
           env,
           data: serviceResult,
         };
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error(err.message, err);
         this.logger.consoleFailure(`service ${service.name} env ${env.id} has failed. ${err.message}`);
         errors.push(err);

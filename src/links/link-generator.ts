@@ -145,9 +145,7 @@ function _getDirectDependencies(
     : component.getAllNonEnvsDependencies();
 }
 
-function groupLinks(
-  flattenLinks: LinkFileType[]
-): {
+function groupLinks(flattenLinks: LinkFileType[]): {
   postInstallLinks: OutputFileParams[];
   linksToWrite: OutputFileParams[];
   symlinks: SymlinkType[];

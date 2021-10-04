@@ -12,18 +12,22 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // const tsconfig = this.tsconfig;
     const paths = component.state.filesystem.files.map((file) => file.path).filter((path) => path.endsWith('index.ts'));
     // const paths = ['/Users/ranmizrahi/Bit/bit/scopes/workspace/workspace/index.ts'];
-    const typedocApp = new Application();
-    typedocApp.options.setValues({
-      inputFiles: paths,
-      allowJs: true,
-      lib: ['lib.es2015.d.ts', 'lib.es2019.d.ts', 'lib.es6.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
-      jsx: 2,
-      noEmit: true,
-      exclude: ['node_modules', '*.scss'],
-      esModuleInterop: true,
+    const app = new Application();
+    app.bootstrap({
+      // typedoc options here
+      entryPoints: paths,
     });
-    const docs = typedocApp.convert(paths);
-    if (!docs) throw new Error();
-    return (typedocApp.serializer.projectToObject(docs) as any) as Module;
+    const project = app.convert();
+    // typedocApp.options.setValues({
+    //   inputFiles: paths,
+    //   allowJs: true,
+    //   lib: ['lib.es2015.d.ts', 'lib.es2019.d.ts', 'lib.es6.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
+    //   jsx: 2,
+    //   noEmit: true,
+    //   exclude: ['node_modules', '*.scss'],
+    //   esModuleInterop: true,
+    // });
+    if (!project) throw new Error('typedoc failed generating docs');
+    return app.serializer.projectToObject(project) as any as Module;
   }
 }

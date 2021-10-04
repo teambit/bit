@@ -23,7 +23,7 @@ export default class PackageManager {
     try {
       await capsule.fs.promises.access(pathToFile);
       return true;
-    } catch (e) {}
+    } catch (e: any) {}
     return false;
   }
 
@@ -31,7 +31,7 @@ export default class PackageManager {
     async function safeUnlink(toRemove: string) {
       try {
         await capsule.fs.promises.unlink(join(capsule.wrkDir, toRemove));
-      } catch (e) {}
+      } catch (e: any) {}
     }
     await safeUnlink('yarn.lock');
     await safeUnlink('package-lock.json');
@@ -130,7 +130,7 @@ function linkBitLegacyInCapsule(capsule) {
   // and we need it in order to perform the linking
   try {
     capsule.fs.mkdirSync('node_modules');
-  } catch (e) {
+  } catch (e: any) {
     // fail silently - we only need to create it if it doesn't already exist
   }
   // we use fs directly here rather than the capsule.fs because there are some edge cases

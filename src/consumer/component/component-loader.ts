@@ -1,10 +1,11 @@
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-
+import { IssuesClasses } from '@teambit/component-issues';
+import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
+import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP, DEFAULT_DIST_DIRNAME } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -16,6 +17,7 @@ import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
 
@@ -59,6 +61,7 @@ export default class ComponentLoader {
       const pathsToCheck = [
         path.join(this.consumer.getPath(), 'node_modules'),
         path.join(this.consumer.getPath(), 'package.json'),
+        path.join(this.consumer.getPath(), BIT_MAP),
         this.consumer.config.path,
       ];
       const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
@@ -169,7 +172,7 @@ export default class ComponentLoader {
         id,
         consumer: this.consumer,
       });
-    } catch (err) {
+    } catch (err: any) {
       return handleError(err);
     }
     component.loadedFromFileSystem = true;
@@ -178,13 +181,14 @@ export default class ComponentLoader {
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
+    await this.addComponentIssues(component);
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
       const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
-        useDependenciesCache: true,
+        useDependenciesCache: component.issues.isEmpty(),
       });
       await dependenciesLoader.load();
       updateDependenciesVersions(this.consumer, component);
@@ -198,11 +202,25 @@ export default class ComponentLoader {
     try {
       await loadDependencies();
       await runOnComponentLoadEvent();
-    } catch (err) {
+    } catch (err: any) {
       return handleError(err);
     }
 
     return component;
+  }
+
+  private async addComponentIssues(component: Component) {
+    if (this.consumer.isLegacy) return;
+    const pkgName = componentIdToPackageName(component);
+    const pkgDir = path.join(this.consumer.getPath(), 'node_modules', pkgName);
+    const distDir = path.join(pkgDir, DEFAULT_DIST_DIRNAME);
+    const distExists = await fs.pathExists(distDir);
+    if (distExists) return;
+    component.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
+    const pkgDirExist = await fs.pathExists(pkgDir);
+    if (!pkgDirExist) {
+      component.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
+    }
   }
 
   private async _handleOutOfSyncScenarios(component: Component) {

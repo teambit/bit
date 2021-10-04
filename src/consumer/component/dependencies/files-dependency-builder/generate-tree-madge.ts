@@ -161,7 +161,7 @@ export default function generateTree(files: string[] = [], config): GenerateTree
         cacheProjectAst: config.cacheProjectAst,
       });
       Object.assign(depTree, dependencyTreeResult);
-    } catch (err) {
+    } catch (err: any) {
       errors[file] = err;
     }
   });

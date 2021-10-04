@@ -1,4 +1,5 @@
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
+import { omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -13,7 +14,7 @@ import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
-import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
+import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig, TsConfigTransformer } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
@@ -21,9 +22,12 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
-import { ESLintMain, ESLintAspect } from '@teambit/eslint';
+import { FormatterContext } from '@teambit/formatter';
+import { LinterContext } from '@teambit/linter';
+import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
+import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -42,6 +46,7 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
+  PrettierMain,
   ApplicationMain,
   GeneratorMain
 ];
@@ -70,6 +75,18 @@ export type UseWebpackModifiers = {
   devServerConfig?: WebpackConfigTransformer[];
 };
 
+export type UseTypescriptModifiers = {
+  buildConfig?: TsConfigTransformer[];
+  devConfig?: TsConfigTransformer[];
+};
+
+export type UseEslintModifiers = {
+  transformers: EslintConfigTransformer[];
+};
+export type UsePrettierModifiers = {
+  transformers: PrettierConfigTransformer[];
+};
+
 export class ReactMain {
   constructor(
     /**
@@ -86,39 +103,80 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
-  private tsConfigOverride: TsConfigSourceFile | undefined;
+  /**
+   * override the env's typescript config for both dev and build time.
+   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
+   */
+  useTypescript(modifiers?: UseTypescriptModifiers, tsModule: any = ts) {
+    const overrides: any = {};
+    const devTransformers = modifiers?.devConfig;
+    if (devTransformers) {
+      overrides.getCompiler = () => this.reactEnv.getCompiler(devTransformers, tsModule);
+    }
+    const buildTransformers = modifiers?.buildConfig;
+    if (buildTransformers) {
+      const buildPipeModifiers = {
+        tsModifier: {
+          transformers: buildTransformers,
+          module: tsModule,
+        },
+      };
+      overrides.getBuildPipe = () => this.reactEnv.getBuildPipe(buildPipeModifiers);
+    }
+    return this.envs.override(overrides);
+  }
 
   /**
+   * @deprecated use useTypescript()
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(
-    tsconfig?: TsConfigSourceFile,
+    tsconfig: Record<string, any> = {},
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
-    this.tsConfigOverride = tsconfig;
-
-    return this.envs.override({
-      getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, compilerOptions, tsModule);
-      },
-    });
+    const transformer: TsConfigTransformer = (configMutator) => {
+      configMutator.mergeTsConfig(tsconfig);
+      configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
+      configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      if (compilerOptions.types) {
+        configMutator.addTypes(compilerOptions.types);
+      }
+      const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
+      configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
+      return configMutator;
+    };
+    // return this.envs.override({
+    //   getCompiler: () => this.reactEnv.getCompiler([transformer], tsModule),
+    // });
+    return this.useTypescript({ devConfig: [transformer] }, tsModule);
   }
 
   /**
+   * @deprecated use useTypescript()
    * override the build tsconfig.
    */
   overrideBuildTsConfig(
-    tsconfig?: TsConfigSourceFile,
+    tsconfig: Record<string, any> = {},
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
-    return this.envs.override({
-      getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions, tsModule);
-      },
-    });
+    const transformer: TsConfigTransformer = (configMutator) => {
+      configMutator.mergeTsConfig(tsconfig);
+      configMutator.raw.compileJs = compilerOptions.compileJs ?? configMutator.raw.compileJs;
+      configMutator.raw.compileJsx = compilerOptions.compileJsx ?? configMutator.raw.compileJsx;
+      if (compilerOptions.types) {
+        configMutator.addTypes(compilerOptions.types);
+      }
+      const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
+      configMutator.raw = Object.assign(configMutator.raw, genericCompilerOptions);
+      return configMutator;
+    };
+    // return this.envs.override({
+    //   getBuildPipe: () => this.reactEnv.getBuildPipe([transformer], tsModule),
+    // });
+    return this.useTypescript({ buildConfig: [transformer] }, tsModule);
   }
 
   /**
@@ -138,6 +196,10 @@ export class ReactMain {
     );
   }
 
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
   useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
     const overrides: any = {};
     const devServerTransformers = modifiers?.devServerConfig;
@@ -151,6 +213,30 @@ export class ReactMain {
       overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
     }
     return this.envs.override(overrides);
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  useEslint(modifiers?: UseEslintModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getLinter: (context: LinterContext) => this.reactEnv.getLinter(context, transformers),
+    });
+  }
+
+  /**
+   * An API to mutate the prettier config
+   * @param modifiers
+   * @returns
+   */
+  usePrettier(modifiers?: UsePrettierModifiers): EnvTransformer {
+    const transformers = modifiers?.transformers || [];
+    return this.envs.override({
+      getFormatter: (context: FormatterContext) => this.reactEnv.getFormatter(context, transformers),
+    });
   }
 
   /**
@@ -205,13 +291,6 @@ export class ReactMain {
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
     });
-  }
-
-  /**
-   * return the computed tsconfig.
-   */
-  getTsConfig() {
-    return this.reactEnv.getTsConfig(this.tsConfigOverride);
   }
 
   /**
@@ -306,6 +385,7 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
+    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
   ];
@@ -322,12 +402,24 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
+      prettier,
       application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(
+      jestAspect,
+      tsAspect,
+      compiler,
+      webpack,
+      workspace,
+      pkg,
+      tester,
+      config,
+      eslint,
+      prettier
+    );
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

@@ -14,8 +14,8 @@ import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export async function listScope({
   scopeName,
-  showAll, // include nested
-  showRemoteVersion,
+  showAll = false, // include nested
+  showRemoteVersion = false,
   namespacesUsingWildcards,
   strategiesNames,
 }: {
@@ -29,7 +29,7 @@ export async function listScope({
   if (scopeName) {
     return remoteList();
   }
-  return scopeList();
+  return localList();
 
   async function remoteList(): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName as string, consumer);
@@ -37,14 +37,13 @@ export async function listScope({
     return remote.list(namespacesUsingWildcards, strategiesNames);
   }
 
-  async function scopeList(): Promise<ListScopeResult[]> {
+  async function localList(): Promise<ListScopeResult[]> {
     if (!consumer) {
       throw new ConsumerNotFound();
     }
     loader.start(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(consumer);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return componentsList.listScope(showRemoteVersion, showAll, namespacesUsingWildcards);
+    return componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
   }
 }
 

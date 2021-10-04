@@ -4,7 +4,7 @@ export default function outputJsonFile(file: string, data: Record<string, any>):
   try {
     fs.ensureFileSync(file);
     return fs.outputJsonSync(file, data);
-  } catch (e) {
+  } catch (e: any) {
     console.error(`failed to write output to file:${e}`); // eslint-disable-line no-console
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

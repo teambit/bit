@@ -58,7 +58,12 @@ export default class Import implements LegacyCommand {
     [
       '',
       'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master',
+      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+    ],
+    [
+      '',
+      'all-history',
+      'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
   ] as CommandOptions;
   loader = true;
@@ -85,6 +90,7 @@ export default class Import implements LegacyCommand {
       skipLane = false,
       dependencies = false,
       dependents = false,
+      allHistory = false,
     }: {
       tester?: boolean;
       compiler?: boolean;
@@ -103,6 +109,7 @@ export default class Import implements LegacyCommand {
       skipLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
+      allHistory?: boolean;
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -144,6 +151,7 @@ export default class Import implements LegacyCommand {
       skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
+      allHistory,
     };
     return importAction(environmentOptions, importOptions, packageManagerArgs).then((importResults) => ({
       displayDependencies,

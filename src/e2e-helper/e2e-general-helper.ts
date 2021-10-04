@@ -41,6 +41,9 @@ export default class GeneralHelper {
     const comp3 = scope.find((item) => item.name === compId);
     if (!comp3) throw new Error(`getHashPathOfComponent unable to find ${compId} in the scope`);
     const hash = comp3.hash;
+    return this.getHashPathOfObject(hash);
+  }
+  getHashPathOfObject(hash: string) {
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
   installAndGetTypeScriptCompilerDir(): string {
@@ -65,7 +68,7 @@ export default class GeneralHelper {
     let output;
     try {
       output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
-    } catch (err) {
+    } catch (err: any) {
       output = err.toString() + err.stdout.toString();
     }
     return output;
@@ -82,7 +85,7 @@ export default class GeneralHelper {
     let output;
     try {
       cmdFunc();
-    } catch (err) {
+    } catch (err: any) {
       output = err.toString();
     }
 

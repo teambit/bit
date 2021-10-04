@@ -65,7 +65,7 @@ export class ComponentStatusLoader {
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
       componentFromFileSystem = await this.consumer.loadComponent(id.changeVersion(LATEST));
-    } catch (err) {
+    } catch (err: any) {
       if (
         err instanceof MissingFilesFromComponent ||
         err instanceof ComponentNotFoundInPath ||
@@ -93,6 +93,7 @@ export class ComponentStatusLoader {
     }
 
     const lane = await this.consumer.getCurrentLaneObject();
+    await componentFromModel.setDivergeData(this.consumer.scope.objects);
     status.staged = await componentFromModel.isLocallyChanged(lane, this.consumer.scope.objects);
     const versionFromFs = componentFromFileSystem.id.version;
     const idStr = id.toString();

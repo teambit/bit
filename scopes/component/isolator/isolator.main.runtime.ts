@@ -22,6 +22,7 @@ import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { importMultipleDistsArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
@@ -322,6 +323,7 @@ export class IsolatorMain {
 
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
     const legacyComponents = components.map((component) => component.state._consumer.clone());
+    if (legacyScope) await importMultipleDistsArtifacts(legacyScope, legacyComponents);
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
@@ -380,7 +382,7 @@ export class IsolatorMain {
         workspace: workspacePath,
         capsules: capsuleFullPaths,
       };
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === 'ENOENT') {
         return { workspace: workspacePath, capsules: [] };
       }
@@ -420,7 +422,7 @@ export class IsolatorMain {
         try {
           const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
           previousPackageJson = JSON.parse(previousPackageJsonRaw);
-        } catch (e) {
+        } catch (e: any) {
           // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
         }
         return {

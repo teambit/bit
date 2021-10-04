@@ -41,7 +41,7 @@ export async function getAllVersionsInfo({
 }: {
   modelComponent: ModelComponent;
   repo?: Repository;
-  throws?: boolean;
+  throws?: boolean; // in case objects are missing
   versionObjects?: Version[];
   startFrom?: Ref | null; // by default, start from the head
   stopAt?: Ref | null; // by default, stop when the parents is empty

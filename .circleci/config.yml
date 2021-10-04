@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: circleci/node:12.15.0
+    - image: circleci/node:12.22.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -29,7 +29,7 @@ windows_defaults: &windows_defaults
   <<: *windows_default_working_dir
 
 mac_default_xcode_version: &mac_default_xcode_version
-  xcode: 11.5.0
+  xcode: 13.0.0
 
 mac_default_executor: &mac_default_executor
   macos:
@@ -575,7 +575,7 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=4096
+            NODE_OPTIONS: --max_old_space_size=8096
 
   bit_tag:
     resource_class: large
@@ -631,7 +631,7 @@ jobs:
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max_old_space_size=4096
+            NODE_OPTIONS: --max_old_space_size=8096
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
@@ -756,7 +756,7 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 12.16.0
+      - run: choco install nodejs --version 12.22.0
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1120,7 +1120,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.15.0
+      - run: cinst nodejs --version 12.22.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1174,7 +1174,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.15.0
+      - run: cinst nodejs --version 12.22.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt

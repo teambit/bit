@@ -40,7 +40,7 @@ export default async function runAndUpdateCI({
     const dists = buildResults ? buildResults.dists : null;
     await addCIAttrsInTheModel({ startTime });
     return { specsResults: testResults, dists };
-  } catch (e) {
+  } catch (e: any) {
     await addCIAttrsInTheModel({ error: e, startTime });
     throw e;
   }

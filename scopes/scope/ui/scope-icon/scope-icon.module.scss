@@ -1,0 +1,23 @@
+.scopeIcon {
+  position: relative;
+  display: flex;
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+  border-radius: 9px;
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: var(--bit-border-color, #babec9);
+  font-weight: normal;
+}
+.letter {
+  color: var(--bit-bg-color, white);
+}
+.scopeImg {
+  height: 100%;
+}
+.iconBackground {
+  background-color: var(--bit-bg-color, white);
+}

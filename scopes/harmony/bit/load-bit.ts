@@ -94,7 +94,7 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     BitMap.removeNonComponentFields(parsedBitMap);
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
-  } catch (e) {}
+  } catch (e: any) {}
   const allBitmapIds = Object.keys(parsedBitMap).map((id) => BitMap.getBitIdFromComponentJson(id, parsedBitMap[id]));
   const bitMapBitIds = BitIds.fromArray(allBitmapIds);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
@@ -114,7 +114,14 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
 }
 
 function getVersionFromBitMapIds(allBitmapIds: BitIds, aspectId: string): string | undefined {
-  const aspectBitId = BitId.parse(aspectId, true);
+  let aspectBitId: BitId;
+  try {
+    aspectBitId = BitId.parse(aspectId, true);
+  } catch (err: any) {
+    throw new Error(
+      `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`
+    );
+  }
   // start by searching id in the bitmap with exact match (including scope name)
   // in case the aspect is not exported yet, it will be in the bitmap without a scope,
   // while in the aspect id it will have the default scope
@@ -143,7 +150,7 @@ function getMainAspect() {
     // eslint-disable-next-line global-require
     const packageJson = require(`${mainAspectDir}/package.json`);
     version = packageJson.version;
-  } catch (err) {
+  } catch (err: any) {
     version = undefined;
   }
 
@@ -179,6 +186,7 @@ function shouldLoadInSafeMode() {
     'cat-lane',
     'login',
     'logout',
+    'config',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
@@ -219,7 +227,7 @@ export async function runCLI() {
   let hasWorkspace = true;
   try {
     harmony.get('teambit.workspace/workspace');
-  } catch (err) {
+  } catch (err: any) {
     hasWorkspace = false;
   }
   await cli.run(hasWorkspace);

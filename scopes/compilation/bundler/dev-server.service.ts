@@ -3,6 +3,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
+import { dedupEnvs } from './dedup-envs';
 import { DevServer } from './dev-server';
 import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
@@ -36,32 +37,13 @@ export class DevServerService implements EnvService<ComponentServer> {
     contexts: ExecutionContext[],
     { dedicatedEnvDevServers }: DevServerServiceOptions
   ): Promise<ComponentServer[]> {
-    const getEnvId = (context, dedicatedServers): string => {
-      const contextEnvId = context.id;
-      const contextEnvIdWithoutVersion = contextEnvId.split('@')[0];
-      if (dedicatedServers.includes(contextEnvIdWithoutVersion)) {
-        return contextEnvId;
-      }
-      return context.env?.getDevEnvId(context);
-    };
-
-    // de-duping dev servers by the amount of type the dev server configuration was overridden by envs.
-    const byOriginalEnv = contexts.reduce<{ [key: string]: ExecutionContext[] }>((acc, context) => {
-      const envId = getEnvId(context, dedicatedEnvDevServers);
-      if (acc[envId]) {
-        acc[envId].push(context);
-        return acc;
-      }
-
-      acc[envId] = [context];
-      return acc;
-    }, {});
+    const groupedEnvs = dedupEnvs(contexts, dedicatedEnvDevServers);
 
     const servers = await Promise.all(
-      Object.entries(byOriginalEnv).map(async ([id, contextList]) => {
-        let mainContext = contextList.find((context) => context.envDefinition.id === id);
-        if (!mainContext) mainContext = contextList[0];
+      Object.entries(groupedEnvs).map(async ([id, contextList]) => {
+        const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
+
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
 

@@ -191,7 +191,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     try {
       const workspaceConfig = await this.load(workspacePath);
       return workspaceConfig;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
         const consumerBitJson = this.create(workspaceConfigProps);
         const packageJsonExists = await AbstractConfig.pathHasPackageJson(workspacePath);
@@ -343,7 +343,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
-    } catch (e) {
+    } catch (e: any) {
       throw new InvalidBitJson(bitJsonPath);
     }
   }
@@ -351,7 +351,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
-    } catch (e) {
+    } catch (e: any) {
       throw new InvalidPackageJson(packageJsonPath);
     }
   }

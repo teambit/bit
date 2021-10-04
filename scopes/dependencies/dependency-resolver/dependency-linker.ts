@@ -477,7 +477,7 @@ export class DependencyLinker {
       }
       createSymlinkOrCopy(aspectPath, target);
       return { aspectId: id, linkDetail: { from: aspectPath, to: target } };
-    } catch (err) {
+    } catch (err: any) {
       throw new CoreAspectLinkError(id, err);
     }
   }
@@ -493,7 +493,7 @@ export class DependencyLinker {
     try {
       targetStat = fs.lstatSync(targetPath);
       // eslint-disable-next-line no-empty
-    } catch (e) {}
+    } catch (e: any) {}
     if (targetStat && !hasLocalInstallation) {
       // Do not override links created by other means
       if (!targetStat.isSymbolicLink()) {
@@ -544,7 +544,7 @@ export class DependencyLinker {
       }
       createSymlinkOrCopy(resolvedPath, target);
       return { from: resolvedPath, to: target };
-    } catch (err) {
+    } catch (err: any) {
       throw new NonAspectCorePackageLinkError(err, packageName);
     }
   }
@@ -606,7 +606,7 @@ function isPathSymlink(folderPath: string): boolean | undefined {
   try {
     const stat = fs.lstatSync(folderPath);
     return stat.isSymbolicLink();
-  } catch (e) {
+  } catch (e: any) {
     return undefined;
   }
 }

@@ -11,12 +11,6 @@ export const catchErrors = (action: any) => (req: express.Request, res: express.
   // eslint-disable-next-line promise/no-callback-in-promise
   action(req, res, next).catch((error: ResponseError) => errorHandle(error, req, res, next));
 
-export function notFound(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const err: ResponseError = new Error(`${req.method} ${req.url} Not Found`);
-  err.status = 404;
-  next(err);
-}
-
 export function errorHandle(
   err: ResponseError,
   req: express.Request,

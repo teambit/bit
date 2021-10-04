@@ -6,10 +6,11 @@ import { compact } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
+import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
@@ -23,7 +24,8 @@ export class WorkspaceComponentLoader {
   constructor(
     private workspace: Workspace,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private envs: EnvsMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -67,7 +69,7 @@ export class WorkspaceComponentLoader {
       longProcessLogger.logProgress(id.toString());
       try {
         await this.workspace.consumer.loadComponent(id._legacy);
-      } catch (err) {
+      } catch (err: any) {
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           errors.push({
             id,
@@ -98,11 +100,22 @@ export class WorkspaceComponentLoader {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
-    const component = await this.loadOne(id, consumerComponent);
+    // in case of out-of-sync, the id may changed during the load process
+    const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
+    const component = await this.loadOne(updatedId, consumerComponent);
     if (storeInCache) {
+      this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, forCapsule);
     }
     return component;
+  }
+
+  private addMultipleEnvsIssueIfNeeded(component: Component) {
+    const envs = this.envs.getAllEnvsConfiguredOnComponent(component);
+    if (envs.length < 2) {
+      return;
+    }
+    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envs.map((e) => e.id);
   }
 
   clearCache() {
@@ -182,12 +195,14 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent | undefined> {
     try {
       return forCapsule
-        ? await this.workspace.consumer.loadComponentForCapsule(id._legacy)
-        : await this.workspace.consumer.loadComponent(id._legacy);
-    } catch (err) {
+        ? // eslint-disable-next-line @typescript-eslint/return-await
+          await this.workspace.consumer.loadComponentForCapsule(id._legacy)
+        : // eslint-disable-next-line @typescript-eslint/return-await
+          await this.workspace.consumer.loadComponent(id._legacy);
+    } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
@@ -221,8 +236,8 @@ export class WorkspaceComponentLoader {
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
 
     const depResolverData = {
       dependencies,

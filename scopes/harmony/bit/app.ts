@@ -22,7 +22,7 @@ async function initApp() {
     // registerCoreExtensions();
     // const harmony = await Harmony.load([ConfigExt], {});
     await runCLI();
-  } catch (err) {
+  } catch (err: any) {
     const originalError = err.originalError || err;
     await handleErrorAndExit(originalError, process.argv[2]);
   }

@@ -236,7 +236,7 @@ export default class AbstractConfig {
     try {
       const file = await fs.readJson(jsonFilePath);
       return file;
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === 'ENOENT') return null;
       throw e;
     }

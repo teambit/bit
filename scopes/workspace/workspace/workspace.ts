@@ -16,7 +16,7 @@ import {
   AspectData,
   InvalidComponent,
 } from '@teambit/component';
-import { ComponentScopeDirMap } from '@teambit/config';
+import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
   DependencyLifecycleType,
   DependencyResolverMain,
@@ -51,6 +51,7 @@ import type {
   AddActionResults,
   Warnings,
 } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -58,10 +59,10 @@ import { buildOneGraphForComponents } from '@teambit/legacy/dist/scope/graph/com
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import findCacheDir from 'find-cache-dir';
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference } from 'lodash';
-import path, { join } from 'path';
+import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
@@ -92,6 +93,7 @@ export type EjectConfResult = {
 
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
+export const ComponentRemoved = 'componentRemoved';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -191,7 +193,7 @@ export class Workspace implements ComponentFactory {
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver);
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
   }
 
@@ -212,6 +214,11 @@ export class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /** get the `node_modules` folder of this workspace */
+  private get modulesPath() {
+    return path.join(this.path, 'node_modules');
   }
 
   get isLegacy(): boolean {
@@ -314,6 +321,14 @@ export class Workspace implements ComponentFactory {
       return id.isEqual(componentId);
     });
     return !!found;
+  }
+
+  /**
+   * whether or not a workspace has a component with the given name
+   */
+  async hasName(name: string): Promise<boolean> {
+    const ids = await this.listIds();
+    return Boolean(ids.find((id) => id.fullName === name));
   }
 
   /**
@@ -462,11 +477,11 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
-      // TODO: find way to standardize event names.
-      await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
+    // TODO: find way to standardize event names.
+    await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
     return results;
   }
 
@@ -476,10 +491,10 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
+    await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
     return results;
   }
 
@@ -490,6 +505,8 @@ export class Workspace implements ComponentFactory {
       const onRemoveResult = await onRemoveFunc(id);
       results.push({ extensionId: extension, results: onRemoveResult });
     });
+
+    await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
   }
 
@@ -868,20 +885,22 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
   }
 
-  // remove this function
+  /**
+   * load aspects from the workspace and if not exists in the workspace, load from the scope.
+   * keep in mind that the graph may have circles.
+   */
   async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+    this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
-    const components = await this.importAndGetMany(componentIds);
+    const components = await this.importAndGetAspects(componentIds);
     const graph = await this.getGraphWithoutCore(components);
-
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
-
     const allIds = await Promise.all(allIdsP);
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
@@ -909,13 +928,12 @@ export class Workspace implements ComponentFactory {
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
-    if (workspaceComps.length) {
-      const requireableExtensions: any = await this.requireComponents(workspaceComps);
-      await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
-    }
-    if (scopeComps.length) {
-      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
-    }
+    // load the scope first because we might need it for custom envs that extend external aspects
+    const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
+    await this.scope.loadAspects(scopeIds, throwOnError);
+
+    const workspaceAspects = await this.requireComponents(workspaceComps);
+    await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
@@ -1035,7 +1053,12 @@ export class Workspace implements ComponentFactory {
     id: string
   ) {
     const PREFIX = 'bit';
-    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+    const cacheDir = path.join(this.modulesPath, '.cache', PREFIX, id);
+
+    // maybe should also check it's a folder and has write permissions
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
 
     return cacheDir;
   }
@@ -1190,6 +1213,26 @@ export class Workspace implements ComponentFactory {
     };
   }
 
+  /**
+   * same as `this.importAndGetMany()` with a specific error handling of ComponentNotFound
+   */
+  private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
+    try {
+      return await this.importAndGetMany(componentIds);
+    } catch (err: any) {
+      if (err instanceof ComponentNotFound) {
+        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+        if (configStr.includes(err.id)) {
+          throw new BitError(`error: a component "${err.id}" was not found
+your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+        }
+      }
+
+      throw err;
+    }
+  }
+
   // TODO: replace with a proper import API on the workspace
   private async importObjects() {
     const importOptions: ImportOptions = {
@@ -1209,7 +1252,7 @@ export class Workspace implements ComponentFactory {
     try {
       const res = await importAction({ tester: false, compiler: false }, importOptions, []);
       return res;
-    } catch (err) {
+    } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
       if (err instanceof NothingToImport) {
         // Do not write nothing to import warning
@@ -1232,7 +1275,7 @@ export class Workspace implements ComponentFactory {
     const packageName = componentIdToPackageName(
       component instanceof ConsumerComponent ? component : component.state._consumer
     );
-    return path.join(this.path, 'node_modules', packageName);
+    return path.join(this.modulesPath, packageName);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
@@ -1255,6 +1298,15 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    // This is required in case where you have in your workspace a component with the same name as a core aspect
+    // let's say you have component called react-native (which is eventually my-org.my-scope/react-native)
+    // and you set teambit.react/react-native as your env
+    // bit will get here with the string teambit.react/react-native and will try to resolve it from the workspace
+    // during this it will find the my-org.my-scope/react-native which is incorrect as the core one doesn't exist in the
+    // workspace
+    if (this.aspectLoader.isCoreAspect(id.toString())) {
+      return ComponentID.fromString(id.toString());
+    }
     let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
     if (!legacyId) {
       try {
@@ -1313,7 +1365,7 @@ export class Workspace implements ComponentFactory {
         }
         // Handle use case 3
         return await this.scope.resolveComponentId(idWithVersion);
-      } catch (error) {
+      } catch (error: any) {
         legacyId = BitId.parse(id.toString(), true);
         return ComponentID.fromLegacy(legacyId);
       }

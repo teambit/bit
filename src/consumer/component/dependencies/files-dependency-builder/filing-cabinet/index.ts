@@ -7,7 +7,6 @@ import appModulePath from 'app-module-path';
 import webpackResolve from 'enhanced-resolve';
 import isRelative from 'is-relative-path';
 import getModuleType from 'module-definition';
-import amdLookup from 'module-lookup-amd';
 import objectAssign from 'object-assign';
 import path from 'path';
 import resolve from 'resolve';
@@ -100,7 +99,7 @@ export default function cabinet(options: Options) {
       );
       try {
         result = resolver(options);
-      } catch (err) {
+      } catch (err: any) {
         debug(`unable to use the resolver of ${dependencyExt} for ${filename}. got an error ${err.message}`);
       }
     }
@@ -169,7 +168,7 @@ function _getJSType(options) {
  * @return {String}
  */
 function jsLookup(options: Options) {
-  const { configPath, dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
+  const { dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
   const type = _getJSType({
     config,
     webpackConfig,
@@ -181,15 +180,7 @@ function jsLookup(options: Options) {
 
   switch (type) {
     case 'amd':
-      debug('using amd resolver');
-      return amdLookup({
-        config,
-        // Optional in case a pre-parsed config is being passed in
-        configPath,
-        partial: dependency,
-        directory,
-        filename,
-      });
+      throw new Error('AMD is not supported');
 
     case 'webpack':
       debug('using webpack resolver for es6');
@@ -322,7 +313,7 @@ function commonJSLookup(options: Options) {
       moduleDirectory: ['node_modules'],
     });
     debug(`resolved path: ${result}`);
-  } catch (e) {
+  } catch (e: any) {
     debug(`could not resolve ${dependency}`);
   }
 
@@ -339,7 +330,7 @@ function resolveWebpackPath(dependency, filename, directory, webpackConfig) {
     if (typeof loadedConfig === 'function') {
       loadedConfig = loadedConfig();
     }
-  } catch (e) {
+  } catch (e: any) {
     debug(`error loading the webpack config at ${webpackConfig}`);
     debug(e.message);
     debug(e.stack);
@@ -374,7 +365,7 @@ function resolveWebpack(dependency, filename, directory, resolveConfig) {
     const lookupPath = isRelative(dependency) ? path.dirname(filename) : directory;
 
     return resolver(lookupPath, dependency);
-  } catch (e) {
+  } catch (e: any) {
     debug(`error when resolving ${dependency}`);
     debug(e.message);
     debug(e.stack);

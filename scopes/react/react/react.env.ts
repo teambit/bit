@@ -3,19 +3,32 @@ import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
-import { merge, omit } from 'lodash';
+import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { BuilderEnv, DependenciesEnv, DevEnv, LinterEnv, PackageEnv, TesterEnv } from '@teambit/envs';
+import {
+  BuilderEnv,
+  CompilerEnv,
+  DependenciesEnv,
+  DevEnv,
+  LinterEnv,
+  PackageEnv,
+  TesterEnv,
+  FormatterEnv,
+  PipeServiceModifier,
+  PipeServiceModifiersMap,
+} from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
-import { TypescriptMain } from '@teambit/typescript';
-import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
+import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
+import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain } from '@teambit/eslint';
-import { Linter } from '@teambit/linter';
+import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
+import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
+import { Linter, LinterContext } from '@teambit/linter';
+import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { SchemaExtractor } from '@teambit/schema';
@@ -44,11 +57,21 @@ export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
+const prettierConfig = require('./prettier/prettier.config.js');
+
+// TODO: move to be taken from the key mode of compiler context
+type CompilerMode = 'build' | 'dev';
+
+type GetBuildPipeModifiers = PipeServiceModifiersMap & {
+  tsModifier?: PipeServiceModifier;
+};
 
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv {
+export class ReactEnv
+  implements TesterEnv, CompilerEnv, LinterEnv, DevEnv, BuilderEnv, DependenciesEnv, PackageEnv, FormatterEnv
+{
   constructor(
     /**
      * jest extension
@@ -87,7 +110,9 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private prettier: PrettierMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -106,52 +131,62 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
-  createTsCompiler(
-    targetConfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
-    tsModule = ts
-  ) {
-    const tsconfig = this.getTsConfig(targetConfig);
+  private getTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
+    const tsconfig = mode === 'dev' ? defaultTsConfig : buildTsConfig;
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
-    const additionalTypes = compilerOptions.types || [];
-    const compileJs = compilerOptions.compileJs ?? true;
-    const compileJsx = compilerOptions.compileJsx ?? true;
-    const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
-    return this.tsAspect.createCompiler(
-      {
-        tsconfig,
-        // TODO: @david please remove this line and refactor to be something that makes sense.
-        types: [
-          resolve(pathToSource, './typescript/style.d.ts'),
-          resolve(pathToSource, './typescript/asset.d.ts'),
-          ...additionalTypes,
-        ],
-        compileJs,
-        compileJsx,
-        ...genericCompilerOptions,
-      },
-      // @ts-ignore
-      tsModule
-    );
+    const compileJs = true;
+    const compileJsx = true;
+    return {
+      tsconfig,
+      // TODO: @david please remove this line and refactor to be something that makes sense.
+      types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
+      compileJs,
+      compileJsx,
+    };
   }
 
-  getCompiler(
-    targetConfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
-    tsModule = ts
-  ) {
-    return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
+  private getTsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompileOptions = this.getTsCompilerOptions(mode);
+    return this.tsAspect.createCompiler(tsCompileOptions, transformers, tsModule);
+  }
+
+  getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.getTsCompiler('dev', transformers, tsModule);
   }
 
   /**
    * returns and configures the component linter.
    */
-  getLinter(): Linter {
-    return this.eslint.createLinter({
-      config: eslintConfig,
-      // resolve all plugins from the react environment.
-      pluginPath: __dirname,
-    });
+  getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const defaultTransformer: EslintConfigTransformer = (configMutator) => {
+      configMutator.addExtensionTypes(['.md', '.mdx']);
+      return configMutator;
+    };
+
+    const allTransformers = [defaultTransformer, ...transformers];
+
+    return this.eslint.createLinter(
+      context,
+      {
+        config: eslintConfig,
+        // resolve all plugins from the react environment.
+        pluginPath: __dirname,
+      },
+      allTransformers
+    );
+  }
+
+  /**
+   * returns and configures the component formatter.
+   */
+  getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
+    return this.prettier.createFormatter(
+      context,
+      {
+        config: prettierConfig,
+      },
+      transformers
+    );
   }
 
   private getFileMap(components: Component[], local = false) {
@@ -196,10 +231,11 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
+    const componentsDirs = this.getComponentsModulesDirectories(context.components);
     // const fileMapPath = this.writeFileMap(context.components, true);
     // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
     // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id, componentsDirs);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
@@ -222,6 +258,13 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
+  }
+
+  private getComponentsModulesDirectories(components: Component[]): string[] {
+    const dirs = components.map((component) => {
+      return this.pkg.getModulePath(component, { absPath: true });
+    });
+    return dirs;
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {
@@ -301,21 +344,15 @@ export class ReactEnv implements TesterEnv, LinterEnv, DevEnv, BuilderEnv, Depen
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(
-    tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
-    tsModule = ts
-  ): BuildTask[] {
-    return [this.getCompilerTask(tsconfig, compilerOptions, tsModule), this.tester.task];
+  getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
+    const transformers: TsConfigTransformer[] =
+      (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
+    return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
-  private getCompilerTask(
-    tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
-    tsModule = ts
-  ) {
-    const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions, tsModule));
+  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompiler = this.getTsCompiler('build', transformers, tsModule);
+    return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
   async __getDescriptor() {

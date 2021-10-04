@@ -22,13 +22,13 @@ export class ReactApp implements Application {
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
-        configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
+        // configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
         return configMutator;
       },
     ]);
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
-    devServer.listen(port);
+    await devServer.listen(port);
     return port;
   }
 

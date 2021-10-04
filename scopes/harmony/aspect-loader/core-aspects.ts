@@ -8,7 +8,7 @@ export function getAspectDir(id: string): string {
   try {
     const moduleDirectory = require.resolve(packageName);
     dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
-  } catch (err) {
+  } catch (err: any) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
   if (!existsSync(dirPath)) {

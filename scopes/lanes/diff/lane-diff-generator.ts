@@ -4,7 +4,11 @@ import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
-import { diffBetweenVersionsObjects, DiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import {
+  diffBetweenVersionsObjects,
+  DiffResults,
+  DiffOptions,
+} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 
 export class LaneDiffGenerator {
@@ -21,7 +25,7 @@ export class LaneDiffGenerator {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  async generate(values: string[]) {
+  async generate(values: string[], diffOptions: DiffOptions = {}) {
     const { fromLaneName, toLaneName } = this.getLaneNames(values);
     if (fromLaneName === toLaneName) {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
@@ -35,7 +39,7 @@ export class LaneDiffGenerator {
     this.toLane = toLane;
     await Promise.all(
       this.toLane.components.map(async ({ id, head }) => {
-        await this.componentDiff(id, head);
+        await this.componentDiff(id, head, diffOptions);
       })
     );
     return {
@@ -46,7 +50,7 @@ export class LaneDiffGenerator {
     };
   }
 
-  private async componentDiff(id: BitId, toLaneHead: Ref) {
+  private async componentDiff(id: BitId, toLaneHead: Ref, diffOptions: DiffOptions) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
     const compFromLane = this.fromLane?.getComponentByName(id);
     const fromLaneHead = compFromLane ? compFromLane.head : modelComponent.head;
@@ -61,6 +65,7 @@ export class LaneDiffGenerator {
     const fromVersion = await fromLaneHead.load(this.scope.legacyScope.objects);
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
     const fromLaneStr = this.fromLane ? this.fromLane.name : DEFAULT_LANE;
+    diffOptions.formatDepsAsTable = false;
     const diff = await diffBetweenVersionsObjects(
       modelComponent,
       fromVersion as Version,
@@ -68,7 +73,7 @@ export class LaneDiffGenerator {
       fromLaneStr,
       this.toLane.name,
       this.scope.legacyScope,
-      { formatDepsAsTable: false }
+      diffOptions
     );
     this.compsWithDiff.push(diff);
   }

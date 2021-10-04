@@ -48,7 +48,7 @@ export function composeDependencyPathForIsolated(
   const getIdPath = () => {
     try {
       return bitId.toFullPath();
-    } catch (err) {
+    } catch (err: any) {
       return bitId.name;
     }
   };

@@ -10,10 +10,11 @@ import { Application } from './application';
 import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
-import { AppListCmd } from './app-list.cmd';
+import { AppListCmdDeprecated } from './app-list.cmd';
 import { DeployTask } from './deploy.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
+import { AppCmd, AppListCmd } from './app.cmd';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -140,8 +141,9 @@ export class ApplicationMain {
 
   private async createAppContext(appName: string) {
     const host = this.componentAspect.getHost();
+    const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
-    const component = await host.get(id);
+    const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
 
     const env = await this.envs.createEnvironment([component]);
@@ -166,9 +168,11 @@ export class ApplicationMain {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
     const application = new ApplicationMain(appSlot, appTypeSlot, deploymentProviderSlot, envs, component, appService);
-    builder.registerDeployTasks([new DeployTask(application)]);
+    const appCmd = new AppCmd();
+    appCmd.commands = [new AppListCmd(application)];
+    builder.registerTagTasks([new DeployTask(application)]);
     cli.registerGroup('apps', 'Applications');
-    cli.register(new RunCmd(application, logger), new AppListCmd(application));
+    cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
 
     return application;
   }

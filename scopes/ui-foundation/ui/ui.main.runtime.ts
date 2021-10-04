@@ -35,6 +35,10 @@ export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMa
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
+export type PreStart = (preStartOpts: PreStartOpts) => Promise<void>;
+
+export type PreStartOpts = { skipCompilation?: boolean };
+
 export type OnStart = () => Promise<undefined | ComponentType<{}>>;
 
 export type StartPluginSlot = SlotRegistry<StartPlugin>;
@@ -42,6 +46,8 @@ export type StartPluginSlot = SlotRegistry<StartPlugin>;
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
 export type BuildMethodOverwrite = (name: string, uiRoot: UIRoot, rebuild?: boolean) => Promise<string>;
+
+export type PreStartSlot = SlotRegistry<PreStart>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 
@@ -70,6 +76,9 @@ export type UIConfig = {
    * always relative to the workspace root directory.
    */
   publicDir: string;
+
+  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
+  publicUrl?: string;
 };
 
 export type RuntimeOptions = {
@@ -129,6 +138,11 @@ export class UiMain {
     private express: ExpressMain,
 
     /**
+     * pre-start slot
+     */
+    private preStartSlot: PreStartSlot,
+
+    /**
      * on start slot
      */
     private onStartSlot: OnStartSlot,
@@ -177,11 +191,14 @@ export class UiMain {
     return this.config.publicDir;
   }
 
-  getUiByName(name = '') {
+  private getUiByName(name: string) {
     const roots = this.uiRootSlot.toArray();
-    return roots.find(([, uiRoot]) => {
-      return uiRoot.name === name;
-    });
+    const [, root] =
+      roots.find(([, uiRoot]) => {
+        return uiRoot.name === name;
+      }) || [];
+
+    return root;
   }
 
   /**
@@ -190,9 +207,9 @@ export class UiMain {
   async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
     // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootName: "${uiRootName}"`);
-    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+    const maybeUiRoot = this.getUi(uiRootName);
 
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
     const [name, uiRoot] = maybeUiRoot;
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
@@ -232,9 +249,9 @@ export class UiMain {
    * create a Bit UI runtime.
    */
   async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
-    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+    const maybeUiRoot = this.getUi(uiRootName);
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
 
-    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
     const [name, uiRoot] = maybeUiRoot;
 
     const plugins = await this.initiatePlugins({
@@ -243,6 +260,7 @@ export class UiMain {
     });
 
     if (this.componentExtension.isHost(name)) this.componentExtension.setHostPriority(name);
+
     const uiServer = UIServer.create({
       express: this.express,
       graphql: this.graphql,
@@ -254,6 +272,8 @@ export class UiMain {
       startPlugins: plugins,
     });
 
+    // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
+    this.addSignalListener();
     if (dev) {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
@@ -264,6 +284,16 @@ export class UiMain {
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
 
     return uiServer;
+  }
+
+  private addSignalListener() {
+    process.on('SIGTERM', () => {
+      process.exit();
+    });
+
+    process.on('SIGINT', () => {
+      process.exit();
+    });
   }
 
   async getPort(port?: number): Promise<number> {
@@ -277,6 +307,14 @@ export class UiMain {
   private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
     return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
   };
+
+  /**
+   * pre-start events are triggered and *completed* before the webserver started.
+   * (the promise is awaited)
+   */
+  registerPreStart(preStartFn: PreStart) {
+    this.preStartSlot.register(preStartFn);
+  }
 
   /**
    * bind to ui server start event.
@@ -320,6 +358,11 @@ export class UiMain {
     return undefined;
   }
 
+  async invokePreStart(preStartOpts: PreStartOpts): Promise<void> {
+    const promises = this.preStartSlot.values().map((fn) => fn(preStartOpts));
+    await Promise.all(promises);
+  }
+
   async invokeOnStart(): Promise<ComponentType[]> {
     const promises = this.onStartSlot.values().map((fn) => fn());
     const startPlugins = await Promise.all(promises);
@@ -338,7 +381,7 @@ export class UiMain {
    */
   getUi(uiRootName?: string): [string, UIRoot] | undefined {
     if (uiRootName) {
-      const root = this.getUiRootOrThrow(uiRootName, false);
+      const root = this.uiRootSlot.get(uiRootName) || this.getUiByName(uiRootName);
       if (!root) return undefined;
       return [uiRootName, root];
     }
@@ -347,14 +390,15 @@ export class UiMain {
     return uis.find(([, root]) => root.priority);
   }
 
-  getUiRootOrThrow(uiRootName: string, shouldThrow: boolean): UIRoot | undefined {
-    const uiSlot = this.uiRootSlot.get(uiRootName);
-    if (!uiSlot && shouldThrow)
-      throw new UnknownUI(
-        uiRootName,
-        this.uiRootSlot.toArray().map(([id]) => id)
-      );
-    return uiSlot;
+  getUiName(uiRootName?: string): string | undefined {
+    const [, ui] = this.getUi(uiRootName) || [];
+    if (!ui) return undefined;
+
+    return ui.name;
+  }
+
+  private possibleUis() {
+    return this.uiRootSlot.toArray().map(([id]) => id);
   }
 
   createLink(aspectDefs: AspectDefinition[], rootExtensionName: string) {
@@ -418,17 +462,17 @@ export class UiMain {
       this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
       return hash;
     }
-    if (hash !== hashed) {
-      this.logger.console(
-        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
-          uiRoot.name
-        )} in target directory: ${chalk.cyan(await this.publicDir(uiRoot))}'`
-      );
-    } else {
+    if (!hashed) {
       this.logger.console(
         `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
-        )}`
+        )}. The first time we build the UI it may take a few minutes.`
+      );
+    } else {
+      this.logger.console(
+        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+          await this.publicDir(uiRoot)
+        )}' as ${uiRoot.configFile} has been changed.`
       );
     }
 
@@ -454,12 +498,16 @@ export class UiMain {
     await this.cache.set(uiRoot.path, hash);
   }
 
+  get publicUrl() {
+    return this.config.publicUrl;
+  }
+
   private async openBrowser(url: string) {
     const openBrowser = new OpenBrowser(this.logger);
     openBrowser.open(url);
   }
 
-  static defaultConfig = {
+  static defaultConfig: UIConfig = {
     publicDir: 'public/bit',
     portRange: [3000, 3100],
     host: 'localhost',
@@ -478,6 +526,7 @@ export class UiMain {
 
   static slots = [
     Slot.withType<UIRoot>(),
+    Slot.withType<PreStart>(),
     Slot.withType<OnStart>(),
     Slot.withType<PublicDirOverwriteSlot>(),
     Slot.withType<BuildMethodOverwriteSlot>(),
@@ -487,8 +536,9 @@ export class UiMain {
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
+    [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
+      PreStartSlot,
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
@@ -505,6 +555,7 @@ export class UiMain {
       graphql,
       uiRootSlot,
       express,
+      preStartSlot,
       onStartSlot,
       publicDirOverwriteSlot,
       buildMethodOverwriteSlot,

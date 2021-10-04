@@ -144,6 +144,25 @@ export default class ComponentsList {
     return fileSystemComponents.filter((f) => f.latestVersion);
   }
 
+  /**
+   * list components that their head is a snap, not a tag.
+   * this is relevant only when the lane is the default (main), otherwise, the head is always a snap.
+   * components that are during-merge are filtered out, we don't want them during tag and don't want
+   * to show them in the "snapped" section in bit-status.
+   */
+  async listSnappedComponentsOnMain() {
+    if (!this.scope.lanes.isOnDefaultLane()) {
+      return [];
+    }
+    const componentsFromModel = await this.getModelComponents();
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const compsDuringMerge = this.listDuringMergeStateComponents();
+    return componentsFromModel
+      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toBitId()))
+      .filter((c) => c.isHeadSnap());
+  }
+
   async listMergePendingComponents(): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getAuthoredAndImportedFromFS();
@@ -254,10 +273,20 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
+    const fromBitMap = this.bitMap.getAuthoredAndImportedBitIds();
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, (component: ModelComponent) =>
-      component.isLocallyChanged(lane, this.scope.objects)
-    );
+    const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
+      await component.setDivergeData(this.scope.objects);
+      if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
+        // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
+        // be considered as staged and should be exported. notice that we use `hasLocalChanges`
+        // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
+        // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
+        // be exported unexpectedly.
+        return component.isLocallyChangedRegardlessOfLanes();
+      }
+      return component.isLocallyChanged(lane, this.scope.objects);
+    });
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
@@ -292,8 +321,10 @@ export default class ComponentsList {
 
   async listAutoTagPendingComponents(): Promise<Component[]> {
     const modifiedComponents = (await this.listModifiedComponents()) as BitId[];
+    const newComponents = (await this.listNewComponents()) as BitIds;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    return this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
+    const autoTagPending = await this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
+    return autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.id));
   }
 
   idsFromBitMap(origin?: ComponentOrigin): BitIds {
@@ -389,46 +420,56 @@ export default class ComponentsList {
   /**
    * get called when the Consumer is available, shows also components from remote scopes
    */
-  async listScope(
+  async listAll(
     showRemoteVersion: boolean,
-    includeNested: boolean,
+    listScope: boolean,
     namespacesUsingWildcards?: string
   ): Promise<ListScopeResult[]> {
-    const components: ModelComponent[] = await this.getModelComponents();
-    const componentsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
-      : components;
-    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
-      id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated,
-    }));
-    const componentsIds = listScopeResults.map((result) => result.id);
+    const modelComponents: ModelComponent[] = await this.getModelComponents();
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const authoredAndImportedIdsNoVer = authoredAndImportedIds.map((id) => id.changeVersion(undefined));
+    const modelComponentsIds = modelComponents.map((c) => c.toBitId());
+    const allIds = listScope
+      ? modelComponentsIds
+      : BitIds.uniqFromArray([...authoredAndImportedIdsNoVer, ...modelComponentsIds]);
+    const idsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(allIds, namespacesUsingWildcards)
+      : allIds;
+    const idsSorted = ComponentsList.sortComponentsByName(idsFilteredByWildcards);
+    const listAllResults: ListScopeResult[] = idsSorted.map((id: BitId) => {
+      const component = modelComponents.find((c) => c.toBitId().isEqualWithoutVersion(id));
+      return {
+        id: component ? component.toBitIdWithLatestVersion() : id,
+        deprecated: component ? component.deprecated : false,
+      };
+    });
+    const componentsIds = listAllResults.map((result) => result.id);
     if (showRemoteVersion) {
       const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
       latestVersionsInfo.forEach((componentId) => {
-        const listResult = listScopeResults.find((c) => c.id.isEqualWithoutVersion(componentId));
+        const listResult = listAllResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }
-    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
-    listScopeResults.forEach((listResult) => {
+    listAllResults.forEach((listResult) => {
       const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
       if (existingBitMapId) {
-        listResult.currentlyUsedVersion = existingBitMapId.version;
+        listResult.currentlyUsedVersion = existingBitMapId.hasVersion() ? existingBitMapId.version : undefined;
       }
     });
-    if (includeNested) return listScopeResults;
+    if (listScope) {
+      return listAllResults;
+    }
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
-      if (!componentMap.onLanesOnly) return true; // component is on master, always show it
-      if (!currentLane) return false; // if !currentLane the user is on master, don't show it.
+      if (!componentMap.onLanesOnly) return true; // component is on main, always show it
+      if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };
-    return listScopeResults.filter((listResult) => {
+    return listAllResults.filter((listResult) => {
       const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
       return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && isIdOnCurrentLane(componentMap);
     });

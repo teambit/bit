@@ -1,5 +1,4 @@
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
-import webpackConfig from './webpack.config';
 
 /**
  * Transformation to apply for both preview and dev server
@@ -8,8 +7,11 @@ import webpackConfig from './webpack.config';
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function commonTransformation(config: WebpackConfigMutator, _context: WebpackConfigTransformContext) {
-  // Merge config with the webpack.config.js file - adding handlebars support
-  config.merge([webpackConfig]);
+  config.addAliases({
+    react: require.resolve('react'),
+    'react-dom/server': require.resolve('react-dom/server'),
+    'react-native$': require.resolve('react-native-web'),
+  });
   return config;
 }
 

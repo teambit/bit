@@ -35,6 +35,7 @@ export class WorkspaceUIRoot implements UIRoot {
 
   buildOptions = {
     ssr: false,
+    launchBrowserOnStart: true,
   };
 
   async resolveAspects(runtimeName: string) {

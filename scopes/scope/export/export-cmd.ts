@@ -11,16 +11,11 @@ export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
 
   description = `export components to a remote scope.
-  bit export => export all staged components to their current scope
-  Legacy:
-  \`bit export <remote> [id...]\` => export (optionally given ids) to the specified remote
-  \`bit export ${CURRENT_UPSTREAM} [id...]\` => export (optionally given ids) to their current scope
-  Harmony:
-  \`bit export [id...]\` => export (optionally given ids) to their current scope
-  \`bit export <remote> <lane...>\` => export the specified lanes to the specified remote
+bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+\`bit export [id...]\` => export the given ids to their current scope
 
-  https://${BASE_DOCS_DOMAIN}/docs/export
-  ${WILDCARD_HELP('export remote-scope')}`;
+https://${BASE_DOCS_DOMAIN}/docs/export
+${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
   options = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
@@ -41,7 +36,6 @@ export class ExportCmd implements Command {
       'LEGACY ONLY. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    ['l', 'lanes', 'HARMONY ONLY. export lanes'],
     ['', 'all-versions', 'export not only staged versions but all of them'],
     [
       '',
@@ -52,6 +46,11 @@ export class ExportCmd implements Command {
       '',
       'resume <string>',
       'in case the previous export failed and suggested to resume with an export-id, enter the id',
+    ],
+    [
+      '',
+      'ignore-missing-artifacts',
+      "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
   ] as CommandOptions;
   loader = true;
@@ -71,7 +70,7 @@ export class ExportCmd implements Command {
       originDirectly = false,
       force = false,
       rewire = false,
-      lanes = false,
+      ignoreMissingArtifacts = false,
       resume,
     }: any
   ): Promise<string> {
@@ -95,8 +94,8 @@ export class ExportCmd implements Command {
       originDirectly,
       codemod: rewire,
       force,
-      lanes,
       resumeExportId: resume,
+      ignoreMissingArtifacts,
     });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');

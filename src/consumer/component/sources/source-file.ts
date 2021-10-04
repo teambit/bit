@@ -23,7 +23,7 @@ export default class SourceFile extends AbstractVinyl {
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       R.forEachObjIndexed(addToFile, extendedProps);
       return file;
-    } catch (err) {
+    } catch (err: any) {
       logger.errorAndAddBreadCrumb(
         'source-file.load',
         'failed loading file {filePath}. Error: {message}',

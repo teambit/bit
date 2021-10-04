@@ -34,7 +34,7 @@ describe('bit tag command', function () {
       helper.bitJson.corrupt();
       try {
         helper.command.tagComponent('bar/foo2');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
@@ -52,7 +52,7 @@ describe('bit tag command', function () {
       helper.bitMap.write(bitMap);
       try {
         helper.command.tagComponent('bar/foo');
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -114,11 +114,11 @@ describe('bit tag command', function () {
       it('Should set the exact version when specified on new component', () => {
         helper.fs.createFile('components', 'exact-new.js');
         helper.command.addComponent('components/exact-new.js', { i: 'components/exact-new' });
-        output = helper.command.tagComponent('components/exact-new 5.12.10', 'message', '-f');
+        output = helper.command.tagComponent('components/exact-new@5.12.10', 'message', '-f');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        output = helper.command.tagComponent('components/exact 3.3.3', 'message', '-f');
+        output = helper.command.tagComponent('components/exact@3.3.3', 'message', '-f');
         expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
@@ -145,8 +145,8 @@ describe('bit tag command', function () {
         });
       });
       it('Should throw error when the version already exists', () => {
-        helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
-        const tagWithExisting = () => helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
+        helper.command.tagComponent('components/exact --ver 5.5.5', 'message', '-f');
+        const tagWithExisting = () => helper.command.tagComponent('components/exact --ver 5.5.5', 'message', '-f');
         const error = new VersionAlreadyExists('5.5.5', 'components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
       });
@@ -244,7 +244,7 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists in one of the components', () => {
         helper.fs.createFile('components', 'a.js', 'console.log("v4.3.4")');
         helper.fs.createFile('components', 'b.js', 'console.log("v4.3.4")');
-        helper.command.tagComponent('components/a 4.3.4', 'message');
+        helper.command.tagComponent('components/a@4.3.4', 'message');
         helper.fs.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
         const tagWithExisting = () => helper.command.tagAllComponents('', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
@@ -272,7 +272,7 @@ describe('bit tag command', function () {
       let output;
       try {
         helper.command.tagWithoutMessage('non/existing');
-      } catch (err) {
+      } catch (err: any) {
         output = err.message;
       }
       expect(output).to.have.string(
@@ -287,7 +287,7 @@ describe('bit tag command', function () {
       before(() => {
         try {
           helper.command.tagWithoutMessage('bar/foo');
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -306,7 +306,7 @@ describe('bit tag command', function () {
       before(() => {
         try {
           helper.command.tagWithoutMessage('bar/foo --verbose');
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString() + err.stdout.toString();
         }
       });
@@ -582,7 +582,7 @@ describe('bit tag command', function () {
       helper.fixtures.addComponentUtilsIsString();
       try {
         helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -622,7 +622,7 @@ describe('bit tag command', function () {
         const tagAll = () => helper.command.tagAllComponents();
         try {
           tagAll();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -677,7 +677,7 @@ describe('bit tag command', function () {
         const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
         try {
           output = tagOne();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -708,7 +708,7 @@ describe('bit tag command', function () {
         const tagAll = () => helper.command.tagAllComponents('--ignore-unresolved-dependencies');
         try {
           output = tagAll();
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });
@@ -809,7 +809,7 @@ describe('bit tag command', function () {
       helper.fs.deletePath('bar/foo.js');
       try {
         helper.command.runCmd('bit tag -a');
-      } catch (err) {
+      } catch (err: any) {
         errMsg = err.message;
       }
       const output = helper.command.listLocalScope();
@@ -869,10 +869,10 @@ describe('bit tag command', function () {
       describe('when one of the components has the same version', () => {
         let output;
         before(() => {
-          helper.command.tagComponent('bar/foo 0.0.8', 'msg', '--force');
+          helper.command.tagComponent('bar/foo@0.0.8', 'msg', '--force');
           try {
             helper.command.tagAllComponents('--scope 0.0.8');
-          } catch (err) {
+          } catch (err: any) {
             output = err.toString();
           }
         });
@@ -883,7 +883,7 @@ describe('bit tag command', function () {
       describe('when one of the components has a greater version', () => {
         let output;
         before(() => {
-          helper.command.tagComponent('bar/foo 0.1.5', 'msg', '--force');
+          helper.command.tagComponent('bar/foo@0.1.5', 'msg', '--force');
           output = helper.command.tagScope('0.1.4', 'msg');
         });
         it('should display a warning', () => {

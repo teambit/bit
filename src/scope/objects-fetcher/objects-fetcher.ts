@@ -6,7 +6,7 @@ import { Scope } from '..';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
-import { Remotes } from '../../remotes';
+import { Remote, Remotes } from '../../remotes';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '../network/exceptions';
@@ -17,6 +17,7 @@ import { WriteComponentsQueue } from './write-components-queue';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { concurrentFetchLimit } from '../../utils/concurrency';
+import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -81,10 +82,19 @@ ${failedScopesErr.join('\n')}`);
     // when importing directly from a remote scope, throw for ScopeNotFound. otherwise, when
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
     const shouldThrowOnUnavailableScope = !this.fetchOptions.withoutDependencies;
-    const remote = await this.remotes.resolve(scopeName, this.scope);
+    let remote: Remote;
+    try {
+      remote = await this.remotes.resolve(scopeName, this.scope);
+    } catch (err: any) {
+      if (err instanceof ScopeNotFoundOrDenied) {
+        throw new Error(`unable to import the following component(s): ${ids.join(', ')}.
+the remote scope "${scopeName}" was not found`);
+      }
+      throw err;
+    }
     try {
       return await remote.fetch(ids, this.fetchOptions as FETCH_OPTIONS, this.context);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
         logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
       } else if (err instanceof UnexpectedNetworkError) {
@@ -113,7 +123,7 @@ ${failedScopesErr.join('\n')}`);
     });
     try {
       await pipelinePromise(objectsStream, writable);
-    } catch (err) {
+    } catch (err: any) {
       if (readableError) {
         if (!readableError.message) {
           logger.error(`error coming from a remote has no message, please fix!`, readableError);

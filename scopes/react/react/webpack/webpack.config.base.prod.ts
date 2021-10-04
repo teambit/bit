@@ -4,9 +4,6 @@ import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
-// Source maps are resource heavy and can cause out of memory issue for large source files.
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
-
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
@@ -53,7 +50,6 @@ export default function (): Configuration {
           },
         }),
         new CssMinimizerPlugin({
-          sourceMap: shouldUseSourceMap,
           minimizerOptions: {
             preset: [
               'default',
@@ -96,8 +92,8 @@ export default function (): Configuration {
           const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
           return {
-            files: manifestFiles,
-            entrypoints: entrypointFiles,
+            files: JSON.stringify(manifestFiles),
+            entrypoints: JSON.stringify(entrypointFiles),
           };
         },
       }),

@@ -485,10 +485,10 @@ export default class Scope {
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
     const modelComponent = await this.sources.get(id);
     if (modelComponent) {
-      // @todo: what about the remote head
       // @todo: what about other places the model-component is loaded
       const currentLane = await this.lanes.getCurrentLaneObject();
-      modelComponent.setLaneHeadLocal(currentLane);
+      const laneId = this.lanes.getCurrentLaneId();
+      await modelComponent.populateLocalAndRemoteHeads(this.objects, laneId, currentLane);
     }
     return modelComponent;
   }
@@ -866,11 +866,7 @@ export default class Scope {
     return fs.remove(pendingDir); // no error is thrown if not exists
   }
 
-  static ensure(
-    path: PathOsBasedAbsolute,
-    name: string | null | undefined,
-    groupName: string | null | undefined
-  ): Promise<Scope> {
+  static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = Repository.create({ scopePath: path, scopeJson });

@@ -332,7 +332,7 @@ console.log(barFoo.default());`;
       helper.fs.createFile('components/utils/is-string', 'is-string.js', isStringWithDepsFixture); // modify utils/is-string
       try {
         output = helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -366,7 +366,7 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       try {
         output = helper.command.tagAllComponents();
-      } catch (err) {
+      } catch (err: any) {
         output = err.toString();
       }
     });
@@ -436,8 +436,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.command.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
+      helper.command.importManyComponents(['utils/is-string@0.0.1', 'utils/is-type@0.0.2']);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.general.getRequireBitPath('utils', 'is-string');
@@ -700,7 +699,7 @@ console.log(barFoo.default());`;
       before(() => {
         try {
           helper.command.importComponent('bar/foo');
-        } catch (err) {
+        } catch (err: any) {
           output = err.toString();
         }
       });

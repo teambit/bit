@@ -122,7 +122,7 @@ describe('bit untag command', function () {
         before(() => {
           try {
             output = helper.command.runCmd('bit untag bar/foo 0.0.1');
-          } catch (err) {
+          } catch (err: any) {
             output = err.message;
           }
         });
@@ -150,7 +150,7 @@ describe('bit untag command', function () {
       before(() => {
         try {
           helper.command.runCmd('bit untag non-exist-scope/non-exist-comp');
-        } catch (err) {
+        } catch (err: any) {
           output = err.message;
         }
       });
@@ -226,7 +226,7 @@ describe('bit untag command', function () {
         before(() => {
           try {
             helper.command.runCmd('bit untag utils/is-type');
-          } catch (err) {
+          } catch (err: any) {
             untagOutput = err.message;
           }
         });
@@ -255,7 +255,7 @@ describe('bit untag command', function () {
           helper.command.tagScope('1.0.5');
           try {
             output = helper.command.runCmd('bit untag utils/is-type');
-          } catch (err) {
+          } catch (err: any) {
             output = err.message;
           }
         });
@@ -302,7 +302,7 @@ describe('bit untag command', function () {
           helper.command.tagComponent('utils/is-string', undefined, '-f');
           try {
             helper.command.runCmd('bit untag 0.0.1 --all');
-          } catch (err) {
+          } catch (err: any) {
             untagOutput = err.message;
           }
         });

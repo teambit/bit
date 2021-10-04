@@ -173,6 +173,17 @@ export default class DependencyGraph {
     });
   }
 
+  static buildFromNodesAndEdges(
+    nodes: Array<{ idStr: string; bitId: BitId }>,
+    edges: Array<{ src: string; target: string; depType: string }>
+  ): Graph {
+    const graph = new Graph();
+    nodes.forEach((node) => graph.setNode(node.idStr, node.bitId));
+    edges.forEach((edge) => graph.setEdge(edge.src, edge.target, edge.depType));
+
+    return graph;
+  }
+
   /**
    * returns a new Graph that has only nodes that are related to the given id.
    * (meaning, they're either dependents or dependencies)

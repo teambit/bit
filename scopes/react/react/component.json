@@ -17,16 +17,18 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
+          "@svgr/webpack": "5.5.0",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
-          "@typescript-eslint/parser": "4.15.1",
-          "@typescript-eslint/eslint-plugin": "4.15.1",
+          "@typescript-eslint/parser": "4.30.0",
+          "@typescript-eslint/eslint-plugin": "4.30.0",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
           "eslint-plugin-react-hooks": "4.2.0",
           "eslint-plugin-react": "7.22.0",
           "eslint-plugin-jsx-a11y": "6.4.1",
           "eslint-plugin-mdx": "1.13.0",
+          "new-url-loader": "0.1.1",
           "react-app-polyfill": "1.0.6",
           "resolve-url-loader": "3.1.2",
           "@mdx-js/react": "1.6.22",
@@ -37,16 +39,19 @@
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
           "style-loader": "^2.0.0",
-          "css-loader": "5.2.0",
+          "css-loader": "6.2.0",
           "postcss": "8.2.9",
-          "postcss-loader": "5.2.0",
+          "postcss-loader": "6.1.1",
+          "postcss-normalize": "10.0.0",
           "postcss-preset-env": "6.7.0",
           "postcss-flexbugs-fixes": "5.0.2",
-          "sass-loader": "11.0.1",
+          "sanitize.css": "12.0.1",
+          "sass-loader": "12.1.0",
           "less": "^4.1.1",
-          "less-loader": "8.0.0",
+          "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "^7.12.18"
+          "@babel/runtime": "^7.12.18",
+          "react-refresh": "0.10.0"
         },
         "devDependencies": {
           "react": "-",
@@ -54,13 +59,15 @@
           "@teambit/legacy": "-",
           "@types/mocha": "5.2.7",
           "@types/node": "12.20.4",
+          "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
           "@types/react-dom": "^17.0.5"
+          
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.115"
+          "@teambit/legacy": "1.0.156"
         }
       }
     }

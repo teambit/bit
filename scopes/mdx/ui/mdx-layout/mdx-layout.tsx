@@ -14,10 +14,10 @@ const mdxComponents: MDXProviderComponents = {
  * MDX Provider which includes documenter as design system for markdown rendering.
  */
 export function MDXLayout({ components, ...rest }: MDXLayoutProps) {
-  const _components: MDXProviderComponents = useMemo(() => ({ ...mdxComponents, ...components }), [
-    mdxComponents,
-    components,
-  ]);
+  const _components: MDXProviderComponents = useMemo(
+    () => ({ ...mdxComponents, ...components }),
+    [mdxComponents, components]
+  );
 
   return <MDXLayoutBase components={_components} {...rest} />;
 }

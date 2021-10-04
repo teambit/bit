@@ -55,7 +55,7 @@ export function generatorSchema(generator: GeneratorMain): Schema {
       },
       Generator: {
         templates: async () => {
-          return generator.listComponentTemplates();
+          return generator.listTemplates();
         },
       },
       Query: {

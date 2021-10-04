@@ -4,9 +4,12 @@ import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { ApplicationMain } from './application.main.runtime';
 
-export class AppListCmd implements Command {
+/**
+ * @deprecated use AppListCmd class
+ */
+export class AppListCmdDeprecated implements Command {
   name = 'app-list';
-  description = 'list all registered applications';
+  description = 'DEPRECATED. use "bit app list"';
   alias = '';
   group = 'apps';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
@@ -16,13 +19,16 @@ export class AppListCmd implements Command {
   async report(args: [string], { json }: { json: boolean }) {
     const apps = this.applicationAspect.listApps();
     if (json) return JSON.stringify(apps, null, 2);
-    if (!apps.length) return chalk.yellow('no apps found');
+    const deprecationStr = `this command is deprecated. please use "bit app list" instead\n`;
+    // eslint-disable-next-line no-console
+    console.log(chalk.red());
+    if (!apps.length) return chalk.yellow(`${deprecationStr}no apps found`);
 
     const rows = apps.map((app) => {
       return [app.name];
     });
 
     const table = new CLITable([], rows);
-    return table.render();
+    return deprecationStr + table.render();
   }
 }

@@ -1,11 +1,20 @@
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
-export default function (envId: string): WebpackConfigWithDevServer {
+export default function envConfig(envId: string): WebpackConfigWithDevServer {
   return {
     devServer: {
-      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
+      webSocketServer: {
+        options: {
+          path: `/_hmr/${envId}`,
+          // port is automatically matchs WDS
+        },
+      },
       client: {
-        path: `_hmr/${envId}`,
+        // public, sockHost, sockPath, and sockPort options were removed in favor client.webSocketURL option:
+        webSocketURL: {
+          pathname: `_hmr/${envId}`,
+          // port is automatically matchs the website.
+        },
       },
     },
   };

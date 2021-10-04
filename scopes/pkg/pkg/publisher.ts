@@ -73,7 +73,7 @@ export class Publisher {
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
       const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
       metadata = this.options.dryRun ? {} : { publishedPackage };
-    } catch (err) {
+    } catch (err: any) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);

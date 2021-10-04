@@ -31,7 +31,7 @@ export class CliGenerateCmd implements Command {
 
 export class CliCmd implements Command {
   name = 'cli';
-  description = 'EXPERIMENTAL. enters bit cli program and generate commands list';
+  description = 'EXPERIMENTAL. enters bit cli program and generates commands list';
   alias = '';
   commands: Command[] = [];
   loader = false;
@@ -59,7 +59,7 @@ export class CliCmd implements Command {
         const cmd = line.trim().split(' ');
         try {
           await cliParser.parse(cmd);
-        } catch (err) {
+        } catch (err: any) {
           await handleErrorAndExit(err, cmd[0]);
         }
         rl.prompt();

@@ -52,7 +52,7 @@ export default function npmLogin(token: string, pathToNpmrc: string, url: string
     : mergeOrCreateConfig(token, url);
   try {
     fs.writeFileSync(npmrcPath, iniBuilder.serialize(npmrcConfig));
-  } catch (err) {
+  } catch (err: any) {
     throw new WriteToNpmrcError(npmrcPath);
   }
   return npmrcPath;

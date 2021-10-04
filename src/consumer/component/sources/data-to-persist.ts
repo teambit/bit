@@ -103,7 +103,7 @@ export default class DataToPersist {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
         logger.debug(`skip file ${absPath}, it already exists`);
         return null;
-      } catch (err) {
+      } catch (err: any) {
         if (err.code !== 'ENOENT') {
           throw err;
         }
@@ -117,7 +117,7 @@ export default class DataToPersist {
   async atomicSymlink(capsule: Capsule, symlink: Symlink) {
     try {
       await capsule.symlink(symlink.src, symlink.dest);
-    } catch (e) {
+    } catch (e: any) {
       // On windows when the link already created by npm we got EPERM error
       // TODO: We should handle this better and avoid creating the symlink if it's already exists
       if (e.code !== 'EEXIST' && e.code !== 'EPERM') {

@@ -7,7 +7,14 @@ import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import { BIT_MAP, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
+import {
+  BIT_MAP,
+  COMPONENT_ORIGINS,
+  DEFAULT_LANE,
+  OLD_BIT_MAP,
+  VERSION_DELIMITER,
+  BITMAP_PREFIX_MESSAGE,
+} from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
@@ -33,15 +40,15 @@ export const CURRENT_BITMAP_SCHEMA = '14.9.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 /**
- * When working on lanes, a component version can be different than the master.
- * For example, when tagging 1.0.0 on master, then switching to a new lane and snapping.
- * The version saved in .bitmap file is the one of master (in this case 1.0.0).
+ * When working on lanes, a component version can be different than the main.
+ * For example, when tagging 1.0.0 on main, then switching to a new lane and snapping.
+ * The version saved in .bitmap file is the one of main (in this case 1.0.0).
  * The hash of the snap is saved on the 'workspace-lane' file.
  * These files are saved in .bit/workspace/lanes/<lane-name> directory, and they're not get
  * synched by Git.
  * Once a lane is exported to a remote scope, then .bitmap gets a new property
  * "lanes" array that includes the remote-lane-id and the version hash.
- * Still, the version on the ID doesn't get changed and it reflects the master version.
+ * Still, the version on the ID doesn't get changed and it reflects the main version.
  * Since all operations on .bitmap are not aware of this new workspace-lane file and the "lanes" prop,
  * we do a manipulation when loading and when saving the .bitmap file.
  * When loading .bitmap file, it also loads the workspace-lane of the active lane if exists.
@@ -64,7 +71,7 @@ export default class BitMap {
     private mapPath: string,
     public schema: string,
     private isLegacy: boolean,
-    public workspaceLane: WorkspaceLane | null,
+    public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
     private remoteLaneName?: RemoteLaneId
   ) {
     this.components = [];
@@ -166,7 +173,7 @@ export default class BitMap {
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), undefined, true);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(`invalid bitmap at ${currentLocation}`, e);
       throw new InvalidBitMap(currentLocation, e.message);
     }
@@ -197,7 +204,7 @@ export default class BitMap {
         try {
           componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
           componentMap.recentlyTracked = true;
-        } catch (err) {
+        } catch (err: any) {
           componentMap.files = [];
           componentMap.noFilesError = err;
         }
@@ -246,7 +253,7 @@ export default class BitMap {
       const mapFileContent = BitMap.loadRawSync(dirPath);
       if (!mapFileContent) return;
       json.parse(mapFileContent.toString('utf8'), undefined, true);
-    } catch (err) {
+    } catch (err: any) {
       deleteBitMapFile();
     }
   }
@@ -398,13 +405,7 @@ export default class BitMap {
    */
   getBitId(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
     if (!(bitId instanceof BitId)) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
@@ -423,6 +424,7 @@ export default class BitMap {
     if (this.updatedIds[bitId.toString()]) {
       return this.updatedIds[bitId.toString()].id;
     }
+
     throw new MissingBitMapComponent(bitId.toString());
   }
 
@@ -444,7 +446,7 @@ export default class BitMap {
     try {
       const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return existingBitId;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
@@ -459,7 +461,10 @@ export default class BitMap {
     bitId: BitId,
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap {
-    const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+    const existingBitId: BitId = this.getBitId(bitId, {
+      ignoreVersion,
+      ignoreScopeAndVersion,
+    });
     return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
   }
 
@@ -470,18 +475,12 @@ export default class BitMap {
    */
   getComponentIfExist(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false,
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return componentMap;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
@@ -651,10 +650,12 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
     const getOrCreateComponentMap = (): ComponentMap => {
-      const componentMap = this.getComponentIfExist(componentId);
+      const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
+      const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
         componentMap.files = files;
+        componentMap.id = componentId;
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -704,6 +705,7 @@ export default class BitMap {
 
   reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
+    if (!workspaceLane) this.remoteLaneName = undefined;
     this._invalidateCache();
     this.components.forEach((componentMap) =>
       componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null)
@@ -724,6 +726,7 @@ export default class BitMap {
   };
 
   _removeFromComponentsArray(componentId: BitId) {
+    logger.debug(`bit-map: _removeFromComponentsArray ${componentId.toString()}`);
     this.components = this.components.filter((componentMap) => !componentMap.id.isEqual(componentId));
     this.markAsChanged();
   }
@@ -886,7 +889,7 @@ export default class BitMap {
         // if not exist, we still need these properties so we know later to parse them correctly.
         componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
         componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
-        // change back the id to the master id, so the local lanes data won't be saved in .bitmap
+        // change back the id to the main id, so the local lanes data won't be saved in .bitmap
         if (componentMapCloned.defaultVersion) {
           componentMapCloned.version = componentMapCloned.defaultVersion;
         }
@@ -919,7 +922,7 @@ export default class BitMap {
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
-    await outputFile({ filePath: this.mapPath, content: this.contentToString() });
+    await outputFile({ filePath: this.mapPath, content: this.contentToString(), prefixMessage: BITMAP_PREFIX_MESSAGE });
     this.hasChanged = false;
   }
 
