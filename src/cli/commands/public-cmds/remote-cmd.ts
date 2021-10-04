@@ -12,7 +12,10 @@ import RemoteUndefined from '../exceptions/remote-undefined';
 
 class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
-  description = 'add a tracked bit remote';
+  shortDescription = 'add a tracked bit remote';
+  description = `add a bare-scope as a remote. supported protocols are [file, http, ssh].
+for example: "http://localhost:3000", "file:///tmp/local-scope", "ssh://user@127.0.0.1:/tmp/local-scope".
+Legacy support [file, ssh]. Harmony supports [file, http].`;
   alias = '';
   opts = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
