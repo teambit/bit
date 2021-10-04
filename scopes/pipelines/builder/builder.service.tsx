@@ -22,10 +22,15 @@ export type BuildServiceResults = {
 
 export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[]; skipTests?: boolean };
 
-export type BuilderDescriptor = { tasks: string[] };
+export type BuilderDescriptor = Array<{ pipeName: string; tasks: string[] }>;
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
+const pipeNames = {
+  getBuildPipe: 'build',
+  getTagPipe: 'tag',
+  getSnapPipe: 'snap',
+};
 export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
   name = 'builder';
 
@@ -48,7 +53,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     /**
      * a method with such name should be implemented on the env in order to run the pipe tasks.
      */
-    private pipeNameOnEnv: 'getBuildPipe' | 'getTagPipe' | 'getSnapPipe',
+    private pipeNameOnEnv: keyof typeof pipeNames,
 
     /**
      * pipe name to display on the console during the execution
@@ -102,15 +107,24 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   }
 
   render(env: EnvDefinition) {
-    const tasksQueue = this.getDescriptor(env);
+    const pipes = this.getDescriptor(env);
 
     return (
-      <Text key={BuilderAspect.id}>
-        <Text color="cyan">
-          total {tasksQueue.tasks.length} tasks are configured to be executed in the following order
+      <Text key={BuilderAspect.id}>{pipes.map(({ pipeName, tasks }) => this.renderOnePipe(pipeName, tasks))}</Text>
+    );
+  }
+
+  private renderOnePipe(pipeName, tasks) {
+    if (!tasks || !tasks.length) return null;
+    return (
+      <Text key={pipeName}>
+        <Text underline color="green">
+          {pipeName} pipe
         </Text>
         <Newline />
-        {tasksQueue.tasks.map((task, index) => (
+        <Text color="cyan">total {tasks.length} tasks are configured to be executed in the following order</Text>
+        <Newline />
+        {tasks.map((task, index) => (
           <Text key={index}>
             <Text>
               {index + 1}. {task}
@@ -124,7 +138,12 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   }
 
   getDescriptor(env: EnvDefinition) {
-    const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], this.pipeNameOnEnv);
-    return { tasks: tasksQueue.map(({ task }) => BuildTaskHelper.serializeId(task)) };
+    const tasks = Object.keys(pipeNames).map((pipeName) => {
+      const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], pipeName).map(({ task }) =>
+        BuildTaskHelper.serializeId(task)
+      );
+      return { pipeName: pipeNames[pipeName], tasks: tasksQueue };
+    });
+    return tasks;
   }
 }
