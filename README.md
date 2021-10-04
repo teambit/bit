@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-logo%20(2).png"/>
+  <img src="https://storage.googleapis.com/bit-docs/readme-logo%20(6).png"/>
 </p>
 
 <p align="center">
@@ -9,12 +9,12 @@
 </p>
 
 <h3 align="center">
-  Build components first.
+  Build anything in components
 </h3>
 
 <p align="center">
-Open infrastructure for component-driven applications to speed and scale development.
-</p>
+  
+Componentize modern app development, build modular systems and applications, and move components from app to app.
 
 <p align="center">
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
@@ -31,20 +31,29 @@ Open infrastructure for component-driven applications to speed and scale develop
   </a>
 </p>
 <p align="left">
-Bit is an OSS Infrastructure for building and composing components. It is an extensible toolchain for component-driven applications / systems which are faster to develop, simpler to understand, test, and maintain, more resilient and performant, and easier to collaborate on.
 
-Instead of building an application that has many components, Bit lets you develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.
+Bit is an open tool for web developers to build and collaborate on component-driven applications. It enables modern apps to be quickly assembled from components and eliminates the friction around developing together or working on more than one app. You can think of Bit as a way to develop entire web apps in a way similar to how microservices build your backend.
 
-</p>
+Bit consists of a **workspace** (with UI) where component are developed, managed, and integrated. In the workspace you build can fully distributed projects with a simple monolithic-like dev experience. A single workspace can easily host and manage many components even using different stacks and frameworks. 
+  
+Each component has an isolated **dev environment** so it is independently developed, tested, built, and run anywhere you need it. Each component is versioned and can be independently deployed. **Dependencie** between components are automatically defined and managed by Bit, using smart **graph versioning**, making it simple to incrementally update and build changes to many components.  
+  
+**Scopes** help you store and organize components. Remote scopes (on [bit cloud](https://bit.dev) or your own server) make it easy to move components from app to app or between teams, share and discover components, and collaborate to stay in sync. 
+  
+### Why do developers like Bit?
 
-### Key Features
+Modern applications are already built with components. But, the tools used to build them were build to develop, version, and deploy entire projects and not the components within them. As a result, developers are forced to build component-driven applications in a monolithic way, which is painful and highly inefficient. They seek solutions such as Component Libraries and Micro Frontends to try and build in a more modular and distributed way, split development, or share components.
+  
+With Bit you don't have these problems. Bit gives developers a great experience for building components and composing them into infinite features and applications, making modern web development not only faster but also more distributed, collaborative, scalable, and consistent.
+  
+  
+### Why do organizations need Bit?
 
-<p align="left">
+When you build many applications with many teams, and every team works inside a monolith oblivious of other people's components, development becomes slow and inconsistent. Bit helps organizations take control of their components, standardize their development (with features like custom component generators and dev envs), and collaborate to achieve speed and consistency. It makes teams more autonomous to build and ship components and at the same time collaborate through a central hub for components.
+  
+[Here are 4 popular use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) many organizations choose to start with.
 
-- **Workspace - build and compose components**. The workspace is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the _Workspace UI_ to visually develop and manage your components with ease.
-
-- **Scope - manage and scale with components**. Scopes are where you push, version, and organize your components. It’s a component store. _Remote Scopes_ let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
-
+  
 ### How to Start?
 
 <p align="center">

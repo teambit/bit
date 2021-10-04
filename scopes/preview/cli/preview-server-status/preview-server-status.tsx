@@ -13,6 +13,8 @@ export const IGNORE_WARNINGS = [
   // Webpack 5+ has no facility to disable this warning.
   // System.import is used in @angular/core for deprecated string-form lazy routes
   /System.import\(\) is deprecated and will be removed soon/i,
+  // We need to include all the files in the compilation because we don't know what people will use in their compositions
+  /is part of the TypeScript compilation but it's unused/i,
   // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83
   /Failed to parse source map from/,
 ];

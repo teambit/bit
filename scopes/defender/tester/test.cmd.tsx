@@ -1,4 +1,5 @@
-import { Command, CommandOptions, Flags } from '@teambit/cli';
+import { Command, CommandOptions } from '@teambit/cli';
+import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -9,7 +10,14 @@ import { NoMatchingComponents } from './exceptions';
 
 import type { TesterMain } from './tester.main.runtime';
 
-const chalk = require('chalk');
+type TestFlags = {
+  watch: boolean;
+  debug: boolean;
+  env?: string;
+  scope?: string;
+  junit?: string;
+  coverage?: boolean;
+};
 
 export class TestCmd implements Command {
   name = 'test [pattern]';
@@ -20,6 +28,8 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
+    ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
+    ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only the given env'],
     ['s', 'scope <scope>', 'name of the scope to test'],
     // TODO: we need to reduce this redundant casting every time.
@@ -27,7 +37,10 @@ export class TestCmd implements Command {
 
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
-  async render([userPattern]: [string], { watch, debug, env, scope }: Flags) {
+  async render(
+    [userPattern]: [string],
+    { watch = false, debug = false, env, scope, junit, coverage = false }: TestFlags
+  ) {
     this.logger.off();
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
@@ -46,15 +59,18 @@ export class TestCmd implements Command {
     let code = 0;
     if (watch && !debug) {
       await this.tester.watch(components, {
-        watch: Boolean(watch),
-        debug: Boolean(debug),
-        env: env as string | undefined,
+        watch,
+        debug,
+        env,
+        coverage,
       });
     } else {
       const tests = await this.tester.test(components, {
-        watch: Boolean(watch),
-        debug: Boolean(debug),
-        env: env as string | undefined,
+        watch,
+        debug,
+        env,
+        junit,
+        coverage,
       });
       tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
     }

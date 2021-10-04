@@ -55,7 +55,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
   const rows = listScopeResults.map(tabulateComponent);
   const head = ['component ID', 'latest in scope', 'used in workspace'];
   if (showRemoteVersion) {
-    head.push('latest in remove scope');
+    head.push('latest in remote scope');
   }
 
   const table = new Table({ head, style: { head: ['cyan'] } });

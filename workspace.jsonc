@@ -157,10 +157,10 @@
         "@types/mdx-js__react": "1.5.3",
         "@types/memoizee": "0.4.5",
         "@types/mime": "2.0.3",
+        "@types/mini-css-extract-plugin": "2.2.0",
         "@types/mousetrap": "1.6.5",
         "@types/node": "14.14.13",
         "@types/pluralize": "0.0.29",
-        "@types/postcss-normalize": "9.0.1",
         "@types/puppeteer": "3.0.5",
         "@types/react": "17.0.8",
         "@types/react-dom": "17.0.5",
@@ -239,6 +239,7 @@
         "join-path": "1.1.1",
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
+        "junit-report-builder": "3.0.0",
         "loader-utils": "2.0.0",
         "lodash": "4.17.20",
         "lodash.compact": "3.0.1",
@@ -250,7 +251,6 @@
         "memory-fs": "0.5.0",
         "mime": "2.5.2",
         "mini-css-extract-plugin": "2.2.2",
-        "@types/mini-css-extract-plugin": "2.2.0",
         "minimatch": "3.0.4",
         "mousetrap": "1.6.5",
         "nanoid": "3.1.20",
@@ -263,7 +263,6 @@
         "postcss": "8.2.9",
         "postcss-flexbugs-fixes": "5.0.2",
         "postcss-loader": "6.1.1",
-        "postcss-normalize": "10.0.0",
         "postcss-preset-env": "6.7.0",
         "postcss-safe-parser": "5.0.2",
         "pretty-time": "1.1.0",
@@ -320,7 +319,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.152",
+        "@teambit/legacy": "1.0.156",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -436,7 +435,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.152"
+            "@teambit/legacy": "1.0.156"
           }
         }
       },
@@ -606,7 +605,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.152",
+            "@teambit/legacy": "1.0.156",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
