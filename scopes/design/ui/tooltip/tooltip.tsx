@@ -7,8 +7,8 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/dist/svg-arrow.css';
 
 import { getMountPoint } from './mount-point';
-import './tippy.module.scss';
 import { useCtxTooltipInstance } from './shared-instance';
+import './tippy.module.scss';
 
 const THEME = 'teambit';
 const popperOptions = {
