@@ -2,6 +2,8 @@ import type { DevServer } from '@teambit/bundler';
 import type { Server } from 'http';
 import type { webpack as webpackCompiler, Configuration } from 'webpack';
 import type * as WDS from 'webpack-dev-server';
+import { inspect } from 'util';
+import { WebpackAspect } from './webpack.aspect';
 
 export interface WebpackConfigWithDevServer extends Configuration {
   devServer: WDS.Configuration;
@@ -15,6 +17,14 @@ export class WebpackDevServer implements DevServer {
 
   private getCompiler(): any {
     return this.webpack(this.config);
+  }
+
+  id = WebpackAspect.id;
+
+  displayName = 'Webpack dev server';
+
+  displayConfig(): string {
+    return inspect(this.config, { depth: 10 });
   }
 
   async listen(port: number): Promise<Server> {
