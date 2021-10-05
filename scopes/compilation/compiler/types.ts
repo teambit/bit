@@ -6,10 +6,19 @@ export type TranspileFileParams = {
   filePath: string; // relative path of the file inside the component directory
 };
 
+export enum CompileOrigin {
+  CmdReport,
+  CmdJson,
+  PreStart,
+  ComponentChanged,
+  AspectLoadFail,
+}
+
 export type TranspileComponentParams = {
   component: ConsumerComponent;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
+  origin: CompileOrigin; // origin of the compilation's request
 };
 
 export type TranspileFileOutput =
