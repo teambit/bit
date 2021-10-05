@@ -17,6 +17,12 @@ export class ESLintLinter implements Linter {
     private ESLint?: any
   ) {}
 
+  displayName = 'ESlint';
+
+  displayConfig() {
+    return JSON.stringify(this.options, null, 2);
+  }
+
   async lint(context: LinterContext): Promise<LintResults> {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const resultsP = mapSeries(context.components, async (component) => {
