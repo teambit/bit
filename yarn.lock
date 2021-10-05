@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.156":
-  version: 1.0.156
-  resolution: "@teambit/legacy@npm:1.0.156"
+"@teambit/legacy@npm:1.0.157":
+  version: 1.0.157
+  resolution: "@teambit/legacy@npm:1.0.157"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: a487c2624326c10b8566da52905a7ea936ac6f3794fa486fe62bc835d493c745e14f04560b0422d99e5da369dcf7b496cdba70656d18896dd94c441e77c5db17
+  checksum: 2bbc4dfd03bc01d380020d68ecee5a8700edd1e7a4c8193a8ee228d0381cfa2f80d8f0332c130a51ae5cdd568d47f0c1f0127065aa3e0bd3b6cc48dd76c21b62
   languageName: node
   linkType: hard
 
@@ -6962,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.156
+    "@teambit/legacy": 1.0.157
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7305,7 +7305,7 @@ __metadata:
     socket.io-client: 2.4.0
     socks-proxy-agent: 5.0.0
     source-map-loader: 3.0.0
-    ssh2: 0.8.9
+    ssh2: 1.4.0
     stream-browserify: 3.0.0
     stream-http: 3.2.0
     string-format: 0.5.0
@@ -7368,7 +7368,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.156
+    "@teambit/legacy": 1.0.157
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -11605,7 +11605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1@npm:~0.2.0, asn1@npm:~0.2.3":
+"asn1@npm:^0.2.4, asn1@npm:~0.2.0, asn1@npm:~0.2.3":
   version: 0.2.4
   resolution: "asn1@npm:0.2.4"
   dependencies:
@@ -14697,6 +14697,16 @@ __metadata:
     path-type: ^4.0.0
     yaml: ^1.10.0
   checksum: 6801feaa0249e9b9fdde5b3d70dc33b4f9c69095bec94d67e3fe08b66eac24dc7e2099f053597cfbc94b743de269aa5d2cfa7da3fde765433423b06bd122941a
+  languageName: node
+  linkType: hard
+
+"cpu-features@npm:0.0.2":
+  version: 0.0.2
+  resolution: "cpu-features@npm:0.0.2"
+  dependencies:
+    nan: ^2.14.1
+    node-gyp: latest
+  checksum: 15177f9a2d465e4d84390f902c977b34f237dadb29fd8553853b13d906ffe5f15be9f091c72db4f34c71412d5ff4e0e4edf04caebc875b02d1d7ecfce2963299
   languageName: node
   linkType: hard
 
@@ -24913,6 +24923,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nan@npm:^2.14.1, nan@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "nan@npm:2.15.0"
+  dependencies:
+    node-gyp: latest
+  checksum: 33e1bb4dfca447fe37d4bb5889be55de154828632c8d38646db67293a21afd61ed9909cdf1b886214a64707d935926c4e60e2b09de9edfc2ad58de31d6ce8f39
+  languageName: node
+  linkType: hard
+
 "nanoclone@npm:^0.2.1":
   version: 0.2.1
   resolution: "nanoclone@npm:0.2.1"
@@ -31333,6 +31352,23 @@ __metadata:
   dependencies:
     ssh2-streams: ~0.4.10
   checksum: 3127497cb5570922b3c37daf93e1e49e24776ae3046c7e01c4af1323408653267ea7d9e506283adbdc8445cd20429318501e08db75f2101bbb0bdc49455da720
+  languageName: node
+  linkType: hard
+
+"ssh2@npm:1.4.0":
+  version: 1.4.0
+  resolution: "ssh2@npm:1.4.0"
+  dependencies:
+    asn1: ^0.2.4
+    bcrypt-pbkdf: ^1.0.2
+    cpu-features: 0.0.2
+    nan: ^2.15.0
+  dependenciesMeta:
+    cpu-features:
+      optional: true
+    nan:
+      optional: true
+  checksum: 354ed1a4ed5df39e4d898b9ad02f0207851c2256adfddd34ca53971a67b793e72b4581d8812b2155c9d70bceb69b4c582445e743a013867516595c31e922d674
   languageName: node
   linkType: hard
 
