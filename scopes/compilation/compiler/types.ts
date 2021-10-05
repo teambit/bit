@@ -7,19 +7,20 @@ export type TranspileFileParams = {
   filePath: string; // relative path of the file inside the component directory
 };
 
-export enum CompileOrigin {
+export enum CompilationInitiator {
   CmdReport,
   CmdJson,
   PreStart,
   ComponentChanged,
   AspectLoadFail,
+  ComponentAdded,
 }
 
 export type TranspileComponentParams = {
   component: ConsumerComponent;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
-  origin: CompileOrigin; // origin of the compilation's request
+  origin: CompilationInitiator; // origin of the compilation's request
 };
 
 export type TranspileFileOutput =
@@ -96,10 +97,10 @@ export interface Compiler extends CompilerOptions {
   getDistPathBySrcPath(srcPath: string): string;
 
   /**
-   * given a component, returns the path to source folder to use for the preview, uses the one
+   * given a component, returns the path to the source folder to use for the preview, uses the one
    * in node_modules by default
    */
-  getPreviewComponentPath?(component: Component): string;
+  getPreviewComponentRootPath?(component: Component): string;
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.

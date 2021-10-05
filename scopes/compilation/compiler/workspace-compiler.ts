@@ -21,7 +21,7 @@ import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
-import { Compiler, CompileOrigin } from './types';
+import { Compiler, CompilationInitiator } from './types';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -34,7 +34,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  origin: CompileOrigin;
+  origin: CompilationInitiator; // describes where the compilation is coming from
 };
 
 export type CompileError = { path: string; error: Error };
@@ -118,7 +118,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile, origin: CompileOrigin): Promise<void> {
+  private async compileOneFileWithNewCompiler(file: SourceFile, origin: CompilationInitiator): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, origin };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -148,7 +148,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFilesWithNewCompiler(component: ConsumerComponent, origin: CompileOrigin): Promise<void> {
+  private async compileAllFilesWithNewCompiler(
+    component: ConsumerComponent,
+    origin: CompilationInitiator
+  ): Promise<void> {
     const base = this.distDir;
     const filesToCompile: SourceFile[] = [];
     component.files.forEach((file: SourceFile) => {
@@ -208,13 +211,13 @@ export class WorkspaceCompiler {
       changed: true,
       verbose: false,
       deleteDistDir: false,
-      origin: CompileOrigin.PreStart,
+      origin: CompilationInitiator.PreStart,
     });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
     if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
-      await this.compileComponents([id.toString()], { origin: CompileOrigin.AspectLoadFail }, true);
+      await this.compileComponents([id.toString()], { origin: CompilationInitiator.AspectLoadFail }, true);
       return true;
     }
     return false;
@@ -223,7 +226,7 @@ export class WorkspaceCompiler {
   async onComponentChange(component: Component): Promise<SerializableResults> {
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { origin: CompileOrigin.ComponentChanged },
+      { origin: CompilationInitiator.ComponentChanged },
       true
     );
     return {

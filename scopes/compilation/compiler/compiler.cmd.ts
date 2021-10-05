@@ -6,7 +6,7 @@ import prettyTime from 'pretty-time';
 import type ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { formatCompileResults } from './output-formatter';
 import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
-import { CompileOrigin } from './types';
+import { CompilationInitiator } from './types';
 
 // IDs & events
 import { CompilerAspect } from './compiler.aspect';
@@ -38,8 +38,11 @@ export class CompileCmd implements Command {
     this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
     let outputString = '';
-    compilerOptions.deleteDistDir = true;
-    await this.compile.compileComponents(components, { ...compilerOptions, origin: CompileOrigin.CmdReport });
+    await this.compile.compileComponents(components, {
+      ...compilerOptions,
+      origin: CompilationInitiator.CmdReport,
+      deleteDistDir: true,
+    });
     const compileTimeLength = process.hrtime(startTimestamp);
 
     outputString += '\n';
@@ -62,7 +65,8 @@ export class CompileCmd implements Command {
     // @ts-ignore
     const compileResults = await this.compile.compileComponents(components, {
       ...compilerOptions,
-      origin: CompileOrigin.CmdJson,
+      origin: CompilationInitiator.CmdJson,
+      deleteDistDir: true,
     });
     return {
       data: compileResults,

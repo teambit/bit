@@ -3,7 +3,7 @@ export { CompilerAspect } from './compiler.aspect';
 export {
   Compiler,
   CompilerOptions,
-  CompileOrigin,
+  CompilationInitiator,
   TranspileFileOutput,
   TranspileFileParams,
   TranspileComponentParams,
