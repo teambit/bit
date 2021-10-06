@@ -34,7 +34,7 @@ export class LessCompiler implements Compiler {
     );
 
     return {
-      // @ts-ignore
+      // @ts-ignore TODO: fix this.
       componentsResults: results,
     };
   }
