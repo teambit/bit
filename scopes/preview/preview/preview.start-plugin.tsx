@@ -94,24 +94,16 @@ export class PreviewStartPlugin implements StartPlugin {
     return servers;
   };
 
-  render() {
-    const handleStart = (setServers: ServersSetter) => {
-      this.updateServers = setServers;
-      this.initialState = {};
-    };
+  render = () => {
+    const [servers, setServers] = useState<CompilationServers>(this.initialState);
+    this.updateServers = setServers;
+    this.initialState = {};
 
-    const PreviewPlugin = () => {
-      const [servers, setServers] = useState<CompilationServers>(this.initialState);
-      handleStart(setServers);
+    useEffect(() => {
+      const noneAreCompiling = Object.values(servers).every((x) => !x.compiling);
+      if (noneAreCompiling) this.setReady();
+    }, [servers]);
 
-      useEffect(() => {
-        const noneAreCompiling = Object.values(servers).every((x) => !x.compiling);
-        if (noneAreCompiling) this.setReady();
-      }, [servers]);
-
-      return <PreviewServerStatus previewServers={this.previewServers} serverStats={servers} />;
-    };
-
-    return PreviewPlugin;
-  }
+    return <PreviewServerStatus previewServers={this.previewServers} serverStats={servers} />;
+  };
 }
