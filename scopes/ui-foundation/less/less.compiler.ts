@@ -31,7 +31,7 @@ export class LessCompiler implements Compiler {
     );
 
     return {
-      componentsResults: results,
+      componentsResults: [],
     };
   }
 
