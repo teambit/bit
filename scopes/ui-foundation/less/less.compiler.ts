@@ -1,6 +1,6 @@
 import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { render, version } from 'less';
-import { Compiler, TranspileComponentParams, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
+import { Compiler } from '@teambit/compiler';
 
 export class LessCompiler implements Compiler {
   constructor(readonly id: string, readonly displayName = 'Less') {}
@@ -16,6 +16,9 @@ export class LessCompiler implements Compiler {
           lessFiles.map((file) => {
             try {
               const cssFile = render(file.contents);
+              const capsule = context.capsuleNetwork.seedersCapsules.getCapsule(component.id);
+              if (capsule) capsule?.fs.writeFileSync(this.getDistPathBySrcPath(file.path), cssFile);
+
               return {
                 component,
               };
@@ -31,12 +34,13 @@ export class LessCompiler implements Compiler {
     );
 
     return {
-      componentsResults: [],
+      // @ts-ignore
+      componentsResults: results,
     };
   }
 
   getDistPathBySrcPath(srcPath: string): string {
-    return ``;
+    return srcPath.replace('.scss', '.css');
   }
 
   isFileSupported(filePath: string): boolean {
