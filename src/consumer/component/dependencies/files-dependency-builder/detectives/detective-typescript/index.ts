@@ -56,6 +56,7 @@ export default function (src, options: Record<string, any> = {}) {
     return dependencies;
   }
 
+  // eslint-disable-next-line complexity
   walker.walk(src, function (node) {
     switch (node.type) {
       case 'ImportDeclaration':
@@ -99,6 +100,11 @@ export default function (src, options: Record<string, any> = {}) {
           if (value) addDependency(value);
         }
         break;
+      case 'ImportExpression': {
+        // node represents Dynamic Imports such as import(source)
+        if (node.source?.value) addDependency(node.source?.value);
+        break;
+      }
       case 'Decorator': // parse Angular Decorators to find style/template dependencies
         if (
           node.expression &&

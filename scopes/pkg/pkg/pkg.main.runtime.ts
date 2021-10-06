@@ -33,6 +33,7 @@ import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
 import { PackageFragment } from './package.fragment';
 import { PackTask } from './pack.task';
+import { PkgService } from './pkg.service';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -143,6 +144,7 @@ export class PkgMain {
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
     graphql.register(pkgSchema(pkg));
+    envs.registerService(new PkgService());
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 

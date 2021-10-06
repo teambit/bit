@@ -73,13 +73,13 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
 
     const manifestFilepath = path.join(root, 'asset-manifest.json');
     if (!fs.existsSync(manifestFilepath)) {
-      logger.warn('[ssr] - Failed finding asset manifest file. Skipping setup.');
+      logger.warn('[ssr] - Skipping setup (cannot find asset manifest file)');
       return undefined;
     }
 
     assets = await parseManifest(manifestFilepath);
     if (!assets) {
-      logger.warn('[ssr] - failed parsing assets manifest. Skipping setup.');
+      logger.warn('[ssr] - Skipping setup (failed parsing assets manifest)');
       return undefined;
     }
 
@@ -101,15 +101,20 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
   };
 }
 
-async function parseManifest(filepath: string) {
+async function parseManifest(filepath: string, logger?: Logger) {
   try {
     const file = await fs.readFile(filepath);
+    logger?.debug('[ssr] - ✓ aread manifest file');
     const contents = file.toString();
     const parsed: ManifestFile = JSON.parse(contents);
+    logger?.debug('[ssr] - ✓ prased manifest file', parsed);
     const assets = getAssets(parsed);
+    logger?.debug('[ssr] - ✓ extracted data from manifest file', assets);
 
     return assets;
   } catch (e: any) {
+    logger?.error('[ssr] - error parsing asset manifest', e);
+    process.exit();
     return undefined;
   }
 }
