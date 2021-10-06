@@ -110,7 +110,7 @@ export interface Command {
    */
   json?(args: CLIArgs, flags: Flags): Promise<GenericObject>;
 }
-export type Flags = { [flagName: string]: string | boolean | undefined };
+export type Flags = { [flagName: string]: string | boolean | undefined | any };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };

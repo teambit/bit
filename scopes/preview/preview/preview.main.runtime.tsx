@@ -3,7 +3,7 @@ import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext, hasCompiler } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
@@ -138,10 +138,9 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const environment = context.envRuntime.env;
-
-      const compilerInstance = hasCompiler(environment) && environment.getCompiler();
+      const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
-        const modulePath = this.pkg.getModulePath(component);
+        const modulePath = compilerInstance?.getPreviewComponentPath?.(component) || this.pkg.getModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;
