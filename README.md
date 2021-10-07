@@ -36,7 +36,7 @@ Bit is an open tool for web developers to build and collaborate on component-dri
 
 Bit consists of a **workspace** (with UI) where component are developed, managed, and integrated. In the workspace you build can fully distributed projects with a simple monolithic-like dev experience. A single workspace can easily host and manage many components even using different stacks and frameworks. 
   
-Each component has an isolated **dev environment** so it is independently developed, tested, built, and run anywhere you need it. Each component is versioned and can be independently deployed. **Dependencie** between components are automatically defined and managed by Bit, using smart **graph versioning**, making it simple to incrementally update and build changes to many components.  
+Each component has an isolated **dev environment** so it is independently developed, tested, built, and run anywhere you need it. Each component is versioned and can be independently deployed. **Dependencies** between components are automatically defined and managed by Bit, using smart **graph versioning**, making it simple to incrementally update and build changes to many components.  
   
 **Scopes** help you store and organize components. Remote scopes (on [bit cloud](https://bit.dev) or your own server) make it easy to move components from app to app or between teams, share and discover components, and collaborate to stay in sync. 
   

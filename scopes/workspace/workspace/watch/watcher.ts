@@ -106,7 +106,7 @@ export class Watcher {
   }
 
   /**
-   * if .bitmap has change, it's possible that a new component has added. trigger onComponentAdd.
+   * if .bitmap changed, it's possible that a new component has been added. trigger onComponentAdd.
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
     const previewsTrackDirs = { ...this.trackDirs };
