@@ -504,7 +504,10 @@ export class ScopeMain implements ComponentFactory {
       {
         baseDir: this.getAspectCapsulePath(),
         skipIfExists: true,
-        seedersOnly: true,
+        // for some reason this needs to be false, otherwise tagging components in some workspaces
+        // result in error during Preview task:
+        // "No matching version found for <some-component-on-the-workspace>"
+        seedersOnly: false,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
         host: this,
