@@ -2,6 +2,8 @@ import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
 import { docFile } from './files/doc';
 import { extensionFile } from './files/extension';
+import { webpackConfigFile } from './files/webpack.config';
+import { jestConfigFile } from './files/jest.config';
 
 export const reactNativeTemplate: ComponentTemplate = {
   name: 'react-native-env',
@@ -20,6 +22,14 @@ export const reactNativeTemplate: ComponentTemplate = {
       {
         relativePath: `${context.name}.extension.ts`,
         content: extensionFile(context),
+      },
+      {
+        relativePath: `webpack/webpack-transformers.ts`,
+        content: webpackConfigFile(),
+      },
+      {
+        relativePath: `jest/jest.config.js`,
+        content: jestConfigFile(),
       },
     ];
   },

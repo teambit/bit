@@ -91,10 +91,11 @@ export default function (): Configuration {
           }, seed);
           const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
+          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
           return {
-            files: JSON.stringify(manifestFiles),
-            entrypoints: JSON.stringify(entrypointFiles),
-          };
+            files: manifestFiles,
+            entrypoints: entrypointFiles,
+          } as Record<string, string>;
         },
       }),
       // Generate a service worker script that will precache, and keep up to date,
