@@ -73,8 +73,10 @@ export class StartCmd implements Command {
 
     if (!noBrowser) {
       uiServer
-        .then((server) => {
+        .then(async (server) => {
           if (!server.buildOptions?.launchBrowserOnStart) return undefined;
+
+          await server.whenReady;
 
           return open(this.ui.publicUrl || server.fullUrl);
         })

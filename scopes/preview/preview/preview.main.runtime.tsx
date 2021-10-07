@@ -140,7 +140,8 @@ export class PreviewMain {
       const environment = context.envRuntime.env;
       const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
-        const modulePath = compilerInstance?.getPreviewComponentPath?.(component) || this.pkg.getModulePath(component);
+        const modulePath =
+          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;

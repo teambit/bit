@@ -88,6 +88,12 @@ export class UIServer {
     );
   }
 
+  private setReady: () => void;
+  private startPromise = new Promise<void>((resolve) => (this.setReady = resolve));
+  get whenReady() {
+    return Promise.all([this.startPromise, ...this.plugins.map((x) => x?.whenReady)]);
+  }
+
   /**
    * start a UI server.
    */
@@ -118,6 +124,8 @@ export class UIServer {
     // important: we use the string of the following message for the http.e2e.ts. if you change the message,
     // please make sure you change the `HTTP_SERVER_READY_MSG` const.
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
+
+    this.setReady();
   }
 
   getPluginsComponents() {
