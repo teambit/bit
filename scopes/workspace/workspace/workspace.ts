@@ -930,7 +930,6 @@ export class Workspace implements ComponentFactory {
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
-
     const workspaceAspects = await this.requireComponents(workspaceComps);
     const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       workspaceAspects,
@@ -941,7 +940,7 @@ export class Workspace implements ComponentFactory {
     const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
-    await this.aspectLoader.loadExtensionsByManifests(allManifests);
+    await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
