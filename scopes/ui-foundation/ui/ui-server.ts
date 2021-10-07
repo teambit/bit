@@ -129,9 +129,7 @@ export class UIServer {
   }
 
   getPluginsComponents() {
-    return this.plugins.map((plugin) => {
-      return plugin.render();
-    });
+    return this.plugins.map((plugin) => plugin.render);
   }
 
   private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
