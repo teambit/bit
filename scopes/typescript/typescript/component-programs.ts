@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
+import { WatchOptions } from '@teambit/workspace';
 import ts from 'typescript';
 
 type ComponentProgram = {
@@ -8,9 +9,9 @@ type ComponentProgram = {
 };
 
 export class ComponentPrograms {
-  constructor(private componentPrograms: ComponentProgram[], private tsModule: typeof ts) {}
+  constructor(private componentPrograms: ComponentProgram[], private tsModule = ts) {}
 
-  startWatch() {
+  startWatch(watchOptions: WatchOptions) {
     const host = this.tsModule.createSolutionBuilderWithWatchHost(
       undefined,
       undefined,
@@ -20,7 +21,7 @@ export class ComponentPrograms {
     );
 
     const dirs = this.componentPrograms.map((c) => c.componentDir);
-    const solutionBuilder = this.tsModule.createSolutionBuilderWithWatch(host, dirs, { verbose: false });
+    const solutionBuilder = this.tsModule.createSolutionBuilderWithWatch(host, dirs, { verbose: watchOptions.verbose });
     solutionBuilder.build();
 
     const { componentPrograms } = this;

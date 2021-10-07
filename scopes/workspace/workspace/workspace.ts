@@ -672,6 +672,18 @@ export class Workspace implements ComponentFactory {
     return this.componentDirFromLegacyId(componentId._legacy, bitMapOptions, options);
   }
 
+  /**
+   * component's files in the workspace are symlinked to the node_modules, and a package.json file is generated on that
+   * package directory to simulate a valid node package.
+   * @returns the package directory inside the node_module.
+   * by default the absolute path, unless `options.relative` was set
+   */
+  componentPackageDir(component: Component, options = { relative: false }): string {
+    const packageName = componentIdToPackageName(component.state._consumer);
+    const packageDir = path.join('node_modules', packageName);
+    return options.relative ? packageDir : this.consumer.toAbsolutePath(packageDir);
+  }
+
   private componentDirFromLegacyId(
     bitId: BitId,
     bitMapOptions?: GetBitMapComponentOptions,
@@ -814,9 +826,13 @@ export class Workspace implements ComponentFactory {
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const components = await this.getMany(componentIds);
     const preWatchFunctions = this.onPreWatchSlot.values();
+    this.logger.console('triggering preWatch hook...');
+    const start = Date.now();
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
+    const end = Date.now() - start;
+    this.logger.console(`completed preWatch hook (${end / 1000} sec)`);
   }
 
   /**

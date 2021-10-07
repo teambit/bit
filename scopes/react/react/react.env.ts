@@ -220,8 +220,8 @@ export class ReactEnv
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
-    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
+  getSchemaExtractor(): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor();
   }
 
   /**

@@ -25,7 +25,7 @@ export function generateDocumentation(program: ts.Program): void {
   }
 
   // print out the doc
-  console.log('DOCS', JSON.stringify(output, undefined, 4));
+  // console.log('DOCS', JSON.stringify(output, undefined, 4));
 
   /** visit nodes finding exported classes */
   function visit(node: ts.Node) {
@@ -53,6 +53,7 @@ export function generateDocumentation(program: ts.Program): void {
     return {
       name: symbol.getName(),
       documentation: ts.displayPartsToString(symbol.getDocumentationComment(checker)),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       type: checker.typeToString(checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)),
     };
   }
@@ -62,6 +63,7 @@ export function generateDocumentation(program: ts.Program): void {
     const details = serializeSymbol(symbol);
 
     // Get the construct signatures
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const constructorType = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!);
     details.constructors = constructorType.getConstructSignatures().map(serializeSignature);
     return details;
@@ -79,6 +81,7 @@ export function generateDocumentation(program: ts.Program): void {
   /** True if this is visible outside this file, false otherwise */
   function isNodeExported(node: ts.Node): boolean {
     return (
+      // eslint-disable-next-line no-bitwise
       (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0 ||
       (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
     );

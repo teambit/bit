@@ -223,26 +223,11 @@ export class WorkspaceCompiler {
   }
 
   async onPreWatch(components: Component[], watchOpts: WatchOptions) {
-    const compilerInstances: any[] = [];
-    const componentPackageDirs: Array<{ componentDir: string; componentID: ComponentID }> = [];
-    let tsCompiler: any;
-    await Promise.all(
-      components.map(async (comp) => {
-        const environment = this.envs.getEnv(comp).env;
-        const compilerInstance = environment.getCompiler?.();
-        compilerInstances.push(compilerInstance);
-        const packageName = componentIdToPackageName(comp.state._consumer);
-        const packageDir = path.join('node_modules', packageName);
-        const absPackageDir = this.workspace.consumer.toAbsolutePath(packageDir);
-        if (compilerInstance?.id === 'teambit.typescript/typescript') {
-          tsCompiler = compilerInstance;
-          componentPackageDirs.push({ componentDir: absPackageDir, componentID: comp.id });
-        }
-        await compilerInstance?.preWatch?.(comp, absPackageDir);
-      })
-    );
-    if (watchOpts.checkTypes) {
-      tsCompiler.watchProjectReferences(componentPackageDirs);
+    if (!watchOpts.skipPreCompilation) {
+      await this.compileComponents(
+        components.map((c) => c.id._legacy),
+        {}
+      );
     }
   }
 

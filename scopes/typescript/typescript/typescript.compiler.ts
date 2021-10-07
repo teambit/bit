@@ -5,12 +5,9 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
-import { Component } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
-import { generateDocumentation } from './check-types';
-import { ComponentPrograms } from './component-programs';
 
 export class TypescriptCompiler implements Compiler {
   distDir: string;
@@ -86,17 +83,6 @@ export class TypescriptCompiler implements Compiler {
       });
     }
     return outputFiles;
-  }
-
-  async preWatch(component: Component, componentPackageDir: string) {
-    const tsconfigStr = this.stringifyTsconfig(this.options.tsconfig);
-    await fs.writeFile(path.join(componentPackageDir, 'tsconfig.json'), tsconfigStr);
-    await this.writeTypes([componentPackageDir]);
-  }
-
-  watchProjectReferences(componentsDirs) {
-    const componentPrograms = new ComponentPrograms(componentsDirs, this.tsModule);
-    componentPrograms.startWatch();
   }
 
   async preBuild(context: BuildContext) {
@@ -245,7 +231,7 @@ export class TypescriptCompiler implements Compiler {
     };
   }
 
-  private async writeTypes(dirs: string[]) {
+  async writeTypes(dirs: string[]) {
     await Promise.all(
       this.options.types.map(async (typePath) => {
         const contents = await fs.readFile(typePath, 'utf8');
@@ -288,7 +274,20 @@ export class TypescriptCompiler implements Compiler {
 
   private async writeTsConfig(dirs: string[]) {
     const tsconfigStr = this.stringifyTsconfig(this.options.tsconfig);
-    await Promise.all(dirs.map((capsuleDir) => fs.writeFile(path.join(capsuleDir, 'tsconfig.json'), tsconfigStr)));
+    await Promise.all(dirs.map((dir) => fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr)));
+  }
+
+  async writeTsConfigForWatch(dir: string) {
+    const tsConfig = { ...this.options.tsconfig };
+    const compilerOptions: ts.CompilerOptions = { ...tsConfig.compilerOptions };
+    compilerOptions.noEmit = true;
+    compilerOptions.allowJs = true;
+    compilerOptions.composite = true;
+    // compilerOptions.preserveSymlinks = false;
+    tsConfig.compilerOptions = compilerOptions;
+
+    const tsconfigStr = this.stringifyTsconfig(tsConfig);
+    await fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr);
   }
 
   private stringifyTsconfig(tsconfig) {

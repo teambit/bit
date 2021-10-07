@@ -57,6 +57,7 @@ export class WatchCommand implements Command {
   shortDescription = '';
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
     ['t', 'check-types', 'for typescript files, load the dependency graph and check types (takes longer)'],
   ] as CommandOptions;
 
