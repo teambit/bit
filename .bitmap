@@ -777,6 +777,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
     },
+    "number/is-number": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/number/is-number"
+    },
     "types/serializable": {
         "scope": "teambit.toolbox",
         "version": "0.0.442",
