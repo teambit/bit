@@ -6,4 +6,3 @@ export type { ReactEnv } from './react.env';
 // export * as styleRegexps from '@teambit/modules.style-regexps';
 
 export { ReactAspect, ReactAspect as default } from './react.aspect';
-export { default as jestConfig } from './jest/jest.config';
