@@ -61,7 +61,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference } from 'lodash';
+import { slice, uniqBy, difference, compact } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -930,10 +930,18 @@ export class Workspace implements ComponentFactory {
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
-    await this.scope.loadAspects(scopeIds, throwOnError);
 
     const workspaceAspects = await this.requireComponents(workspaceComps);
-    await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);
+    const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
+      workspaceAspects,
+      throwOnError
+    );
+    const manifestsIds = workspaceManifests.map((m) => m.id);
+
+    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
+
+    const allManifests = [...scopeManifests, ...workspaceManifests];
+    await this.aspectLoader.loadExtensionsByManifests(allManifests);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {

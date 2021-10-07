@@ -274,6 +274,14 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
+    const manifests = await this.getManifestsFromRequireableExtensions(requireableExtensions, throwOnError);
+    return this.loadExtensionsByManifests(manifests, throwOnError);
+  }
+
+  async getManifestsFromRequireableExtensions(
+    requireableExtensions: RequireableComponent[],
+    throwOnError = false
+  ): Promise<Array<ExtensionManifest | Aspect>> {
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
@@ -302,8 +310,7 @@ export class AspectLoaderMain {
     const manifests = await manifestsP;
 
     // Remove empty manifests as a result of loading issue
-    const filteredManifests = compact(manifests);
-    return this.loadExtensionsByManifests(filteredManifests, throwOnError);
+    return compact(manifests);
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
