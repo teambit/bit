@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from './linter.aspect';
@@ -8,6 +8,7 @@ import { LinterService } from './linter.service';
 import { LintTask } from './lint.task';
 import { LintCmd } from './lint.cmd';
 import { FixTypes, LinterOptions } from './linter-context';
+import { LintResults } from './linter';
 
 export type LinterConfig = {
   /**
@@ -25,7 +26,7 @@ export class LinterMain {
   /**
    * lint an array of components.
    */
-  async lint(components: Component[], opts: LinterOptions) {
+  async lint(components: Component[], opts: LinterOptions): Promise<EnvsExecutionResult<LintResults>> {
     const envsRuntime = await this.envs.createEnvironment(components);
     const lintResults = envsRuntime.run(this.linterService, opts);
     return lintResults;

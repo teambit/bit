@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { FormatterAspect } from './formatter.aspect';
@@ -8,6 +8,7 @@ import { FormatterService, FormatterServiceOptions } from './formatter.service';
 import { FormatTask } from './format.task';
 import { FormatCmd } from './format.cmd';
 import { FormatterOptions } from './formatter-context';
+import { FormatResults } from './formatter';
 
 export type FormatterConfig = {};
 export class FormatterMain {
@@ -27,7 +28,7 @@ export class FormatterMain {
   /**
    * check format an array of components.
    */
-  async check(components: Component[], opts: FormatterOptions) {
+  async check(components: Component[], opts: FormatterOptions): Promise<EnvsExecutionResult<FormatResults>> {
     const envsRuntime = await this.envs.createEnvironment(components);
     const formatResults = envsRuntime.run(this.formatterService, this.toFormatServiceOptions(opts, true));
     return formatResults;

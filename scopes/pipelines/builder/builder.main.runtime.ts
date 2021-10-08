@@ -86,7 +86,7 @@ export class BuilderMain {
     components: Component[],
     options: OnTagOpts = {},
     isolateOptions: IsolateComponentsOptions = {}
-  ): Promise<OnTagResults> {
+  ): Promise<{ builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] }> {
     const pipeResults: TaskResultsList[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap } = options;
     const envsExecutionResults = await this.build(
