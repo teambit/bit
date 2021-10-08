@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.157":
-  version: 1.0.157
-  resolution: "@teambit/legacy@npm:1.0.157"
+"@teambit/legacy@npm:1.0.159":
+  version: 1.0.159
+  resolution: "@teambit/legacy@npm:1.0.159"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6797,7 +6797,7 @@ __metadata:
     sass-lookup: 3.0.0
     semver: 7.3.4
     serialize-error: 5.0.0
-    ssh2: 0.8.9
+    ssh2: 1.4.0
     string-format: 0.5.0
     stringify-package: 1.0.1
     stylus-lookup: 3.0.2
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 2bbc4dfd03bc01d380020d68ecee5a8700edd1e7a4c8193a8ee228d0381cfa2f80d8f0332c130a51ae5cdd568d47f0c1f0127065aa3e0bd3b6cc48dd76c21b62
+  checksum: 04b113540db110216e1b5ec1e94d8c1cc920f8a9fda903249442949037cd7e34fdaf8a924dcb8e1f3f363406bab01182443efe158a54381a735f903728f5df55
   languageName: node
   linkType: hard
 
@@ -6962,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.157
+    "@teambit/legacy": 1.0.159
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7164,7 +7164,7 @@ __metadata:
     ignore: 3.3.10
     ini-builder: 1.1.1
     ink: 3.0.8
-    ink-spinner: 4.0.1
+    ink-spinner: 4.0.3
     inquirer: 6.5.2
     inquirer-fuzzy-path: 2.3.0
     is-glob: 4.0.1
@@ -7368,7 +7368,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.157
+    "@teambit/legacy": 1.0.159
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -11605,7 +11605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1@npm:^0.2.4, asn1@npm:~0.2.0, asn1@npm:~0.2.3":
+"asn1@npm:^0.2.4, asn1@npm:~0.2.3":
   version: 0.2.4
   resolution: "asn1@npm:0.2.4"
   dependencies:
@@ -20698,6 +20698,18 @@ __metadata:
     ink: ^3.0.0-4
     react: ^16.8.2
   checksum: 6732ccd2efd52643218c5ff3634514b7c801a15af873a9fb366053210f1c63ad149e48c92b19125ca6699158106c344d4b9a565e107958fc3e59438d0f887cc6
+  languageName: node
+  linkType: hard
+
+"ink-spinner@npm:4.0.3":
+  version: 4.0.3
+  resolution: "ink-spinner@npm:4.0.3"
+  dependencies:
+    cli-spinners: ^2.3.0
+  peerDependencies:
+    ink: ">=3.0.5"
+    react: ">=16.8.2"
+  checksum: d3785d688dd1ba19fb7a850b7a2c1dd8b2d06e4c77e6a7cc6c5bbd366a5a721e9ea45d036447016a9028f7519994077ce603a60a43a495e17b7b443b8a513ddc
   languageName: node
   linkType: hard
 
@@ -31335,26 +31347,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ssh2-streams@npm:~0.4.10":
-  version: 0.4.10
-  resolution: "ssh2-streams@npm:0.4.10"
-  dependencies:
-    asn1: ~0.2.0
-    bcrypt-pbkdf: ^1.0.2
-    streamsearch: ~0.1.2
-  checksum: dad86d7aa83c08a8f57feedfda26f4032a3f5e605a1d2018da835ced4ebb003739962aa416066f374a006d941067e4215f8b84a8ec81e888156c9274445ae5db
-  languageName: node
-  linkType: hard
-
-"ssh2@npm:0.8.9":
-  version: 0.8.9
-  resolution: "ssh2@npm:0.8.9"
-  dependencies:
-    ssh2-streams: ~0.4.10
-  checksum: 3127497cb5570922b3c37daf93e1e49e24776ae3046c7e01c4af1323408653267ea7d9e506283adbdc8445cd20429318501e08db75f2101bbb0bdc49455da720
-  languageName: node
-  linkType: hard
-
 "ssh2@npm:1.4.0":
   version: 1.4.0
   resolution: "ssh2@npm:1.4.0"
@@ -31581,7 +31573,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"streamsearch@npm:0.1.2, streamsearch@npm:~0.1.2":
+"streamsearch@npm:0.1.2":
   version: 0.1.2
   resolution: "streamsearch@npm:0.1.2"
   checksum: d2db57cbfbf7947ab9c75a7b4c80a8ef8d24850cf0a1a24258bb6956c97317ce1eab7dbcbf9c5aba3e6198611af1053b02411057bbedb99bf9c64b8275248997

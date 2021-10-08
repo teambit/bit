@@ -1,23 +1,23 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Component } from '@teambit/component';
-import { BitId } from '@teambit/legacy-bit-id';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { BitId } from '@teambit/legacy-bit-id';
 
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import { CompilerService } from './compiler.service';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import UIAspect, { UiMain } from '@teambit/ui';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
+import { CompilerService } from './compiler.service';
 import { CompilerTask } from './compiler.task';
-import { Compiler } from './types';
-import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
+import { CompilationInitiator, Compiler } from './types';
+import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
   constructor(
@@ -27,9 +27,12 @@ export class CompilerMain {
     private builder: BuilderMain
   ) {}
 
+  /**
+   * Run compilation on `bit new` and when new components are imported
+   */
   compileOnWorkspace(
     componentsIds: string[] | BitId[] = [], // when empty, it compiles all
-    options: CompileOptions = {}
+    options: CompileOptions = { origin: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
