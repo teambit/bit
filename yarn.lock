@@ -7164,7 +7164,7 @@ __metadata:
     ignore: 3.3.10
     ini-builder: 1.1.1
     ink: 3.0.8
-    ink-spinner: 4.0.1
+    ink-spinner: 4.0.3
     inquirer: 6.5.2
     inquirer-fuzzy-path: 2.3.0
     is-glob: 4.0.1
@@ -20698,6 +20698,18 @@ __metadata:
     ink: ^3.0.0-4
     react: ^16.8.2
   checksum: 6732ccd2efd52643218c5ff3634514b7c801a15af873a9fb366053210f1c63ad149e48c92b19125ca6699158106c344d4b9a565e107958fc3e59438d0f887cc6
+  languageName: node
+  linkType: hard
+
+"ink-spinner@npm:4.0.3":
+  version: 4.0.3
+  resolution: "ink-spinner@npm:4.0.3"
+  dependencies:
+    cli-spinners: ^2.3.0
+  peerDependencies:
+    ink: ">=3.0.5"
+    react: ">=16.8.2"
+  checksum: d3785d688dd1ba19fb7a850b7a2c1dd8b2d06e4c77e6a7cc6c5bbd366a5a721e9ea45d036447016a9028f7519994077ce603a60a43a495e17b7b443b8a513ddc
   languageName: node
   linkType: hard
 
