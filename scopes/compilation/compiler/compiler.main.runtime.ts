@@ -32,7 +32,7 @@ export class CompilerMain {
    */
   compileOnWorkspace(
     componentsIds: string[] | BitId[] = [], // when empty, it compiles all
-    options: CompileOptions = { origin: CompilationInitiator.ComponentAdded }
+    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
