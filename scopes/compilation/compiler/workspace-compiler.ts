@@ -34,7 +34,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  origin: CompilationInitiator; // describes where the compilation is coming from
+  origin?: CompilationInitiator; // describes where the compilation is coming from
 };
 
 export type CompileError = { path: string; error: Error };
@@ -118,7 +118,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile, origin: CompilationInitiator): Promise<void> {
+  private async compileOneFileWithNewCompiler(
+    file: SourceFile,
+    origin: CompilationInitiator = CompilationInitiator.CmdReport
+  ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, origin };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -150,7 +153,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileAllFilesWithNewCompiler(
     component: ConsumerComponent,
-    origin: CompilationInitiator
+    origin: CompilationInitiator = CompilationInitiator.CmdReport
   ): Promise<void> {
     const base = this.distDir;
     const filesToCompile: SourceFile[] = [];

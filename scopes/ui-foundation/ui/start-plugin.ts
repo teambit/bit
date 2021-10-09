@@ -15,11 +15,9 @@ export type StartPluginOptions = {
 
 export interface StartPlugin {
   initiate(startOptions: StartPluginOptions): void;
-
+  /** promise that resolves when the plugin completed initiation */
+  whenReady: Promise<void>;
   getProxy?(): ProxyEntry[];
 
   render: ComponentType;
-
-  /** promise that resolves when the plugin completed initiation */
-  get whenReady(): Promise<void>;
 }
