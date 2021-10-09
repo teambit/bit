@@ -6694,9 +6694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.159":
-  version: 1.0.159
-  resolution: "@teambit/legacy@npm:1.0.159"
+"@teambit/legacy@npm:1.0.160":
+  version: 1.0.160
+  resolution: "@teambit/legacy@npm:1.0.160"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6740,7 +6740,7 @@ __metadata:
     ignore: 3.3.10
     ini-builder: 1.1.1
     ink: 3.0.8
-    ink-spinner: 4.0.1
+    ink-spinner: 4.0.3
     inquirer: 6.5.2
     inquirer-fuzzy-path: 2.3.0
     is-glob: 4.0.1
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 04b113540db110216e1b5ec1e94d8c1cc920f8a9fda903249442949037cd7e34fdaf8a924dcb8e1f3f363406bab01182443efe158a54381a735f903728f5df55
+  checksum: 3b4d0d2757600cae4d906c328f3cf1f8eb11328cd51950177f24a68bad8d67582108ec2d58edfabd9c0af22a0ec2b4fe2eb25f16f10fc650562e61488ab884bb
   languageName: node
   linkType: hard
 
@@ -6962,7 +6962,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.159
+    "@teambit/legacy": 1.0.160
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7368,7 +7368,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.159
+    "@teambit/legacy": 1.0.160
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -20686,18 +20686,6 @@ __metadata:
   version: 1.3.8
   resolution: "ini@npm:1.3.8"
   checksum: dfd98b0ca3a4fc1e323e38a6c8eb8936e31a97a918d3b377649ea15bdb15d481207a0dda1021efbd86b464cae29a0d33c1d7dcaf6c5672bee17fa849bc50a1b3
-  languageName: node
-  linkType: hard
-
-"ink-spinner@npm:4.0.1":
-  version: 4.0.1
-  resolution: "ink-spinner@npm:4.0.1"
-  dependencies:
-    cli-spinners: ^2.3.0
-  peerDependencies:
-    ink: ^3.0.0-4
-    react: ^16.8.2
-  checksum: 6732ccd2efd52643218c5ff3634514b7c801a15af873a9fb366053210f1c63ad149e48c92b19125ca6699158106c344d4b9a565e107958fc3e59438d0f887cc6
   languageName: node
   linkType: hard
 
