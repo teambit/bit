@@ -17,7 +17,7 @@ export interface Application {
   /**
    * build the application.
    */
-  build?(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
+  build(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
 
   /**
    * application deployment. this is a build task.
