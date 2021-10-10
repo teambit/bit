@@ -1,5 +1,4 @@
 import { PluginDefinition } from './plugin-definition';
-import { join } from 'path';
 
 export class Plugin {
   constructor(readonly def: PluginDefinition, readonly path: string) {}

@@ -1,5 +1,3 @@
-import { Aspect } from '@teambit/harmony';
-
 export interface PluginDefinition {
   /**
    * regex pattern for detecting the definition file within a component.
@@ -15,9 +13,4 @@ export interface PluginDefinition {
    * register the plugin to its slot registry.
    */
   register<T>(object: T): void;
-
-  /**
-   * list of dependencies for the aspect to include.
-   */
-  dependencies?: Aspect[];
 }

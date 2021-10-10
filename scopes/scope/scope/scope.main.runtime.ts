@@ -440,6 +440,7 @@ export class ScopeMain implements ComponentFactory {
         if (plugins.has()) {
           return plugins.load(MainRuntime.name);
         }
+        // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(capsule.path);
         const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
         const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);

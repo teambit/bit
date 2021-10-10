@@ -15,7 +15,7 @@ import { DeployTask } from './deploy.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
-import { AspectLoaderMain, AspectLoaderAspect, PluginDefinition } from '@teambit/aspect-loader';
+import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 
@@ -191,7 +191,7 @@ export class ApplicationMain {
     );
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];
-    aspectLoader.registerPlugins([new AppPlugin()]);
+    aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerTagTasks([new DeployTask(application)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
