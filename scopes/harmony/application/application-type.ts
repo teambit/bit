@@ -1,4 +1,6 @@
-export interface ApplicationType {
+import { Application } from './application';
+
+export interface ApplicationType<T> {
   name: string;
-  serve(): Promise<void>;
+  createApp(options: T): Application;
 }

@@ -15,8 +15,11 @@ import { DeployTask } from './deploy.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
+import { AspectLoaderMain, AspectLoaderAspect, PluginDefinition } from '@teambit/aspect-loader';
+import { AppPlugin } from './app.plugin';
+import { AppTypePlugin } from './app-type.plugin';
 
-export type ApplicationTypeSlot = SlotRegistry<ApplicationType[]>;
+export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
 export type DeploymentProviderSlot = SlotRegistry<DeploymentProvider[]>;
 
@@ -41,7 +44,8 @@ export class ApplicationMain {
     private deploymentProviderSlot: DeploymentProviderSlot,
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
-    private appService: AppService
+    private appService: AppService,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -49,14 +53,6 @@ export class ApplicationMain {
    */
   registerApp(app: Application) {
     this.appSlot.register([app]);
-    return this;
-  }
-
-  /**
-   * register multiple apps.
-   */
-  registerApps(apps: Application[]) {
-    this.appSlot.register(apps);
     return this;
   }
 
@@ -88,6 +84,16 @@ export class ApplicationMain {
   getApp(appName: string): Application | undefined {
     const apps = this.listApps();
     return apps.find((app) => app.name === appName);
+  }
+
+  /**
+   * registers a new app and sets a plugin for it.
+   */
+  registerAppType<T>(appType: ApplicationType<T>) {
+    const plugin = new AppTypePlugin(`*.${appType.name}.*`, appType, this.appSlot);
+    this.aspectLoader.registerPlugins([plugin]);
+    this.appTypeSlot.register([appType]);
+    return this;
   }
 
   /**
@@ -152,24 +158,40 @@ export class ApplicationMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect];
+  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect, AspectLoaderAspect];
 
   static slots = [
-    Slot.withType<ApplicationType[]>(),
+    Slot.withType<ApplicationType<unknown>[]>(),
     Slot.withType<Application[]>(),
     Slot.withType<DeploymentProvider[]>(),
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component]: [CLIMain, LoggerMain, BuilderMain, EnvsMain, ComponentMain],
+    [cli, loggerAspect, builder, envs, component, aspectLoader]: [
+      CLIMain,
+      LoggerMain,
+      BuilderMain,
+      EnvsMain,
+      ComponentMain,
+      AspectLoaderMain
+    ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
   ) {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
-    const application = new ApplicationMain(appSlot, appTypeSlot, deploymentProviderSlot, envs, component, appService);
+    const application = new ApplicationMain(
+      appSlot,
+      appTypeSlot,
+      deploymentProviderSlot,
+      envs,
+      component,
+      appService,
+      aspectLoader
+    );
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];
+    aspectLoader.registerPlugins([new AppPlugin()]);
     builder.registerTagTasks([new DeployTask(application)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);

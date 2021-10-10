@@ -1075,6 +1075,11 @@ export class Workspace implements ComponentFactory {
       }
 
       const requireFunc = async () => {
+        const plugins = this.aspectLoader.getPlugins(component, localPath);
+        if (plugins.has()) {
+          return plugins.load(MainRuntime.name);
+        }
+
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(localPath);
         // require aspect runtimes

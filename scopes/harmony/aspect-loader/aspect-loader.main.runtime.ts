@@ -3,7 +3,8 @@ import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentID } from '@teambit/component';
+import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
+import { flatten } from 'lodash';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
@@ -14,10 +15,14 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
 import { difference, compact } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
+import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef } from './core-aspects';
+import { Plugins } from './plugins';
+
+export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
 export type AspectDescriptor = {
   /**
@@ -88,7 +93,8 @@ export class AspectLoaderMain {
     private envs: EnvsMain,
     private harmony: Harmony,
     private onAspectLoadErrorSlot: OnAspectLoadErrorSlot,
-    private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot
+    private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot,
+    private pluginSlot: PluginDefinitionSlot
   ) {}
 
   private getCompiler(component: Component) {
@@ -333,8 +339,30 @@ export class AspectLoaderMain {
     return updatedManifest;
   }
 
+  getPluginDefs() {
+    return flatten(this.pluginSlot.values());
+  }
+
+  getPlugins(component: Component, componentPath: string): Plugins {
+    const defs = this.getPluginDefs();
+    return Plugins.from(component, defs, (relativePath) => {
+      const compiler = this.getCompiler(component);
+      if (!compiler) {
+        return join(componentPath, relativePath);
+      }
+
+      const dist = compiler.getDistPathBySrcPath(relativePath);
+      return join(componentPath, dist);
+    });
+  }
+
   isAspect(manifest: any) {
     return !!(manifest.addRuntime && manifest.getRuntime);
+  }
+
+  isAspectComponent(component: Component): boolean {
+    const data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
+    return Boolean(data && data.type === 'aspect');
   }
 
   /**
@@ -384,6 +412,14 @@ export class AspectLoaderMain {
     });
   }
 
+  /**
+   * register a plugin.
+   */
+  registerPlugins(pluginDefs: PluginDefinition[]) {
+    this.pluginSlot.register(pluginDefs);
+    return this;
+  }
+
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
     try {
@@ -415,12 +451,20 @@ export class AspectLoaderMain {
 
   static runtime = MainRuntime;
   static dependencies = [LoggerAspect, EnvsAspect];
-  static slots = [Slot.withType<OnAspectLoadError>(), Slot.withType<OnLoadRequireableExtension>()];
+  static slots = [
+    Slot.withType<OnAspectLoadError>(),
+    Slot.withType<OnLoadRequireableExtension>(),
+    Slot.withType<PluginDefinition[]>(),
+  ];
 
   static async provider(
     [loggerExt, envs]: [LoggerMain, EnvsMain],
     config,
-    [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot]: [OnAspectLoadErrorSlot, OnLoadRequireableExtensionSlot],
+    [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
+      OnAspectLoadErrorSlot,
+      OnLoadRequireableExtensionSlot,
+      PluginDefinitionSlot
+    ],
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
@@ -429,8 +473,10 @@ export class AspectLoaderMain {
       envs,
       harmony,
       onAspectLoadErrorSlot,
-      onLoadRequireableExtensionSlot
+      onLoadRequireableExtensionSlot,
+      pluginSlot
     );
+
     return aspectLoader;
   }
 }

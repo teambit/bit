@@ -26,6 +26,7 @@ import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
+import { ReactAppType } from './react.app-type';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -192,17 +193,11 @@ export class ReactMain {
    * register a new React application.
    */
   registerReactApp(options: ReactAppOptions) {
-    if (!this.workspace) return;
     this.application.registerApp(
-      new ReactApp(
-        options.name,
-        options.entry,
-        options.portRange || [3000, 4000],
-        this.reactEnv,
-        this.workspace.path,
-        options.deploy
-      )
+      new ReactApp(options.name, options.entry, options.portRange || [3000, 4000], this.reactEnv, options.deploy)
     );
+
+    return this;
   }
 
   /**
@@ -434,6 +429,7 @@ export class ReactMain {
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
     generator.registerWorkspaceTemplate(workspaceTemplates);
+    application.registerAppType(new ReactAppType('react-app', reactEnv));
     return react;
   }
 }
