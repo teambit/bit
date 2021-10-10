@@ -1,5 +1,6 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
 import { flatten } from 'lodash';
+import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -15,7 +16,6 @@ import { DeployTask } from './deploy.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
-import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 

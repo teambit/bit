@@ -33,7 +33,7 @@ export class Plugins {
           plugin.register();
         });
       },
-      runtime: runtime,
+      runtime,
       // dependencies: this.computeDependencies(runtime)
       dependencies: [],
     });
