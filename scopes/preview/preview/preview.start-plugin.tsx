@@ -31,6 +31,9 @@ export class PreviewStartPlugin implements StartPlugin {
     // DON'T add wait! this promise never resolve so it's stop all the start process!
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.workspace.watcher.watchAll({
+      checkTypes: true,
+      verbose: true,
+      skipPreCompilation: true,
       msgs: {
         onAll: () => {},
         onStart: () => {},

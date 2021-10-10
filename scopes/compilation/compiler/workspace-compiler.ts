@@ -242,7 +242,7 @@ export class WorkspaceCompiler {
     if (!watchOpts.skipPreCompilation) {
       await this.compileComponents(
         components.map((c) => c.id._legacy),
-        {}
+        { origin: CompilationInitiator.PreWatch }
       );
     }
   }

@@ -55,10 +55,10 @@ export class TypescriptMain {
     await this.writeTsconfigAndTypesOnWorkspace(components);
     const componentPackageDirs = components.map((comp) => {
       const absPackageDir = workspace.componentPackageDir(comp);
-      return { componentDir: absPackageDir, componentId: comp.id };
+      return { componentDir: absPackageDir, component: comp };
     });
-    const componentPrograms = new ComponentPrograms(componentPackageDirs);
-    componentPrograms.startWatch(watchOpts);
+    this.componentPrograms = new ComponentPrograms(componentPackageDirs);
+    this.componentPrograms.startWatch(watchOpts);
   }
 
   private async writeTsconfigAndTypesOnWorkspace(components: Component[]) {
