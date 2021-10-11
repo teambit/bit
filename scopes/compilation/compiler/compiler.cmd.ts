@@ -40,7 +40,7 @@ export class CompileCmd implements Command {
     let outputString = '';
     await this.compile.compileComponents(components, {
       ...compilerOptions,
-      origin: CompilationInitiator.CmdReport,
+      initiator: CompilationInitiator.CmdReport,
       deleteDistDir: true,
     });
     const compileTimeLength = process.hrtime(startTimestamp);
@@ -65,7 +65,7 @@ export class CompileCmd implements Command {
     // @ts-ignore
     const compileResults = await this.compile.compileComponents(components, {
       ...compilerOptions,
-      origin: CompilationInitiator.CmdJson,
+      initiator: CompilationInitiator.CmdJson,
       deleteDistDir: true,
     });
     return {

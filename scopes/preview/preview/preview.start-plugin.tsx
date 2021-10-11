@@ -6,6 +6,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
 import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
+import { CompilationInitiator } from '@teambit/compiler';
 
 type CompilationServers = Record<string, CompilationResult>;
 type ServersSetter = Dispatch<SetStateAction<CompilationServers>>;
@@ -43,6 +44,7 @@ export class PreviewStartPlugin implements StartPlugin {
         onError: () => {},
         onUnlink: () => {},
       },
+      initiator: CompilationInitiator.Start,
     });
     this.previewServers = this.previewServers.concat(previewServers);
   }

@@ -12,6 +12,7 @@ export enum CompilationInitiator {
   CmdJson,
   PreStart,
   PreWatch,
+  Start,
   ComponentChanged,
   AspectLoadFail,
   ComponentAdded,
@@ -21,7 +22,7 @@ export type TranspileComponentParams = {
   component: ConsumerComponent;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
-  origin: CompilationInitiator; // origin of the compilation's request
+  initiator: CompilationInitiator; // origin of the compilation's request
 };
 
 export type TranspileFileOutput =

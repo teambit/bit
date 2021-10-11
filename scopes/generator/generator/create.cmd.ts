@@ -27,7 +27,7 @@ export class CreateCmd implements Command {
 
   async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
-    const title = `the following ${results.length} component(s) were created`;
+    const title = `${results.length} component(s) were created`;
 
     const componentsData = results
       .map((result) => {

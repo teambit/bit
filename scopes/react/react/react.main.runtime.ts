@@ -154,6 +154,15 @@ export class ReactMain {
   }
 
   /**
+   * Override the Bit documentation link. See docs: https://bit.dev/docs/docs/doc-templates
+   */
+  overrideDocsTemplate(templatePath: string) {
+    return this.envs.override({
+      getDocsTemplate: () => templatePath,
+    });
+  }
+
+  /**
    * @deprecated use useTypescript()
    * override the build tsconfig.
    */

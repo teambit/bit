@@ -14,6 +14,7 @@ import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { CompilationInitiator } from '@teambit/compiler';
 import { WorkspaceAspect } from '../';
 import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { Workspace } from '../workspace';
@@ -42,7 +43,7 @@ export class Watcher {
     return this.workspace.consumer;
   }
 
-  async watchAll(opts: { msgs } & WatchOptions) {
+  async watchAll(opts: { msgs; initiator?: CompilationInitiator } & WatchOptions) {
     const { msgs, ...watchOpts } = opts;
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const pathsToWatch = await this.getPathsToWatch();
@@ -63,7 +64,7 @@ export class Watcher {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath)) || [];
+        const buildResults = (await this.handleChange(filePath, opts?.initiator)) || [];
         const duration = new Date().getTime() - startTime;
         msgs?.onChange(filePath, buildResults, this.verbose, duration);
       });
@@ -86,7 +87,7 @@ export class Watcher {
     });
   }
 
-  private async handleChange(filePath: string): Promise<OnComponentEventResult[]> {
+  private async handleChange(filePath: string, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
         const buildResults = await this.handleBitmapChanges();
@@ -99,7 +100,7 @@ export class Watcher {
         return this.completeWatch();
       }
 
-      const buildResults = await this.executeWatchOperationsOnComponent(componentId);
+      const buildResults = await this.executeWatchOperationsOnComponent(componentId, true, initiator);
       this.completeWatch();
       return buildResults;
     } catch (err: any) {
@@ -142,7 +143,8 @@ export class Watcher {
 
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
-    isChange = true
+    isChange = true,
+    initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     if (this.isComponentWatchedExternally(componentId)) {
       // update capsule, once done, it automatically triggers the external watcher
@@ -162,7 +164,7 @@ export class Watcher {
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
-        ? await this.workspace.triggerOnComponentChange(componentId)
+        ? await this.workspace.triggerOnComponentChange(componentId, initiator)
         : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err: any) {
       // do not exit the watch process on errors, just print them
