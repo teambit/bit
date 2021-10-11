@@ -5711,16 +5711,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/component.instructions.exporting-components@npm:0.0.5":
-  version: 0.0.5
-  resolution: "@teambit/component.instructions.exporting-components@npm:0.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcomponent.instructions.exporting-components%2F-%2Fcomponent.instructions.exporting-components-0.0.5.tgz"
+"@teambit/component.instructions.exporting-components@npm:0.0.6":
+  version: 0.0.6
+  resolution: "@teambit/component.instructions.exporting-components@npm:0.0.6"
   dependencies:
-    "@teambit/ui.mdx-scope-context": 0.0.367
+    "@mdx-js/react": 1.6.22
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 6d95aa3eca0020fe03bbfe66ff04af13a8d720c97427c347eb2e2f8044ebeb73e1fc727626cbbea999968647619e834146a2a52151497a02752cdfaca99a846a
+  checksum: 0a78335c695d1dfb9d4c90cb143e6259471816c0708a96408c68868c0729393596fe6a5ffe8b197b3eda1b13a303f9a18de769586d8782d2409b77739f72b96a
   languageName: node
   linkType: hard
 
@@ -6940,7 +6941,7 @@ __metadata:
     "@teambit/base-ui.utils.sub-paths": 1.0.0
     "@teambit/base-ui.utils.time-ago": 1.0.0
     "@teambit/capsule": 0.0.12
-    "@teambit/component.instructions.exporting-components": 0.0.5
+    "@teambit/component.instructions.exporting-components": 0.0.6
     "@teambit/design.ui.icon-button": 1.0.1
     "@teambit/documenter.code.react-playground": 4.0.1
     "@teambit/documenter.content.documentation-links": 4.0.1
@@ -6987,8 +6988,8 @@ __metadata:
     "@teambit/legacy": 1.0.160
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
-    "@teambit/react.instructions.react.adding-compositions": 0.0.5
-    "@teambit/react.instructions.react.adding-tests": 0.0.5
+    "@teambit/react.instructions.react.adding-compositions": ^0.0.6
+    "@teambit/react.instructions.react.adding-tests": ^0.0.6
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/toolbox.network.agent": 0.0.116
     "@teambit/ui.composition-card": 0.0.259
@@ -7471,29 +7472,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/react.instructions.react.adding-compositions@npm:0.0.5":
-  version: 0.0.5
-  resolution: "@teambit/react.instructions.react.adding-compositions@npm:0.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Freact.instructions.react.adding-compositions%2F-%2Freact.instructions.react.adding-compositions-0.0.5.tgz"
+"@teambit/react.instructions.react.adding-compositions@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "@teambit/react.instructions.react.adding-compositions@npm:0.0.6"
   dependencies:
-    "@teambit/ui.mdx-scope-context": 0.0.367
+    "@mdx-js/react": 1.6.22
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 144deaa3dea10cfcdcb07bba25f0ccf2816704d4a6f36820c7514f52c3b988b403a3e173d9136650a30cfa9edad7bf210942bf3f4ea509b00ea1f2122160bf55
+  checksum: e9edaf4e2d250672aa6671223e7ac5af63a44096f4d3b37f9d96c114b0979a35d0ff9465ad9438d8a72a89c53a5880a5cb7bbaf1effcce93104f43eebd1aa5be
   languageName: node
   linkType: hard
 
-"@teambit/react.instructions.react.adding-tests@npm:0.0.5":
-  version: 0.0.5
-  resolution: "@teambit/react.instructions.react.adding-tests@npm:0.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Freact.instructions.react.adding-tests%2F-%2Freact.instructions.react.adding-tests-0.0.5.tgz"
+"@teambit/react.instructions.react.adding-tests@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "@teambit/react.instructions.react.adding-tests@npm:0.0.6"
   dependencies:
-    "@teambit/ui.mdx-scope-context": 0.0.367
+    "@mdx-js/react": 1.6.22
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     core-js: ^3.0.0
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: b85de02df3c6d6ff86c03e50d6336e23c5e4e4f0da00eb6a9f42bc94f6bb8f9a748a97bd23dd0f2f726a162990834dde637b91708ce6102451d4b5b0c0af6c7f
+  checksum: 310df6160adf06be7c56976fe67f746db495977fe1258e2a58d4ab8905eb20f7dcb2f881fa9783ac4328dca7d69f4123d0ffc8a372508429e541d8e9edf559fd
   languageName: node
   linkType: hard
 
@@ -7564,19 +7567,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 45dc6ff682caea71080071ef54997dfd423e4ad39df6134059b31b25236338095ed42a52dfbfaf33bbffde7c6bf2cf62f3d336084db860c0127d0d555db1b975
-  languageName: node
-  linkType: hard
-
-"@teambit/ui.mdx-scope-context@npm:0.0.367":
-  version: 0.0.367
-  resolution: "@teambit/ui.mdx-scope-context@npm:0.0.367::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui.mdx-scope-context%2F-%2Fui.mdx-scope-context-0.0.367.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.85
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 493131e48e4fcbe4f1427942c8eb32d2e1107aaad24e9717e764a78bbc5c15e75dc9f4b594c0ba3a5f32ff025992663810612e2e8d2b92c9ed514ad2cebad3b2
   languageName: node
   linkType: hard
 
