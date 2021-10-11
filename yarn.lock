@@ -3219,13 +3219,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/config@npm:13.0.0":
-  version: 13.0.0
-  resolution: "@pnpm/config@npm:13.0.0"
+"@pnpm/config@npm:13.1.0":
+  version: 13.1.0
+  resolution: "@pnpm/config@npm:13.1.0"
   dependencies:
     "@pnpm/constants": 5.0.0
     "@pnpm/error": 2.0.0
     "@pnpm/global-bin-dir": 3.0.0
+    "@pnpm/pnpmfile": 1.1.0
     "@pnpm/types": 7.4.0
     "@zkochan/npm-conf": 2.0.2
     camelcase: ^6.2.0
@@ -3234,7 +3235,7 @@ __metadata:
     ramda: ^0.27.1
     realpath-missing: ^1.1.0
     which: ^2.0.2
-  checksum: 94d803ce7889acab76402570e01b7032f1a7fcf477eb3f5b045c11f90800d362e7d3cd6a12490b8d4897041fc0e2464be335977ca22e33d1595e18f3f3586b96
+  checksum: eb0ca0a234cfa44bc842faf431b066b1bbeef0df1bb4f778e217ebc6eace04202d7b5cc3f9b6d816d3bcaea50894720944652e4e5188cd8194ee28978b90cd1a
   languageName: node
   linkType: hard
 
@@ -3256,11 +3257,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/default-reporter@npm:8.2.3":
-  version: 8.2.3
-  resolution: "@pnpm/default-reporter@npm:8.2.3"
+"@pnpm/default-reporter@npm:8.3.0":
+  version: 8.3.0
+  resolution: "@pnpm/default-reporter@npm:8.3.0"
   dependencies:
-    "@pnpm/config": 13.0.0
+    "@pnpm/config": 13.1.0
     "@pnpm/core-loggers": 6.0.4
     "@pnpm/error": 2.0.0
     "@pnpm/types": 7.4.0
@@ -3277,7 +3278,7 @@ __metadata:
     stacktracey: ^1.2.127
     string-length: ^4.0.1
     strip-ansi: ^6.0.0
-  checksum: 32cc706f2b14201d2a9b45e1806a994895530c4c306f56f0fd010996d6f2ffa0cf98dd2324ab5e9ef5a8f529e4029a27e04f91e2f7b1f5b42ad7868865174431
+  checksum: a62dda5338eb258f54d3723ac84ebe210af75afc71d0c0266b4d460fe20673f9df12b3a45c9a5a35142672c1a044e1abcba2b5ea8d26fa8a6779d7b128e7e8d9
   languageName: node
   linkType: hard
 
@@ -3424,9 +3425,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/headless@npm:16.1.1":
-  version: 16.1.1
-  resolution: "@pnpm/headless@npm:16.1.1"
+"@pnpm/headless@npm:16.1.2":
+  version: 16.1.2
+  resolution: "@pnpm/headless@npm:16.1.2"
   dependencies:
     "@pnpm/build-modules": 7.1.1
     "@pnpm/constants": 5.0.0
@@ -3437,7 +3438,7 @@ __metadata:
     "@pnpm/lifecycle": 11.0.5
     "@pnpm/link-bins": 6.2.0
     "@pnpm/lockfile-file": 4.1.1
-    "@pnpm/lockfile-to-pnp": 0.4.24
+    "@pnpm/lockfile-to-pnp": 0.4.25
     "@pnpm/lockfile-utils": 3.0.8
     "@pnpm/modules-cleaner": 11.0.12
     "@pnpm/modules-yaml": 9.0.4
@@ -3456,7 +3457,7 @@ __metadata:
     realpath-missing: ^1.1.0
   peerDependencies:
     "@pnpm/logger": ^4.0.0
-  checksum: 50a757e94851ad4310f8a2fb04ed5a57ea49d4615487a5c788f8cfdf4040bf3b4d276bcf816751cb0e0241cd47f97fc76509ee2448a234b4f99b243ce8614a3a
+  checksum: a40116e746937ecfbca0f90d147f5cd33fb1e996564b6f2bddd971ef40c147f9ca1768f838ae11f5586b0a263d428f97efb5f93ecfa6983c853040f1d1af59e7
   languageName: node
   linkType: hard
 
@@ -3556,11 +3557,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/lockfile-to-pnp@npm:0.4.24":
-  version: 0.4.24
-  resolution: "@pnpm/lockfile-to-pnp@npm:0.4.24"
+"@pnpm/lockfile-to-pnp@npm:0.4.25":
+  version: 0.4.25
+  resolution: "@pnpm/lockfile-to-pnp@npm:0.4.25"
   dependencies:
-    "@pnpm/config": 13.0.0
+    "@pnpm/config": 13.1.0
     "@pnpm/lockfile-file": 4.1.1
     "@pnpm/lockfile-utils": 3.0.8
     "@pnpm/read-project-manifest": 2.0.5
@@ -3570,7 +3571,7 @@ __metadata:
     ramda: ^0.27.1
   peerDependencies:
     "@pnpm/logger": ^4.0.0
-  checksum: 2ae9ec131ec9afb14378d35cf436dbeb3a5ac5c49b3abc6e7dee54bb7929a0ed21de36ab9d16a6433a8c7b1c5c4f762d58d4b46fdf9dd56107315a2ef917566a
+  checksum: b65250c6cc4086695229933630986a73efab3a5b9575b91d8e3b9162d1a2fcebbd1acab3b7b6e02dfddd929d415044379e852802c3e8188a370d703e4179a09c
   languageName: node
   linkType: hard
 
@@ -3836,6 +3837,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pnpm/pnpmfile@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@pnpm/pnpmfile@npm:1.1.0"
+  dependencies:
+    "@pnpm/core-loggers": 6.0.4
+    "@pnpm/error": 2.0.0
+    "@pnpm/lockfile-types": 3.0.0
+    "@pnpm/types": 7.4.0
+    chalk: ^4.1.0
+    path-absolute: ^1.0.1
+  peerDependencies:
+    "@pnpm/logger": ^4.0.0
+  checksum: 0c6f5238f06e626297022521144d0ed7e0e625c23f82e9fa5b243282d7edd33ff16e0cf927b988ab1b8f7e63d4c7bae37173b51226993913b7ae195ecfd3aa73
+  languageName: node
+  linkType: hard
+
 "@pnpm/prepare-package@npm:1.0.4":
   version: 1.0.4
   resolution: "@pnpm/prepare-package@npm:1.0.4"
@@ -3999,13 +4016,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/store-connection-manager@npm:3.0.18":
-  version: 3.0.18
-  resolution: "@pnpm/store-connection-manager@npm:3.0.18"
+"@pnpm/store-connection-manager@npm:3.0.19":
+  version: 3.0.19
+  resolution: "@pnpm/store-connection-manager@npm:3.0.19"
   dependencies:
     "@pnpm/cli-meta": 2.0.0
     "@pnpm/client": 5.0.7
-    "@pnpm/config": 13.0.0
+    "@pnpm/config": 13.1.0
     "@pnpm/error": 2.0.0
     "@pnpm/package-store": 12.0.15
     "@pnpm/server": 11.0.7
@@ -4015,7 +4032,7 @@ __metadata:
     dir-is-case-sensitive: ^2.0.0
   peerDependencies:
     "@pnpm/logger": ^4.0.0
-  checksum: 7b66610c06b36e5e20d9b1bc6be96852798bb0b647942ef24057c96434debc5eebedca60ffce896e5240c34944bb83a2498b6a9d2071da9d926a28edbf47f400
+  checksum: 688eb63efdee4c6b7da82ef9d1a0200233ff9977ef90f718e103ecff94dfdc2448a640bb31edd8b75a44f639adb1b8598de277c6a5a9aeccfc550ba2937484c9
   languageName: node
   linkType: hard
 
@@ -6871,8 +6888,8 @@ __metadata:
     "@mdx-js/react": 1.6.22
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-rc.6
     "@pnpm/client": 5.0.7
-    "@pnpm/config": 13.0.0
-    "@pnpm/default-reporter": 8.2.3
+    "@pnpm/config": 13.1.0
+    "@pnpm/default-reporter": 8.3.0
     "@pnpm/default-resolver": 13.0.6
     "@pnpm/error": 2.0.0
     "@pnpm/fetch": 4.1.1
@@ -6884,7 +6901,7 @@ __metadata:
     "@pnpm/package-store": 12.0.15
     "@pnpm/pick-registry-for-package": 2.0.4
     "@pnpm/resolver-base": 8.0.4
-    "@pnpm/store-connection-manager": 3.0.18
+    "@pnpm/store-connection-manager": 3.0.19
     "@pnpm/tarball-fetcher": 9.3.7
     "@pnpm/tarball-resolver": 5.0.4
     "@popperjs/core": 2.6.0
@@ -7338,7 +7355,7 @@ __metadata:
     style-loader: ^2.0.0
     stylus-lookup: 3.0.2
     subscriptions-transport-ws: 0.9.18
-    supi: 0.47.24
+    supi: 0.47.26
     symlink-or-copy: 1.3.1
     table: 5.4.6
     tar: 6.1.11
@@ -8646,13 +8663,13 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:^17.0.8":
-  version: 17.0.20
-  resolution: "@types/react@npm:17.0.20"
+  version: 17.0.27
+  resolution: "@types/react@npm:17.0.27"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: e342bfaa4fe052fc3a445ea49f746f3fd82cfc9c8028eae139a3e0763ead1871f353bd40da2a472f23d2b52544d2781d40e3159c0703e7e2ff08c13f067a3b9c
+  checksum: 3a1147d963c16dc9bbea5afb20c4be94f2389cf4eca4c5fbe9b02f3406bd9957602c0459ea017c95f8c3d523221f572e8bd842f94654835776d4c2923357f9dc
   languageName: node
   linkType: hard
 
@@ -32190,9 +32207,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supi@npm:0.47.24":
-  version: 0.47.24
-  resolution: "supi@npm:0.47.24"
+"supi@npm:0.47.26":
+  version: 0.47.26
+  resolution: "supi@npm:0.47.26"
   dependencies:
     "@pnpm/build-modules": 7.1.1
     "@pnpm/constants": 5.0.0
@@ -32200,12 +32217,12 @@ __metadata:
     "@pnpm/error": 2.0.0
     "@pnpm/filter-lockfile": 5.0.8
     "@pnpm/get-context": 5.1.5
-    "@pnpm/headless": 16.1.1
+    "@pnpm/headless": 16.1.2
     "@pnpm/hoist": 5.2.0
     "@pnpm/lifecycle": 11.0.5
     "@pnpm/link-bins": 6.2.0
     "@pnpm/lockfile-file": 4.1.1
-    "@pnpm/lockfile-to-pnp": 0.4.24
+    "@pnpm/lockfile-to-pnp": 0.4.25
     "@pnpm/lockfile-utils": 3.0.8
     "@pnpm/lockfile-walker": 4.0.8
     "@pnpm/manifest-utils": 2.1.0
@@ -32236,6 +32253,7 @@ __metadata:
     p-filter: ^2.1.0
     p-limit: ^3.1.0
     path-absolute: ^1.0.1
+    path-exists: ^4.0.0
     ramda: ^0.27.1
     run-groups: ^3.0.1
     semver: ^7.3.4
@@ -32243,7 +32261,7 @@ __metadata:
     version-selector-type: ^3.0.0
   peerDependencies:
     "@pnpm/logger": ^4.0.0
-  checksum: 91a64cf683b744e49dfe4a0f1a565341193f41579623b014ca70a2b22d484117373983acfffae26f42b9ed8a651b5d6ad756f3d4a09cc96a674d5e3cb60f98bd
+  checksum: 7788801fe2fb50d7b0305f8f07ff44c762f3321a2a9867fdfd3c3341746300900a57d6695913585ada9663f89c30a644cb21703fba56045f3a15c71eec085e72
   languageName: node
   linkType: hard
 
