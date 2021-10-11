@@ -23,28 +23,28 @@ export class ComponentPrograms {
 
     const dirs = this.componentPrograms.map((c) => c.componentDir);
     const solutionBuilder = this.tsModule.createSolutionBuilderWithWatch(host, dirs, { verbose: watchOptions.verbose });
-    solutionBuilder.build();
+    // solutionBuilder.build();
 
     const { componentPrograms } = this;
 
-    // let nextProject;
-    // // eslint-disable-next-line no-cond-assign
-    // while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-    //   const proj = solutionBuilder.getNextInvalidatedProject();
-    //   // @ts-ignore
-    //   if (proj && proj.getProgram) {
-    //     const progSource = proj as any as ts.BuilderProgram;
-    //     const program = progSource.getProgram();
-    //     const projectDir = proj.project;
-    //     const dirWithoutTsconfig = projectDir.replace(/[/\\]tsconfig.json/, '');
-    //     const compProg = componentPrograms.find((c) => c.componentDir === dirWithoutTsconfig);
-    //     if (!compProg) {
-    //       throw new Error(`unable to find the component-id of ${projectDir}`);
-    //     }
-    //     compProg.program = program;
-    //   }
-    //   nextProject.done();
-    // }
+    let nextProject;
+    // eslint-disable-next-line no-cond-assign
+    while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
+      const proj = solutionBuilder.getNextInvalidatedProject();
+      // @ts-ignore
+      if (proj && proj.getProgram) {
+        const progSource = proj as any as ts.BuilderProgram;
+        const program = progSource.getProgram();
+        const projectDir = proj.project;
+        const dirWithoutTsconfig = projectDir.replace(/[/\\]tsconfig.json/, '');
+        const compProg = componentPrograms.find((c) => c.componentDir === dirWithoutTsconfig);
+        if (!compProg) {
+          throw new Error(`unable to find the component-id of ${projectDir}`);
+        }
+        compProg.program = program;
+      }
+      nextProject.done();
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function reportWatch(diag: ts.Diagnostic) {

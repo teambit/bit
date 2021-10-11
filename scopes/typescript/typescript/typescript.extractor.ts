@@ -1,4 +1,5 @@
-// import { tmpdir } from 'os';
+import ts from 'typescript';
+import { compact } from 'lodash';
 import { join } from 'path';
 import { Module, SchemaExtractor } from '@teambit/schema';
 import { Component } from '@teambit/component';
@@ -54,7 +55,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return program as any as Module;
   }
 
-  async extractAll() {
+  async extractAll(json = false) {
     if (!this.componentPrograms) {
       throw new Error(
         'unable to run Typescript Schema Extractor, make sure the watch is running and its check-types flag is enabled'
@@ -62,33 +63,50 @@ export class TypeScriptExtractor implements SchemaExtractor {
     }
     const compPrograms = this.componentPrograms.getAll();
     const app = new Application();
-    const entryPoints: DocumentationEntryPoint[] = compPrograms.map((compProgram) => {
-      const { program, component } = compProgram;
-      if (!program) {
-        throw new Error(`unable to find ts.program for ${component.id.toString()}`);
-      }
-      const mainFile = component.state._consumer.mainFile;
-      const mainFileAbs = join(compProgram.componentDir, mainFile);
-      const sourceFile = program.getSourceFile(mainFileAbs);
-      if (!sourceFile) {
-        throw new Error(`unable to find ts.sourceFile for ${component.id.toString()}, main-file: ${mainFile}`);
-      }
-      return {
-        displayName: component.id.toStringWithoutVersion(),
-        program,
-        sourceFile,
-      };
-    });
+    const entryPoints: DocumentationEntryPoint[] = compact(
+      compPrograms.map((compProgram) => {
+        const { program, component } = compProgram;
+        if (!program) {
+          throw new Error(`unable to find ts.program for ${component.id.toString()}`);
+        }
+        const mainFile = component.state._consumer.mainFile;
+        const mainFileAbs = join(compProgram.componentDir, mainFile);
+        const sourceFile = getSourceFile(mainFileAbs, program, component.id.toString());
+        if (!sourceFile) {
+          return null;
+        }
+        return {
+          displayName: component.id.toStringWithoutVersion(),
+          program,
+          sourceFile,
+        };
+      })
+    );
 
     const project = app.converter.convert(entryPoints);
 
-    const outputDir = 'docs-all';
-
     // Rendered docs
-    await app.generateDocs(project, outputDir);
+    json ? await app.generateJson(project, 'docs-json.json') : await app.generateDocs(project, 'docs-all');
 
     return project as any as Module;
   }
+}
+
+function getSourceFile(mainFile: string, program: ts.Program, compId: string): ts.SourceFile | null {
+  if (!isSupportedFile(mainFile)) {
+    return null;
+  }
+  const sourceFile = program.getSourceFile(mainFile);
+  if (!sourceFile) {
+    throw new Error(`unable to find ts.sourceFile for ${compId}, main-file: ${mainFile}`);
+  }
+
+  return sourceFile;
+}
+
+function isSupportedFile(filepath: string) {
+  const supportedExt = ['.ts', '.tsx', '.js', '.jsx'];
+  return supportedExt.some((ext) => filepath.endsWith(ext));
 }
 
 // export class TypeScriptExtractor implements SchemaExtractor {
