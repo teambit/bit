@@ -1,4 +1,4 @@
-import isNumber from '../number/is-number';
+import { isNumber } from '@teambit/toolbox.number.is-number';
 
 export type SSHUrl = {
   username: string;
