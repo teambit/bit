@@ -129,13 +129,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     });
   }
 
-  private async getComponentIdsToSign(
-    ids: ComponentID[]
-  ): Promise<{
+  private async getComponentIdsToSign(ids: ComponentID[]): Promise<{
     componentsToSkip: ComponentID[];
     componentsToSign: ComponentID[];
   }> {
-    // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
+    // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
     const components = await this.scope.loadMany(ids);
     this.logger.clearStatusLine();
