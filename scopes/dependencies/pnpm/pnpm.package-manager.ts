@@ -20,6 +20,7 @@ import { join } from 'path';
 import userHome from 'user-home';
 
 const defaultStoreDir = join(userHome, '.pnpm-store');
+const defaultCacheDir = join(userHome, '.pnpm-cache');
 
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
@@ -34,6 +35,7 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir ? join(installOptions?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
+    const cacheDir = installOptions?.cacheRootDir ? join(installOptions?.cacheRootDir, '.pnpm-cache') : defaultCacheDir;
 
     const components = componentDirectoryMap.toArray().map(([component]) => component);
     const options: CreateFromComponentsOptions = {
@@ -69,7 +71,7 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.off();
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
-    await install(rootManifest, componentsManifests, storeDir, registries, proxyConfig, this.logger);
+    await install(rootManifest, componentsManifests, storeDir, cacheDir, registries, proxyConfig, this.logger);
     this.logger.on();
     // Make a divider row to improve output
     this.logger.console('-------------------------');
@@ -97,10 +99,10 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { resolveRemoteVersion } = require('./lynx');
-    const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
+    const cacheDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-cache') : defaultStoreDir;
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
-    return resolveRemoteVersion(packageName, options.rootDir, storeDir, registries, proxyConfig);
+    return resolveRemoteVersion(packageName, options.rootDir, cacheDir, registries, proxyConfig);
   }
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {

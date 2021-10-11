@@ -34,7 +34,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  origin: CompilationInitiator; // describes where the compilation is coming from
+  initiator: CompilationInitiator; // describes where the compilation is coming from
 };
 
 export type CompileError = { path: string; error: Error };
@@ -62,10 +62,10 @@ export class ComponentCompiler {
 
     if (this.compilerInstance.transpileFile) {
       await Promise.all(
-        this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file, options.origin))
+        this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file, options.initiator))
       );
     } else if (this.compilerInstance.transpileComponent) {
-      await this.compileAllFilesWithNewCompiler(this.component, options.origin);
+      await this.compileAllFilesWithNewCompiler(this.component, options.initiator);
     } else {
       throw new Error(
         `compiler ${this.compilerId.toString()} doesn't implement either "transpileFile" or "transpileComponent" methods`
@@ -118,8 +118,8 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile, origin: CompilationInitiator): Promise<void> {
-    const options = { componentDir: this.componentDir, filePath: file.relative, origin };
+  private async compileOneFileWithNewCompiler(file: SourceFile, initiator: CompilationInitiator): Promise<void> {
+    const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
     if (isFileSupported) {
@@ -150,7 +150,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileAllFilesWithNewCompiler(
     component: ConsumerComponent,
-    origin: CompilationInitiator
+    initiator: CompilationInitiator
   ): Promise<void> {
     const base = this.distDir;
     const filesToCompile: SourceFile[] = [];
@@ -176,7 +176,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
           component,
           componentDir: this.componentDir,
           outputDir: this.workspace.getComponentPackagePath(component),
-          origin,
+          initiator,
         });
       } catch (error: any) {
         this.compileErrors.push({ path: this.componentDir, error });
@@ -211,22 +211,22 @@ export class WorkspaceCompiler {
       changed: true,
       verbose: false,
       deleteDistDir: false,
-      origin: CompilationInitiator.PreStart,
+      initiator: CompilationInitiator.PreStart,
     });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
     if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
-      await this.compileComponents([id.toString()], { origin: CompilationInitiator.AspectLoadFail }, true);
+      await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
       return true;
     }
     return false;
   }
 
-  async onComponentChange(component: Component): Promise<SerializableResults> {
+  async onComponentChange(component: Component, initiator?: CompilationInitiator): Promise<SerializableResults> {
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { origin: CompilationInitiator.ComponentChanged },
+      { initiator: initiator || CompilationInitiator.ComponentChanged },
       true
     );
     return {
