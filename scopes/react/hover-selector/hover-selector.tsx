@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
 
-export interface MouseSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface HoverSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
   onElementChange?: (element: HTMLElement | null) => void;
   disabled?: boolean;
 }
 
-export function HoverSelector({ onElementChange, onMouseOver, onMouseLeave, disabled, ...rest }: MouseSelectorProps) {
+export function HoverSelector({ onElementChange, onMouseOver, onMouseLeave, disabled, ...rest }: HoverSelectorProps) {
   const handleEnter = useCallback(
     (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       onMouseOver?.(event);

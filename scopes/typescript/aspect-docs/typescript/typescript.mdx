@@ -23,3 +23,51 @@ compilerOptions.outDir = <CompilerOptions.distDir>
 
 This is done to avoid confusion when the distDir is `x` and ts-config outDir is `y`,
 in which case, the dists in the capsule are written into `y`, but other bit processes expect to find them in `x`.
+
+# Override typescript configuration in a custom env:
+
+When creating a new custom environment, use the following API to change the typescript compiler config.
+
+```
+useTypescript(modifiers?: UseTypescriptModifiers, tsModule: any = ts)
+```
+
+The modifiers are:
+
+```
+type UseTypescriptModifiers = {
+  buildConfig?: TsConfigTransformer[];
+  devConfig?: TsConfigTransformer[];
+};
+```
+
+As you can see, you can customize the configuration for both: the build process and for the compilation on the workspace.
+
+An example of a TsConfigTransformer used by `teambit/aspect` for the build process, which uses the typescript compiler only for generating the types:
+
+```
+const tsconfig = require("./tsconfig.json");
+
+const transformer: TsConfigTransformer = (config: TypescriptConfigMutator) => {
+      config
+        .mergeTsConfig(tsconfig)
+        .setArtifactName('declaration')
+        .setDistGlobPatterns([`dist/**/*.d.ts`])
+        .setShouldCopyNonSupportedFiles(false);
+      return config;
+    };
+```
+
+In the last example, a custom tsconfig.json was merged to the builtin tsconfig.json.
+
+```
+{
+  "compilerOptions": {
+    ...
+    "emitDeclarationOnly": true,
+    ...
+  },
+}
+```
+
+Some more props were changed as well to accomodate this env

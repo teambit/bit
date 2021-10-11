@@ -18,14 +18,13 @@ export interface ComponentLabelProps extends CardProps {
 
 export function ComponentLabel({ componentId, className, link, scopeLink, local, ...rest }: ComponentLabelProps) {
   return (
-    <Card {...rest} className={classNames(className, styles.duoComponentBubble)} data-ignore-component-highlight>
-      <ScopeBubble href={scopeLink} componentId={componentId} className={bubble} data-ignore-component-highlight />
+    <Card {...rest} className={classNames(className, styles.duoComponentBubble)}>
+      <ScopeBubble href={scopeLink} componentId={componentId} className={bubble} />
       <ComponentBubble
         href={link}
         componentId={componentId}
         className={bubble}
         local={local}
-        data-ignore-component-highlight
       />
     </Card>
   );

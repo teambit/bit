@@ -20,14 +20,14 @@ export class WorkerMain {
 
   static runtime = MainRuntime;
 
-  listWorkers() {
+  listWorkers(): HarmonyWorker<any>[] {
     return this.workerSlot.values();
   }
 
   /**
    * create a new worker.
    */
-  async declareWorker<T>(name: string, path: string) {
+  async declareWorker<T>(name: string, path: string): Promise<HarmonyWorker<T>> {
     this.workerNameSlot.register(name);
 
     const maybeAspectId = this.workerNameSlot.toArray().find(([, workerName]) => {
@@ -43,7 +43,7 @@ export class WorkerMain {
     return systemWorker;
   }
 
-  private async resolveWorkerScript(name: string, aspectId: string) {
+  private async resolveWorkerScript(name: string, aspectId: string): Promise<string> {
     const host = this.componentAspect.getHost();
     const id = await host.resolveComponentId(aspectId);
     const component = await host.get(id);
@@ -54,7 +54,7 @@ export class WorkerMain {
     return require.resolve(join(packageName, 'dist', `${name}.worker.js`));
   }
 
-  getWorker<T>(id: string) {
+  getWorker<T>(id: string): HarmonyWorker<T> {
     return this.workerSlot.get(id) as HarmonyWorker<T>;
   }
 

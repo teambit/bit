@@ -5,17 +5,21 @@ import nodeEndpoint from './node-endpoint';
 
 export type InitOptions = {
   /**
-   * determine whether stdout should be piped into the parent process.
+   * Determines whether stdout should be piped into the parent process.
+   * If this is set to true, then worker.stdout is NOT automatically piped through to process.stdout in the parent.
    */
   stdout: boolean;
 
   /**
-   * determine whether stderr should be piped into the parent process.
+   * Determines whether stderr should be piped into the parent process.
+   * If this is set to true, then worker.stderr is NOT automatically piped through to process.stderr in the parent.
    */
   stderr: boolean;
 
   /**
-   * determine whether stdin should be piped into the parent process.
+   * Determines whether stdin should be piped into the parent process.
+   * If this is set to true, then worker.stdin provides a writable stream whose contents appear as process.stdin inside
+   * the Worker. By default, no data is provided.
    */
   stdin: boolean;
 };

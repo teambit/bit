@@ -84,6 +84,11 @@ export default function (src) {
       case 'ExportDefaultDeclaration':
         addExportedToImportSpecifier(node.declaration.name);
         break;
+      case 'ImportExpression': {
+        // node represents Dynamic Imports such as import(source)
+        if (node.source?.value) addDependency(node.source?.value);
+        break;
+      }
       case 'CallExpression':
         {
           const value = getDependenciesFromCallExpression(node);

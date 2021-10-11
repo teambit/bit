@@ -13,6 +13,7 @@ export {
   getCoreAspectPackageName,
   getCoreAspectName,
 } from './core-aspects';
+export { PluginDefinition } from './plugin-definition';
 export { AspectDefinition } from './aspect-definition';
 export { AspectLoaderAspect };
 export default AspectLoaderAspect;

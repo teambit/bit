@@ -110,7 +110,12 @@ use --json to get the list of all workspace capsules`);
 
 export class CapsuleCmd implements Command {
   name = 'capsule <sub-command>';
-  description = 'manage capsules';
+  shortDescription = 'manage capsules';
+  description = `manage capsules.
+a capsule is a directory contains the component code, isolated from the workspace.
+normally, capsules are created during the build process, the component files are copied and the packages are installed
+via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
+other users after publishing/exporting them.`;
   alias = '';
   group = 'capsules';
   commands: Command[] = [];

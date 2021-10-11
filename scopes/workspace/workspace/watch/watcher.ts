@@ -1,21 +1,20 @@
 import { PubsubMain } from '@teambit/pubsub';
-import { dirname } from 'path';
+import { dirname, sep } from 'path';
 import { difference } from 'lodash';
 import { ComponentID } from '@teambit/component';
-
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-
+import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { CompilationInitiator } from '@teambit/compiler';
 import { WorkspaceAspect } from '../';
 import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { Workspace } from '../workspace';
@@ -28,7 +27,7 @@ export class Watcher {
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
-    private trackDirs: { [dir: string]: ComponentID } = {},
+    private trackDirs: { [dir: PathLinux]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
@@ -42,7 +41,7 @@ export class Watcher {
     return this.workspace.consumer;
   }
 
-  async watchAll(opts?: { msgs; verbose?: boolean }) {
+  async watchAll(opts?: { msgs; verbose?: boolean; initiator?: CompilationInitiator }) {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const _verbose = opts?.verbose || false;
     await this.createWatcher();
@@ -60,7 +59,7 @@ export class Watcher {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath)) || [];
+        const buildResults = (await this.handleChange(filePath, opts?.initiator)) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
@@ -83,7 +82,7 @@ export class Watcher {
     });
   }
 
-  private async handleChange(filePath: string): Promise<OnComponentEventResult[]> {
+  private async handleChange(filePath: string, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
         const buildResults = await this.handleBitmapChanges();
@@ -96,7 +95,7 @@ export class Watcher {
         return this.completeWatch();
       }
 
-      const buildResults = await this.executeWatchOperationsOnComponent(componentId);
+      const buildResults = await this.executeWatchOperationsOnComponent(componentId, true, initiator);
       this.completeWatch();
       return buildResults;
     } catch (err: any) {
@@ -108,7 +107,7 @@ export class Watcher {
   }
 
   /**
-   * if .bitmap has change, it's possible that a new component has added. trigger onComponentAdd.
+   * if .bitmap changed, it's possible that a new component has been added. trigger onComponentAdd.
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
     const previewsTrackDirs = { ...this.trackDirs };
@@ -139,7 +138,8 @@ export class Watcher {
 
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
-    isChange = true
+    isChange = true,
+    initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     if (this.isComponentWatchedExternally(componentId)) {
       // update capsule, once done, it automatically triggers the external watcher
@@ -159,7 +159,7 @@ export class Watcher {
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
-        ? await this.workspace.triggerOnComponentChange(componentId)
+        ? await this.workspace.triggerOnComponentChange(componentId, initiator)
         : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err: any) {
       // do not exist the watch process on errors, just print them
@@ -243,7 +243,7 @@ export class Watcher {
       // https://github.com/paulmillr/chokidar/issues/724
       ignored: (path) => {
         // Ignore package.json temporarily since it cerates endless loop since it's re-written after each build
-        if (path.includes('dist') || path.includes('node_modules') || path.includes('package.json')) {
+        if (path.includes(`${sep}node_modules${sep}`) || path.includes(`${sep}package.json`)) {
           return true;
         }
         return false;
@@ -270,7 +270,7 @@ export class Watcher {
     );
   }
 
-  private async getPathsToWatch(): Promise<string[]> {
+  private async getPathsToWatch(): Promise<PathOsBasedAbsolute[]> {
     await this.setTrackDirs();
     const paths = [...Object.keys(this.trackDirs), BIT_MAP];
     const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));

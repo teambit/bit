@@ -23,6 +23,12 @@ export class PrettierFormatter implements Formatter {
     private prettierModule = PrettierLib
   ) {}
 
+  displayName = 'Prettier';
+
+  displayConfig() {
+    return JSON.stringify(this.options, null, 2);
+  }
+
   async format(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }
