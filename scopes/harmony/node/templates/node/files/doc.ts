@@ -1,11 +1,18 @@
-export function docFile() {
-  return `---
-labels: ['module', 'paths', 'filesystem']
+import { ComponentContext } from '@teambit/generator';
+
+export function docFile(context: ComponentContext) {
+  return {
+    relativePath: `${context.name}.docs.mdx`,
+    content: `---
+labels: ['module']
 description: 'A general purpose node module'
 ---
 
-This is a customized extension for Node, based of the [Node Aspect](https://bit.dev/teambit/harmony/node).
+API:
 
-Explain here the modified configurations and tools applied.
-`;
+\`\`\`ts
+function ${context.nameCamelCase}(): string
+\`\`\`
+`,
+  };
 }

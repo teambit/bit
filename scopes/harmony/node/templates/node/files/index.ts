@@ -1,6 +1,9 @@
-// import { ComponentContext } from '@teambit/generator';
+import { ComponentContext } from '@teambit/generator';
 
-export function indexFile() {
-  return `
-  `;
+export function indexFile(context: ComponentContext) {
+  return {
+    relativePath: 'index.ts',
+    content: `export { ${context.nameCamelCase} } from './${context.name}';`,
+    isMain: true,
+  };
 }
