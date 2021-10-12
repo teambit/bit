@@ -280,13 +280,13 @@ export class TypescriptCompiler implements Compiler {
   async writeTsConfigForWatch(dir: string) {
     const tsConfig = { ...this.options.tsconfig };
     const compilerOptions: ts.CompilerOptions = { ...tsConfig.compilerOptions };
-    compilerOptions.noEmit = true;
+    compilerOptions.emitDeclarationOnly = true;
     compilerOptions.allowJs = true;
     compilerOptions.composite = true;
-    // compilerOptions.preserveSymlinks = false;
     tsConfig.compilerOptions = compilerOptions;
 
     const tsconfigStr = this.stringifyTsconfig(tsConfig);
+    // @todo: write only if changed, otherwise, TS will rebuild it every single time.
     await fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr);
   }
 
