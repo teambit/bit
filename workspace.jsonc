@@ -558,7 +558,8 @@
       }
     },
     "scopes/ui-foundation": {
-      "defaultScope": "teambit.ui-foundation"
+      "defaultScope": "teambit.ui-foundation",
+      "teambit.community/envs/community-react": "-"
     },
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
