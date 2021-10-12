@@ -1445,7 +1445,7 @@
     },
     "ui/tree/tree-node": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.447",
+        "version": "0.0.448",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/tree/tree-node"
     },
