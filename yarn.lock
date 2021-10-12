@@ -5742,6 +5742,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/design.elements.icon@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@teambit/design.elements.icon@npm:1.0.5"
+  dependencies:
+    "@teambit/base-ui.elements.icon": 1.0.0
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 0466cdb3f775fb29637ac57bcd4048597ebaee750537c02205624ad04d1a5c6fe6df1fa537e539b5c5732d89b15c0057672d5997e5fe95a65de2e99090e97685
+  languageName: node
+  linkType: hard
+
 "@teambit/design.ui.icon-button@npm:1.0.1":
   version: 1.0.1
   resolution: "@teambit/design.ui.icon-button@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.icon-button%2F-%2Fdesign.ui.icon-button-1.0.1.tgz"
@@ -6959,6 +6972,7 @@ __metadata:
     "@teambit/base-ui.utils.time-ago": 1.0.0
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.6
+    "@teambit/design.elements.icon": 1.0.5
     "@teambit/design.ui.icon-button": 1.0.1
     "@teambit/documenter.code.react-playground": 4.0.1
     "@teambit/documenter.content.documentation-links": 4.0.1
@@ -7005,10 +7019,12 @@ __metadata:
     "@teambit/legacy": 1.0.160
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
-    "@teambit/react.instructions.react.adding-compositions": ^0.0.6
-    "@teambit/react.instructions.react.adding-tests": ^0.0.6
+    "@teambit/react.instructions.react.adding-compositions": 0.0.6
+    "@teambit/react.instructions.react.adding-tests": 0.0.6
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/toolbox.network.agent": 0.0.116
+    "@teambit/ui-foundation.ui.tree.folder-tree-node": 0.0.445
+    "@teambit/ui-foundation.ui.tree.tree-node": 0.0.447
     "@teambit/ui.composition-card": 0.0.259
     "@teambit/ui.routing.provider": 0.0.364
     "@testing-library/jest-dom": 5.11.10
@@ -7489,7 +7505,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/react.instructions.react.adding-compositions@npm:^0.0.6":
+"@teambit/react.instructions.react.adding-compositions@npm:0.0.6":
   version: 0.0.6
   resolution: "@teambit/react.instructions.react.adding-compositions@npm:0.0.6"
   dependencies:
@@ -7503,7 +7519,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/react.instructions.react.adding-tests@npm:^0.0.6":
+"@teambit/react.instructions.react.adding-tests@npm:0.0.6":
   version: 0.0.6
   resolution: "@teambit/react.instructions.react.adding-tests@npm:0.0.6"
   dependencies:
@@ -7553,6 +7569,43 @@ __metadata:
   peerDependencies:
     "@teambit/legacy": 1.0.108
   checksum: 92c3a62f45e3ae95b52f208b15db073cf241f3aeb8a0afdecfd1e56aebf39d2a9b09d7924b0d07cbe8a87632dc3578bd389e66b8321ce396568f5dcac3e3d762
+  languageName: node
+  linkType: hard
+
+"@teambit/ui-foundation.ui.tree.folder-tree-node@npm:0.0.445":
+  version: 0.0.445
+  resolution: "@teambit/ui-foundation.ui.tree.folder-tree-node@npm:0.0.445"
+  dependencies:
+    "@teambit/base-ui.graph.tree.indent": 1.0.0
+    "@teambit/base-ui.graph.tree.recursive-tree": 1.0.0
+    "@teambit/base-ui.theme.colors": 1.0.0
+    "@teambit/evangelist.elements.icon": 1.0.2
+    classnames: 2.2.6
+    core-js: ^3.0.0
+    react-animate-height: 2.0.23
+  peerDependencies:
+    "@teambit/legacy": 1.0.160
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: e2d5baf9d8eadc7b1c78476f3b5fe679d86f8abd934ccf8f982f7ef0f838c711dfae826f3056c47dc52750beed465e7ca2a910c50655acc9b0ad9cdd9fe0bf27
+  languageName: node
+  linkType: hard
+
+"@teambit/ui-foundation.ui.tree.tree-node@npm:0.0.447":
+  version: 0.0.447
+  resolution: "@teambit/ui-foundation.ui.tree.tree-node@npm:0.0.447"
+  dependencies:
+    "@teambit/base-ui.graph.tree.indent": 1.0.0
+    "@teambit/base-ui.graph.tree.recursive-tree": 1.0.0
+    "@teambit/base-ui.routing.nav-link": 1.0.0
+    "@teambit/base-ui.theme.colors": 1.0.0
+    classnames: 2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    "@teambit/legacy": 1.0.160
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: cb1c01ab9b283ea3e15b887da30185580f8e070a1d7acca9965db9961a4c0d890c90e84143a5e39d3259a4640f3463a713af309cdafe5672c376cbf3945eed66
   languageName: node
   linkType: hard
 
@@ -33527,7 +33580,7 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@3.9.7#~builtin<compat/typescript>":
   version: 3.9.7
-  resolution: "typescript@patch:typescript@npm%3A3.9.7#~builtin<compat/typescript>::version=3.9.7&hash=32657b"
+  resolution: "typescript@patch:typescript@npm%3A3.9.7#~builtin<compat/typescript>::version=3.9.7&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
@@ -33537,17 +33590,17 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@4.4.2#~builtin<compat/typescript>":
   version: 4.4.2
-  resolution: "typescript@patch:typescript@npm%3A4.4.2#~builtin<compat/typescript>::version=4.4.2&hash=32657b"
+  resolution: "typescript@patch:typescript@npm%3A4.4.2#~builtin<compat/typescript>::version=4.4.2&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 3109ae25705746996007161cdd3271857db4f40356b894e34d4cabc216bf9e251f53e0bb6e48df2450b5e3fd948dcbee716a616a4ad4cf7251292025e6163cb1
+  checksum: 11d6ab6e868117908c388401e2ac06d503c5c8709115ab80ee69a1a6352c1f98471d1e595636bfe6a2d6b20b03a44df6bb2d3d198cea97c0c328968cd18d2b70
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@^2.6.2#~builtin<compat/typescript>":
   version: 2.9.2
-  resolution: "typescript@patch:typescript@npm%3A2.9.2#~builtin<compat/typescript>::version=2.9.2&hash=32657b"
+  resolution: "typescript@patch:typescript@npm%3A2.9.2#~builtin<compat/typescript>::version=2.9.2&hash=d8b4e7"
   bin:
     tsc: ./bin/tsc
     tsserver: ./bin/tsserver
@@ -33557,7 +33610,7 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@^3.9.3#~builtin<compat/typescript>":
   version: 3.9.10
-  resolution: "typescript@patch:typescript@npm%3A3.9.10#~builtin<compat/typescript>::version=3.9.10&hash=32657b"
+  resolution: "typescript@patch:typescript@npm%3A3.9.10#~builtin<compat/typescript>::version=3.9.10&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
