@@ -22,7 +22,7 @@ export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
   const [open, setOpen] = useState(node.payload?.open ?? true);
   useEffect(() => {
     // allow node model to override open state
-    node?.payload?.open !== undefined && setOpen(node?.payload?.open);
+    node?.payload?.open !== undefined && setOpen(node?.payload?.open)
   }, [node?.payload?.open])
   const displayName = node.id.replace(/\/$/, '').split('/').pop();
 

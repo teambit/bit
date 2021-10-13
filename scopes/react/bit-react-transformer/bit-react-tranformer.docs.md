@@ -10,7 +10,6 @@ Having the added metadata is useful for debbuging and [showcasing](/ui/component
 ### Example
 
 Input:
-
 ```ts
 export function Button() {
   return <div></div>;
