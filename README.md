@@ -34,23 +34,25 @@ Componentize modern app development, build modular systems and applications, and
 
 Bit is an open tool for web developers to build and collaborate on component-driven applications. It enables modern apps to be quickly assembled from components and eliminates the friction around developing together or working on more than one app. You can think of Bit as a way to develop entire web apps in a way similar to how microservices build your backend.
 
-Bit consists of a **workspace** (with UI) where component are developed, managed, and integrated. In the workspace you build can fully distributed projects with a simple monolithic-like dev experience. A single workspace can easily host and manage many components even using different stacks and frameworks.
-
-Each component has an isolated **dev environment** so it is independently developed, tested, built, and run anywhere you need it. Each component is versioned and can be independently deployed. **Dependencies** between components are automatically defined and managed by Bit, using smart **graph versioning**, making it simple to incrementally update and build changes to many components.
-
-**Scopes** help you store and organize components. Remote scopes (on [bit cloud](https://bit.dev) or your own server) make it easy to move components from app to app or between teams, share and discover components, and collaborate to stay in sync.
-
+Bit consists of a **workspace** (with UI) where component are developed, managed, and integrated. In the workspace you build can fully distributed projects with a simple monolithic-like dev experience. A single workspace can easily host and manage many components even using different stacks and frameworks. 
+  
+Each component has an isolated **dev environment** so it is independently developed, tested, built, and run anywhere you need it. Each component is versioned and can be independently deployed. **Dependencies** between components are automatically defined and managed by Bit, using smart **graph versioning**, making it simple to incrementally update and build changes to many components.  
+  
+**Scopes** help you store and organize components. Remote scopes (on [bit cloud](https://bit.dev) or your own server) make it easy to move components from app to app or between teams, share and discover components, and collaborate to stay in sync. 
+  
 ### Why do developers like Bit?
 
 Modern applications are already built with components. But, the tools used to build them were build to develop, version, and deploy entire projects and not the components within them. As a result, developers are forced to build component-driven applications in a monolithic way, which is painful and highly inefficient. They seek solutions such as Component Libraries and Micro Frontends to try and build in a more modular and distributed way, split development, or share components.
-
+  
 With Bit you don't have these problems. Bit gives developers a great experience for building components and composing them into infinite features and applications, making modern web development not only faster but also more distributed, collaborative, scalable, and consistent.
+
 
 ### Why do organizations need Bit?
 
 When you build many applications with many teams, and every team works inside a monolith oblivious of other people's components, development becomes slow and inconsistent. Bit helps organizations take control of their components, standardize their development (with features like custom component generators and dev envs), and collaborate to achieve speed and consistency. It makes teams more autonomous to build and ship components and at the same time collaborate through a central hub for components.
-
+  
 [Here are 4 popular use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) many organizations choose to start with.
+
 
 ### How to Start?
 
@@ -88,8 +90,9 @@ Install dependencies:
 cd <my-workspace-name>
 bit start
 ```
-
+ 
 Open-up your browser on localhost:3000, or any other available port, and view the demo components.
+
 
 Create components:
 
@@ -97,6 +100,7 @@ Create components:
 bit create react ui/button     # TypeScript
 bit create react-js ui/button  # JavaScript
 ```
+
 
 ### Popular Onboarding Use-Cases
 

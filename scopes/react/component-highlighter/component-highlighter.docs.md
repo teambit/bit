@@ -33,7 +33,9 @@ You can also use it manually, to have more control:
 ```tsx
 const [element, setElement] = useState<HTMLElement | undefined>(undefined);
 
-useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
+useEffect(() => setElement(
+    document.getElementById('to-highlight')
+), [targetRef.current]);
 
 const target = targetElement && {
   element: targetElement,
@@ -53,24 +55,22 @@ return (
 ```
 
 ## How does it work?
-
 The manual highlighter works by positioning elements (a frame and a label) to a target element. It uses [PopperJS](https://popper.js.org/) to correctly align them to the element.
 
 The automatic highlighter then adds an event listener for hover events, which automatically tracks mouse movements and finds the most relevant React component using [DOM-to-react](https://bit.dev/teambit/react/modules/dom-to-react). It bubbles up the DOM until it finds a component with bit metadata.
 
 Where does the metadata come from? The highlighter assumes the code has been transpiled by Bit's [custom babel plugin](https://bit.dev/teambit/react/babel/bit-react-transformer). The plugin looks for React components (i.e. functions or classes), and attaches a metadata object to them.
-
 > The `Bit React Transformer` babel plugin is already running in the Preview during `bit start`.  
-> It only effects the browser bundle, and not the dists.
+It only effects the browser bundle, and not the dists.
 
 The result looks like this:
 
 ```tsx
 var __bit_component = {
   id: 'teambit.base-ui/button@1.0.0',
-  homepage: 'https://bit.dev/teambit/base-ui/input/button',
+  homepage: 'https://bit.dev/teambit/base-ui/input/button', 
   exported: true,
-};
+}
 
 export function Button() {
   return <div>click me!</div>;
@@ -83,7 +83,6 @@ Button.__bit_component = __bit_component;
 ## Customization
 
 Use these CSS variables to edit the highlighter color
-
 ```css
 --bit-highlighter-color: #eebcc9;
 --bit-highlighter-color-hover: #f6dae2;

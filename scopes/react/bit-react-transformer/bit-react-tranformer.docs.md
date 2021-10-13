@@ -18,13 +18,12 @@ export function Button() {
 ```
 
 Output:
-
 ```tsx
 var __bit_component = {
   id: 'teambit.base-ui/button@1.0.0',
-  homepage: 'https://bit.dev/teambit/base-ui/input/button',
+  homepage: 'https://bit.dev/teambit/base-ui/input/button', 
   exported: true,
-};
+}
 
 export function Button() {
   return <div></div>;

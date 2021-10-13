@@ -7,12 +7,13 @@ import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import styles from './folder-tree-node.module.scss';
 
-export type FolderTreeNodeProps = {} & TreeNodeProps<FolderPayload>;
+export type FolderTreeNodeProps = {
+} & TreeNodeProps<FolderPayload>;
 
 export type FolderPayload = {
   icon?: string | ReactNode;
   open?: boolean;
-};
+}
 
 /**
  * Renders a folder node in the file tree
@@ -22,7 +23,7 @@ export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
   useEffect(() => {
     // allow node model to override open state
     node?.payload?.open !== undefined && setOpen(node?.payload?.open);
-  }, [node?.payload?.open]);
+  }, [node?.payload?.open])
   const displayName = node.id.replace(/\/$/, '').split('/').pop();
 
   const CustomIcon =

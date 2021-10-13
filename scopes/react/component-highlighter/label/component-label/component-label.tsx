@@ -20,7 +20,12 @@ export function ComponentLabel({ componentId, className, link, scopeLink, local,
   return (
     <Card {...rest} className={classNames(className, styles.duoComponentBubble)}>
       <ScopeBubble href={scopeLink} componentId={componentId} className={bubble} />
-      <ComponentBubble href={link} componentId={componentId} className={bubble} local={local} />
+      <ComponentBubble
+        href={link}
+        componentId={componentId}
+        className={bubble}
+        local={local}
+      />
     </Card>
   );
 }

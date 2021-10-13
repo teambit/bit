@@ -36,7 +36,15 @@ export function LabelContainer({ targetRef, offset, placement, flip = true, clas
 
   if (!targetRef) return null;
 
-  return <div {...rest} ref={setSourceRef} className={className} style={styles.popper} {...attributes.popper} />;
+  return (
+    <div
+      {...rest}
+      ref={setSourceRef}
+      className={className}
+      style={styles.popper}
+      {...attributes.popper}
+    />
+  );
 }
 
 export interface LabelProps extends CardProps {
