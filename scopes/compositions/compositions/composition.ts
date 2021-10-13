@@ -32,6 +32,7 @@ export class Composition {
     return {
       identifier: this.identifier,
       filepath: this.filepath,
+      displayName: this._displayName,
     };
   }
 
