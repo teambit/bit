@@ -7,11 +7,7 @@ export function compositionFile(context: ComponentContext) {
 import { ${context.nameCamelCase} } from './${context.name}';
 
 export function ReturnsCorrectValue() {
-  return (
-    <div>
-      {${context.nameCamelCase}()}
-    </div>
-  );
+  return <div>{${context.nameCamelCase}()}</div>;
 }
 `,
   };

@@ -11,7 +11,7 @@ description: 'A general purpose node module'
 API:
 
 \`\`\`ts
-function ${context.nameCamelCase}(): string
+function ${context.nameCamelCase}(): string;
 \`\`\`
 `,
   };
