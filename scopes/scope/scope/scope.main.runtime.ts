@@ -480,6 +480,8 @@ export class ScopeMain implements ComponentFactory {
           componentDir: requirableAspect.capsule.path,
         });
       }
+
+      return [];
     });
 
     await Promise.all(
