@@ -12,7 +12,6 @@ export async function getProxyConfig(): Promise<PackageManagerProxyConfig> {
     cert: config.config.cert,
     key: config.config.key,
     noProxy: config.config.rawConfig.noproxy,
-    localAddress: config.config.localAddress,
     strictSSL: config.config.strictSsl,
   };
   return proxyConfig;
@@ -24,7 +23,6 @@ export type ProxyConfig = {
   httpProxy?: string;
   httpsProxy?: string;
   key?: string;
-  localAddress?: string;
   noProxy?: boolean | string;
   strictSSL?: boolean;
 };
