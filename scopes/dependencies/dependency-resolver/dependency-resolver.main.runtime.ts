@@ -15,7 +15,7 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
-import { Http, ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -125,6 +125,41 @@ export interface DependencyResolverWorkspaceConfig {
    * A comma-separated string of domain extensions that a proxy should not be used for.
    */
   noProxy?: string;
+
+  /**
+   * The IP address of the local interface to use when making connections to the npm registry.
+   */
+  localAddress?: string;
+
+  /**
+   * How many times to retry if Bit fails to fetch from the registry.
+   */
+  fetchRetries?: number;
+
+  /*
+   * The exponential factor for retry backoff.
+   */
+  fetchRetryFactor?: number;
+
+  /*
+   * The minimum (base) timeout for retrying requests.
+   */
+  fetchRetryMintimeout?: number;
+
+  /*
+   * The maximum fallback timeout to ensure the retry factor does not make requests too long.
+   */
+  fetchRetryMaxtimeout?: number;
+
+  /*
+   * The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
+   */
+  fetchTimeout?: number;
+
+  /*
+   * Controls the maximum number of HTTP(S) requests to process simultaneously.
+   */
+  networkConcurrency?: number;
 
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
@@ -545,6 +580,21 @@ export class DependencyResolverMain {
       key: this.config.key,
       noProxy: this.config.noProxy,
       strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
+    };
+  }
+
+  async getNetworkConfig(): Promise<NetworkConfig> {
+    return this.getNetworkConfigFromDepResolverConfig();
+  }
+
+  private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
+    return {
+      fetchTimeout: this.config.fetchTimeout,
+      fetchRetries: this.config.fetchRetries,
+      fetchRetryFactor: this.config.fetchRetryFactor,
+      fetchRetryMintimeout: this.config.fetchRetryMintimeout,
+      fetchRetryMaxtimeout: this.config.fetchRetryMaxtimeout,
+      networkConcurrency: this.config.networkConcurrency,
     };
   }
 
