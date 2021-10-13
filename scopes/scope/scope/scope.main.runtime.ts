@@ -39,6 +39,8 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { Compiler } from '@teambit/compiler';
 import { compact, uniq, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
@@ -118,7 +120,9 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private envs: EnvsMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -434,23 +438,58 @@ export class ScopeMain implements ComponentFactory {
     const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
-      return new RequireableComponent(capsule.component, async () => {
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const plugins = this.aspectLoader.getPlugins(capsule.component, capsule.path);
-        if (plugins.has()) {
-          return plugins.load(MainRuntime.name);
-        }
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const aspect = require(capsule.path);
-        const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
-        const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
-        const runtimePath = scopeRuntime || mainRuntime;
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (runtimePath) require(runtimePath);
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return aspect;
-      });
+      return new RequireableComponent(
+        capsule.component,
+        async () => {
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          const plugins = this.aspectLoader.getPlugins(capsule.component, capsule.path);
+          if (plugins.has()) {
+            return plugins.load(MainRuntime.name);
+          }
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          const aspect = require(capsule.path);
+          const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
+          const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
+          const runtimePath = scopeRuntime || mainRuntime;
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          if (runtimePath) require(runtimePath);
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          return aspect;
+        },
+        capsule
+      );
     });
+  }
+
+  private async tryCompile(requirableAspect: RequireableComponent) {
+    const env = this.envs.getEnv(requirableAspect.component);
+    const compiler: Compiler = env.env.getCompiler();
+    const compiledCode = requirableAspect.component.filesystem.files.flatMap((file) => {
+      if (!compiler.isFileSupported(file.path)) {
+        return [
+          {
+            outputText: file.contents.toString('utf8'),
+            outputPath: file.path,
+          },
+        ];
+      }
+
+      if (compiler.transpileFile && requirableAspect.capsule) {
+        return compiler.transpileFile(file.contents.toString('utf8'), {
+          filePath: file.path,
+          componentDir: requirableAspect.capsule.path,
+        });
+      }
+    });
+
+    await Promise.all(
+      compact(compiledCode).map((compiledFile) => {
+        const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
+        return requirableAspect.capsule?.outputFile(path, compiledFile.outputText);
+      })
+    );
+
+    return this.aspectLoader.doRequire(requirableAspect);
   }
 
   async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
@@ -468,6 +507,7 @@ export class ScopeMain implements ComponentFactory {
             return await this.aspectLoader.doRequire(requireableExtension);
           } catch (err: any) {
             erroredId = requireableExtension.component.id.toString();
+            if (err.code === 'MODULE_NOT_FOUND') return await this.tryCompile(requireableExtension);
             error = err;
             throw err;
           }
@@ -493,6 +533,7 @@ export class ScopeMain implements ComponentFactory {
         return compact(manifestAgain);
       }
     }
+
     this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
     return [];
   }
@@ -811,6 +852,7 @@ export class ScopeMain implements ComponentFactory {
     AspectLoaderAspect,
     ExpressAspect,
     LoggerAspect,
+    EnvsAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -818,7 +860,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -826,7 +868,8 @@ export class ScopeMain implements ComponentFactory {
       IsolatorMain,
       AspectLoaderMain,
       ExpressMain,
-      LoggerMain
+      LoggerMain,
+      EnvsMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -859,7 +902,8 @@ export class ScopeMain implements ComponentFactory {
       preFetchObjectsSlot,
       isolator,
       aspectLoader,
-      logger
+      logger,
+      envs
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
