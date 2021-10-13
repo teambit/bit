@@ -36,20 +36,22 @@
 
 /* default for custom types */
 .admonition {
-  background-color: rgba(118, 51, 219, 0.1);
-  border-left: 8px solid #7633db;
+  background-color: var(--bit-accent-primary-bg, #eceaff);
+  border-left: 8px solid var(--bit-accent-primary-color, #6c5ce7);
 }
 
 .admonition h3 {
-  color: #7633db;
+  color: var(--bit-accent-primary-color, #6c5ce7);
 }
 
 .admonition .admonition-icon svg {
-  stroke: #7633db;
-  fill: #7633db;
+  stroke: var(--bit-accent-primary-color, #6c5ce7);
+  fill: var(--bit-accent-primary-color, #6c5ce7);
 }
 
 /** native types */
+
+// caution colors - @TODO - add a orange colors to pallet. we currently dont have one
 .admonition-caution {
   background-color: rgba(230, 126, 34, 0.1);
   border-left: 8px solid #e67e22;
@@ -64,58 +66,66 @@
   fill: #e67e22;
 }
 
+// tip colors
+
 .admonition-tip {
-  background-color: rgba(46, 204, 113, 0.1);
-  border-left: 8px solid #2ecc71;
+  background-color: var(--bit-accent-success-bg, #eefaf3);
+  border-left: 8px solid var(--bit-accent-success-color, #37b26c);
 }
 
 .admonition-tip h3 {
-  color: #2ecc71;
+  color: var(--bit-accent-success-color, #37b26c);
 }
 
 .admonition-tip .admonition-icon svg {
-  stroke: #2ecc71;
-  fill: #2ecc71;
+  stroke: var(--bit-accent-success-color, #37b26c);
+  fill: var(--bit-accent-success-color, #37b26c);
 }
 
+// warning colors
+
 .admonition-warning {
-  background-color: rgba(231, 76, 60, 0.1);
-  border-left: 8px solid #e74c3c;
+  background-color: var(--bit-accent-impulsive-bg, #fdeff2);
+  border-left: 8px solid var(--bit-accent-impulsive-color, #e62e5c);
 }
 
 .admonition-warning h3 {
-  color: #e74c3c;
+  color: var(--bit-accent-impulsive-color, #e62e5c);
 }
 
 .admonition-warning .admonition-icon svg {
-  stroke: #e74c3c;
-  fill: #e74c3c;
+  stroke: var(--bit-accent-impulsive-color, #e62e5c);
+  fill: var(--bit-accent-impulsive-color, #e62e5c);
 }
 
+// important colors
+
 .admonition-important {
-  background-color: rgba(52, 152, 219, 0.1);
-  border-left: 8px solid #3498db;
+  background-color: var(--bit-accent-process-color, #f3faff);
+  border-left: 8px solid var(--bit-accent-process-color, #0984e3);
 }
 
 .admonition-important h3 {
-  color: #3498db;
+  color: var(--bit-accent-process-color, #0984e3);
 }
 
 .admonition-important .admonition-icon svg {
-  stroke: #3498db;
-  fill: #3498db;
+  stroke: var(--bit-accent-process-color, #0984e3);
+  fill: var(--bit-accent-process-color, #0984e3);
+
 }
+// note colors
 
 .admonition-note {
-  background-color: rgba(241, 196, 15, 0.1);
-  border-left: 8px solid #f1c40f;
+  background-color: var(--bit-accent-hunger-bg, #fff5dd);
+  border-left: 8px solid var(--bit-accent-hunger-color, #ffc640);
 }
 
 .admonition-note h3 {
-  color: #f1c40f;
+  color: var(--bit-accent-hunger-bg, #ffc640);
 }
 
 .admonition-note .admonition-icon svg {
-  stroke: #f1c40f;
-  fill: #f1c40f;
+  stroke: var(--bit-accent-hunger-color, #ffc640);
+  fill: var(--bit-accent-hunger-color, #ffc640);
 }
