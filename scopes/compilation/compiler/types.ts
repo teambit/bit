@@ -1,15 +1,27 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { Component } from '@teambit/component';
 
 export type TranspileFileParams = {
   componentDir: string; // absolute path of the component's root directory
   filePath: string; // relative path of the file inside the component directory
 };
 
+export enum CompilationInitiator {
+  CmdReport,
+  CmdJson,
+  PreStart,
+  Start,
+  ComponentChanged,
+  AspectLoadFail,
+  ComponentAdded,
+}
+
 export type TranspileComponentParams = {
   component: ConsumerComponent;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
+  initiator: CompilationInitiator; // origin of the compilation's request
 };
 
 export type TranspileFileOutput =
@@ -84,6 +96,12 @@ export interface Compiler extends CompilerOptions {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string;
+
+  /**
+   * given a component, returns the path to the source folder to use for the preview, uses the one
+   * in node_modules by default
+   */
+  getPreviewComponentRootPath?(component: Component): string;
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.

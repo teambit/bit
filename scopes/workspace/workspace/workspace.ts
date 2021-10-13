@@ -61,10 +61,11 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference } from 'lodash';
+import { slice, uniqBy, difference, compact } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { CompilationInitiator } from '@teambit/compiler';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -467,7 +468,7 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
-  async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
+  async triggerOnComponentChange(id: ComponentID, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -476,7 +477,7 @@ export class Workspace implements ComponentFactory {
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component);
+      const onChangeResult = await onChangeFunc(component, initiator);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -930,10 +931,17 @@ export class Workspace implements ComponentFactory {
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     // load the scope first because we might need it for custom envs that extend external aspects
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
-    await this.scope.loadAspects(scopeIds, throwOnError);
-
     const workspaceAspects = await this.requireComponents(workspaceComps);
-    await this.aspectLoader.loadRequireableExtensions(workspaceAspects, throwOnError);
+    const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
+      workspaceAspects,
+      throwOnError
+    );
+    const manifestsIds = workspaceManifests.map((m) => m.id);
+
+    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
+
+    const allManifests = [...scopeManifests, ...workspaceManifests];
+    await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
@@ -1075,6 +1083,11 @@ export class Workspace implements ComponentFactory {
       }
 
       const requireFunc = async () => {
+        const plugins = this.aspectLoader.getPlugins(component, localPath);
+        if (plugins.has()) {
+          return plugins.load(MainRuntime.name);
+        }
+
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(localPath);
         // require aspect runtimes

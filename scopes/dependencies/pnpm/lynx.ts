@@ -48,6 +48,7 @@ type RegistriesMap = {
 
 async function createStoreController(
   storeDir: string,
+  cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {}
 ): Promise<StoreController> {
@@ -73,6 +74,7 @@ async function createStoreController(
   // const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
   const opts: CreateNewStoreControllerOptions = {
+    cacheDir,
     storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
@@ -89,7 +91,7 @@ async function createStoreController(
 }
 
 async function generateResolverAndFetcher(
-  storeDir: string,
+  cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {}
 ) {
@@ -97,14 +99,14 @@ async function generateResolverAndFetcher(
   const authConfig = getAuthConfig(registries);
   const opts: ClientOptions = {
     authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
-    storeDir,
+    cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
     ca: proxyConfig?.ca,
     cert: proxyConfig?.cert,
     key: proxyConfig?.key,
     noProxy: proxyConfig?.noProxy,
-    strictSSL: proxyConfig.strictSSL,
+    strictSsl: proxyConfig.strictSSL,
   };
   const result = createResolverAndFetcher(opts);
   return result;
@@ -114,6 +116,7 @@ export async function install(
   rootPathToManifest,
   pathsToManifests,
   storeDir: string,
+  cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -154,7 +157,7 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(storeDir, registries, proxyConfig);
+  const storeController = await createStoreController(storeDir, cacheDir, registries, proxyConfig);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
@@ -185,11 +188,11 @@ export async function install(
 export async function resolveRemoteVersion(
   packageName: string,
   rootDir: string,
-  storeDir: string,
+  cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {}
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(storeDir, registries, proxyConfig);
+  const { resolve } = await generateResolverAndFetcher(cacheDir, registries, proxyConfig);
   const resolveOpts = {
     projectDir: rootDir,
     registry: '',

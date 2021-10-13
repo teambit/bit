@@ -1,6 +1,9 @@
-import { EnvService, ExecutionContext } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
+import React from 'react';
+import { Text, Newline } from 'ink';
+import highlight from 'cli-highlight';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
@@ -10,7 +13,31 @@ import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
-export class DevServerService implements EnvService<ComponentServer> {
+export type DevServerDescriptor = {
+  /**
+   * id of the dev server (e.g. jest/mocha)
+   */
+  id: string;
+
+  /**
+   * display name of the dev server (e.g. Jest / Mocha)
+   */
+  displayName: string;
+
+  /**
+   * icon of the configured dev server.
+   */
+  icon: string;
+
+  /**
+   * string containing the config for display.
+   */
+  config: string;
+
+  version?: string;
+};
+
+export class DevServerService implements EnvService<ComponentServer, DevServerDescriptor> {
   name = 'dev server';
 
   constructor(
@@ -24,6 +51,45 @@ export class DevServerService implements EnvService<ComponentServer> {
      */
     private runtimeSlot: BrowserRuntimeSlot
   ) {}
+
+  async render(env: EnvDefinition, context: ExecutionContext[]) {
+    const descriptor = await this.getDescriptor(env, context);
+    return (
+      <Text key={descriptor?.id}>
+        <Text color="cyan">configured dev server: </Text>
+        <Text>
+          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
+        </Text>
+        <Newline />
+        <Text underline color="cyan">
+          dev server config:
+        </Text>
+        <Newline />
+        <Text>
+          {/* refactor a separate component which highlights for cli */}
+          {highlight(descriptor?.config || '', { language: 'javascript', ignoreIllegals: true })}
+        </Text>
+        <Newline />
+      </Text>
+    );
+  }
+
+  async getDescriptor(
+    environment: EnvDefinition,
+    context?: ExecutionContext[]
+  ): Promise<DevServerDescriptor | undefined> {
+    if (!environment.env.getDevServer || !context) return undefined;
+    const mergedContext = await this.buildContext(context[0], []);
+    const devServer: DevServer = environment.env.getDevServer(mergedContext);
+
+    return {
+      id: devServer.id || '',
+      displayName: devServer.displayName || '',
+      icon: devServer.icon || '',
+      config: devServer.displayConfig ? devServer.displayConfig() : '',
+      version: devServer.version ? devServer.version() : '?',
+    };
+  }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {
   //   const devServerContext = await this.buildContext(context);

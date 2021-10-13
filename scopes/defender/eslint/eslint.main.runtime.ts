@@ -41,6 +41,7 @@ export type EslintConfigTransformer = (
 
 export class ESLintMain {
   constructor(private logger: Logger) {}
+
   /**
    * create a eslint linter instance.
    * @param options eslint options.
