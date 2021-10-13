@@ -16,6 +16,7 @@ export function toPreviewUrl(component: ComponentModel, previewName?: string, ad
  */
 export function toPreviewServer(component: ComponentModel) {
   let explicitUrl = component.server?.url;
+  // eslint-disable-next-line no-console
   // quickfix - preview urls in `start` (without `--dev`) won't work without trailing '/'
   if (explicitUrl && !explicitUrl.endsWith('/')) explicitUrl += '/';
 
@@ -25,7 +26,7 @@ export function toPreviewServer(component: ComponentModel) {
 
   // fallback url for all components. Includes versions support
   // for example - "/api/teambit.base-ui/input/button@0.6.2/~aspect/preview/"
-  const defaultServerUrl = `/api/${component.id.toString()}/~aspect/preview/`;
+  const defaultServerUrl = `/bit-dev/api/${component.id.toString()}/~aspect/preview/`;
 
   return explicitUrl || /* envBasedUrl || */ defaultServerUrl;
 }

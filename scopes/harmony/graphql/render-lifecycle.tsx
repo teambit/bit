@@ -66,9 +66,9 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
-    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
+    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/bit-dev/subscriptions`;
 
-    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl });
+    const client = this.graphqlUI.createClient('/bit-dev/graphql', { state, subscriptionUri: wsUrl });
 
     return { client };
   };

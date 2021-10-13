@@ -77,6 +77,12 @@ export type UIConfig = {
    */
   publicDir: string;
 
+  /**
+   * set `publicPath` value for webpack.config to override
+   * in case server is not accessed using root route.
+   */
+  publicPath: string;
+
   /** the url to display when server is listening. Note that bit does not provide proxying to this url */
   publicUrl?: string;
 };
@@ -216,7 +222,13 @@ export class UiMain {
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
 
-    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const browserConfig = createWebpackConfig(
+      uiRoot.path,
+      [mainEntry],
+      uiRoot.name,
+      await this.publicDir(uiRoot),
+      this.config.publicPath
+    );
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
@@ -490,7 +502,8 @@ export class UiMain {
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
-      await this.publicDir(uiRoot)
+      await this.publicDir(uiRoot),
+      this.config.publicPath
     );
     if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
@@ -509,6 +522,8 @@ export class UiMain {
 
   static defaultConfig: UIConfig = {
     publicDir: 'public/bit',
+    // Changing to relative path which should work in all cases
+    publicPath: process.env.ASSET_PATH || './',
     portRange: [3000, 3100],
     host: 'localhost',
   };
