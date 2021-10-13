@@ -5,4 +5,6 @@ export class Export {
      */
     readonly identifier: string
   ) {}
+
+  displayName?: string;
 }

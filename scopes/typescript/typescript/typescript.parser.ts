@@ -47,6 +47,43 @@ export class TypeScriptParser implements Parser {
   parseModule(modulePath: string) {
     const ast = ts.createSourceFile(modulePath, readFileSync(modulePath, 'utf8'), ts.ScriptTarget.Latest);
 
-    return new Module(this.getExports(ast));
+    const moduleExports = this.getExports(ast);
+    const displayNames = collectDisplayNames(ast);
+
+    moduleExports.forEach((exp) => {
+      const name = displayNames.get(exp.identifier);
+      if (name) {
+        exp.displayName = name;
+      }
+    });
+
+    return new Module(moduleExports);
   }
+}
+
+function collectDisplayNames(sourceFile: SourceFile) {
+  const displayNames = sourceFile.statements
+    .map((statement) => {
+      if (statement.kind !== ts.SyntaxKind.ExpressionStatement) return undefined;
+
+      if (!ts.isExpressionStatement(statement)) return undefined;
+      if (!ts.isBinaryExpression(statement.expression)) return undefined;
+      // TODO - verify operationToken
+      // if(statement.expression.operatorToken !== ts.SyntaxKind.EqualsToken) return undefined;
+      if (!ts.isPropertyAccessExpression(statement.expression.left)) return undefined;
+      if (!ts.isIdentifier(statement.expression.left.expression)) return undefined;
+
+      const tagetName = statement.expression.left.expression.text;
+      const propertyName = statement.expression.left.name.text;
+      if (propertyName !== 'compositionName') return undefined;
+
+      if (!ts.isStringLiteral(statement.expression.right)) return undefined;
+
+      const value = statement.expression.right.text;
+
+      return [tagetName, value] as const;
+    })
+    .filter((x) => !!x) as [string, string][];
+
+  return new Map(displayNames);
 }
