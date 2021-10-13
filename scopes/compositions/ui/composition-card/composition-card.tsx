@@ -17,9 +17,9 @@ export interface CompositionCardProps extends CardProps {
 }
 
 export function CompositionCard({ Composition, name, link, className, ...rest }: CompositionCardProps) {
-  const { canvas } = Composition;
+  const { canvas, compositionName } = Composition;
 
-  const humanizedName = useMemo(() => humanizeCompositionId(name), [name]);
+  const humanizedName = useMemo(() => compositionName || humanizeCompositionId(name), [name, compositionName]);
 
   return (
     <Card elevation="low" className={classNames(className, styles.compositionCard)} {...rest}>
