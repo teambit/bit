@@ -7,7 +7,7 @@ import { compositionFile } from './files/composition';
 
 export const nodeTemplate: ComponentTemplate = {
   name: 'node',
-  description: 'a Node.js package',
+  description: 'a Node.js module',
   generateFiles: (context: ComponentContext) => {
     return [indexFile(context), docFile(context), mainFile(context), compositionFile(context), testFile(context)];
   },
