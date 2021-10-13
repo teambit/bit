@@ -5,6 +5,7 @@ export function mainFile(context: ComponentContext) {
     relativePath: `${context.name}.ts`,
     content: `export function ${context.nameCamelCase}() {
   return 'Hello world!';
-}`,
+}
+`,
   };
 }

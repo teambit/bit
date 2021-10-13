@@ -6,7 +6,7 @@ export function compositionFile(context: ComponentContext) {
     content: `import React from 'react';
 import { ${context.nameCamelCase} } from './${context.name}';
 
-export function ReturnsCorrectValue () {
+export function ReturnsCorrectValue() {
   return (
     <div>
       {${context.nameCamelCase}()}

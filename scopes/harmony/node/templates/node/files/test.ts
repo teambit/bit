@@ -7,6 +7,7 @@ export function testFile(context: ComponentContext) {
 
 it('should return the correct value', () => {
   expect(${context.nameCamelCase}()).toBe('Hello world!');
-});`,
+});
+`,
   };
 }
