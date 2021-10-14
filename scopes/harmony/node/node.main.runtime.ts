@@ -12,6 +12,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';
+import { nodeTemplate } from './templates/node';
 
 export class NodeMain {
   constructor(
@@ -130,7 +131,7 @@ export class NodeMain {
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
-    generator.registerComponentTemplate([nodeEnvTemplate]);
+    generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate]);
     return new NodeMain(react, nodeEnv, envs);
   }
 }

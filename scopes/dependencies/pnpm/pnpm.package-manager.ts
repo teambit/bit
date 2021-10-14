@@ -71,7 +71,17 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.off();
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
-    await install(rootManifest, componentsManifests, storeDir, cacheDir, registries, proxyConfig, this.logger);
+    const networkConfig = await this.depResolver.getNetworkConfig();
+    await install(
+      rootManifest,
+      componentsManifests,
+      storeDir,
+      cacheDir,
+      registries,
+      proxyConfig,
+      networkConfig,
+      this.logger
+    );
     this.logger.on();
     // Make a divider row to improve output
     this.logger.console('-------------------------');
@@ -102,7 +112,8 @@ export class PnpmPackageManager implements PackageManager {
     const cacheDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-cache') : defaultStoreDir;
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
-    return resolveRemoteVersion(packageName, options.rootDir, cacheDir, registries, proxyConfig);
+    const networkConfig = await this.depResolver.getNetworkConfig();
+    return resolveRemoteVersion(packageName, options.rootDir, cacheDir, registries, proxyConfig, networkConfig);
   }
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
