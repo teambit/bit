@@ -507,13 +507,13 @@ export class ScopeMain implements ComponentFactory {
             return await this.aspectLoader.doRequire(requireableExtension);
           } catch (err: any) {
             erroredId = requireableExtension.component.id.toString();
-            if (err.code === 'MODULE_NOT_FOUND'){
+            if (err.code === 'MODULE_NOT_FOUND') {
               try {
                 return await this.tryCompile(requireableExtension);
                 return this.aspectLoader.doRequire(requirableAspect);
-              } catch (err: any) {
-                error = err;
-                throw err;
+              } catch (newErr: any) {
+                error = newErr;
+                throw newErr;
               }
             }
             error = err;
