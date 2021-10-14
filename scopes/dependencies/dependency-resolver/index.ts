@@ -21,6 +21,7 @@ export {
   BIT_DEV_REGISTRY,
   NPM_REGISTRY,
   ProxyConfig as PackageManagerProxyConfig,
+  NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
