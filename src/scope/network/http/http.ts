@@ -27,6 +27,13 @@ import {
   CFG_PROXY_KEY,
   CFG_PROXY_NO_PROXY,
   CFG_PROXY_STRICT_SSL,
+  CFG_FETCH_RETRIES,
+  CFG_FETCH_RETRY_FACTOR,
+  CFG_FETCH_RETRY_MINTIMEOUT,
+  CFG_FETCH_RETRY_MAXTIMEOUT,
+  CFG_FETCH_TIMEOUT,
+  CFG_LOCAL_ADDRESS,
+  CFG_NETWORK_CONCURRENCY,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -54,6 +61,16 @@ export type ProxyConfig = {
   strictSSL?: boolean;
 };
 
+export type NetworkConfig = {
+  fetchRetries?: number;
+  fetchRetryFactor?: number;
+  fetchRetryMintimeout?: number;
+  fetchRetryMaxtimeout?: number;
+  fetchTimeout?: number;
+  localAddress?: string;
+  networkConcurrency?: number;
+};
+
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
 
 /**
@@ -71,7 +88,8 @@ export class Http implements Network {
     private scopeName: string,
     private proxyConfig?: ProxyConfig,
     private agent?: Agent,
-    private localScopeName?: string
+    private localScopeName?: string,
+    private networkConfig?: NetworkConfig
   ) {}
 
   static getToken() {
@@ -100,6 +118,20 @@ export class Http implements Network {
       key: obj[CFG_PROXY_KEY],
       noProxy: obj[CFG_PROXY_NO_PROXY],
       strictSSL: obj[CFG_PROXY_STRICT_SSL],
+    };
+  }
+
+  static async getNetworkConfig(): Promise<NetworkConfig> {
+    const obj = await list();
+
+    return {
+      fetchRetries: obj[CFG_FETCH_RETRIES],
+      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT],
+      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT],
+      fetchTimeout: obj[CFG_FETCH_TIMEOUT],
+      localAddress: obj[CFG_LOCAL_ADDRESS],
+      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
     };
   }
 
@@ -494,11 +526,12 @@ export class Http implements Network {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
     const proxyConfig = await Http.getProxyConfig();
+    const networkConfig = await Http.getNetworkConfig();
     const agent = await Http.getAgent(host, proxyConfig);
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
     const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
-    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName);
+    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName, networkConfig);
   }
 }
 

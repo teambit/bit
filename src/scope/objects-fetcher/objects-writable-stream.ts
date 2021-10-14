@@ -60,6 +60,13 @@ export class ObjectsWritable extends Writable {
 
   private async writeComponentObject(modelComponent: ModelComponent) {
     const component = await this.mergeModelComponent(modelComponent, this.remoteName);
+    const componentIsPersistPendingAlready = this.repo.objects[component.hash().toString()];
+    if (componentIsPersistPendingAlready) {
+      // this happens during tag/snap, when all objects are waiting in the repo.objects and only once the tag/snap is
+      // completed, all objects are persisted at once. we don't want the import process to interfere and save
+      // components objects during the tag/snap.
+      return;
+    }
     await this.repo.writeObjectsToTheFS([component]);
     await this.repo.remoteLanes.addEntriesFromModelComponents(RemoteLaneId.from(DEFAULT_LANE, this.remoteName), [
       component,

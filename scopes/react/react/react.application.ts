@@ -12,7 +12,6 @@ export class ReactApp implements Application {
     readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    private rootPath: string,
     readonly deploy?: (context: DeployContext) => Promise<void>
   ) {}
 

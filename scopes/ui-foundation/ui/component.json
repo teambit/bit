@@ -8,7 +8,8 @@
     "teambit.pkg/pkg": {
       "packageJson": {
         "name": "@teambit/{name}",
-        "private": false
+        "private": false,
+        "license": "Apache-2.0"
       },
       "packageManagerPublishArgs": ["--access public"]
     },

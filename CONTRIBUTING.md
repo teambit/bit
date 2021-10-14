@@ -80,6 +80,12 @@ It's easier to leave the watch process running instead of re-build for every cha
   bit watch
 ```
 
+If you are using Linux and getting "System limit for number of file watchers reached" errors, increase the max number of allowed watchers:
+
+```bash
+  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+```
+
 ### Unit Tests
 
 - run the unit tests

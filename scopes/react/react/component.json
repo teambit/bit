@@ -8,7 +8,8 @@
     "teambit.pkg/pkg": {
       "packageJson": {
         "name": "@teambit/{name}",
-        "private": false
+        "private": false,
+        "license": "Apache-2.0"
       },
       "packageManagerPublishArgs": ["--access public"]
     },
@@ -62,7 +63,7 @@
           "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
           "@types/react-dom": "^17.0.5"
-          
+
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
