@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { expect } from 'chai';
 
-import { collectStaticProperties, TypeScriptParser } from './typescript.parser';
+import { TypeScriptParser } from './typescript.parser';
 
 describe('TypescriptParser', () => {
   describe('getExports', () => {
@@ -93,7 +93,7 @@ describe('TypescriptParser', () => {
 
     it('should parse all primitive values', () => {
       const ast = ts.createSourceFile('example.tsx', exampleFile, ts.ScriptTarget.Latest);
-      const staticProperties = collectStaticProperties(ast);
+      const staticProperties = new TypeScriptParser().parseStaticProperties(ast);
 
       expect(staticProperties).to.exist;
 
@@ -112,7 +112,7 @@ describe('TypescriptParser', () => {
 
     it('should skip non primitive values', () => {
       const ast = ts.createSourceFile('example.tsx', exampleFile, ts.ScriptTarget.Latest);
-      const staticProperties = collectStaticProperties(ast);
+      const staticProperties = new TypeScriptParser().parseStaticProperties(ast);
       const exportHello = staticProperties.get('hello');
 
       expect(exportHello?.has('complextLiteral')).to.be.false;
@@ -120,7 +120,7 @@ describe('TypescriptParser', () => {
 
     it('should skip non assignment statements', () => {
       const ast = ts.createSourceFile('example.tsx', exampleFile, ts.ScriptTarget.Latest);
-      const staticProperties = collectStaticProperties(ast);
+      const staticProperties = new TypeScriptParser().parseStaticProperties(ast);
       const exportHello = staticProperties.get('hello');
 
       expect(exportHello?.has('nonAssignedProperty')).to.be.false;

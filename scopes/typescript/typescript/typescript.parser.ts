@@ -14,7 +14,7 @@ export class TypeScriptParser implements Parser {
   public extension = /^.*\.(js|jsx|ts|tsx)$/;
 
   getExports(sourceFile: SourceFile): Export[] {
-    const staticProperties = collectStaticProperties(sourceFile);
+    const staticProperties = this.parseStaticProperties(sourceFile);
 
     const exports = sourceFile.statements.filter((statement) => {
       if (!statement.modifiers) return false;
@@ -58,11 +58,13 @@ export class TypeScriptParser implements Parser {
     return new Module(moduleExports);
   }
 
-  collectStaticProperties(sourceFile: SourceFile) {
+  parseStaticProperties(sourceFile: SourceFile) {
+    // TODO - should we also parse staticProperties inside classes / objects?
+
     const exportStaticProperties = new Map<string, StaticProperties>();
 
-    try {
-      sourceFile.statements.forEach((statement) => {
+    sourceFile.statements.forEach((statement) => {
+      try {
         if (!ts.isExpressionStatement(statement)) return;
         if (!ts.isBinaryExpression(statement.expression)) return;
         if (statement.expression.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return;
@@ -89,13 +91,13 @@ export class TypeScriptParser implements Parser {
         } else if (statement.expression.right.kind === ts.SyntaxKind.FalseKeyword) {
           existingProperties?.set(propertyName, false);
         }
-      });
-    } catch (err) {
-      this.logger?.error('failed parsing static properties', err);
-    }
+      } catch (err) {
+        this.logger?.error('failed parsing static properties', err);
+      }
+    });
 
     return exportStaticProperties;
   }
 
-  constructor(private logger: Logger | undefined) {}
+  constructor(private logger?: Logger | undefined) {}
 }
