@@ -73,7 +73,7 @@ import { DependenciesService } from './dependencies.service';
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
