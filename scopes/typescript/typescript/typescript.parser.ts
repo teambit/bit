@@ -1,5 +1,6 @@
 import { Export, Module, Parser } from '@teambit/schema';
 import { StaticProperties } from '@teambit/schema/schemas/export';
+import { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
 import ts, {
   isClassDeclaration,
@@ -56,39 +57,45 @@ export class TypeScriptParser implements Parser {
 
     return new Module(moduleExports);
   }
-}
 
-export function collectStaticProperties(sourceFile: SourceFile) {
-  const exportStaticProperties = new Map<string, StaticProperties>();
+  collectStaticProperties(sourceFile: SourceFile) {
+    const exportStaticProperties = new Map<string, StaticProperties>();
 
-  sourceFile.statements.forEach((statement) => {
-    if (!ts.isExpressionStatement(statement)) return;
-    if (!ts.isBinaryExpression(statement.expression)) return;
-    if (statement.expression.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return;
-    if (!ts.isPropertyAccessExpression(statement.expression.left)) return;
-    if (!ts.isIdentifier(statement.expression.left.expression)) return;
+    try {
+      sourceFile.statements.forEach((statement) => {
+        if (!ts.isExpressionStatement(statement)) return;
+        if (!ts.isBinaryExpression(statement.expression)) return;
+        if (statement.expression.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return;
+        if (!ts.isPropertyAccessExpression(statement.expression.left)) return;
+        if (!ts.isIdentifier(statement.expression.left.expression)) return;
 
-    const targetName = statement.expression.left.expression.text;
-    const propertyName = statement.expression.left.name.text;
+        const targetName = statement.expression.left.expression.text;
+        const propertyName = statement.expression.left.name.text;
 
-    if (!exportStaticProperties.has(targetName)) exportStaticProperties.set(targetName, new Map());
+        if (!exportStaticProperties.has(targetName)) exportStaticProperties.set(targetName, new Map());
 
-    const existingProperties = exportStaticProperties.get(targetName);
+        const existingProperties = exportStaticProperties.get(targetName);
 
-    if (ts.isStringLiteral(statement.expression.right)) {
-      existingProperties?.set(propertyName, statement.expression.right.text);
-    } else if (ts.isNumericLiteral(statement.expression.right)) {
-      existingProperties?.set(propertyName, +statement.expression.right.text);
-    } else if (statement.expression.right.kind === ts.SyntaxKind.UndefinedKeyword) {
-      existingProperties?.set(propertyName, undefined);
-    } else if (statement.expression.right.kind === ts.SyntaxKind.NullKeyword) {
-      existingProperties?.set(propertyName, null);
-    } else if (statement.expression.right.kind === ts.SyntaxKind.TrueKeyword) {
-      existingProperties?.set(propertyName, true);
-    } else if (statement.expression.right.kind === ts.SyntaxKind.FalseKeyword) {
-      existingProperties?.set(propertyName, false);
+        if (ts.isStringLiteral(statement.expression.right)) {
+          existingProperties?.set(propertyName, statement.expression.right.text);
+        } else if (ts.isNumericLiteral(statement.expression.right)) {
+          existingProperties?.set(propertyName, +statement.expression.right.text);
+        } else if (statement.expression.right.kind === ts.SyntaxKind.UndefinedKeyword) {
+          existingProperties?.set(propertyName, undefined);
+        } else if (statement.expression.right.kind === ts.SyntaxKind.NullKeyword) {
+          existingProperties?.set(propertyName, null);
+        } else if (statement.expression.right.kind === ts.SyntaxKind.TrueKeyword) {
+          existingProperties?.set(propertyName, true);
+        } else if (statement.expression.right.kind === ts.SyntaxKind.FalseKeyword) {
+          existingProperties?.set(propertyName, false);
+        }
+      });
+    } catch (err) {
+      this.logger?.error('failed parsing static properties', err);
     }
-  });
 
-  return exportStaticProperties;
+    return exportStaticProperties;
+  }
+
+  constructor(private logger: Logger | undefined) {}
 }
