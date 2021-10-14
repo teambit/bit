@@ -1,5 +1,4 @@
-import { Export, Module, Parser } from '@teambit/schema';
-import { StaticProperties } from '@teambit/schema/schemas/export';
+import { Export, Module, Parser, StaticProperties } from '@teambit/schema';
 import { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
 import ts, {
