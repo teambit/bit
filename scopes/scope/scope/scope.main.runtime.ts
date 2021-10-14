@@ -509,8 +509,8 @@ export class ScopeMain implements ComponentFactory {
             erroredId = requireableExtension.component.id.toString();
             if (err.code === 'MODULE_NOT_FOUND') {
               try {
-                return await this.tryCompile(requireableExtension);
-                return this.aspectLoader.doRequire(requirableAspect);
+                await this.tryCompile(requireableExtension);
+                return this.aspectLoader.doRequire(requireableExtension);
               } catch (newErr: any) {
                 error = newErr;
                 throw newErr;
