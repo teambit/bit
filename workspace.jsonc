@@ -4,10 +4,7 @@
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
-    "defaultDirectory": "components",
-    // I would like to see this to be used across all places where 
-    // code changes are done as part of this PR.
-    "publicPath": "/bit-dev"
+    "defaultDirectory": "components"
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
