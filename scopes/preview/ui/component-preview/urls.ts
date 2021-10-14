@@ -16,7 +16,6 @@ export function toPreviewUrl(component: ComponentModel, previewName?: string, ad
  */
 export function toPreviewServer(component: ComponentModel) {
   let explicitUrl = component.server?.url;
-  // eslint-disable-next-line no-console
   // quickfix - preview urls in `start` (without `--dev`) won't work without trailing '/'
   if (explicitUrl && !explicitUrl.endsWith('/')) explicitUrl += '/';
 
