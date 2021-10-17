@@ -276,7 +276,6 @@ export default class ComponentsList {
     const fromBitMap = this.bitMap.getAuthoredAndImportedBitIds();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
-      await component.setDivergeData(this.scope.objects);
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
         // be considered as staged and should be exported. notice that we use `hasLocalChanges`
@@ -285,6 +284,7 @@ export default class ComponentsList {
         // be exported unexpectedly.
         return component.isLocallyChangedRegardlessOfLanes();
       }
+      await component.setDivergeData(this.scope.objects);
       return component.isLocallyChanged(lane, this.scope.objects);
     });
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
