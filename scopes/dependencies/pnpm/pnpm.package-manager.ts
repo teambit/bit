@@ -121,8 +121,8 @@ export class PnpmPackageManager implements PackageManager {
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const { config } = await this.readConfig();
     const { getProxyConfig } = require('./get-proxy-config');
+    const { config } = await this.readConfig();
     return getProxyConfig(config);
   }
 
@@ -139,8 +139,8 @@ export class PnpmPackageManager implements PackageManager {
 
   async getRegistries(): Promise<Registries> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const { config } = await this.readConfig();
     const { getRegistries } = require('./get-registries');
+    const { config } = await this.readConfig();
     const pnpmRegistry = await getRegistries(config);
     const defaultRegistry = new Registry(
       pnpmRegistry.default.uri,
