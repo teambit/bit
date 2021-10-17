@@ -19,6 +19,7 @@ import {
   NPM_REGISTRY,
   Registry,
   PackageManagerProxyConfig,
+  PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
@@ -48,8 +49,10 @@ type RegistriesMap = {
 
 async function createStoreController(
   storeDir: string,
+  cacheDir: string,
   registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {}
+  proxyConfig: PackageManagerProxyConfig = {},
+  networkConfig: PackageManagerNetworkConfig = {}
 ): Promise<StoreController> {
   // const fetchFromRegistry = createFetchFromRegistry({});
   // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
@@ -73,6 +76,7 @@ async function createStoreController(
   // const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
   const opts: CreateNewStoreControllerOptions = {
+    cacheDir,
     storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
@@ -83,28 +87,37 @@ async function createStoreController(
     key: proxyConfig?.key,
     noProxy: proxyConfig?.noProxy,
     strictSsl: proxyConfig.strictSSL,
+    networkConcurrency: networkConfig.networkConcurrency,
   };
   const { ctrl } = await createNewStoreController(opts);
   return ctrl;
 }
 
 async function generateResolverAndFetcher(
-  storeDir: string,
+  cacheDir: string,
   registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {}
+  proxyConfig: PackageManagerProxyConfig = {},
+  networkConfig: PackageManagerNetworkConfig = {}
 ) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
   const opts: ClientOptions = {
     authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
-    storeDir,
+    cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
     ca: proxyConfig?.ca,
     cert: proxyConfig?.cert,
     key: proxyConfig?.key,
     noProxy: proxyConfig?.noProxy,
-    strictSSL: proxyConfig.strictSSL,
+    strictSsl: proxyConfig.strictSSL,
+    timeout: networkConfig.fetchTimeout,
+    retry: {
+      factor: networkConfig.fetchRetryFactor,
+      maxTimeout: networkConfig.fetchRetryMaxtimeout,
+      minTimeout: networkConfig.fetchRetryMintimeout,
+      retries: networkConfig.fetchRetries,
+    },
   };
   const result = createResolverAndFetcher(opts);
   return result;
@@ -114,8 +127,10 @@ export async function install(
   rootPathToManifest,
   pathsToManifests,
   storeDir: string,
+  cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
+  networkConfig: PackageManagerNetworkConfig = {},
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -154,7 +169,7 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(storeDir, registries, proxyConfig);
+  const storeController = await createStoreController(storeDir, cacheDir, registries, proxyConfig, networkConfig);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
@@ -185,11 +200,12 @@ export async function install(
 export async function resolveRemoteVersion(
   packageName: string,
   rootDir: string,
-  storeDir: string,
+  cacheDir: string,
   registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {}
+  proxyConfig: PackageManagerProxyConfig = {},
+  networkConfig: PackageManagerNetworkConfig = {}
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(storeDir, registries, proxyConfig);
+  const { resolve } = await generateResolverAndFetcher(cacheDir, registries, proxyConfig, networkConfig);
   const resolveOpts = {
     projectDir: rootDir,
     registry: '',

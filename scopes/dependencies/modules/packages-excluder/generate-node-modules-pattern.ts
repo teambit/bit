@@ -13,7 +13,7 @@ type generateNodeModulesPatternOptions = {
 export function generateNodeModulesPattern({ packages }: generateNodeModulesPatternOptions): string {
   const negativeLookahead = packages.reduce((acc, curr) => {
     const yarnPattern = curr;
-    const pnpmPattern = `.pnpm/registry.npmjs.org/${curr}.*`;
+    const pnpmPattern = `.pnpm/.*[+/]${curr}.*`;
     // The new version of pnpm is not adding the registry as part of the path
     // so adding this as well to support it
     const newPnpmPattern = `.pnpm/${curr}.*`;

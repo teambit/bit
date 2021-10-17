@@ -1,6 +1,10 @@
+const { generateNodeModulesPattern } = require('@teambit/dependencies.modules.packages-excluder');
+
+const packagesToExclude = ['@react-native', 'react-native', 'react-native-button'];
+
 module.exports = {
   preset: 'react-native',
-  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@react-native|react-native|react-native-button)/).*/'],
+  transformIgnorePatterns: [`<rootDir>/${generateNodeModulesPattern({ packages: packagesToExclude })}`],
   transform: { '^.+\\.(js|jsx|ts|tsx)$': '<rootDir>/node_modules/react-native/jest/preprocessor.js' },
   setupFilesAfterEnv: [require.resolve('./setupTests.js')],
   moduleNameMapper: {

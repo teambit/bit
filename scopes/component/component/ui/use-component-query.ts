@@ -28,6 +28,7 @@ const componentFields = gql`
     buildStatus
     compositions {
       identifier
+      displayName
     }
     tags {
       version

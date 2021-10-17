@@ -35,7 +35,7 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       onClick={onClick}
     >
       <div className={styles.left}>
-        <img className={styles.icon} src={icon} />
+        {icon && <img className={styles.icon} src={icon} />}
         <span>{node.id.split('/').pop()}</span>
       </div>
 
