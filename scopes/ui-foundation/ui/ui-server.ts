@@ -16,7 +16,7 @@ import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 
-const { devConfig } = require('./webpack/webpack.dev.config');
+import { devConfig } from './webpack/webpack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -76,7 +76,7 @@ export class UIServer {
   /**
    * get the webpack configuration of the UI server.
    */
-  async getDevConfig(): Promise<any> {
+  async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
     const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 

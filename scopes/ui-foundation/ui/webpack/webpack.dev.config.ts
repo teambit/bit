@@ -3,15 +3,15 @@ import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
-const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
-const path = require('path');
-const { html } = require('./html');
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import path from 'path';
+import { html } from './html';
 
 /*
  * Webpack config for the bit ui
@@ -43,12 +43,7 @@ const moduleFileExtensions = [
   'jsx',
 ];
 
-module.exports = {
-  createWebpackConfig,
-  devConfig: createWebpackConfig,
-};
-
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
+export function devConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -60,7 +55,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
   return {
     // Environment mode
     mode: 'development',
-    // improves HMR
+    // improves HMR - assume node_modules might change
     snapshot: { managedPaths: [] },
 
     devtool: 'inline-source-map',
@@ -68,7 +63,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     // Entry point of app
     entry: {
       main: entryFiles,
-      // preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
     },
 
     output: {
@@ -334,11 +328,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
         chunks: ['main'],
         filename: 'index.html',
       }),
-      // new HtmlWebpackPlugin({
-      //   templateContent: html('Component preview'),
-      //   chunks: ['preview'],
-      //   filename: 'preview.html'
-      // })
       new ProvidePlugin({
         process: require.resolve('process/browser'),
       }),
