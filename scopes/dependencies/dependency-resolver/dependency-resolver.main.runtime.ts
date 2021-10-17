@@ -584,7 +584,15 @@ export class DependencyResolverMain {
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return this.getNetworkConfigFromDepResolverConfig();
+    return {
+      ...await this.getNetworkConfigFromGlobalConfig(),
+      ...await this.getNetworkConfigFromPackageManager(),
+      ...this.getNetworkConfigFromDepResolverConfig(),
+    };
+  }
+
+  private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
+    return Http.getNetworkConfig();
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
@@ -596,6 +604,17 @@ export class DependencyResolverMain {
       fetchRetryMaxtimeout: this.config.fetchRetryMaxtimeout,
       networkConcurrency: this.config.networkConcurrency,
     };
+  }
+
+  private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
+    const packageManager = this.getPackageManager();
+    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
+    return packageManager.getNetworkConfig();
+  }
+
+  private getPackageManager() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager ?? this.getSystemPackageManager();
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {

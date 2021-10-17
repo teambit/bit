@@ -12,6 +12,7 @@ import {
   Registry,
   BIT_DEV_REGISTRY,
   PackageManagerProxyConfig,
+  PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { memoize, omit } from 'lodash';
@@ -120,14 +121,25 @@ export class PnpmPackageManager implements PackageManager {
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const config = await this.readConfig();
+    const { config } = await this.readConfig();
     const { getProxyConfig } = require('./get-proxy-config');
     return getProxyConfig(config);
   }
 
+  async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
+    const { config } = await this.readConfig();
+    return {
+      networkConcurrency: config.networkConcurrency,
+      fetchRetries: config.fetchRetries,
+      fetchTimeout: config.fetchTimeout,
+      fetchRetryMaxtimeout: config.fetchRetryMaxtimeout,
+      fetchRetryMintimeout: config.fetchRetryMintimeout,
+    }
+  }
+
   async getRegistries(): Promise<Registries> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const config = await this.readConfig();
+    const { config } = await this.readConfig();
     const { getRegistries } = require('./get-registries');
     const pnpmRegistry = await getRegistries(config);
     const defaultRegistry = new Registry(
