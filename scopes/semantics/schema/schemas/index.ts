@@ -1,2 +1,2 @@
 export { Module } from './module';
-export { Export } from './export';
+export { Export, StaticProperties } from './export';
