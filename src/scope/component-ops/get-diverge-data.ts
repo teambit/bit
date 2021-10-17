@@ -68,6 +68,11 @@ export async function getDivergeData(
     );
   };
   const localVersion = (await repo.load(localHead)) as Version;
+  if (!localVersion) {
+    throw new Error(`fatal: a component "${modelComponent.id()}" is missing the local head object (${localHead}) in the filesystem.
+run the following command to fix it:
+bit import ${modelComponent.id()} --objects`);
+  }
   await addParentsRecursively(localVersion, snapsOnLocal, true);
   if (remoteHeadExistsLocally) {
     return new DivergeData(snapsOnLocal, [], remoteHead);
