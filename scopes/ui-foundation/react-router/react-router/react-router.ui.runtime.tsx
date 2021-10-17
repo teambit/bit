@@ -16,6 +16,7 @@ type RenderRoutesOptions = {
 };
 
 export class ReactRouterUI {
+  private basename?: string;
   private routerHistory?: History;
   private routingMode = isBrowser ? Routing.url : Routing.static;
 
@@ -35,7 +36,12 @@ export class ReactRouterUI {
    */
   renderRoutes(routes: RouteProps[], options: RenderRoutesOptions = {}): JSX.Element {
     return (
-      <RouteContext reactRouterUi={this} routing={this.routingMode} location={options.initialLocation}>
+      <RouteContext
+        reactRouterUi={this}
+        routing={this.routingMode}
+        location={options.initialLocation}
+        basename={this.basename}
+      >
         <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
       </RouteContext>
     );
@@ -50,6 +56,10 @@ export class ReactRouterUI {
     this.unregisterListener = routerHistory.listen((...args) => {
       this.routeChangeListener.values().forEach((listener) => listener(...args));
     });
+  };
+
+  setBasename = (value: string) => {
+    this.basename = value;
   };
 
   /** decides how navigation is stored and applied.

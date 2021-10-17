@@ -29,7 +29,7 @@ export function RouteContext({
   routing = Routing.url,
   children,
   location,
-  basename = '/bit-dev/',
+  basename,
 }: RouterContextProps) {
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}

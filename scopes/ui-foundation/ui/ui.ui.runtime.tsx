@@ -19,6 +19,7 @@ import type { SsrContent } from './ssr/ssr-content';
 import type { RequestServer } from './ssr/request-server';
 import type { BrowserData } from './ssr/request-browser';
 import { RenderLifecycle } from './render-lifecycle';
+import { UIConfig } from './ui.main.runtime';
 
 export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
 
@@ -262,13 +263,18 @@ export class UiUI {
   static runtime = UIRuntime;
 
   static async provider(
-    [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],
-    config,
+    [graphqlUi, router]: [GraphqlUI, ReactRouterUI],
+    config: UIConfig,
     [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
+    if (config.publicPath) {
+      graphqlUi.setBasename(config.publicPath);
+      router.setBasename(config.publicPath);
+    }
+
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
-    uiUi.registerRenderHooks(GraphqlUi.renderHooks);
+    uiUi.registerRenderHooks(graphqlUi.renderHooks);
 
     return uiUi;
   }
