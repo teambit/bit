@@ -331,6 +331,44 @@ Read about setting a proxy in NPM's global configuration [here](https://docs.npm
 
 > Notice the Dependency Resolver config will override _all_ other proxy configurations. The NPM config will override Bit's global proxy configurations.
 
+## Network settings
+
+Settings that allow to change how aggressively the package manager is making and retrying network requests. Currently, these settings affect only the behavior of pnpm.
+
+These are settings passed to the aspect configuration. For instance:
+
+```json
+{
+  "teambit.dependencies/dependency-resolver": {
+    "networkConcurrency": 4
+  }
+}
+```
+
+### networkConcurrency
+
+Controls the maximum number of HTTP(S) requests to process simultaneously.
+
+### fetchRetries
+
+How many times to retry if Bit fails to fetch from the registry.
+
+### fetchRetryFactor
+
+The exponential factor for retry backoff.
+
+### fetchRetryMintimeout
+
+The minimum (base) timeout for retrying requests.
+
+### fetchRetryMaxtimeout
+
+The maximum fallback timeout to ensure the retry factor does not make requests too long.
+
+### fetchTimeout
+
+The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
+
 ## CLI reference
 
 ### install
