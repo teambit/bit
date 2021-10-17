@@ -339,6 +339,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "entities/semantic-schema": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/entities/semantic-schema"
+    },
     "envs": {
         "scope": "teambit.envs",
         "version": "0.0.524",

@@ -1,4 +1,5 @@
-import { Export, Module, Parser } from '@teambit/schema';
+import { Parser } from '@teambit/schema';
+import { Export, Module } from '@teambit/semantics.entities.semantic-schema';
 import { readFileSync } from 'fs-extra';
 import ts, {
   isClassDeclaration,

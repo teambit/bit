@@ -1,33 +1,74 @@
-// import { tmpdir } from 'os';
-import { TsConfigSourceFile } from 'typescript';
-// import { resolve, join } from 'path';
-import { Module, SchemaExtractor } from '@teambit/schema';
+import ts, { Node, SourceFile } from 'typescript';
+import { SchemaExtractor } from '@teambit/schema';
+import { compact, flatten } from 'lodash';
+import { SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
-import { Application } from 'typedoc';
+import { SchemaTransformerSlot } from './typescript.main.runtime';
+import { TransformerNotFound } from './exceptions';
+import { SchemaExtractorContext } from './schema-extractor-context';
 
 export class TypeScriptExtractor implements SchemaExtractor {
-  constructor(private tsconfig: TsConfigSourceFile) {}
+  constructor(private tsconfig: any, private schemaTransformerSlot: SchemaTransformerSlot) {}
 
+  /**
+   * extract a component schema.
+   */
   async extract(component: Component) {
-    // const tsconfig = this.tsconfig;
-    const paths = component.state.filesystem.files.map((file) => file.path).filter((path) => path.endsWith('index.ts'));
-    // const paths = ['/Users/ranmizrahi/Bit/bit/scopes/workspace/workspace/index.ts'];
-    const app = new Application();
-    app.bootstrap({
-      // typedoc options here
-      entryPoints: paths,
+    const mainFile = component.mainFile;
+    const mainAst = ts.createSourceFile(
+      mainFile.relative,
+      mainFile.contents.toString('utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      this.tsconfig.compilerOptions
+    );
+
+    const exports = this.listExports(mainAst);
+    const schemas = exports.map((node) => {
+      return this.computeSchema(node, component);
     });
-    const project = app.convert();
-    // typedocApp.options.setValues({
-    //   inputFiles: paths,
-    //   allowJs: true,
-    //   lib: ['lib.es2015.d.ts', 'lib.es2019.d.ts', 'lib.es6.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
-    //   jsx: 2,
-    //   noEmit: true,
-    //   exclude: ['node_modules', '*.scss'],
-    //   esModuleInterop: true,
-    // });
-    if (!project) throw new Error('typedoc failed generating docs');
-    return app.serializer.projectToObject(project) as any as Module;
+
+    return SemanticSchema.from({});
+  }
+
+  private createContext(): SchemaExtractorContext {
+    return new SchemaExtractorContext();
+  }
+
+  private computeSchema(node: Node, component: Component) {
+    const transformer = this.getTransformer(node, component);
+    return transformer.transform(node);
+  }
+
+  /**
+   * select the correct transformer for a node.
+   */
+  private getTransformer(node: Node, component: Component) {
+    const transformers = flatten(this.schemaTransformerSlot.values());
+    const transformer = transformers.find((transformer) => transformer.predicate(node));
+
+    if (!transformer) {
+      throw new TransformerNotFound(node, component);
+    }
+
+    return transformer;
+  }
+
+  /**
+   * list all exports of a source file.
+   */
+  private listExports(ast: SourceFile): Node[] {
+    return compact(
+      ast.statements.map((statement) => {
+        if (statement.kind === ts.SyntaxKind.ExportDeclaration) return statement;
+        const isExport = Boolean(
+          statement.modifiers?.find((modifier) => {
+            return modifier.kind === ts.SyntaxKind.ExportKeyword;
+          })
+        );
+
+        if (isExport) return statement;
+      })
+    );
   }
 }

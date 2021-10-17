@@ -1,18 +1,24 @@
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts from 'typescript';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
+import { SchemaTransformer } from './schema-transformer';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { SchemaTransformerPlugin } from './schema-transformer.plugin';
+import { ExportDeclaration } from './transformers';
 
 export type TsMode = 'build' | 'dev';
+
+export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
 
 export type TsConfigTransformContext = {
   // mode: TsMode;
@@ -24,7 +30,7 @@ export type TsConfigTransformer = (
 ) => TypescriptConfigMutator;
 
 export class TypescriptMain {
-  constructor(private logger: Logger) {}
+  constructor(private logger: Logger, private schemaTransformerSlot: SchemaTransformerSlot) {}
   /**
    * create a new compiler.
    */
@@ -39,11 +45,16 @@ export class TypescriptMain {
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
   }
 
+  registerSchemaTransformer(schemaTransformers: SchemaTransformer[]) {
+    this.schemaTransformerSlot.register(schemaTransformers);
+    return this;
+  }
+
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
-    return new TypeScriptExtractor(tsconfig);
+  createSchemaExtractor(tsconfig: any): SchemaExtractor {
+    return new TypeScriptExtractor(tsconfig, this.schemaTransformerSlot);
   }
 
   /**
@@ -58,13 +69,20 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect];
+  static slots = [Slot.withType<SchemaTransformer[]>()];
 
-  static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
+  static async provider(
+    [schema, loggerExt, aspectLoader]: [SchemaMain, LoggerMain, AspectLoaderMain],
+    config,
+    [schemaTransformerSlot]: [SchemaTransformerSlot]
+  ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
+    aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
+    schemaTransformerSlot.register([new ExportDeclaration()]);
 
-    return new TypescriptMain(logger);
+    return new TypescriptMain(logger, schemaTransformerSlot);
   }
 }
 
