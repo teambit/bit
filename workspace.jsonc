@@ -281,6 +281,7 @@
         "react-tabs": "3.2.0",
         "react-test-renderer": "16.14.0",
         "react-tooltip": "3.11.6",
+        "remark-admonitions": "1.2.1",
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",

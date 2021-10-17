@@ -34,3 +34,25 @@ Heading examples:
 ##### H5
 
 ###### H6
+
+### Notes are also available in mdx
+
+:::note
+This is a <b>note</b> message
+:::
+
+:::warning
+This is a <b>warning</b> message
+:::
+
+:::caution
+This is a <b>caution</b> message
+:::
+
+:::tip
+This is a <b>tip</b> message
+:::
+
+:::important
+This is an <b>important</b> message
+:::
