@@ -1,3 +1,4 @@
+import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
@@ -338,6 +339,9 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
       //   chunks: ['preview'],
       //   filename: 'preview.html'
       // })
+      new ProvidePlugin({
+        process: require.resolve('process/browser'),
+      }),
     ],
   };
 }
