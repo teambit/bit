@@ -57,6 +57,26 @@ export class GraphqlUI {
     return client;
   }
 
+  // graphql server path during SSR (usually '/graphql')
+  get ssrEndpoint() {
+    return `${this.baseName}graphql`;
+  }
+
+  // gql subscription pathname (usually '/subscriptions')
+  get subscriptionEndpoint() {
+    return `${this.baseName}subscriptions`;
+  }
+
+  // gql pathname (usually '/subscriptions')
+  get endpoint() {
+    return `${this.baseName}graphql`;
+  }
+
+  private baseName = '/';
+  setBasename(value: string) {
+    this.baseName = value;
+  }
+
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache();
 

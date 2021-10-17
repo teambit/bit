@@ -22,7 +22,7 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     if (!browser) return undefined;
 
     const port = server?.port || 3000;
-    const serverUrl = `http://localhost:${port}/graphql`;
+    const serverUrl = `http://localhost:${port}/${this.graphqlUI.ssrEndpoint}`;
 
     const client = this.graphqlUI.createSsrClient({
       serverUrl,
@@ -66,9 +66,9 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
-    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/bit-dev/subscriptions`;
+    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/${this.graphqlUI.subscriptionEndpoint}`;
 
-    const client = this.graphqlUI.createClient('/bit-dev/graphql', { state, subscriptionUri: wsUrl });
+    const client = this.graphqlUI.createClient(this.graphqlUI.endpoint, { state, subscriptionUri: wsUrl });
 
     return { client };
   };
