@@ -18,7 +18,13 @@ function getDirectory(): PathOsBased {
   return path.join(userHome, '.bit');
 }
 
+export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
+
 function getCacheDirectory(): PathOsBased {
+  const fromEnvVar = process.env[CACHE_GLOBALS_ENV];
+  if (fromEnvVar && typeof fromEnvVar === 'string') {
+    return fromEnvVar;
+  }
   if (process.platform === 'darwin' || process.platform === 'linux') {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
