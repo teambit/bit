@@ -95,6 +95,7 @@ export class TypescriptMain {
   static async provider([schema, loggerExt, envs, workspace]: [SchemaMain, LoggerMain, EnvsMain, Workspace]) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
+    schema.registerParser(new TypeScriptParser(logger));
 
     return new TypescriptMain(logger, envs, workspace);
   }
