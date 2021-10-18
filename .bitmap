@@ -777,6 +777,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
     },
+    "ts-server": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/typescript/ts-server"
+    },
     "types/serializable": {
         "scope": "teambit.toolbox",
         "version": "0.0.444",

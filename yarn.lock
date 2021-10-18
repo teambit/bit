@@ -6747,9 +6747,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.160":
-  version: 1.0.160
-  resolution: "@teambit/legacy@npm:1.0.160"
+"@teambit/legacy@npm:1.0.161":
+  version: 1.0.161
+  resolution: "@teambit/legacy@npm:1.0.161"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6873,7 +6873,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 3b4d0d2757600cae4d906c328f3cf1f8eb11328cd51950177f24a68bad8d67582108ec2d58edfabd9c0af22a0ec2b4fe2eb25f16f10fc650562e61488ab884bb
+  checksum: 7ab80927b90c7e65430ccb330979215c57ea395dbddb1465d257232963beb916b2fa05fe667d346871f2fe659c617bb70cb1309289367650a0029513f32bf7e1
   languageName: node
   linkType: hard
 
@@ -7016,8 +7016,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.160
-    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
+    "@teambit/legacy": 1.0.161
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
     "@teambit/react.instructions.react.adding-tests": 0.0.6
@@ -7070,7 +7069,7 @@ __metadata:
     "@types/postcss-normalize": 9.0.1
     "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
-    "@types/react": ^17.0.8
+    "@types/react": 17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7141,6 +7140,7 @@ __metadata:
     cli-table: 0.3.6
     colors: 1.4.0
     comlink: 4.3.0
+    command-exists: 1.2.9
     comment-json: 3.0.3
     constants-browserify: 1.0.0
     copy-to-clipboard: 3.3.1
@@ -7375,6 +7375,7 @@ __metadata:
     table: 5.4.6
     tar: 6.1.11
     tar-stream: 2.2.0
+    tempy: 1.0.1
     terser-webpack-plugin: 5.2.0
     timers-browserify: 2.0.12
     tippy.js: 6.2.7
@@ -7407,8 +7408,10 @@ __metadata:
     vinyl-file: 3.0.0
     vm-browserify: 1.1.2
     vscode-icons-js: 11.0.0
+    vscode-jsonrpc: 6.0.0
     vscode-languageclient: 6.1.3
     vscode-languageserver: 6.1.1
+    vscode-languageserver-types: 3.16.0
     vscode-ws-jsonrpc: 0.2.0
     vue-template-compiler: 2.6.12
     webpack: 5.51.1
@@ -7422,8 +7425,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.160
-    jest: 26.6.3
+    "@teambit/legacy": 1.0.161
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8666,14 +8668,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^17.0.8":
-  version: 17.0.27
-  resolution: "@types/react@npm:17.0.27"
+"@types/react@npm:17.0.8":
+  version: 17.0.8
+  resolution: "@types/react@npm:17.0.8"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 3a1147d963c16dc9bbea5afb20c4be94f2389cf4eca4c5fbe9b02f3406bd9957602c0459ea017c95f8c3d523221f572e8bd842f94654835776d4c2923357f9dc
+  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
   languageName: node
   linkType: hard
 
@@ -14123,6 +14125,13 @@ __metadata:
   version: 1.2.6
   resolution: "command-exists@npm:1.2.6"
   checksum: 1c61ee83d208681d5c47fb8a257251c078f4f25e5d3ab0dd2b5cef416a605ad9ebe869e515d69cda06f9dad38d452a8be0ed040ec3abb2697372d2074188fb5d
+  languageName: node
+  linkType: hard
+
+"command-exists@npm:1.2.9":
+  version: 1.2.9
+  resolution: "command-exists@npm:1.2.9"
+  checksum: 729ae3d88a2058c93c58840f30341b7f82688a573019535d198b57a4d8cb0135ced0ad7f52b591e5b28a90feb2c675080ce916e56254a0f7c15cb2395277cac3
   languageName: node
   linkType: hard
 
@@ -20828,18 +20837,6 @@ __metadata:
   version: 1.3.8
   resolution: "ini@npm:1.3.8"
   checksum: dfd98b0ca3a4fc1e323e38a6c8eb8936e31a97a918d3b377649ea15bdb15d481207a0dda1021efbd86b464cae29a0d33c1d7dcaf6c5672bee17fa849bc50a1b3
-  languageName: node
-  linkType: hard
-
-"ink-spinner@npm:4.0.3":
-  version: 4.0.3
-  resolution: "ink-spinner@npm:4.0.3"
-  dependencies:
-    cli-spinners: ^2.3.0
-  peerDependencies:
-    ink: ">=3.0.5"
-    react: ">=16.8.2"
-  checksum: d3785d688dd1ba19fb7a850b7a2c1dd8b2d06e4c77e6a7cc6c5bbd366a5a721e9ea45d036447016a9028f7519994077ce603a60a43a495e17b7b443b8a513ddc
   languageName: node
   linkType: hard
 
@@ -32597,6 +32594,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tempy@npm:1.0.1":
+  version: 1.0.1
+  resolution: "tempy@npm:1.0.1"
+  dependencies:
+    del: ^6.0.0
+    is-stream: ^2.0.0
+    temp-dir: ^2.0.0
+    type-fest: ^0.16.0
+    unique-string: ^2.0.0
+  checksum: e77ca4440af18e42dc64d8903b7ed0be673455b76680ff94a7d7c6ee7c16f7604bdcdee3c39436342b1082c23eda010dbe48f6094e836e0bd53c8b1aa63e5b95
+  languageName: node
+  linkType: hard
+
 "tempy@npm:^0.2.1":
   version: 0.2.1
   resolution: "tempy@npm:0.2.1"
@@ -33191,6 +33201,12 @@ __metadata:
   checksum: 596b78152de009ddb1f3c689c3cbf8b3a48900038fccf9915c0dc91901378a69f3134cc80a63705ef24ddb40692d82077577634623716672cc336d22f361a280
   languageName: node
   linkType: hard
+
+"ts-server-0b6c5f@workspace:scopes/typescript/modules/ts-server":
+  version: 0.0.0-use.local
+  resolution: "ts-server-0b6c5f@workspace:scopes/typescript/modules/ts-server"
+  languageName: unknown
+  linkType: soft
 
 "ts-toolbelt@npm:^8.0.7":
   version: 8.4.0

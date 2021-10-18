@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -6,14 +6,15 @@ import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import WorkspaceAspect, { WatchOptions, Workspace } from '@teambit/workspace';
+import pMapSeries from 'p-map-series';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { TsserverClient } from '@teambit/ts-server';
 import { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
-import { ComponentPrograms } from './component-programs';
 
 export type TsMode = 'build' | 'dev';
 
@@ -27,7 +28,7 @@ export type TsConfigTransformer = (
 ) => TypescriptConfigMutator;
 
 export class TypescriptMain {
-  private componentPrograms: ComponentPrograms;
+  private tsServer: TsserverClient;
   constructor(private logger: Logger, private envs: EnvsMain, private workspace?: Workspace) {
     if (this.workspace) {
       this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
@@ -52,49 +53,29 @@ export class TypescriptMain {
     if (!workspace || !watchOpts.checkTypes) {
       return;
     }
-    await this.writeTsconfigAndTypesOnWorkspace(components);
-    const componentPackageDirs = components.map((comp) => {
-      const absPackageDir = workspace.componentPackageDir(comp);
-      return { componentDir: absPackageDir, component: comp };
-    });
-    this.componentPrograms = new ComponentPrograms(componentPackageDirs);
-    this.componentPrograms.startWatch(watchOpts);
-  }
 
-  private async writeTsconfigAndTypesOnWorkspace(components: Component[]) {
-    const workspace = this.workspace;
-    if (!workspace) return;
-    const getTsCompiler = (component: Component): TypescriptCompiler | null => {
-      const environment = this.envs.getEnv(component).env;
-      const compilerInstance = environment.getCompiler();
-      if (compilerInstance.id === TypescriptAspect.id) {
-        return compilerInstance;
-      }
-      const tsCompilerOptions = environment.getTsCompilerOptions?.();
-      if (tsCompilerOptions) {
-        return this.createCompiler(tsCompilerOptions) as TypescriptCompiler;
-      }
-      this.logger.warn(
-        `component "${component.id.toString()}" does not have any typescript configuration set, and won't be part of the check-types and schema-extraction mechanism`
-      );
-      return null;
-    };
-    await Promise.all(
-      components.map(async (comp) => {
-        const tsCompiler = getTsCompiler(comp);
-        if (!tsCompiler) return;
-        const compDir = workspace?.componentPackageDir(comp);
-        await tsCompiler.writeTsConfigForWatch(compDir);
-        await tsCompiler.writeTypes([compDir]);
-      })
-    );
+    this.tsServer = new TsserverClient(workspace.path, {
+      logger: this.logger,
+      verbose: watchOpts.verbose,
+    });
+    this.tsServer.init();
+    // get all files paths
+    const files = components
+      .map((c) => c.filesystem.files)
+      .flat()
+      .map((f) => f.path);
+    const supportedFiles = files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+    await pMapSeries(supportedFiles, (file) => this.tsServer.open(file));
+    this.tsServer.getDiag(supportedFiles).catch((err) => {
+      this.logger.error(`failed getting the diag info from ts-server`, err);
+    });
   }
 
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(): SchemaExtractor {
-    return new TypeScriptExtractor(this.componentPrograms);
+  createSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
+    return new TypeScriptExtractor(tsconfig);
   }
 
   /**
