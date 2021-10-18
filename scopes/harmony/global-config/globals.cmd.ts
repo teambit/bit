@@ -22,7 +22,7 @@ export class GlobalsCmd implements Command {
       })
       .join('\n');
 
-    const title = `the following globals are used by Bit. to change the global root dir, use "${CACHE_GLOBALS_ENV}"" env variable`;
+    const title = `the following globals are used by Bit. to change the global root dir, use "${CACHE_GLOBALS_ENV}" env variable`;
 
     return `${title}\n\n${values}`;
   }
@@ -33,7 +33,6 @@ export class GlobalsCmd implements Command {
       'Log file': DEBUG_LOG,
       'Global Scope Dir': GLOBAL_SCOPE,
       'Config Dir': GLOBAL_CONFIG,
-      'Capsules Dir': '', // populate after PR 4973 is merged.
     };
   }
 }
