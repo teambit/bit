@@ -19,7 +19,13 @@ import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import {
+  CACHE_ROOT,
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_ROOT_BASE_DIR,
+} from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { importMultipleDistsArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
@@ -38,7 +44,7 @@ import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 
-const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
+const DEFAULT_CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
 export type ListResults = {
   workspace: string;
@@ -70,7 +76,14 @@ type CreateGraphOptions = {
 export type IsolateComponentsOptions = CreateGraphOptions & {
   name?: string;
   /**
+   * absolute path to put all the capsules dirs inside.
+   */
+  rootBaseDir?: string;
+
+  /**
    * the capsule root-dir based on a *hash* of this baseDir, not on the baseDir itself.
+   * A folder with this hash as its name will be created in the rootBaseDir
+   * By default this value will be the host path
    */
   baseDir?: string;
 
@@ -133,25 +146,27 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 
 export class IsolatorMain {
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect];
+  static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect, GlobalConfigAspect];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
 
-  static async provider([dependencyResolver, loggerExtension, componentAspect, graphAspect]: [
+  static async provider([dependencyResolver, loggerExtension, componentAspect, graphAspect, globalConfig]: [
     DependencyResolverMain,
     LoggerMain,
     ComponentMain,
-    GraphBuilder
+    GraphBuilder,
+    GlobalConfigMain
   ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
-    const isolator = new IsolatorMain(dependencyResolver, logger, componentAspect, graphAspect);
+    const isolator = new IsolatorMain(dependencyResolver, logger, componentAspect, graphAspect, globalConfig);
     return isolator;
   }
   constructor(
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
     private componentAspect: ComponentMain,
-    private graphBuilder: GraphBuilder
+    private graphBuilder: GraphBuilder,
+    private globalConfig: GlobalConfigMain
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -176,7 +191,7 @@ export class IsolatorMain {
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
     longProcessLogger.end();
     this.logger.consoleSuccess();
-    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
+    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
   }
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
@@ -214,7 +229,7 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     const config = { installPackages: true, ...opts };
-    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string);
+    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
     }
@@ -390,8 +405,10 @@ export class IsolatorMain {
     }
   }
 
-  getCapsulesRootDir(baseDir: string): PathOsBasedAbsolute {
-    return path.join(CAPSULES_BASE_DIR, hash(baseDir));
+  getCapsulesRootDir(baseDir: string, rootBaseDir?: string): PathOsBasedAbsolute {
+    const capsulesRootBaseDir =
+      rootBaseDir || this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
+    return path.join(capsulesRootBaseDir, hash(baseDir));
   }
 
   private async createCapsulesFromComponents(
