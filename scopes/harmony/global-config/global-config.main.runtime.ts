@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import {
   del,
   delSync,
@@ -11,10 +11,11 @@ import {
 } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
+import { GlobalsCmd } from './globals.cmd';
 
 export class GlobalConfigMain {
   static runtime = MainRuntime;
-  static dependencies = [];
+  static dependencies = [CLIAspect];
   static slots = [];
 
   async get(key: string): Promise<string | undefined> {
@@ -47,7 +48,8 @@ export class GlobalConfigMain {
     return delSync(key);
   }
 
-  static async provider() {
+  static async provider([cli]: [CLIMain]) {
+    cli.register(new GlobalsCmd());
     const globalConfig = new GlobalConfigMain();
     return globalConfig;
   }
