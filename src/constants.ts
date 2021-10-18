@@ -261,6 +261,8 @@ export const CFG_FEATURE_TOGGLE = 'features';
 
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
+export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_CA = 'proxy.ca';
