@@ -6,30 +6,31 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
   },
 }));
 
-import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+/* eslint-disable import/first */
 import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   const packageManagerSlot = {
     // @ts-ignore
     get: jest.fn(),
   };
-  const depResolver = new DependencyResolverMain(
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    packageManagerSlot as any,
-    {} as any,
-    {} as any,
-    {} as any
-  );
   it('should return settings from global config', async () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
     packageManagerSlot.get.mockReturnValue({});
     const globalConfig = {
       fetchTimeout: 1,
@@ -44,6 +45,21 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
     expect(await depResolver.getNetworkConfig()).toEqual(globalConfig);
   });
   it('should return settings from package manager config', async () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
     const pmConfig = {
       fetchTimeout: 11,
       fetchRetries: 22,
