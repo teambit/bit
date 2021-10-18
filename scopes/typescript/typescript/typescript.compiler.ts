@@ -277,19 +277,6 @@ export class TypescriptCompiler implements Compiler {
     await Promise.all(dirs.map((dir) => fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr)));
   }
 
-  async writeTsConfigForWatch(dir: string) {
-    const tsConfig = { ...this.options.tsconfig };
-    const compilerOptions: ts.CompilerOptions = { ...tsConfig.compilerOptions };
-    compilerOptions.emitDeclarationOnly = true;
-    compilerOptions.allowJs = true;
-    compilerOptions.composite = true;
-    tsConfig.compilerOptions = compilerOptions;
-
-    const tsconfigStr = this.stringifyTsconfig(tsConfig);
-    // @todo: write only if changed, otherwise, TS will rebuild it every single time.
-    await fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr);
-  }
-
   private stringifyTsconfig(tsconfig) {
     return JSON.stringify(tsconfig, undefined, 2);
   }

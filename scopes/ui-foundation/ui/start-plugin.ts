@@ -21,5 +21,5 @@ export interface StartPlugin {
   render: ComponentType;
 
   /** promise that resolves when the plugin completed initiation */
-  whenReady: Promise<void>;
+  readonly whenReady: Promise<void>;
 }

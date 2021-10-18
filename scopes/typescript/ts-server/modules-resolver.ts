@@ -1,3 +1,8 @@
+/**
+ * copied over from https://github.com/typescript-language-server/typescript-language-server/blob/master/src/modules-resolver.ts
+ * modified to accommodate Bit needs
+ */
+
 /*
  * Copyright (C) 2017, 2018 TypeFox and others.
  *

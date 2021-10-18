@@ -33,7 +33,6 @@ export class PreviewStartPlugin implements StartPlugin {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.workspace.watcher.watchAll({
       checkTypes: true,
-      verbose: true,
       skipPreCompilation: true,
       msgs: {
         onAll: () => {},
