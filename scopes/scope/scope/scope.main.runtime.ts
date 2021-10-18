@@ -490,8 +490,6 @@ export class ScopeMain implements ComponentFactory {
         return requirableAspect.capsule?.outputFile(path, compiledFile.outputText);
       })
     );
-
-    return this.aspectLoader.doRequire(requirableAspect);
   }
 
   async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
@@ -509,7 +507,15 @@ export class ScopeMain implements ComponentFactory {
             return await this.aspectLoader.doRequire(requireableExtension);
           } catch (err: any) {
             erroredId = requireableExtension.component.id.toString();
-            if (err.code === 'MODULE_NOT_FOUND') return await this.tryCompile(requireableExtension);
+            if (err.code === 'MODULE_NOT_FOUND') {
+              try {
+                await this.tryCompile(requireableExtension);
+                return await this.aspectLoader.doRequire(requireableExtension);
+              } catch (newErr: any) {
+                error = newErr;
+                throw newErr;
+              }
+            }
             error = err;
             throw err;
           }
