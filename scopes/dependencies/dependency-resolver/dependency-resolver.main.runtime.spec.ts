@@ -1,5 +1,7 @@
+// @ts-ignore
 jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
   Http: {
+    // @ts-ignore
     getNetworkConfig: jest.fn(),
   },
 }));
@@ -9,6 +11,7 @@ import { Http } from '@teambit/legacy/dist/scope/network/http';
 
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   const packageManagerSlot = {
+    // @ts-ignore
     get: jest.fn(),
   };
   const depResolver = new DependencyResolverMain(
@@ -36,6 +39,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMaxtimeout: 5,
       networkConcurrency: 6,
     };
+    // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
     expect(await depResolver.getNetworkConfig()).toEqual(globalConfig);
   });
@@ -51,6 +55,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
     packageManagerSlot.get.mockReturnValue({
       getNetworkConfig: () => pmConfig,
     });
+    // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
     expect(await depResolver.getNetworkConfig()).toEqual(pmConfig);
   });
@@ -62,8 +67,9 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMintimeout: 444,
       fetchRetryMaxtimeout: 555,
       networkConcurrency: 666,
-    };
+    } as any;
     packageManagerSlot.get.mockReturnValue({});
+    // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
     const depResolver = new DependencyResolverMain(
       config,
