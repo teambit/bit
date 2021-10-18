@@ -18,6 +18,7 @@ export function compositionsSchema(compositions: CompositionsMain): Schema {
       type Composition {
         filepath: String
         identifier: String
+        displayName: String
       }
     `,
     resolvers: {

@@ -61,8 +61,8 @@ export class TypescriptMain {
   static dependencies = [SchemaAspect, LoggerAspect];
 
   static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
-    schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
+    schema.registerParser(new TypeScriptParser(logger));
 
     return new TypescriptMain(logger);
   }
