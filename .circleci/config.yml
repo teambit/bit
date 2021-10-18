@@ -1672,7 +1672,13 @@ workflows:
             - docker_build
   docker_non_root:
     jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: dockerfile-non-root
       - docker_non_root_build:
+          requires:
+            - checkout_code
           filters:
             branches:
               only: dockerfile-non-root
