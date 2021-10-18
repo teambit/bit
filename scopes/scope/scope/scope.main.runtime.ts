@@ -510,7 +510,7 @@ export class ScopeMain implements ComponentFactory {
             if (err.code === 'MODULE_NOT_FOUND') {
               try {
                 await this.tryCompile(requireableExtension);
-                return this.aspectLoader.doRequire(requireableExtension);
+                return await this.aspectLoader.doRequire(requireableExtension);
               } catch (newErr: any) {
                 error = newErr;
                 throw newErr;
