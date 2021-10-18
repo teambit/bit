@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
-import { get } from 'lodash';
+import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -585,8 +585,8 @@ export class DependencyResolverMain {
 
   async getNetworkConfig(): Promise<NetworkConfig> {
     return {
-      ...await this.getNetworkConfigFromGlobalConfig(),
-      ...await this.getNetworkConfigFromPackageManager(),
+      ...(await this.getNetworkConfigFromGlobalConfig()),
+      ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
   }
@@ -596,14 +596,14 @@ export class DependencyResolverMain {
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return {
-      fetchTimeout: this.config.fetchTimeout,
-      fetchRetries: this.config.fetchRetries,
-      fetchRetryFactor: this.config.fetchRetryFactor,
-      fetchRetryMintimeout: this.config.fetchRetryMintimeout,
-      fetchRetryMaxtimeout: this.config.fetchRetryMaxtimeout,
-      networkConcurrency: this.config.networkConcurrency,
-    };
+    return pick(this.config, [
+      'fetchTimeout',
+      'fetchRetries',
+      'fetchRetryFactor',
+      'fetchRetryMintimeout',
+      'fetchRetryMaxtimeout',
+      'networkConcurrency',
+    ]);
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
