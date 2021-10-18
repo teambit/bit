@@ -7,6 +7,7 @@ import { Workspace } from '.';
 
 type CreateOpts = {
   baseDir?: string;
+  rootBaseDir?: string;
   alwaysNew?: boolean;
   seedersOnly?: boolean;
   id: string;
@@ -19,7 +20,12 @@ export class CapsuleCreateCmd implements Command {
   group = 'capsules';
   alias = '';
   options = [
-    ['b', 'base-dir <name>', 'set base dir of all capsules'],
+    [
+      'b',
+      'base-dir <name>',
+      'set base dir of all capsules (hashed to create the base dir inside the root dir - host path by default)',
+    ],
+    ['r', 'root-base-dir <name>', 'set root base dir of all capsules (absolute path to use as root dir)'],
     ['a', 'always-new', 'create new environment for capsule'],
     ['s', 'seeders-only', 'create capsules for the seeders only (not for the entire graph)'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
@@ -32,12 +38,13 @@ export class CapsuleCreateCmd implements Command {
 
   async create(
     [componentIds = []]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
+    { baseDir, rootBaseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
     const capsuleOptions: IsolateComponentsOptions = {
       baseDir,
+      rootBaseDir,
       installOptions: { installPackages },
       alwaysNew,
       seedersOnly,
