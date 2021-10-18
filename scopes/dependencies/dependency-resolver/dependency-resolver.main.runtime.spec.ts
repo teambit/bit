@@ -88,4 +88,46 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
     );
     expect(await depResolver.getNetworkConfig()).toEqual(config);
   });
+  it('should merge settings from global config, package manager config, and aspect config', async () => {
+    const globalConfig = {
+      fetchTimeout: 1,
+      fetchRetries: 2,
+    };
+    const pmConfig = {
+      fetchRetryFactor: 33,
+      fetchRetryMintimeout: 44,
+    };
+    const config = {
+      fetchRetryMaxtimeout: 555,
+      networkConcurrency: 666,
+    } as any;
+    // @ts-ignore
+    Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
+    packageManagerSlot.get.mockReturnValue({
+      getNetworkConfig: () => pmConfig,
+    });
+    const depResolver = new DependencyResolverMain(
+      config,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    expect(await depResolver.getNetworkConfig()).toEqual({
+      fetchTimeout: 1,
+      fetchRetries: 2,
+      fetchRetryFactor: 33,
+      fetchRetryMintimeout: 44,
+      fetchRetryMaxtimeout: 555,
+      networkConcurrency: 666,
+    });
+  });
 });
