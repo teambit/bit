@@ -32,4 +32,5 @@ export function findPathToYarnSdk(dir: string, moduleName: string): string | und
   if (parent !== dir) {
     return findPathToYarnSdk(parent, moduleName);
   }
+  return undefined;
 }
