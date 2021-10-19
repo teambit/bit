@@ -32,15 +32,6 @@ export class TypescriptConfigMutator {
 
   // TODO: move to a shared place, as all compilers mutators will need it
   /**
-   * relative path of the dist directory inside the capsule. e.g. "dist".
-   */
-  setDistDir(distDir: string) {
-    this.raw.distDir = distDir;
-    return this;
-  }
-
-  // TODO: move to a shared place, as all compilers mutators will need it
-  /**
    * determines which ones of the generated files will be saved in the bit objects when tagging.
    * e.g. distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
    * see https://github.com/mrmlnc/fast-glob for the supported glob patters syntax.
@@ -82,8 +73,23 @@ export class TypescriptConfigMutator {
     return this;
   }
 
-  setModule(module: ModuleKind): TypescriptConfigMutator {
+  setModule(module: string): TypescriptConfigMutator {
     this.raw.tsconfig.compilerOptions.module = module;
+    return this;
+  }
+
+  /**
+   * This will change the dist dir for all relevant places:
+   * 1. the dist dir of the compiler instance
+   * 2. add exclude for the dist dir in the tsconfig
+   * 3. set the outDir of the tsconfig
+   * @param distDir
+   * @returns
+   */
+  setDistDir(distDir: string): TypescriptConfigMutator {
+    this.raw.distDir = distDir;
+    this.addExclude([distDir]);
+    this.setOutDir(distDir);
     return this;
   }
 
