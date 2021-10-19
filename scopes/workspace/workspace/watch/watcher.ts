@@ -169,7 +169,9 @@ export class Watcher {
         : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err: any) {
       // do not exit the watch process on errors, just print them
-      logger.console(err.message || err);
+      const msg = `found an issue during onComponentChange or onComponentAdd hooks`;
+      logger.error(msg, err);
+      logger.console(`\n${msg}: ${err.message || err}`);
       return [];
     }
     if (buildResults && buildResults.length) {

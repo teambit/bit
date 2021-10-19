@@ -82,6 +82,11 @@ export class TypescriptMain {
   }
 
   async onComponentChange(component: Component, files: string[]) {
+    if (!this.tsServer) {
+      return {
+        results: 'N/A',
+      };
+    }
     await pMapSeries(files, (file) => this.tsServer.changed(file));
     let results = 'succeed';
     this.tsServer
