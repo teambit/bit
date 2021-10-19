@@ -6,9 +6,10 @@ import protocol from 'typescript/lib/protocol';
 import { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
 import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
-import { ProcessBasedTsServer, TypeScriptRequestTypes } from './process-based-tsserver';
+import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
+import { formatDiagnostics } from './format-diagnostics';
 
 type TsserverClientOpts = {
   logger: Logger;
@@ -126,8 +127,8 @@ export class TsserverClient {
     if (!message.body?.diagnostics.length) {
       return;
     }
-    const errors = message.body.diagnostics.map((d) => `code: ${d.code}, text: ${d.text}`).join('\n');
-    const errorMsg = `Found errors in file: ${message.body.file}\n${errors}\n`;
+    const file = path.relative(this.projectPath, message.body.file);
+    const errorMsg = formatDiagnostics(message.body.diagnostics, file);
     this.options.logger.console(errorMsg);
   }
 
