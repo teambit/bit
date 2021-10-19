@@ -47,7 +47,7 @@ export class RunCmd implements Command {
 
     return (
       <Text>
-        {appName} has started on port {`http://localhost:${port}`}
+        {appName} app is running on {`http://localhost:${port}`}
       </Text>
     );
     // return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
