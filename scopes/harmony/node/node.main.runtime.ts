@@ -1,14 +1,14 @@
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
-import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
+import { TsCompilerOptionsWithoutTsConfig, TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';
@@ -17,6 +17,8 @@ import { nodeTemplate } from './templates/node';
 export class NodeMain {
   constructor(
     private react: ReactMain,
+
+    private tsAspect: TypescriptMain,
 
     readonly nodeEnv: NodeEnv,
 
@@ -89,7 +91,14 @@ export class NodeMain {
    * override the env's typescript config for both dev and build time.
    * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
    */
-  useTypescript = this.react.useTypescript.bind(this.react);
+  useTypescript(modifiers?: UseTypescriptModifiers, tsModule?: any) {
+    const devTransformersFromModifiers = modifiers?.devConfig || [];
+    const devTransformers = [this.tsAspect.getCjsTransformer(), ...devTransformersFromModifiers];
+    const buildTransformersFromModifiers = modifiers?.buildConfig || [];
+    const buildTransformers = [this.tsAspect.getCjsTransformer(), ...buildTransformersFromModifiers];
+    const finalModifiers: UseTypescriptModifiers = { devConfig: devTransformers, buildConfig: buildTransformers };
+    this.react.useTypescript.call(this.react, finalModifiers, tsModule);
+  }
 
   /**
    * override the env's dev server and preview webpack configurations.
@@ -126,13 +135,20 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
+  static dependencies = [EnvsAspect, ReactAspect, TypescriptAspect, GeneratorAspect];
 
-  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
-    const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
+  static async provider([envs, react, tsAspect, generator]: [EnvsMain, ReactMain, TypescriptMain, GeneratorMain]) {
+    const reactCjs = react.compose([
+      react.useTypescript({
+        devConfig: [tsAspect.getCjsTransformer()],
+        buildConfig: [tsAspect.getCjsTransformer()],
+      }),
+    ]);
+
+    const nodeEnv: NodeEnv = envs.merge(new NodeEnv(tsAspect), reactCjs);
     envs.registerEnv(nodeEnv);
     generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate]);
-    return new NodeMain(react, nodeEnv, envs);
+    return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }
 

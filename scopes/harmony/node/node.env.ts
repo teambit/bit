@@ -1,7 +1,10 @@
 import { DependenciesEnv } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { TypescriptMain } from '@teambit/typescript';
 
 export class NodeEnv implements DependenciesEnv {
+  constructor(private tsAspect: TypescriptMain) {}
+
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
   getDependencies(): VariantPolicyConfigObject {
@@ -13,5 +16,9 @@ export class NodeEnv implements DependenciesEnv {
         '@babel/runtime': '7.12.18',
       },
     };
+  }
+
+  getPackageJsonProps() {
+    return this.tsAspect.getPackageJsonProps();
   }
 }
