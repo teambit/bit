@@ -1,6 +1,8 @@
 import { clone, merge } from 'lodash';
-import { CompilerOptions } from 'typescript';
+import { CompilerOptions, ModuleKind } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
+
+export { ModuleKind } from 'typescript';
 
 export type Target = 'ES3' | 'ES5' | 'ES2015' | 'ES2016' | 'ES2017' | 'ES2018' | 'ES2019' | 'ES2020' | 'ESNext';
 
@@ -77,6 +79,16 @@ export class TypescriptConfigMutator {
 
   setTarget(target: Target): TypescriptConfigMutator {
     this.raw.tsconfig.compilerOptions.target = target;
+    return this;
+  }
+
+  setModule(module: ModuleKind): TypescriptConfigMutator {
+    this.raw.tsconfig.compilerOptions.module = module;
+    return this;
+  }
+
+  setOutDir(outDir: string): TypescriptConfigMutator {
+    this.raw.tsconfig.compilerOptions.outDir = outDir;
     return this;
   }
 
