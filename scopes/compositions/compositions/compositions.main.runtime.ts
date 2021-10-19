@@ -118,7 +118,13 @@ export class CompositionsMain {
 
     const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
     return module.exports.map((exportModel) => {
-      return new Composition(exportModel.identifier, file.relative);
+      const displayName = exportModel.staticProperties?.get('compositionName');
+
+      return new Composition(
+        exportModel.identifier,
+        file.relative,
+        typeof displayName === 'string' ? displayName : undefined
+      );
     });
   }
 
