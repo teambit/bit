@@ -146,25 +146,14 @@ export class ReactEnv
     };
   }
 
-  private getTsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompileOptions = this.getTsCompilerOptions(mode);
-    return this.tsAspect.createCompiler(tsCompileOptions, transformers, tsModule);
-  }
-
   getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const cjsTransformer = (config: TypescriptConfigMutator) => config.setModule(ModuleKind.CommonJS);
-    return this.getTsCompiler(mode, [cjsTransformer, ...transformers], tsModule);
+    const tsCompileOptions = this.getTsCompilerOptions(mode);
+    return this.tsAspect.createCjsCompiler(tsCompileOptions, transformers, tsModule);
   }
 
   getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const changeDistFolderTransformer = (config: TypescriptConfigMutator) => {
-      const distDir = 'dist-esm';
-      config.raw.distDir = distDir;
-      config.addExclude([distDir]);
-      config.setOutDir(distDir);
-      return config;
-    };
-    return this.getTsCompiler(mode, [changeDistFolderTransformer, ...transformers], tsModule);
+    const tsCompileOptions = this.getTsCompilerOptions(mode);
+    return this.tsAspect.createEsmCompiler(tsCompileOptions, transformers, tsModule);
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
