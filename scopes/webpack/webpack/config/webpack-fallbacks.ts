@@ -57,4 +57,4 @@ export const fallbacks = {
   // pnpapi: false,
   // readline: false,
   // worker_threads: false,
-};
+} as const;
