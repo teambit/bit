@@ -4,7 +4,7 @@ import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
+import { TypescriptConfigMutator, ModuleKind } from '@teambit/typescript.modules.ts-config-mutator';
 
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
@@ -37,6 +37,32 @@ export class TypescriptMain {
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
+  }
+
+  createCjsCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getCjsTransformer(), ...transformers], tsModule);
+  }
+
+  createEsmCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getEsmTransformer(), ...transformers], tsModule);
+  }
+
+  getCjsTransformer(): TsConfigTransformer {
+    const cjsTransformer = (config: TypescriptConfigMutator) => {
+      config.setDistDir('dist');
+      config.setModule('CommonJS');
+      return config;
+    };
+    return cjsTransformer;
+  }
+
+  getEsmTransformer(): TsConfigTransformer {
+    const esmTransformer = (config: TypescriptConfigMutator) => {
+      config.setDistDir('dist-esm');
+      config.setModule('ES2020');
+      return config;
+    };
+    return esmTransformer;
   }
 
   /**
