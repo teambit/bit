@@ -92,6 +92,11 @@ export interface Compiler extends CompilerOptions {
   build(context: BuildContext): Promise<BuiltTaskResult>;
 
   /**
+   * return the dist dir of the compiled files
+   */
+  getDistDir(): string;
+
+  /**
    * given a source file, return its parallel in the dists. e.g. "index.ts" => "dist/index.js"
    * both, the return path and the given path are relative paths.
    */
