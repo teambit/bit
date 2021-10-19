@@ -64,7 +64,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return this.container.exec(opts, exec);
   }
 
-  outputFile(file: string, data: any, options: any): Promise<any> {
+  outputFile(file: string, data: any, options?: any): Promise<any> {
     return this.container.outputFile(file, data, options);
   }
 

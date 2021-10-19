@@ -18,7 +18,13 @@ function getDirectory(): PathOsBased {
   return path.join(userHome, '.bit');
 }
 
+export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
+
 function getCacheDirectory(): PathOsBased {
+  const fromEnvVar = process.env[CACHE_GLOBALS_ENV];
+  if (fromEnvVar && typeof fromEnvVar === 'string') {
+    return fromEnvVar;
+  }
   if (process.platform === 'darwin' || process.platform === 'linux') {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
@@ -254,6 +260,8 @@ export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 export const CFG_FEATURE_TOGGLE = 'features';
 
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
+
+export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';

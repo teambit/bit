@@ -175,6 +175,17 @@ jobs:
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit:latest
 
+  docker_non_root_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:latest .
+      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-non-root:latest
+
   server_docker_build:
     machine: true
     steps:
@@ -1536,6 +1547,9 @@ workflows:
       - docker_build:
           requires:
             - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_publish_to_gcloud
       - server_docker_build:
           requires:
             - docker_build
@@ -1645,6 +1659,10 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
       - docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
