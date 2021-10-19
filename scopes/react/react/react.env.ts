@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
-import { merge } from 'lodash';
+import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
 import {
@@ -18,10 +18,11 @@ import {
   PipeServiceModifier,
   PipeServiceModifiersMap,
 } from '@teambit/envs';
+import { ModuleKind } from '@teambit/typescript.modules.ts-config-mutator';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
-import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
+import { TsConfigTransformer, TypescriptConfigMutator, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
@@ -132,7 +133,7 @@ export class ReactEnv
   }
 
   private getTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
-    const tsconfig = mode === 'dev' ? defaultTsConfig : buildTsConfig;
+    const tsconfig = mode === 'dev' ? cloneDeep(defaultTsConfig) : cloneDeep(buildTsConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     const compileJs = true;
     const compileJsx = true;
@@ -150,8 +151,24 @@ export class ReactEnv
     return this.tsAspect.createCompiler(tsCompileOptions, transformers, tsModule);
   }
 
+  getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const cjsTransformer = (config: TypescriptConfigMutator) => config.setModule(ModuleKind.CommonJS);
+    return this.getTsCompiler(mode, [cjsTransformer, ...transformers], tsModule);
+  }
+
+  getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const changeDistFolderTransformer = (config: TypescriptConfigMutator) => {
+      const distDir = 'dist-esm';
+      config.raw.distDir = distDir;
+      config.addExclude([distDir]);
+      config.setOutDir(distDir);
+      return config;
+    };
+    return this.getTsCompiler(mode, [changeDistFolderTransformer, ...transformers], tsModule);
+  }
+
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.getTsCompiler('dev', transformers, tsModule);
+    return this.getTsEsmCompiler('dev', transformers, tsModule);
   }
 
   /**
@@ -307,7 +324,13 @@ export class ReactEnv
    * define the package json properties to add to each component.
    */
   getPackageJsonProps() {
-    return this.tsAspect.getPackageJsonProps();
+    const defaultTsProps = this.tsAspect.getPackageJsonProps();
+    return {
+      ...defaultTsProps,
+      // React compile by default to esm, so uses type module
+      type: 'module',
+      main: 'dist-esm/{main}.js',
+    };
   }
 
   /**
@@ -351,7 +374,7 @@ export class ReactEnv
   }
 
   private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsCompiler('build', transformers, tsModule);
+    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
