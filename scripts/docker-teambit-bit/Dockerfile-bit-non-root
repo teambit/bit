@@ -6,6 +6,7 @@ USER user
 RUN npm i @teambit/bvm -g
 RUN bvm upgrade
 ENV PATH=$PATH:/home/user/bin
+ENV BIT_GLOBALS_DIR=/tmp/bit
 RUN bit config set analytics_reporting false
 RUN bit config set no_warnings false
 RUN bit config set interactive false
