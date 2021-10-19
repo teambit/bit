@@ -100,7 +100,7 @@ export class Watcher {
         return this.completeWatch();
       }
 
-      const buildResults = await this.executeWatchOperationsOnComponent(componentId, true, initiator);
+      const buildResults = await this.executeWatchOperationsOnComponent(componentId, [filePath], true, initiator);
       this.completeWatch();
       return buildResults;
     } catch (err: any) {
@@ -123,8 +123,8 @@ export class Watcher {
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       this.fsWatcher.add(newDirs);
-      const addResults = await mapSeries(newDirs, (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], false)
+      const addResults = await mapSeries(newDirs, async (dir) =>
+        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], false)
       );
       results.push(...addResults.flat());
     }
@@ -143,6 +143,7 @@ export class Watcher {
 
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
+    files: string[],
     isChange = true,
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
@@ -164,7 +165,7 @@ export class Watcher {
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
-        ? await this.workspace.triggerOnComponentChange(componentId, initiator)
+        ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
         : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err: any) {
       // do not exit the watch process on errors, just print them

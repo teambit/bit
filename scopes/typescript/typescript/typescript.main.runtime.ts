@@ -32,6 +32,8 @@ export class TypescriptMain {
   constructor(private logger: Logger, private envs: EnvsMain, private workspace?: Workspace) {
     if (this.workspace) {
       this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
+      this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
     }
   }
   /**
@@ -53,22 +55,47 @@ export class TypescriptMain {
     if (!workspace || !watchOpts.checkTypes) {
       return;
     }
-
-    this.tsServer = new TsserverClient(workspace.path, {
-      logger: this.logger,
-      verbose: watchOpts.verbose,
-    });
-    this.tsServer.init();
     // get all files paths
     const files = components
       .map((c) => c.filesystem.files)
       .flat()
       .map((f) => f.path);
     const supportedFiles = files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
-    await pMapSeries(supportedFiles, (file) => this.tsServer.open(file));
-    this.tsServer.getDiag(supportedFiles).catch((err) => {
-      this.logger.error(`failed getting the diag info from ts-server`, err);
+
+    this.tsServer = new TsserverClient(workspace.path, supportedFiles, {
+      logger: this.logger,
+      verbose: watchOpts.verbose,
     });
+    this.tsServer.init();
+    this.tsServer.openAllFiles();
+
+    const start = Date.now();
+    this.tsServer
+      .getDiagnostic()
+      .then(() => {
+        const end = Date.now() - start;
+        this.logger.console(`\ncompleted preliminary type checking. took ${end / 1000} sec`);
+      })
+      .catch((err) => {
+        this.logger.error(`failed getting the diag info from ts-server`, err);
+      });
+  }
+
+  async onComponentChange(component: Component, files: string[]) {
+    await pMapSeries(files, (file) => this.tsServer.changed(file));
+    let results = 'succeed';
+    this.tsServer
+      .getDiagnostic()
+      .then(() => {
+        this.logger.console(`\ntype checking had been completed for the following files:\n${files.join('\n')}`);
+      })
+      .catch((err) => {
+        results = 'failed';
+        this.logger.error(`failed getting the diag info from ts-server`, err);
+      });
+    return {
+      results,
+    };
   }
 
   /**

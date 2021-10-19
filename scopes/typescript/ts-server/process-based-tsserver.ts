@@ -39,7 +39,7 @@ export interface TsServerArgs {
   pluginProbeLocations?: string[];
 }
 
-interface TypeScriptRequestTypes {
+export interface TypeScriptRequestTypes {
   geterr: [protocol.GeterrRequestArgs, any];
   compilerOptionsForInferredProjects: [
     protocol.SetCompilerOptionsForInferredProjectsArgs,

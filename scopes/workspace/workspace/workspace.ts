@@ -477,7 +477,11 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
-  async triggerOnComponentChange(id: ComponentID, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
+  async triggerOnComponentChange(
+    id: ComponentID,
+    files: string[],
+    initiator?: CompilationInitiator
+  ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -486,7 +490,7 @@ export class Workspace implements ComponentFactory {
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, initiator);
+      const onChangeResult = await onChangeFunc(component, files, initiator);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -499,8 +503,9 @@ export class Workspace implements ComponentFactory {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
+    const files = component.state.filesystem.files.map((file) => file.path);
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
-      const onAddResult = await onAddFunc(component);
+      const onAddResult = await onAddFunc(component, files);
       results.push({ extensionId: extension, results: onAddResult });
     });
 
@@ -827,13 +832,9 @@ export class Workspace implements ComponentFactory {
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const components = await this.getMany(componentIds);
     const preWatchFunctions = this.onPreWatchSlot.values();
-    this.logger.console('triggering preWatch hook...');
-    const start = Date.now();
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
-    const end = Date.now() - start;
-    this.logger.console(`completed preWatch hook (${end / 1000} sec)`);
   }
 
   /**

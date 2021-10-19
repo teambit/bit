@@ -93,13 +93,20 @@ export enum CommandTypes {
   ProvideInlayHints = 'provideInlayHints',
 }
 
-export enum EventTypes {
-  ConfigFileDiag = 'configFileDiag',
-  RequestCompleted = 'requestCompleted',
-  SyntaxDiag = 'syntaxDiag',
-  SementicDiag = 'semanticDiag',
-  SuggestionDiag = 'suggestionDiag',
-  Telemetry = 'telemetry',
+export enum EventName {
+  syntaxDiag = 'syntaxDiag',
+  semanticDiag = 'semanticDiag',
+  suggestionDiag = 'suggestionDiag',
+  configFileDiag = 'configFileDiag',
+  telemetry = 'telemetry',
+  projectLanguageServiceState = 'projectLanguageServiceState',
+  projectsUpdatedInBackground = 'projectsUpdatedInBackground',
+  beginInstallTypes = 'beginInstallTypes',
+  endInstallTypes = 'endInstallTypes',
+  typesInstallerInitializationFailed = 'typesInstallerInitializationFailed',
+  surveyReady = 'surveyReady',
+  projectLoadingStart = 'projectLoadingStart',
+  projectLoadingFinish = 'projectLoadingFinish',
 }
 
 export enum ScriptElementKind {
