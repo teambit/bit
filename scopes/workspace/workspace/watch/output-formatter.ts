@@ -24,9 +24,16 @@ export const formatWatchPathsSortByComponent = (trackDirs) => {
   );
 };
 
+/**
+ * todo: this was implemented incorrectly.
+ * the original idea of `SerializableResults` was to have each one of the aspects registered to the slot, the
+ * ability to have their own formatting to their results, and then `toString()` method to print them.
+ * Here, the printing is specifically to the Compiler aspect. It should move to where it belongs.
+ */
 export function formatCompileResults(compileResults: OnComponentEventResult[], verbose: boolean) {
-  if (!compileResults.length) return '';
+  if (!compileResults.length || !Array.isArray(compileResults)) return '';
   return compileResults
+    .filter((compileResult) => compileResult.results?.results && Array.isArray(compileResult.results?.results))
     .map((compileResult) => ({
       extensionId: compileResult.extensionId,
       resultsForExtension: compileResult.results?.results?.map((resultForExtension) => ({

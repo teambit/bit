@@ -46,13 +46,12 @@ Each component has an isolated **dev environment** so it is independently develo
   
 **Scopes** help you store and organize components. Remote scopes (on [bit cloud](https://bit.dev) or your own server) make it easy to move components from app to app or between teams, share and discover components, and collaborate to stay in sync. 
   
-Organizations can assign team ownership over features to autonomous teams, who build and serve components for all apps to use. For example, a team can build a set of front and backend components for “search” and serve them for all applications to integrate and use, just like a microservice serves APIs. 
+Organizations can assign team ownership over features to autonomous teams, who build and serve components for all apps to use. For example, a team can build a set of front and backend components for “search” and serve them for all applications to integrate and use, just like a microservice serves APIs.
 
-Bit distributes and scales web development in a way similar to how microservices distributed and scaled backend development, only in a more flexible degree of freedom through unlimited granularity and across the entire modern web development stack, front and back.  
-  
-***We build 100% of our technology with Bit, and so do thousands of developers and dozens of Fortune-500 companies.***
+Bit distributes and scales web development in a way similar to how microservices distributed and scaled backend development, only in a more flexible degree of freedom through unlimited granularity and across the entire modern web development stack, front and back.
 
-  
+**_We build 100% of our technology with Bit, and so do thousands of developers and dozens of Fortune-500 companies._**
+
 ### How to Start?
 
 <p align="center">
@@ -89,10 +88,9 @@ Install dependencies:
 cd <my-workspace-name>
 bit start
 ```
- 
+
 Open-up your browser on localhost:3000, or any other available port, and view the demo components.
 
-  
 Create components:
 
 ```bash
@@ -100,9 +98,8 @@ bit create react ui/button     # TypeScript
 bit create react-js ui/button  # JavaScript
 ```
 
-
 ### Popular Onboarding Use-Cases
-  
+
 [Here are 4 popular use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) many organizations choose to start with.
 
 - Micro Frontends

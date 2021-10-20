@@ -34,7 +34,6 @@ export function configFactory(entries: string[], rootPath: string): Configuratio
     resolve: {
       alias: fallbacksAliases,
 
-      // @ts-ignore
       fallback: fallbacks,
     },
 
