@@ -4,7 +4,7 @@ import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
-import { TypescriptConfigMutator, ModuleKind } from '@teambit/typescript.modules.ts-config-mutator';
+import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';

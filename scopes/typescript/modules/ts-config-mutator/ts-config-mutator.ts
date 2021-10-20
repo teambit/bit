@@ -1,8 +1,6 @@
 import { clone, merge } from 'lodash';
-import { CompilerOptions, ModuleKind } from 'typescript';
+import { CompilerOptions } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
-
-export { ModuleKind } from 'typescript';
 
 export type Target = 'ES3' | 'ES5' | 'ES2015' | 'ES2016' | 'ES2017' | 'ES2018' | 'ES2019' | 'ES2020' | 'ESNext';
 

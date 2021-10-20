@@ -18,11 +18,10 @@ import {
   PipeServiceModifier,
   PipeServiceModifiersMap,
 } from '@teambit/envs';
-import { ModuleKind } from '@teambit/typescript.modules.ts-config-mutator';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
-import { TsConfigTransformer, TypescriptConfigMutator, TypescriptMain } from '@teambit/typescript';
+import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
