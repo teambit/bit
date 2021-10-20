@@ -1671,12 +1671,12 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment in case you want to re-build the dockers on PR:
-  # docker_build_temp:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: bvm-dir-docker-non-root
-  #     - docker_non_root_build:
-  #         requires:
-  #           - checkout_code
+  docker_build_temp:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: bvm-dir-docker-non-root
+      - docker_non_root_build:
+          requires:
+            - checkout_code
