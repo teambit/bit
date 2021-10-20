@@ -18,12 +18,8 @@ export type TsserverClientOpts = {
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
-  constructor(
-    private projectPath: string,
-    private files: string[],
-    private logger: Logger,
-    private options: TsserverClientOpts
-  ) {}
+  private files: string[] = [];
+  constructor(private projectPath: string, private logger: Logger, private options: TsserverClientOpts) {}
   /**
    * start the ts-server and keep its process alive.
    * the initial process should be pretty quick as it doesn't open or investigate the project files.
@@ -38,8 +34,13 @@ export class TsserverClient {
     this.tsServer.start();
   }
 
+  killTsServer() {
+    this.tsServer.kill();
+  }
+
   /**
-   * get diagnostic of the entire project. there is little to no value of getting diagnostic for a specific file, as
+   * get diagnostic of all files opened in the project.
+   * there is little to no value of getting diagnostic for a specific file, as
    * changing a type in one file may cause errors in different files.
    *
    * the errors/diagnostic info are sent as events, see this.onTsserverEvent() for more info.
@@ -51,15 +52,62 @@ export class TsserverClient {
     return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files: this.files });
   }
 
+  /**
+   * avoid using this method, it takes longer than `getDiagnostic()` and shows errors from paths outside the project
+   */
   async getDiagnosticAllProject(requestedByFile: string): Promise<any> {
     return this.tsServer.request(CommandTypes.GeterrForProject, { file: requestedByFile, delay: 0 });
   }
 
+  /**
+   * @param file can be absolute or relative to this.projectRoot.
+   */
   async getQuickInfo(file: string, position: Position): Promise<protocol.QuickInfoResponse | undefined> {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.open(absFile);
     return this.tsServer.request(CommandTypes.Quickinfo, {
-      file,
-      line: position.line + 1,
-      offset: position.character + 1,
+      file: absFile,
+      line: position.line,
+      offset: position.character,
+    });
+  }
+
+  /**
+   * @param file can be absolute or relative to this.projectRoot.
+   */
+  async getTypeDefinition(file: string, position: Position): Promise<protocol.TypeDefinitionResponse | undefined> {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.open(absFile);
+    return this.tsServer.request(CommandTypes.TypeDefinition, {
+      file: absFile,
+      line: position.line,
+      offset: position.character,
+    });
+  }
+
+  /**
+   * @param file can be absolute or relative to this.projectRoot.
+   */
+  async getReferences(file: string, position: Position): Promise<protocol.ReferencesResponse | undefined> {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.open(absFile);
+    return this.tsServer.request(CommandTypes.References, {
+      file: absFile,
+      line: position.line,
+      offset: position.character,
+    });
+  }
+
+  /**
+   * @param file can be absolute or relative to this.projectRoot.
+   */
+  async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.open(absFile);
+    return this.tsServer.request(CommandTypes.SignatureHelp, {
+      file: absFile,
+      line: position.line,
+      offset: position.character,
     });
   }
 
@@ -69,21 +117,34 @@ export class TsserverClient {
     return this.tsServer.request(CommandTypes.Configure, configureArgs);
   }
 
+  /**
+   * ask tsserver to open a file if it was not opened before.
+   * @param file absolute path of the file
+   */
   open(file: string) {
+    if (this.files.includes(file)) {
+      return;
+    }
     this.tsServer.notify(CommandTypes.Open, {
       file,
       projectRootPath: this.projectPath,
     });
+    this.files.push(file);
   }
 
-  openAllFiles() {
-    this.files.forEach((file) => this.open(file));
+  /**
+   *
+   * @param files absolute paths
+   */
+  openMultipleFiles(files: string[]) {
+    files.forEach((file) => this.open(file));
   }
 
   close(file: string) {
     this.tsServer.notify(CommandTypes.Close, {
       file,
     });
+    this.files = this.files.filter((openFile) => openFile !== file);
   }
 
   /**
@@ -126,6 +187,13 @@ export class TsserverClient {
       default:
         this.logger.debug(`ignored TsServer event: ${event.event}`);
     }
+  }
+
+  private convertFileToAbsoluteIfNeeded(filepath: string): string {
+    if (path.isAbsolute(filepath)) {
+      return filepath;
+    }
+    return path.join(this.projectPath, filepath);
   }
 
   private publishDiagnostic(message: protocol.DiagnosticEvent) {

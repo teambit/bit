@@ -29,10 +29,18 @@ export class ComponentFsCache {
     await this.saveDataInCache(idStr, LAST_TRACK, Buffer.from(timestamp.toString()));
   }
 
+  /**
+   * @deprecated
+   * not in use anymore. it takes time to save and get them from the cache, and it's faster to get them from the filesystem directly.
+   */
   async getFilePathsFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
     return this.getStringDataFromCache(idStr, FILE_PATHS);
   }
 
+  /**
+   * @deprecated
+   * not in use anymore. it takes time to save and get them from the cache, and it's faster to get them from the filesystem directly.
+   */
   async saveFilePathsInCache(idStr: string, filePaths: ComponentMapFile[]): Promise<void> {
     await this.saveStringDataInCache(idStr, FILE_PATHS, filePaths);
   }
