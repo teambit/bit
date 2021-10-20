@@ -5,9 +5,10 @@ USER user
 
 ENV BVM_GLOBALS_DIR=/tmp/bvm
 RUN npm i @teambit/bvm -g
-ENV PATH=$PATH:/home/user/bin
 RUN bvm config
 RUN bvm upgrade
+RUN bvm link --verbose
+ENV PATH=$PATH:/home/user/bin
 # RUN bvm const set
 ENV BIT_GLOBALS_DIR=/tmp/bit
 RUN bit config set analytics_reporting false
