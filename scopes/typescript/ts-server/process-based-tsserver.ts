@@ -41,6 +41,7 @@ export interface TsServerArgs {
 
 export interface TypeScriptRequestTypes {
   geterr: [protocol.GeterrRequestArgs, any];
+  geterrForProject: [protocol.GeterrForProjectRequestArgs, any];
   compilerOptionsForInferredProjects: [
     protocol.SetCompilerOptionsForInferredProjectsArgs,
     protocol.SetCompilerOptionsForInferredProjectsResponse

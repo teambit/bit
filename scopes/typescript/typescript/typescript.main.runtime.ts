@@ -113,10 +113,14 @@ export class TypescriptMain {
     }
     await pMapSeries(files, (file) => this.tsServer.changed(file));
     let results = 'succeed';
+    const start = Date.now();
     this.tsServer
       .getDiagnostic()
       .then(() => {
-        this.logger.console(`\ntype checking had been completed for the following files:\n${files.join('\n')}`);
+        const end = Date.now() - start;
+        this.logger.console(
+          `\ntype checking had been completed (${end / 1000} sec) for the following files:\n${files.join('\n')}`
+        );
       })
       .catch((err) => {
         results = 'failed';

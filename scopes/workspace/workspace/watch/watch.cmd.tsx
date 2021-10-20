@@ -17,6 +17,8 @@ export class WatchCommand implements Command {
     onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       if (verbose) {
         this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
@@ -27,6 +29,8 @@ export class WatchCommand implements Command {
       );
     },
     onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       if (!buildResults.length) {
         this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
         return;
@@ -37,6 +41,8 @@ export class WatchCommand implements Command {
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
     onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       this.logger.console(`The file ${filePath} has been added.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
