@@ -54,29 +54,17 @@ export class TypescriptMain {
     return this.tsServer;
   }
 
-  async initTsserverClient(
-    projectPath: string,
-    components: Component[],
-    options: TsserverClientOpts = {}
-  ): Promise<TsserverClient> {
-    const supportedFiles = this.getAllFilesForTsserver(components);
-    this.tsServer = new TsserverClient(projectPath, supportedFiles, this.logger, options);
+  async initTsserverClient(projectPath: string, options: TsserverClientOpts = {}): Promise<TsserverClient> {
+    this.tsServer = new TsserverClient(projectPath, this.logger, options);
     this.tsServer.init();
-    this.tsServer.openAllFiles();
     return this.tsServer;
   }
 
-  async initTsserverClientFromWorkspace(
-    components?: Component[],
-    options: TsserverClientOpts = {}
-  ): Promise<TsserverClient> {
+  async initTsserverClientFromWorkspace(options: TsserverClientOpts = {}): Promise<TsserverClient> {
     if (!this.workspace) {
       throw new Error(`initTsserverClientFromWorkspace: workspace was not found`);
     }
-    if (!components) {
-      components = await this.workspace.list();
-    }
-    return this.initTsserverClient(this.workspace.path, components, options);
+    return this.initTsserverClient(this.workspace.path, options);
   }
 
   private getAllFilesForTsserver(components: Component[]): string[] {
@@ -92,7 +80,9 @@ export class TypescriptMain {
     if (!workspace || !watchOpts.checkTypes) {
       return;
     }
-    await this.initTsserverClientFromWorkspace(components, { verbose: watchOpts.verbose });
+    await this.initTsserverClientFromWorkspace({ verbose: watchOpts.verbose });
+    const supportedFiles = this.getAllFilesForTsserver(components);
+    this.tsServer.openMultipleFiles(supportedFiles);
     const start = Date.now();
     this.tsServer
       .getDiagnostic()
