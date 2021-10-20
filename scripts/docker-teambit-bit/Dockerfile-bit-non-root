@@ -1,4 +1,8 @@
 FROM node:12.22.0
+RUN mkdir /tmp/bvm
+RUN mkdir /tmp/bit
+RUN chmod -R 777 /tmp/bvm
+RUN chmod -R 777 /tmp/bit
 RUN adduser --disabled-password --gecos '' user
 RUN chown -R user /usr/local/
 USER user
