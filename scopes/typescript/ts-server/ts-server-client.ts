@@ -51,6 +51,10 @@ export class TsserverClient {
     return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files: this.files });
   }
 
+  async getDiagnosticAllProject(requestedByFile: string): Promise<any> {
+    return this.tsServer.request(CommandTypes.GeterrForProject, { file: requestedByFile, delay: 0 });
+  }
+
   async getQuickInfo(file: string, position: Position): Promise<protocol.QuickInfoResponse | undefined> {
     return this.tsServer.request(CommandTypes.Quickinfo, {
       file,
