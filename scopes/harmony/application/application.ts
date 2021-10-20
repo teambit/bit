@@ -24,7 +24,6 @@ export interface Application {
    */
   deploy?(context: BuildContext): Promise<void>;
 
-
   /**
    * prerender routes of application (will create static file for the route)
    * e.g ['/plugins', '/learn', '/docs/quick-start]

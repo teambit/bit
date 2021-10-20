@@ -5,7 +5,11 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-
+import WorkspaceAspect from '@teambit/workspace';
+import type { WatchOptions, Workspace } from '@teambit/workspace';
+import pMapSeries from 'p-map-series';
+import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -24,7 +28,14 @@ export type TsConfigTransformer = (
 ) => TypescriptConfigMutator;
 
 export class TypescriptMain {
-  constructor(private logger: Logger) {}
+  private tsServer: TsserverClient;
+  constructor(private logger: Logger, private workspace?: Workspace) {
+    if (this.workspace) {
+      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
+      this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+    }
+  }
   /**
    * create a new compiler.
    */
@@ -37,6 +48,83 @@ export class TypescriptMain {
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
+  }
+
+  getTsserverClient(): TsserverClient | undefined {
+    return this.tsServer;
+  }
+
+  async initTsserverClient(
+    projectPath: string,
+    components: Component[],
+    options: TsserverClientOpts = {}
+  ): Promise<TsserverClient> {
+    const supportedFiles = this.getAllFilesForTsserver(components);
+    this.tsServer = new TsserverClient(projectPath, supportedFiles, this.logger, options);
+    this.tsServer.init();
+    this.tsServer.openAllFiles();
+    return this.tsServer;
+  }
+
+  async initTsserverClientFromWorkspace(
+    components?: Component[],
+    options: TsserverClientOpts = {}
+  ): Promise<TsserverClient> {
+    if (!this.workspace) {
+      throw new Error(`initTsserverClientFromWorkspace: workspace was not found`);
+    }
+    if (!components) {
+      components = await this.workspace.list();
+    }
+    return this.initTsserverClient(this.workspace.path, components, options);
+  }
+
+  private getAllFilesForTsserver(components: Component[]): string[] {
+    const files = components
+      .map((c) => c.filesystem.files)
+      .flat()
+      .map((f) => f.path);
+    return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+  }
+
+  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    const workspace = this.workspace;
+    if (!workspace || !watchOpts.checkTypes) {
+      return;
+    }
+    await this.initTsserverClientFromWorkspace(components, { verbose: watchOpts.verbose });
+    const start = Date.now();
+    this.tsServer
+      .getDiagnostic()
+      .then(() => {
+        const end = Date.now() - start;
+        this.logger.console(`\ncompleted preliminary type checking. took ${end / 1000} sec`);
+      })
+      .catch((err) => {
+        this.logger.error(`failed getting the diag info from ts-server`, err);
+      });
+  }
+
+  private async onComponentChange(component: Component, files: string[]) {
+    if (!this.tsServer) {
+      return {
+        results: 'N/A',
+      };
+    }
+    await pMapSeries(files, (file) => this.tsServer.changed(file));
+    let results = 'succeed';
+    this.tsServer
+      .getDiagnostic()
+      .then(() => {
+        this.logger.console(`\ntype checking had been completed for the following files:\n${files.join('\n')}`);
+      })
+      .catch((err) => {
+        results = 'failed';
+        this.logger.error(`failed getting the diag info from ts-server`, err);
+      });
+    return {
+      results,
+    };
   }
 
   /**
@@ -58,13 +146,14 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, WorkspaceAspect];
 
-  static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
+  static async provider([schema, loggerExt, workspace]: [SchemaMain, LoggerMain, Workspace]) {
+    schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     schema.registerParser(new TypeScriptParser(logger));
 
-    return new TypescriptMain(logger);
+    return new TypescriptMain(logger, workspace);
   }
 }
 

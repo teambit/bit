@@ -1,4 +1,4 @@
-import PrerenderSPAPlugin from '@dreysolano/prerender-spa-plugin'
+import PrerenderSPAPlugin from '@dreysolano/prerender-spa-plugin';
 import { join, basename } from 'path';
 import { Capsule } from '@teambit/isolator';
 import { Application, AppContext, DeployContext } from '@teambit/application';
@@ -15,7 +15,7 @@ export class ReactApp implements Application {
     private reactEnv: ReactEnv,
     readonly deploy?: (context: DeployContext) => Promise<void>,
     readonly prerenderRoutes?: string[]
-  ) { }
+  ) {}
 
   applicationType = 'react';
 
@@ -63,14 +63,16 @@ export class ReactApp implements Application {
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, [
       (configMutator) => {
         configMutator.addTopLevel('output', { path: join(outputPath, 'public'), publicPath: `/` });
-        configMutator.addPlugin(new PrerenderSPAPlugin({
-          staticDir: join(outputPath, 'public'),
-          routes: this.prerenderRoutes,
-          postProcess(renderedRoute) {
-            renderedRoute.outputPath = join(outputPath, 'public', `${renderedRoute.originalRoute}.html`)
-            return renderedRoute
-          },
-        }))
+        configMutator.addPlugin(
+          new PrerenderSPAPlugin({
+            staticDir: join(outputPath, 'public'),
+            routes: this.prerenderRoutes,
+            postProcess(renderedRoute) {
+              renderedRoute.outputPath = join(outputPath, 'public', `${renderedRoute.originalRoute}.html`);
+              return renderedRoute;
+            },
+          })
+        );
         return configMutator;
       },
     ]);
