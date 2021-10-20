@@ -16,7 +16,7 @@ import { VariantsAspect } from '@teambit/variants';
 import { EXT_NAME } from './constants';
 import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
 import { WorkspaceAspect } from './workspace.aspect';
-import workspaceProvider from './workspace.provider';
+import workspaceProvider, { OnPreWatch } from './workspace.provider';
 
 export const WorkspaceMain = {
   name: EXT_NAME,
@@ -41,6 +41,7 @@ export const WorkspaceMain = {
     Slot.withType<OnComponentChange>(),
     Slot.withType<OnComponentAdd>(),
     Slot.withType<OnComponentRemove>(),
+    Slot.withType<OnPreWatch>(),
   ],
   provider: workspaceProvider,
   defineRuntime: 'browser',

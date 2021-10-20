@@ -8,7 +8,7 @@ import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { Watcher } from './watcher';
+import { Watcher, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { OnComponentEventResult } from '../on-component-events';
 
@@ -17,6 +17,8 @@ export class WatchCommand implements Command {
     onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       if (verbose) {
         this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
@@ -27,6 +29,8 @@ export class WatchCommand implements Command {
       );
     },
     onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       if (!buildResults.length) {
         this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
         return;
@@ -37,6 +41,8 @@ export class WatchCommand implements Command {
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
     onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      // eslint-disable-next-line no-console
+      console.clear();
       this.logger.console(`The file ${filePath} has been added.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
@@ -55,7 +61,11 @@ export class WatchCommand implements Command {
   alias = '';
   group = 'development';
   shortDescription = '';
-  options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
+  options = [
+    ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
+    ['t', 'check-types', 'EXPERIMENTAL. for typescript files, load an tsserver instance to check types'],
+  ] as CommandOptions;
 
   constructor(
     /**
@@ -89,8 +99,8 @@ export class WatchCommand implements Command {
     }
   };
 
-  async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
-    await this.watcher.watch({ msgs: this.msgs, verbose });
+  async report(cliArgs: [], watchOpts: WatchOptions) {
+    await this.watcher.watch({ msgs: this.msgs, ...watchOpts });
     return 'watcher terminated';
   }
 }

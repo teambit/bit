@@ -527,7 +527,10 @@ export class Http implements Network {
     const headers = token ? getAuthHeader(token) : {};
     const proxyConfig = await Http.getProxyConfig();
     const networkConfig = await Http.getNetworkConfig();
-    const agent = await Http.getAgent(host, proxyConfig);
+    const agent = await Http.getAgent(host, {
+      ...proxyConfig,
+      localAddress: networkConfig.localAddress,
+    });
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
     const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
@@ -546,7 +549,11 @@ export function getAuthHeader(token: string) {
  */
 export async function getFetcherWithAgent(uri: string) {
   const proxyConfig = await Http.getProxyConfig();
-  const agent = await Http.getAgent(uri, proxyConfig);
+  const networkConfig = await Http.getNetworkConfig();
+  const agent = await Http.getAgent(uri, {
+    ...proxyConfig,
+    localAddress: networkConfig.localAddress,
+  });
   const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
 }
