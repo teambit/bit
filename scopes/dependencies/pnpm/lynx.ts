@@ -88,6 +88,7 @@ async function createStoreController(
     localAddress: networkConfig?.localAddress,
     noProxy: proxyConfig?.noProxy,
     strictSsl: proxyConfig.strictSSL,
+    maxSockets: networkConfig.maxSockets,
     networkConcurrency: networkConfig.networkConcurrency,
   };
   const { ctrl } = await createNewStoreController(opts);
