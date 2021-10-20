@@ -1,1 +1,1 @@
-export { TsserverClient } from './ts-server-client';
+export { TsserverClient, TsserverClientOpts } from './ts-server-client';

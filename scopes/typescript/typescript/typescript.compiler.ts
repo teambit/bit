@@ -231,7 +231,7 @@ export class TypescriptCompiler implements Compiler {
     };
   }
 
-  async writeTypes(dirs: string[]) {
+  private async writeTypes(dirs: string[]) {
     await Promise.all(
       this.options.types.map(async (typePath) => {
         const contents = await fs.readFile(typePath, 'utf8');

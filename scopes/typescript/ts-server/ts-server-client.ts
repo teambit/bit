@@ -11,25 +11,26 @@ import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
 import { formatDiagnostics } from './format-diagnostics';
 
-type TsserverClientOpts = {
-  logger: Logger;
+export type TsserverClientOpts = {
   verbose?: boolean;
   tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies
 };
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
-  private logger: Logger;
-  constructor(private projectPath: string, private files: string[], private options: TsserverClientOpts) {
-    this.logger = this.options.logger;
-  }
+  constructor(
+    private projectPath: string,
+    private files: string[],
+    private logger: Logger,
+    private options: TsserverClientOpts
+  ) {}
   /**
    * start the ts-server and keep its process alive.
    * the initial process should be pretty quick as it doesn't open or investigate the project files.
    */
   init() {
     this.tsServer = new ProcessBasedTsServer({
-      logger: this.options.logger,
+      logger: this.logger,
       tsserverPath: this.findTsserverPath(),
       logToConsole: this.options.verbose,
       onEvent: this.onTsserverEvent.bind(this),
@@ -129,7 +130,7 @@ export class TsserverClient {
     }
     const file = path.relative(this.projectPath, message.body.file);
     const errorMsg = formatDiagnostics(message.body.diagnostics, file);
-    this.options.logger.console(errorMsg);
+    this.logger.console(errorMsg);
   }
 
   /**
