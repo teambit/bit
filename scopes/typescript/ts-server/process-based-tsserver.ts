@@ -185,6 +185,7 @@ export class ProcessBasedTsServer {
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {
+    msg = `[tsserver] ${msg}`;
     if (this.options.logToConsole) {
       this.logger.console(`${msg} ${JSON.stringify(obj, undefined, 4)}`);
     } else {

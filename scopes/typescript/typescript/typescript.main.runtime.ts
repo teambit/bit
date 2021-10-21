@@ -50,75 +50,44 @@ export class TypescriptMain {
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
   }
 
+  /**
+   * get TsserverClient instance if initiated already, otherwise, return undefined.
+   */
   getTsserverClient(): TsserverClient | undefined {
     return this.tsServer;
   }
 
-  async initTsserverClient(projectPath: string, options: TsserverClientOpts = {}): Promise<TsserverClient> {
-    this.tsServer = new TsserverClient(projectPath, this.logger, options);
+  /**
+   * starts a tsserver process to communicate with its API.
+   * @param projectPath absolute path of the project root directory
+   * @param options TsserverClientOpts
+   * @param files optionally, if check-types is enabled, provide files to open and type check.
+   * @returns TsserverClient
+   */
+  async initTsserverClient(
+    projectPath: string,
+    options: TsserverClientOpts = {},
+    files: string[] = []
+  ): Promise<TsserverClient> {
+    this.tsServer = new TsserverClient(projectPath, this.logger, options, files);
     this.tsServer.init();
     return this.tsServer;
   }
 
-  async initTsserverClientFromWorkspace(options: TsserverClientOpts = {}): Promise<TsserverClient> {
+  /**
+   * starts a tsserver process to communicate with its API. use only when running on the workspace.
+   * @param options TsserverClientOpts
+   * @param files optionally, if check-types is enabled, provide files to open and type check.
+   * @returns TsserverClient
+   */
+  async initTsserverClientFromWorkspace(
+    options: TsserverClientOpts = {},
+    files: string[] = []
+  ): Promise<TsserverClient> {
     if (!this.workspace) {
       throw new Error(`initTsserverClientFromWorkspace: workspace was not found`);
     }
-    return this.initTsserverClient(this.workspace.path, options);
-  }
-
-  private getAllFilesForTsserver(components: Component[]): string[] {
-    const files = components
-      .map((c) => c.filesystem.files)
-      .flat()
-      .map((f) => f.path);
-    return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
-  }
-
-  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
-    const workspace = this.workspace;
-    if (!workspace || !watchOpts.checkTypes) {
-      return;
-    }
-    await this.initTsserverClientFromWorkspace({ verbose: watchOpts.verbose });
-    const supportedFiles = this.getAllFilesForTsserver(components);
-    this.tsServer.openMultipleFiles(supportedFiles);
-    const start = Date.now();
-    this.tsServer
-      .getDiagnostic()
-      .then(() => {
-        const end = Date.now() - start;
-        this.logger.console(`\ncompleted preliminary type checking. took ${end / 1000} sec`);
-      })
-      .catch((err) => {
-        this.logger.error(`failed getting the diag info from ts-server`, err);
-      });
-  }
-
-  private async onComponentChange(component: Component, files: string[]) {
-    if (!this.tsServer) {
-      return {
-        results: 'N/A',
-      };
-    }
-    await pMapSeries(files, (file) => this.tsServer.changed(file));
-    let results = 'succeed';
-    const start = Date.now();
-    this.tsServer
-      .getDiagnostic()
-      .then(() => {
-        const end = Date.now() - start;
-        this.logger.console(
-          `\ntype checking had been completed (${end / 1000} sec) for the following files:\n${files.join('\n')}`
-        );
-      })
-      .catch((err) => {
-        results = 'failed';
-        this.logger.error(`failed getting the diag info from ts-server`, err);
-      });
-    return {
-      results,
-    };
+    return this.initTsserverClient(this.workspace.path, options, files);
   }
 
   /**
@@ -136,6 +105,36 @@ export class TypescriptMain {
     return {
       main: 'dist/{main}.js',
       types: '{main}.ts',
+    };
+  }
+
+  private getAllFilesForTsserver(components: Component[]): string[] {
+    const files = components
+      .map((c) => c.filesystem.files)
+      .flat()
+      .map((f) => f.path);
+    return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+  }
+
+  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    const workspace = this.workspace;
+    if (!workspace || !watchOpts.spawnTSServer) {
+      return;
+    }
+    const { verbose, checkTypes } = watchOpts;
+    const files = checkTypes ? this.getAllFilesForTsserver(components) : [];
+    await this.initTsserverClientFromWorkspace({ verbose, checkTypes }, files);
+  }
+
+  private async onComponentChange(component: Component, files: string[]) {
+    if (!this.tsServer) {
+      return {
+        results: 'N/A',
+      };
+    }
+    await pMapSeries(files, (file) => this.tsServer.onFileChange(file));
+    return {
+      results: 'succeed',
     };
   }
 

@@ -12,6 +12,12 @@ import { Watcher, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { OnComponentEventResult } from '../on-component-events';
 
+export type WatchCmdOpts = {
+  verbose?: boolean;
+  skipPreCompilation?: boolean;
+  checkTypes?: boolean;
+};
+
 export class WatchCommand implements Command {
   msgs = {
     onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
@@ -99,8 +105,16 @@ export class WatchCommand implements Command {
     }
   };
 
-  async report(cliArgs: [], watchOpts: WatchOptions) {
-    await this.watcher.watch({ msgs: this.msgs, ...watchOpts });
+  async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
+    const { verbose, checkTypes } = watchCmdOpts;
+    const watchOpts: WatchOptions = {
+      msgs: this.msgs,
+      verbose,
+      preCompile: !watchCmdOpts.skipPreCompilation,
+      spawnTSServer: checkTypes, // if check-types is enabled, it must spawn the tsserver.
+      checkTypes,
+    };
+    await this.watcher.watchAll(watchOpts);
     return 'watcher terminated';
   }
 }
