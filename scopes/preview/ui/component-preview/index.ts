@@ -1,2 +1,2 @@
 export { ComponentPreview } from './preview';
-export { toPreviewUrl, toPreviewServer, toPreviewHash } from './urls';
+export { usePreviewUrl, toPreviewUrl, toPreviewServer, toPreviewHash } from './urls';

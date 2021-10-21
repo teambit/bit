@@ -83,7 +83,7 @@ export type UIConfig = {
    */
   publicPath: string;
 
-  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
+  /** the url to *display* when server is listening. Note that bit does not provide proxying to this url */
   publicUrl?: string;
 };
 
@@ -550,7 +550,7 @@ export class UiMain {
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
-    config,
+    config: UIConfig,
     [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
       PreStartSlot,
