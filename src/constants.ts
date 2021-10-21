@@ -277,6 +277,7 @@ export const CFG_FETCH_RETRY_MINTIMEOUT = 'network.fetch_retry_mintimeout';
 export const CFG_FETCH_RETRY_MAXTIMEOUT = 'network.fetch_retry_maxtimeout';
 export const CFG_FETCH_TIMEOUT = 'network.fetch_timeout';
 export const CFG_LOCAL_ADDRESS = 'network.local_address';
+export const CFG_MAX_SOCKETS = 'network.max_sockets';
 export const CFG_NETWORK_CONCURRENCY = 'network.concurrency';
 
 export const CFG_CONCURRENCY_IO = 'concurrency.io';
