@@ -22,7 +22,14 @@ import { OnComponentEventResult } from '../on-component-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
-export type WatchOptions = { verbose?: boolean; checkTypes?: boolean; skipPreCompilation?: boolean };
+export type WatchOptions = {
+  msgs?: any;
+  initiator?: CompilationInitiator;
+  verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
+  spawnTSServer?: boolean; // needed for check types and extract API/docs.
+  checkTypes?: boolean; // if enabled, the spawnTSServer becomes true.
+  preCompile?: boolean; // whether compile all components before start watching
+};
 
 export class Watcher {
   private fsWatcher: FSWatcher;
@@ -34,16 +41,11 @@ export class Watcher {
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
 
-  async watch(opts: { msgs } & WatchOptions) {
-    this.verbose = Boolean(opts.verbose);
-    await this.watchAll(opts);
-  }
-
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll(opts: { msgs; initiator?: CompilationInitiator } & WatchOptions) {
+  async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const pathsToWatch = await this.getPathsToWatch();
