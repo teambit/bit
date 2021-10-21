@@ -11,6 +11,7 @@ export enum CompilationInitiator {
   CmdReport,
   CmdJson,
   PreStart,
+  PreWatch,
   Start,
   ComponentChanged,
   AspectLoadFail,

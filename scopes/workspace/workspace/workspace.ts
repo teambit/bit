@@ -77,13 +77,15 @@ import {
   SerializableResults,
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { Watcher } from './watch/watcher';
+import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
+  OnPreWatch,
+  OnPreWatchSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
@@ -190,6 +192,8 @@ export class Workspace implements ComponentFactory {
 
     private onComponentRemoveSlot: OnComponentRemoveSlot,
 
+    private onPreWatchSlot: OnPreWatchSlot,
+
     private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
@@ -243,6 +247,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
+    return this;
+  }
+
+  registerOnPreWatch(onPreWatchFunc: OnPreWatch) {
+    this.onPreWatchSlot.register(onPreWatchFunc);
     return this;
   }
 
@@ -468,7 +477,11 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
-  async triggerOnComponentChange(id: ComponentID, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
+  async triggerOnComponentChange(
+    id: ComponentID,
+    files: string[],
+    initiator?: CompilationInitiator
+  ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -477,7 +490,7 @@ export class Workspace implements ComponentFactory {
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, initiator);
+      const onChangeResult = await onChangeFunc(component, files, initiator);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -490,8 +503,9 @@ export class Workspace implements ComponentFactory {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
+    const files = component.state.filesystem.files.map((file) => file.path);
     await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
-      const onAddResult = await onAddFunc(component);
+      const onAddResult = await onAddFunc(component, files);
       results.push({ extensionId: extension, results: onAddResult });
     });
 
@@ -664,6 +678,18 @@ export class Workspace implements ComponentFactory {
     return this.componentDirFromLegacyId(componentId._legacy, bitMapOptions, options);
   }
 
+  /**
+   * component's files in the workspace are symlinked to the node_modules, and a package.json file is generated on that
+   * package directory to simulate a valid node package.
+   * @returns the package directory inside the node_module.
+   * by default the absolute path, unless `options.relative` was set
+   */
+  componentPackageDir(component: Component, options = { relative: false }): string {
+    const packageName = componentIdToPackageName(component.state._consumer);
+    const packageDir = path.join('node_modules', packageName);
+    return options.relative ? packageDir : this.consumer.toAbsolutePath(packageDir);
+  }
+
   private componentDirFromLegacyId(
     bitId: BitId,
     bitMapOptions?: GetBitMapComponentOptions,
@@ -801,6 +827,14 @@ export class Workspace implements ComponentFactory {
     }
 
     return mergedExtensions;
+  }
+
+  async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
+    const components = await this.getMany(componentIds);
+    const preWatchFunctions = this.onPreWatchSlot.values();
+    await mapSeries(preWatchFunctions, async (func) => {
+      await func(components, watchOpts);
+    });
   }
 
   /**

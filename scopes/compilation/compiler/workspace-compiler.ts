@@ -3,9 +3,10 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace } from '@teambit/workspace';
+import { SerializableResults, Workspace, WatchOptions } from '@teambit/workspace';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
+import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -13,7 +14,6 @@ import { Dist, SourceFile } from '@teambit/legacy/dist/consumer/component/source
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
@@ -46,6 +46,7 @@ export class ComponentCompiler {
     private component: ConsumerComponent,
     private compilerInstance: Compiler,
     private compilerId: string,
+    private logger: Logger,
     private dists: Dist[] = [],
     private compileErrors: CompileError[] = []
   ) {}
@@ -91,7 +92,7 @@ export class ComponentCompiler {
   private throwOnCompileErrors(noThrow = true) {
     if (this.compileErrors.length) {
       this.compileErrors.forEach((errorItem) => {
-        logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
+        this.logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
       });
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
       const err = new Error(`compilation failed. see the following errors from the compiler
@@ -103,7 +104,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         throw err;
       }
 
-      logger.console(err.message);
+      this.logger.console(err.message);
     }
   }
 
@@ -191,11 +192,13 @@ export class WorkspaceCompiler {
     private envs: EnvsMain,
     private pubsub: PubsubMain,
     private aspectLoader: AspectLoaderMain,
-    private ui: UiMain
+    private ui: UiMain,
+    private logger: Logger
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
@@ -223,7 +226,11 @@ export class WorkspaceCompiler {
     return false;
   }
 
-  async onComponentChange(component: Component, initiator?: CompilationInitiator): Promise<SerializableResults> {
+  async onComponentChange(
+    component: Component,
+    files: string[],
+    initiator?: CompilationInitiator
+  ): Promise<SerializableResults> {
     const buildResults = await this.compileComponents(
       [component.id.toString()],
       { initiator: initiator || CompilationInitiator.ComponentChanged },
@@ -235,6 +242,19 @@ export class WorkspaceCompiler {
         return `${buildResults[0]?.buildResults?.join('\n\t')}`;
       },
     };
+  }
+
+  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    if (!watchOpts.skipPreCompilation) {
+      const start = Date.now();
+      this.logger.console(`compiling ${components.length} components`);
+      await this.compileComponents(
+        components.map((c) => c.id._legacy),
+        { initiator: CompilationInitiator.PreWatch }
+      );
+      const end = Date.now() - start;
+      this.logger.consoleSuccess(`compiled ${components.length} components successfully (${end / 1000} sec)`);
+    }
   }
 
   async compileComponents(
@@ -256,7 +276,14 @@ export class WorkspaceCompiler {
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsAndNewCompilers.push(
-          new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
+          new ComponentCompiler(
+            this.pubsub,
+            this.workspace,
+            c.state._consumer,
+            compilerInstance,
+            compilerName,
+            this.logger
+          )
         );
       }
     });

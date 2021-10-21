@@ -4,7 +4,7 @@ import { Capsule } from '@teambit/isolator';
 type RequireFunc = () => any;
 
 export class RequireableComponent {
-  constructor(readonly component: Component, readonly requireFunc: RequireFunc) {}
+  constructor(readonly component: Component, readonly requireFunc: RequireFunc, readonly capsule?: Capsule) {}
 
   async require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require
@@ -14,6 +14,6 @@ export class RequireableComponent {
   static fromCapsule(capsule: Capsule) {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const requireFunc = () => require(capsule.wrkDir);
-    return new RequireableComponent(capsule.component, requireFunc);
+    return new RequireableComponent(capsule.component, requireFunc, capsule);
   }
 }

@@ -12,17 +12,20 @@ import {
   Registry,
   BIT_DEV_REGISTRY,
   PackageManagerProxyConfig,
+  PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { omit } from 'lodash';
+import { memoize, omit } from 'lodash';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
 import userHome from 'user-home';
+import { readConfig } from './read-config';
 
 const defaultStoreDir = join(userHome, '.pnpm-store');
 const defaultCacheDir = join(userHome, '.pnpm-cache');
 
 export class PnpmPackageManager implements PackageManager {
+  private readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
   async install(
@@ -119,13 +122,26 @@ export class PnpmPackageManager implements PackageManager {
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { getProxyConfig } = require('./get-proxy-config');
-    return getProxyConfig();
+    const { config } = await this.readConfig();
+    return getProxyConfig(config);
+  }
+
+  async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
+    const { config } = await this.readConfig();
+    return {
+      networkConcurrency: config.networkConcurrency,
+      fetchRetries: config.fetchRetries,
+      fetchTimeout: config.fetchTimeout,
+      fetchRetryMaxtimeout: config.fetchRetryMaxtimeout,
+      fetchRetryMintimeout: config.fetchRetryMintimeout,
+    };
   }
 
   async getRegistries(): Promise<Registries> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { getRegistries } = require('./get-registries');
-    const pnpmRegistry = await getRegistries();
+    const { config } = await this.readConfig();
+    const pnpmRegistry = await getRegistries(config);
     const defaultRegistry = new Registry(
       pnpmRegistry.default.uri,
       pnpmRegistry.default.alwaysAuth,

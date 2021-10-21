@@ -278,7 +278,7 @@ export class TypescriptCompiler implements Compiler {
 
   private async writeTsConfig(dirs: string[]) {
     const tsconfigStr = this.stringifyTsconfig(this.options.tsconfig);
-    await Promise.all(dirs.map((capsuleDir) => fs.writeFile(path.join(capsuleDir, 'tsconfig.json'), tsconfigStr)));
+    await Promise.all(dirs.map((dir) => fs.writeFile(path.join(dir, 'tsconfig.json'), tsconfigStr)));
   }
 
   private stringifyTsconfig(tsconfig) {
