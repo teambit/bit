@@ -19,13 +19,13 @@ import { memoize, omit } from 'lodash';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
 import userHome from 'user-home';
-import { readConfig } from './read-config'
+import { readConfig } from './read-config';
 
 const defaultStoreDir = join(userHome, '.pnpm-store');
 const defaultCacheDir = join(userHome, '.pnpm-cache');
 
 export class PnpmPackageManager implements PackageManager {
-  private readConfig = memoize(readConfig)
+  private readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
   async install(
@@ -129,12 +129,13 @@ export class PnpmPackageManager implements PackageManager {
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
     return {
+      maxSockets: config.maxSockets,
       networkConcurrency: config.networkConcurrency,
       fetchRetries: config.fetchRetries,
       fetchTimeout: config.fetchTimeout,
       fetchRetryMaxtimeout: config.fetchRetryMaxtimeout,
       fetchRetryMintimeout: config.fetchRetryMintimeout,
-    }
+    };
   }
 
   async getRegistries(): Promise<Registries> {
