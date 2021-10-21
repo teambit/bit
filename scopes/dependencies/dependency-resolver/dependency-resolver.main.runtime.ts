@@ -157,6 +157,11 @@ export interface DependencyResolverWorkspaceConfig {
   fetchTimeout?: number;
 
   /*
+   * The maximum number of connections to use per origin (protocol/host/port combination).
+   */
+  maxSockets?: number;
+
+  /*
    * Controls the maximum number of HTTP(S) requests to process simultaneously.
    */
   networkConcurrency?: number;
@@ -602,6 +607,7 @@ export class DependencyResolverMain {
       'fetchRetryFactor',
       'fetchRetryMintimeout',
       'fetchRetryMaxtimeout',
+      'maxSockets',
       'networkConcurrency',
     ]);
   }
