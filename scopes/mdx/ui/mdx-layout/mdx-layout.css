@@ -1,4 +1,3 @@
-// remark-admonitions styles for mdx notes
 .admonition {
   margin-bottom: 1em;
   padding: 15px 30px 15px 15px;
@@ -49,9 +48,6 @@
   fill: var(--bit-accent-primary-color, #6c5ce7);
 }
 
-/** native types */
-
-// caution colors - @TODO - add a orange colors to pallet. we currently dont have one
 .admonition-caution {
   background-color: rgba(230, 126, 34, 0.1);
   border-left: 8px solid #e67e22;
@@ -65,8 +61,6 @@
   stroke: #e67e22;
   fill: #e67e22;
 }
-
-// tip colors
 
 .admonition-tip {
   background-color: var(--bit-accent-success-bg, #eefaf3);
@@ -82,8 +76,6 @@
   fill: var(--bit-accent-success-color, #37b26c);
 }
 
-// warning colors
-
 .admonition-warning {
   background-color: var(--bit-accent-impulsive-bg, #fdeff2);
   border-left: 8px solid var(--bit-accent-impulsive-color, #e62e5c);
@@ -98,8 +90,6 @@
   fill: var(--bit-accent-impulsive-color, #e62e5c);
 }
 
-// important colors
-
 .admonition-important {
   background-color: var(--bit-accent-process-color, #f3faff);
   border-left: 8px solid var(--bit-accent-process-color, #0984e3);
@@ -113,7 +103,6 @@
   stroke: var(--bit-accent-process-color, #0984e3);
   fill: var(--bit-accent-process-color, #0984e3);
 }
-// note colors
 
 .admonition-note {
   background-color: var(--bit-accent-hunger-bg, #fff5dd);
