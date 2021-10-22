@@ -9,7 +9,7 @@ import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
-import { formatDiagnostics, formatDiagnostic } from './format-diagnostics';
+import { formatDiagnostic } from './format-diagnostics';
 
 export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.
