@@ -98,7 +98,7 @@ export default class RemoveModelComponents {
   }
 
   private async getDataForDependenciesRemoval(
-    dependentBits: Record<string, any>,
+    dependentBits: Record<string, BitId[]>,
     componentList: Array<ModelComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId

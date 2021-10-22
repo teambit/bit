@@ -521,7 +521,7 @@ export default class Scope {
       const dependents = dependencyGraph.getDependentsInfo(current);
       if (dependents.length) {
         const dependentsIds = dependents.map((d) => (returnResultsWithVersion ? d.id : d.id.changeVersion(undefined)));
-        acc[current.toString()] = dependentsIds;
+        acc[current.toStringWithoutVersion()] = dependentsIds;
       }
       return acc;
     }, {});
