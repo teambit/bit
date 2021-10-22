@@ -1,6 +1,5 @@
 /**
- * copied over from https://github.com/typescript-language-server/typescript-language-server/blob/master/src/tsp-client.ts
- * modified to accommodate Bit needs
+ * part of this file was copied over from https://github.com/typescript-language-server/typescript-language-server/blob/master/src/tsp-client.ts
  */
 
 /*

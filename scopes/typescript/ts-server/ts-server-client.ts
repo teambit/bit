@@ -9,7 +9,7 @@ import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
-import { formatDiagnostics } from './format-diagnostics';
+import { formatDiagnostic } from './format-diagnostics';
 
 export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.
@@ -19,6 +19,7 @@ export type TsserverClientOpts = {
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
+  private lastDiagnostics: protocol.DiagnosticEventBody[] = [];
   constructor(
     /**
      * absolute root path of the project.
@@ -49,20 +50,30 @@ export class TsserverClient {
     if (this.files.length) {
       this.files.forEach((file) => this.open(file));
     }
-    if (this.options.checkTypes) {
-      const start = Date.now();
-      this.getDiagnostic()
-        .then(() => {
-          const end = Date.now() - start;
-          this.logger.console(`\ncompleted preliminary type checking (${end / 1000} sec)`);
-        })
-        .catch((err) => {
-          const msg = `failed getting the type errors from ts-server`;
-          this.logger.console(msg);
-          this.logger.error(msg, err);
-        });
-    }
+    this.checkTypesIfNeeded();
     this.logger.debug('TsserverClient.init completed');
+  }
+
+  private checkTypesIfNeeded(files = this.files) {
+    if (!this.options.checkTypes) {
+      return;
+    }
+    const start = Date.now();
+    this.getDiagnostic(files)
+      .then(() => {
+        const end = Date.now() - start;
+        const msg = `completed type checking (${end / 1000} sec)`;
+        if (this.lastDiagnostics.length) {
+          this.logger.consoleFailure(`${msg}. found errors in ${this.lastDiagnostics.length} files.`);
+        } else {
+          this.logger.consoleSuccess(`${msg}. no errors were found.`);
+        }
+      })
+      .catch((err) => {
+        const msg = `failed getting the type errors from ts-server`;
+        this.logger.console(msg);
+        this.logger.error(msg, err);
+      });
   }
 
   /**
@@ -70,19 +81,7 @@ export class TsserverClient {
    */
   async onFileChange(file: string) {
     await this.changed(file);
-    if (this.options.checkTypes) {
-      const start = Date.now();
-      this.getDiagnostic()
-        .then(() => {
-          const end = Date.now() - start;
-          this.logger.console(`\ntype checking had been completed (${end / 1000} sec) for "${file}"`);
-        })
-        .catch((err) => {
-          const msg = `failed getting the type errors from ts-server for "${file}"`;
-          this.logger.console(msg);
-          this.logger.error(msg, err);
-        });
-    }
+    this.checkTypesIfNeeded();
   }
 
   killTsServer() {
@@ -99,8 +98,9 @@ export class TsserverClient {
    * the return value here just shows whether the request was succeeded, it doesn't have any info about whether errors
    * were found or not.
    */
-  async getDiagnostic(): Promise<any> {
-    return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files: this.files });
+  async getDiagnostic(files = this.files): Promise<any> {
+    this.lastDiagnostics = [];
+    return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files });
   }
 
   /**
@@ -246,9 +246,9 @@ export class TsserverClient {
     if (!message.body?.diagnostics.length || !this.options.checkTypes) {
       return;
     }
+    this.lastDiagnostics.push(message.body);
     const file = path.relative(this.projectPath, message.body.file);
-    const errorMsg = formatDiagnostics(message.body.diagnostics, file);
-    this.logger.console(errorMsg);
+    message.body.diagnostics.forEach((diag) => this.logger.console(formatDiagnostic(diag, file)));
   }
 
   /**
