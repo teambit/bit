@@ -4,7 +4,7 @@ import { PreviewServerStatus } from '@teambit/preview.cli.preview-server-status'
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
-import { Workspace } from '@teambit/workspace';
+import { Workspace, CheckTypes } from '@teambit/workspace';
 import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
@@ -35,7 +35,7 @@ export class PreviewStartPlugin implements StartPlugin {
     this.workspace.watcher
       .watchAll({
         spawnTSServer: true,
-        checkTypes: false,
+        checkTypes: CheckTypes.None,
         preCompile: false,
         msgs: {
           onAll: () => {},
