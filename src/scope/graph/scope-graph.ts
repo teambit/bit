@@ -1,12 +1,15 @@
 import GraphLib, { Graph } from 'graphlib';
+import pMap from 'p-map';
+import pMapSeries from 'p-map-series';
 
 import { BitId, BitIds } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
-import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Consumer from '../../consumer/consumer';
 import { getLatestVersionNumber } from '../../utils';
+import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
@@ -88,6 +91,25 @@ export default class DependencyGraph {
     return graph;
   }
 
+  static async buildIdsGraphWithAllVersions(scope: Scope): Promise<Graph> {
+    const modelComponents = await scope.list();
+    const graph = new Graph();
+    await pMapSeries(modelComponents, async (modelComp) => {
+      const versionsInfo = await getAllVersionsInfo({
+        modelComponent: modelComp,
+        repo: scope.objects,
+        throws: false,
+      });
+      versionsInfo.forEach((versionInfo) => {
+        if (!versionInfo.version) return;
+        const id = modelComp.toBitId().changeVersion(versionInfo.tag || versionInfo.ref.toString());
+        DependencyGraph._addDependenciesToGraph(id, graph, versionInfo.version);
+      });
+    });
+
+    return graph;
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
@@ -155,7 +177,6 @@ export default class DependencyGraph {
     return graph;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component, reverse = false): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
