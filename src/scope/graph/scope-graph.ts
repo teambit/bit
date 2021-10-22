@@ -1,15 +1,13 @@
 import GraphLib, { Graph } from 'graphlib';
-import pMap from 'p-map';
 import pMapSeries from 'p-map-series';
-
 import { BitId, BitIds } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
-import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Consumer from '../../consumer/consumer';
 import { getLatestVersionNumber } from '../../utils';
-import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
+import { getAllVersionsInfo } from '../component-ops/traverse-versions';
 import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
