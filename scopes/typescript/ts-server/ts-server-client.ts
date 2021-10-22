@@ -3,7 +3,8 @@ import { Logger } from '@teambit/logger';
 import path from 'path';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-import { Position } from 'vscode-languageserver-types';
+import { CheckTypes } from '@teambit/workspace';
+import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
 import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
@@ -14,7 +15,7 @@ import { formatDiagnostic } from './format-diagnostics';
 export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.
   tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies.
-  checkTypes?: boolean; // whether errors/warnings are monitored and printed to the console.
+  checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
 };
 
 export class TsserverClient {
@@ -55,7 +56,7 @@ export class TsserverClient {
   }
 
   private checkTypesIfNeeded(files = this.files) {
-    if (!this.options.checkTypes) {
+    if (!this.shouldCheckTypes()) {
       return;
     }
     const start = Date.now();
@@ -76,12 +77,18 @@ export class TsserverClient {
       });
   }
 
+  private shouldCheckTypes() {
+    // this also covers this.options.checkTypes !== CheckTypes.None.
+    return Boolean(this.options.checkTypes);
+  }
+
   /**
    * if `bit watch` or `bit start` are running in the background, this method is triggered.
    */
   async onFileChange(file: string) {
     await this.changed(file);
-    this.checkTypesIfNeeded();
+    const files = this.options.checkTypes === CheckTypes.ChangedFile ? [file] : undefined;
+    this.checkTypesIfNeeded(files);
   }
 
   killTsServer() {
@@ -243,7 +250,7 @@ export class TsserverClient {
   }
 
   private publishDiagnostic(message: protocol.DiagnosticEvent) {
-    if (!message.body?.diagnostics.length || !this.options.checkTypes) {
+    if (!message.body?.diagnostics.length || !this.shouldCheckTypes()) {
       return;
     }
     this.lastDiagnostics.push(message.body);
