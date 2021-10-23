@@ -266,6 +266,16 @@ export default class DependencyGraph {
     return dependents;
   }
 
+  getDependentsForAllVersions(id: BitId): BitIds {
+    const allBitIds = this.graph.nodes().map((idStr) => this.graph.node(idStr));
+    const idWithAllVersions = BitIds.fromArray(allBitIds).filterWithoutVersion(id);
+    const dependentsIds = idWithAllVersions
+      .map((idWithVer) => this.getDependentsInfo(idWithVer))
+      .flat()
+      .map((depInfo) => depInfo.id);
+    return BitIds.uniqFromArray(dependentsIds);
+  }
+
   _getIdWithLatestVersion(id: BitId): BitId {
     if (id.hasVersion()) {
       return id;

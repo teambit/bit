@@ -518,10 +518,10 @@ export default class Scope {
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     const dependencyGraph = new DependencyGraph(idsGraph);
     const dependentsGraph = bitIds.reduce((acc, current) => {
-      const dependents = dependencyGraph.getDependentsInfo(current);
+      const dependents = dependencyGraph.getDependentsForAllVersions(current);
       if (dependents.length) {
-        const dependentsIds = dependents.map((d) => (returnResultsWithVersion ? d.id : d.id.changeVersion(undefined)));
-        acc[current.toStringWithoutVersion()] = dependentsIds;
+        const dependentsIds = dependents.map((id) => (returnResultsWithVersion ? id : id.changeVersion(undefined)));
+        acc[current.toStringWithoutVersion()] = BitIds.uniqFromArray(dependentsIds);
       }
       return acc;
     }, {});
