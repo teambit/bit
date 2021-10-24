@@ -318,7 +318,7 @@ export class PreviewMain {
       logger
     );
 
-    if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
+    if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
 
     componentExtension.registerRoute([new PreviewRoute(preview, logger)]);
     bundler.registerTarget([

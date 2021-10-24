@@ -245,7 +245,7 @@ export class WorkspaceCompiler {
   }
 
   async onPreWatch(components: Component[], watchOpts: WatchOptions) {
-    if (!watchOpts.skipPreCompilation) {
+    if (watchOpts.preCompile) {
       const start = Date.now();
       this.logger.console(`compiling ${components.length} components`);
       await this.compileComponents(

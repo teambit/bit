@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
-import { get } from 'lodash';
+import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -155,6 +155,11 @@ export interface DependencyResolverWorkspaceConfig {
    * The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
    */
   fetchTimeout?: number;
+
+  /*
+   * The maximum number of connections to use per origin (protocol/host/port combination).
+   */
+  maxSockets?: number;
 
   /*
    * Controls the maximum number of HTTP(S) requests to process simultaneously.
@@ -584,18 +589,38 @@ export class DependencyResolverMain {
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return this.getNetworkConfigFromDepResolverConfig();
+    return {
+      ...(await this.getNetworkConfigFromGlobalConfig()),
+      ...(await this.getNetworkConfigFromPackageManager()),
+      ...this.getNetworkConfigFromDepResolverConfig(),
+    };
+  }
+
+  private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
+    return Http.getNetworkConfig();
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return {
-      fetchTimeout: this.config.fetchTimeout,
-      fetchRetries: this.config.fetchRetries,
-      fetchRetryFactor: this.config.fetchRetryFactor,
-      fetchRetryMintimeout: this.config.fetchRetryMintimeout,
-      fetchRetryMaxtimeout: this.config.fetchRetryMaxtimeout,
-      networkConcurrency: this.config.networkConcurrency,
-    };
+    return pick(this.config, [
+      'fetchTimeout',
+      'fetchRetries',
+      'fetchRetryFactor',
+      'fetchRetryMintimeout',
+      'fetchRetryMaxtimeout',
+      'maxSockets',
+      'networkConcurrency',
+    ]);
+  }
+
+  private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
+    const packageManager = this.getPackageManager();
+    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
+    return packageManager.getNetworkConfig();
+  }
+
+  private getPackageManager() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager ?? this.getSystemPackageManager();
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
