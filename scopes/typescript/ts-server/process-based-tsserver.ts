@@ -1,6 +1,5 @@
 /**
- * copied over from https://github.com/typescript-language-server/typescript-language-server/blob/master/src/tsp-client.ts
- * modified to accommodate Bit needs
+ * part of this file was copied over from https://github.com/typescript-language-server/typescript-language-server/blob/master/src/tsp-client.ts
  */
 
 /*
@@ -185,6 +184,7 @@ export class ProcessBasedTsServer {
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {
+    msg = `[tsserver] ${msg}`;
     if (this.options.logToConsole) {
       this.logger.console(`${msg} ${JSON.stringify(obj, undefined, 4)}`);
     } else {

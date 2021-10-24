@@ -3,26 +3,42 @@ import { Logger } from '@teambit/logger';
 import path from 'path';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-import { Position } from 'vscode-languageserver-types';
+import { CheckTypes } from '@teambit/workspace';
+import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
 import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
-import { formatDiagnostics } from './format-diagnostics';
+import { formatDiagnostic } from './format-diagnostics';
 
 export type TsserverClientOpts = {
-  verbose?: boolean;
-  tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies
+  verbose?: boolean; // print tsserver events to the console.
+  tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies.
+  checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
 };
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
-  private files: string[] = [];
-  constructor(private projectPath: string, private logger: Logger, private options: TsserverClientOpts) {}
+  private lastDiagnostics: protocol.DiagnosticEventBody[] = [];
+  constructor(
+    /**
+     * absolute root path of the project.
+     */
+    private projectPath: string,
+    private logger: Logger,
+    private options: TsserverClientOpts = {},
+    /**
+     * provide files if you want to check types on init. (options.checkTypes should be enabled).
+     * paths should be absolute.
+     */
+    private files: string[] = []
+  ) {}
+
   /**
    * start the ts-server and keep its process alive.
-   * the initial process should be pretty quick as it doesn't open or investigate the project files.
+   * this methods returns pretty fast. if checkTypes is enabled, it runs the process in the background and
+   * doesn't wait for it.
    */
   init() {
     this.tsServer = new ProcessBasedTsServer({
@@ -32,6 +48,47 @@ export class TsserverClient {
       onEvent: this.onTsserverEvent.bind(this),
     });
     this.tsServer.start();
+    if (this.files.length) {
+      this.files.forEach((file) => this.open(file));
+    }
+    this.checkTypesIfNeeded();
+    this.logger.debug('TsserverClient.init completed');
+  }
+
+  private checkTypesIfNeeded(files = this.files) {
+    if (!this.shouldCheckTypes()) {
+      return;
+    }
+    const start = Date.now();
+    this.getDiagnostic(files)
+      .then(() => {
+        const end = Date.now() - start;
+        const msg = `completed type checking (${end / 1000} sec)`;
+        if (this.lastDiagnostics.length) {
+          this.logger.consoleFailure(`${msg}. found errors in ${this.lastDiagnostics.length} files.`);
+        } else {
+          this.logger.consoleSuccess(`${msg}. no errors were found.`);
+        }
+      })
+      .catch((err) => {
+        const msg = `failed getting the type errors from ts-server`;
+        this.logger.console(msg);
+        this.logger.error(msg, err);
+      });
+  }
+
+  private shouldCheckTypes() {
+    // this also covers this.options.checkTypes !== CheckTypes.None.
+    return Boolean(this.options.checkTypes);
+  }
+
+  /**
+   * if `bit watch` or `bit start` are running in the background, this method is triggered.
+   */
+  async onFileChange(file: string) {
+    await this.changed(file);
+    const files = this.options.checkTypes === CheckTypes.ChangedFile ? [file] : undefined;
+    this.checkTypesIfNeeded(files);
   }
 
   killTsServer() {
@@ -48,8 +105,9 @@ export class TsserverClient {
    * the return value here just shows whether the request was succeeded, it doesn't have any info about whether errors
    * were found or not.
    */
-  async getDiagnostic(): Promise<any> {
-    return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files: this.files });
+  async getDiagnostic(files = this.files): Promise<any> {
+    this.lastDiagnostics = [];
+    return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files });
   }
 
   /**
@@ -64,7 +122,7 @@ export class TsserverClient {
    */
   async getQuickInfo(file: string, position: Position): Promise<protocol.QuickInfoResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.open(absFile);
+    this.openIfNeeded(absFile);
     return this.tsServer.request(CommandTypes.Quickinfo, {
       file: absFile,
       line: position.line,
@@ -77,7 +135,7 @@ export class TsserverClient {
    */
   async getTypeDefinition(file: string, position: Position): Promise<protocol.TypeDefinitionResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.open(absFile);
+    this.openIfNeeded(absFile);
     return this.tsServer.request(CommandTypes.TypeDefinition, {
       file: absFile,
       line: position.line,
@@ -90,7 +148,7 @@ export class TsserverClient {
    */
   async getReferences(file: string, position: Position): Promise<protocol.ReferencesResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.open(absFile);
+    this.openIfNeeded(absFile);
     return this.tsServer.request(CommandTypes.References, {
       file: absFile,
       line: position.line,
@@ -103,7 +161,7 @@ export class TsserverClient {
    */
   async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.open(absFile);
+    this.openIfNeeded(absFile);
     return this.tsServer.request(CommandTypes.SignatureHelp, {
       file: absFile,
       line: position.line,
@@ -111,7 +169,7 @@ export class TsserverClient {
     });
   }
 
-  async configure(
+  private async configure(
     configureArgs: protocol.ConfigureRequestArguments = {}
   ): Promise<protocol.ConfigureResponse | undefined> {
     return this.tsServer.request(CommandTypes.Configure, configureArgs);
@@ -121,23 +179,19 @@ export class TsserverClient {
    * ask tsserver to open a file if it was not opened before.
    * @param file absolute path of the file
    */
-  open(file: string) {
+  openIfNeeded(file: string) {
     if (this.files.includes(file)) {
       return;
     }
+    this.open(file);
+    this.files.push(file);
+  }
+
+  private open(file: string) {
     this.tsServer.notify(CommandTypes.Open, {
       file,
       projectRootPath: this.projectPath,
     });
-    this.files.push(file);
-  }
-
-  /**
-   *
-   * @param files absolute paths
-   */
-  openMultipleFiles(files: string[]) {
-    files.forEach((file) => this.open(file));
   }
 
   close(file: string) {
@@ -181,7 +235,6 @@ export class TsserverClient {
     switch (event.event) {
       case EventName.semanticDiag:
       case EventName.syntaxDiag:
-      case EventName.suggestionDiag:
         this.publishDiagnostic(event as protocol.DiagnosticEvent);
         break;
       default:
@@ -197,12 +250,12 @@ export class TsserverClient {
   }
 
   private publishDiagnostic(message: protocol.DiagnosticEvent) {
-    if (!message.body?.diagnostics.length) {
+    if (!message.body?.diagnostics.length || !this.shouldCheckTypes()) {
       return;
     }
+    this.lastDiagnostics.push(message.body);
     const file = path.relative(this.projectPath, message.body.file);
-    const errorMsg = formatDiagnostics(message.body.diagnostics, file);
-    this.logger.console(errorMsg);
+    message.body.diagnostics.forEach((diag) => this.logger.console(formatDiagnostic(diag, file)));
   }
 
   /**

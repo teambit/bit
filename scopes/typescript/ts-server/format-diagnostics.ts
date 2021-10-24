@@ -18,14 +18,14 @@ export function formatDiagnostics(diagnostics: readonly Diagnostic[], filePath: 
 
 const diagnosticCategoryName = (diagnostic: Diagnostic) => diagnostic.category;
 
-function formatDiagnostic(diagnostic: Diagnostic, filePath: string): string {
+export function formatDiagnostic(diagnostic: Diagnostic, filePath: string): string {
   const errorMessage = `${diagnosticCategoryName(diagnostic)} TS${diagnostic.code}: ${flattenDiagnosticMessageText(
     diagnostic.text,
     '\n'
   )}${'\n'}`;
 
   const { line, offset } = diagnostic.start;
-  return `${filePath}(${line + 1},${offset + 1}): ${errorMessage}`;
+  return `${filePath}(${line},${offset}): ${errorMessage}`;
 }
 
 function flattenDiagnosticMessageText(

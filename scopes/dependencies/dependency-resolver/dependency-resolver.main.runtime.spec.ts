@@ -39,6 +39,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMintimeout: 4,
       fetchRetryMaxtimeout: 5,
       networkConcurrency: 6,
+      maxSockets: 7,
     };
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
@@ -67,6 +68,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMintimeout: 44,
       fetchRetryMaxtimeout: 55,
       networkConcurrency: 66,
+      maxSockets: 77,
     };
     packageManagerSlot.get.mockReturnValue({
       getNetworkConfig: () => pmConfig,
@@ -83,6 +85,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMintimeout: 444,
       fetchRetryMaxtimeout: 555,
       networkConcurrency: 666,
+      maxSockets: 777,
     } as any;
     packageManagerSlot.get.mockReturnValue({});
     // @ts-ignore
@@ -116,6 +119,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
     const config = {
       fetchRetryMaxtimeout: 555,
       networkConcurrency: 666,
+      maxSockets: 777,
     } as any;
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
@@ -144,6 +148,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       fetchRetryMintimeout: 44,
       fetchRetryMaxtimeout: 555,
       networkConcurrency: 666,
+      maxSockets: 777,
     });
   });
 });

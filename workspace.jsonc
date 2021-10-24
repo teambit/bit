@@ -21,21 +21,22 @@
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.0-rc.6",
-        "@pnpm/client": "5.0.7",
-        "@pnpm/config": "13.1.0",
-        "@pnpm/default-reporter": "8.3.0",
-        "@pnpm/default-resolver": "13.0.6",
+        "@pnpm/client": "5.0.8",
+        "@pnpm/config": "13.3.0",
+        "@pnpm/core": "1.0.0",
+        "@pnpm/default-reporter": "8.3.3",
+        "@pnpm/default-resolver": "13.0.7",
         "@pnpm/error": "2.0.0",
-        "@pnpm/fetch": "4.1.1",
+        "@pnpm/fetch": "4.1.2",
         "@pnpm/fetching-types": "2.2.1",
-        "@pnpm/git-resolver": "5.1.5",
+        "@pnpm/git-resolver": "5.1.6",
         "@pnpm/local-resolver": "6.1.0",
         "@pnpm/logger": "4.0.0",
         "@pnpm/npm-resolver": "12.0.4",
         "@pnpm/package-store": "12.0.15",
         "@pnpm/pick-registry-for-package": "2.0.4",
         "@pnpm/resolver-base": "8.0.4",
-        "@pnpm/store-connection-manager": "3.0.19",
+        "@pnpm/store-connection-manager": "3.1.0",
         "@pnpm/tarball-fetcher": "9.3.7",
         "@pnpm/tarball-resolver": "5.0.4",
         "@popperjs/core": "2.6.0",
@@ -297,7 +298,6 @@
         "string-to-color": "2.2.2",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
-        "supi": "0.47.26",
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
@@ -327,7 +327,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.163",
+        "@teambit/legacy": "1.0.164",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -445,7 +445,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.163"
+            "@teambit/legacy": "1.0.164"
           }
         }
       },
@@ -617,7 +617,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.163",
+            "@teambit/legacy": "1.0.164",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

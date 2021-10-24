@@ -129,6 +129,7 @@ export class PnpmPackageManager implements PackageManager {
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
     return {
+      maxSockets: config.maxSockets,
       networkConcurrency: config.networkConcurrency,
       fetchRetries: config.fetchRetries,
       fetchTimeout: config.fetchTimeout,
