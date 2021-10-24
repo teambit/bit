@@ -352,8 +352,8 @@ export class ReactMain {
     return this.envs.override({
       getPackageJsonProps: () => {
         return {
-          ...props,
           ...this.reactEnv.getPackageJsonProps(),
+          ...props,
         };
       },
     });
