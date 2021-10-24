@@ -26,13 +26,7 @@ export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
   }, [node?.payload?.open])
   const displayName = node.id.replace(/\/$/, '').split('/').pop();
 
-  const CustomIcon =
-    node.payload?.icon &&
-    (typeof node.payload.icon === 'string' ? (
-      <Icon className={styles.icon} of={node.payload.icon} />
-    ) : (
-      node.payload.icon
-    ));
+  const CustomIcon = getCustomIcon(node.payload?.icon)
 
   return (
     <div>
@@ -52,4 +46,18 @@ export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
       </AnimateHeight>
     </div>
   );
+}
+
+
+function getCustomIcon(icon: string | ReactNode) {
+  if(!icon) return null;
+  if(typeof icon === 'string') {
+    if(icon.startsWith('http')) {
+      return <img src={icon} className={styles.img} />
+    }
+    // for icomoon icons
+    return <Icon className={styles.icon} of={icon} />
+  }
+  // for custom elements
+  return icon
 }
