@@ -207,6 +207,19 @@ export class EnvsMain {
   }
 
   /**
+   * get the env of the given component.
+   * This will try to use the regular getEnv but fallback to the calculate env (in case you are using it during on load)
+   * This is safe to be used on onLoad as well
+   */
+  getOrCalculateEnv(component: Component): EnvDefinition {
+    try {
+      return this.getEnv(component);
+    } catch (err) {
+      return this.calculateEnv(component);
+    }
+  }
+
+  /**
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {

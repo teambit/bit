@@ -1,11 +1,10 @@
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import { IssuesClasses } from '@teambit/component-issues';
-import fs from 'fs-extra';
+import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP, DEFAULT_DIST_DIRNAME } from '../../constants';
+import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -17,9 +16,9 @@ import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
+type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
 export default class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
@@ -40,6 +39,11 @@ export default class ComponentLoader {
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
   static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber) {
     this.onComponentLoadSubscribers.push(func);
+  }
+
+  static onComponentIssuesCalcSubscribers: OnComponentIssuesCalcSubscriber[] = [];
+  static registerOnComponentIssuesCalcSubscriber(func: OnComponentIssuesCalcSubscriber) {
+    this.onComponentIssuesCalcSubscribers.push(func);
   }
 
   clearComponentsCache() {
@@ -181,27 +185,10 @@ export default class ComponentLoader {
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
-    await this.addComponentIssues(component);
 
-    const loadDependencies = async () => {
-      await this.invalidateDependenciesCacheIfNeeded();
-      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
-        cacheResolvedDependencies: this.cacheResolvedDependencies,
-        cacheProjectAst: this.cacheProjectAst,
-        useDependenciesCache: component.issues.isEmpty(),
-      });
-      await dependenciesLoader.load();
-      updateDependenciesVersions(this.consumer, component);
-    };
-
-    const runOnComponentLoadEvent = async () => {
-      return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
-        component = await subscriber(component);
-      });
-    };
     try {
-      await loadDependencies();
-      await runOnComponentLoadEvent();
+      await this.loadDependencies(component);
+      await this.runOnComponentLoadEvent(component);
     } catch (err: any) {
       return handleError(err);
     }
@@ -209,18 +196,30 @@ export default class ComponentLoader {
     return component;
   }
 
-  private async addComponentIssues(component: Component) {
-    if (this.consumer.isLegacy) return;
-    const pkgName = componentIdToPackageName(component);
-    const pkgDir = path.join(this.consumer.getPath(), 'node_modules', pkgName);
-    const distDir = path.join(pkgDir, DEFAULT_DIST_DIRNAME);
-    const distExists = await fs.pathExists(distDir);
-    if (distExists) return;
-    component.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
-    const pkgDirExist = await fs.pathExists(pkgDir);
-    if (!pkgDirExist) {
-      component.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
-    }
+  private async runOnComponentLoadEvent(component: Component) {
+    return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
+      component = await subscriber(component);
+    });
+  }
+
+  private async runOnComponentIssuesCalcEvent(component: Component) {
+    return mapSeries(ComponentLoader.onComponentIssuesCalcSubscribers, async (subscriber) => {
+      const issues = await subscriber(component);
+      issues.forEach((issue) => {
+        component.issues.add(issue);
+      });
+    });
+  }
+
+  private async loadDependencies(component: Component) {
+    await this.invalidateDependenciesCacheIfNeeded();
+    const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+      cacheResolvedDependencies: this.cacheResolvedDependencies,
+      cacheProjectAst: this.cacheProjectAst,
+      useDependenciesCache: component.issues.isEmpty(),
+    });
+    await dependenciesLoader.load();
+    updateDependenciesVersions(this.consumer, component);
   }
 
   private async _handleOutOfSyncScenarios(component: Component) {

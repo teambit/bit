@@ -1,5 +1,6 @@
 import { compact, omit } from 'lodash';
 import { join } from 'path';
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -13,6 +14,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
+import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -157,6 +159,7 @@ export class PkgMain {
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
+        await pkg.addMissingLinksFromNodeModulesIssue(component);
         const data = await pkg.mergePackageJsonProps(component);
         return {
           packageJsonModification: data,
@@ -190,6 +193,20 @@ export class PkgMain {
       throw new Error('getModulePath with abs path option is not implemented for scope');
     }
     return relativePath;
+  }
+
+  isModulePathExists(component: Component): boolean {
+    const packageDir = this.getModulePath(component, { absPath: true });
+    return fs.existsSync(packageDir);
+  }
+
+  async addMissingLinksFromNodeModulesIssue(component: Component) {
+    const exist = this.isModulePathExists(component);
+    if (!exist) {
+      component.state.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
+    }
+    // we don't want to add any data to the compiler aspect, only to add issues on the component
+    return undefined;
   }
 
   /**
