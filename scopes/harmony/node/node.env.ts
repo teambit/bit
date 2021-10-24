@@ -19,6 +19,6 @@ export class NodeEnv implements DependenciesEnv {
   }
 
   getPackageJsonProps() {
-    return this.tsAspect.getPackageJsonProps();
+    return this.tsAspect.getCjsPackageJsonProps();
   }
 }

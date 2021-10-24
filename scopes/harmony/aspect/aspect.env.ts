@@ -39,6 +39,10 @@ export class AspectEnv implements Environment {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
+  getPackageJsonProps() {
+    return this.reactEnv.getCjsPackageJsonProps();
+  }
+
   async getDependencies() {
     return {
       dependencies: {
