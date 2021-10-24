@@ -2,7 +2,7 @@ import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-m
 import { TsConfigTransformer } from '@teambit/typescript';
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { Environment, PackageEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
@@ -15,7 +15,7 @@ export const AspectEnvType = 'aspect';
 /**
  * a component environment built for [Aspects](https://reactjs.org) .
  */
-export class AspectEnv implements Environment {
+export class AspectEnv implements Environment, PackageEnv {
   constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';

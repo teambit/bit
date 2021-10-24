@@ -1,8 +1,8 @@
-import { DependenciesEnv } from '@teambit/envs';
+import { DependenciesEnv, PackageEnv } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TypescriptMain } from '@teambit/typescript';
 
-export class NodeEnv implements DependenciesEnv {
+export class NodeEnv implements DependenciesEnv, PackageEnv {
   constructor(private tsAspect: TypescriptMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
