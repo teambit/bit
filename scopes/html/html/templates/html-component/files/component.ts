@@ -5,7 +5,10 @@ export const componentFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.ts`,
     content: `
-    export function ${Name}(text : string) {
+exoprt type ${Name}Props: {
+  text: string
+}
+export function ${Name}({text}: ${Name}Props) {
   return \`<div>\${text}</div>\`;
 }
 `,
