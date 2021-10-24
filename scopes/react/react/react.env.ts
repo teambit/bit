@@ -312,13 +312,12 @@ export class ReactEnv
    * define the package json properties to add to each component.
    */
   getPackageJsonProps() {
-    const defaultTsProps = this.tsAspect.getPackageJsonProps();
-    return {
-      ...defaultTsProps,
-      // React compile by default to esm, so uses type module
-      type: 'module',
-      main: 'dist-esm/{main}.js',
-    };
+    // React compile by default to esm, so uses type module
+    return this.tsAspect.getEsmPackageJsonProps();
+  }
+
+  getCjsPackageJsonProps() {
+    return this.tsAspect.getCjsPackageJsonProps();
   }
 
   /**
