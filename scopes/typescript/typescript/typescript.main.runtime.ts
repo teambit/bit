@@ -172,9 +172,8 @@ export class TypescriptMain {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    schemaTransformerSlot.register([new ExportDeclaration()]);
-
     const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace);
+    schemaTransformerSlot.register([new ExportDeclaration()]);
 
     if (workspace) {
       workspace.registerOnPreWatch(tsMain.onPreWatch.bind(this));

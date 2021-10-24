@@ -7,7 +7,6 @@ import { testFile } from './files/test';
 export const reactComponent: ComponentTemplate = {
   name: 'react',
   description: 'a basic react component',
-
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
     const indexFile = {
