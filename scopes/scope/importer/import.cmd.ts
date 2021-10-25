@@ -56,10 +56,11 @@ export default class ImportCmd implements Command {
   loader = true;
   migration = true;
   remoteOp = true;
+  _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
   constructor(private workspace: Workspace) {}
 
-  async action(
+  async report(
     [ids = []]: [string[]],
     {
       path,
@@ -89,8 +90,7 @@ export default class ImportCmd implements Command {
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
-    },
-    packageManagerArgs: string[]
+    }
   ): Promise<any> {
     if (objects && merge) {
       throw new GeneralError('you cant use --objects and --merge flags combined');
@@ -122,7 +122,7 @@ export default class ImportCmd implements Command {
       importDependents: dependents,
       allHistory,
     };
-    const importResults = await importAction(this.workspace, importOptions, packageManagerArgs);
+    const importResults = await importAction(this.workspace, importOptions, this._packageManagerArgs);
     const { importDetails } = importResults;
 
     if (json) {
