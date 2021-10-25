@@ -14,6 +14,7 @@ import remoteResolver from './remote-resolver/remote-resolver';
 import { UnexpectedNetworkError } from '../scope/network/exceptions';
 import { ObjectItemsStream } from '../scope/objects/object-list';
 import { concurrentFetchLimit } from '../utils/concurrency';
+import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -61,15 +62,22 @@ export default class Remotes extends Map<string, Remote> {
     await pMap(
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
-        const remote = await this.resolve(scopeName, thisScope);
-        let objectsStream: ObjectItemsStream;
         try {
-          objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+          const remote = await this.resolve(scopeName, thisScope);
+          const objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
           objectsStreamPerRemote[scopeName] = objectsStream;
           return objectsStream;
         } catch (err: any) {
-          if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
-            logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
+          if (err instanceof ScopeNotFound || err instanceof ScopeNotFoundOrDenied) {
+            const msgPrefix = `failed accessing the scope "${scopeName}", which was needed for the following IDs: ${idsGroupedByScope[
+              scopeName
+            ].join('\n')}`;
+            if (shouldThrowOnUnavailableScope) {
+              logger.error(`${msgPrefix}\nstopping the process`);
+              throw err;
+            } else {
+              logger.error(`${msgPrefix}\ncontinuing without this scope.`);
+            }
           } else if (err instanceof UnexpectedNetworkError) {
             logger.error(`failed fetching from ${scopeName}`, err);
             failedScopes[scopeName] = err;
