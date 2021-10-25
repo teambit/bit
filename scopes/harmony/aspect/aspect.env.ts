@@ -4,6 +4,7 @@ import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
 import { Environment, PackageEnv } from '@teambit/envs';
 import { merge } from 'lodash';
+import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { babelConfig } from './babel/babel-config';
@@ -39,7 +40,7 @@ export class AspectEnv implements Environment, PackageEnv {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
-  getPackageJsonProps() {
+  getPackageJsonProps(): PackageJsonProps {
     return this.reactEnv.getCjsPackageJsonProps();
   }
 
