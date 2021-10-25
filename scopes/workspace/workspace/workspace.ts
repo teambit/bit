@@ -631,7 +631,7 @@ export class Workspace implements ComponentFactory {
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
-    await this.consumer.bitMap.write(this.consumer.componentFsCache);
+    await this.writeBitMap();
     return addResults;
   }
 
@@ -1287,17 +1287,15 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       verbose: false,
       merge: false,
       objectsOnly: true,
-      withEnvironments: false,
       override: false,
       writeDists: false,
       writeConfig: false,
       installNpmPackages: false,
-      writePackageJson: false,
       importDependenciesDirectly: false,
       importDependents: false,
     };
     try {
-      const res = await importAction({ tester: false, compiler: false }, importOptions, []);
+      const res = await importAction(importOptions, []);
       return res;
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy

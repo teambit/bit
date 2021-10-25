@@ -1,31 +1,24 @@
+import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import R from 'ramda';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import { Workspace } from '@teambit/workspace';
+import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
+import { importAction } from './import-action';
 
-import { importAction } from '../../../api/consumer';
-import { EnvironmentOptions } from '../../../api/consumer/lib/import';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import Component from '../../../consumer/component';
-import { ImportDetails, ImportOptions } from '../../../consumer/component-ops/import-components';
-import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
-import GeneralError from '../../../error/general-error';
-import { ComponentWithDependencies } from '../../../scope';
-import { immutableUnshift } from '../../../utils';
-import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-
-export default class Import implements LegacyCommand {
+export default class ImportCmd implements Command {
   name = 'import [ids...]';
   shortDescription = 'import components into your current working area';
-  group: Group = 'collaborate';
+  group = 'collaborate';
   description = `import components into your current workspace.
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
   ${WILDCARD_HELP('import')}`;
   alias = '';
-  opts = [
-    ['t', 'tester', 'import a tester environment component'],
-    ['c', 'compiler', 'import a compiler environment component'],
-    ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
+  options = [
     ['p', 'path <path>', 'import components into a specific directory'],
     [
       'o',
@@ -36,17 +29,11 @@ export default class Import implements LegacyCommand {
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    ['', 'ignore-dist', "skip writing the component's build files during import"],
     ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
     [
       '',
       'skip-npm-install',
       'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)',
-    ],
-    [
-      '',
-      'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
     ],
     [
       'm',
@@ -70,41 +57,33 @@ export default class Import implements LegacyCommand {
   migration = true;
   remoteOp = true;
 
-  action(
+  constructor(private workspace: Workspace) {}
+
+  async action(
     [ids = []]: [string[]],
     {
-      tester = false,
-      compiler = false,
       path,
       objects = false,
       displayDependencies = false,
-      environment = false,
       override = false,
       verbose = false,
       json = false,
-      ignoreDist = false,
       conf,
       skipNpmInstall = false,
-      ignorePackageJson = false,
       merge,
       skipLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
     }: {
-      tester?: boolean;
-      compiler?: boolean;
       path?: string;
       objects?: boolean;
       displayDependencies?: boolean;
-      environment?: boolean;
       override?: boolean;
       verbose?: boolean;
       json?: boolean;
-      ignoreDist?: boolean;
       conf?: string;
       skipNpmInstall?: boolean;
-      ignorePackageJson?: boolean;
       merge?: MergeStrategy;
       skipLane?: boolean;
       dependencies?: boolean;
@@ -113,9 +92,6 @@ export default class Import implements LegacyCommand {
     },
     packageManagerArgs: string[]
   ): Promise<any> {
-    if (tester && compiler) {
-      throw new GeneralError('you cant use tester and compiler flags combined');
-    }
     if (objects && merge) {
       throw new GeneralError('you cant use --objects and --merge flags combined');
     }
@@ -130,66 +106,35 @@ export default class Import implements LegacyCommand {
       }
       mergeStrategy = merge;
     }
-    const environmentOptions: EnvironmentOptions = {
-      tester,
-      compiler,
-    };
 
     const importOptions: ImportOptions = {
       ids,
       verbose,
-      merge: !!merge,
+      merge: Boolean(merge),
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
-      withEnvironments: environment,
       override,
-      writeDists: !ignoreDist,
-      writeConfig: !!conf,
+      writeConfig: Boolean(conf),
       installNpmPackages: !skipNpmInstall,
-      writePackageJson: !ignorePackageJson,
       skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
     };
-    return importAction(importOptions, packageManagerArgs, environmentOptions).then((importResults) => ({
-      displayDependencies,
-      json,
-      ...importResults,
-    }));
-  }
+    const importResults = await importAction(this.workspace, importOptions, packageManagerArgs);
+    const { importDetails } = importResults;
 
-  report({
-    dependencies,
-    envComponents,
-    importDetails,
-    warnings,
-    displayDependencies,
-    json,
-  }: {
-    dependencies?: ComponentWithDependencies[];
-    envComponents?: Component[];
-    importDetails: ImportDetails[];
-    warnings?: {
-      notInPackageJson: [];
-      notInNodeModules: [];
-      notInBoth: [];
-    };
-    displayDependencies: boolean;
-    json: boolean;
-  }): string {
     if (json) {
-      return JSON.stringify({ importDetails, warnings }, null, 4);
+      return JSON.stringify({ importDetails }, null, 4);
     }
     let dependenciesOutput;
-    let envComponentsOutput;
 
-    if (dependencies && !R.isEmpty(dependencies)) {
-      const components = dependencies.map(R.prop('component'));
+    if (importResults.dependencies && !R.isEmpty(importResults.dependencies)) {
+      const components = importResults.dependencies.map(R.prop('component'));
       const peerDependencies = R.flatten(
-        dependencies.map(R.prop('dependencies')),
-        dependencies.map(R.prop('devDependencies'))
+        importResults.dependencies.map(R.prop('dependencies')),
+        importResults.dependencies.map(R.prop('devDependencies'))
       );
 
       const title =
@@ -217,49 +162,11 @@ export default class Import implements LegacyCommand {
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
 
-    if (envComponents && !R.isEmpty(envComponents)) {
-      envComponentsOutput = immutableUnshift(
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.map((envDependency) => formatPlainComponentItem(envDependency.component)),
-        chalk.green('the following component environments were installed')
-      ).join('\n');
-    }
-
     const getImportOutput = () => {
-      if (dependenciesOutput && !envComponentsOutput) return dependenciesOutput;
-      if (!dependenciesOutput && envComponentsOutput) return envComponentsOutput;
-      if (dependenciesOutput && envComponentsOutput) {
-        return `${dependenciesOutput}\n\n${envComponentsOutput}`;
-      }
-
+      if (dependenciesOutput) return dependenciesOutput;
       return chalk.yellow('nothing to import');
     };
 
-    const logObject = (obj) => `> ${R.keys(obj)[0]}: ${R.values(obj)[0]}`;
-    const getWarningOutput = () => {
-      if (!warnings) return '';
-      let output = '\n';
-
-      if (!R.isEmpty(warnings.notInBoth)) {
-        output += chalk.red.underline(
-          '\nerror - missing the following package dependencies. please install and add to package.json.\n'
-        );
-        output += chalk.red(`${warnings.notInBoth.map(logObject).join('\n')}\n`);
-      }
-
-      if (!R.isEmpty(warnings.notInPackageJson)) {
-        output += chalk.yellow.underline('\nwarning - add the following packages to package.json\n');
-        output += chalk.yellow(`${warnings.notInPackageJson.map(logObject).join('\n')}\n`);
-      }
-
-      if (!R.isEmpty(warnings.notInNodeModules)) {
-        output += chalk.yellow.underline('\nwarning - following packages are not installed. please install them.\n');
-        output += chalk.yellow(`${warnings.notInNodeModules.map(logObject).join('\n')}\n`);
-      }
-
-      return output === '\n' ? '' : output;
-    };
-
-    return getImportOutput() + getWarningOutput();
+    return getImportOutput();
   }
 }

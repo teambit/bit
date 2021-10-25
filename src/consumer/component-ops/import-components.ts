@@ -34,11 +34,11 @@ export type ImportOptions = {
   verbose: boolean; // default: false
   merge?: boolean; // default: false
   mergeStrategy?: MergeStrategy;
-  withEnvironments: boolean; // default: false
+  withEnvironments?: boolean; // default: false. Ignored by Harmony - always false.
   writeToPath?: string;
-  writePackageJson: boolean; // default: true
+  writePackageJson?: boolean; // default: true. Ignored by Harmony - always false.
   writeConfig: boolean; // default: false
-  writeDists: boolean; // default: true
+  writeDists?: boolean; // default: true. Ignored by Harmony - always true, as they're inside node_modules.
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
   objectsOnly: boolean; // default: false
