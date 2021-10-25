@@ -4800,6 +4800,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.elements.dots-loader@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/base-ui.elements.dots-loader@npm:1.0.3"
+  dependencies:
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 266880bdeef18756abc80127db77303f98ca603c37c8ac5196f64668fba9cb709956af4d026c9ed7c499a839122deac5ad92a02cc0bc861219b5025ee12fd631
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.elements.icon@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.elements.icon@npm:1.0.0"
@@ -4952,6 +4965,20 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 458784bd8638e81150b7517dd01c9194181b99380abccf64f101b295e8d3eebbda446dff017a66c8ffbf4ea6f10fcfaaac11a82085ab3a0d13929c774ec3f6cd
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.input.button@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@teambit/base-ui.input.button@npm:1.0.3"
+  dependencies:
+    "@teambit/base-ui.elements.dots-loader": 1.0.3
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: d187df31722ea3c28b2d0f5846d7f531f946c15a88e106653da2155ae5d67f2b4b4adbb123a1d62df6ac4e8d357a054f79fa0bbf6616de0a171f79c239682343
   languageName: node
   linkType: hard
 
@@ -5951,6 +5978,21 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: fc0e647eebc26a74dfffbcc4cfb1feb4d3c4a26c4233047055ceba9f25203fe15f6e7c4ece5b66cdd2ffc30010cb2895dc1439f68f7339b676ac52d9a3b4c90d
+  languageName: node
+  linkType: hard
+
+"@teambit/design.ui.icon-button@npm:1.0.10":
+  version: 1.0.10
+  resolution: "@teambit/design.ui.icon-button@npm:1.0.10"
+  dependencies:
+    "@teambit/base-ui.elements.icon": 1.0.0
+    "@teambit/base-ui.input.button": 1.0.3
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 433aecb226aeb08f3da46fe8154ff7b4616b4b0d6c04f09928db718a1f7b8e6ab02230f2d12dd83859c6b735444de4aa76c95d0d4181817673c8ebdd81d12b7f
   languageName: node
   linkType: hard
 
@@ -16871,6 +16913,8 @@ __metadata:
 "error-fallback-dda211@workspace:scopes/react/ui/error-fallback":
   version: 0.0.0-use.local
   resolution: "error-fallback-dda211@workspace:scopes/react/ui/error-fallback"
+  dependencies:
+    "@teambit/design.ui.icon-button": 1.0.10
   languageName: unknown
   linkType: soft
 
