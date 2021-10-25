@@ -19,7 +19,7 @@ import {
   PipeServiceModifiersMap,
 } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
-import { PkgMain } from '@teambit/pkg';
+import { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
@@ -311,12 +311,12 @@ export class ReactEnv
   /**
    * define the package json properties to add to each component.
    */
-  getPackageJsonProps() {
+  getPackageJsonProps(): PackageJsonProps {
     // React compile by default to esm, so uses type module
     return this.tsAspect.getEsmPackageJsonProps();
   }
 
-  getCjsPackageJsonProps() {
+  getCjsPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getCjsPackageJsonProps();
   }
 
