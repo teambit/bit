@@ -100,7 +100,7 @@ export class TypescriptMain {
 
   getCjsTransformer(): TsConfigTransformer {
     const cjsTransformer = (config: TypescriptConfigMutator) => {
-      config.setDistDir('dist');
+      // config.setDistDir('dist');
       config.setModule('CommonJS');
       return config;
     };
@@ -109,7 +109,7 @@ export class TypescriptMain {
 
   getEsmTransformer(): TsConfigTransformer {
     const esmTransformer = (config: TypescriptConfigMutator) => {
-      config.setDistDir('dist-esm');
+      // config.setDistDir('dist-esm');
       config.setModule('ES2020');
       return config;
     };
@@ -136,7 +136,8 @@ export class TypescriptMain {
 
   getEsmPackageJsonProps(): PackageJsonProps {
     return {
-      main: 'dist-esm/{main}.js',
+      // main: 'dist-esm/{main}.js',
+      main: 'dist/{main}.js',
       type: 'module',
       types: '{main}.ts',
     };
