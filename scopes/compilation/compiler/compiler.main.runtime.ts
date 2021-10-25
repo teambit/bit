@@ -119,7 +119,9 @@ export class CompilerMain {
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
-    workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
+    if (workspace) {
+      workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
+    }
     ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
 
     return compilerMain;
