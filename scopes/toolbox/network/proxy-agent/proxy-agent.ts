@@ -98,7 +98,7 @@ function getAuth(proxyUrl: URL): string | undefined {
     return undefined;
   }
   if (!proxyUrl.password) {
-    return proxyUrl.username;
+    return decodeURIComponent(proxyUrl.username);
   }
-  return `${proxyUrl.username}:${proxyUrl.password}`;
+  return decodeURIComponent(`${proxyUrl.username}:${proxyUrl.password}`);
 }
