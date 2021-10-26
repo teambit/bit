@@ -63,11 +63,11 @@ export type ImportDetails = {
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
 };
-export type ImportResult = Promise<{
+export type ImportResult = {
   dependencies: ComponentWithDependencies[];
   envComponents?: Component[];
   importDetails: ImportDetails[];
-}>;
+};
 
 export default class ImportComponents {
   consumer: Consumer;
@@ -83,7 +83,7 @@ export default class ImportComponents {
     this.options = options;
   }
 
-  importComponents(): ImportResult {
+  importComponents(): Promise<ImportResult> {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
     if (this.consumer.isLegacy && !this.options.writePackageJson) {
@@ -97,8 +97,7 @@ export default class ImportComponents {
     return this.importSpecificComponents();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async importSpecificComponents(): ImportResult {
+  async importSpecificComponents(): Promise<ImportResult> {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
@@ -225,7 +224,7 @@ export default class ImportComponents {
     return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
-  async importAccordingToBitMap(): ImportResult {
+  async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
