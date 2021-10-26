@@ -417,6 +417,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/html"
     },
+    "importer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/importer"
+    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.534",
