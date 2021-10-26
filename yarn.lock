@@ -20950,6 +20950,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"importer-94de4e@workspace:scopes/scope/importer":
+  version: 0.0.0-use.local
+  resolution: "importer-94de4e@workspace:scopes/scope/importer"
+  languageName: unknown
+  linkType: soft
+
 "imurmurhash@npm:^0.1.4":
   version: 0.1.4
   resolution: "imurmurhash@npm:0.1.4"
