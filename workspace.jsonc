@@ -518,7 +518,13 @@
       "defaultScope": "teambit.dependencies"
     },
     "scopes/react": {
-      "defaultScope": "teambit.react"
+      "defaultScope": "teambit.react",
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@teambit/design.ui.icon-button": "1.0.10"          }
+        }
+      }
     },
     "scopes/preview": {
       "defaultScope": "teambit.preview"
