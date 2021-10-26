@@ -9,6 +9,8 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
 import { importAction } from './import-action';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
   name = 'import [ids...]';
@@ -58,7 +60,7 @@ export default class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private workspace: Workspace) {}
+  constructor(private importer: Importer) {}
 
   async report(
     [ids = []]: [string[]],
@@ -122,7 +124,7 @@ export default class ImportCmd implements Command {
       importDependents: dependents,
       allHistory,
     };
-    const importResults = await importAction(this.workspace, importOptions, this._packageManagerArgs);
+    const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
     const { importDetails } = importResults;
 
     if (json) {

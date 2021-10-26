@@ -62,7 +62,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
       if (!calculatedOpts.updateExisting) {
         throw new EntryAlreadyExist(entry);
       }
-      this.remove(entry.dependencyId);
+      this.remove([entry.dependencyId]);
     }
     this._policiesEntries.push(entry);
   }
@@ -85,9 +85,9 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return matchedEntry;
   }
 
-  remove(depId: string): WorkspacePolicy {
+  remove(depIds: string[]): WorkspacePolicy {
     const entries = this.entries.filter((entry) => {
-      return entry.dependencyId !== depId;
+      return !depIds.includes(entry.dependencyId);
     });
     return new WorkspacePolicy(entries);
   }
