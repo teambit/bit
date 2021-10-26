@@ -86,7 +86,7 @@ export default class ImportComponents {
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
-    if (!this.options.writePackageJson) {
+    if (this.consumer.isLegacy && !this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
