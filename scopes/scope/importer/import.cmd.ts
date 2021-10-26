@@ -3,13 +3,10 @@ import chalk from 'chalk';
 import R from 'ramda';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import { Workspace } from '@teambit/workspace';
 import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
-import { importAction } from './import-action';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
