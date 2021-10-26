@@ -746,13 +746,23 @@ export class DependencyResolverMain {
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
+    this.updateConfigPolicy(workspacePolicy);
+    return workspacePolicy;
+  }
+
+  removeFromRootPolicy(dependencyIds: string[]) {
+    const workspacePolicy = this.getWorkspacePolicyFromConfig();
+    const workspacePolicyUpdated = workspacePolicy.remove(dependencyIds);
+    this.updateConfigPolicy(workspacePolicyUpdated);
+  }
+
+  private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
     const workspacePolicyObject = workspacePolicy.toConfigObject();
     this.config.policy = workspacePolicyObject;
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
       overrideExisting: true,
       ignoreVersion: true,
     });
-    return workspacePolicy;
   }
 
   async persistConfig(workspaceDir?: string) {
