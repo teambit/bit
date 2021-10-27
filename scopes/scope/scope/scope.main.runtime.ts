@@ -641,8 +641,15 @@ export class ScopeMain implements ComponentFactory {
       throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
     }: {
+      /**
+       * if the component exists locally, don't go to the server to search for updates.
+       */
       useCache?: boolean;
       throwIfNotExist?: boolean;
+      /**
+       * if the Version objects exists locally, but its `buildStatus` is Pending or Failed, reach the remote to find
+       * whether the version was already built there.
+       */
       reFetchUnBuiltVersion?: boolean;
     } = {}
   ): Promise<Component[]> {
