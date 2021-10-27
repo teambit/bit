@@ -70,11 +70,16 @@ export class GraphFromFsBuilder {
     return this.graph;
   }
 
-  private async getAllDeps(component: Component): Promise<BitIds> {
-    const depsWithoutIgnore = component.getAllDependenciesIds().difference(this.ignoreIds);
-    if (!this.shouldLoadItsDeps) return depsWithoutIgnore;
+  private getAllDepsUnfiltered(component: Component) {
+    return component.getAllDependenciesIds().difference(this.ignoreIds);
+  }
+
+  private async getAllDepsFiltered(component: Component): Promise<BitIds> {
+    const depsWithoutIgnore = this.getAllDepsUnfiltered(component);
+    const shouldLoadFunc = this.shouldLoadItsDeps;
+    if (!shouldLoadFunc) return depsWithoutIgnore;
     const deps = await mapSeries(depsWithoutIgnore, async (depId) => {
-      const shouldLoad = await this.shouldLoadItsDeps?.(depId);
+      const shouldLoad = await shouldLoadFunc(depId);
       if (!shouldLoad) this.ignoreIds.push(depId);
       return shouldLoad ? depId : null;
     });
@@ -84,7 +89,14 @@ export class GraphFromFsBuilder {
   private async processManyComponents(components: Component[]) {
     this.logger.debug(`GraphFromFsBuilder.processManyComponents depth ${this.depth}, ${components.length} components`);
     this.depth += 1;
-    const allDeps = (await mapSeries(components, (c) => this.getAllDeps(c))).flat();
+    await this.importObjects(components);
+    const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
+    const allDependenciesFlattened = flatten(allDependencies);
+    if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
+  }
+
+  private async importObjects(components: Component[]) {
+    const allDeps = components.map((c) => this.getAllDepsUnfiltered(c)).flat();
     const allDepsWithScope = allDeps.filter((dep) => dep.hasScope());
     const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
     await scopeComponentsImporter.importMany(
@@ -92,15 +104,12 @@ export class GraphFromFsBuilder {
       undefined,
       this.shouldThrowOnMissingDep
     );
-    const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
-    const allDependenciesFlattened = flatten(allDependencies);
-    if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
   }
 
   private async processOneComponent(component: Component) {
     const idStr = component.id.toString();
     if (this.completed.includes(idStr)) return [];
-    const allIds = await this.getAllDeps(component);
+    const allIds = await this.getAllDepsFiltered(component);
 
     const allDependencies = await this.loadManyComponents(allIds, idStr);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
