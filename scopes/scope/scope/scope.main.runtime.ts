@@ -402,7 +402,7 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.import(componentIds);
+    const components = await this.import(componentIds, { reFetchUnBuiltVersion: false });
 
     return components;
   }
@@ -634,7 +634,18 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true, throwIfNotExist = false): Promise<Component[]> {
+  async import(
+    ids: ComponentID[],
+    {
+      useCache = true,
+      throwIfNotExist = false,
+      reFetchUnBuiltVersion = true,
+    }: {
+      useCache?: boolean;
+      throwIfNotExist?: boolean;
+      reFetchUnBuiltVersion?: boolean;
+    } = {}
+  ): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -644,7 +655,7 @@ export class ScopeMain implements ComponentFactory {
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache, reFetchUnBuiltVersion);
 
     return this.getMany(ids, throwIfNotExist);
   }

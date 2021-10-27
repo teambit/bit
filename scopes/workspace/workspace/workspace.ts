@@ -608,7 +608,7 @@ export class Workspace implements ComponentFactory {
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    await this.scope.import(ids);
+    await this.scope.import(ids, { reFetchUnBuiltVersion: false });
     return this.componentLoader.getMany(ids, forCapsule);
   }
 

@@ -140,8 +140,8 @@ export default class Scope {
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany(ids, cache);
+  async import(ids: BitIds, cache = true, reFetchUnBuiltVersion = true): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany(ids, cache, reFetchUnBuiltVersion);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
