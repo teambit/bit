@@ -608,7 +608,7 @@ export class Workspace implements ComponentFactory {
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    await this.scope.import(ids, { reFetchUnBuiltVersion: false });
+    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
@@ -1478,6 +1478,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     });
     return Promise.all(resolveMergedExtensionsP);
   }
+}
+
+function shouldReFetchUnBuiltVersion() {
+  const commandsToReFetch = ['build', 'show', 'start', 'tag', 'install', 'link', 'import'];
+  return commandsToReFetch.includes(process.argv[2]);
 }
 
 export default Workspace;
