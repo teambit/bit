@@ -430,6 +430,7 @@ export class ScopeMain implements ComponentFactory {
       {
         baseDir: this.getAspectCapsulePath(),
         skipIfExists,
+        seedersOnly: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
       },
