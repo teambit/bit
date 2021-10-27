@@ -608,7 +608,7 @@ export class Workspace implements ComponentFactory {
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    await this.scope.import(ids);
+    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
@@ -1478,6 +1478,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     });
     return Promise.all(resolveMergedExtensionsP);
   }
+}
+
+/**
+ * this is a super hacky way to do it. problem is that loadAspect is running as onStart hook, where we don't
+ * have the CLI fully loaded yet, so we can't get the command from the CLI aspect, we have to retrieve it from
+ * process.argv.
+ * in general, we don't want every command to try again and again fetching un-built versions. otherwise, every time
+ * Bit loads (even bit --help), it'll fetch them and slow down everything.
+ * instead, long-running commands and those that need the artifacts from the Version objects, should try to re-fetch.
+ */
+function shouldReFetchUnBuiltVersion() {
+  const commandsToReFetch = ['build', 'show', 'start', 'tag', 'install', 'link', 'import'];
+  return commandsToReFetch.includes(process.argv[2]);
 }
 
 export default Workspace;
