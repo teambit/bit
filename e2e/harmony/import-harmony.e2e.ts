@@ -91,6 +91,24 @@ describe('import functionality on Harmony', function () {
           expect(bitMapEntry.rootDir).to.equal('src');
         });
       });
+      describe('installing a component as a package and then importing it directly', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          const comp1Pkg = `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`;
+          helper.command.install(comp1Pkg);
+          npmCiRegistry.setResolver();
+
+          // as an intermediate step, make sure the package is listed in the workspace config.
+          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          expect(workspaceConf.dependencies).to.have.property(comp1Pkg);
+
+          helper.command.importComponent('comp1');
+        });
+        it('should remove the package from workspace.jsonc', () => {
+          const workspaceConf = helper.bitJsonc.getPolicyFromDependencyResolver();
+          expect(workspaceConf.dependencies).to.be.empty;
+        });
+      });
     });
   });
   describe('tag, export, clean scope objects, tag and export', () => {
