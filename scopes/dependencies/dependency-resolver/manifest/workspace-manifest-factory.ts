@@ -206,7 +206,7 @@ function updateDependencyVersion(
     const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
     const version =
       variantVersionWithoutMinus ||
-      rootPolicy.getDepVersion(packageName, dependency.lifecycle) ||
+      rootPolicy.getDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
       dependency.version ||
       '0.0.1-new';
     dependency.setVersion(version);
