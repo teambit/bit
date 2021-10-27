@@ -77,6 +77,12 @@ export default class BitJsoncHelper {
     this.addKeyVal(bitJsoncDir, 'teambit.dependencies/dependency-resolver', depResolver);
   }
 
+  getPolicyFromDependencyResolver() {
+    const bitJsonc = this.read();
+    const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
+    return depResolver.policy;
+  }
+
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
