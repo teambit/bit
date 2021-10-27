@@ -92,6 +92,10 @@ export class Logger implements IBitLogger {
     return loader.on();
   }
 
+  profile(id: string, console?: boolean) {
+    logger.profile(id, console);
+  }
+
   /**
    * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
    */
