@@ -19,7 +19,7 @@ import type { SsrContent } from './ssr/ssr-content';
 import type { RequestServer } from './ssr/request-server';
 import type { BrowserData } from './ssr/request-browser';
 import { RenderLifecycle } from './render-lifecycle';
-import { UIConfig } from './ui.main.runtime';
+import { UIConfig } from './ui-config';
 
 export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
 
