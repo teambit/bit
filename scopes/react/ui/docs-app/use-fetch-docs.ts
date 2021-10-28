@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { request, gql } from 'graphql-request';
 import { ComponentModel } from '@teambit/component';
 
-const GQL_SERVER = '/graphql';
 const DOCS_QUERY = gql`
   query getComponentDocs($id: String!) {
     getHost {
@@ -78,7 +77,7 @@ type FetchDocsObj =
     }
   | undefined;
 
-export function useFetchDocs(componentId: string) {
+export function useFetchDocs(componentId: string, gqlServer = '/graphql') {
   const [data, setData] = useState<FetchDocsObj>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(undefined);
@@ -87,7 +86,7 @@ export function useFetchDocs(componentId: string) {
     setLoading(true);
 
     const variables = { id: componentId };
-    request(GQL_SERVER, DOCS_QUERY, variables)
+    request(gqlServer, DOCS_QUERY, variables)
       .then((result: QueryResults) => {
         setData({
           component: ComponentModel.from(result.getHost.get),
