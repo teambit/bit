@@ -1,4 +1,3 @@
-// @ts-ignore
 import { updateDependencyVersion } from './update-dependency-version';
 import { DependencyLifecycleType } from '../dependencies';
 
@@ -8,9 +7,11 @@ describe('updateDependencyVersion()', function () {
       getPackageName: () => 'foo',
       lifecycle: 'dev',
       version: '1.0.0',
+      // @ts-ignore
       setVersion: jest.fn(),
     } as any; // eslint-disable-line
     const rootPolicy = {
+      // @ts-ignore
       getDepVersion: jest.fn((pkgName: string, lifecycle: DependencyLifecycleType) =>
         lifecycle === 'runtime' ? '2.0.0' : undefined
       ),
