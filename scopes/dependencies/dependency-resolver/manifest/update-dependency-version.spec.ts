@@ -21,7 +21,7 @@ describe('updateDependencyVersion()', function () {
     updateDependencyVersion(dependency, rootPolicy, variationPolicy);
     // The lifecycle type is changed to runtime
     // root policies don't have a separate property for dev dependencies
-    // bot runtime and dev dependencies are specified through "dependencies"
+    // both runtime and dev dependencies are specified through "dependencies"
     expect(rootPolicy.getDepVersion).toHaveBeenCalledWith('foo', 'runtime');
     expect(dependency.setVersion).toHaveBeenCalledWith('2.0.0');
   });
