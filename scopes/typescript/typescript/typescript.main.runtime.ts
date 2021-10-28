@@ -5,7 +5,11 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-
+import WorkspaceAspect from '@teambit/workspace';
+import type { WatchOptions, Workspace } from '@teambit/workspace';
+import pMapSeries from 'p-map-series';
+import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -24,7 +28,14 @@ export type TsConfigTransformer = (
 ) => TypescriptConfigMutator;
 
 export class TypescriptMain {
-  constructor(private logger: Logger) {}
+  private tsServer: TsserverClient;
+  constructor(private logger: Logger, private workspace?: Workspace) {
+    if (this.workspace) {
+      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
+      this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+    }
+  }
   /**
    * create a new compiler.
    */
@@ -37,6 +48,46 @@ export class TypescriptMain {
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
+  }
+
+  /**
+   * get TsserverClient instance if initiated already, otherwise, return undefined.
+   */
+  getTsserverClient(): TsserverClient | undefined {
+    return this.tsServer;
+  }
+
+  /**
+   * starts a tsserver process to communicate with its API.
+   * @param projectPath absolute path of the project root directory
+   * @param options TsserverClientOpts
+   * @param files optionally, if check-types is enabled, provide files to open and type check.
+   * @returns TsserverClient
+   */
+  async initTsserverClient(
+    projectPath: string,
+    options: TsserverClientOpts = {},
+    files: string[] = []
+  ): Promise<TsserverClient> {
+    this.tsServer = new TsserverClient(projectPath, this.logger, options, files);
+    this.tsServer.init();
+    return this.tsServer;
+  }
+
+  /**
+   * starts a tsserver process to communicate with its API. use only when running on the workspace.
+   * @param options TsserverClientOpts
+   * @param files optionally, if check-types is enabled, provide files to open and type check.
+   * @returns TsserverClient
+   */
+  async initTsserverClientFromWorkspace(
+    options: TsserverClientOpts = {},
+    files: string[] = []
+  ): Promise<TsserverClient> {
+    if (!this.workspace) {
+      throw new Error(`initTsserverClientFromWorkspace: workspace was not found`);
+    }
+    return this.initTsserverClient(this.workspace.path, options, files);
   }
 
   /**
@@ -57,14 +108,45 @@ export class TypescriptMain {
     };
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect];
+  private getAllFilesForTsserver(components: Component[]): string[] {
+    const files = components
+      .map((c) => c.filesystem.files)
+      .flat()
+      .map((f) => f.path);
+    return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+  }
 
-  static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
+  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    const workspace = this.workspace;
+    if (!workspace || !watchOpts.spawnTSServer) {
+      return;
+    }
+    const { verbose, checkTypes } = watchOpts;
+    const files = checkTypes ? this.getAllFilesForTsserver(components) : [];
+    await this.initTsserverClientFromWorkspace({ verbose, checkTypes }, files);
+  }
+
+  private async onComponentChange(component: Component, files: string[]) {
+    if (!this.tsServer) {
+      return {
+        results: 'N/A',
+      };
+    }
+    await pMapSeries(files, (file) => this.tsServer.onFileChange(file));
+    return {
+      results: 'succeed',
+    };
+  }
+
+  static runtime = MainRuntime;
+  static dependencies = [SchemaAspect, LoggerAspect, WorkspaceAspect];
+
+  static async provider([schema, loggerExt, workspace]: [SchemaMain, LoggerMain, Workspace]) {
+    schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     schema.registerParser(new TypeScriptParser(logger));
 
-    return new TypescriptMain(logger);
+    return new TypescriptMain(logger, workspace);
   }
 }
 

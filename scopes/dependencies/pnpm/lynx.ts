@@ -23,8 +23,8 @@ import {
 } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
-import { MutatedProject, mutateModules } from 'supi';
-// import { ReporterFunction } from 'supi/lib/types';
+import { MutatedProject, mutateModules } from '@pnpm/core';
+// import { ReporterFunction } from '@pnpm/core/lib/types';
 // import { createResolver } from './create-resolver';
 // import {isValidPath} from '@teambit/legacy/dist/utils';
 // import {createResolver} from '@pnpm/default-resolver';
@@ -85,8 +85,10 @@ async function createStoreController(
     ca: proxyConfig?.ca,
     cert: proxyConfig?.cert,
     key: proxyConfig?.key,
+    localAddress: networkConfig?.localAddress,
     noProxy: proxyConfig?.noProxy,
     strictSsl: proxyConfig.strictSSL,
+    maxSockets: networkConfig.maxSockets,
     networkConcurrency: networkConfig.networkConcurrency,
   };
   const { ctrl } = await createNewStoreController(opts);
@@ -109,6 +111,7 @@ async function generateResolverAndFetcher(
     ca: proxyConfig?.ca,
     cert: proxyConfig?.cert,
     key: proxyConfig?.key,
+    localAddress: networkConfig?.localAddress,
     noProxy: proxyConfig?.noProxy,
     strictSsl: proxyConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
@@ -134,8 +137,8 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
-  const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
-  const workspacePackages = {}; // supi will use this to link packages to each other
+  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
+  const workspacePackages = {}; // @pnpm/core will use this to link packages to each other
 
   // This will create local link by pnpm to a component exists in the ws.
   // it will later deleted by the link process

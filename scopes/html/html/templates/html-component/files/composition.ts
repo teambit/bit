@@ -8,7 +8,7 @@ export const compositionFile = (context: ComponentContext) => {
     content: `
 import { ${Name} } from './${name}';
 
-export const Basic${Name} = ${Name}("Some basic composition text");
+export const Basic${Name} = ${Name}({text:"Some basic composition text"});
 `,
   };
 };

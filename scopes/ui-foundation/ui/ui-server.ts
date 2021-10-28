@@ -16,7 +16,7 @@ import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 
-const { devConfig } = require('./webpack/webpack.dev.config');
+import { devConfig } from './webpack/webpack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -76,7 +76,7 @@ export class UIServer {
   /**
    * get the webpack configuration of the UI server.
    */
-  async getDevConfig(): Promise<any> {
+  async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
     const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 
@@ -177,15 +177,18 @@ export class UIServer {
    * start a UI dev server.
    */
   async dev({ portRange }: StartOptions = {}) {
-    const selectedPort = await this.selectPort(portRange);
+    const devServerPort = await this.selectPort(portRange);
     await this.start({ portRange: [4100, 4200] });
+    const expressAppPort = this._port;
+
     const config = await this.getDevConfig();
     const compiler = webpack(config);
-    const devServerConfig = await this.getDevServerConfig(this._port, config.devServer);
+    const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
-    const devServer = new WebpackDevServer(compiler, devServerConfig);
-    devServer.listen(selectedPort);
-    this._port = selectedPort;
+    const devServer = new WebpackDevServer(devServerConfig, compiler);
+    
+    await devServer.start();
+    this._port = devServerPort;
     return devServer;
   }
 
@@ -220,9 +223,13 @@ export class UIServer {
     return gqlProxies.concat(proxyEntries);
   }
 
-  private async getDevServerConfig(port: number, config?: WdsConfiguration): Promise<WdsConfiguration> {
-    const proxy = await this.getProxy(port);
-    const devServerConf = { ...config, proxy };
+  private async getDevServerConfig(
+    appPort: number,
+    gqlPort: number,
+    config?: WdsConfiguration
+  ): Promise<WdsConfiguration> {
+    const proxy = await this.getProxy(gqlPort);
+    const devServerConf = { ...config, proxy, port: appPort };
 
     return devServerConf;
   }

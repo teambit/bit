@@ -33,6 +33,7 @@ import {
   CFG_FETCH_RETRY_MAXTIMEOUT,
   CFG_FETCH_TIMEOUT,
   CFG_LOCAL_ADDRESS,
+  CFG_MAX_SOCKETS,
   CFG_NETWORK_CONCURRENCY,
 } from '../../../constants';
 import logger from '../../../logger/logger';
@@ -68,6 +69,7 @@ export type NetworkConfig = {
   fetchRetryMaxtimeout?: number;
   fetchTimeout?: number;
   localAddress?: string;
+  maxSockets?: number;
   networkConcurrency?: number;
 };
 
@@ -131,6 +133,7 @@ export class Http implements Network {
       fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT],
       fetchTimeout: obj[CFG_FETCH_TIMEOUT],
       localAddress: obj[CFG_LOCAL_ADDRESS],
+      maxSockets: obj[CFG_MAX_SOCKETS],
       networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
     };
   }
@@ -527,7 +530,11 @@ export class Http implements Network {
     const headers = token ? getAuthHeader(token) : {};
     const proxyConfig = await Http.getProxyConfig();
     const networkConfig = await Http.getNetworkConfig();
-    const agent = await Http.getAgent(host, proxyConfig);
+    const agent = await Http.getAgent(host, {
+      ...proxyConfig,
+      localAddress: networkConfig.localAddress,
+      maxSockets: networkConfig.maxSockets,
+    });
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
     const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
@@ -546,7 +553,12 @@ export function getAuthHeader(token: string) {
  */
 export async function getFetcherWithAgent(uri: string) {
   const proxyConfig = await Http.getProxyConfig();
-  const agent = await Http.getAgent(uri, proxyConfig);
+  const networkConfig = await Http.getNetworkConfig();
+  const agent = await Http.getAgent(uri, {
+    ...proxyConfig,
+    localAddress: networkConfig.localAddress,
+    maxSockets: networkConfig.maxSockets,
+  });
   const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
 }

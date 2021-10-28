@@ -1,18 +1,17 @@
 import { PackageManagerProxyConfig } from '@teambit/dependency-resolver';
-import { readConfig } from './read-config';
+import { Config } from '@pnpm/config'
 
-export async function getProxyConfig(): Promise<PackageManagerProxyConfig> {
-  const config = await readConfig();
-  const httpProxy = config.config.httpProxy;
-  const httpsProxy = config.config.httpsProxy || httpProxy;
+export function getProxyConfig(config: Config): PackageManagerProxyConfig {
+  const httpProxy = config.httpProxy;
+  const httpsProxy = config.httpsProxy || httpProxy;
   const proxyConfig: PackageManagerProxyConfig = {
     httpProxy,
     httpsProxy,
-    ca: config.config.ca,
-    cert: config.config.cert,
-    key: config.config.key,
-    noProxy: config.config.rawConfig.noproxy,
-    strictSSL: config.config.strictSsl,
+    ca: config.ca,
+    cert: config.cert,
+    key: config.key,
+    noProxy: config.rawConfig.noproxy,
+    strictSSL: config.strictSsl,
   };
   return proxyConfig;
 }
