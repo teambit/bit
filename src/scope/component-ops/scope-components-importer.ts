@@ -68,7 +68,12 @@ export default class ScopeComponentsImporter {
    * 3. b. If all flattened exists locally - exit the loop.
    * 3. c. otherwise, put it in the externalsToFetch array.
    */
-  async importMany(ids: BitIds, cache = true, throwForDependencyNotFound = false): Promise<VersionDependencies[]> {
+  async importMany(
+    ids: BitIds,
+    cache = true,
+    throwForDependencyNotFound = false,
+    reFetchUnBuiltVersion = true
+  ): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
       `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
@@ -81,7 +86,7 @@ export default class ScopeComponentsImporter {
 
     const externalsToFetch: BitId[] = [];
 
-    const compDefs = await this.sources.getMany(idsToImport, true);
+    const compDefs = await this.sources.getMany(idsToImport, reFetchUnBuiltVersion);
     const existingDefs = compDefs.filter(({ id, component }) => {
       if (id.isLocal(this.scope.name)) {
         if (!component) throw new ComponentNotFound(id.toString());

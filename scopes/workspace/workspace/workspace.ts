@@ -55,7 +55,6 @@ import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { buildOneGraphForComponents } from '@teambit/legacy/dist/scope/graph/components-graph';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -89,6 +88,7 @@ import {
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
+import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 
 export type EjectConfResult = {
   configPath: string;
@@ -392,7 +392,7 @@ export class Workspace implements ComponentFactory {
 
     const legacyIds = ids.map((id) => id._legacy);
 
-    const legacyGraph = await buildOneGraphForComponents(legacyIds, this.consumer);
+    const legacyGraph = await this.buildOneGraphForComponents(legacyIds);
     return legacyGraph;
   }
 
@@ -608,7 +608,7 @@ export class Workspace implements ComponentFactory {
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    await this.scope.import(ids);
+    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
@@ -894,7 +894,7 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  async getGraphWithoutCore(components: Component[]) {
+  async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldIgnoreFunc) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
@@ -917,7 +917,7 @@ export class Workspace implements ComponentFactory {
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     const ignoredIds = coreAspectsBitIds.concat([]);
-    return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
+    return this.buildOneGraphForComponents(ids, BitIds.fromArray(ignoredIds), isAspect);
   }
 
   /**
@@ -932,14 +932,10 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
-    const graph = await this.getGraphWithoutCore(components);
-    const allIdsP = graph.nodes().map(async (id) => {
-      return this.resolveComponentId(id);
-    });
-    const allIds = await Promise.all(allIdsP);
-    const allComponents = await this.getMany(allIds as ComponentID[]);
 
-    const aspects = allComponents.filter((component: Component) => {
+    const isAspect = async (bitId: BitId) => {
+      const id = await this.resolveComponentId(bitId);
+      const component = await this.get(id);
       let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
       if (!data) {
         // TODO: remove this once we re-export old components used to store the data here
@@ -959,11 +955,13 @@ export class Workspace implements ComponentFactory {
         }
       }
       return data.type === 'aspect';
-    });
-    // no need to filter core aspects as they are not included in the graph
-    // here we are trying to load extensions from the workspace.
+    };
+
+    const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
+    const idsStr = graph.nodes();
+    const compIds = await this.resolveMultipleComponentIds(idsStr);
+    const aspects = await this.getMany(compIds);
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
-    // load the scope first because we might need it for custom envs that extend external aspects
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
     const workspaceAspects = await this.requireComponents(workspaceComps);
     const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
@@ -976,6 +974,20 @@ export class Workspace implements ComponentFactory {
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+  }
+
+  /**
+   * Note - this gets called from Harmony only.
+   * returns one graph that includes all dependencies types. each edge has a label of the dependency
+   * type. the nodes content is the Component object.
+   */
+  async buildOneGraphForComponents(
+    ids: BitId[],
+    ignoreIds?: BitIds,
+    shouldIgnoreFunc?: ShouldIgnoreFunc
+  ): Promise<LegacyGraph> {
+    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldIgnoreFunc);
+    return graphFromFsBuilder.buildGraph(ids);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
@@ -1466,6 +1478,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     });
     return Promise.all(resolveMergedExtensionsP);
   }
+}
+
+/**
+ * this is a super hacky way to do it. problem is that loadAspect is running as onStart hook, where we don't
+ * have the CLI fully loaded yet, so we can't get the command from the CLI aspect, we have to retrieve it from
+ * process.argv.
+ * in general, we don't want every command to try again and again fetching un-built versions. otherwise, every time
+ * Bit loads (even bit --help), it'll fetch them and slow down everything.
+ * instead, long-running commands and those that need the artifacts from the Version objects, should try to re-fetch.
+ */
+function shouldReFetchUnBuiltVersion() {
+  const commandsToReFetch = ['build', 'show', 'start', 'tag', 'install', 'link', 'import'];
+  return commandsToReFetch.includes(process.argv[2]);
 }
 
 export default Workspace;

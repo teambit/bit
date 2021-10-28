@@ -3,14 +3,12 @@ import R from 'ramda';
 
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
-import { Consumer } from '../../consumer';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
-import { GraphFromFsBuilder } from './build-graph-from-fs';
 import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 
 export type AllDependenciesGraphs = {
@@ -75,21 +73,6 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
     });
   });
   return graph;
-}
-
-/**
- * Note - this gets called from Harmony only.
- * returns one graph that includes all dependencies types. each edge has a label of the dependency
- * type. the nodes content is the Component object.
- */
-export async function buildOneGraphForComponents(
-  ids: BitId[],
-  consumer: Consumer,
-  loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
-  ignoreIds?: BitIds
-): Promise<Graph> {
-  const graphFromFsBuilder = new GraphFromFsBuilder(consumer, ignoreIds, loadComponentsFunc);
-  return graphFromFsBuilder.buildGraph(ids);
 }
 
 /**

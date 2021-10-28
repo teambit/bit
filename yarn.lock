@@ -5968,21 +5968,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/design.ui.icon-button@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@teambit/design.ui.icon-button@npm:1.0.1"
-  dependencies:
-    "@teambit/base-ui.elements.icon": 1.0.0
-    "@teambit/base-ui.input.button": 1.0.1
-    classnames: ^2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: fc0e647eebc26a74dfffbcc4cfb1feb4d3c4a26c4233047055ceba9f25203fe15f6e7c4ece5b66cdd2ffc30010cb2895dc1439f68f7339b676ac52d9a3b4c90d
-  languageName: node
-  linkType: hard
-
 "@teambit/design.ui.icon-button@npm:1.0.10":
   version: 1.0.10
   resolution: "@teambit/design.ui.icon-button@npm:1.0.10"
@@ -6975,9 +6960,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.165":
-  version: 1.0.165
-  resolution: "@teambit/legacy@npm:1.0.165"
+"@teambit/legacy@npm:1.0.166":
+  version: 1.0.166
+  resolution: "@teambit/legacy@npm:1.0.166"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7101,7 +7086,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 4efd68a97a7b820041d9392284c57f0d3c590a574a823d8053621bd159f674428c58a094d12167ca1fff8e73e388f50dcef7aa048225dc45e76b16769fd46173
+  checksum: 33edb2e78c4d0e335ca588b009feffc0095e6d3a4470e56f805fe8c2df500a7d49778b2622b518f09a4157c996d0fad63a25f4514b605f53210a019a23368a7a
   languageName: node
   linkType: hard
 
@@ -7203,7 +7188,7 @@ __metadata:
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.6
     "@teambit/design.elements.icon": 1.0.5
-    "@teambit/design.ui.icon-button": 1.0.1
+    "@teambit/design.ui.icon-button": 1.0.10
     "@teambit/documenter.code.react-playground": 4.0.1
     "@teambit/documenter.content.documentation-links": 4.0.1
     "@teambit/documenter.markdown.hybrid-live-code-snippet": 0.1.3
@@ -7246,7 +7231,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.165
+    "@teambit/legacy": 1.0.166
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7656,7 +7641,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.165
+    "@teambit/legacy": 1.0.166
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -16924,8 +16909,6 @@ __metadata:
 "error-fallback-dda211@workspace:scopes/react/ui/error-fallback":
   version: 0.0.0-use.local
   resolution: "error-fallback-dda211@workspace:scopes/react/ui/error-fallback"
-  dependencies:
-    "@teambit/design.ui.icon-button": 1.0.10
   languageName: unknown
   linkType: soft
 
