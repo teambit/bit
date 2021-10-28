@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import urlJoin from 'url-join';
 import { getDataFromTree } from '@apollo/client/react/ssr';
 import type { NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
@@ -22,8 +23,10 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     if (!browser) return undefined;
 
     const port = server?.port || 3000;
-    const serverUrl = `http://localhost:${port}/${this.graphqlUI.ssrEndpoint}`;
+    const { ssrEndpoint } = this.graphqlUI.getConfig();
+    if (!ssrEndpoint) return undefined;
 
+    const serverUrl = urlJoin(`http://localhost:${port}`, ssrEndpoint);
     const client = this.graphqlUI.createSsrClient({
       serverUrl,
       headers: pick(browser.connection.headers, ALLOWED_HEADERS),
@@ -66,10 +69,11 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
-    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/${this.graphqlUI.subscriptionEndpoint}`;
+    const { endpoint, subscriptionEndpoint } = this.graphqlUI.getConfig();
 
-    const client = this.graphqlUI.createClient(this.graphqlUI.endpoint, { state, subscriptionUri: wsUrl });
+    const wsUrl = subscriptionEndpoint && urlJoin(isInsecure ? 'ws://' : 'wss://', location.host, subscriptionEndpoint);
 
+    const client = this.graphqlUI.createClient(endpoint, { state, subscriptionUri: wsUrl });
     return { client };
   };
 
