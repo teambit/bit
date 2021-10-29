@@ -379,7 +379,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedLocalScope(importedScope);
         helper.command.fetchRemoteLane('dev');
       });
-      it.only('bit status should show all components as pending update', () => {
+      it('bit status should show all components as pending update', () => {
         const status = helper.command.statusJson();
         expect(status.outdatedComponents).to.have.lengthOf(3);
       });
