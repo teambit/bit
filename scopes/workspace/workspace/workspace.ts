@@ -1239,6 +1239,9 @@ export class Workspace implements ComponentFactory {
   }
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    if (options?.fetchObject) {
+      await this.importObjects();
+    }
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
