@@ -6960,9 +6960,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.166":
-  version: 1.0.166
-  resolution: "@teambit/legacy@npm:1.0.166"
+"@teambit/legacy@npm:1.0.167":
+  version: 1.0.167
+  resolution: "@teambit/legacy@npm:1.0.167"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7086,7 +7086,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 33edb2e78c4d0e335ca588b009feffc0095e6d3a4470e56f805fe8c2df500a7d49778b2622b518f09a4157c996d0fad63a25f4514b605f53210a019a23368a7a
+  checksum: 4a0cfcee1aa2b783643d20f72ca8ecc8958a8f347758d90a88b4751057c103e849f685c494f0f2ca93091b92d5dc43fab9904c826d03246a45b82dd83b1a6b39
   languageName: node
   linkType: hard
 
@@ -7231,7 +7231,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.166
+    "@teambit/legacy": 1.0.167
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7641,7 +7641,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.166
+    "@teambit/legacy": 1.0.167
     jest: 26.6.3
   bin:
     bit: bin/bit.js
