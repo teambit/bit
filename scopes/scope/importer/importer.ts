@@ -39,6 +39,9 @@ export class Importer {
   }
 
   private populateLanesDataIfNeeded(importOptions: ImportOptions) {
+    if (importOptions.ids) {
+      return;
+    }
     const remoteLaneId = this.workspace.getCurrentRemoteLaneId();
     if (!remoteLaneId) {
       return;
