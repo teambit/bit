@@ -59,6 +59,15 @@ export class SchemaMain {
     return parser.parseModule(path);
   }
 
+  private getSchemaExtractorContext() {}
+
+  getSchemaExtractor(component: Component) {
+    const env = this.envs.getEnv(component).env;
+    if (typeof env.getSchemaExtractor === 'undefined') {
+      throw new Error(`No SchemaExtractor defined for ${env.name}`);
+    }
+  }
+
   /**
    * get a schema of a component.
    * @param component target component.

@@ -1,3 +1,5 @@
+import { SchemaNode } from '../schema-node';
+
 type Primitive = string | number | boolean | null | undefined;
 export type StaticProperties = Map<string, Primitive>;
 
@@ -7,6 +9,11 @@ export class Export {
      * named export identifier of the module export.
      */
     readonly identifier: string,
+
+    /**
+     * API node.
+     */
+    readonly node: SchemaNode,
 
     /**
      * static properties attached to this export

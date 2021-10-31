@@ -1,5 +1,6 @@
 import { Node } from 'typescript';
-import { JSONSchema } from '@teambit/semantics.entities.semantic-schema';
+import { JSONSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaExtractorContext } from './schema-extractor-context';
 
 export type SchemaTransformer = {
   /**
@@ -10,5 +11,5 @@ export type SchemaTransformer = {
   /**
    * transform the node into JSONSchema.
    */
-  transform(node: Node): JSONSchema;
+  transform(node: Node, tsserver: SchemaExtractorContext): Promise<SchemaNode>;
 };
