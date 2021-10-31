@@ -16,6 +16,7 @@ import {
   AspectData,
   InvalidComponent,
 } from '@teambit/component';
+import { Importer } from '@teambit/importer';
 import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
   DependencyLifecycleType,
@@ -1325,8 +1326,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       importDependenciesDirectly: false,
       importDependents: false,
     };
+    const importer = new Importer(this, this.dependencyResolver);
     try {
-      const res = await importAction(importOptions, []);
+      const res = await importer.import(importOptions, []);
       return res;
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy

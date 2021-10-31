@@ -47,5 +47,6 @@ export class Importer {
       return;
     }
     importOptions.lanes = { laneIds: [remoteLaneId] };
+    importOptions.objectsOnly = true;
   }
 }
