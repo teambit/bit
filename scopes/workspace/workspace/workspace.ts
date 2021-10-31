@@ -38,7 +38,7 @@ import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pa
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link, importAction } from '@teambit/legacy/dist/api/consumer';
+import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
