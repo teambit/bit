@@ -1,4 +1,5 @@
 import { GraphQLClient, gql } from 'graphql-request';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
 import {
   CFG_HUB_DOMAIN_KEY,
@@ -48,9 +49,14 @@ async function getScope(name: string) {
     return res;
   } catch (err: any) {
     logger.error('getScope has failed', err);
-    const msg = err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error.";
+    const msg: string =
+      err?.response?.errors?.[0].message || "unknown error. please use the '--log' flag for the full error.";
+    const errorCode = err?.response?.errors?.[0].ERR_CODE;
     if (msg === 'access denied') {
       throw new ScopeNotFoundOrDenied(name);
+    }
+    if (errorCode === 'InvalidScopeID') {
+      throw new InvalidScopeName(name);
     }
     throw new Error(`${name}: ${msg}`);
   }

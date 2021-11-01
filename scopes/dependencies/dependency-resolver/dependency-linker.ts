@@ -43,6 +43,11 @@ export type LinkingOptions = {
    * similar to npm/yarn link
    */
   linkToDir?: string;
+
+  /**
+   * whether link should import objects before linking
+   */
+  fetchObject?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {

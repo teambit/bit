@@ -435,7 +435,7 @@ describe('bit lane command', function () {
       );
     });
   });
-  describe('main => lane-a => labe-b, so laneB branched from laneA', () => {
+  describe('main => lane-a => lane-b, so laneB branched from laneA', () => {
     let beforeSwitchingBack;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
