@@ -31,6 +31,9 @@ import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
+import { ReactElementAspect } from '@teambit/react-element';
+import { ElementsAspect } from '@teambit/elements';
+import { MyReactElementsAspect } from '@teambit/my-react-elements';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
@@ -99,6 +102,9 @@ export const manifestsMap = {
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
   [ReactNativeAspect.id]: ReactNativeAspect,
+  [ReactElementAspect.id]: ReactElementAspect,
+  [ElementsAspect.id]: ElementsAspect,
+  [MyReactElementsAspect.id]: MyReactElementsAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
