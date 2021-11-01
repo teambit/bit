@@ -96,7 +96,7 @@ export default class Snap implements LegacyCommand {
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
+    const tagExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit untag" to unstage versions)\n`;
 
     const outputComponents = (comps) => {
