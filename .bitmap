@@ -339,6 +339,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "elements": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mfe/elements"
+    },
     "envs": {
         "scope": "teambit.envs",
         "version": "0.0.539",
@@ -609,6 +615,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
+    "my-react-elements": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/my-react-elements"
+    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.267",
@@ -698,6 +710,12 @@
         "version": "0.0.539",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
+    },
+    "react-element": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/react-element"
     },
     "react-native": {
         "scope": "teambit.react",
