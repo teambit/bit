@@ -28,6 +28,9 @@ import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-
 import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import ManyComponentsWriter from './many-components-writer';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
+import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -165,9 +168,7 @@ export default class ImportComponents {
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
     if (this.options.lanes) {
-      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
-      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+      await this.populateBitIdsFromLanes(bitIds);
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -193,6 +194,23 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
+  }
+
+  private async populateBitIdsFromLanes(bitIds: BitId[]) {
+    if (!this.options.lanes) return;
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+    try {
+      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
+      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+    } catch (err) {
+      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
+      } else {
+        throw err;
+      }
+    }
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
