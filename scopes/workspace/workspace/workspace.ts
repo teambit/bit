@@ -16,6 +16,7 @@ import {
   AspectData,
   InvalidComponent,
 } from '@teambit/component';
+import { Importer } from '@teambit/importer';
 import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
   DependencyLifecycleType,
@@ -37,7 +38,7 @@ import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pa
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link, importAction } from '@teambit/legacy/dist/api/consumer';
+import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
@@ -1255,6 +1256,9 @@ export class Workspace implements ComponentFactory {
   }
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    if (options?.fetchObject) {
+      await this.importObjects();
+    }
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -1322,8 +1326,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       importDependenciesDirectly: false,
       importDependents: false,
     };
+    const importer = new Importer(this, this.dependencyResolver);
     try {
-      const res = await importAction(importOptions, []);
+      const res = await importer.import(importOptions, []);
       return res;
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
