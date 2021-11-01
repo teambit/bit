@@ -19,7 +19,12 @@ import { TypeScriptParser } from './typescript.parser';
 import { SchemaTransformer } from './schema-transformer';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
-import { ExportDeclaration, FunctionDeclaration } from './transformers';
+import {
+  ExportDeclaration,
+  FunctionDeclaration,
+  VariableStatementTransformer,
+  SourceFileTransformer,
+} from './transformers';
 
 export type TsMode = 'build' | 'dev';
 
@@ -157,7 +162,12 @@ export class TypescriptMain {
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace);
-    schemaTransformerSlot.register([new ExportDeclaration(), new FunctionDeclaration()]);
+    schemaTransformerSlot.register([
+      new ExportDeclaration(),
+      new FunctionDeclaration(),
+      new VariableStatementTransformer(),
+      new SourceFileTransformer(),
+    ]);
 
     if (workspace) {
       workspace.registerOnPreWatch(tsMain.onPreWatch.bind(this));

@@ -4,11 +4,12 @@ import { TsserverClient } from '@teambit/ts-server';
 import { SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { compact, flatten } from 'lodash';
+import { flatten } from 'lodash';
 import { TypescriptMain } from './typescript.main.runtime';
 import { SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
+import { ExportList } from './export-list';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -35,16 +36,18 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const mainAst = this.parseSourceFile(mainFile);
-
     const context = this.createContext(tsserver, component);
-    const exports = this.listExports(mainAst);
-    const schemas = await Promise.all(
-      exports.map((node) => {
-        return this.computeSchema(node, context);
-      })
-    );
+    const exportNames = await this.computeExportedIdentifiers(mainAst, context);
+    context.setExports(new ExportList(exportNames));
+    const schemas = await this.computeSchema(mainAst, context);
 
     return SemanticSchema.from({});
+  }
+
+  async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
+    const transformer = this.getTransformer(node, context.component);
+    if (!transformer || !transformer.getIdentifiers) throw new TransformerNotFound(node, context.component);
+    return transformer.getIdentifiers(node, context);
   }
 
   private createContext(tsserver: TsserverClient, component: Component): SchemaExtractorContext {
@@ -86,23 +89,5 @@ export class TypeScriptExtractor implements SchemaExtractor {
     }
 
     return transformer;
-  }
-
-  /**
-   * list all exports of a source file.
-   */
-  private listExports(ast: SourceFile): Node[] {
-    return compact(
-      ast.statements.map((statement) => {
-        if (statement.kind === ts.SyntaxKind.ExportDeclaration) return statement;
-        const isExport = Boolean(
-          statement.modifiers?.find((modifier) => {
-            return modifier.kind === ts.SyntaxKind.ExportKeyword;
-          })
-        );
-
-        if (isExport) return statement;
-      })
-    );
   }
 }

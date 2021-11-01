@@ -19,5 +19,7 @@ export class FunctionSchema implements SchemaNode {
     signatureStr?: string
   ) {}
 
+  serialize() {}
+
   toJsonSchema() {}
 }

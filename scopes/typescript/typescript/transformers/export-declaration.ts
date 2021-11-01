@@ -1,10 +1,30 @@
 import ts, { Node, SyntaxKind, ExportDeclaration as ExportDeclarationNode, NamedExports } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
+import { ExportIdentifier } from '../export-identifier';
 
 export class ExportDeclaration implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportDeclaration;
+  }
+
+  async getIdentifiers(exportDec: ExportDeclarationNode, context: SchemaExtractorContext) {
+    if (exportDec.exportClause?.kind === ts.SyntaxKind.NamedExports) {
+      exportDec.exportClause as NamedExports;
+      return exportDec.exportClause.elements.map((elm) => {
+        return new ExportIdentifier(elm.name.getText(), elm.getSourceFile().fileName);
+      });
+    }
+
+    if (exportDec.exportClause?.kind === ts.SyntaxKind.NamespaceExport) {
+      return [new ExportIdentifier(exportDec.exportClause.name.getText(), exportDec.getSourceFile().fileName)];
+    }
+
+    if (exportDec.istOmoduleSpecifier) {
+      return context.getFileExports(exportDec);
+    }
+
+    return [];
   }
 
   async transform(node: Node, context: SchemaExtractorContext) {

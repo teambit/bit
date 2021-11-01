@@ -1,8 +1,8 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
+import { ExportIdentifier } from '../export-identifier';
 
 export class FunctionDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -10,15 +10,19 @@ export class FunctionDeclaration implements SchemaTransformer {
   }
 
   // need to check for anonymous functions assigned for vars, const and let.
-  private getName(funcDec: FunctionDeclarationNode) {
-    return funcDec.name?.getText();
+  async getIdentifiers(funcDec: FunctionDeclarationNode) {
+    return [new ExportIdentifier(this.getName(funcDec), funcDec.getSourceFile().fileName)];
   }
 
-  private getArgs(funcDec: FunctionDeclarationNode) {
+  private getName(funcDec: FunctionDeclarationNode) {
+    return funcDec.name?.getText() || '';
+  }
+
+  private getArgs(funcDec: FunctionDeclarationNode, context: SchemaExtractorContext) {
     return funcDec.parameters.map((param) => {
       return {
         name: param.name.getText(),
-        type: param.type?.getText(),
+        type: context.resolveType(param.type!),
       };
     });
   }
@@ -35,8 +39,9 @@ export class FunctionDeclaration implements SchemaTransformer {
     const info = await context.getQuickInfo(funcDec.name!);
     const displaySig = info?.body?.displayString;
     const signature = this.parseReturnValue(displaySig);
+    const returnType = await context.resolveType(funcDec.type);
     console.log(info, signature);
 
-    return new FunctionSchema(name || '', [], info?.body?.displayString);
+    return new FunctionSchema(name || '', this.getArgs(funcDec, context), info?.body?.displayString);
   }
 }
