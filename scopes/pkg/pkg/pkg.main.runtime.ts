@@ -11,7 +11,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
+import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -22,7 +22,6 @@ import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packe
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
 import { PreparePackagesTask } from './prepare-packages.task';
-import { PublishDryRunTask } from './publish-dry-run.task';
 import { PublishCmd } from './publish.cmd';
 import { Publisher } from './publisher';
 import { PublishTask } from './publish.task';
@@ -148,10 +147,13 @@ export class PkgMain {
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
+    // we ended up not using the publish-dry-run task. It used to run "npm publish --dry-run"
+    // and also "npm pack --dry-run", but it's not that useful and it takes long to complete.
+    // we might revise our decision later.
+    // const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
-    builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
+    // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
+    builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);
     builder.registerSnapTasks([packTask]);
     if (workspace) {

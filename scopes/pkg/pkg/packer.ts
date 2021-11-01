@@ -6,7 +6,7 @@ import { ScopeMain } from '@teambit/scope';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from '@teambit/legacy/dist/pack';
 import { Logger } from '@teambit/logger';
-import mapSeries from 'p-map-series';
+import pMap from 'p-map';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -19,6 +19,7 @@ export type PackResultWithId = PackResult & {
 };
 
 const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
+const PACK_CONCURRENCY = 10;
 export const TAR_FILE_ARTIFACT_NAME = 'package tar file';
 
 export class Packer {
@@ -66,13 +67,14 @@ export class Packer {
     dryRun = false,
     omitFullTarPath = false
   ): Promise<ComponentResult[]> {
-    const description = `packing components${dryRun ? ' (dry-run)' : ''}`;
-    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = mapSeries(capsules, (capsule) => {
-      longProcessLogger.logProgress(capsule.component.id.toString());
-      return this.packCapsule(capsule, writeOptions, dryRun, omitFullTarPath);
-    });
-    longProcessLogger.end();
+    // const description = `packing components${dryRun ? ' (dry-run)' : ''}`;
+    const results = pMap(
+      capsules,
+      (capsule) => {
+        return this.packCapsule(capsule, writeOptions, dryRun, omitFullTarPath);
+      },
+      { concurrency: PACK_CONCURRENCY }
+    );
     return results;
   }
 
