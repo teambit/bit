@@ -484,8 +484,8 @@
       "teambit.harmony/aspect": "-",
       "defaultScope": "teambit.toolbox"
     },
-    "scopes/mfe": {
-      "defaultScope": "teambit.mfe"
+    "scopes/web-components": {
+      "defaultScope": "teambit.web-components"
     },
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
