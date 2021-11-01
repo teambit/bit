@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
@@ -28,7 +29,6 @@ import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-
 import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import ManyComponentsWriter from './many-components-writer';
-import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 
