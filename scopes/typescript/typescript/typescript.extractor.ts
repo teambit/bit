@@ -84,9 +84,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const transformers = flatten(this.schemaTransformerSlot.values());
     const transformer = transformers.find((transformer) => transformer.predicate(node));
 
-    if (!transformer) {
-      // throw new TransformerNotFound(node, component);
-    }
+    if (!transformer) throw new TransformerNotFound(node, component);
 
     return transformer;
   }
