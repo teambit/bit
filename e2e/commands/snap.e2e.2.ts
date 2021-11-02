@@ -706,7 +706,7 @@ describe('bit snap command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(authorFirstTag);
-      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.fixtures.populateComponents(1, false, ' v3');
       helper.command.tagAllWithoutBuild('-s 0.0.3');
       helper.command.importAllComponents();
     });
