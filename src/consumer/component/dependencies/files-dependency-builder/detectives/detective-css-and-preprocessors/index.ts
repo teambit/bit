@@ -45,7 +45,7 @@ function detective(fileContent, syntax) {
 }
 
 function isImportStatement(node) {
-  if (node.type === 'Atrule' && node.name === 'import') {
+  if (node.type === 'Atrule' && (node.name === 'import' || node.name === 'use' || node.name === 'forward')) {
     return true;
   }
   return false;
@@ -66,7 +66,10 @@ function extractDependencies(importStatementNode) {
     importStatementNode.prelude.children &&
     importStatementNode.prelude.children.tail.data.type !== 'Url'
   ) {
-    return importStatementNode.prelude.children.tail.data.value.replace(/["']/g, '');
+    const name =
+      importStatementNode.prelude.children.tail.data.value || // for import keyword
+      importStatementNode.prelude.children.tail.data.name; // for use keyword
+    return name.replace(/["']/g, '');
   }
 
   // allows imports with no semicolon

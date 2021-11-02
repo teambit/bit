@@ -51,4 +51,26 @@ describe('detective-sass', function () {
       test('@import reset', ['reset']);
     });
   });
+
+  describe('use keyword', function () {
+    it('returns the dependencies of the given .sass file content', function () {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@use _foo', ['_foo']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@use        _foo', ['_foo']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@use reset', ['reset']);
+    });
+  });
+
+  describe('forward keyword', function () {
+    it('returns the dependencies of the given .sass file content', function () {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@forward _foo', ['_foo']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@forward        _foo', ['_foo']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      test('@forward reset', ['reset']);
+    });
+  });
 });
