@@ -23,19 +23,13 @@ export class ReactElementMain {
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
     const componentProdConfig = componentPreviewProdConfigFactory();
+    const baseElementsTransformers = this.elements.getWebpackTransformers();
 
-    const defaultTransformer: WebpackConfigTransformer = (configMutator, context) => {
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
-      const namePascalCase = camelCase(context.target.components[0].id.name, { pascalCase: true });
-      merged.raw.output = merged.raw.output || {};
-      merged.raw.output.filename = 'static/js/elements.[contenthash:8].js';
-      merged.raw.output.library = {
-        name: namePascalCase,
-        type: 'umd',
-      };
       return merged;
     };
-    return [defaultTransformer];
+    return [...baseElementsTransformers, defaultTransformer];
   }
 
   private getWrapperTemplateOptsWithDefaults(opts: Partial<GetWrapperOpts>): GetWrapperOpts {

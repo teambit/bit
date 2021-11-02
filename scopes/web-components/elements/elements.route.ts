@@ -40,10 +40,14 @@ export class ElementsRoute implements Route {
           return res.status(404).send();
         }
         // TODO: please fix file path concatenation here.
-        const defaultRelativePath = 'asset-manifest.json';
-        const relativePath = req.params.elementsPath || defaultRelativePath;
-        const calculatedPath = join(this.elements.getElementsDirName(), 'public', relativePath);
-        const file = artifact?.getFile(calculatedPath);
+        let file;
+        if (req.params.elementsPath) {
+          const relativePath = req.params.elementsPath;
+          const calculatedPath = join(this.elements.getElementsDirName(), 'public', relativePath);
+          file = artifact?.getFile(calculatedPath);
+        } else {
+          file = artifact?.getMainElementsBundleFile();
+        }
         if (!file) return res.status(404).send();
 
         const contents = file.contents;
