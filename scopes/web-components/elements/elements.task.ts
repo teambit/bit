@@ -1,11 +1,12 @@
 import { resolve } from 'path';
 import { ExecutionContext } from '@teambit/envs';
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import { CompilerAspect } from '@teambit/compiler';
 import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { ElementsMain } from './elements.main.runtime';
 import { computeTargets } from './compute-targets';
 import { computeResults } from './compute-results';
-import { CompilerAspect } from '@teambit/compiler';
+import ElementsAspect from '.';
 
 export type ElementsWrapperContext = {
   mainFilePath: string;
@@ -21,7 +22,7 @@ export class ElementTask implements BuildTask {
     private elements: ElementsMain
   ) {}
 
-  aspectId = 'teambit.mfe/elements';
+  aspectId = ElementsAspect.id;
   name = 'GenerateElementBundle';
   location: TaskLocation = 'end';
   readonly dependencies = [CompilerAspect.id];
