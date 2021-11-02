@@ -1,13 +1,12 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, SourceFile } from 'typescript';
+import ts, { ExportDeclaration, Node, TypeReferenceNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
-import type { Position } from 'vscode-languageserver-types';
+import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve } from 'path';
 import { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
-import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
-import { ExportIdentifier } from './export-identifier';
+import { SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { ExportList } from './export-list';
 
 export class SchemaExtractorContext {
@@ -60,20 +59,28 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
+  private findFileInComponent(filePath: string) {
+    return this.component.filesystem.files.find((file) => {
+      // TODO: fix this line to support further extensions.
+      if (file.path.includes(filePath)) {
+        const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
+          if (filePath.endsWith(format)) return filePath;
+          return `${filePath}.${format}`;
+        });
+
+        return strings.find((string) => string === file.path);
+      }
+
+      return false;
+    });
+  }
+
   /**
    * return the file if part of the component.
    * otherwise, a reference to the target package and the type name.
    */
   private getSourceFile(filePath: string) {
-    const file = this.component.filesystem.files.find((file) => {
-      // TODO: fix this line to support further extensions.
-      if ((file.path.includes(filePath) && filePath.endsWith('.js')) || filePath.endsWith('.ts')) {
-        return file;
-      }
-
-      return false;
-    });
-
+    const file = this.findFileInComponent(filePath);
     if (!file) return;
     return this.extractor.parseSourceFile(file);
   }
@@ -86,7 +93,6 @@ export class SchemaExtractorContext {
 
     const startPosition = firstDef.start;
     const sourceFile = this.getSourceFile(firstDef.file);
-    // if (!sourceFile) return this.createRef(firstDef.file);
     if (!sourceFile) return undefined; // learn how to return a reference to a different component here.
     const pos = this.getPosition(sourceFile, startPosition.line, startPosition.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
@@ -109,8 +115,6 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  private resolve(currentFile: string, target: string) {}
-
   async getFileExports(exportDec: ExportDeclaration) {
     const file = exportDec.getSourceFile().fileName;
     const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
@@ -132,9 +136,35 @@ export class SchemaExtractorContext {
     return this.extractor.computeExportedIdentifiers(node, this);
   }
 
-  async resolveType(type?: Node) {
-    if (!type) return new TypeRefSchema('any');
-    const typeDef = await this.definition(type);
-    console.log(typeDef);
+  private isNative(typeName: string) {
+    return ['string', 'number', 'bool', 'boolean', 'object', 'any', 'void'].includes(typeName);
+  }
+
+  async jump(file: AbstractVinyl, start: any) {
+    const sourceFile = this.extractor.parseSourceFile(file);
+    const pos = this.getPosition(sourceFile, start.line, start.offset);
+    const nodeAtPos = getTokenAtPosition(sourceFile, pos);
+    return this.visit(nodeAtPos!);
+  }
+
+  async resolveType(node: Node, typeStr: string, type = true): Promise<TypeRefSchema> {
+    if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
+    if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
+    const typeDef = type
+      ? await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node))
+      : await this.typeDefinition(node);
+
+    const def = await Promise.all(
+      typeDef?.body?.map(async (def) => {
+        const file = this.findFileInComponent(def.file);
+        // TODO: find component id is exists, otherwise add the package name.
+        if (!file) return new TypeRefSchema(typeStr, undefined, '');
+        if (file) return new TypeRefSchema(typeStr, undefined, undefined, this.jump(file, def.start));
+      }) || []
+    );
+
+    const headDef = head(def);
+    if (headDef) return headDef;
+    return new TypeRefSchema('any');
   }
 }

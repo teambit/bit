@@ -20,7 +20,7 @@ export class ExportDeclaration implements SchemaTransformer {
       return [new ExportIdentifier(exportDec.exportClause.name.getText(), exportDec.getSourceFile().fileName)];
     }
 
-    if (exportDec.istOmoduleSpecifier) {
+    if (exportDec.moduleSpecifier) {
       return context.getFileExports(exportDec);
     }
 
@@ -35,7 +35,7 @@ export class ExportDeclaration implements SchemaTransformer {
       exportClause as NamedExports;
       const exports = await Promise.all(
         exportClause.elements.map(async (element) => {
-          const sig = await context.visitDefinition(element);
+          const sig = await context.visitDefinition(element.name);
           return element.name;
         })
       );

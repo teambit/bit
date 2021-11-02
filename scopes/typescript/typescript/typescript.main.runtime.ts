@@ -21,6 +21,7 @@ import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
   ExportDeclaration,
+  TypeAliasTransformer,
   FunctionDeclaration,
   VariableStatementTransformer,
   SourceFileTransformer,
@@ -167,6 +168,7 @@ export class TypescriptMain {
       new FunctionDeclaration(),
       new VariableStatementTransformer(),
       new SourceFileTransformer(),
+      new TypeAliasTransformer(),
     ]);
 
     if (workspace) {

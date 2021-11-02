@@ -1,4 +1,5 @@
 import { SchemaNode } from '../schema-node';
+import { TypeRefSchema } from './type-ref';
 
 export type Argument = {
   name: string;
@@ -13,10 +14,7 @@ export class FunctionSchema implements SchemaNode {
     // readonly doc: any,
     readonly args: Argument[],
 
-    /**
-     * signature string for display
-     */
-    signatureStr?: string
+    readonly returnType: TypeRefSchema
   ) {}
 
   serialize() {}

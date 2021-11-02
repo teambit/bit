@@ -1,5 +1,5 @@
 import { SchemaNode, FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typescript';
+import ts, { Node, FunctionDeclaration as FunctionDeclarationNode, TypeReferenceNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
@@ -20,17 +20,18 @@ export class FunctionDeclaration implements SchemaTransformer {
 
   private getArgs(funcDec: FunctionDeclarationNode, context: SchemaExtractorContext) {
     return funcDec.parameters.map((param) => {
+      const type = param.type;
       return {
         name: param.name.getText(),
-        type: context.resolveType(param.type!),
+        type: context.resolveType(type!, type?.getText() || 'any'),
       };
     });
   }
 
   private parseReturnValue(displayString?: string) {
     if (!displayString) return '';
-    const [, type] = displayString.split(':');
-    return type.trim();
+    const array = displayString.split(':');
+    return array[array.length - 1].trim();
   }
 
   async transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -38,10 +39,11 @@ export class FunctionDeclaration implements SchemaTransformer {
     const name = this.getName(funcDec);
     const info = await context.getQuickInfo(funcDec.name!);
     const displaySig = info?.body?.displayString;
-    const signature = this.parseReturnValue(displaySig);
-    const returnType = await context.resolveType(funcDec.type);
-    console.log(info, signature);
+    const returnTypeStr = this.parseReturnValue(displaySig);
+    const args = this.getArgs(funcDec, context);
+    const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
+    console.log(info, returnTypeStr);
 
-    return new FunctionSchema(name || '', this.getArgs(funcDec, context), info?.body?.displayString);
+    return new FunctionSchema(name || '', [], returnType);
   }
 }
