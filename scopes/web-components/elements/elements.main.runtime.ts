@@ -8,9 +8,13 @@ import { ElementsArtifact } from './elements-artifact';
 import { ElementsAspect } from './elements.aspect';
 import { ElementsRoute } from './elements.route';
 import { ElementTask } from './elements.task';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { elementsSchema } from './elemets.graphql';
 
 export class ElementsMain {
-  constructor(private builder: BuilderMain) {}
+  constructor(private builder: BuilderMain, private componentExtension: ComponentMain) {}
+  baseRoute = `/elements/`;
+
   getElementsDirName(): string {
     return '__element';
   }
@@ -41,13 +45,25 @@ export class ElementsMain {
     return new ElementsArtifact(artifacts);
   }
 
+  async getElementUrl(component: Component): Promise<string> {
+    // const artifacts = await this.getElements(component);
+    // Check if deployed
+    return this.componentExtension.getRoute(component.id, this.baseRoute);
+  }
+
   static slots = [];
-  static dependencies = [ComponentAspect, BuilderAspect, LoggerAspect];
+  static dependencies = [ComponentAspect, BuilderAspect, LoggerAspect, GraphqlAspect];
   static runtime = MainRuntime;
-  static async provider([componentExtension, builder, loggerMain]: [ComponentMain, BuilderMain, LoggerMain]) {
-    const elements = new ElementsMain(builder);
+  static async provider([componentExtension, builder, loggerMain, graphql]: [
+    ComponentMain,
+    BuilderMain,
+    LoggerMain,
+    GraphqlMain
+  ]) {
+    const elements = new ElementsMain(builder, componentExtension);
     const logger = loggerMain.createLogger(ElementsAspect.id);
     const elementsRoute = new ElementsRoute(elements, logger);
+    graphql.register(elementsSchema(elements));
     componentExtension.registerRoute([elementsRoute]);
     return elements;
   }

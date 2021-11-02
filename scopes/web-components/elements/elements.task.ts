@@ -39,7 +39,7 @@ export class ElementTask implements BuildTask {
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
       entry: [],
-      publicPath: this.getPreviewDirectory(context),
+      publicPath: this.getElementsDir(context),
       rootPath: url,
     });
 
@@ -49,7 +49,7 @@ export class ElementTask implements BuildTask {
     return computeResults(bundlerContext, bundlerResults, outDirName);
   }
 
-  getPreviewDirectory(context: ExecutionContext) {
+  getElementsDir(context: ExecutionContext) {
     const outputPath = resolve(`${context.id}/public`);
     return outputPath;
   }
