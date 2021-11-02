@@ -196,7 +196,7 @@ export class UiMain {
       [mainEntry],
       uiRoot.name,
       await this.publicDir(uiRoot),
-      this.config.publicPath
+      this.config.urlBasename
     );
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
@@ -472,7 +472,7 @@ export class UiMain {
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
       await this.publicDir(uiRoot),
-      this.config.publicPath
+      this.config.urlBasename
     );
     if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
@@ -491,8 +491,6 @@ export class UiMain {
 
   static defaultConfig: UIConfig = {
     publicDir: 'public/bit',
-    // Changing to relative path which should work in all cases
-    publicPath: process.env.ASSET_PATH || './',
     portRange: [3000, 3100],
     host: 'localhost',
   };

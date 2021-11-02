@@ -21,10 +21,11 @@ export type UIConfig = {
   publicDir: string;
 
   /**
-   * set `publicPath` value for webpack.config to override
-   * in case server is not accessed using root route.
+   * set the url basename of the main UI.
+   * This is used as `publicPath` in webpack config and basename in react-router.
+   * @example '/~settings' --> '/base-url/~settings' // when urlBasename is "base-url"
    */
-  publicPath: string;
+  urlBasename?: string;
 
   /** the url to *display* when server is listening. Note that bit does not provide proxying to this url */
   publicUrl?: string;

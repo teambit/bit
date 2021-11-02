@@ -10,8 +10,8 @@ export class UiPreview {
   static runtime = PreviewRuntime;
 
   static async provider([graphqlUi]: [GraphqlUI], config: UIConfig) {
-    if (config.publicPath) {
-      graphqlUi.setBasename(config.publicPath);
+    if (config.urlBasename) {
+      graphqlUi.setBasename(config.urlBasename);
     }
 
     return new UiPreview();

@@ -267,9 +267,9 @@ export class UiUI {
     config: UIConfig,
     [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
-    if (config.publicPath) {
-      graphqlUi.setBasename(config.publicPath);
-      router.setBasename(config.publicPath);
+    if (config.urlBasename) {
+      graphqlUi.setBasename(config.urlBasename);
+      router.setBasename(config.urlBasename);
     }
 
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);

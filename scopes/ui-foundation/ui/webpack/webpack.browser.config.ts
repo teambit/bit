@@ -13,7 +13,7 @@ export default function createWebpackConfig(
   entryFiles: string[],
   title: string,
   publicDir: string,
-  publicPath: string
+  publicPath?: string
 ): Configuration {
   const baseConfig = createBaseConfig(workspaceDir, entryFiles);
   const browserConfig = createBrowserConfig(workspaceDir, title, publicDir, publicPath);
