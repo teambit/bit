@@ -343,7 +343,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mfe/elements"
+        "rootDir": "scopes/web-components/elements"
     },
     "envs": {
         "scope": "teambit.envs",
