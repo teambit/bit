@@ -28,6 +28,7 @@ export class ReactElementMain {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       const namePascalCase = camelCase(context.target.components[0].id.name, { pascalCase: true });
       merged.raw.output = merged.raw.output || {};
+      merged.raw.output.filename = 'static/js/elements.[contenthash:8].js';
       merged.raw.output.library = {
         name: namePascalCase,
         type: 'umd',
