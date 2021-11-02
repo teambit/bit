@@ -15,8 +15,24 @@ it('should return null', () => {
     isDeprecate: false,
   };
   // @ts-ignore
-  const component = new ComponentModel(null, null, null, null, null, null, null, null, null, deprecation, null, null);
+  const component = new ComponentModel(
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    deprecation,
+    null,
+    null,
+    null,
+    null
+  );
   const { container } = render(<DeprecationIcon component={component} />);
   const span = container.querySelector('span');
-  expect(span).to.null;
+  expect(span).to.be.null;
 });
