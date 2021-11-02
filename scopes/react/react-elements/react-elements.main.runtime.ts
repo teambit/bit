@@ -6,9 +6,9 @@ import basePreviewConfigFactory from './webpack/webpack.config.base';
 import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 
-import { ReactElementAspect } from './react-element.aspect';
+import { ReactElementsAspect } from './react-elements.aspect';
 
-export class ReactElementMain {
+export class ReactElementsMain {
   constructor(private elements: ElementsMain) {}
   createTask() {
     return this.elements.createTask();
@@ -39,8 +39,8 @@ export class ReactElementMain {
   static dependencies = [ElementsAspect];
   static runtime = MainRuntime;
   static async provider([elements]: [ElementsMain]) {
-    return new ReactElementMain(elements);
+    return new ReactElementsMain(elements);
   }
 }
 
-ReactElementAspect.addRuntime(ReactElementMain);
+ReactElementsAspect.addRuntime(ReactElementsMain);

@@ -705,11 +705,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
     },
-    "react-element": {
+    "react-elements": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-element"
+        "rootDir": "scopes/react/react-elements"
     },
     "react-native": {
         "scope": "teambit.react",
