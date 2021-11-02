@@ -4,11 +4,11 @@ import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { ElementsArtifact } from './elements-artifact';
 import { ElementsAspect } from './elements.aspect';
 import { ElementsRoute } from './elements.route';
 import { ElementTask } from './elements.task';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { elementsSchema } from './elemets.graphql';
 
 export class ElementsMain {

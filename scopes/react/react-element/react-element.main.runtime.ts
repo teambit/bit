@@ -1,4 +1,3 @@
-import camelCase from 'camelcase';
 import { MainRuntime } from '@teambit/cli';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import ElementsAspect, { ElementsMain } from '@teambit/elements';

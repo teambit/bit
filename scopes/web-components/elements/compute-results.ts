@@ -1,4 +1,4 @@
-import { ArtifactDefinition, BuildContext, ComponentResult } from '@teambit/builder';
+import { ArtifactDefinition, ComponentResult } from '@teambit/builder';
 import { BundlerContext, BundlerResult } from '@teambit/bundler';
 
 export async function computeResults(context: BundlerContext, results: BundlerResult[], outDirName: string) {
