@@ -18,14 +18,16 @@ export class FunctionDeclaration implements SchemaTransformer {
     return funcDec.name?.getText() || '';
   }
 
-  private getArgs(funcDec: FunctionDeclarationNode, context: SchemaExtractorContext) {
-    return funcDec.parameters.map((param) => {
-      const type = param.type;
-      return {
-        name: param.name.getText(),
-        type: context.resolveType(type!, type?.getText() || 'any'),
-      };
-    });
+  private async getArgs(funcDec: FunctionDeclarationNode, context: SchemaExtractorContext) {
+    return Promise.all(
+      funcDec.parameters.map(async (param) => {
+        const type = param.type;
+        return {
+          name: param.name.getText(),
+          type: await context.resolveType(type!, type?.getText() || 'any'),
+        };
+      })
+    );
   }
 
   private parseReturnValue(displayString?: string) {
@@ -40,7 +42,7 @@ export class FunctionDeclaration implements SchemaTransformer {
     const info = await context.getQuickInfo(funcDec.name!);
     const displaySig = info?.body?.displayString;
     const returnTypeStr = this.parseReturnValue(displaySig);
-    const args = this.getArgs(funcDec, context);
+    const args = await this.getArgs(funcDec, context);
     const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
     console.log(info, returnTypeStr);
 
