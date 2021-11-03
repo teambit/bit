@@ -52,6 +52,7 @@ export class ElementsRoute implements Route {
 
         const contents = file.contents;
         const str = `${file.cwd}/${file.path}`;
+        // @ts-ignore - temporarily, remove it later
         const contentType = mime.getType(str);
         if (contentType) res.set('Content-Type', contentType);
         return res.send(contents);
