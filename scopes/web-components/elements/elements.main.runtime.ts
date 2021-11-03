@@ -45,11 +45,15 @@ export class ElementsMain {
     return new ElementsArtifact(artifacts);
   }
 
+  isElementsExist(component: Component): boolean {
+    const artifacts = this.builder.getArtifactsByExtension(component, ElementsAspect.id);
+    return !!artifacts?.length;
+  }
+
   async getElementUrl(component: Component): Promise<string | undefined> {
-    const artifacts = await this.getElements(component);
     // In case there are no elements return as undefined
-    if (!artifacts || artifacts?.isEmpty()) return undefined;
-    // Check if deployed
+    if (!this.isElementsExist(component)) return undefined;
+    // TODO: Check if deployed
     return this.componentExtension.getRoute(component.id, this.baseRoute);
   }
 
