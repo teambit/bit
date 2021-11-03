@@ -427,7 +427,9 @@ export default class Consumer {
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
         id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope as string),
+        saveDependenciesAsComponents: this.isLegacy
+          ? saveDependenciesAsComponents || !remotes.isHub(bitId.scope as string)
+          : false,
       };
     });
     return shouldDependenciesSavedAsComponents;

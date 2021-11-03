@@ -138,7 +138,7 @@ export default class ManyComponentsWriter {
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
-    await this._populateComponentsDependenciesToWrite();
+    if (this.isLegacy) await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
