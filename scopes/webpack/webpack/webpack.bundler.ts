@@ -22,6 +22,7 @@ export class WebpackBundler implements Bundler {
   ) {}
 
   async run(): Promise<BundlerResult[]> {
+    const startTime = Date.now();
     const compilers = this.configs.map((config: any) => this.webpack(config));
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
@@ -44,6 +45,8 @@ export class WebpackBundler implements Bundler {
             outputPath: stats.compilation.outputOptions.path,
             components,
             warnings: info.warnings,
+            startTime,
+            endTime: Date.now(),
           });
         });
       });
