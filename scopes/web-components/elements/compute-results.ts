@@ -7,6 +7,8 @@ export async function computeResults(context: BundlerContext, results: BundlerRe
   const componentsResults: ComponentResult[] = result.components.map((component) => {
     return {
       component,
+      startTime: result.startTime,
+      endTime: result.endTime,
       errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
       warning: result.warnings,
     };
