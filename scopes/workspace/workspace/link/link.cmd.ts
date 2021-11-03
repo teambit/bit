@@ -15,6 +15,7 @@ type LinkCommandOpts = {
   rewire: boolean;
   verbose: boolean;
   target: string;
+  skipFetchingObjects?: boolean;
 };
 export class LinkCommand implements Command {
   name = 'link [ids...]';
@@ -32,6 +33,7 @@ export class LinkCommand implements Command {
       'target <dir>',
       'EXPERIMENTAL. link to an external directory (similar to npm-link) so other projects could use these components',
     ],
+    ['', 'skip-fetching-objects', 'skip fetch missing objects from remotes before linking'],
   ] as CommandOptions;
 
   constructor(
@@ -86,6 +88,7 @@ export class LinkCommand implements Command {
       linkCoreAspects: true,
       linkTeambitBit: true,
       linkToDir: opts.target,
+      fetchObject: !opts.skipFetchingObjects,
     };
     const linkResults = await this.workspace.link(linkOpts);
     return linkResults;

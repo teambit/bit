@@ -16,6 +16,7 @@ import {
   AspectData,
   InvalidComponent,
 } from '@teambit/component';
+import { Importer } from '@teambit/importer';
 import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
   DependencyLifecycleType,
@@ -37,13 +38,13 @@ import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pa
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link, importAction } from '@teambit/legacy/dist/api/consumer';
+import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
-import { LocalLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -535,6 +536,22 @@ export class Workspace implements ComponentFactory {
 
   getCurrentLaneId(): LocalLaneId {
     return this.consumer.getCurrentLaneId();
+  }
+
+  /**
+   * if checked out to a lane, return the remote lane id (name+scope). otherwise, return null.
+   */
+  getCurrentRemoteLaneId(): RemoteLaneId | null {
+    const currentLane = this.getCurrentLaneId();
+    if (currentLane.isDefault()) {
+      return null;
+    }
+    const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
+    const remoteLaneName = trackData?.remoteLane;
+    if (!remoteLaneName) {
+      return null;
+    }
+    return RemoteLaneId.from(remoteLaneName, trackData.remoteScope);
   }
 
   getDefaultExtensions(): ExtensionDataList {
@@ -1239,6 +1256,9 @@ export class Workspace implements ComponentFactory {
   }
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    if (options?.fetchObject) {
+      await this.importObjects();
+    }
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -1306,8 +1326,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       importDependenciesDirectly: false,
       importDependents: false,
     };
+    const importer = new Importer(this, this.dependencyResolver);
     try {
-      const res = await importAction(importOptions, []);
+      const res = await importer.import(importOptions, []);
       return res;
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy

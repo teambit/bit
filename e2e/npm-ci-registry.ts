@@ -87,7 +87,10 @@ expect {
 EOD`;
     fs.writeFileSync('adduser.sh', addUser);
     const addUserResult = execa.sync('sh', ['adduser.sh']);
-    if (!addUserResult.stdout.includes('Logged in as ci to scope @ci')) {
+    if (
+      !addUserResult.stdout.includes('Logged in as ci to scope @ci') && // npm<7
+      !addUserResult.stdout.includes(`Logged in as ci on ${this.ciRegistry}`) // npm>=7
+    ) {
       throw new Error(`failed executing npm adduser ${addUserResult.stderr}`);
     }
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
