@@ -13,7 +13,7 @@ import { elementsSchema } from './elemets.graphql';
 
 export class ElementsMain {
   constructor(private builder: BuilderMain, private componentExtension: ComponentMain) {}
-  baseRoute = `/elements/`;
+  baseRoute = `elements/`;
 
   getElementsDirName(): string {
     return '__element';
