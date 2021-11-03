@@ -16,6 +16,7 @@ it('should return null', () => {
   };
   // @ts-ignore
   const component = new ComponentModel(
+    // @ts-ignore
     null,
     null,
     null,

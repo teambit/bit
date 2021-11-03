@@ -7,8 +7,8 @@ export const DeprecationIconIsDeprecate = () => {
   const deprecation = {
     isDeprecate: true,
   };
-  // @ts-ignore
   const component = new ComponentModel(
+    // @ts-ignore
     null,
     null,
     null,
