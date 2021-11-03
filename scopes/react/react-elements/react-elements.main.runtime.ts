@@ -4,7 +4,6 @@ import ElementsAspect, { ElementsMain } from '@teambit/elements';
 import { GetWrapperOpts, getWrapperTemplateFn } from './element-wrapper-template';
 import basePreviewConfigFactory from './webpack/webpack.config.base';
 import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
-import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 
 import { ReactElementsAspect } from './react-elements.aspect';
 
@@ -21,11 +20,10 @@ export class ReactElementsMain {
   getWebpackTransformers(): WebpackConfigTransformer[] {
     const baseConfig = basePreviewConfigFactory(true);
     const baseProdConfig = basePreviewProdConfigFactory();
-    const componentProdConfig = componentPreviewProdConfigFactory();
     const baseElementsTransformers = this.elements.getWebpackTransformers();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig]);
       return merged;
     };
     return [...baseElementsTransformers, defaultTransformer];
