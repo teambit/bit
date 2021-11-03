@@ -6,12 +6,18 @@ import { Install } from './install';
 import { Import } from './import';
 import styles from './menu.module.scss';
 import { Tabs } from './tabs';
+import { Elements } from './elements';
 
 export type MenuProps = {
   /**
    * package link to be copied
    */
   packageName: string;
+
+  /**
+   * Elements url
+   */
+  elementsUrl?: string;
   /**
    * import link to be copied
    */
@@ -26,7 +32,7 @@ export type MenuProps = {
   componentName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Menu({ packageName, componentId, registryName, componentName, ...rest }: MenuProps) {
+export function Menu({ packageName, componentId, registryName, componentName, elementsUrl, ...rest }: MenuProps) {
   const [activeTab, setActiveTab] = useState('bit');
   const [activeRegistry, setActiveRegistry] = useState<string | undefined>(undefined);
 
@@ -80,6 +86,7 @@ export function Menu({ packageName, componentId, registryName, componentName, ..
           back={() => setActiveRegistry('install')}
         />
       )}
+      {activeTab === 'elements' && elementsUrl && <Elements componentName={componentName} url={elementsUrl} />}
     </div>
   );
 }

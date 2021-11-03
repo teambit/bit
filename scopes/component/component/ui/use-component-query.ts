@@ -20,6 +20,7 @@ const componentFields = gql`
       ...componentIdFields
     }
     packageName
+    elementsUrl
     displayName
     server {
       env

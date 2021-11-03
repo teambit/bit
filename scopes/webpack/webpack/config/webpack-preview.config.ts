@@ -1,9 +1,11 @@
 import webpack, { Configuration } from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
+import { html } from './html';
 
-export function configFactory(entries: string[], rootPath: string): Configuration {
+export function previewConfigFactory(entries: string[], rootPath: string): Configuration {
   return {
     mode: 'production',
     // Stop compilation early in production
@@ -27,6 +29,31 @@ export function configFactory(entries: string[], rootPath: string): Configuratio
       fallback: fallbacks,
     },
 
-    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig)],
+    plugins: [
+      new HtmlWebpackPlugin(
+        Object.assign(
+          {},
+          {
+            inject: true,
+            templateContent: html('Preview'),
+          },
+          {
+            minify: {
+              removeComments: true,
+              collapseWhitespace: true,
+              removeRedundantAttributes: true,
+              useShortDoctype: true,
+              removeEmptyAttributes: true,
+              removeStyleLinkTypeAttributes: true,
+              keepClosingSlash: true,
+              minifyJS: true,
+              minifyCSS: true,
+              minifyURLs: true,
+            },
+          }
+        )
+      ),
+      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
+    ],
   };
 }

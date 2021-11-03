@@ -339,6 +339,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "elements": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/web-components/elements"
+    },
     "envs": {
         "scope": "teambit.envs",
         "version": "0.0.547",
@@ -698,6 +704,12 @@
         "version": "0.0.547",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
+    },
+    "react-elements": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/react-elements"
     },
     "react-native": {
         "scope": "teambit.react",

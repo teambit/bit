@@ -18,6 +18,7 @@ export type ComponentModelProps = {
   server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
+  elementsUrl?: string; // pkg aspect
   compositions?: CompositionProps[];
   tags?: TagProps[];
   issuesCount?: number; // component/issues aspect
@@ -75,6 +76,10 @@ export class ComponentModel {
      */
     readonly issuesCount?: number,
     /**
+     * elements url
+     */
+    readonly elementsUrl?: string,
+    /**
      * status of component.
      */
     readonly status?: any,
@@ -117,6 +122,7 @@ export class ComponentModel {
     displayName,
     compositions = [],
     packageName,
+    elementsUrl,
     tags = [],
     deprecation,
     buildStatus,
@@ -136,6 +142,7 @@ export class ComponentModel {
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
       buildStatus,
       issuesCount,
+      elementsUrl,
       status,
       deprecation,
       env,
