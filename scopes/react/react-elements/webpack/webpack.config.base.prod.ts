@@ -1,4 +1,3 @@
-import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
