@@ -8,12 +8,12 @@ export function Tabs({ onClick, activeTab = 'bit' }: { activeTab: string; onClic
       <Tab title="bit" icon="bit" isActive={activeTab === 'bit'} onClick={() => onClick('bit')} />
       <Tab className={styles.npmTab} icon="npm" isActive={activeTab === 'npm'} onClick={() => onClick('npm')} />
       <Tab className={styles.yarnTab} icon="yarn" isActive={activeTab === 'yarn'} onClick={() => onClick('yarn')} />
-      <Tab
+      {/* <Tab
         className={styles.elementsTab}
         icon="xml"
         isActive={activeTab === 'elements'}
         onClick={() => onClick('elements')}
-      />
+      /> */}
     </div>
   );
 }

@@ -45,9 +45,15 @@ export class ElementsMain {
     return new ElementsArtifact(artifacts);
   }
 
-  async getElementUrl(component: Component): Promise<string> {
-    // const artifacts = await this.getElements(component);
-    // Check if deployed
+  isElementsExist(component: Component): boolean {
+    const artifacts = this.builder.getArtifactsByExtension(component, ElementsAspect.id);
+    return !!artifacts?.length;
+  }
+
+  async getElementUrl(component: Component): Promise<string | undefined> {
+    // In case there are no elements return as undefined
+    if (!this.isElementsExist(component)) return undefined;
+    // TODO: Check if deployed
     return this.componentExtension.getRoute(component.id, this.baseRoute);
   }
 
