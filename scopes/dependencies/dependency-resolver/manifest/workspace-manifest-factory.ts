@@ -94,7 +94,7 @@ export class WorkspaceManifestFactory {
       }
       depList = filterResolvedFromEnv(depList, componentPolicy);
       // Remove bit bin from dep list
-      depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
+      depList = depList.filter((dep) => dep.id !== '@teambit/legacy' && dep.id !== '@teambit/harmony');
       if (dependencyFilterFn) {
         depList = dependencyFilterFn(depList);
       }
