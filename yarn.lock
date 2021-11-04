@@ -6960,9 +6960,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.167":
-  version: 1.0.167
-  resolution: "@teambit/legacy@npm:1.0.167"
+"@teambit/legacy@npm:1.0.169":
+  version: 1.0.169
+  resolution: "@teambit/legacy@npm:1.0.169"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7086,7 +7086,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 4a0cfcee1aa2b783643d20f72ca8ecc8958a8f347758d90a88b4751057c103e849f685c494f0f2ca93091b92d5dc43fab9904c826d03246a45b82dd83b1a6b39
+  checksum: ec35adea45c0279e9831bec9ae916f892d01fdcbbba5b17f25bdf2fc90d6fedde032fad2fd167a6a2c076dde2ea8b8d83386ed06416573edf0a69af35d8bd949
   languageName: node
   linkType: hard
 
@@ -7231,7 +7231,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.167
+    "@teambit/legacy": 1.0.169
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7586,7 +7586,7 @@ __metadata:
     string_decoder: 1.3.0
     stringify-package: 1.0.1
     strip-ansi: 6.0.0
-    style-loader: ^2.0.0
+    style-loader: 2.0.0
     stylus-lookup: 3.0.2
     subscriptions-transport-ws: 0.9.18
     symlink-or-copy: 1.3.1
@@ -7643,7 +7643,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.167
+    "@teambit/legacy": 1.0.169
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -16583,6 +16583,12 @@ __metadata:
   checksum: 22004fa6ea0bd3f963836a5b82c45d70983e69c406ac2c27a72162e35b4446d9f3cf37c2218c3167797743f7a0e4055280c930a39124aa56bb42d5ec9db29428
   languageName: node
   linkType: hard
+
+"elements-01fa74@workspace:scopes/web-components/elements":
+  version: 0.0.0-use.local
+  resolution: "elements-01fa74@workspace:scopes/web-components/elements"
+  languageName: unknown
+  linkType: soft
 
 "ellipsis-2796fc@workspace:scopes/toolbox/string/ellipsis":
   version: 0.0.0-use.local
@@ -29182,6 +29188,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-elements-f68d4a@workspace:scopes/react/react-elements":
+  version: 0.0.0-use.local
+  resolution: "react-elements-f68d4a@workspace:scopes/react/react-elements"
+  languageName: unknown
+  linkType: soft
+
 "react-error-boundary@npm:^3.0.0":
   version: 3.1.3
   resolution: "react-error-boundary@npm:3.1.3"
@@ -32582,7 +32594,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"style-loader@npm:^2.0.0":
+"style-loader@npm:2.0.0":
   version: 2.0.0
   resolution: "style-loader@npm:2.0.0"
   dependencies:

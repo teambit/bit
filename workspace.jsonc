@@ -329,7 +329,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.168",
+        "@teambit/legacy": "1.0.170",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -396,7 +396,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.76"
+            "@teambit/legacy": "1.0.170"
           }
         }
       },
@@ -447,7 +447,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.168"
+            "@teambit/legacy": "1.0.170"
           }
         }
       },
@@ -485,6 +485,9 @@
       },
       "teambit.harmony/aspect": "-",
       "defaultScope": "teambit.toolbox"
+    },
+    "scopes/web-components": {
+      "defaultScope": "teambit.web-components"
     },
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
@@ -587,6 +590,44 @@
         }
       }
     },
+    "scopes/react/react-elements": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "react": "-",
+            "react-dom": "-",
+            "css-loader": "6.2.0",
+            "postcss": "8.2.9",
+            "postcss-loader": "6.1.1",
+            "babel-loader": "8.2.2",
+            "@babel/preset-react": "7.13.13",
+            "@babel/preset-env": "7.12.17",
+            "resolve-url-loader": "3.1.2",
+            "sass-loader": "12.1.0",
+            "@svgr/webpack": "5.5.0",
+            "new-url-loader": "0.1.1",
+            "less": "^4.1.1",
+            "@mdx-js/react": "1.6.22",
+            "less-loader": "10.0.0",
+            "babel-preset-react-app": "^10.0.0",
+            "postcss-normalize": "10.0.0",
+            "postcss-preset-env": "6.7.0",
+            "postcss-flexbugs-fixes": "5.0.2"
+          },
+          "devDependencies": {
+            "react": "-",
+            "react-dom": "-",
+            "@types/mocha": "5.2.7",
+            "@types/postcss-normalize": "9.0.1"
+          },
+          "peerDependencies": {
+            "react": "^16.8.0 || ^17.0.0",
+            "react-dom": "^16.8.0 || ^17.0.0",
+            "@teambit/legacy": "1.0.170"
+          }
+        }
+      }
+    },
     "scopes/typescript": {
       "defaultScope": "teambit.typescript"
     },
@@ -619,7 +660,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.168",
+            "@teambit/legacy": "1.0.170",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -727,7 +768,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.76"
+            "@teambit/legacy": "1.0.170"
           }
         }
       }

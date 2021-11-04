@@ -257,7 +257,7 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
   }
 
   private getComponentsModulesDirectories(components: Component[]): string[] {

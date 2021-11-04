@@ -1,4 +1,11 @@
-export type { WebpackMain, WebpackConfigTransformer, WebpackConfigTransformContext } from './webpack.main.runtime';
+export type {
+  WebpackMain,
+  WebpackConfigTransformer,
+  WebpackConfigTransformContext,
+  WebpackConfigDevServerTransformContext,
+  GlobalWebpackConfigTransformContext,
+  WebpackConfigDevServerTransformer,
+} from './webpack.main.runtime';
 export { runTransformersWithContext } from './webpack.main.runtime';
 export { WebpackAspect } from './webpack.aspect';
 export { WebpackDevServer } from './webpack.dev-server';
