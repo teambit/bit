@@ -1,5 +1,5 @@
 import { SchemaNode, FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, FunctionDeclaration as FunctionDeclarationNode, TypeReferenceNode } from 'typescript';
+import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
