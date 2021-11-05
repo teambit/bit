@@ -151,7 +151,7 @@ export class PkgMain {
     // and also "npm pack --dry-run", but it's not that useful and it takes long to complete.
     // we might revise our decision later.
     // const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher, envs);
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);

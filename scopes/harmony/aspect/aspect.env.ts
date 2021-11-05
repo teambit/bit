@@ -2,7 +2,7 @@ import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-m
 import { TsConfigTransformer } from '@teambit/typescript';
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { CompilerEnv, BuilderEnv, DependenciesEnv, PackageEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
@@ -15,7 +15,7 @@ export const AspectEnvType = 'aspect';
 /**
  * a component environment built for [Aspects](https://reactjs.org) .
  */
-export class AspectEnv implements Environment {
+export class AspectEnv implements CompilerEnv, BuilderEnv, DependenciesEnv, PackageEnv {
   constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
@@ -90,5 +90,12 @@ export class AspectEnv implements Environment {
       this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
       ...pipeWithoutCompiler,
     ];
+  }
+
+  getNpmIgnore() {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    return ['/*.ts'];
   }
 }
