@@ -6,6 +6,10 @@ export class ElementsArtifact {
 
   static defaultMainFilePrefix = 'elements';
 
+  isEmpty() {
+    return !this.artifacts.length;
+  }
+
   getFile(path: string) {
     return this.artifacts.find((file) => {
       return pathNormalizeToLinux(file.relative) === path;

@@ -22,7 +22,7 @@ export class ElementsRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `${this.elements.baseRoute}:elementsPath(*)`;
+  route = `/${this.elements.baseRoute}:elementsPath(*)`;
   method = 'get';
 
   middlewares = [

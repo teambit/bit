@@ -60,16 +60,30 @@ function extractDependencies(importStatementNode) {
     return importStatementNode.prelude.children.tail.data.value.value.replace(/["']/g, '');
   }
 
+  // @use and @forward of scss/sass syntax
+  if (
+    (importStatementNode.name === 'use' || importStatementNode.name === 'forward') &&
+    importStatementNode.prelude.type === 'AtrulePrelude' &&
+    importStatementNode.prelude.children?.head?.data
+  ) {
+    const getDepName = () => {
+      const headData = importStatementNode.prelude.children?.head?.data;
+      if (headData.type === 'String' && headData.value) return headData.value;
+      if (headData.type === 'Identifier' && headData.name) return headData.name;
+      return null;
+    };
+    const depName = getDepName();
+    if (!depName) return [];
+    return depName.replace(/["']/g, '');
+  }
+
   // simple @import
   if (
     importStatementNode.prelude.type === 'AtrulePrelude' &&
     importStatementNode.prelude.children &&
     importStatementNode.prelude.children.tail.data.type !== 'Url'
   ) {
-    const name =
-      importStatementNode.prelude.children.tail.data.value || // for import keyword
-      importStatementNode.prelude.children.tail.data.name; // for use keyword
-    return name.replace(/["']/g, '');
+    return importStatementNode.prelude.children.tail.data.value.replace(/["']/g, '');
   }
 
   // allows imports with no semicolon
