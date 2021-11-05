@@ -1118,7 +1118,7 @@ describe('bit lane command', function () {
       });
     });
     // todo: fix.
-    describe.skip('when artifacts from older versions are missing locally', () => {
+    describe('when artifacts from older versions are missing locally', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);

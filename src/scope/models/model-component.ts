@@ -604,6 +604,11 @@ export default class Component extends BitObject {
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
+    const artifactsRefsFromExportedVersions: Ref[] = [];
+    const locallyChangedVersions = this.getLocalTagsOrHashes();
+    const locallyChangedHashes = locallyChangedVersions.map((v) =>
+      isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
+    );
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
     // @ts-ignore
@@ -611,7 +616,10 @@ export default class Component extends BitObject {
     versionsObjects.forEach((versionObject) => {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
-      artifactsRefs.push(...getRefsFromExtensions(versionObject.extensions));
+      const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
+      locallyChangedHashes.includes(versionObject.hash.toString())
+        ? artifactsRefs.push(...refsFromExtensions)
+        : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
     const loadedRefs: ObjectItem[] = [];
     try {
@@ -629,6 +637,11 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
         ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
         : await repo.loadManyRaw(artifactsRefs);
       loadedRefs.push(...loaded);
+      // ignore missing artifacts when exporting old versions that were exported in the past and are now exported to a
+      // different scope. this is happening for example when exporting a lane that has components from different
+      // remotes. it's ok to not have all artifacts from the other remotes to this remote.
+      const loadedExportedArtifacts = await repo.loadManyRawIgnoreMissing(artifactsRefsFromExportedVersions);
+      loadedRefs.push(...loadedExportedArtifacts);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an artifact object file "${err.path}"
