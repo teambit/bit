@@ -165,45 +165,6 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the maximum number of HTTP(S) requests to process simultaneously.
    */
   networkConcurrency?: number;
-
-  /**
-   * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-   * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-   * an invalid state that can cause build failures or incompatible dependency versions.
-   * (For historical reasons, JavaScript package managers generally do not treat this invalid
-   * state as an error.)
-   *
-   * The default value is false to avoid legacy compatibility issues.
-   * It is strongly recommended to set strictPeerDependencies=true.
-   */
-  strictPeerDependencies: boolean;
-  /**
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs: string[];
-
-  /**
-   * regex to determine whether a file is a file meant for development purposes.
-   */
-  devFilePatterns: string[];
-
-  /**
-   * By default when bit see your default registry in your npmrc is set to 'https://registry.npmjs.org/'
-   * bit will replace it with the bit.dev npm registry (node.bit.dev) during bit install
-   * bit does this in order to save you the need to configure many scoped registries for components from different owners
-   * bit.dev registry will then proxy the request to npmjs registry for non found packages in the bit.dev registry.
-   * in case you want to disable this proxy set this config to false
-   *
-   */
-  installFromBitDevRegistry: boolean;
-
-  /**
-   * Like https://docs.npmjs.com/cli/v7/using-npm/config#save-prefix
-   * Set the prefix to use when adding dependency to workspace.jsonc via bit install
-   * to lock version to exact version you can use empty string (default)
-   */
-  savePrefix: string;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -980,12 +941,7 @@ export class DependencyResolverMain {
      * default package manager.
      */
     packageManager: 'teambit.dependencies/pnpm',
-    policy: {},
-    packageManagerArgs: [],
-    devFilePatterns: ['**/*.spec.ts'],
-    strictPeerDependencies: true,
-    installFromBitDevRegistry: true,
-    savePrefix: '',
+    policy: {}
   };
 
   static async provider(
