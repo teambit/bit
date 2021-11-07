@@ -10,7 +10,7 @@ export function testsResultsToJUnitFormat(components: ComponentsResults[]): stri
       suite.timestamp(new Date(compResult.results?.start).toISOString());
     }
     compResult.results?.testFiles.forEach((testFile) => {
-      if (testFile.error) {
+      if (testFile.error?.error) {
         const testCase = suite.testCase().className(testFile.file).name(testFile.file);
         testCase.error(stripAnsi(testFile.error.error as string));
       }

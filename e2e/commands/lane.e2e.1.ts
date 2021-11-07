@@ -435,7 +435,7 @@ describe('bit lane command', function () {
       );
     });
   });
-  describe('main => lane-a => labe-b, so laneB branched from laneA', () => {
+  describe('main => lane-a => lane-b, so laneB branched from laneA', () => {
     let beforeSwitchingBack;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -1052,6 +1052,27 @@ describe('bit lane command', function () {
     it('bit lane show should show the changed values', () => {
       const laneData = helper.command.showOneLane('dev');
       expect(laneData).to.have.string(`my-remote${LANE_REMOTE_DELIMITER}dev`);
+    });
+  });
+  describe('bit-import with no params when checked out to a lane', () => {
+    let importOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents();
+      helper.command.snapAllComponents();
+      helper.command.exportLane();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.switchRemoteLane('dev');
+
+      importOutput = helper.command.import();
+    });
+    // before, it was throwing an error about missing head.
+    it('should import the remote lane successfully', () => {
+      expect(importOutput).to.have.string('successfully imported 3 components');
     });
   });
 });

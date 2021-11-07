@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
-import { get } from 'lodash';
+import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -15,7 +15,7 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
-import { Http, ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -73,7 +73,7 @@ import { DependenciesService } from './dependencies.service';
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
@@ -125,6 +125,46 @@ export interface DependencyResolverWorkspaceConfig {
    * A comma-separated string of domain extensions that a proxy should not be used for.
    */
   noProxy?: string;
+
+  /**
+   * The IP address of the local interface to use when making connections to the npm registry.
+   */
+  localAddress?: string;
+
+  /**
+   * How many times to retry if Bit fails to fetch from the registry.
+   */
+  fetchRetries?: number;
+
+  /*
+   * The exponential factor for retry backoff.
+   */
+  fetchRetryFactor?: number;
+
+  /*
+   * The minimum (base) timeout for retrying requests.
+   */
+  fetchRetryMintimeout?: number;
+
+  /*
+   * The maximum fallback timeout to ensure the retry factor does not make requests too long.
+   */
+  fetchRetryMaxtimeout?: number;
+
+  /*
+   * The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
+   */
+  fetchTimeout?: number;
+
+  /*
+   * The maximum number of connections to use per origin (protocol/host/port combination).
+   */
+  maxSockets?: number;
+
+  /*
+   * Controls the maximum number of HTTP(S) requests to process simultaneously.
+   */
+  networkConcurrency?: number;
 
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
@@ -548,6 +588,41 @@ export class DependencyResolverMain {
     };
   }
 
+  async getNetworkConfig(): Promise<NetworkConfig> {
+    return {
+      ...(await this.getNetworkConfigFromGlobalConfig()),
+      ...(await this.getNetworkConfigFromPackageManager()),
+      ...this.getNetworkConfigFromDepResolverConfig(),
+    };
+  }
+
+  private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
+    return Http.getNetworkConfig();
+  }
+
+  private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
+    return pick(this.config, [
+      'fetchTimeout',
+      'fetchRetries',
+      'fetchRetryFactor',
+      'fetchRetryMintimeout',
+      'fetchRetryMaxtimeout',
+      'maxSockets',
+      'networkConcurrency',
+    ]);
+  }
+
+  private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
+    const packageManager = this.getPackageManager();
+    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
+    return packageManager.getNetworkConfig();
+  }
+
+  private getPackageManager() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager ?? this.getSystemPackageManager();
+  }
+
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let proxyConfigFromPackageManager: ProxyConfig = {};
@@ -671,13 +746,23 @@ export class DependencyResolverMain {
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
+    this.updateConfigPolicy(workspacePolicy);
+    return workspacePolicy;
+  }
+
+  removeFromRootPolicy(dependencyIds: string[]) {
+    const workspacePolicy = this.getWorkspacePolicyFromConfig();
+    const workspacePolicyUpdated = workspacePolicy.remove(dependencyIds);
+    this.updateConfigPolicy(workspacePolicyUpdated);
+  }
+
+  private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
     const workspacePolicyObject = workspacePolicy.toConfigObject();
     this.config.policy = workspacePolicyObject;
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
       overrideExisting: true,
       ignoreVersion: true,
     });
-    return workspacePolicy;
   }
 
   async persistConfig(workspaceDir?: string) {

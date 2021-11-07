@@ -11,7 +11,7 @@ import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State 
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
-import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { Capsule, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -25,6 +25,7 @@ import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/l
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -39,6 +40,8 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { Compiler } from '@teambit/compiler';
 import { compact, uniq, slice, uniqBy, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
@@ -118,7 +121,9 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private envs: EnvsMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -397,7 +402,7 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.import(componentIds);
+    const components = await this.import(componentIds, { reFetchUnBuiltVersion: false });
 
     return components;
   }
@@ -425,6 +430,7 @@ export class ScopeMain implements ComponentFactory {
       {
         baseDir: this.getAspectCapsulePath(),
         skipIfExists,
+        seedersOnly: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
       },
@@ -434,18 +440,68 @@ export class ScopeMain implements ComponentFactory {
     const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
-      return new RequireableComponent(capsule.component, async () => {
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const aspect = require(capsule.path);
-        const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
-        const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
-        const runtimePath = scopeRuntime || mainRuntime;
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (runtimePath) require(runtimePath);
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return aspect;
-      });
+      return new RequireableComponent(
+        capsule.component,
+        async () => {
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          const plugins = this.aspectLoader.getPlugins(capsule.component, capsule.path);
+          if (plugins.has()) {
+            await this.compileIfNoDist(capsule, capsule.component);
+            return plugins.load(MainRuntime.name);
+          }
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          const aspect = require(capsule.path);
+          const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
+          const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
+          const runtimePath = scopeRuntime || mainRuntime;
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          if (runtimePath) require(runtimePath);
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          return aspect;
+        },
+        capsule
+      );
     });
+  }
+
+  private async compileIfNoDist(capsule: Capsule, component: Component) {
+    const env = this.envs.getEnv(component);
+    const compiler: Compiler = env.env.getCompiler();
+    const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
+    const distExists = existsSync(join(capsule.path, distDir));
+    if (distExists) return;
+
+    const compiledCode = component.filesystem.files.flatMap((file) => {
+      if (!compiler.isFileSupported(file.path)) {
+        return [
+          {
+            outputText: file.contents.toString('utf8'),
+            outputPath: file.path,
+          },
+        ];
+      }
+
+      if (compiler.transpileFile) {
+        return compiler.transpileFile(file.contents.toString('utf8'), {
+          filePath: file.path,
+          componentDir: capsule.path,
+        });
+      }
+
+      return [];
+    });
+
+    await Promise.all(
+      compact(compiledCode).map((compiledFile) => {
+        const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
+        return capsule?.outputFile(path, compiledFile.outputText);
+      })
+    );
+  }
+
+  private async tryCompile(requirableAspect: RequireableComponent) {
+    if (requirableAspect.capsule) return this.compileIfNoDist(requirableAspect.capsule, requirableAspect.component);
+    return undefined;
   }
 
   async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
@@ -463,6 +519,15 @@ export class ScopeMain implements ComponentFactory {
             return await this.aspectLoader.doRequire(requireableExtension);
           } catch (err: any) {
             erroredId = requireableExtension.component.id.toString();
+            if (err.code === 'MODULE_NOT_FOUND') {
+              try {
+                await this.tryCompile(requireableExtension);
+                return await this.aspectLoader.doRequire(requireableExtension);
+              } catch (newErr: any) {
+                error = newErr;
+                throw newErr;
+              }
+            }
             error = err;
             throw err;
           }
@@ -488,6 +553,7 @@ export class ScopeMain implements ComponentFactory {
         return compact(manifestAgain);
       }
     }
+
     this.aspectLoader.handleExtensionLoadingError(error, erroredId, throwOnError);
     return [];
   }
@@ -568,7 +634,25 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[], useCache = true, throwIfNotExist = false): Promise<Component[]> {
+  async import(
+    ids: ComponentID[],
+    {
+      useCache = true,
+      throwIfNotExist = false,
+      reFetchUnBuiltVersion = true,
+    }: {
+      /**
+       * if the component exists locally, don't go to the server to search for updates.
+       */
+      useCache?: boolean;
+      throwIfNotExist?: boolean;
+      /**
+       * if the Version objects exists locally, but its `buildStatus` is Pending or Failed, reach the remote to find
+       * whether the version was already built there.
+       */
+      reFetchUnBuiltVersion?: boolean;
+    } = {}
+  ): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -578,7 +662,7 @@ export class ScopeMain implements ComponentFactory {
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache, reFetchUnBuiltVersion);
 
     return this.getMany(ids, throwIfNotExist);
   }
@@ -770,6 +854,10 @@ export class ScopeMain implements ComponentFactory {
     const component = await this.get(id);
     if (!component) return undefined;
     const aspectIds = component.state.aspects.ids;
+    // load components from type aspects as aspects.
+    if (this.aspectLoader.isAspectComponent(component)) {
+      aspectIds.push(component.id.toString());
+    }
     await this.loadAspects(aspectIds, true);
 
     return component;
@@ -802,6 +890,7 @@ export class ScopeMain implements ComponentFactory {
     AspectLoaderAspect,
     ExpressAspect,
     LoggerAspect,
+    EnvsAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -809,7 +898,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -817,7 +906,8 @@ export class ScopeMain implements ComponentFactory {
       IsolatorMain,
       AspectLoaderMain,
       ExpressMain,
-      LoggerMain
+      LoggerMain,
+      EnvsMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -850,7 +940,8 @@ export class ScopeMain implements ComponentFactory {
       preFetchObjectsSlot,
       isolator,
       aspectLoader,
-      logger
+      logger,
+      envs
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

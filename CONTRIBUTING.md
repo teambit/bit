@@ -80,6 +80,12 @@ It's easier to leave the watch process running instead of re-build for every cha
   bit watch
 ```
 
+If you are using Linux and getting "System limit for number of file watchers reached" errors, increase the max number of allowed watchers:
+
+```bash
+  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+```
+
 ### Unit Tests
 
 - run the unit tests
@@ -89,6 +95,15 @@ It's easier to leave the watch process running instead of re-build for every cha
 ```
 
 ### End to End Tests
+
+Prerequisites. You need to have Expect installed on your system:
+
+```bash
+  # on Ubuntu
+  sudo apt-get install expect
+  # on Fedora
+  sudo dnf install expect
+```
 
 Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
 

@@ -34,7 +34,7 @@ export default class RemoveModelComponents {
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
     await this.setCurrentLane();
-    const dependentBits = await this.scope.findDependentBits(foundComponents);
+    const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
     if (R.isEmpty(dependentBits) || this.force) {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
@@ -75,7 +75,7 @@ export default class RemoveModelComponents {
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     const componentList = await this.scope.listIncludesSymlinks();
 
-    const dependentBits = await this.scope.findDependentBits(
+    const dependentBits = await this.scope.getDependentsBitIds(
       consumerComponentToRemove.flattenedDependencies,
       bitId.version !== LATEST_BIT_VERSION
     );
@@ -98,7 +98,7 @@ export default class RemoveModelComponents {
   }
 
   private async getDataForDependenciesRemoval(
-    dependentBits: Record<string, any>,
+    dependentBits: Record<string, BitId[]>,
     componentList: Array<ModelComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId

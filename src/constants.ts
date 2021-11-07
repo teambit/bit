@@ -18,7 +18,13 @@ function getDirectory(): PathOsBased {
   return path.join(userHome, '.bit');
 }
 
+export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
+
 function getCacheDirectory(): PathOsBased {
+  const fromEnvVar = process.env[CACHE_GLOBALS_ENV];
+  if (fromEnvVar && typeof fromEnvVar === 'string') {
+    return fromEnvVar;
+  }
   if (process.platform === 'darwin' || process.platform === 'linux') {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
@@ -255,6 +261,8 @@ export const CFG_FEATURE_TOGGLE = 'features';
 
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
+export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_CA = 'proxy.ca';
@@ -262,6 +270,15 @@ export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
 export const CFG_PROXY_CERT = 'proxy.cert';
 export const CFG_PROXY_KEY = 'proxy.key';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
+
+export const CFG_FETCH_RETRIES = 'network.fetch_retries';
+export const CFG_FETCH_RETRY_FACTOR = 'network.fetch_retry_factor';
+export const CFG_FETCH_RETRY_MINTIMEOUT = 'network.fetch_retry_mintimeout';
+export const CFG_FETCH_RETRY_MAXTIMEOUT = 'network.fetch_retry_maxtimeout';
+export const CFG_FETCH_TIMEOUT = 'network.fetch_timeout';
+export const CFG_LOCAL_ADDRESS = 'network.local_address';
+export const CFG_MAX_SOCKETS = 'network.max_sockets';
+export const CFG_NETWORK_CONCURRENCY = 'network.concurrency';
 
 export const CFG_CONCURRENCY_IO = 'concurrency.io';
 export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';

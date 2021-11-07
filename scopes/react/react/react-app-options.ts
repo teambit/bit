@@ -33,6 +33,12 @@ export type ReactAppOptions = {
   deploy?: (context: DeployContext) => Promise<void>;
 
   /**
+   * prerender routes of application (will create static file for the route)
+   * e.g ['/plugins', '/learn', '/docs/quick-start]
+   */
+  prerenderRoutes?: string[];
+
+  /**
    * ranges of ports to use to run the app server.
    */
   portRange?: number[];

@@ -12,6 +12,7 @@ import {
   ComponentWithCollectOptions,
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
+import { LaneNotFound } from './exceptions/lane-not-found';
 
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
@@ -108,8 +109,9 @@ export default async function fetch(
       const lanes = await scope.listLanes();
       const lanesToFetch = laneIds.map((laneId) => {
         const laneToFetch = lanes.find((lane) => lane.name === laneId.name);
-        // @todo: throw LaneNotFound, make sure it shows correctly on the client using ssh
-        if (!laneToFetch) throw new Error(`lane ${laneId.name} was not found in scope ${scope.name}`);
+        if (!laneToFetch) {
+          throw new LaneNotFound(scope.name, laneId.name);
+        }
         return laneToFetch;
       });
       lanesToFetch.forEach((laneToFetch) => {

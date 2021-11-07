@@ -32,6 +32,7 @@
   .icon {
     width: 16px;
     height: 16px;
+    margin-right: 4px;
     // opacity: 0.8;
   }
 
@@ -45,7 +46,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding: 0 8px;
+      padding-left: 4px; // to align to sibling with icon
+      margin-right: 8px;
     }
   }
 

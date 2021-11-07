@@ -3,21 +3,25 @@ import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentID } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
+import { ComponentID, Component } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact } from 'lodash';
+import { difference, compact, flatten } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
+import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef } from './core-aspects';
+import { Plugins } from './plugins';
+
+export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
 export type AspectDescriptor = {
   /**
@@ -88,7 +92,8 @@ export class AspectLoaderMain {
     private envs: EnvsMain,
     private harmony: Harmony,
     private onAspectLoadErrorSlot: OnAspectLoadErrorSlot,
-    private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot
+    private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot,
+    private pluginSlot: PluginDefinitionSlot
   ) {}
 
   private getCompiler(component: Component) {
@@ -274,6 +279,14 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
+    const manifests = await this.getManifestsFromRequireableExtensions(requireableExtensions, throwOnError);
+    return this.loadExtensionsByManifests(manifests, throwOnError);
+  }
+
+  async getManifestsFromRequireableExtensions(
+    requireableExtensions: RequireableComponent[],
+    throwOnError = false
+  ): Promise<Array<ExtensionManifest | Aspect>> {
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
@@ -302,8 +315,7 @@ export class AspectLoaderMain {
     const manifests = await manifestsP;
 
     // Remove empty manifests as a result of loading issue
-    const filteredManifests = compact(manifests);
-    return this.loadExtensionsByManifests(filteredManifests, throwOnError);
+    return compact(manifests);
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
@@ -333,8 +345,30 @@ export class AspectLoaderMain {
     return updatedManifest;
   }
 
+  getPluginDefs() {
+    return flatten(this.pluginSlot.values());
+  }
+
+  getPlugins(component: Component, componentPath: string): Plugins {
+    const defs = this.getPluginDefs();
+    return Plugins.from(component, defs, (relativePath) => {
+      const compiler = this.getCompiler(component);
+      if (!compiler) {
+        return join(componentPath, relativePath);
+      }
+
+      const dist = compiler.getDistPathBySrcPath(relativePath);
+      return join(componentPath, dist);
+    });
+  }
+
   isAspect(manifest: any) {
     return !!(manifest.addRuntime && manifest.getRuntime);
+  }
+
+  isAspectComponent(component: Component): boolean {
+    const data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
+    return Boolean(data && data.type === 'aspect');
   }
 
   /**
@@ -351,7 +385,7 @@ export class AspectLoaderMain {
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    const components = await scope.import(ids, useCache, true);
+    const components = await scope.import(ids, { useCache, throwIfNotExist: true });
 
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
@@ -382,6 +416,14 @@ export class AspectLoaderMain {
       aspect.addRuntime(manifest);
       return aspect;
     });
+  }
+
+  /**
+   * register a plugin.
+   */
+  registerPlugins(pluginDefs: PluginDefinition[]) {
+    this.pluginSlot.register(pluginDefs);
+    return this;
   }
 
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
@@ -415,12 +457,20 @@ export class AspectLoaderMain {
 
   static runtime = MainRuntime;
   static dependencies = [LoggerAspect, EnvsAspect];
-  static slots = [Slot.withType<OnAspectLoadError>(), Slot.withType<OnLoadRequireableExtension>()];
+  static slots = [
+    Slot.withType<OnAspectLoadError>(),
+    Slot.withType<OnLoadRequireableExtension>(),
+    Slot.withType<PluginDefinition[]>(),
+  ];
 
   static async provider(
     [loggerExt, envs]: [LoggerMain, EnvsMain],
     config,
-    [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot]: [OnAspectLoadErrorSlot, OnLoadRequireableExtensionSlot],
+    [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
+      OnAspectLoadErrorSlot,
+      OnLoadRequireableExtensionSlot,
+      PluginDefinitionSlot
+    ],
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
@@ -429,8 +479,10 @@ export class AspectLoaderMain {
       envs,
       harmony,
       onAspectLoadErrorSlot,
-      onLoadRequireableExtensionSlot
+      onLoadRequireableExtensionSlot,
+      pluginSlot
     );
+
     return aspectLoader;
   }
 }

@@ -1,3 +1,4 @@
+import webpack, { Configuration } from 'webpack';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import {
   BundlerAspect,
@@ -12,23 +13,35 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
-import webpack from 'webpack';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
-import { configFactory as previewConfigFactory } from './config/webpack.config';
+import { previewConfigFactory } from './config/webpack-preview.config';
+import { configFactory as baseConfigFactory } from './config/webpack.config';
 
 import { WebpackAspect } from './webpack.aspect';
 import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
 
-export type WebpackConfigTransformContext = {
+export type WebpackConfigTransformContext = GlobalWebpackConfigTransformContext & {
+  target: Target;
+};
+
+export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransformContext;
+
+export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
 };
+
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigTransformContext
+) => WebpackConfigMutator;
+
+export type WebpackConfigDevServerTransformer = (
+  config: WebpackConfigMutator,
+  context: WebpackConfigDevServerTransformContext
 ) => WebpackConfigMutator;
 
 export class WebpackMain {
@@ -67,7 +80,7 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const transformerContext: WebpackConfigTransformContext = { mode: 'dev' };
+    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'dev' };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
@@ -77,21 +90,51 @@ export class WebpackMain {
     return merge(target, source);
   }
 
-  createBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
-    const configs = this.createPreviewConfig(context.targets);
-    const transformerContext: WebpackConfigTransformContext = { mode: 'prod' };
-    const mutatedConfigs = configs.map((config) => {
-      const configMutator = new WebpackConfigMutator(config);
-      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
-      return afterMutation.raw;
-    });
-    return new WebpackBundler(context.targets, mutatedConfigs, this.logger, webpack);
+  createBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = [],
+    initialConfigs?: webpack.Configuration[]
+  ) {
+    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
+    const configs = initialConfigs || this.createEmptyConfigs(context.targets, transformers, transformerContext);
+    return new WebpackBundler(context.targets, configs, this.logger, webpack);
   }
 
-  private createPreviewConfig(targets: Target[]) {
+  createPreviewBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
+    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
+    const configs = this.createPreviewConfig(context.targets, transformers, transformerContext);
+    return new WebpackBundler(context.targets, configs, this.logger, webpack);
+  }
+
+  private createConfigs(
+    targets: Target[],
+    factory: (entries: string[], outputPath: string) => Configuration,
+    transformers: WebpackConfigTransformer[] = [],
+    transformerContext: GlobalWebpackConfigTransformContext
+  ) {
     return targets.map((target) => {
-      return previewConfigFactory(target.entries, target.outputPath);
+      const baseConfig = factory(target.entries, target.outputPath);
+      const configMutator = new WebpackConfigMutator(baseConfig);
+      const context = Object.assign({}, transformerContext, { target });
+      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, context);
+      return afterMutation.raw;
     });
+  }
+
+  private createEmptyConfigs(
+    targets: Target[],
+    transformers: WebpackConfigTransformer[] = [],
+    transformerContext: GlobalWebpackConfigTransformContext
+  ) {
+    return this.createConfigs(targets, baseConfigFactory, transformers, transformerContext);
+  }
+
+  private createPreviewConfig(
+    targets: Target[],
+    transformers: WebpackConfigTransformer[] = [],
+    transformerContext: GlobalWebpackConfigTransformContext
+  ) {
+    return this.createConfigs(targets, previewConfigFactory, transformers, transformerContext);
   }
 
   private createDevServerConfig(
@@ -120,11 +163,12 @@ WebpackAspect.addRuntime(WebpackMain);
 
 export function runTransformersWithContext(
   config: WebpackConfigMutator,
-  transformers: WebpackConfigTransformer[] = [],
-  context: WebpackConfigTransformContext
+  transformers: Array<WebpackConfigTransformer | WebpackConfigDevServerTransformer> = [],
+  context: WebpackConfigTransformContext | WebpackConfigDevServerTransformContext
 ): WebpackConfigMutator {
   if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
+    // @ts-ignore
     return transformer(acc, context);
   }, config);
   return newConfig;

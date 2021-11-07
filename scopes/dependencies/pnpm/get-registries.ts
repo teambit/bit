@@ -1,26 +1,25 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import { RegistriesMap } from '@teambit/dependency-resolver';
 import { stripTrailingChar } from '@teambit/legacy/dist/utils';
+import { Config } from '@pnpm/config'
 import { isEmpty } from 'lodash';
 import toNerfDart from 'nerf-dart';
-import { readConfig } from './read-config';
 
 type OriginalAuthConfig = {
   originalAuthType: string;
   originalAuthValue: string;
 };
 
-export async function getRegistries(): Promise<RegistriesMap> {
-  const config = await readConfig();
+export function getRegistries(config: Config): RegistriesMap {
   const registriesMap: RegistriesMap = {};
 
-  Object.keys(config.config.registries).forEach((regName) => {
-    const uri = config.config.registries[regName];
-    let credentials = getCredentialsByURI(config.config.rawConfig, uri);
-    let originalAuthConfig = getOriginalAuthConfigByUri(config.config.rawConfig, uri);
+  Object.keys(config.registries).forEach((regName) => {
+    const uri = config.registries[regName];
+    let credentials = getCredentialsByURI(config.rawConfig, uri);
+    let originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, uri);
     if (isEmpty(credentials)) {
-      credentials = getCredentialsByURI(config.config.rawConfig, switchTrailingSlash(uri));
-      originalAuthConfig = getOriginalAuthConfigByUri(config.config.rawConfig, switchTrailingSlash(uri));
+      credentials = getCredentialsByURI(config.rawConfig, switchTrailingSlash(uri));
+      originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, switchTrailingSlash(uri));
     }
     registriesMap[regName] = {
       uri,

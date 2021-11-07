@@ -84,10 +84,10 @@ export class CompilerMain {
     BuilderMain,
     UiMain
   ]) {
-    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui);
+    const logger = loggerMain.createLogger(CompilerAspect.id);
+    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui, logger);
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder);
-    const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
 
     ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);

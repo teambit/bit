@@ -1,13 +1,14 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-// import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { Module } from './schemas';
 import { SemanticSchema } from './semantic-schema';
 import { SchemaExtractor } from './schema-extractor';
+import { schemaSchema } from './schema.graphql';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -85,7 +86,7 @@ export class SchemaMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect];
+  static dependencies = [EnvsAspect, GraphqlAspect];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
@@ -93,8 +94,9 @@ export class SchemaMain {
 
   static slots = [Slot.withType<Parser>()];
 
-  static async provider([envs]: [EnvsMain], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
+  static async provider([envs, graphql]: [EnvsMain, GraphqlMain], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
     const schema = new SchemaMain(parserSlot, envs, config);
+    graphql.register(schemaSchema(schema));
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
     //   return {};
