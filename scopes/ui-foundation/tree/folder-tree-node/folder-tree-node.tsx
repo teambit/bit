@@ -5,15 +5,10 @@ import React, { ReactNode, useState, useEffect } from 'react';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { CollapsableTreeNode } from '@teambit/base-ui.graph.tree.collapsable-tree-node';
-
+import type { FolderPayload } from '@teambit/base-ui.graph.tree.collapsable-tree-node';
 import styles from './folder-tree-node.module.scss';
 
 export type FolderTreeNodeProps = {} & TreeNodeProps<FolderPayload>;
-
-export type FolderPayload = {
-  icon?: string | ReactNode;
-  open?: boolean;
-};
 
 function getCustomIcon(icon: string | ReactNode) {
   if (!icon) return null;
