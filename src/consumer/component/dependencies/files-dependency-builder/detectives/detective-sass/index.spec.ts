@@ -71,4 +71,13 @@ describe('detective-sass', function () {
       test('@forward reset', ['reset']);
     });
   });
+
+  describe('use syntax with colon', function () {
+    it('should return only the package name (the part before the colon)', function () {
+      test('@use "pkg:math"', ['pkg']);
+    });
+    it('should return an empty array when it is a built-in module', function () {
+      test('@use "sass:math"', []);
+    });
+  });
 });
