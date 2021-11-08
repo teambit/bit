@@ -562,17 +562,8 @@
         "env": "teambit.harmony/node"
       }
     },
-    "scopes/harmony/bit-error": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      }
-    },
-    "scopes/defender/tests-results": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      }
-    },
-    "scopes/typescript/ts-server": {
+    "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server": {
+      "teambit.harmony/aspect": "-",
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       }
