@@ -51,6 +51,7 @@
         "@teambit/base-ui.elements.image": "1.0.0",
         "@teambit/base-ui.elements.label": "1.0.0",
         "@teambit/base-ui.elements.separator": "1.0.0",
+        "@teambit/base-ui.graph.tree.collapsable-tree-node": "0.0.4",
         "@teambit/base-ui.graph.tree.indent": "1.0.0",
         "@teambit/base-ui.graph.tree.inflate-paths": "1.0.0",
         "@teambit/base-ui.graph.tree.recursive-tree": "1.0.0",
@@ -560,6 +561,12 @@
       }
     },
     "scopes/component/legacy-bit-id": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server": {
+      "teambit.harmony/aspect": "-",
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       }
