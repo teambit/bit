@@ -11,12 +11,14 @@ chai.use(require('chai-fs'));
   let helper: Helper;
   let scopeWithoutOwner: string;
   let randomStr: string;
+  let remote: string;
   this.timeout(0);
   before(async () => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
     scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
     helper.bitJsonc.setupDefault();
+    remote = helper.scopes.remote;
 
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -31,11 +33,13 @@ chai.use(require('chai-fs'));
       const name = `@ci/${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
 
+      // comp2 is a dependency of comp1
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile(`comp1/index.js`, `const comp2 = require("@ci/${randomStr}.comp2");`);
       helper.command.tagAllComponents('--patch');
       helper.command.export();
 
+      // A new version of comp2 is created
       helper.scopeHelper.reInitLocalScopeHarmony();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
@@ -45,6 +49,7 @@ chai.use(require('chai-fs'));
       helper.command.tagComponent('comp2', 'tag2', '--ver=0.0.2');
       helper.command.export();
 
+      // comp1 is imported and the newest version of comp2 is installed
       helper.scopeHelper.reInitLocalScopeHarmony();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
@@ -57,9 +62,13 @@ chai.use(require('chai-fs'));
         helper.fixtures.fs.readJsonFile(`node_modules/@ci/${randomStr}.comp2/package.json`).componentId.version
       ).to.equal('0.0.2');
     });
+    it('should not nest/install the version from the component model to the component node_modules dir', () => {
+      expect(
+        path.join(helper.fixtures.scopes.localPath, `${remote}/comp1/node_modules/@ci/${randomStr}.comp2`)
+      ).to.not.be.a.path();
+    });
   });
   describe('complex scenario', () => {
-    let remote: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -68,6 +77,10 @@ chai.use(require('chai-fs'));
       const name = `@ci/${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
 
+      // 4 components are created: comp1, comp2, comp3, and comp-dep
+      // comp1-comp3 all dependend on lodash.get
+      // comp1 has a policy for lodash.get@3.7.0
+      // comp2 has a policy for comp-dep@0.0.1
       helper.fixtures.populateComponents(3);
       helper.fs.outputFile('comp-dep/comp-dep.js', '');
       helper.command.addComponent('comp-dep');
@@ -99,6 +112,7 @@ const get = require("lodash.get");`
       helper.command.tagAllComponents('--patch');
       helper.command.export();
 
+      // comp4 is created with lodash.get@^4.4.0 in its dependencies
       helper.scopeHelper.reInitLocalScopeHarmony();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.bitJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
@@ -144,8 +158,6 @@ const get = require("lodash.get");`
       helper.command.importComponent(`comp4`);
       helper.command.importComponent(`comp5`);
       helper.command.install(`@ci/${randomStr}.comp-dep@0.0.3 lodash.get@4.4.2`);
-
-      remote = helper.scopes.remote;
     });
     it('should install the package version specified in the root workspace manifest to the root node_modules directory', () => {
       expect(helper.fixtures.fs.readJsonFile('node_modules/lodash.get/package.json').version).to.equal('4.4.2');
