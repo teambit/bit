@@ -37,7 +37,7 @@ export class ScopeComponentLoader {
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
     const snap = this.createSnapFromVersion(version);
     const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
+    const tagMap = this.getTagMap(modelComponent);
 
     const component = new Component(newId, snap, state, tagMap, this.scope);
     this.componentsCache.set(idStr, component);
@@ -54,7 +54,7 @@ export class ScopeComponentLoader {
       (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
     const snap = this.createSnapFromVersion(version);
     const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
+    const tagMap = this.getTagMap(modelComponent);
 
     return new Component(id, snap, state, tagMap, this.scope);
   }
@@ -116,7 +116,7 @@ export class ScopeComponentLoader {
     return undefined;
   }
 
-  private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
+  private getTagMap(modelComponent: ModelComponent): TagMap {
     const tagMap = new TagMap();
     Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
       const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
