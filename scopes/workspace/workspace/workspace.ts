@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -201,6 +202,15 @@ export class Workspace implements ComponentFactory {
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
+    // memoize this method to improve performance.
+    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile = memoize(
+      this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
+      {
+        primitive: true,
+        promise: true,
+        maxAge: 60 * 1000, // 1 min
+      }
+    );
   }
 
   private validateConfig() {
@@ -1453,11 +1463,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return ComponentID.fromLegacy(legacyId);
       }
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
-    const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-      relativeComponentDir,
-      legacyId.toStringWithoutScopeAndVersion()
-    );
+    const getDefaultScope = async (bitId: BitId) => {
+      if (bitId.scope) {
+        return bitId.scope;
+      }
+      const relativeComponentDir = this.componentDirFromLegacyId(bitId, undefined, { relative: true });
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
+        relativeComponentDir,
+        bitId.toStringWithoutScopeAndVersion()
+      );
+      return defaultScope;
+    };
+    const defaultScope = await getDefaultScope(legacyId);
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
