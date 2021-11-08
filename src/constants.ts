@@ -142,7 +142,7 @@ export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
 
-export const BASE_WEB_DOMAIN = 'bit.dev';
+export const BASE_WEB_DOMAIN = 'bit.cloud';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
