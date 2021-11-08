@@ -1,4 +1,5 @@
 import { mergeSchemas } from 'graphql-tools';
+import urljoin from 'url-join';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -39,6 +40,7 @@ export type GraphQLServerOptions = {
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
+  urlBasename?: string;
 };
 
 export class GraphqlMain {
@@ -95,7 +97,7 @@ export class GraphqlMain {
     );
 
     app.use(
-      '/graphql',
+      urljoin(options.urlBasename || '/', 'graphql'),
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
         customFormatErrorFn: (err) => {

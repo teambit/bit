@@ -256,10 +256,10 @@ export class UiMain {
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();
     if (dev) {
-      await uiServer.dev({ portRange: port || this.config.portRange });
+      await uiServer.dev({ portRange: port || this.config.portRange, urlBasename: this.config.urlBasename });
     } else {
       await this.buildUI(name, uiRoot, rebuild);
-      await uiServer.start({ portRange: port || this.config.portRange });
+      await uiServer.start({ portRange: port || this.config.portRange, urlBasename: this.config.urlBasename });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));

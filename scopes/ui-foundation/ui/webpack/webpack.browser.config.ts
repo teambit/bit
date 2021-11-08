@@ -23,7 +23,7 @@ export default function createWebpackConfig(
   return combined;
 }
 
-function createBrowserConfig(workspaceDir: string, title: string, publicDir: string, publicPath: string) {
+function createBrowserConfig(workspaceDir: string, title: string, publicDir: string, publicPath?: string) {
   const browserConfig: Configuration = {
     // target: 'web', // already default
 
