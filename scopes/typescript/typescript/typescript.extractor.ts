@@ -1,7 +1,7 @@
-import ts, { Node, SourceFile } from 'typescript';
+import ts, { Node } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
-import { SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
@@ -39,7 +39,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const context = this.createContext(tsserver, component);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
-    const schemas = await this.computeSchema(mainAst, context);
+    await this.computeSchema(mainAst, context); // TODO: create the schema
 
     return SemanticSchema.from({});
   }
@@ -71,7 +71,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return this.tsserver;
   }
 
-  async computeSchema(node: Node, context: SchemaExtractorContext) {
+  async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode | undefined> {
     const transformer = this.getTransformer(node, context.component);
     if (!transformer) return;
     return transformer.transform(node, context);

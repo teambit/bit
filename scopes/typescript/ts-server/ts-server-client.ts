@@ -179,11 +179,7 @@ export class TsserverClient {
   async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     this.openIfNeeded(absFile);
-    console.log({
-      file: absFile,
-      line: position.line,
-      offset: position.character,
-    });
+
     return this.tsServer.request(CommandTypes.SignatureHelp, {
       file: absFile,
       line: position.line,

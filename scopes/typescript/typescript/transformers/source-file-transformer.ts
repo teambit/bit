@@ -51,7 +51,8 @@ export class SourceFileTransformer implements SchemaTransformer {
           })
         );
 
-        if (isExport) return statement;
+        if (!isExport) return;
+        return statement;
       })
     );
   }

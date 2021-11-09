@@ -10,6 +10,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import type { WatchOptions, Workspace } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
@@ -17,7 +18,6 @@ import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
 import { SchemaTransformer } from './schema-transformer';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
   ExportDeclaration,

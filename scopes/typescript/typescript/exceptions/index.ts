@@ -1,1 +1,1 @@
-export { TransformerNotFound } from './tranformer-not-found';
+export { TransformerNotFound } from './transformer-not-found';

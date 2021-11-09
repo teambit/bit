@@ -1,12 +1,12 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, TypeReferenceNode } from 'typescript';
+import ts, { ExportDeclaration, Node } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve } from 'path';
 import { Component } from '@teambit/component';
+import { TypeRefSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
-import { SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { ExportList } from './export-list';
 
 export class SchemaExtractorContext {
@@ -45,7 +45,7 @@ export class SchemaExtractorContext {
     return sourceFile.fileName;
   }
 
-  createRef(filePath: string) {
+  createRef() {
     return {};
   }
 
@@ -99,13 +99,13 @@ export class SchemaExtractorContext {
     return nodeAtPos;
   }
 
-  async visitDefinition(node: Node) {
+  async visitDefinition(node: Node): Promise<SchemaNode | undefined> {
     const definition = await this.definition(node);
     if (!definition) return;
     return this.visit(definition.parent);
   }
 
-  async visit(node: Node) {
+  async visit(node: Node): Promise<SchemaNode | undefined> {
     return this.extractor.computeSchema(node, this);
   }
 
@@ -118,7 +118,7 @@ export class SchemaExtractorContext {
   async getFileExports(exportDec: ExportDeclaration) {
     const file = exportDec.getSourceFile().fileName;
     const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
-    let specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
+    const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath!);
     const sourceFile = this.getSourceFile(absPath);
     if (!sourceFile) return [];

@@ -1,4 +1,4 @@
-import { Node, SyntaxKind } from 'typescript';
+import { Node } from 'typescript';
 import { Component } from '@teambit/component';
 
 export class TransformerNotFound extends Error {

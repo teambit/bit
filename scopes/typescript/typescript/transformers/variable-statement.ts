@@ -13,7 +13,7 @@ export class VariableStatementTransformer implements SchemaTransformer {
     });
   }
 
-  async transform(node: Node) {
+  async transform() {
     return {};
   }
 }

@@ -1,4 +1,4 @@
-import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { BuildTask, BuiltTaskResult } from '@teambit/builder';
 
 export class SchemaExtract implements BuildTask {
   name = 'schema-extraction';
@@ -6,7 +6,7 @@ export class SchemaExtract implements BuildTask {
 
   constructor(readonly aspectId: string) {}
 
-  execute(context: BuildContext): Promise<BuiltTaskResult> {
+  execute(): Promise<BuiltTaskResult> {
     throw new Error('Method not implemented.');
   }
 }

@@ -1,6 +1,5 @@
 import { Export } from './schemas';
 import { SchemaNode } from './schema-node';
-import { JSONSchema } from './json-schema';
 
 export type PlainSemanticSchema = {
   exports?: Export[];

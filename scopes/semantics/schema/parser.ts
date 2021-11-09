@@ -1,4 +1,4 @@
-import { Module, SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
+import { Module } from '@teambit/semantics.entities.semantic-schema';
 
 export interface Parser {
   /**
