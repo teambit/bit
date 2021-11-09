@@ -21,7 +21,6 @@
     "moduleResolution": "node",
     "noImplicitAny": false,
     "rootDir": ".",
-    "removeComments": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true
   },

@@ -1,6 +1,8 @@
 import type { DependencySource } from '../policy/variant-policy/variant-policy';
 
-export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
+export type WorkspaceDependencyLifecycleType = 'runtime' | 'peer';
+
+export type DependencyLifecycleType = WorkspaceDependencyLifecycleType | 'dev';
 
 export interface SerializedDependency {
   id: string;

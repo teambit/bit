@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -19,7 +20,7 @@ import {
 import { Importer } from '@teambit/importer';
 import { ComponentScopeDirMap, Config } from '@teambit/config';
 import {
-  DependencyLifecycleType,
+  WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   PackageManagerInstallOptions,
   ComponentDependency,
@@ -106,7 +107,7 @@ export interface EjectConfOptions {
 
 export type WorkspaceInstallOptions = {
   variants?: string;
-  lifecycleType?: DependencyLifecycleType;
+  lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe: boolean;
   import: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
@@ -201,6 +202,15 @@ export class Workspace implements ComponentFactory {
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
+    // memoize this method to improve performance.
+    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile = memoize(
+      this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
+      {
+        primitive: true,
+        promise: true,
+        maxAge: 60 * 1000, // 1 min
+      }
+    );
   }
 
   private validateConfig() {
@@ -1182,8 +1192,8 @@ export class Workspace implements ComponentFactory {
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
     if (packages && packages.length) {
-      if (!options?.variants && options?.lifecycleType === 'dev') {
-        throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType);
+      if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
+        throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
       }
       this.logger.debug(`installing the following packages: ${packages.join()}`);
       const resolver = this.dependencyResolver.getVersionResolver();
@@ -1278,12 +1288,17 @@ export class Workspace implements ComponentFactory {
   private async generateFilterFnForDepsFromLocalRemote() {
     // TODO: once scope create a new API for this, replace it with the new one
     const remotes = await this.scope._legacyRemotes();
+    const reg = await this.dependencyResolver.getRegistries();
+    const packageScopes = Object.keys(reg.scopes);
     return (dependencyList: DependencyList): DependencyList => {
       const filtered = dependencyList.filter((dep) => {
         if (!(dep instanceof ComponentDependency)) {
           return true;
         }
         if (remotes.isHub(dep.componentId.scope)) {
+          return true;
+        }
+        if (packageScopes.some((scope) => dep.packageName.startsWith(`@${scope}/`))) {
           return true;
         }
         return false;
@@ -1448,11 +1463,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return ComponentID.fromLegacy(legacyId);
       }
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
-    const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-      relativeComponentDir,
-      legacyId.toStringWithoutScopeAndVersion()
-    );
+    const getDefaultScope = async (bitId: BitId) => {
+      if (bitId.scope) {
+        return bitId.scope;
+      }
+      const relativeComponentDir = this.componentDirFromLegacyId(bitId, undefined, { relative: true });
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
+        relativeComponentDir,
+        bitId.toStringWithoutScopeAndVersion()
+      );
+      return defaultScope;
+    };
+    const defaultScope = await getDefaultScope(legacyId);
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
