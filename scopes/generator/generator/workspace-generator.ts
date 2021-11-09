@@ -152,6 +152,9 @@ export class WorkspaceGenerator {
       const currentPackages = Object.keys(oldAndNewPackageNames);
       // only bring auto-resolved dependencies, others should be set in the workspace.jsonc template
       const workspacePolicyEntries = deps
+        // filter @teambit/harmony and @teambit/legacy as we will link them later from the global bit installation
+        // TODO: filter all core aspects
+        .filter((dep) => dep.id !== '@teambit/legacy' && dep.id !== '@teambit/harmony')
         .filter((dep) => dep.source === 'auto')
         .map((dep) => ({
           dependencyId: dep.getPackageName?.() || dep.id,

@@ -446,10 +446,15 @@ export class DependencyResolverMain {
     this.logger.setStatusLine('deduping dependencies for installation');
     const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
+    // filter @teambit/harmony and @teambit/legacy as we will link them later from the global bit installation
+    // TODO: filter all core aspects
+    const rootPolicyWithoutGlobalLinked = rootPolicy.filter(
+      (dep) => dep.dependencyId !== '@teambit/harmony' && dep.dependencyId !== '@teambit/legacy'
+    );
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
-      rootPolicy,
+      rootPolicyWithoutGlobalLinked,
       rootDir,
       components,
       concreteOpts

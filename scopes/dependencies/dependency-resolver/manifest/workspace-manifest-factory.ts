@@ -93,7 +93,8 @@ export class WorkspaceManifestFactory {
         depList = filterComponents(depList, components);
       }
       depList = filterResolvedFromEnv(depList, componentPolicy);
-      // Remove bit bin from dep list
+      // filter @teambit/harmony and @teambit/legacy as we will link them later from the global bit installation
+      // TODO: filter all core aspects
       depList = depList.filter((dep) => dep.id !== '@teambit/legacy' && dep.id !== '@teambit/harmony');
       if (dependencyFilterFn) {
         depList = dependencyFilterFn(depList);
