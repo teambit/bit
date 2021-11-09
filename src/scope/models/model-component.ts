@@ -1,5 +1,5 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
-import { isEmpty, merge } from 'lodash';
+import { isEmpty } from 'lodash';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
@@ -206,9 +206,9 @@ export default class Component extends BitObject {
   }
 
   get versionsIncludeOrphaned(): Versions {
-    // surprisingly enough, lodash.merge is way faster then the object spread operator.
-    // for bit-bin with 266 components, it takes 60ms instead of 1,700ms with the spread operator.
-    return merge(this.versions, this.orphanedVersions);
+    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
+    // but mutates `this.versions`.
+    return { ...this.versions, ...this.orphanedVersions };
   }
 
   hasTagIncludeOrphaned(version: string): boolean {
