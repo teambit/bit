@@ -4867,6 +4867,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.graph.tree.collapsable-tree-node@npm:0.0.4":
+  version: 0.0.4
+  resolution: "@teambit/base-ui.graph.tree.collapsable-tree-node@npm:0.0.4"
+  dependencies:
+    "@teambit/base-ui.graph.tree.indent": 1.0.0
+    "@teambit/base-ui.graph.tree.recursive-tree": 1.0.0
+    core-js: ^3.0.0
+    react-animate-height: 2.0.23
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: da6d60bc26d512c3c2cdb71883efd32f3780cf7d1c170e137bfc7229f762d741018c5d5feab91c90072423ad434a8fac4fa9bde3fd876da53fd8bd162b494e1d
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.graph.tree.indent@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.graph.tree.indent@npm:1.0.0"
@@ -7146,6 +7161,7 @@ __metadata:
     "@teambit/base-ui.elements.image": 1.0.0
     "@teambit/base-ui.elements.label": 1.0.0
     "@teambit/base-ui.elements.separator": 1.0.0
+    "@teambit/base-ui.graph.tree.collapsable-tree-node": 0.0.4
     "@teambit/base-ui.graph.tree.indent": 1.0.0
     "@teambit/base-ui.graph.tree.inflate-paths": 1.0.0
     "@teambit/base-ui.graph.tree.recursive-tree": 1.0.0
