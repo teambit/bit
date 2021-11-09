@@ -32,11 +32,13 @@ import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
+import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
+import { getOutdatedWorkspacePkgs, OutdatedPkg } from './get-outdated-workspace-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -932,6 +934,44 @@ export class DependencyResolverMain {
       });
     }
     return manifest;
+  }
+
+  getOutdatedPkgs({
+    rootDir,
+    variantPatterns,
+    componentPoliciesById,
+  }: {
+    rootDir: string;
+    variantPatterns: Record<string, Object>;
+    componentPoliciesById: Record<string, any>;
+  }) {
+    const resolver = this.getVersionResolver();
+    const resolve = async (spec: string) =>
+      (
+        await resolver.resolveRemoteVersion(spec, {
+          rootDir,
+        })
+      ).version;
+    return getOutdatedWorkspacePkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      resolve,
+      variantPatterns,
+      componentPoliciesById,
+    });
+  }
+
+  applyUpdates(
+    outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
+    options: {
+      variantPatterns: Record<string, any>;
+      componentPoliciesById: Record<string, any>;
+    }
+  ) {
+    return applyUpdates(outdatedPkgs, {
+      dependencyResolver: this,
+      variantPatterns: options.variantPatterns,
+      componentPoliciesById: options.componentPoliciesById,
+    });
   }
 
   static runtime = MainRuntime;

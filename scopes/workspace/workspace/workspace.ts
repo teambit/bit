@@ -23,6 +23,7 @@ import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
+  DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
   WorkspacePolicyEntry,
@@ -63,7 +64,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact } from 'lodash';
+import { slice, uniqBy, difference, compact, pick } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -116,6 +117,8 @@ export type WorkspaceInstallOptions = {
   updateExisting: boolean;
   savePrefix?: string;
 };
+
+export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
 
 export type WorkspaceLinkOptions = LinkingOptions;
 
@@ -1278,6 +1281,73 @@ export class Workspace implements ComponentFactory {
       await this.importObjects();
       this.logger.consoleSuccess();
     }
+    return this.installModules(options);
+  }
+
+  private async getComponentsWithDependencyPolicies() {
+    const allComponentIds = await this.listIds();
+    const componentConfigFiles: Record<string, ComponentConfigFile> = {};
+    const componentPoliciesById: Record<string, any> = {};
+    (
+      await Promise.all<ComponentConfigFile | undefined>(
+        allComponentIds.map((componentId) => this.componentConfigFile(componentId))
+      )
+    ).forEach((component) => {
+      if (component == null) return;
+      const depResolverAspect = component?.aspects.get(DependencyResolverAspect.id);
+      if (depResolverAspect == null || component == null) return;
+      const componentId = component.componentId.toString();
+      componentConfigFiles[componentId] = component;
+      // eslint-disable-next-line
+      componentPoliciesById[componentId] = depResolverAspect.legacy.rawConfig['policy'];
+    });
+    return {
+      componentConfigFiles,
+      componentPoliciesById,
+    };
+  }
+
+  async updateDependencies() {
+    const { componentConfigFiles, componentPoliciesById } = await this.getComponentsWithDependencyPolicies();
+    const variantPatterns = this.variants.raw();
+    const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgs({
+      rootDir: this.path,
+      variantPatterns,
+      componentPoliciesById,
+    });
+    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs, {
+      variantPatterns,
+      componentPoliciesById,
+    });
+    await this.updateVariants(variantPatterns, updatedVariants);
+    const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
+    await this.saveManyConfigFiles(updatedComponentConfigFiles);
+    await this._reloadConsumer();
+    return this.installModules({ dedupe: true });
+  }
+
+  private updateVariants(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+    for (const variantPattern of updateVariantPolicies) {
+      this.variants.setExtension(
+        variantPattern,
+        DependencyResolverAspect.id,
+        variantPatterns[variantPattern][DependencyResolverAspect.id],
+        { overrideExisting: true }
+      );
+    }
+    return this.dependencyResolver.persistConfig(this.path);
+  }
+
+  private async saveManyConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
+    await Promise.all(
+      Array.from(componentConfigFiles).map(async (componentConfigFile) => {
+        const componentDir = this.componentDir(componentConfigFile.componentId, { ignoreVersion: true });
+        await componentConfigFile.write(componentDir, { override: true });
+      })
+    );
+  }
+
+  private async installModules(options?: ModulesInstallOptions) {
     this.logger.console(
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
