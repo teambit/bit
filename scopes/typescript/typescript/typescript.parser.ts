@@ -28,7 +28,7 @@ export class TypeScriptParser implements Parser {
       if (isVariableStatement(statement)) {
         const child = (statement as VariableStatement).declarationList.declarations[0];
         const name = (child as any).name.text;
-        return new Export(name, staticProperties.get(name));
+        return new Export(name, undefined, staticProperties.get(name));
       }
 
       if (isFunctionDeclaration(statement)) {

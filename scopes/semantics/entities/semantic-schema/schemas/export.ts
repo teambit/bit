@@ -13,7 +13,7 @@ export class Export {
     /**
      * API node.
      */
-    readonly node: SchemaNode,
+    readonly node?: SchemaNode,
 
     /**
      * static properties attached to this export
