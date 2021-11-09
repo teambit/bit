@@ -44,7 +44,6 @@ export class FunctionDeclaration implements SchemaTransformer {
     const returnTypeStr = this.parseReturnValue(displaySig);
     const args = await this.getArgs(funcDec, context);
     const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
-    console.log(info, returnTypeStr);
 
     return new FunctionSchema(name || '', [], returnType);
   }
