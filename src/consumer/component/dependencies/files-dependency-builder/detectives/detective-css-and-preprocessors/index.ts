@@ -72,9 +72,20 @@ function extractDependencies(importStatementNode) {
       if (headData.type === 'Identifier' && headData.name) return headData.name;
       return null;
     };
-    const depName = getDepName();
+    const removeQuotes = (dep) => dep.replace(/["']/g, '');
+
+    const parseDepName = (dep?: string) => {
+      if (!dep) return undefined;
+      if (!dep.includes(':')) return removeQuotes(dep);
+      const pkgName = removeQuotes(dep.split(':')[0]);
+      if (pkgName === 'sass') return undefined; // it's a built-in module
+      return pkgName;
+    };
+    const depNameRaw = getDepName();
+    const depName = parseDepName(depNameRaw);
     if (!depName) return [];
-    return depName.replace(/["']/g, '');
+
+    return depName;
   }
 
   // simple @import
