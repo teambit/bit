@@ -206,9 +206,9 @@ export default class Component extends BitObject {
   }
 
   get versionsIncludeOrphaned(): Versions {
-    // surprisingly enough, lodash.merge is way faster then the object spread operator.
-    // for bit-bin with 266 components, it takes 60ms instead of 1,700ms with the spread operator.
-    return merge(this.versions, this.orphanedVersions);
+    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
+    // but mutates `this.versions`.
+    return { ...this.versions, ...this.orphanedVersions };
   }
 
   hasTagIncludeOrphaned(version: string): boolean {
