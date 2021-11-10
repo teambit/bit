@@ -165,6 +165,24 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the maximum number of HTTP(S) requests to process simultaneously.
    */
   networkConcurrency?: number;
+
+  /*
+   * Set the prefix to use when adding dependency to workspace.jsonc via bit install
+   * to lock version to exact version you can use empty string (default)
+   */
+  savePrefix?: string;
+
+  /*
+   * in case you want to disable this proxy set this config to false
+   *
+   */
+  installFromBitDevRegistry?: boolean;
+
+  /*
+   * map of extra arguments to pass to the configured package manager upon the installation
+   * of dependencies.
+   */
+  packageManagerArgs?: string[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -270,11 +288,11 @@ export class DependencyResolverMain {
   }
 
   getSavePrefix(): string {
-    return this.config.savePrefix;
+    return this.config.savePrefix || '';
   }
 
   getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
-    const prefix = overridePrefix || this.getSavePrefix() || '';
+    const prefix = overridePrefix || this.getSavePrefix();
     const versionWithPrefix = `${prefix}${version}`;
     if (!semver.validRange(versionWithPrefix)) {
       throw new InvalidVersionWithPrefix(versionWithPrefix);
@@ -632,10 +650,12 @@ export class DependencyResolverMain {
 
     const bitDefaultRegistry = getDefaultBitRegistry();
 
+    const installFromBitDevRegistry = this.config.installFromBitDevRegistry ?? true;
+
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
-      this.config.installFromBitDevRegistry &&
+      installFromBitDevRegistry &&
       (!registries.defaultRegistry.uri ||
         registries.defaultRegistry.uri === NPM_REGISTRY ||
         NPM_REGISTRY.startsWith(registries.defaultRegistry.uri))
