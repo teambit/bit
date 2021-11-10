@@ -62,7 +62,11 @@ export class FlattenedDependenciesGetter {
       .filter((bitId: BitId) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    this.versionDependencies = await scopeComponentsImporter.importMany(BitIds.fromArray(bitIds), true, true);
+    this.versionDependencies = await scopeComponentsImporter.importMany({
+      ids: BitIds.fromArray(bitIds),
+      cache: true,
+      throwForDependencyNotFound: true,
+    });
   }
 
   private async getFlattened(bitId: BitId): Promise<BitIds> {

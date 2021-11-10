@@ -87,7 +87,7 @@ export async function buildOneGraphForComponentsUsingScope(
   const components = await scope.getManyConsumerComponents(ids);
   const allFlattened = components.map((component) => component.getAllFlattenedDependencies()).flat();
   const scopeComponentImporter = new ScopeComponentsImporter(scope);
-  await scopeComponentImporter.importMany(BitIds.uniqFromArray(allFlattened));
+  await scopeComponentImporter.importMany({ ids: BitIds.uniqFromArray(allFlattened) });
   const dependencies = await scope.getManyConsumerComponents(allFlattened);
   const allComponents: Component[] = [...components, ...dependencies];
 

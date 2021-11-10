@@ -68,13 +68,19 @@ export default class ScopeComponentsImporter {
    * 3. b. If all flattened exists locally - exit the loop.
    * 3. c. otherwise, put it in the externalsToFetch array.
    */
-  async importMany(
-    ids: BitIds,
+  async importMany({
+    ids,
     cache = true,
     throwForDependencyNotFound = false,
     reFetchUnBuiltVersion = true,
-    lanes: Lane[] = []
-  ): Promise<VersionDependencies[]> {
+    lanes = [],
+  }: {
+    ids: BitIds;
+    cache?: boolean;
+    throwForDependencyNotFound?: boolean;
+    reFetchUnBuiltVersion?: boolean;
+    lanes?: Lane[]; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
+  }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
       `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
@@ -178,13 +184,11 @@ export default class ScopeComponentsImporter {
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    const versionDependenciesArr: VersionDependencies[] = await this.importMany(
-      idsWithoutNils,
+    const versionDependenciesArr: VersionDependencies[] = await this.importMany({
+      ids: idsWithoutNils,
       cache,
-      undefined,
-      undefined,
-      lanes
-    );
+      lanes,
+    });
 
     const allIdsWithAllVersions = new BitIds();
     versionDependenciesArr.forEach((versionDependencies) => {
@@ -201,7 +205,11 @@ export default class ScopeComponentsImporter {
       }
     });
     if (allDepsVersions) {
-      const verDepsOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache, undefined, undefined, lanes);
+      const verDepsOfOlderVersions = await this.importMany({
+        ids: allIdsWithAllVersions,
+        cache,
+        lanes,
+      });
       versionDependenciesArr.push(...verDepsOfOlderVersions);
       const allFlattenDepsIds = versionDependenciesArr.map((v) => v.allDependencies.map((d) => d.id));
       const dependenciesOnly = R.flatten(allFlattenDepsIds).filter((id: BitId) => !ids.hasWithoutVersion(id));
