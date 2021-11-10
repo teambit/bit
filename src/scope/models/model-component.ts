@@ -206,7 +206,9 @@ export default class Component extends BitObject {
   }
 
   get versionsIncludeOrphaned(): Versions {
-    return { ...this.orphanedVersions, ...this.versions };
+    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
+    // but mutates `this.versions`.
+    return { ...this.versions, ...this.orphanedVersions };
   }
 
   hasTagIncludeOrphaned(version: string): boolean {
