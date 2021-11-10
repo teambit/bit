@@ -106,7 +106,7 @@ export default class ImportComponents {
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = this.consumer.isLegacy
-      ? await this.consumer.importComponents(bitIds, true, this.options.saveDependenciesAsComponents)
+      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
       : await this.consumer.importComponentsHarmony(bitIds, true);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
@@ -282,7 +282,7 @@ export default class ImportComponents {
               this.options.fromOriginalScope,
               this.options.allHistory
             )
-          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }

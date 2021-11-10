@@ -367,7 +367,7 @@ export default class Consumer {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(
+  async importComponentsLegacy(
     ids: BitIds,
     withAllVersions: boolean,
     saveDependenciesAsComponents?: boolean
