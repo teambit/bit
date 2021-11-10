@@ -62,6 +62,11 @@ export interface PackageEnv extends Environment {
    * Used by `bit link` to augment package.json with new properties
    */
   getPackageJsonProps?: () => PackageJsonProps;
+
+  /**
+   * return `.npmignore` entries to be written before packing the component
+   */
+  getNpmIgnore?: () => string[];
 }
 
 export interface LinterEnv extends Environment {

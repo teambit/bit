@@ -1,12 +1,8 @@
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-import { TsConfigTransformer } from '@teambit/typescript';
-import { BabelMain } from '@teambit/babel';
-import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { Compiler } from '@teambit/compiler';
+import { DependenciesEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
-import { babelConfig } from './babel/babel-config';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -15,8 +11,8 @@ export const AspectEnvType = 'aspect';
 /**
  * a component environment built for [Aspects](https://reactjs.org) .
  */
-export class AspectEnv implements Environment {
-  constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
+export class AspectEnv implements DependenciesEnv {
+  constructor(private reactEnv: ReactEnv) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -29,10 +25,6 @@ export class AspectEnv implements Environment {
   getTsConfig(tsConfig: TsConfigSourceFile) {
     const targetConf = merge(tsconfig, tsConfig);
     return targetConf;
-  }
-
-  getCompiler() {
-    return this.babel.createCompiler({ babelTransformOptions: babelConfig });
   }
 
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
@@ -65,30 +57,5 @@ export class AspectEnv implements Environment {
         'react-dom': '^16.8.0 || ^17.0.0',
       },
     };
-  }
-
-  // TODO: move this to be in the aspect.main.runtime and use the react.overrideBuildPipe API.
-  // TODO: see example in e2e/fixtures/extensions/multiple-compilers-env/multiple-compilers-env.extension.ts
-  // TODO: or maybe even use the - react.overrideCompilerTasks
-  getBuildPipe() {
-    const transformer: TsConfigTransformer = (config: TypescriptConfigMutator) => {
-      config
-        .mergeTsConfig(tsconfig)
-        .setArtifactName('declaration')
-        .setDistGlobPatterns([`dist/**/*.d.ts`])
-        .setShouldCopyNonSupportedFiles(false);
-      return config;
-    };
-    const tsCompiler = this.reactEnv.getCompiler([transformer]);
-
-    const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
-
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
-
-    return [
-      this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
-      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
-      ...pipeWithoutCompiler,
-    ];
   }
 }
