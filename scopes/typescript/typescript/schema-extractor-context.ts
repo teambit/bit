@@ -81,15 +81,15 @@ export class SchemaExtractorContext {
    */
   private getSourceFile(filePath: string) {
     const file = this.findFileInComponent(filePath);
-    if (!file) return;
+    if (!file) return undefined;
     return this.extractor.parseSourceFile(file);
   }
 
-  async definition(node: Node) {
+  async definition(node: Node): Promise<Node | undefined> {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
     const firstDef = head(def.body);
-    if (!firstDef) return;
+    if (!firstDef) return undefined;
 
     const startPosition = firstDef.start;
     const sourceFile = this.getSourceFile(firstDef.file);
@@ -101,7 +101,7 @@ export class SchemaExtractorContext {
 
   async visitDefinition(node: Node): Promise<SchemaNode | undefined> {
     const definition = await this.definition(node);
-    if (!definition) return;
+    if (!definition) return undefined;
     return this.visit(definition.parent);
   }
 
