@@ -1117,7 +1117,6 @@ describe('bit lane command', function () {
         expect(bar2.scope).to.equal(anotherRemote);
       });
     });
-    // todo: fix.
     describe('when artifacts from older versions are missing locally', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
@@ -1134,7 +1133,16 @@ describe('bit lane command', function () {
         expect(() => helper.command.export()).to.not.throw();
       });
     });
-    // todo: fix.
-    describe('importing the lane', () => {});
+    // todo: fix. now it's throwing an error.
+    describe('importing the lane', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.switchRemoteLane('dev');
+      });
+      it('should not throw an error', () => {});
+    });
   });
 });

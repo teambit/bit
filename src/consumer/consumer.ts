@@ -400,6 +400,17 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
+  async importComponentsHarmony(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const versionDependenciesArr: VersionDependencies[] = withAllVersions
+      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
+      : await scopeComponentsImporter.importMany(ids);
+    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
+      versionDependencies.toConsumer(this.scope.objects)
+    );
+    return componentWithDependencies;
+  }
+
   async importComponentsObjectsHarmony(
     ids: BitIds,
     fromOriginalScope = false,

@@ -105,11 +105,9 @@ export default class ImportComponents {
     const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(
-      bitIds,
-      true,
-      this.options.saveDependenciesAsComponents
-    );
+    const componentsWithDependencies = this.consumer.isLegacy
+      ? await this.consumer.importComponents(bitIds, true, this.options.saveDependenciesAsComponents)
+      : await this.consumer.importComponentsHarmony(bitIds, true);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
