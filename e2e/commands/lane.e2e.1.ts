@@ -1128,21 +1128,23 @@ describe('bit lane command', function () {
         const hashPath = helper.general.getHashPathOfObject(artifactFileHash);
         helper.fs.deleteObject(hashPath);
       });
-      // currently, throwing an error "unable to find an artifact object file".
+      // previously, throwing an error "unable to find an artifact object file".
       it('should not throw an error', () => {
         expect(() => helper.command.export()).to.not.throw();
       });
     });
-    // todo: fix. now it's throwing an error.
     describe('importing the lane', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.switchRemoteLane('dev');
       });
-      it('should not throw an error', () => {});
+      // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
+      it('should not throw an error', () => {
+        expect(() => helper.command.switchRemoteLane('dev')).to.not.throw();
+      });
     });
   });
 });

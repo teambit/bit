@@ -400,11 +400,15 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
-  async importComponentsHarmony(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+  async importComponentsHarmony(
+    ids: BitIds,
+    withAllVersions: boolean,
+    lanes: Lane[] = []
+  ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
-      : await scopeComponentsImporter.importMany(ids);
+      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false, undefined, lanes)
+      : await scopeComponentsImporter.importMany(ids, undefined, undefined, undefined, lanes);
     const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
       versionDependencies.toConsumer(this.scope.objects)
     );
