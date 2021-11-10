@@ -889,7 +889,8 @@ export default class Consumer {
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
     const configP = WorkspaceConfig.reset(projectPath, resetHard);
-    await Promise.all([scopeP, configP]);
+    const packageJsonP = PackageJsonFile.reset(projectPath);
+    await Promise.all([scopeP, configP, packageJsonP]);
   }
 
   async resetNew() {
