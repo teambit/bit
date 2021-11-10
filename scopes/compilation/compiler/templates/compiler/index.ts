@@ -7,7 +7,7 @@ import { compilerFile } from './files/compiler-file';
 export const compilerTemplate: ComponentTemplate = {
   name: 'compiler',
   description: 'A compiler implementation',
-  hidden: false,
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {
