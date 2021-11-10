@@ -6,7 +6,7 @@ import {
   WorkspacePolicyConfigEntryValue,
   WorkspacePolicyEntryValue,
 } from './workspace-policy';
-import { LIFECYCLE_TYPE_BY_KEY_NAME, DependencyLifecycleType } from '../../dependencies';
+import { LIFECYCLE_TYPE_BY_KEY_NAME, WorkspaceDependencyLifecycleType } from '../../dependencies';
 
 export class WorkspacePolicyFactory {
   fromConfigObject(configObject: WorkspacePolicyConfigObject): WorkspacePolicy {
@@ -51,7 +51,7 @@ function entriesFromKey(
 function createEntry(
   depId: string,
   value: WorkspacePolicyConfigEntryValue,
-  lifecycleType: DependencyLifecycleType
+  lifecycleType: WorkspaceDependencyLifecycleType
 ): WorkspacePolicyEntry {
   const version = typeof value === 'string' ? value : value.version;
   const preserve = typeof value === 'string' ? false : value.preserve;
