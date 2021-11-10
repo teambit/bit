@@ -448,13 +448,15 @@ export class DependencyResolverMain {
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     // filter @teambit/harmony and @teambit/legacy as we will link them later from the global bit installation
     // TODO: filter all core aspects
-    const rootPolicyWithoutGlobalLinked = rootPolicy.filter(
-      (dep) => dep.dependencyId !== '@teambit/harmony' && dep.dependencyId !== '@teambit/legacy'
-    );
+    // TODO: we should filter it here, but at the moment it break bit's repo itself, we need to not apply this on
+    // bit repo. for now disabling this filter
+    // const rootPolicyWithoutGlobalLinked = rootPolicy.filter(
+    //   (dep) => dep.dependencyId !== '@teambit/harmony' && dep.dependencyId !== '@teambit/legacy'
+    // );
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
-      rootPolicyWithoutGlobalLinked,
+      rootPolicy,
       rootDir,
       components,
       concreteOpts
