@@ -1,13 +1,15 @@
 export const componentMetaField = '__bit_component';
 
-export const fieldComponentId = 'id';
-export const fieldHomepageUrl = 'homepage';
-export const fieldIsExported = 'exported';
+export const componentMetaProperties = {
+  componentId: 'id',
+  homepageUrl: 'homepage',
+  isExported: 'exported',
+} as const;
 
 export type ComponentMeta = {
-  [fieldComponentId]: string;
-  [fieldHomepageUrl]?: string;
-  [fieldIsExported]?: boolean;
+  [componentMetaProperties.componentId]: string;
+  [componentMetaProperties.homepageUrl]?: string;
+  [componentMetaProperties.isExported]?: boolean;
 };
 
 export interface ComponentMetaHolder {
