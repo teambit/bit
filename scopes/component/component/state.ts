@@ -39,8 +39,8 @@ export class State {
    * get the main file of the component.
    */
   get mainFile() {
-    const file = this.filesystem.files.find((file) => {
-      return file.relative === this._consumer.mainFile;
+    const file = this.filesystem.files.find((componentFile) => {
+      return componentFile.relative === this._consumer.mainFile;
     });
 
     if (!file) throw new MainFileNotFound(ComponentID.fromLegacy(this._consumer.id), this._consumer.mainFile);

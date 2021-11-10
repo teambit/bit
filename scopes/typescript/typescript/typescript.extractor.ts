@@ -5,8 +5,7 @@ import { SchemaNode, SemanticSchema } from '@teambit/semantics.entities.semantic
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
-import { TypescriptMain } from './typescript.main.runtime';
-import { SchemaTransformerSlot } from './typescript.main.runtime';
+import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { ExportList } from './export-list';
@@ -73,7 +72,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode | undefined> {
     const transformer = this.getTransformer(node, context.component);
-    if (!transformer) return;
+    if (!transformer) return undefined;
     return transformer.transform(node, context);
   }
 
@@ -82,7 +81,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
    */
   private getTransformer(node: Node, component: Component) {
     const transformers = flatten(this.schemaTransformerSlot.values());
-    const transformer = transformers.find((transformer) => transformer.predicate(node));
+    const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
 
     if (!transformer) throw new TransformerNotFound(node, component);
 

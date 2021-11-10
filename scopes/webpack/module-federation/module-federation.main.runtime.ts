@@ -2,8 +2,8 @@ import { BuilderAspect } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import { WebpackAspect } from '@teambit/webpack';
 import ScopeAspect from '@teambit/scope';
-import { ModuleFederationAspect } from './module-federation.aspect';
 import { ExpressAspect } from '@teambit/express';
+import { ModuleFederationAspect } from './module-federation.aspect';
 
 export class ModuleFederationMain {
   createMFBuildTask() {}
