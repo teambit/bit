@@ -304,7 +304,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
     const processModelComponent = async (modelComponent: ModelComponent) => {
-      const versionToExport = await getVersionsToExport(modelComponent);
+      const versionToExport = await getVersionsToExport(modelComponent, lane);
       modelComponent.clearStateData();
       const objectItems = await modelComponent.collectVersionsObjects(
         scope.objects,
@@ -338,7 +338,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     await mapSeries(modelComponents, processModelComponent);
     if (lane) {
       lane.components.forEach((c) => {
-        c.id = c.id.changeScope(remoteName);
+        c.id = c.id.hasScope() ? c.id : c.id.changeScope(remoteName);
       });
       const laneData = { ref: lane.hash(), buffer: await lane.compress() };
       objectList.addIfNotExist([laneData]);
@@ -347,8 +347,11 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
-  async function getVersionsToExport(modelComponent: ModelComponent): Promise<string[]> {
-    if (!allVersions) return modelComponent.getLocalTagsOrHashes();
+  async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
+    if (!allVersions && !lane) {
+      // if lane is exported, components from other remotes may be exported to this remote. we need their history.
+      return modelComponent.getLocalTagsOrHashes();
+    }
     const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
     return modelComponent.switchHashesWithTagsIfExist(allHashes);
   }
@@ -519,7 +522,9 @@ export async function mergeObjects(
     'export-scope-components.mergeObjects',
     `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
   );
-  const { mergeResults, errors } = await scope.sources.mergeComponents(components, versions);
+  const { mergeResults, errors } = lanesObjects.length
+    ? { mergeResults: [], errors: [] } // for lanes, no need to merge component objects, the lane is merged later.
+    : await scope.sources.mergeComponents(components, versions);
 
   // add all objects to the cache, it is needed for lanes later on. also it might be
   // good regardless to update the cache with the new data.
@@ -823,7 +828,8 @@ async function convertToCorrectScopeHarmony(
   componentsObjects: ModelComponentAndObjects,
   remoteScope: string,
   exportingIds: BitIds,
-  idsWithFutureScope: BitIds
+  idsWithFutureScope: BitIds,
+  shouldFork = false // not in used currently, but might be needed soon
 ): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versionsObjects: Version[] = componentsObjects.objects.filter((object) => object instanceof Version);
@@ -838,8 +844,13 @@ async function convertToCorrectScopeHarmony(
       return didDependencyChange;
     })
   );
-  const hasComponentChanged = remoteScope !== componentsObjects.component.scope;
-  componentsObjects.component.scope = remoteScope;
+  const shouldChangeScope = shouldFork
+    ? remoteScope !== componentsObjects.component.scope
+    : !componentsObjects.component.scope;
+  const hasComponentChanged = shouldChangeScope;
+  if (shouldChangeScope) {
+    componentsObjects.component.scope = remoteScope;
+  }
 
   // return true if one of the versions has changed or the component itself
   return haveVersionsChanged.some((x) => x) || hasComponentChanged;
@@ -880,6 +891,7 @@ async function convertToCorrectScopeHarmony(
     if (dependencyId.scope === remoteScope) {
       return dependencyId; // nothing has changed
     }
+    // either, dependencyId is new, or this dependency is among the components to export (in case of fork)
     if (!dependencyId.scope || exportingIds.hasWithoutVersion(dependencyId)) {
       const depId = ModelComponent.fromBitId(dependencyId);
       // todo: use 'load' for async and switch the foreach with map.

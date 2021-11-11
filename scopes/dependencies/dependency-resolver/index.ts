@@ -26,6 +26,7 @@ export {
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
   DependencyLifecycleType,
+  WorkspaceDependencyLifecycleType,
   DependencyList,
   DependencyFactory,
   SerializedDependency,

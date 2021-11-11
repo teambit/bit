@@ -23,6 +23,9 @@ export default async function provideConfig() {
   const consumerInfo = await getConsumerInfo(process.cwd());
   const config: Config = await tryToGetConfig(consumerInfo?.path || process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
+  LegacyWorkspaceConfig.registerOnWorkspaceConfigReset((dirPath, resetHard) =>
+    WorkspaceConfig.reset(dirPath, resetHard)
+  );
   return config;
 }
 

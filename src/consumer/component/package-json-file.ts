@@ -75,6 +75,14 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
   }
 
+  static async reset(workspaceDir: PathOsBasedAbsolute) {
+    const pkgJsonFile = await PackageJsonFile.load(workspaceDir);
+    if (pkgJsonFile.fileExist) {
+      pkgJsonFile.removeProperty('bit');
+      await pkgJsonFile.write();
+    }
+  }
+
   static loadSync(workspaceDir: PathOsBasedAbsolute, componentDir: PathRelative = '.'): PackageJsonFile {
     const filePath = composePath(componentDir);
     const filePathAbsolute = path.join(workspaceDir, filePath);
@@ -207,6 +215,10 @@ export default class PackageJsonFile {
 
   addOrUpdateProperty(propertyName: string, propertyValue: any): void {
     this.packageJsonObject[propertyName] = propertyValue;
+  }
+
+  removeProperty(propertyName: string) {
+    delete this.packageJsonObject[propertyName];
   }
 
   getProperty(propertyName: string): any {
