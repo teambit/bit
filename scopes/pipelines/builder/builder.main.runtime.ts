@@ -19,7 +19,7 @@ import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
-import { StorageResolver } from './storage';
+import { ArtifactsStorageResolver } from './storage';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -29,7 +29,7 @@ import { ArtifactsCmd } from './artifact/artifacts.cmd';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
-export type StorageResolverSlot = SlotRegistry<StorageResolver>;
+export type ArtifactsStorageResolverSlot = SlotRegistry<ArtifactsStorageResolver>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
@@ -50,7 +50,7 @@ export class BuilderMain {
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
     private snapTaskSlot: TaskSlot,
-    private storageResolversSlot: StorageResolverSlot
+    private storageResolversSlot: ArtifactsStorageResolverSlot
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -113,7 +113,7 @@ export class BuilderMain {
   /**
    * register a new storage resolver.
    */
-  registerStorageResolver(storageResolver: StorageResolver) {
+  registerArtifactsStorageResolver(storageResolver: ArtifactsStorageResolver) {
     this.storageResolversSlot.register(storageResolver);
     return this;
   }
@@ -121,7 +121,7 @@ export class BuilderMain {
   /**
    * get storage resolver by name. otherwise, returns default.
    */
-  getStorageResolver(name: string): StorageResolver | undefined {
+  getArtifactsStorageResolver(name: string): ArtifactsStorageResolver | undefined {
     return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
@@ -257,7 +257,7 @@ export class BuilderMain {
 
   static slots = [
     Slot.withType<BuildTask>(),
-    Slot.withType<StorageResolver>(),
+    Slot.withType<ArtifactsStorageResolver>(),
     Slot.withType<BuildTask>(),
     Slot.withType<BuildTask>(),
   ];
@@ -289,7 +289,7 @@ export class BuilderMain {
     config,
     [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
       TaskSlot,
-      StorageResolverSlot,
+      ArtifactsStorageResolverSlot,
       TaskSlot,
       TaskSlot
     ]
