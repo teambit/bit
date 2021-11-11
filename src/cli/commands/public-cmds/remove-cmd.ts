@@ -7,7 +7,7 @@ import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import paintRemoved from '../../templates/remove-template';
+import { removeTemplate } from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
@@ -65,9 +65,9 @@ export default class Remove implements LegacyCommand {
     remoteResult: RemovedObjects[];
   }): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return paintRemoved(localResult, false) + this.paintArray(remoteResult);
+    return removeTemplate(localResult, false) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
-    return removedObjectsArray.map((item) => paintRemoved(item, true));
+    return removedObjectsArray.map((item) => removeTemplate(item, true));
   }
 }

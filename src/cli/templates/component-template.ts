@@ -144,6 +144,7 @@ export default function paintComponent(
       'files',
       'specs',
       'deprecated',
+      'archived',
     ];
     if (detailed) {
       const extraFields = [

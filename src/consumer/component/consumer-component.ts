@@ -102,6 +102,7 @@ export type ComponentProps = {
   specsResults?: SpecsResults;
   license?: License;
   deprecated?: boolean;
+  archived?: boolean;
   origin: ComponentOrigin;
   log?: Log;
   schema?: string;
@@ -167,6 +168,7 @@ export default class Component {
   isolatedEnvironment: IsolatedEnvironment;
   issues: IssuesList;
   deprecated: boolean;
+  archived: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;
   customResolvedPaths: CustomResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
@@ -224,6 +226,7 @@ export default class Component {
     license,
     log,
     deprecated,
+    archived,
     origin,
     customResolvedPaths,
     scopesList,
@@ -259,6 +262,7 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.archived = archived || false;
     this.origin = origin;
     this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
@@ -838,6 +842,7 @@ export default class Component {
       license: this.license ? this.license.serialize() : null,
       log: this.log,
       deprecated: this.deprecated,
+      archived: this.archived,
     };
   }
 
@@ -907,55 +912,32 @@ export default class Component {
     this.setDevDependencies(componentFromModel.devDependencies.get());
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromObject(object: Record<string, any>): Component {
+  static async fromObject(object: Record<string, any>): Promise<Component> {
     const {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       box,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       peerPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compilerPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       testerPackageDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dists,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       specsResults,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       license,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       deprecated,
+      archived,
       schema,
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
@@ -990,6 +972,7 @@ export default class Component {
       license: license ? License.deserialize(license) : undefined,
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false,
+      archived: archived || false,
       schema,
     });
   }
@@ -1029,6 +1012,7 @@ export default class Component {
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
+    const archived = componentFromModel ? componentFromModel.archived : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
@@ -1152,6 +1136,7 @@ export default class Component {
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,
+      archived,
       origin: componentMap.origin,
       overrides,
       schema: getSchema(),

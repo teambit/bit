@@ -6,6 +6,7 @@ import RemovedObjects from './removed-components';
 describe('RemovedComponents', () => {
   const payload = {
     removedComponentIds: [],
+    archivedComponentIds: [],
     missingComponents: [],
     removedDependencies: [],
     dependentBits: {},

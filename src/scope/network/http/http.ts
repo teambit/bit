@@ -349,6 +349,7 @@ export class Http implements Network {
           _legacyList(namespaces: $namespaces) {
             id
             deprecated
+            archived
           }
         }
       }

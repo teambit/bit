@@ -25,6 +25,7 @@ export type ListScopeResult = {
   currentlyUsedVersion?: string | null | undefined;
   remoteVersion?: string;
   deprecated?: boolean;
+  archived?: boolean;
 };
 
 export type DivergedComponent = { id: BitId; diverge: DivergeData };
@@ -441,6 +442,7 @@ export default class ComponentsList {
       return {
         id: component ? component.toBitIdWithLatestVersion() : id,
         deprecated: component ? component.deprecated : false,
+        archived: component ? component.archived : false,
       };
     });
     const componentsIds = listAllResults.map((result) => result.id);
@@ -487,6 +489,7 @@ export default class ComponentsList {
     return componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated,
+      archived: component.archived,
     }));
   }
 

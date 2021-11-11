@@ -23,6 +23,7 @@ export default async function remove(
   const res = await scope.removeMany(bitIds, force);
   const hookArgs = {
     removedComponentsIds: res.removedComponentIds.serialize(),
+    archivedComponentIds: res.archivedComponentIds.serialize(),
     missingComponentsIds: res.missingComponents.serialize(),
     dependentBitsIds: res.dependentBits,
     force,

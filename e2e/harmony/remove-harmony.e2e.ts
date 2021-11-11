@@ -49,4 +49,38 @@ describe('remove components on Harmony', function () {
       expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
     });
   });
+  describe('remove a component that has dependents', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    describe('without force', () => {
+      let output: string;
+      it('should not allow removing', () => {
+        output = helper.command.removeComponent('comp3');
+        expect(output).to.have.string('unable to delete');
+      });
+    });
+    describe('with force', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.removeComponent('comp3', '--force');
+      });
+      it('should indicate in the output that the component was archived', () => {
+        expect(output).to.have.string('successfully archived');
+      });
+      it('bit list should show it as archived', () => {
+        const list = helper.command.listLocalScopeParsed();
+        const comp3 = list.find((l) => l.id === `${helper.scopes.remote}/comp3`);
+        expect(comp3?.archived).to.be.true;
+      });
+      it('should delete it from the .bitmap file', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.not.have.property('comp3');
+      });
+    });
+  });
 });

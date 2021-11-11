@@ -50,6 +50,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     extensions,
     mainFile,
     deprecated,
+    archived,
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
@@ -100,6 +101,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
       : null;
   obj.extensions = parseExtensions(extensions);
   obj.deprecated = deprecated ? 'True' : null;
+  obj.archived = archived ? 'True' : null;
   obj.overridesDependencies = parsePackages(overrides.dependencies);
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);

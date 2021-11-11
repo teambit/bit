@@ -2,11 +2,19 @@ import chalk from 'chalk';
 import R from 'ramda';
 
 import { BitId } from '../../bit-id';
+import RemovedLocalObjects from '../../scope/removed-local-objects';
 
-export default (
-  { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
+export function removeTemplate(
+  {
+    dependentBits,
+    modifiedComponents,
+    removedComponentIds,
+    archivedComponentIds,
+    missingComponents,
+    removedFromLane,
+  }: RemovedLocalObjects,
   isRemote
-) => {
+) {
   const paintMissingComponents = () => {
     if (R.isEmpty(missingComponents)) return '';
     return (
@@ -33,6 +41,22 @@ export default (
     );
   };
 
+  const paintArchived = () => {
+    if (R.isEmpty(archivedComponentIds)) return '';
+    const removedFrom = removedFromLane ? 'lane' : 'scope';
+    const msg = isRemote
+      ? `successfully archived components from the remote ${removedFrom}:`
+      : `successfully archived components from the local ${removedFrom} (to remove/archive from the remote ${removedFrom}, please re-run the command with --remote flag):`;
+    return (
+      chalk.green(msg) +
+      chalk(
+        ` ${archivedComponentIds.map((id) =>
+          id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()
+        )}\n`
+      )
+    );
+  };
+
   const paintUnRemovedComponents = () => {
     if (R.isEmpty(dependentBits)) return '';
     return Object.keys(dependentBits)
@@ -47,7 +71,7 @@ export default (
   };
 
   const paintModifiedComponents = () => {
-    if (R.isEmpty(modifiedComponents)) return '';
+    if (!modifiedComponents || R.isEmpty(modifiedComponents)) return '';
     const modifiedStr = modifiedComponents.map((id: BitId) =>
       id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()
     );
@@ -58,13 +82,6 @@ export default (
   };
 
   return (
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    paintUnRemovedComponents(dependentBits) +
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    paintRemoved(removedComponentIds) +
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    paintMissingComponents(missingComponents) +
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    paintModifiedComponents(modifiedComponents)
+    paintUnRemovedComponents() + paintRemoved() + paintArchived() + paintMissingComponents() + paintModifiedComponents()
   );
-};
+}

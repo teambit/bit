@@ -3,6 +3,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 
 export type RemovedObjectSerialized = {
   removedComponentIds: BitIdStr[];
+  archivedComponentIds: BitIdStr[];
   missingComponents: BitIdStr[];
   removedDependencies: BitIdStr[];
   dependentBits: Record<string, any>;
@@ -12,6 +13,7 @@ export type RemovedObjectSerialized = {
 
 export default class RemovedObjects {
   removedComponentIds: BitIds;
+  archivedComponentIds: BitIds;
   missingComponents: BitIds;
   removedDependencies: BitIds;
   dependentBits: Record<string, any>;
@@ -19,6 +21,7 @@ export default class RemovedObjects {
   removedLanes: string[];
   constructor({
     removedComponentIds,
+    archivedComponentIds,
     missingComponents,
     removedDependencies,
     dependentBits,
@@ -26,6 +29,7 @@ export default class RemovedObjects {
     removedLanes,
   }: {
     removedComponentIds?: BitIds;
+    archivedComponentIds?: BitIds;
     missingComponents?: BitIds;
     removedDependencies?: BitIds;
     dependentBits?: Record<string, any>;
@@ -33,6 +37,7 @@ export default class RemovedObjects {
     removedLanes?: string[];
   }) {
     this.removedComponentIds = removedComponentIds || new BitIds();
+    this.archivedComponentIds = archivedComponentIds || new BitIds();
     this.missingComponents = missingComponents || new BitIds();
     this.removedDependencies = removedDependencies || new BitIds();
     this.dependentBits = dependentBits || {};
@@ -43,6 +48,7 @@ export default class RemovedObjects {
   serialize(): RemovedObjectSerialized {
     return {
       removedComponentIds: this.removedComponentIds.serialize(),
+      archivedComponentIds: this.archivedComponentIds.serialize(),
       missingComponents: this.missingComponents.serialize(),
       removedDependencies: this.removedDependencies.serialize(),
       dependentBits: this.dependentBits,
@@ -53,6 +59,7 @@ export default class RemovedObjects {
 
   static fromObjects(payload: {
     removedComponentIds: string[];
+    archivedComponentIds: string[];
     missingComponents: string[];
     removedDependencies: string[];
     dependentBits: { [key: string]: Record<string, any>[] };
@@ -61,6 +68,7 @@ export default class RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
     const missingComponents = new BitIds(...payload.missingComponents.map((id) => BitId.parse(id, true)));
     const removedComponentIds = new BitIds(...payload.removedComponentIds.map((id) => BitId.parse(id, true)));
+    const archivedComponentIds = new BitIds(...payload.archivedComponentIds.map((id) => BitId.parse(id, true)));
     const removedDependencies = new BitIds(...payload.removedDependencies.map((id) => BitId.parse(id, true)));
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -70,6 +78,7 @@ export default class RemovedObjects {
     return new RemovedObjects({
       missingComponents,
       removedComponentIds,
+      archivedComponentIds,
       removedDependencies,
       dependentBits,
       removedLanes: payload.removedLanes,

@@ -96,6 +96,9 @@ export default class BitIds extends Array<BitId> {
   removeMultipleIfExistWithoutVersion(bitIds: BitIds): BitIds {
     return BitIds.fromArray(this.filter((id) => !bitIds.hasWithoutVersion(id)));
   }
+  removeMultipleIfExist(bitIds: BitIds): BitIds {
+    return BitIds.fromArray(this.filter((id) => !bitIds.has(id)));
+  }
 
   /**
    * make sure to pass only bit ids you know they have scope, otherwise, you'll get invalid bit ids.

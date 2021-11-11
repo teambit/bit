@@ -39,22 +39,32 @@ export default class RemoveModelComponents {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
-      const removalData = await mapSeries(foundComponents, (bitId) => this.getRemoveSingleData(bitId));
-      const compIds = new BitIds(...removalData.map((x) => x.compId));
-      const depsIds = new BitIds(...removalData.map((x) => x.depIds).flat());
-      const allIds = [...compIds, ...depsIds];
-      const refsToRemoveAll = removalData.map((removed) => removed.refsToRemove).flat();
+      const removalData = await mapSeries(foundComponents, (bitId) => {
+        const hasDependents = Boolean(dependentBits[bitId.toString()]);
+        return this.getRemoveSingleData(bitId, hasDependents);
+      });
+      const removalDataNoArchived = removalData.filter((r) => !r.hasDependents);
+      const removedComponentIds = new BitIds(...removalDataNoArchived.map((x) => x.compId));
+      const removedDependencies = new BitIds(...removalDataNoArchived.map((x) => x.depIds).flat());
+      const allRemovedIds = [...removedComponentIds, ...removedDependencies];
+      const refsToRemoveAll = removalDataNoArchived.map((removed) => removed.refsToRemove).flat();
       if (this.currentLane) {
         await this.scope.objects.writeObjectsToTheFS([this.currentLane]);
       }
       await this.scope.objects.deleteObjectsFromFS(refsToRemoveAll);
-      await this.scope.objects.deleteRecordsFromUnmergedComponents(allIds.map((id) => id.name));
+      await this.scope.objects.deleteRecordsFromUnmergedComponents(allRemovedIds.map((id) => id.name));
+
+      const removalDataArchived = removalData.filter((r) => r.hasDependents);
+      const modelComponentsToArchive = removalDataArchived.map((r) => r.modelComponent);
+      await this.archiveComponentsThatHaveDependents(modelComponentsToArchive);
+      const archivedComponentIds = BitIds.fromArray(removalDataArchived.map((r) => r.compId));
 
       const removedFromLane = Boolean(this.currentLane && foundComponents.length);
       return new RemovedObjects({
-        removedComponentIds: compIds,
+        removedComponentIds,
+        archivedComponentIds,
         missingComponents,
-        removedDependencies: depsIds,
+        removedDependencies,
         removedFromLane,
       });
     }
@@ -62,12 +72,27 @@ export default class RemoveModelComponents {
     return new RemovedObjects({ missingComponents, dependentBits });
   }
 
+  private async archiveComponentsThatHaveDependents(modelComponentsToArchive: ModelComponent[]) {
+    modelComponentsToArchive.map((m) => m.markAsArchived());
+    await this.scope.objects.writeObjectsToTheFS(modelComponentsToArchive);
+    this.scope.objects.clearCache();
+  }
+
   /**
    * removeSingle - remove single component
    * @param {BitId} bitId - list of remote component ids to delete
    * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
-  async getRemoveSingleData(bitId: BitId): Promise<{ compId: BitId; depIds: BitIds; refsToRemove: Ref[] }> {
+  async getRemoveSingleData(
+    bitId: BitId,
+    hasDependents: boolean
+  ): Promise<{
+    compId: BitId;
+    depIds: BitIds;
+    refsToRemove: Ref[];
+    modelComponent: ModelComponent;
+    hasDependents: boolean;
+  }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
@@ -94,6 +119,8 @@ export default class RemoveModelComponents {
       compId: bitId.changeVersion(version),
       depIds,
       refsToRemove: [...componentsRefs, ...depsRefs],
+      modelComponent: component.component,
+      hasDependents,
     };
   }
 

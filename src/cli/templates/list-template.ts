@@ -16,8 +16,10 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
+    const deprecatedStr = listScopeResult.deprecated ? ' [Deprecated]' : '';
+    const archivedStr = listScopeResult.archived ? ' [archived]' : '';
     const data: Row = {
-      id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
+      id: c.white(`${id}${deprecatedStr}${archivedStr}`),
       localVersion: version,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
     };
@@ -42,6 +44,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       id,
       localVersion: version || '<new>',
       deprecated: listScopeResult.deprecated,
+      archived: listScopeResult.archived,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
     };

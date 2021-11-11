@@ -74,6 +74,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   head?: Ref;
   schema?: string | undefined;
+  archived?: boolean;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -108,6 +109,7 @@ export default class Component extends BitObject {
   laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   schema: string | undefined;
+  archived?: boolean;
   private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
@@ -125,6 +127,7 @@ export default class Component extends BitObject {
     this.scopesList = props.scopesList || [];
     this.head = props.head;
     this.schema = props.schema;
+    this.archived = props.archived;
   }
 
   get versionArray(): Ref[] {
@@ -134,6 +137,11 @@ export default class Component extends BitObject {
   setVersion(tag: string, ref: Ref) {
     this.versions[tag] = ref;
     delete this.orphanedVersions[tag]; // just in case it's there.
+  }
+
+  markAsArchived() {
+    this.deprecated = false; // just in case it was deprecated before
+    this.archived = true;
   }
 
   setOrphanedVersion(tag: string, ref: Ref) {
@@ -570,6 +578,7 @@ export default class Component extends BitObject {
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
       schema: this.schema,
+      archived: this.archived,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -779,6 +788,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
+      archived: this.archived,
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
@@ -920,6 +930,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
       schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
+      archived: rawComponent.archived,
     });
   }
 
