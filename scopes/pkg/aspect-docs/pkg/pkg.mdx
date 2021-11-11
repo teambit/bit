@@ -109,6 +109,22 @@ For example:
   }
 ```
 
+#### .npmignore
+
+Add records to the .npmignore file before a package is published or pack.
+For example, if you don't want the source files to be part of the package, you can add them to the .npmignore.
+
+The API to add records to this file is exposed in the environment: `getNpmIgnore()`.
+
+For example, the following was added to the Aspect env.
+
+```js
+getNpmIgnore() {
+  // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+  return ['/*.ts']
+}
+```
+
 ### CLI Reference
 
 #### Pack
