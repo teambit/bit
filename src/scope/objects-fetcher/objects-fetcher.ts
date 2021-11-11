@@ -15,9 +15,10 @@ import { ObjectItemsStream } from '../objects/object-list';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteComponentsQueue } from './write-components-queue';
 import { WriteObjectsQueue } from './write-objects-queue';
-import { groupByScopeName } from '../component-ops/scope-components-importer';
+import { groupByLanes, groupByScopeName } from '../component-ops/scope-components-importer';
 import { concurrentFetchLimit } from '../../utils/concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
+import { Lane } from '../models';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -38,6 +39,7 @@ export class ObjectFetcher {
     private remotes: Remotes,
     private fetchOptions: Partial<FETCH_OPTIONS>,
     private ids: BitId[],
+    private lanes: Lane[] = [],
     private context = {}
   ) {}
 
@@ -46,17 +48,18 @@ export class ObjectFetcher {
       type: 'component',
       withoutDependencies: true,
       includeArtifacts: false,
+      allowExternal: Boolean(this.lanes.length),
       ...this.fetchOptions,
     };
-    const idsGroupedByScope = groupByScopeName(this.ids);
+    const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
     logger.debug('[-] Running fetch on remotes, with the following options', this.fetchOptions);
     const objectsQueue = new WriteObjectsQueue();
     const componentsQueue = new WriteComponentsQueue();
     this.showProgress(objectsQueue, componentsQueue);
     await pMap(
-      Object.keys(idsGroupedByScope),
+      Object.keys(idsGrouped),
       async (scopeName) => {
-        const readableStream = await this.fetchFromSingleRemote(scopeName, idsGroupedByScope[scopeName]);
+        const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);
         if (!readableStream) return;
         await this.writeFromSingleRemote(readableStream, scopeName, objectsQueue, componentsQueue);
       },
