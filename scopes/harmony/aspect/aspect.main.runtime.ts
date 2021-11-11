@@ -71,7 +71,14 @@ export class AspectMain {
     ]);
 
     const pkgJsonOverride = react.overridePackageJsonProps({
-      files: [babelCompiler.distDir, `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`, 'README.md', 'README.mdx'],
+      files: [
+        babelCompiler.distDir,
+        `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`,
+        'README.md',
+        'README.mdx',
+        '*.js',
+        '*.json',
+      ],
     });
 
     const aspectEnv = react.compose(
