@@ -344,7 +344,7 @@ export default class Component extends BitObject {
     // either a user is on main or a lane, check whether the remote is ahead of the local
     await this.setDivergeData(repo, false);
     const divergeData = this.getDivergeData();
-    return divergeData.isLocalAhead() ? latestLocally : remoteHead.toString();
+    return divergeData.isRemoteAhead() ? remoteHead.toString() : latestLocally;
   }
 
   latestVersion(): string {
