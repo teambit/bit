@@ -16,11 +16,12 @@ export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.
   tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies.
   checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
+  printTypeErrors?: boolean; // whether print typescript errors to the console.
 };
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
-  private lastDiagnostics: protocol.DiagnosticEventBody[] = [];
+  public lastDiagnostics: protocol.DiagnosticEventBody[] = [];
   constructor(
     /**
      * absolute root path of the project.
@@ -250,7 +251,7 @@ export class TsserverClient {
   }
 
   private publishDiagnostic(message: protocol.DiagnosticEvent) {
-    if (!message.body?.diagnostics.length || !this.shouldCheckTypes()) {
+    if (!message.body?.diagnostics.length || !this.options.printTypeErrors) {
       return;
     }
     this.lastDiagnostics.push(message.body);
