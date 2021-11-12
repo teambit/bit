@@ -340,11 +340,11 @@ export default class Component extends BitObject {
     if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
+
     // either a user is on main or a lane, check whether the remote is ahead of the local
-    const allLocalHashes = await getAllVersionHashes(this, repo, false);
-    const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
-    if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
-    return remoteHead.toString(); // remote is ahead
+    await this.setDivergeData(repo, false);
+    const divergeData = this.getDivergeData();
+    return divergeData.isLocalAhead() ? latestLocally : remoteHead.toString();
   }
 
   latestVersion(): string {
