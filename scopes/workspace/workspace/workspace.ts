@@ -365,7 +365,7 @@ export class Workspace implements ComponentFactory {
   /**
    * list all modified components in the workspace.
    */
-  async modified() {
+  async modified(): Promise<Component[]> {
     const ids: any = await this.componentList.listModifiedComponents(false);
     const componentIds = ids.map(ComponentID.fromLegacy);
     return this.getMany(componentIds);
@@ -392,6 +392,11 @@ export class Workspace implements ComponentFactory {
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
     const ids = await this.componentList.listTagPendingComponents();
     return this.resolveMultipleComponentIds(ids);
+  }
+
+  async newAndModified(): Promise<Component[]> {
+    const ids = await this.getNewAndModifiedIds();
+    return this.getMany(ids);
   }
 
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
@@ -613,6 +618,21 @@ export class Workspace implements ComponentFactory {
 
     const components = await this.getMany(targetIds);
     return components;
+  }
+
+  /**
+   * useful for workspace commands, such as `bit build`, `bit compile`.
+   * by default, it should be running on new and modified components.
+   * a user can specify `--all` to run on all components or specify a pattern to limit to specific components.
+   */
+  async getComponentsByUserInputDefaultToChanged(all?: boolean, pattern?: string): Promise<Component[]> {
+    if (all) {
+      return this.list();
+    }
+    if (pattern) {
+      return this.byPattern(pattern);
+    }
+    return this.newAndModified();
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
