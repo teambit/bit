@@ -1569,6 +1569,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/url/query-string"
     },
+    "use": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/use"
+    },
     "user-agent": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.244",
