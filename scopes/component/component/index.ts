@@ -10,11 +10,11 @@ export type { AspectList } from './aspect-list';
 export { AspectEntry, AspectData } from './aspect-entry';
 // TODO: check why it's not working when using the index in snap dir like this:
 // export { Snap, Author } from './snap';
-export { Snap } from './snap/snap';
+export { Snap, SnapProps } from './snap/snap';
 export type { Author } from './snap/author';
 // TODO: check why it's not working when using the index in tag dir like this:
 // export { Tag } from './tag';
-export { Tag } from './tag/tag';
+export { Tag, TagProps } from './tag/tag';
 export { State } from './state';
 export type { Hash } from './hash';
 export { TagMap } from './tag-map';

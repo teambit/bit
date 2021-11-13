@@ -74,10 +74,17 @@ export class AspectMain {
       files: [
         babelCompiler.distDir,
         `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`,
-        'README.md',
-        'README.mdx',
-        '*.js',
-        '*.json',
+        '**/*.md',
+        '**/*.mdx',
+        '**/*.js',
+        '**/*.json',
+        '**/*.sass',
+        '**/*.scss',
+        '**/*.less',
+        '**/*.css',
+        '**/*.css',
+        '**/*.jpeg',
+        '**/*.gif',
       ],
     });
 

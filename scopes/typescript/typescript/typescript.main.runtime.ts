@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
@@ -26,6 +26,7 @@ import {
   VariableStatementTransformer,
   SourceFileTransformer,
 } from './transformers';
+import { CheckTypesCmd } from './cmds/check-types.cmd';
 
 export type TsMode = 'build' | 'dev';
 
@@ -120,7 +121,7 @@ export class TypescriptMain {
     };
   }
 
-  private getAllFilesForTsserver(components: Component[]): string[] {
+  public getSupportedFilesForTsserver(components: Component[]): string[] {
     const files = components
       .map((c) => c.filesystem.files)
       .flat()
@@ -134,8 +135,9 @@ export class TypescriptMain {
       return;
     }
     const { verbose, checkTypes } = watchOpts;
-    const files = checkTypes ? this.getAllFilesForTsserver(components) : [];
-    await this.initTsserverClientFromWorkspace({ verbose, checkTypes }, files);
+    const files = checkTypes ? this.getSupportedFilesForTsserver(components) : [];
+    const printTypeErrors = Boolean(checkTypes);
+    await this.initTsserverClientFromWorkspace({ verbose, checkTypes, printTypeErrors }, files);
   }
 
   private async onComponentChange(component: Component, files: string[]) {
@@ -151,11 +153,11 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect, WorkspaceAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect, WorkspaceAspect, CLIAspect];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace]: [SchemaMain, LoggerMain, AspectLoaderMain, Workspace],
+    [schema, loggerExt, aspectLoader, workspace, cli]: [SchemaMain, LoggerMain, AspectLoaderMain, Workspace, CLIMain],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
@@ -176,6 +178,9 @@ export class TypescriptMain {
       workspace.registerOnComponentChange(tsMain.onComponentChange.bind(this));
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(this));
     }
+
+    const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
+    cli.register(checkTypesCmd);
 
     return tsMain;
   }
