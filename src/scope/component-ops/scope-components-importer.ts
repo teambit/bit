@@ -4,7 +4,7 @@ import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, intersection } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
 import { Analytics } from '../../analytics/analytics';
@@ -68,12 +68,19 @@ export default class ScopeComponentsImporter {
    * 3. b. If all flattened exists locally - exit the loop.
    * 3. c. otherwise, put it in the externalsToFetch array.
    */
-  async importMany(
-    ids: BitIds,
+  async importMany({
+    ids,
     cache = true,
     throwForDependencyNotFound = false,
-    reFetchUnBuiltVersion = true
-  ): Promise<VersionDependencies[]> {
+    reFetchUnBuiltVersion = true,
+    lanes = [],
+  }: {
+    ids: BitIds;
+    cache?: boolean;
+    throwForDependencyNotFound?: boolean;
+    reFetchUnBuiltVersion?: boolean;
+    lanes?: Lane[]; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
+  }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
       `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
@@ -101,7 +108,7 @@ export default class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound);
+    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes);
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport);
     logger.debug('importMany, completed!');
     return versionDeps;
@@ -139,7 +146,7 @@ export default class ScopeComponentsImporter {
     return [...versionDeps, ...externalDeps];
   }
 
-  async importWithoutDeps(ids: BitIds, cache = true): Promise<ComponentVersion[]> {
+  async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('importWithoutDeps', `ids: {ids}`, {
       ids: ids.toString(),
@@ -163,20 +170,25 @@ export default class ScopeComponentsImporter {
       })
     );
     const remotes = await getScopeRemotes(this.scope);
-    const externalDeps = await this.getExternalManyWithoutDeps(externals, remotes, cache);
+    const externalDeps = await this.getExternalManyWithoutDeps(externals, remotes, cache, undefined, lanes);
     return [...compact(componentVersionArr), ...externalDeps];
   }
 
   async importManyWithAllVersions(
     ids: BitIds,
     cache = true,
-    allDepsVersions = false // by default, only dependencies of the latest version are imported
+    allDepsVersions = false, // by default, only dependencies of the latest version are imported
+    lanes: Lane[] = []
   ): Promise<VersionDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
+    const versionDependenciesArr: VersionDependencies[] = await this.importMany({
+      ids: idsWithoutNils,
+      cache,
+      lanes,
+    });
 
     const allIdsWithAllVersions = new BitIds();
     versionDependenciesArr.forEach((versionDependencies) => {
@@ -193,14 +205,23 @@ export default class ScopeComponentsImporter {
       }
     });
     if (allDepsVersions) {
-      const verDepsOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache);
+      const verDepsOfOlderVersions = await this.importMany({
+        ids: allIdsWithAllVersions,
+        cache,
+        lanes,
+      });
       versionDependenciesArr.push(...verDepsOfOlderVersions);
       const allFlattenDepsIds = versionDependenciesArr.map((v) => v.allDependencies.map((d) => d.id));
       const dependenciesOnly = R.flatten(allFlattenDepsIds).filter((id: BitId) => !ids.hasWithoutVersion(id));
-      const verDepsOfAllFlattenDeps = await this.importManyWithAllVersions(BitIds.uniqFromArray(dependenciesOnly));
+      const verDepsOfAllFlattenDeps = await this.importManyWithAllVersions(
+        BitIds.uniqFromArray(dependenciesOnly),
+        undefined,
+        undefined,
+        lanes
+      );
       versionDependenciesArr.push(...verDepsOfAllFlattenDeps);
     } else {
-      await this.importWithoutDeps(allIdsWithAllVersions);
+      await this.importWithoutDeps(allIdsWithAllVersions, undefined, lanes);
     }
 
     return versionDependenciesArr;
@@ -260,7 +281,7 @@ export default class ScopeComponentsImporter {
     const lanes = await this.importLanes(remoteLaneIds);
     const ids = lanes.map((lane) => lane.toBitIds());
     const bitIds = BitIds.uniqFromArray(R.flatten(ids));
-    await this.importManyWithAllVersions(bitIds, false);
+    await this.importManyWithAllVersions(bitIds, false, undefined, lanes);
     return lanes;
   }
 
@@ -300,9 +321,9 @@ export default class ScopeComponentsImporter {
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
-  async fetchWithoutDeps(ids: BitIds): Promise<ComponentVersion[]> {
+  async fetchWithoutDeps(ids: BitIds, allowExternal: boolean): Promise<ComponentVersion[]> {
     logger.debugAndAddBreadCrumb('fetchWithoutDeps', `ids: {ids}`, { ids: ids.toString() });
-    this.throwIfExternalFound(ids);
+    if (!allowExternal) this.throwIfExternalFound(ids);
     const localDefs: ComponentDef[] = await this.sources.getMany(ids);
     const componentVersionArr = await Promise.all(
       localDefs.map(({ id, component }) => {
@@ -316,9 +337,9 @@ export default class ScopeComponentsImporter {
     return compact(componentVersionArr);
   }
 
-  async fetchWithDeps(ids: BitIds): Promise<VersionDependencies[]> {
+  async fetchWithDeps(ids: BitIds, allowExternal: boolean): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb('fetchWithDeps', `ids: {ids}`, { ids: ids.toString() });
-    this.throwIfExternalFound(ids);
+    if (!allowExternal) this.throwIfExternalFound(ids);
     // avoid race condition of getting multiple "fetch" requests, which later translates into
     // multiple getExternalMany calls, which saves objects and write refs files at the same time
     return this.fetchWithDepsMutex.runExclusive(async () => {
@@ -456,7 +477,8 @@ export default class ScopeComponentsImporter {
   private async getExternalMany(
     ids: BitId[],
     remotes: Remotes,
-    throwForDependencyNotFound = false
+    throwForDependencyNotFound = false,
+    lanes: Lane[] = []
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', `fetching from remote scope. Ids: {ids}`, {
@@ -476,6 +498,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: false,
       },
       ids,
+      lanes,
       context
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
@@ -490,7 +513,8 @@ export default class ScopeComponentsImporter {
     ids: BitId[],
     remotes: Remotes,
     localFetch = false,
-    context: Record<string, any> = {}
+    context: Record<string, any> = {},
+    lanes: Lane[] = []
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `ids: {ids}, localFetch: ${localFetch.toString()}`, {
@@ -513,6 +537,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: true,
       },
       left.map((def) => def.id),
+      lanes,
       context
     ).fetchFromRemoteAndWrite();
 
@@ -661,5 +686,22 @@ export function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
   });
+  return grouped;
+}
+
+export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]: string[] } {
+  const bitIdsStr = ids.map((id) => id.toString());
+  const grouped = {};
+  lanes.forEach((lane) => {
+    const scope = lane.scope;
+    if (!scope) {
+      throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
+    }
+    const laneIdsStr = lane.toBitIds().map((id) => id.toString());
+    const intersectIds = intersection(bitIdsStr, laneIdsStr);
+    if (!intersectIds.length) return;
+    (grouped[scope] ||= []).push(...laneIdsStr);
+  });
+
   return grouped;
 }

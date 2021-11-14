@@ -151,7 +151,7 @@ export class PkgMain {
     // and also "npm pack --dry-run", but it's not that useful and it takes long to complete.
     // we might revise our decision later.
     // const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher, envs);
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);
@@ -269,10 +269,16 @@ export class PkgMain {
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps: PackageJsonProps = {};
+    const mergeToNewProps = (otherProps: PackageJsonProps) => {
+      const files = [...(newProps.files || []), ...(otherProps.files || [])];
+      const merged = { ...newProps, ...otherProps };
+      if (files.length) merged.files = files;
+      return merged;
+    };
     const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
-      newProps = Object.assign(newProps, propsFromEnv);
+      newProps = mergeToNewProps(propsFromEnv);
     }
 
     const configuredIds = component.state.aspects.ids;
@@ -280,14 +286,14 @@ export class PkgMain {
       // Only get props from configured extensions on this specific component
       const props = this.packageJsonPropsRegistry.get(extId);
       if (props) {
-        newProps = Object.assign(newProps, props);
+        newProps = mergeToNewProps(props);
       }
     });
 
     const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentConfig = currentExtension?.config as unknown as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
-      newProps = Object.assign(newProps, currentConfig.packageJson);
+      newProps = mergeToNewProps(currentConfig.packageJson);
     }
     // Keys not allowed to override
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];

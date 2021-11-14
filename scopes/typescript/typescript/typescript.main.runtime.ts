@@ -1,5 +1,5 @@
 import ts, { TsConfigSourceFile } from 'typescript';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
@@ -15,6 +15,7 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
+import { CheckTypesCmd } from './cmds/check-types.cmd';
 
 export type TsMode = 'build' | 'dev';
 
@@ -108,7 +109,7 @@ export class TypescriptMain {
     };
   }
 
-  private getAllFilesForTsserver(components: Component[]): string[] {
+  public getSupportedFilesForTsserver(components: Component[]): string[] {
     const files = components
       .map((c) => c.filesystem.files)
       .flat()
@@ -122,8 +123,9 @@ export class TypescriptMain {
       return;
     }
     const { verbose, checkTypes } = watchOpts;
-    const files = checkTypes ? this.getAllFilesForTsserver(components) : [];
-    await this.initTsserverClientFromWorkspace({ verbose, checkTypes }, files);
+    const files = checkTypes ? this.getSupportedFilesForTsserver(components) : [];
+    const printTypeErrors = Boolean(checkTypes);
+    await this.initTsserverClientFromWorkspace({ verbose, checkTypes, printTypeErrors }, files);
   }
 
   private async onComponentChange(component: Component, files: string[]) {
@@ -139,14 +141,17 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, WorkspaceAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, WorkspaceAspect, CLIAspect];
 
-  static async provider([schema, loggerExt, workspace]: [SchemaMain, LoggerMain, Workspace]) {
+  static async provider([schema, loggerExt, workspace, cli]: [SchemaMain, LoggerMain, Workspace, CLIMain]) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     schema.registerParser(new TypeScriptParser(logger));
+    const typescriptMain = new TypescriptMain(logger, workspace);
+    const checkTypesCmd = new CheckTypesCmd(typescriptMain, workspace, logger);
+    cli.register(checkTypesCmd);
 
-    return new TypescriptMain(logger, workspace);
+    return typescriptMain;
   }
 }
 

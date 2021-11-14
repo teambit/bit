@@ -10,6 +10,9 @@ import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
+import { babelConfig } from './babel/babel-config';
+
+const tsconfig = require('./typescript/tsconfig.json');
 
 export class AspectMain {
   constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain) {}
@@ -41,7 +44,55 @@ export class AspectMain {
     BabelMain,
     GeneratorMain
   ]) {
-    const aspectEnv = envs.merge<AspectEnv>(new AspectEnv(react.reactEnv, babel, compiler), react.reactEnv);
+    const babelCompiler = babel.createCompiler({
+      babelTransformOptions: babelConfig,
+      distDir: 'dist',
+      distGlobPatterns: [`dist/**`, `!dist/**/*.d.ts`, `!dist/tsconfig.tsbuildinfo`],
+    });
+    const compilerOverride = envs.override({
+      getCompiler: () => {
+        return babelCompiler;
+      },
+    });
+
+    const transformer = (config) => {
+      config
+        .mergeTsConfig(tsconfig)
+        .setArtifactName('declaration')
+        .setDistGlobPatterns([`dist/**/*.d.ts`])
+        .setShouldCopyNonSupportedFiles(false);
+      return config;
+    };
+    const tsCompiler = react.env.getCompiler([transformer]);
+
+    const compilerTasksOverride = react.overrideCompilerTasks([
+      compiler.createTask('BabelCompiler', babelCompiler),
+      compiler.createTask('TypescriptCompiler', tsCompiler),
+    ]);
+
+    const pkgJsonOverride = react.overridePackageJsonProps({
+      files: [
+        babelCompiler.distDir,
+        `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`,
+        '**/*.md',
+        '**/*.mdx',
+        '**/*.js',
+        '**/*.json',
+        '**/*.sass',
+        '**/*.scss',
+        '**/*.less',
+        '**/*.css',
+        '**/*.css',
+        '**/*.jpeg',
+        '**/*.gif',
+      ],
+    });
+
+    const aspectEnv = react.compose(
+      [compilerOverride, compilerTasksOverride, pkgJsonOverride],
+      new AspectEnv(react.reactEnv)
+    );
+
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
       builder.registerBuildTasks([coreExporterTask]);
@@ -49,7 +100,7 @@ export class AspectMain {
 
     envs.registerEnv(aspectEnv);
     generator.registerComponentTemplate([aspectTemplate]);
-    return new AspectMain(aspectEnv, envs);
+    return new AspectMain(aspectEnv as AspectEnv, envs);
   }
 }
 

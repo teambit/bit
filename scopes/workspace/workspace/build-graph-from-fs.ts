@@ -99,11 +99,10 @@ export class GraphFromFsBuilder {
     const allDeps = components.map((c) => this.getAllDepsUnfiltered(c)).flat();
     const allDepsWithScope = allDeps.filter((dep) => dep.hasScope());
     const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
-    await scopeComponentsImporter.importMany(
-      BitIds.uniqFromArray(allDepsWithScope),
-      undefined,
-      this.shouldThrowOnMissingDep
-    );
+    await scopeComponentsImporter.importMany({
+      ids: BitIds.uniqFromArray(allDepsWithScope),
+      throwForDependencyNotFound: this.shouldThrowOnMissingDep,
+    });
   }
 
   private async processOneComponent(component: Component) {
