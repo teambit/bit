@@ -1,5 +1,5 @@
 import camelCase from 'camelcase';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { ArtifactsStorageResolver, BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -19,8 +19,8 @@ export class ElementsMain {
     return '__element';
   }
 
-  createTask() {
-    return new ElementTask(this);
+  createTask(storageResolvers?: ArtifactsStorageResolver[]) {
+    return new ElementTask(this, storageResolvers);
   }
 
   getWebpackTransformers(): WebpackConfigTransformer[] {

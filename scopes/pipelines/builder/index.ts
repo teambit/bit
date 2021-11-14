@@ -9,6 +9,7 @@ export {
   ArtifactListStoreResult,
   ArtifactFileStoreResult,
   ArtifactStoreResult,
+  DefaultResolver,
 } from './storage';
 export { Artifact, ArtifactList, ArtifactFactory, ArtifactDefinition } from './artifact';
 export { TaskResultsList } from './task-results-list';

@@ -19,7 +19,7 @@ export type ArtifactObject = {
   name: string;
   description?: string;
   generatedBy: string;
-  storage: string;
+  storage: string | string[];
   task: {
     id: string;
     name?: string;

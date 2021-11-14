@@ -54,8 +54,7 @@ export class BuildPipe {
      */
     readonly tasksQueue: TasksQueue,
     readonly envsBuildContext: EnvsBuildContext,
-    readonly logger: Logger,
-    readonly artifactFactory: ArtifactFactory
+    readonly logger: Logger
   ) {}
 
   /**
@@ -103,7 +102,8 @@ export class BuildPipe {
       const duration = prettyTime(process.hrtime(startTask));
       this.logger.consoleSuccess(`env "${env.id}", task "${taskName}" has completed successfully in ${duration}`);
       const defs = buildTaskResult.artifacts || [];
-      artifacts = this.artifactFactory.generate(buildContext, defs, task);
+      const artifactFactory = new ArtifactFactory(env.env.getStorageResolvers?.() || {});
+      artifacts = artifactFactory.generate(buildContext, defs, task);
     }
 
     const taskResults: TaskResults = {
@@ -156,12 +156,7 @@ export class BuildPipe {
   /**
    * create a build pipe from an array of tasks.
    */
-  static from(
-    tasksQueue: TasksQueue,
-    envsBuildContext: EnvsBuildContext,
-    logger: Logger,
-    artifactFactory: ArtifactFactory
-  ) {
-    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory);
+  static from(tasksQueue: TasksQueue, envsBuildContext: EnvsBuildContext, logger: Logger) {
+    return new BuildPipe(tasksQueue, envsBuildContext, logger);
   }
 }

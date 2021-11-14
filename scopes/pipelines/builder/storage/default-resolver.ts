@@ -9,5 +9,8 @@ export class DefaultResolver implements StorageResolver {
     artifactList.artifacts.forEach((artifact) => {
       artifact.files.populateVinylsFromPaths(artifact.rootDir);
     });
+    return {
+      resolverName: this.name,
+    };
   }
 }

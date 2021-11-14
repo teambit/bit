@@ -1,4 +1,4 @@
-export interface PluginDefinition<T> {
+export interface PluginDefinition {
   /**
    * regex pattern for detecting the definition file within a component.
    */
@@ -12,5 +12,5 @@ export interface PluginDefinition<T> {
   /**
    * register the plugin to its slot registry.
    */
-  register(object: T): void;
+  register<T>(object: T): void;
 }

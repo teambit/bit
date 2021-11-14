@@ -48,5 +48,5 @@ export type ArtifactDefinition = {
    * storage resolver. can be used to replace where artifacts are stored.
    * default resolver persists artifacts on scope. (not recommended for large files!)
    */
-  storageResolver?: string;
+  storageResolver?: string[];
 };

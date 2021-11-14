@@ -13,7 +13,6 @@ import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
-import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
@@ -58,15 +57,17 @@ export class BuilderMain {
     const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
+          const environment = this.envs.getEnv(component).env;
+          const storageResolvers = environment.getStorageResolvers?.();
           try {
-            return await artifactList.store(component);
+            return await artifactList.store(component, storageResolvers);
           } catch (err: any) {
             throw new ArtifactStorageError(err, component);
           }
         })
       );
     });
-    await Promise.all(storeP);
+    return Promise.all(storeP);
   }
 
   private pipelineResultsToBuilderData(
@@ -294,28 +295,11 @@ export class BuilderMain {
       TaskSlot
     ]
   ) {
-    const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const buildService = new BuilderService(
-      isolator,
-      logger,
-      buildTaskSlot,
-      'getBuildPipe',
-      'build',
-      artifactFactory,
-      scope
-    );
+    const buildService = new BuilderService(isolator, logger, buildTaskSlot, 'getBuildPipe', 'build', scope);
     envs.registerService(buildService);
-    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
-    const snapService = new BuilderService(
-      isolator,
-      logger,
-      snapTaskSlot,
-      'getSnapPipe',
-      'snap',
-      artifactFactory,
-      scope
-    );
+    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', scope);
+    const snapService = new BuilderService(isolator, logger, snapTaskSlot, 'getSnapPipe', 'snap', scope);
     const builder = new BuilderMain(
       envs,
       workspace,

@@ -1,6 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import ElementsAspect, { ElementsMain } from '@teambit/elements';
+import { ArtifactsStorageResolver } from '@teambit/builder';
 import { GetWrapperOpts, getWrapperTemplateFn } from './element-wrapper-template';
 import basePreviewConfigFactory from './webpack/webpack.config.base';
 import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
@@ -9,8 +10,8 @@ import { ReactElementsAspect } from './react-elements.aspect';
 
 export class ReactElementsMain {
   constructor(private elements: ElementsMain) {}
-  createTask() {
-    return this.elements.createTask();
+  createTask(storageResolvers?: ArtifactsStorageResolver[]) {
+    return this.elements.createTask(storageResolvers);
   }
 
   getWrapperTemplateFn(opts?: Partial<GetWrapperOpts>) {

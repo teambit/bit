@@ -1,7 +1,7 @@
 import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { BuildTask } from '../build-task';
-import type { StorageResolver } from '../storage';
 import type { ArtifactDefinition } from './artifact-definition';
+import type { ArtifactsStorageResolver } from '../storage';
 
 export class Artifact {
   constructor(
@@ -13,7 +13,7 @@ export class Artifact {
     /**
      * storage resolver. can be used to replace where artifacts are stored.
      */
-    readonly storageResolver: StorageResolver,
+    readonly storageResolvers: ArtifactsStorageResolver[],
 
     readonly files: ArtifactFiles,
 
@@ -36,7 +36,11 @@ export class Artifact {
   ) {}
 
   get storage() {
-    return this.storageResolver;
+    return this.storageResolvers;
+  }
+
+  get storageResolversNames() {
+    return this.storageResolvers.map((resolver) => resolver.name);
   }
 
   /**
@@ -70,7 +74,8 @@ export class Artifact {
       name: this.name,
       description: this.description,
       generatedBy: this.generatedBy,
-      storage: this.storageResolver.name,
+      // storage: this.storage,
+      storage: this.storageResolversNames,
       task: {
         id: this.task.aspectId,
         name: this.task.name,

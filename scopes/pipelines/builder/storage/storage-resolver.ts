@@ -14,6 +14,10 @@ export type ArtifactStoreResult = {
 };
 
 export type StoreResult = {
+  /**
+   * The resolver name as registered in the env
+   */
+  resolverName: string;
   artifacts?: ArtifactStoreResult[];
   metadata?: Object;
 };

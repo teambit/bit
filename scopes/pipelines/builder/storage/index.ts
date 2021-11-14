@@ -5,4 +5,3 @@ export {
   ArtifactStoreResult,
 } from './storage-resolver';
 export { DefaultResolver } from './default-resolver';
-export { StorageResolverPlugin } from './storage-resolver.plugin';
