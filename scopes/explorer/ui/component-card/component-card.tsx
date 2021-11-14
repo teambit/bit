@@ -48,7 +48,7 @@ export type ComponentCardProps = {
    */
   isDeprecated?: boolean;
   /**
-   * explicit link, to instead of the component id. Using this opens the link in a new tab, as an external link.
+   * explicit link, to use instead of the component id. Using this opens the link in a new tab, as an external link.
    */
   href?: string;
 } & BaseComponentCardProps;
