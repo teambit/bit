@@ -34,14 +34,17 @@ export type ConfigDeps = [];
 
 export type ConfigConfig = {};
 
-export type PreAddingAspects = (aspectIds: string[]) => Promise<ComponentID[]>;
+/**
+ * pass the aspectIds entered by the user. returns the complete ids including versions.
+ */
+export type PreAddingAspects = (aspectIds: string[]) => Promise<string[]>;
 export type PreAddingAspectsSlot = SlotRegistry<PreAddingAspects>;
 
 export class ConfigMain {
   constructor(
     public workspaceConfig?: WorkspaceConfig,
     public scopeConfig?: WorkspaceConfig,
-    private preAddingAspectsSlot?: PreAddingAspectsSlot
+    public preAddingAspectsSlot?: PreAddingAspectsSlot
   ) {}
 
   get type(): ConfigType {

@@ -17,29 +17,29 @@ export class UseCmd implements Command {
   constructor(private config: ConfigMain) {}
 
   async report([ids = []]: [string[]]): Promise<any> {
-    // const config = this.config.workspaceConfig || this.config.scopeConfig;
-    // if (!config) {
-    //   throw new Error(`please run "bit use" from either a workspace or a scope`);
-    // }
-    // const componentIds = await this.scope.resolveMultipleComponentIds(ids);
+    const config = this.config.workspaceConfig || this.config.scopeConfig;
+    if (!config) {
+      throw new Error(`please run "bit use" from either a workspace or a scope`);
+    }
+    const preAddingAspectFunctions = this.config.preAddingAspectsSlot?.toArray();
+    if (!preAddingAspectFunctions) throw new Error(`can't find any registration to the preAddingAspects slot`);
+    const componentIds = (await Promise.all(preAddingAspectFunctions.map(([, func]) => func(ids)))).flat();
 
-    // await this.scope.import(componentIds);
-    // componentIds.forEach((compId) => {
-    //   config.setExtension(
-    //     compId.toString(),
-    //     {},
-    //     {
-    //       overrideExisting: false,
-    //       ignoreVersion: false,
-    //     }
-    //   );
-    // });
-    // await config.write({ dir: path.dirname(config.path) });
-    const componentIds: any[] = [];
+    componentIds.forEach((compId) => {
+      config.setExtension(
+        compId,
+        {},
+        {
+          overrideExisting: false,
+          ignoreVersion: false,
+        }
+      );
+    });
+    await config.write({ dir: path.dirname(config.path) });
 
     return chalk.green(`the following aspect(s) were saved into ${
       this.config.workspaceConfig ? 'workspace.jsonc' : 'scopes.jsonc'
     } file:
-${componentIds.map((id) => id.toString()).join('\n')}`);
+${componentIds.join('\n')}`);
   }
 }
