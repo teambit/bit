@@ -115,14 +115,14 @@ export class ConfigMain {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
     const consumerInfo = await getConsumerInfo(process.cwd());
 
-    let configMain: ConfigMain;
+    let configMain: ConfigMain | any;
     const configDirPath = consumerInfo?.path || process.cwd();
     const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath);
     if (workspaceConfig) {
       configMain = new ConfigMain(workspaceConfig, undefined, preAddingAspectsSlot);
     } else {
       // TODO: try load scope config here
-      configMain = new ConfigMain(undefined, undefined, preAddingAspectsSlot);
+      configMain = {};
     }
     LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(configMain));
     LegacyWorkspaceConfig.registerOnWorkspaceConfigReset((dirPath, resetHard) =>
