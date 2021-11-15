@@ -3343,6 +3343,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pnpm/colorize-semver-diff@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@pnpm/colorize-semver-diff@npm:1.0.1"
+  dependencies:
+    chalk: ^4.1.0
+  checksum: 7370b33608e056ffb8e2c6eb3adc75ee88e42a8336b29599b34ac0fc4835a69eac2bd973a950c332f749c002ee91c8fa02a39edd290f547afacd8aaa4db93c71
+  languageName: node
+  linkType: hard
+
 "@pnpm/config@npm:13.5.0":
   version: 13.5.0
   resolution: "@pnpm/config@npm:13.5.0"
@@ -4218,6 +4227,13 @@ __metadata:
   dependencies:
     "@pnpm/types": 7.6.0
   checksum: a9883d3365b1f32899a218edbadac4d1a0e52e879fb03f0a5c79b320d28cd34d1626626ed909521c619ecf4eeddcdc2e65c5d868719b0faccdd1b3aba9b4ce5a
+  languageName: node
+  linkType: hard
+
+"@pnpm/semver-diff@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@pnpm/semver-diff@npm:1.1.0"
+  checksum: 6e103738fc280238d1fd59a9fb2661e2d5132edd3af474a32b16ccfd6f8dd975f589e45fb374310ea6676f1a0e7708eded10b51861b7b2b3a22a26740633bf10
   languageName: node
   linkType: hard
 
@@ -7505,6 +7521,7 @@ __metadata:
     "@mdx-js/react": 1.6.22
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.1
     "@pnpm/client": 6.0.5
+    "@pnpm/colorize-semver-diff": 1.0.1
     "@pnpm/config": 13.5.0
     "@pnpm/core": 1.3.0
     "@pnpm/default-reporter": 8.3.7
@@ -7519,6 +7536,7 @@ __metadata:
     "@pnpm/package-store": 12.1.2
     "@pnpm/pick-registry-for-package": 2.0.6
     "@pnpm/resolver-base": 8.1.1
+    "@pnpm/semver-diff": 1.1.0
     "@pnpm/store-connection-manager": 3.1.9
     "@pnpm/tarball-fetcher": 9.3.9
     "@pnpm/tarball-resolver": 5.0.6
@@ -7700,6 +7718,7 @@ __metadata:
     "@yarnpkg/fslib": 2.5.1
     "@yarnpkg/plugin-npm": 2.5.0
     "@yarnpkg/plugin-pack": 3.0.0
+    "@zkochan/table": 1.0.0
     acorn: 6.4.2
     agentkeepalive: 4.1.4
     ajv: 6.12.6
@@ -10787,6 +10806,18 @@ __metadata:
   version: 2.1.1
   resolution: "@zkochan/rimraf@npm:2.1.1"
   checksum: 5d3911ea4d5c13925de306ce8f533575de82556c6de7e618467ef8229a76398973254d4aa0bfcb853dabc04012248691655e3c1b9ced589fe946ac74abc87997
+  languageName: node
+  linkType: hard
+
+"@zkochan/table@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@zkochan/table@npm:1.0.0"
+  dependencies:
+    "@arcanis/slice-ansi": ^1.0.2
+    ajv: ^6.12.4
+    lodash: ^4.17.20
+    string-width: ^4.2.0
+  checksum: ccde63e1c96e325f6dbb91ac623da973e86a842d2069878b1991aa49c39d4051a667c32f756db2425d3be2b755a4553f2c26c35aad74e75457377fbd17213827
   languageName: node
   linkType: hard
 

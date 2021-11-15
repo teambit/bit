@@ -79,6 +79,7 @@ import {
   OnComponentRemove,
   SerializableResults,
 } from './on-component-events';
+import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { WorkspaceExtConfig } from './types';
 import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
@@ -1306,7 +1307,7 @@ export class Workspace implements ComponentFactory {
     };
   }
 
-  async updateDependencies() {
+  async updateDependencies(options: { all: boolean }) {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -1315,7 +1316,8 @@ export class Workspace implements ComponentFactory {
       variantPoliciesByPatterns,
       componentPoliciesById,
     });
-    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs, {
+    const outdatedPkgsToUpdate = options.all ? outdatedPkgs : await pickOutdatedPkgs(outdatedPkgs);
+    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
       componentPoliciesById,
     });
