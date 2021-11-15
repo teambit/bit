@@ -18,7 +18,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
-import { ComponentScopeDirMap, Config } from '@teambit/config';
+import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -1335,7 +1335,7 @@ export class Workspace implements ComponentFactory {
       return await this.importAndGetMany(componentIds);
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
         const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
         if (configStr.includes(err.id)) {
           throw new BitError(`error: a component "${err.id}" was not found
