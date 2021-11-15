@@ -33,7 +33,9 @@ You can also use it manually, to have more control:
 ```tsx
 const [element, setElement] = useState<HTMLElement | undefined>(undefined);
 
-useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
+useEffect(() => setElement(
+    document.getElementById('to-highlight')
+), [targetRef.current]);
 
 const target = targetElement && {
   element: targetElement,
