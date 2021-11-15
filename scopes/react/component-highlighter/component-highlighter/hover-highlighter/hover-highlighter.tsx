@@ -78,19 +78,14 @@ export function HoverHighlighter({
         data-nullify-component-highlight
       >
         {children}
+        {/*
+         * keep the highlighter inside of the hover selector, or it could disappear when switching between elements
+         * the excludeHighlighterAtt will ensure it doesn't turn into a recursion.
+         */}
+        {target && (
+          <ElementHighlighter target={target} classes={classes} style={highlightStyle} placement={placement} />
+        )}
       </HoverSelector>
-      {target && (
-        <ElementHighlighter
-          target={target}
-          classes={classes}
-          style={highlightStyle}
-          placement={placement}
-          // could also achieve this by moving the ElementHighlighter into HoverSelector.
-          // it will be ignored thanks to the excludeHighlighter attribute.
-          onMouseEnter={handleElement.cancel}
-          onMouseOut={() => handleElement(null)}
-        />
-      )}
     </>
   );
 }
