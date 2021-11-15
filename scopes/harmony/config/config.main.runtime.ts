@@ -12,7 +12,6 @@ import LegacyWorkspaceConfig, {
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry, GlobalConfig } from '@teambit/harmony';
 import path from 'path';
 import { UseCmd } from './use.cmd';

@@ -997,7 +997,7 @@ export class ScopeMain implements ComponentFactory {
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
-    configMain.registerPreAddingAspectsSlot(async (compIds) => {
+    configMain?.registerPreAddingAspectsSlot(async (compIds) => {
       const loadedIds = await scope.loadAspects(compIds, true);
       // find the full component-ids including versions in the load-aspects results.
       // we need it for bit-use to be added to the config file.
