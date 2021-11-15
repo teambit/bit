@@ -88,6 +88,7 @@ export function HoverHighlighter({
           // could also achieve this by moving the ElementHighlighter into HoverSelector.
           // it will be ignored thanks to the excludeHighlighter attribute.
           onMouseEnter={handleElement.cancel}
+          onMouseOut={() => handleElement(null)}
         />
       )}
     </>
