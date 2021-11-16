@@ -78,6 +78,7 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
+  private laneObjects: Lane[] = [];
   private divergeData: Array<ModelComponent> = [];
   // @ts-ignore
   constructor(consumer: Consumer, options: ImportOptions) {
@@ -105,11 +106,9 @@ export default class ImportComponents {
     const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(
-      bitIds,
-      true,
-      this.options.saveDependenciesAsComponents
-    );
+    const componentsWithDependencies = this.consumer.isLegacy
+      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
+      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
@@ -201,6 +200,7 @@ export default class ImportComponents {
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
     try {
       const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
+      this.laneObjects = lanes;
       lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
@@ -284,7 +284,7 @@ export default class ImportComponents {
               this.options.fromOriginalScope,
               this.options.allHistory
             )
-          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }

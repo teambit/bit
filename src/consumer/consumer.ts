@@ -327,7 +327,7 @@ export default class Consumer {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany(new BitIds(id));
+      await scopeComponentsImporter.importMany({ ids: new BitIds(id) });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
@@ -367,7 +367,7 @@ export default class Consumer {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(
+  async importComponentsLegacy(
     ids: BitIds,
     withAllVersions: boolean,
     saveDependenciesAsComponents?: boolean
@@ -375,7 +375,7 @@ export default class Consumer {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
-      : await scopeComponentsImporter.importMany(ids);
+      : await scopeComponentsImporter.importMany({ ids });
     const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
       versionDependenciesArr.map((v) => v.component.id),
       saveDependenciesAsComponents
@@ -400,6 +400,21 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
+  async importComponentsHarmony(
+    ids: BitIds,
+    withAllVersions: boolean,
+    lanes: Lane[] = []
+  ): Promise<ComponentWithDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const versionDependenciesArr: VersionDependencies[] = withAllVersions
+      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false, undefined, lanes)
+      : await scopeComponentsImporter.importMany({ ids, lanes });
+    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
+      versionDependencies.toConsumer(this.scope.objects)
+    );
+    return componentWithDependencies;
+  }
+
   async importComponentsObjectsHarmony(
     ids: BitIds,
     fromOriginalScope = false,
@@ -410,7 +425,7 @@ export default class Consumer {
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany(ids);
+      : await scopeComponentsImporter.importMany({ ids });
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
       this.scope.objects
@@ -878,7 +893,8 @@ export default class Consumer {
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
     const configP = WorkspaceConfig.reset(projectPath, resetHard);
-    await Promise.all([scopeP, configP]);
+    const packageJsonP = PackageJsonFile.reset(projectPath);
+    await Promise.all([scopeP, configP, packageJsonP]);
   }
 
   async resetNew() {
@@ -999,7 +1015,7 @@ export default class Consumer {
     const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
 
-    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds);
+    const versionDependenciesArr = await scopeComponentsImporter.importMany({ ids: dependentsIds });
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,

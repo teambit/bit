@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
-import type { Config } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -166,44 +166,23 @@ export interface DependencyResolverWorkspaceConfig {
    */
   networkConcurrency?: number;
 
-  /**
-   * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-   * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-   * an invalid state that can cause build failures or incompatible dependency versions.
-   * (For historical reasons, JavaScript package managers generally do not treat this invalid
-   * state as an error.)
-   *
-   * The default value is false to avoid legacy compatibility issues.
-   * It is strongly recommended to set strictPeerDependencies=true.
-   */
-  strictPeerDependencies: boolean;
-  /**
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs: string[];
-
-  /**
-   * regex to determine whether a file is a file meant for development purposes.
-   */
-  devFilePatterns: string[];
-
-  /**
-   * By default when bit see your default registry in your npmrc is set to 'https://registry.npmjs.org/'
-   * bit will replace it with the bit.dev npm registry (node.bit.dev) during bit install
-   * bit does this in order to save you the need to configure many scoped registries for components from different owners
-   * bit.dev registry will then proxy the request to npmjs registry for non found packages in the bit.dev registry.
-   * in case you want to disable this proxy set this config to false
-   *
-   */
-  installFromBitDevRegistry: boolean;
-
-  /**
-   * Like https://docs.npmjs.com/cli/v7/using-npm/config#save-prefix
+  /*
    * Set the prefix to use when adding dependency to workspace.jsonc via bit install
    * to lock version to exact version you can use empty string (default)
    */
-  savePrefix: string;
+  savePrefix?: string;
+
+  /*
+   * in case you want to disable this proxy set this config to false
+   *
+   */
+  installFromBitDevRegistry?: boolean;
+
+  /*
+   * map of extra arguments to pass to the configured package manager upon the installation
+   * of dependencies.
+   */
+  packageManagerArgs?: string[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -269,7 +248,7 @@ export class DependencyResolverMain {
 
     private logger: Logger,
 
-    private configAspect: Config,
+    private configAspect: ConfigMain,
 
     private aspectLoader: AspectLoaderMain,
 
@@ -309,11 +288,11 @@ export class DependencyResolverMain {
   }
 
   getSavePrefix(): string {
-    return this.config.savePrefix;
+    return this.config.savePrefix || '';
   }
 
   getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
-    const prefix = overridePrefix || this.getSavePrefix() || '';
+    const prefix = overridePrefix || this.getSavePrefix();
     const versionWithPrefix = `${prefix}${version}`;
     if (!semver.validRange(versionWithPrefix)) {
       throw new InvalidVersionWithPrefix(versionWithPrefix);
@@ -678,10 +657,12 @@ export class DependencyResolverMain {
 
     const bitDefaultRegistry = getDefaultBitRegistry();
 
+    const installFromBitDevRegistry = this.config.installFromBitDevRegistry ?? true;
+
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
-      this.config.installFromBitDevRegistry &&
+      installFromBitDevRegistry &&
       (!registries.defaultRegistry.uri ||
         registries.defaultRegistry.uri === NPM_REGISTRY ||
         NPM_REGISTRY.startsWith(registries.defaultRegistry.uri))
@@ -988,18 +969,13 @@ export class DependencyResolverMain {
      */
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
-    packageManagerArgs: [],
-    devFilePatterns: ['**/*.spec.ts'],
-    strictPeerDependencies: true,
-    installFromBitDevRegistry: true,
-    savePrefix: '',
   };
 
   static async provider(
     [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
       EnvsMain,
       LoggerMain,
-      Config,
+      ConfigMain,
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,

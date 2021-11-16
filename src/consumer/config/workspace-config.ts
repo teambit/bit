@@ -35,6 +35,8 @@ export type WorkspaceConfigEnsureFunction = (
   workspaceConfigProps: WorkspaceConfigProps
 ) => Promise<ILegacyWorkspaceConfig>;
 
+export type WorkspaceConfigResetFunction = (dirPath: PathOsBasedAbsolute, resetHard: boolean) => Promise<void>;
+
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
   tester?: string | Testers;
@@ -86,6 +88,10 @@ export default class WorkspaceConfig extends AbstractConfig {
   static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
   static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
     this.workspaceConfigEnsuringRegistry = func;
+  }
+  static workspaceConfigResetRegistry: WorkspaceConfigResetFunction;
+  static registerOnWorkspaceConfigReset(func: WorkspaceConfigResetFunction) {
+    this.workspaceConfigResetRegistry = func;
   }
 
   constructor({
@@ -215,6 +221,8 @@ export default class WorkspaceConfig extends AbstractConfig {
     if (resetHard) {
       await deleteBitJsonFile();
     }
+    const resetFunc = this.workspaceConfigResetRegistry;
+    await resetFunc(dirPath, resetHard);
     await WorkspaceConfig.ensure(dirPath);
   }
 

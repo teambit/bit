@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.171",
+  "version": "1.0.175",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -216,7 +216,7 @@
     "regenerator-runtime": "0.13.7",
     "resolve": "1.20.0",
     "resolve-dependency-path": "2.0.0",
-    "sass": "1.32.8",
+    "sass": "1.43.4",
     "sass-lookup": "3.0.0",
     "semver": "7.3.4",
     "serialize-error": "5.0.0",

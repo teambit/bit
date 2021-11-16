@@ -17,6 +17,12 @@ export interface HoverHighlighterProps extends React.HTMLAttributes<HTMLDivEleme
   classes?: HighlightClasses;
   /** customize highlighter */
   highlightStyle?: CSSProperties;
+  /** debounces element hover selection.
+   * A higher value will reduce element lookups as well as "keep" the highlight on the current element for longer.
+   * Initial selection (when no element is currently selected) will always happen immediately to improve the user experience.
+   * @default 80ms
+   */
+  debounceSelection?: number;
 }
 
 /** automatically highlight components on hover */
@@ -26,6 +32,7 @@ export function HoverHighlighter({
   classes,
   highlightStyle,
   placement,
+  debounceSelection = 80,
   ...rest
 }: HoverHighlighterProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
@@ -52,7 +59,7 @@ export function HoverHighlighter({
     });
   }, []);
 
-  const handleElement = useDebouncedCallback(_handleElement, target ? 80 : 0);
+  const handleElement = useDebouncedCallback(_handleElement, target ? debounceSelection : 0);
 
   // clear target when disabled
   useEffect(() => {
@@ -72,7 +79,17 @@ export function HoverHighlighter({
       >
         {children}
       </HoverSelector>
-      {target && <ElementHighlighter target={target} classes={classes} style={highlightStyle} placement={placement} />}
+      {target && (
+        <ElementHighlighter
+          target={target}
+          classes={classes}
+          style={highlightStyle}
+          placement={placement}
+          // could also achieve this by moving the ElementHighlighter into HoverSelector.
+          // it will be ignored thanks to the excludeHighlighter attribute.
+          onMouseEnter={handleElement.cancel}
+        />
+      )}
     </>
   );
 }

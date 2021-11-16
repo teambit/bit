@@ -50,6 +50,7 @@ export default class Remotes extends Map<string, Remote> {
       type: 'component',
       withoutDependencies: true,
       includeArtifacts: false,
+      allowExternal: false,
       ...options,
     };
     logger.debug('[-] Running fetch on remotes, with the following options', fetchOptions);

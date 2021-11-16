@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $animationTime: 300ms;
 
 .timestamp {
@@ -12,7 +14,7 @@ $animationTime: 300ms;
   min-width: 230px;
   transform-origin: right bottom;
   max-height: 100vh;
-  transition: all $animationTime, max-height $animationTime / 2 ease-out;
+  transition: all $animationTime, max-height ($animationTime * 0.5) ease-out;
 
   animation: enter $animationTime forwards;
   box-shadow: var(--bit-shadow-faint);
@@ -77,5 +79,5 @@ $animationTime: 300ms;
 }
 
 :export {
-  dismissTime: $animationTime / 1ms;
+  dismissTime: math.div($animationTime, 1ms);
 }

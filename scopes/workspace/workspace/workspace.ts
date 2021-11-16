@@ -18,7 +18,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
-import { ComponentScopeDirMap, Config } from '@teambit/config';
+import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -365,7 +365,7 @@ export class Workspace implements ComponentFactory {
   /**
    * list all modified components in the workspace.
    */
-  async modified() {
+  async modified(): Promise<Component[]> {
     const ids: any = await this.componentList.listModifiedComponents(false);
     const componentIds = ids.map(ComponentID.fromLegacy);
     return this.getMany(componentIds);
@@ -392,6 +392,11 @@ export class Workspace implements ComponentFactory {
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
     const ids = await this.componentList.listTagPendingComponents();
     return this.resolveMultipleComponentIds(ids);
+  }
+
+  async newAndModified(): Promise<Component[]> {
+    const ids = await this.getNewAndModifiedIds();
+    return this.getMany(ids);
   }
 
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
@@ -613,6 +618,21 @@ export class Workspace implements ComponentFactory {
 
     const components = await this.getMany(targetIds);
     return components;
+  }
+
+  /**
+   * useful for workspace commands, such as `bit build`, `bit compile`.
+   * by default, it should be running on new and modified components.
+   * a user can specify `--all` to run on all components or specify a pattern to limit to specific components.
+   */
+  async getComponentsByUserInputDefaultToChanged(all?: boolean, pattern?: string): Promise<Component[]> {
+    if (all) {
+      return this.list();
+    }
+    if (pattern) {
+      return this.byPattern(pattern);
+    }
+    return this.newAndModified();
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
@@ -951,10 +971,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
     this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return;
+    if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
@@ -1001,6 +1021,8 @@ export class Workspace implements ComponentFactory {
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+
+    return compact(allManifests.map((manifest) => manifest.id));
   }
 
   /**
@@ -1315,7 +1337,7 @@ export class Workspace implements ComponentFactory {
       return await this.importAndGetMany(componentIds);
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
         const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
         if (configStr.includes(err.id)) {
           throw new BitError(`error: a component "${err.id}" was not found
