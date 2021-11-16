@@ -1053,6 +1053,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
+    "ui/highlighter/component-metadata/bit-component-meta": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/bit-component-meta"
+    },
     "ui/hooks/scope-context": {
         "scope": "teambit.scope",
         "version": "0.0.76",

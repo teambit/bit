@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
 import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { HoverSelector } from '@teambit/react.ui.hover-selector';
-import { hasComponentMeta } from '../bit-react-component';
+import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import styles from './hover-highlighter.module.scss';
 import { excludeHighlighterSelector } from '../../ignore-highlighter';

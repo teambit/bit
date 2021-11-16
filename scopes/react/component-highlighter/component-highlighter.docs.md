@@ -16,7 +16,7 @@ Simplest way to use the component is by wrapping your code with `HoverHighlighte
 It will automatically detect components from DOM elements, just by hovering on them.
 
 ```tsx
-import { HoverHighlightbr } from '@teambit/react.ui.component-highlighter';
+import { HoverHighlighter } from '@teambit/react.ui.component-highlighter';
 
 function App() {
   return (

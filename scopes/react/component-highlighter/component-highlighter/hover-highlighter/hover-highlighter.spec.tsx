@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { act } from 'react-dom/test-utils';
 import { render, fireEvent, waitForElementToBeRemoved } from '@testing-library/react';
-import { ComponentMeta, componentMetaField } from '@teambit/react.babel.bit-react-transformer';
+import { ComponentMeta, componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import { HoverHighlighter } from './hover-highlighter';
 
