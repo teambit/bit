@@ -23,6 +23,8 @@ export interface HoverHighlighterProps extends React.HTMLAttributes<HTMLDivEleme
    * @default 80ms
    */
   debounceSelection?: number;
+  /** continually update frame position to match moving elements */
+  watchMotion?: boolean;
 }
 
 /** automatically highlight components on hover */
@@ -33,6 +35,7 @@ export function HoverHighlighter({
   highlightStyle,
   placement,
   debounceSelection = 80,
+  watchMotion = true,
   ...rest
 }: HoverHighlighterProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
@@ -83,7 +86,13 @@ export function HoverHighlighter({
          * the excludeHighlighterAtt will ensure it doesn't turn into a recursion.
          */}
         {target && (
-          <ElementHighlighter target={target} classes={classes} style={highlightStyle} placement={placement} />
+          <ElementHighlighter
+            target={target}
+            classes={classes}
+            style={highlightStyle}
+            placement={placement}
+            watchMotion={watchMotion}
+          />
         )}
       </HoverSelector>
     </>

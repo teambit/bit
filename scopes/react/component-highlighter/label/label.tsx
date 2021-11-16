@@ -2,24 +2,34 @@ import React, { useMemo, useState } from 'react';
 import { usePopper } from 'react-popper';
 import { ComponentID } from '@teambit/component-id';
 import type { CardProps } from '@teambit/base-ui.surfaces.card';
-import useAnimationFrame from 'use-animation-frame';
 import type { Placement, Modifier } from '@popperjs/core';
 import '@popperjs/core';
 
 import { DefaultLabel } from './default-label';
 import { ComponentLabel } from './component-label';
+import { useAnimationFrame } from '../use-animation-frame';
 
 export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   targetRef: HTMLElement | null;
   offset?: [number, number];
   placement?: Placement;
   flip?: boolean;
+  /** continually update label position to match moving elements */
+  watchMotion?: boolean;
 }
 
 export type { Placement };
 
 // TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
-export function LabelContainer({ targetRef, offset, placement, flip = true, className, ...rest }: LabelContainerProps) {
+export function LabelContainer({
+  targetRef,
+  offset,
+  placement,
+  flip = true,
+  watchMotion,
+  className,
+  ...rest
+}: LabelContainerProps) {
   const [sourceRef, setSourceRef] = useState<HTMLDivElement | null>(null);
 
   const modifiers = useMemo<Partial<Modifier<any, any>>[]>(
@@ -32,19 +42,11 @@ export function LabelContainer({ targetRef, offset, placement, flip = true, clas
     placement,
   });
 
-  useAnimationFrame(() => update?.(), [update]);
+  useAnimationFrame(!!watchMotion && update);
 
   if (!targetRef) return null;
 
-  return (
-    <div
-      {...rest}
-      ref={setSourceRef}
-      className={className}
-      style={styles.popper}
-      {...attributes.popper}
-    />
-  );
+  return <div {...rest} ref={setSourceRef} className={className} style={styles.popper} {...attributes.popper} />;
 }
 
 export interface LabelProps extends CardProps {
