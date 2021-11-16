@@ -47,7 +47,7 @@ export class ElementTask implements BuildTask {
     const bundler: Bundler = await context.env.getElementsBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
-    return computeResults(bundlerContext, bundlerResults, outDirName, this.storageResolvers);
+    return computeResults(bundlerContext, bundlerResults, outDirName, ElementsAspect.id, this.storageResolvers);
   }
 
   getElementsDir(context: ExecutionContext) {

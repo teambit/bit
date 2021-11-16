@@ -5,6 +5,7 @@ export async function computeResults(
   context: BundlerContext,
   results: BundlerResult[],
   outDirName: string,
+  generatedBy: string,
   storageResolvers?: ArtifactsStorageResolver[]
 ) {
   const result = results[0];
@@ -19,7 +20,7 @@ export async function computeResults(
     };
   });
 
-  const artifacts = getArtifactDef(outDirName, storageResolvers);
+  const artifacts = getArtifactDef(outDirName, generatedBy, storageResolvers);
 
   return {
     componentsResults,
@@ -27,11 +28,17 @@ export async function computeResults(
   };
 }
 
-function getArtifactDef(outDirName: string, storageResolvers?: ArtifactsStorageResolver[]): ArtifactDefinition[] {
+function getArtifactDef(
+  outDirName: string,
+  generatedBy: string,
+  storageResolvers?: ArtifactsStorageResolver[]
+): ArtifactDefinition[] {
   return [
     {
       name: 'element',
       globPatterns: [`${outDirName}/public/**`],
+      generatedBy,
+      description: 'UMD bundle of a web component wrapper',
       // TODO: support more than one resolver
       storageResolver: storageResolvers?.length ? storageResolvers?.map((resolver) => resolver.name) : undefined,
     },
