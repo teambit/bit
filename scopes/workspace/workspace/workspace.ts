@@ -18,7 +18,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
-import { ComponentScopeDirMap, Config } from '@teambit/config';
+import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -971,10 +971,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
     this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return;
+    if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
@@ -1021,6 +1021,8 @@ export class Workspace implements ComponentFactory {
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+
+    return compact(allManifests.map((manifest) => manifest.id));
   }
 
   /**
@@ -1335,7 +1337,7 @@ export class Workspace implements ComponentFactory {
       return await this.importAndGetMany(componentIds);
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
         const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
         if (configStr.includes(err.id)) {
           throw new BitError(`error: a component "${err.id}" was not found
