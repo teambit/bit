@@ -11,7 +11,7 @@ export class CheckTypesCmd implements Command {
   alias = '';
   group = 'development';
   options = [
-    ['a', 'all', 'build all components, not only modified and new'],
+    ['a', 'all', 'check-types for all components, not only modified and new'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
 

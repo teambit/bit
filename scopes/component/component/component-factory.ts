@@ -70,9 +70,10 @@ export interface ComponentFactory {
   getSnap(id: ComponentID, snapId: string): Promise<Snap>;
 
   /**
-   * load extension.
+   * load aspects.
+   * returns the loaded aspect ids including the loaded versions.
    */
-  loadAspects: (ids: string[], throwOnError: boolean) => Promise<void>;
+  loadAspects: (ids: string[], throwOnError: boolean) => Promise<string[]>;
 
   /**
    * Resolve dirs for aspects

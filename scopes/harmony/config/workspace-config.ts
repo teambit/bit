@@ -18,7 +18,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
 
-import { SetExtensionOptions } from './config';
+import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
 import InvalidConfigFile from './exceptions/invalid-config-file';
