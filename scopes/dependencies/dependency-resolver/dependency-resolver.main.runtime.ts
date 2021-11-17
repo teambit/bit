@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
-import type { Config } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -248,7 +248,7 @@ export class DependencyResolverMain {
 
     private logger: Logger,
 
-    private configAspect: Config,
+    private configAspect: ConfigMain,
 
     private aspectLoader: AspectLoaderMain,
 
@@ -961,14 +961,14 @@ export class DependencyResolverMain {
      * default package manager.
      */
     packageManager: 'teambit.dependencies/pnpm',
-    policy: {}
+    policy: {},
   };
 
   static async provider(
     [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
       EnvsMain,
       LoggerMain,
-      Config,
+      ConfigMain,
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,

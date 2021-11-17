@@ -6,6 +6,7 @@ import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
+import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import {
   AspectEntry,
   ComponentMain,
@@ -18,7 +19,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
-import { ComponentScopeDirMap, Config } from '@teambit/config';
+import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -412,6 +413,18 @@ export class Workspace implements ComponentFactory {
     return legacyGraph;
   }
 
+  /**
+   * given component ids, find their dependents in the workspace
+   */
+  async getDependentsIds(ids: ComponentID[]): Promise<ComponentID[]> {
+    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(this.consumer, true);
+    const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
+    const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id._legacy));
+    const dependentsLegacyIds = workspaceDependents.flat().map((_) => _.id);
+    const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyIds);
+    return dependentsIds;
+  }
+
   async loadCapsules(bitIds: string[]) {
     // throw new Error("Method not implemented.");
     const components = await this.load(bitIds);
@@ -624,15 +637,24 @@ export class Workspace implements ComponentFactory {
    * useful for workspace commands, such as `bit build`, `bit compile`.
    * by default, it should be running on new and modified components.
    * a user can specify `--all` to run on all components or specify a pattern to limit to specific components.
+   * some commands such as build/test needs to run also on the dependents.
    */
-  async getComponentsByUserInputDefaultToChanged(all?: boolean, pattern?: string): Promise<Component[]> {
+  async getComponentsByUserInput(all?: boolean, pattern?: string, includeDependents = false): Promise<Component[]> {
     if (all) {
       return this.list();
     }
     if (pattern) {
       return this.byPattern(pattern);
     }
-    return this.newAndModified();
+    const newAndModified = await this.newAndModified();
+    if (includeDependents) {
+      const newAndModifiedIds = newAndModified.map((comp) => comp.id);
+      const dependentsIds = await this.getDependentsIds(newAndModifiedIds);
+      const dependentsIdsFiltered = dependentsIds.filter((id) => !newAndModified.find((_) => _.id.isEqual(id)));
+      const dependents = await this.getMany(dependentsIdsFiltered);
+      newAndModified.push(...dependents);
+    }
+    return newAndModified;
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
@@ -971,10 +993,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
+  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
     this.logger.debug(`loading ${ids.length} aspects`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
-    if (!notLoadedIds.length) return;
+    if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
@@ -1021,6 +1043,8 @@ export class Workspace implements ComponentFactory {
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+
+    return compact(allManifests.map((manifest) => manifest.id));
   }
 
   /**
@@ -1335,7 +1359,7 @@ export class Workspace implements ComponentFactory {
       return await this.importAndGetMany(componentIds);
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
-        const config = this.harmony.get<Config>('teambit.harmony/config');
+        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
         const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
         if (configStr.includes(err.id)) {
           throw new BitError(`error: a component "${err.id}" was not found

@@ -18,7 +18,7 @@ $borderLabelHeight: 20px;
     top: 1px;
     left: 10px;
 
-    font-size: $borderLabelHeight / 2;
+    font-size: $borderLabelHeight * 0.5;
     color: white;
     line-height: $borderLabelHeight;
   }
