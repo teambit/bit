@@ -72,30 +72,28 @@ export function HoverHighlighter({
   }, [disabled]);
 
   return (
-    <>
-      <HoverSelector
-        {...rest}
-        className={classnames(styles.highlighter, !disabled && styles.active)}
-        onElementChange={handleElement}
-        disabled={disabled}
-        data-nullify-component-highlight
-      >
-        {children}
-        {/*
-         * keep the highlighter inside of the hover selector, or it could disappear when switching between elements
-         * the excludeHighlighterAtt will ensure it doesn't turn into a recursion.
-         */}
-        {target && (
-          <ElementHighlighter
-            target={target}
-            classes={classes}
-            style={highlightStyle}
-            placement={placement}
-            watchMotion={watchMotion}
-          />
-        )}
-      </HoverSelector>
-    </>
+    <HoverSelector
+      {...rest}
+      className={classnames(styles.highlighter, !disabled && styles.active)}
+      onElementChange={handleElement}
+      disabled={disabled}
+      data-nullify-component-highlight
+    >
+      {children}
+      {/*
+       * keep the highlighter inside of the hover selector, or it could disappear when switching between elements
+       * the excludeHighlighterAtt will ensure it doesn't turn into a recursion.
+       */}
+      {target && (
+        <ElementHighlighter
+          target={target}
+          classes={classes}
+          style={highlightStyle}
+          placement={placement}
+          watchMotion={watchMotion}
+        />
+      )}
+    </HoverSelector>
   );
 }
 
