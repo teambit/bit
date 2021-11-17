@@ -231,11 +231,7 @@ export class ReactEnv
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
-    const componentsDirs = this.getComponentsModulesDirectories(context.components);
-    // const fileMapPath = this.writeFileMap(context.components, true);
-    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
-    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id, componentsDirs);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
@@ -258,33 +254,6 @@ export class ReactEnv
     };
 
     return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
-  }
-
-  private getComponentsModulesDirectories(components: Component[]): string[] {
-    const dirs = components.map((component) => {
-      return this.pkg.getModulePath(component, { absPath: true });
-    });
-    return dirs;
-  }
-
-  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
-    if (!config || !config.entry) {
-      return [];
-    }
-    if (typeof config.entry === 'string') {
-      return [config.entry];
-    }
-    if (Array.isArray(config.entry)) {
-      let entries: string[] = [];
-      entries = config.entry.reduce((acc, entry) => {
-        if (typeof entry === 'string') {
-          acc.push(entry);
-        }
-        return acc;
-      }, entries);
-      return entries;
-    }
-    return [];
   }
 
   /**
