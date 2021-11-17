@@ -48,9 +48,9 @@ export type ComponentCardProps = {
    */
   isDeprecated?: boolean;
   /**
-   * true if the component is internal
+   * explicit link, to use instead of the component id. Using this opens the link in a new tab, as an external link.
    */
-  isInternal?: boolean;
+  href?: string;
 } & BaseComponentCardProps;
 
 export function ComponentCard({
@@ -60,24 +60,21 @@ export function ComponentCard({
   version,
   description,
   envIcon,
-  isDeprecated,
+  isDeprecated = false,
+  href,
 }: ComponentCardProps) {
   return (
     <Card className={className}>
-      <Link className={styles.componentCardLink} href={id}>
+      <Link className={styles.componentCardLink} href={href || id} external={!!href}>
         <DeprecationSticker isDeprecated={isDeprecated} />
         <PreviewContainer preview={preview} />
 
         <ComponentDetails id={id} version={version} description={description} className={styles.content} />
         <div className={styles.bottom}>
-          <div className={styles.left}></div>
+          <div className={styles.left} />
           <img src={envIcon} className={styles.img} />
         </div>
       </Link>
     </Card>
   );
 }
-
-ComponentCard.defaultProps = {
-  isDeprecated: false,
-};

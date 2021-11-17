@@ -1,7 +1,7 @@
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 
-import { SetExtensionOptions } from './config';
+import { SetExtensionOptions } from './config.main.runtime';
 
 export type WriteOptions = {
   dir?: PathOsBasedAbsolute;

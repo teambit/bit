@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $animationTime: 300ms;
 
 .dismissButton {
@@ -49,5 +51,5 @@ $animationTime: 300ms;
 }
 
 :export {
-  animationTime: $animationTime / 1ms;
+  animationTime: math.div($animationTime, 1ms);
 }

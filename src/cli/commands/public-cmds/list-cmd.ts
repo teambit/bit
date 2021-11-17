@@ -17,7 +17,7 @@ export default class List implements LegacyCommand {
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';
   opts = [
-    ['ids', 'ids', 'show only component ids unformatted'],
+    ['i', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
     ['b', 'bare', 'DEPRECATED. use --raw instead'],
     ['r', 'raw', 'show raw output (only components ids, no styling)'],
