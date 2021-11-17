@@ -57,7 +57,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     }
 
     const longProcessLogger = this.logger.createLongProcessLogger('build');
-    const components = await this.workspace.getComponentsByUserInputDefaultToChanged(all, userPattern);
+    const components = await this.workspace.getComponentsByUserInput(all, userPattern, true);
     if (!components.length) {
       return chalk.bold(
         `no components found to build. use "--all" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
