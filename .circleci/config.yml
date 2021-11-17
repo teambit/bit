@@ -1171,6 +1171,7 @@ jobs:
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
+      - run: 'cd bit\bit; npm run build:types:windows'
       - persist_to_workspace:
           root: .
           paths:
