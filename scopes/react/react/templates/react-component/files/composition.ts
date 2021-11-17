@@ -10,7 +10,7 @@ import { ${Name} } from './${name}';
 
 export const Basic${Name} = () => {
   return (
-    <${Name} text="hello from ${Name}" />
+    <${Name}>hello world!</${Name}>
   );
 }
 `,
