@@ -5,7 +5,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
-import { loadBit } from '@teambit/bit';
+import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
@@ -32,6 +32,12 @@ export type GeneratorConfig = {
    * array of aspects to include in the list of templates.
    */
   aspects: string[];
+
+  /**
+   * by default core templates are shown.
+   * use this to hide them unless `--show-all` flag of `bit templates` was used
+   */
+  hideCoreTemplates: boolean;
 };
 
 export class GeneratorMain {
@@ -72,12 +78,19 @@ export class GeneratorMain {
     }: {
       id: string;
       template: WorkspaceTemplate | ComponentTemplate;
-    }) => ({
-      aspectId: id,
-      name: template.name,
-      description: template.description,
-      hidden: template.hidden,
-    });
+    }) => {
+      const shouldBeHidden = () => {
+        if (template.hidden) return true;
+        if (this.config.hideCoreTemplates && isCoreAspect(id)) return true;
+        return false;
+      };
+      return {
+        aspectId: id,
+        name: template.name,
+        description: template.description,
+        hidden: shouldBeHidden(),
+      };
+    };
     return this.isRunningInsideWorkspace()
       ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
       : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
