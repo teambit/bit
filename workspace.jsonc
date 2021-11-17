@@ -323,6 +323,7 @@
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
         "ws": "7.4.2",
+        "get-xpath": "3.0.1",
         "yaml": "1.10.2"
       },
       "peerDependencies": {

@@ -11,9 +11,10 @@ type HighlightedElementProps = {
   style?: CSSProperties;
   targetStyle?: CSSProperties;
   className?: string;
+  watchMotion?: boolean;
 };
 
-export const HighlightedElement = ({ style, targetStyle, className }: HighlightedElementProps) => {
+export const HighlightedElement = ({ style, targetStyle, watchMotion, className }: HighlightedElementProps) => {
   const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
 
@@ -21,11 +22,11 @@ export const HighlightedElement = ({ style, targetStyle, className }: Highlighte
   const target = targetElement && { ...mockTarget, element: targetElement };
 
   return (
-    <div className={className} style={{ padding: '16px 160px 50px 16px' }}>
+    <div className={className} style={{ padding: '16px 16px 50px 16px', width: 300 }}>
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
-      {target && <ElementHighlighter target={target} style={style} placement="bottom" />}
+      {target && <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" />}
     </div>
   );
 };
@@ -54,7 +55,5 @@ export const MovingElement = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  return (
-    <HighlightedElement style={{ padding: '16px 16px 50px 16px', width: 250 }} targetStyle={{ marginLeft: margin }} />
-  );
+  return <HighlightedElement targetStyle={{ marginLeft: margin }} />;
 };

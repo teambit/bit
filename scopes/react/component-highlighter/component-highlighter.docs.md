@@ -33,9 +33,7 @@ You can also use it manually, to have more control:
 ```tsx
 const [element, setElement] = useState<HTMLElement | undefined>(undefined);
 
-useEffect(() => setElement(
-    document.getElementById('to-highlight')
-), [targetRef.current]);
+useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
 
 const target = targetElement && {
   element: targetElement,
@@ -89,6 +87,24 @@ A debounce mitigates this by batching re-targets and smooths out the experience.
 First time selection will always happen immediately, for a snappy experience.
 
 You can control the debounce rate with the `debounceSelection` prop. (default - `80ms`)
+
+## Multi highlighter
+
+This component is similar to the Hover Highlighter, but provides automatic highlighting to all components nested inside it.
+
+Simply wrap your code like so, and see the highlighting in action:
+
+```tsx
+import { MultiHighlighter } from '@teambit/react.ui.component-highlighter';
+
+// ...
+
+return (
+  <MultiHighlighter>
+    <App />
+  </MultiHighlighter>
+);
+```
 
 ## Customization
 
