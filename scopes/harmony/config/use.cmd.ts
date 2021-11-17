@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import path from 'path';
-import chalk from 'jest-matcher-utils/node_modules/chalk';
+import chalk from 'chalk';
 import { ConfigMain } from '@teambit/config';
 
 export class UseCmd implements Command {
