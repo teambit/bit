@@ -658,7 +658,27 @@
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
             "bbit": "bin/bit"
-          }
+          },
+          "engines": {
+            "node": ">=12.22.0"
+          },
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/teambit/bit"
+          },
+          "keywords": [
+            "bit",
+            "bit-aspect",
+            "components",
+            "collaboration",
+            "web",
+            "react",
+            "react-components",
+            "angular",
+            "angular-components",
+            "vue",
+            "vue-components"
+          ]
         }
       },
       "teambit.dependencies/dependency-resolver": {
