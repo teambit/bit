@@ -34,11 +34,13 @@ export const HighlightedElement = ({ style, targetStyle, watchMotion, className 
 export const Customized = () => {
   return (
     <HighlightedElement
-      style={{
-        '--bit-highlighter-color': '#94deb4',
-        '--bit-highlighter-color-hover': '#d0f1de',
-        '--bit-highlighter-color-active': '#37b26c',
-      }}
+      style={
+        {
+          '--bit-highlighter-color': '#94deb4',
+          '--bit-highlighter-color-hover': '#d0f1de',
+          '--bit-highlighter-color-active': '#37b26c',
+        } as CSSProperties
+      }
     />
   );
 };
