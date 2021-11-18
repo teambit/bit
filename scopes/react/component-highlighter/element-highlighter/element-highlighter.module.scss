@@ -1,3 +1,5 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .container {
   font-size: 12px;
 }
@@ -5,4 +7,9 @@
 .label {
   font-family: sans-serif;
   padding: 8px;
+}
+
+.frame,
+.label {
+  z-index: $highlighter-z-index;
 }
