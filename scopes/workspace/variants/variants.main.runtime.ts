@@ -100,9 +100,16 @@ export class VariantsMain {
     return result;
   }
 
-  setExtension(variant: string, extensionName: string, extensionConfig: any, opts?: { overrideExisting?: boolean }) {
+  /**
+   * Updates the specified extension object of the specified variant.
+   * @param {string} variant - The variant pattern.
+   * @param {string} extensionId - The extension ID.
+   * @param {Object} extensionConfig - The extension configuration.
+   * @param {boolean} opts.overrideExisting - When true, any existing entries are overriden.
+   */
+  setExtension(variant: string, extensionId: string, extensionConfig: any, opts?: { overrideExisting?: boolean }) {
     const newVariant = this.patterns[variant] ?? {};
-    assign(newVariant, { [extensionName]: extensionConfig });
+    assign(newVariant, { [extensionId]: extensionConfig });
     assign(this.patterns, { [variant]: newVariant });
     this.configAspect.setExtension(VariantsAspect.id, this.patterns, {
       overrideExisting: opts?.overrideExisting === true,

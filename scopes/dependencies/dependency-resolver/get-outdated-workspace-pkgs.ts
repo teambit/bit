@@ -1,4 +1,3 @@
-import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { ManifestDependenciesKeysNames } from './manifest';
 import { WorkspacePolicy } from './policy';
 
@@ -17,20 +16,23 @@ export type OutdatedPkg = CurrentPkg & {
 
 type ResolveFunction = (range: string) => Promise<string | null>;
 
+/**
+ * Gets outdated packages from root policy, variants, and component config files (component.json files).
+ */
 export function getOutdatedWorkspacePkgs({
   rootPolicy,
-  variantPatterns,
+  variantPoliciesByPatterns,
   resolve,
   componentPoliciesById,
 }: {
   rootPolicy: WorkspacePolicy;
-  variantPatterns: Record<string, any>;
+  variantPoliciesByPatterns: Record<string, any>;
   resolve: ResolveFunction;
   componentPoliciesById: Record<string, any>;
 }): Promise<OutdatedPkg[]> {
   const allPkgs = [
     ...getPkgsFromRootPolicy(rootPolicy),
-    ...getPkgsFromVariants(variantPatterns),
+    ...getPkgsFromVariants(variantPoliciesByPatterns),
     ...getPkgsFromComponents(componentPoliciesById),
   ];
   return getOutdatedPkgs(resolve, allPkgs);
@@ -46,14 +48,11 @@ function getPkgsFromRootPolicy(rootPolicy: WorkspacePolicy): CurrentPkg[] {
   }));
 }
 
-function getPkgsFromVariants(variantPatterns: Record<string, any>): CurrentPkg[] {
-  return Object.entries(variantPatterns)
-    .filter(([, variant]) => variant[DependencyResolverAspect.id]?.policy != null)
+function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, any>): CurrentPkg[] {
+  return Object.entries(variantPoliciesByPatterns)
+    .filter(([, variant]) => variant != null)
     .map(([variantPattern, variant]) => {
-      return readAllDependenciesFromPolicyObject(
-        { source: 'variants', variantPattern },
-        variant[DependencyResolverAspect.id].policy
-      );
+      return readAllDependenciesFromPolicyObject({ source: 'variants', variantPattern }, variant);
     })
     .flat();
 }

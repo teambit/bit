@@ -936,15 +936,18 @@ export class DependencyResolverMain {
     return manifest;
   }
 
-  getOutdatedPkgs({
+  /**
+   * Return a list of outdated policy dependencies.
+   */
+  getOutdatedPkgsFromPolicies({
     rootDir,
-    variantPatterns,
+    variantPoliciesByPatterns,
     componentPoliciesById,
   }: {
     rootDir: string;
-    variantPatterns: Record<string, Object>;
+    variantPoliciesByPatterns: Record<string, any>;
     componentPoliciesById: Record<string, any>;
-  }) {
+  }): Promise<OutdatedPkg[]> {
     const resolver = this.getVersionResolver();
     const resolve = async (spec: string) =>
       (
@@ -955,23 +958,36 @@ export class DependencyResolverMain {
     return getOutdatedWorkspacePkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       resolve,
-      variantPatterns,
+      variantPoliciesByPatterns,
       componentPoliciesById,
     });
   }
 
+  /**
+   * Update the specified packages to their latest versions in all policies;
+   * root polcies, variant pocilicies, and component configuration policies (component.json).
+   */
   applyUpdates(
     outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
     options: {
-      variantPatterns: Record<string, any>;
+      variantPoliciesByPatterns: Record<string, any>;
       componentPoliciesById: Record<string, any>;
     }
-  ) {
-    return applyUpdates(outdatedPkgs, {
-      dependencyResolver: this,
-      variantPatterns: options.variantPatterns,
+  ): {
+    updatedVariants: string[];
+    updatedComponents: string[];
+  } {
+    const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
+      variantPoliciesByPatterns: options.variantPoliciesByPatterns,
       componentPoliciesById: options.componentPoliciesById,
     });
+    this.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    return {
+      updatedVariants,
+      updatedComponents,
+    };
   }
 
   static runtime = MainRuntime;

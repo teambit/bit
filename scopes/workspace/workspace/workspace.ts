@@ -40,7 +40,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
-import type { VariantsMain } from '@teambit/variants';
+import type { VariantsMain, Patterns } from '@teambit/variants';
 import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
@@ -1281,10 +1281,10 @@ export class Workspace implements ComponentFactory {
       await this.importObjects();
       this.logger.consoleSuccess();
     }
-    return this.installModules(options);
+    return this._installModules(options);
   }
 
-  private async getComponentsWithDependencyPolicies() {
+  private async _getComponentsWithDependencyPolicies() {
     const allComponentIds = await this.listIds();
     const componentConfigFiles: Record<string, ComponentConfigFile> = {};
     const componentPoliciesById: Record<string, any> = {};
@@ -1292,14 +1292,13 @@ export class Workspace implements ComponentFactory {
       await Promise.all<ComponentConfigFile | undefined>(
         allComponentIds.map((componentId) => this.componentConfigFile(componentId))
       )
-    ).forEach((component) => {
-      if (component == null) return;
-      const depResolverAspect = component?.aspects.get(DependencyResolverAspect.id);
-      if (depResolverAspect == null || component == null) return;
-      const componentId = component.componentId.toString();
-      componentConfigFiles[componentId] = component;
-      // eslint-disable-next-line
-      componentPoliciesById[componentId] = depResolverAspect.legacy.rawConfig['policy'];
+    ).forEach((componentConfigFile, index) => {
+      if (!componentConfigFile) return;
+      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
+      if (!depResolverConfig) return;
+      const componentId = allComponentIds[index].toString();
+      componentConfigFiles[componentId] = componentConfigFile;
+      componentPoliciesById[componentId] = depResolverConfig.config.policy;
     });
     return {
       componentConfigFiles,
@@ -1308,25 +1307,36 @@ export class Workspace implements ComponentFactory {
   }
 
   async updateDependencies() {
-    const { componentConfigFiles, componentPoliciesById } = await this.getComponentsWithDependencyPolicies();
+    const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
-    const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgs({
+    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.path,
-      variantPatterns,
+      variantPoliciesByPatterns,
       componentPoliciesById,
     });
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs, {
-      variantPatterns,
+      variantPoliciesByPatterns,
       componentPoliciesById,
     });
-    await this.updateVariants(variantPatterns, updatedVariants);
+    await this._updateVariantsPolicies(variantPatterns, updatedVariants);
     const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
-    await this.saveManyConfigFiles(updatedComponentConfigFiles);
+    await this._saveManyComponentConfigFiles(updatedComponentConfigFiles);
     await this._reloadConsumer();
-    return this.installModules({ dedupe: true });
+    return this._installModules({ dedupe: true });
   }
 
-  private updateVariants(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns) {
+    const variantPoliciesByPatterns = {};
+    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
+      if (extensions[DependencyResolverAspect.id]?.policy) {
+        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
+      }
+    }
+    return variantPoliciesByPatterns;
+  }
+
+  private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,
@@ -1338,7 +1348,7 @@ export class Workspace implements ComponentFactory {
     return this.dependencyResolver.persistConfig(this.path);
   }
 
-  private async saveManyConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
+  private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
     await Promise.all(
       Array.from(componentConfigFiles).map(async (componentConfigFile) => {
         const componentDir = this.componentDir(componentConfigFile.componentId, { ignoreVersion: true });
@@ -1347,7 +1357,7 @@ export class Workspace implements ComponentFactory {
     );
   }
 
-  private async installModules(options?: ModulesInstallOptions) {
+  private async _installModules(options?: ModulesInstallOptions) {
     this.logger.console(
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );

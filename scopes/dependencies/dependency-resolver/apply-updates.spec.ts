@@ -1,13 +1,8 @@
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { applyUpdates } from './apply-updates';
 
 describe('applyUpdates()', () => {
   it('should apply updates on root dependencies', () => {
-    const dependencyResolver: any = {
-      // @ts-ignore
-      addToRootPolicy: jest.fn(),
-    };
-    applyUpdates(
+    const { updatedWorkspacePolicyEntries } = applyUpdates(
       [
         {
           name: 'lodash',
@@ -23,13 +18,12 @@ describe('applyUpdates()', () => {
         },
       ],
       {
-        dependencyResolver,
-        variantPatterns: {},
+        variantPoliciesByPatterns: {},
         componentPoliciesById: {},
       }
     );
     // @ts-ignore
-    expect(dependencyResolver.addToRootPolicy).toBeCalledWith(
+    expect(updatedWorkspacePolicyEntries).toStrictEqual(
       [
         {
           dependencyId: 'lodash',
@@ -50,63 +44,47 @@ describe('applyUpdates()', () => {
     );
   });
   it('should apply updates on variant dependencies', () => {
-    const dependencyResolver: any = {
-      // @ts-ignore
-      addToRootPolicy: jest.fn(),
-    };
-    const variantPatterns = {
+    const variantPoliciesByPatterns = {
       variant1: {
-        [DependencyResolverAspect.id]: {
-          policy: {
-            dependencies: {
-              'variant1-runtime-dep1': '1.0.0',
-              'variant1-runtime-dep2': '1.0.0',
-            },
-            devDependencies: {
-              'variant1-dev-dep1': '1.0.0',
-              'variant1-dev-dep2': '1.0.0',
-            },
-            peerDependencies: {
-              'variant1-peer-dep1': '1.0.0',
-              'variant1-peer-dep2': '1.0.0',
-            },
-          },
+        dependencies: {
+          'variant1-runtime-dep1': '1.0.0',
+          'variant1-runtime-dep2': '1.0.0',
+        },
+        devDependencies: {
+          'variant1-dev-dep1': '1.0.0',
+          'variant1-dev-dep2': '1.0.0',
+        },
+        peerDependencies: {
+          'variant1-peer-dep1': '1.0.0',
+          'variant1-peer-dep2': '1.0.0',
         },
       },
       variant2: {
-        [DependencyResolverAspect.id]: {
-          policy: {
-            dependencies: {
-              'variant2-runtime-dep1': '1.0.0',
-              'variant2-runtime-dep2': '1.0.0',
-            },
-            devDependencies: {
-              'variant2-dev-dep1': '1.0.0',
-              'variant2-dev-dep2': '1.0.0',
-            },
-            peerDependencies: {
-              'variant2-peer-dep1': '1.0.0',
-              'variant2-peer-dep2': '1.0.0',
-            },
-          },
+        dependencies: {
+          'variant2-runtime-dep1': '1.0.0',
+          'variant2-runtime-dep2': '1.0.0',
+        },
+        devDependencies: {
+          'variant2-dev-dep1': '1.0.0',
+          'variant2-dev-dep2': '1.0.0',
+        },
+        peerDependencies: {
+          'variant2-peer-dep1': '1.0.0',
+          'variant2-peer-dep2': '1.0.0',
         },
       },
       variant3: {
-        [DependencyResolverAspect.id]: {
-          policy: {
-            dependencies: {
-              'variant3-runtime-dep1': '1.0.0',
-              'variant3-runtime-dep2': '1.0.0',
-            },
-            devDependencies: {
-              'variant3-dev-dep1': '1.0.0',
-              'variant3-dev-dep2': '1.0.0',
-            },
-            peerDependencies: {
-              'variant3-peer-dep1': '1.0.0',
-              'variant3-peer-dep2': '1.0.0',
-            },
-          },
+        dependencies: {
+          'variant3-runtime-dep1': '1.0.0',
+          'variant3-runtime-dep2': '1.0.0',
+        },
+        devDependencies: {
+          'variant3-dev-dep1': '1.0.0',
+          'variant3-dev-dep2': '1.0.0',
+        },
+        peerDependencies: {
+          'variant3-peer-dep1': '1.0.0',
+          'variant3-peer-dep2': '1.0.0',
         },
       },
     };
@@ -135,74 +113,57 @@ describe('applyUpdates()', () => {
         },
       ],
       {
-        dependencyResolver,
-        variantPatterns,
+        variantPoliciesByPatterns,
         componentPoliciesById: {},
       }
     );
     // @ts-ignore
-    expect(variantPatterns.variant1).toStrictEqual({
-      [DependencyResolverAspect.id]: {
-        policy: {
-          dependencies: {
-            'variant1-runtime-dep1': '2.0.0',
-            'variant1-runtime-dep2': '1.0.0',
-          },
-          devDependencies: {
-            'variant1-dev-dep1': '1.0.0',
-            'variant1-dev-dep2': '1.0.0',
-          },
-          peerDependencies: {
-            'variant1-peer-dep1': '1.0.0',
-            'variant1-peer-dep2': '1.0.0',
-          },
-        },
+    expect(variantPoliciesByPatterns.variant1).toStrictEqual({
+      dependencies: {
+        'variant1-runtime-dep1': '2.0.0',
+        'variant1-runtime-dep2': '1.0.0',
+      },
+      devDependencies: {
+        'variant1-dev-dep1': '1.0.0',
+        'variant1-dev-dep2': '1.0.0',
+      },
+      peerDependencies: {
+        'variant1-peer-dep1': '1.0.0',
+        'variant1-peer-dep2': '1.0.0',
       },
     });
     // @ts-ignore
-    expect(variantPatterns.variant2).toStrictEqual({
-      [DependencyResolverAspect.id]: {
-        policy: {
-          dependencies: {
-            'variant2-runtime-dep1': '1.0.0',
-            'variant2-runtime-dep2': '1.0.0',
-          },
-          devDependencies: {
-            'variant2-dev-dep1': '2.0.0',
-            'variant2-dev-dep2': '1.0.0',
-          },
-          peerDependencies: {
-            'variant2-peer-dep1': '1.0.0',
-            'variant2-peer-dep2': '1.0.0',
-          },
-        },
+    expect(variantPoliciesByPatterns.variant2).toStrictEqual({
+      dependencies: {
+        'variant2-runtime-dep1': '1.0.0',
+        'variant2-runtime-dep2': '1.0.0',
+      },
+      devDependencies: {
+        'variant2-dev-dep1': '2.0.0',
+        'variant2-dev-dep2': '1.0.0',
+      },
+      peerDependencies: {
+        'variant2-peer-dep1': '1.0.0',
+        'variant2-peer-dep2': '1.0.0',
       },
     });
     // @ts-ignore
-    expect(variantPatterns.variant3).toStrictEqual({
-      [DependencyResolverAspect.id]: {
-        policy: {
-          dependencies: {
-            'variant3-runtime-dep1': '1.0.0',
-            'variant3-runtime-dep2': '1.0.0',
-          },
-          devDependencies: {
-            'variant3-dev-dep1': '1.0.0',
-            'variant3-dev-dep2': '1.0.0',
-          },
-          peerDependencies: {
-            'variant3-peer-dep1': '2.0.0',
-            'variant3-peer-dep2': '1.0.0',
-          },
-        },
+    expect(variantPoliciesByPatterns.variant3).toStrictEqual({
+      dependencies: {
+        'variant3-runtime-dep1': '1.0.0',
+        'variant3-runtime-dep2': '1.0.0',
+      },
+      devDependencies: {
+        'variant3-dev-dep1': '1.0.0',
+        'variant3-dev-dep2': '1.0.0',
+      },
+      peerDependencies: {
+        'variant3-peer-dep1': '2.0.0',
+        'variant3-peer-dep2': '1.0.0',
       },
     });
   });
   it('should apply updates on component dependencies', () => {
-    const dependencyResolver: any = {
-      // @ts-ignore
-      addToRootPolicy: jest.fn(),
-    };
     const componentPoliciesById = {
       component1: {
         dependencies: {
@@ -244,8 +205,7 @@ describe('applyUpdates()', () => {
         },
       ],
       {
-        dependencyResolver,
-        variantPatterns: {},
+        variantPoliciesByPatterns: {},
         componentPoliciesById,
       }
     );

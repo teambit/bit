@@ -1,4 +1,3 @@
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { getOutdatedWorkspacePkgs } from './get-outdated-workspace-pkgs';
 
 describe('getOutdatedWorkspacePkgs()', () => {
@@ -36,26 +35,22 @@ describe('getOutdatedWorkspacePkgs()', () => {
           },
         ],
       } as any,
-      variantPatterns: {
+      variantPoliciesByPatterns: {
         '{variant1/*}': {
-          [DependencyResolverAspect.id]: {
-            policy: {
-              dependencies: {
-                'variant1-runtime-dep1': '1.0.0',
-                'variant1-runtime-dep2': '1.0.0',
-                'variant1-runtime-dep3': '-',
-              },
-              devDependencies: {
-                'variant1-dev-dep1': '1.0.0',
-                'variant1-dev-dep2': '1.0.0',
-                'variant1-dev-dep3': '-',
-              },
-              peerDependencies: {
-                'variant1-peer-dep1': '1.0.0',
-                'variant1-peer-dep2': '1.0.0',
-                'variant1-peer-dep3': '-',
-              },
-            },
+          dependencies: {
+            'variant1-runtime-dep1': '1.0.0',
+            'variant1-runtime-dep2': '1.0.0',
+            'variant1-runtime-dep3': '-',
+          },
+          devDependencies: {
+            'variant1-dev-dep1': '1.0.0',
+            'variant1-dev-dep2': '1.0.0',
+            'variant1-dev-dep3': '-',
+          },
+          peerDependencies: {
+            'variant1-peer-dep1': '1.0.0',
+            'variant1-peer-dep2': '1.0.0',
+            'variant1-peer-dep3': '-',
           },
         },
       },
