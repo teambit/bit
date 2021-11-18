@@ -14,28 +14,23 @@ export type OutdatedPkg = CurrentPkg & {
   latestRange: string;
 };
 
-type ResolveFunction = (range: string) => Promise<string | null>;
-
 /**
- * Gets outdated packages from root policy, variants, and component config files (component.json files).
+ * Get packages from root policy, variants, and component config files (component.json files).
  */
-export function getOutdatedWorkspacePkgs({
+export function getAllPolicyPkgs({
   rootPolicy,
   variantPoliciesByPatterns,
-  resolve,
   componentPoliciesById,
 }: {
   rootPolicy: WorkspacePolicy;
   variantPoliciesByPatterns: Record<string, any>;
-  resolve: ResolveFunction;
   componentPoliciesById: Record<string, any>;
-}): Promise<OutdatedPkg[]> {
-  const allPkgs = [
+}): Array<Omit<OutdatedPkg, 'latestRange'>> {
+  return [
     ...getPkgsFromRootPolicy(rootPolicy),
     ...getPkgsFromVariants(variantPoliciesByPatterns),
     ...getPkgsFromComponents(componentPoliciesById),
   ];
-  return getOutdatedPkgs(resolve, allPkgs);
 }
 
 function getPkgsFromRootPolicy(rootPolicy: WorkspacePolicy): CurrentPkg[] {
@@ -80,38 +75,11 @@ function readAllDependenciesFromPolicyObject(
         pkgs.push({
           ...context,
           name,
-          currentRange: currentRange as string,
+          currentRange,
           targetField,
         });
       }
     }
   }
   return pkgs;
-}
-
-function repeatPrefix(originalSpec: string, newVersion: string): string {
-  switch (originalSpec[0]) {
-    case '~':
-    case '^':
-      return `${originalSpec[0]}${newVersion}`;
-    default:
-      return newVersion;
-  }
-}
-
-async function getOutdatedPkgs<T>(
-  resolve: ResolveFunction,
-  pkgs: Array<{ name: string; currentRange: string } & T>
-): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
-  return (
-    await Promise.all(
-      pkgs.map(async (pkg) => {
-        const latestVersion = await resolve(`${pkg.name}@latest`);
-        return {
-          ...pkg,
-          latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
-        } as any;
-      })
-    )
-  ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
 }

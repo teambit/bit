@@ -38,7 +38,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { getOutdatedWorkspacePkgs, OutdatedPkg } from './get-outdated-workspace-pkgs';
+import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -948,6 +948,21 @@ export class DependencyResolverMain {
     variantPoliciesByPatterns: Record<string, any>;
     componentPoliciesById: Record<string, any>;
   }): Promise<OutdatedPkg[]> {
+    const allPkgs = getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPoliciesById,
+    });
+    return this.getOutdatedPkgs(rootDir, allPkgs);
+  }
+
+  /**
+   * Accepts a list of package dependency policies and returns a list of outdated policies extended with their "latestRange"
+   */
+  async getOutdatedPkgs<T>(
+    rootDir: string,
+    pkgs: Array<{ name: string; currentRange: string } & T>
+  ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     const resolver = this.getVersionResolver();
     const resolve = async (spec: string) =>
       (
@@ -955,12 +970,17 @@ export class DependencyResolverMain {
           rootDir,
         })
       ).version;
-    return getOutdatedWorkspacePkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
-      resolve,
-      variantPoliciesByPatterns,
-      componentPoliciesById,
-    });
+    return (
+      await Promise.all(
+        pkgs.map(async (pkg) => {
+          const latestVersion = await resolve(`${pkg.name}@latest`);
+          return {
+            ...pkg,
+            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+          } as any;
+        })
+      )
+    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
   }
 
   /**
@@ -1109,3 +1129,13 @@ export class DependencyResolverMain {
 }
 
 DependencyResolverAspect.addRuntime(DependencyResolverMain);
+
+function repeatPrefix(originalSpec: string, newVersion: string): string {
+  switch (originalSpec[0]) {
+    case '~':
+    case '^':
+      return `${originalSpec[0]}${newVersion}`;
+    default:
+      return newVersion;
+  }
+}

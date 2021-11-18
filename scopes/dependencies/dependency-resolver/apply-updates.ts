@@ -1,4 +1,4 @@
-import { OutdatedPkg } from './get-outdated-workspace-pkgs';
+import { OutdatedPkg } from './get-all-policy-pkgs';
 import { WorkspacePolicyEntry } from './policy';
 
 /**
