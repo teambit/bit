@@ -7632,7 +7632,6 @@ __metadata:
     utf-8-validate: 5.0.5
     util: 0.12.3
     uuid: 3.4.0
-    v8-compile-cache: 2.2.0
     validate-npm-package-name: 3.0.0
     verdaccio: 4.11.0
     vfile: 4.2.0
@@ -34733,6 +34732,12 @@ typescript@^3.9.3:
   checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
+
+"v8-cache-817a32@workspace:scopes/toolbox/performance/v8-cache":
+  version: 0.0.0-use.local
+  resolution: "v8-cache-817a32@workspace:scopes/toolbox/performance/v8-cache"
+  languageName: unknown
+  linkType: soft
 
 "v8-compile-cache@npm:2.2.0":
   version: 2.2.0

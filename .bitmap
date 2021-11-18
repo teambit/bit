@@ -663,6 +663,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/to-windows-compatible-path"
     },
+    "performance/v8-cache": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/performance/v8-cache"
+    },
     "pkg": {
         "scope": "teambit.pkg",
         "version": "0.0.562",
