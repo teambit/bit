@@ -5,14 +5,6 @@
   },
   "propagate": true,
   "extensions": {
-    "teambit.pkg/pkg": {
-      "packageJson": {
-        "name": "@teambit/{name}",
-        "private": false,
-        "license": "Apache-2.0"
-      },
-      "packageManagerPublishArgs": ["--access public"]
-    },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
@@ -41,7 +33,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.175"
+          "@teambit/legacy": "1.0.176"
         }
       }
     }

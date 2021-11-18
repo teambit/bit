@@ -2,7 +2,8 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ConfigAspect, Config } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
@@ -134,7 +135,7 @@ export class ComponentMain {
   static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, ConfigAspect];
 
   static async provider(
-    [graphql, express, cli, configAspect]: [GraphqlMain, ExpressMain, CLIMain, Config],
+    [graphql, express, cli, configAspect]: [GraphqlMain, ExpressMain, CLIMain, ConfigMain],
     config,
     [hostSlot, showFragmentSlot]: [ComponentHostSlot, ShowFragmentSlot]
   ) {

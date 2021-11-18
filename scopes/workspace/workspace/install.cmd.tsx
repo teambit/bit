@@ -22,7 +22,7 @@ export default class InstallCmd implements Command {
   shortDescription = '';
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
-    ['t', 'type [lifecycleType]', 'runtime (default), dev or peer dependency'],
+    ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
     ['u', 'update-existing [updateExisting]', 'update existing dependencies version and types'],
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],

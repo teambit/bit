@@ -31,6 +31,7 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
+import { ConfigMain, ConfigAspect } from '@teambit/config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -357,9 +358,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+  async loadAspects(ids: string[], throwOnError = false): Promise<string[]> {
     const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
+    return compact(scopeManifests.map((manifest) => manifest.id));
   }
 
   async getManifestsGraphRecursively(
@@ -891,6 +893,7 @@ export class ScopeMain implements ComponentFactory {
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
+    ConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -898,7 +901,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, configMain]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -907,7 +910,8 @@ export class ScopeMain implements ComponentFactory {
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain
+      EnvsMain,
+      ConfigMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -992,6 +996,16 @@ export class ScopeMain implements ComponentFactory {
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
+
+    configMain?.registerPreAddingAspectsSlot?.(async (compIds) => {
+      const loadedIds = await scope.loadAspects(compIds, true);
+      // find the full component-ids including versions in the load-aspects results.
+      // we need it for bit-use to be added to the config file.
+      return compIds.map((compId) => {
+        const loaded = loadedIds.find((loadedId) => loadedId.startsWith(`${compId}@`));
+        return loaded || compId;
+      });
+    });
 
     express.register([
       new PutRoute(scope, postPutSlot),

@@ -11,7 +11,7 @@ export class CheckTypesCmd implements Command {
   alias = '';
   group = 'development';
   options = [
-    ['a', 'all', 'build all components, not only modified and new'],
+    ['a', 'all', 'check-types for all components, not only modified and new'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
 
@@ -19,7 +19,7 @@ export class CheckTypesCmd implements Command {
 
   async report([userPattern]: [string], { all = false, strict = false }: { all: boolean; strict: boolean }) {
     if (!this.workspace) throw new ConsumerNotFound();
-    const components = await this.workspace.getComponentsByUserInputDefaultToChanged(all, userPattern);
+    const components = await this.workspace.getComponentsByUserInput(all, userPattern);
     this.logger.setStatusLine(`checking types for ${components.length} components`);
     const files = this.typescript.getSupportedFilesForTsserver(components);
     await this.typescript.initTsserverClientFromWorkspace({ printTypeErrors: true }, files);

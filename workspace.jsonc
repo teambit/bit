@@ -309,7 +309,6 @@
         "unist-util-visit": "2.0.3",
         "url-join": "4.0.1",
         "url-parse": "1.4.7",
-        "use-animation-frame": "0.1.0",
         "use-debounce": "6.0.1",
         "vfile": "4.2.0",
         "vscode-icons-js": "11.0.0",
@@ -324,11 +323,12 @@
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
         "ws": "7.4.2",
+        "get-xpath": "3.0.1",
         "yaml": "1.10.2"
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.175",
+        "@teambit/legacy": "1.0.176",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -395,7 +395,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.175"
+            "@teambit/legacy": "1.0.176"
           }
         }
       },
@@ -446,7 +446,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.175"
+            "@teambit/legacy": "1.0.176"
           }
         }
       },
@@ -628,7 +628,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.175"
+            "@teambit/legacy": "1.0.176"
           }
         }
       }
@@ -658,14 +658,34 @@
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
             "bbit": "bin/bit"
-          }
+          },
+          "engines": {
+            "node": ">=12.22.0"
+          },
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/teambit/bit"
+          },
+          "keywords": [
+            "bit",
+            "bit-aspect",
+            "components",
+            "collaboration",
+            "web",
+            "react",
+            "react-components",
+            "angular",
+            "angular-components",
+            "vue",
+            "vue-components"
+          ]
         }
       },
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.175",
+            "@teambit/legacy": "1.0.176",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -773,7 +793,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.175"
+            "@teambit/legacy": "1.0.176"
           }
         }
       }

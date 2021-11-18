@@ -2,9 +2,13 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import {
+  ComponentMeta,
+  componentMetaField,
+  componentMetaProperties,
+} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { metaFromPackageJson } from './meta-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
-import { ComponentMeta, componentMetaField, componentMetaProperties } from './model';
 
 export type BitReactTransformerOptions = {
   componentFilesPath?: string;
