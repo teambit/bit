@@ -34,7 +34,6 @@ import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-meta
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Configuration } from 'webpack';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
