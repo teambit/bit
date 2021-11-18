@@ -1,12 +1,19 @@
-import React, { useEffect, useState, createRef } from 'react';
+import React, { useEffect, useState, createRef, useRef } from 'react';
+import classNames from 'classnames';
 import getXPath from 'get-xpath';
+import { v4 } from 'uuid';
 import { ElementHighlighter, ElementHighlighterProps, HighlightTarget } from '@teambit/react.ui.component-highlighter';
 import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 
-// TODO - reuse selector from @teambit/react.ui.component-highlighter
-const allExceptHighlighterQuery = `:not(${excludeHighlighterSelector}, ${excludeHighlighterSelector} *)`;
+const targetsSelector = (
+  /**
+   * the scope in which to consider the exclude selector.
+   * The `:scope` modifier is appropriate, but is not supported in older browsers.
+   */
+  scopeSelector = ':scope'
+) => `:not(${scopeSelector} ${excludeHighlighterSelector}, ${scopeSelector} ${excludeHighlighterSelector} *)`;
 
 export interface MultiHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
@@ -37,25 +44,25 @@ export function MultiHighlighter({
 }: MultiHighlighterProps) {
   const ref = createRef<HTMLDivElement>();
   const [targets, setTargets] = useState<Record<string, HighlightTarget>>({});
+  const scopeClass = useRef(`hl-scope-${v4()}`);
 
   useEffect(() => {
-    if (disabled) {
-      setTargets({});
-      return;
-    }
+    if (disabled) setTargets({});
+  }, [disabled]);
 
+  useEffect(() => {
+    const nextTargets: Record<string, HighlightTarget> = {};
     const { current } = ref;
-    if (!current) return;
+    if (!current || disabled) return;
 
     // select all non-highlighter elements
-    const allElements = Array.from(current.querySelectorAll<HTMLElement>(allExceptHighlighterQuery));
+    const allElements = Array.from(current.querySelectorAll<HTMLElement>(targetsSelector(`.${scopeClass.current}`)));
 
     // converge on the root element of components
     const rootElements = allElements.map(toRootElement).filter((x) => !!x);
     // deduplicate
     const uniqueRoots = new Set(rootElements);
 
-    const nextTargets: Record<string, HighlightTarget> = {};
     uniqueRoots.forEach((element) => {
       const comp = domToReact(element);
       if (!element || !hasComponentMeta(comp)) return;
@@ -75,7 +82,7 @@ export function MultiHighlighter({
   };
 
   return (
-    <div ref={ref} {...rest} style={{ ...colors, ...style }}>
+    <div ref={ref} {...rest} className={classNames(scopeClass.current, rest.className)} style={{ ...colors, ...style }}>
       {children}
       {Object.entries(targets).map(([key, target]) => (
         <ElementHighlighter key={key} target={target} watchMotion={watchMotion} {...highlighterOptions} />

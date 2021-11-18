@@ -100,9 +100,30 @@ import { MultiHighlighter } from '@teambit/react.ui.component-highlighter';
 // ...
 
 return (
-  <MultiHighlighter>
+  <MultiHighlighter highlighterOptions={{...}}>
     <App />
   </MultiHighlighter>
+);
+```
+
+## Exclusions Zones
+
+To disabled highlighting in a specific area of the DOM, you can use the `<ExcludeHighlighter />` component:
+
+```tsx
+import { ExcludeHighlighter, excludeHighlighterAtt } from '@teambit/react.ui.component-highlighter';
+
+// ...
+
+return (
+  <div>
+    <ExcludeHighlighter>
+      <Card>this component will not be highlighted</Card>
+    </ExcludeHighlighter>
+
+    {/* you can also add the exclude attribute without making a new div */}
+    <Card {...excludeHighlighterAtt}>this component will not be highlighted</Card>
+  </div>
 );
 ```
 
@@ -116,7 +137,15 @@ Use these CSS variables to edit the highlighter color
 --bit-highlighter-color-active: #e79db1;
 ```
 
-You can also pass these classes for complete control:
+While it is preferred to use the css variables, you can also set them using react props:
+
+```tsx
+<MultiHighlighter bgColor="#eebcc9" bgColorHover="#f6dae2" bgColorActive="#e79db1">
+  ...
+</MultiHighlighter>
+```
+
+And for complete control, you can pass these classes:
 
 ```tsx
 const classes = {

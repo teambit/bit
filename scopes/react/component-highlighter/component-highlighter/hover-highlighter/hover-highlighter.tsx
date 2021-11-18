@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect, CSSProperties } from 'react';
+import React, { useState, useCallback, useEffect, CSSProperties, useRef } from 'react';
 import classnames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
+import { v4 } from 'uuid';
 import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { HoverSelector } from '@teambit/react.ui.hover-selector';
 import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
@@ -39,6 +40,7 @@ export function HoverHighlighter({
   ...rest
 }: HoverHighlighterProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
+  const scopeClass = useRef(`hl-scope-${v4()}`);
 
   const _handleElement = useCallback((element: HTMLElement | null) => {
     // clear highlighter at the edges:
@@ -48,7 +50,7 @@ export function HoverHighlighter({
     }
 
     // skip DOM trees having 'data-ignore-component-highlight'
-    if (element.closest(excludeHighlighterSelector)) return;
+    if (element.closest(`.${scopeClass.current} ${excludeHighlighterSelector}`)) return;
 
     const result = bubbleToBitComponent(element);
     if (!result) return;
@@ -74,7 +76,7 @@ export function HoverHighlighter({
   return (
     <HoverSelector
       {...rest}
-      className={classnames(styles.highlighter, !disabled && styles.active)}
+      className={classnames(styles.highlighter, scopeClass.current, !disabled && styles.active)}
       onElementChange={handleElement}
       disabled={disabled}
       data-nullify-component-highlight
