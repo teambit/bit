@@ -109,12 +109,15 @@ describe('bit checkout command', function () {
   });
   describe('components with dependencies with multiple versions', () => {
     let outputV2: string;
+    let localScope: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       outputV2 = helper.fixtures.populateComponents(3, undefined, 'v2');
       helper.command.tagAllWithoutBuild();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     it('as an intermediate step, make sure all components have v2', () => {
       const result = helper.command.runCmd('node app.js');
@@ -152,6 +155,23 @@ describe('bit checkout command', function () {
       });
       it('should not write package-lock.json file', () => {
         expect(path.join(helper.scopes.localPath, 'package-lock.json')).to.not.be.a.path();
+      });
+    });
+    describe('missing the latest Version object from the filesystem', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.command.export();
+        helper.command.checkout('0.0.1 --all');
+
+        // simulate the missing object by deliberately deleting the object from the filesystem
+        const head = helper.command.getHead('comp1');
+        const objectPath = helper.general.getHashPathOfObject(head);
+        helper.fs.deleteObject(objectPath);
+      });
+      // previously, it was throwing an error:
+      // error: version "0.0.2" of component tpkb99cd-remote/comp1 was not found on the filesystem.
+      it('should not throw an error', () => {
+        expect(() => helper.command.checkout('latest --all')).to.not.throw();
       });
     });
   });

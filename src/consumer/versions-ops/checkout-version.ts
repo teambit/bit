@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
@@ -60,6 +60,7 @@ export default async function checkoutVersion(
   const { version, ids, promptMergeOptions } = checkoutProps;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
+  await consumer.scope.import(BitIds.fromArray(ids || []));
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     (component) => component.mergeResults && component.mergeResults.hasConflicts
