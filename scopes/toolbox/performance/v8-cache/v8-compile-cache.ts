@@ -7,10 +7,25 @@ const path = require('path');
 const vm = require('vm');
 const os = require('os');
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Global {
+      _v8CompileCache: {
+        previousModuleCompile: ((content: string, filename: string) => any) | null;
+        cachedModuleCompile: ((content: string, filename: string) => any) | null;
+      };
+    }
+  }
+}
+
+global._v8CompileCache = global._v8CompileCache || {
+  previousModuleCompile: null,
+  cachedModuleCompile: null,
+};
+
 export class NativeCompileCache {
   private _cacheStore: FileSystemBlobStore;
-  private _previousModuleCompile: ((content: string, filename: string) => any) | null = null;
-  private _cachedModuleCompile: ((content: string, filename: string) => any) | null = null;
 
   constructor(blobStore: FileSystemBlobStore) {
     this.setCacheStore(blobStore);
@@ -21,18 +36,19 @@ export class NativeCompileCache {
   }
 
   install() {
-    if (this._previousModuleCompile || process.env.DISABLE_V8_COMPILE_CACHE || !supportsCachedData()) {
+    if (global._v8CompileCache.previousModuleCompile || process.env.DISABLE_V8_COMPILE_CACHE || !supportsCachedData()) {
       return;
     }
-    if (this._cachedModuleCompile) {
-      this._previousModuleCompile = Module.prototype._compile;
-      Module.prototype._compile = this._cachedModuleCompile;
+    if (global._v8CompileCache.cachedModuleCompile) {
+      global._v8CompileCache.previousModuleCompile = Module.prototype._compile;
+      Module.prototype._compile = global._v8CompileCache.cachedModuleCompile;
       return;
     }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const hasRequireResolvePaths = typeof require.resolve.paths === 'function';
-    this._previousModuleCompile = Module.prototype._compile;
+
+    global._v8CompileCache.previousModuleCompile = Module.prototype._compile;
     Module.prototype._compile = function (content: string, filename: string) {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const mod = this;
@@ -76,11 +92,11 @@ export class NativeCompileCache {
     };
   }
 
-  uninstall() {
-    if (this._previousModuleCompile) {
-      this._cachedModuleCompile = Module.prototype._compile;
-      Module.prototype._compile = this._previousModuleCompile;
-      this._previousModuleCompile = null;
+  static uninstall() {
+    if (global._v8CompileCache.previousModuleCompile) {
+      global._v8CompileCache.cachedModuleCompile = Module.prototype._compile;
+      Module.prototype._compile = global._v8CompileCache.previousModuleCompile;
+      global._v8CompileCache.previousModuleCompile = null;
     }
   }
 
@@ -132,7 +148,7 @@ export class NativeCompileCache {
       // https://nodejs.org/api/vm.html#vm_new_vm_script_code_options
       importModuleDynamically() {
         throw new Error(
-          '[v8-compile-cache] Dynamic imports are currently not supported. See https://git.io/Jge6z for more information. You should call `nativeCompileCache.uninstall()` before using dynamic imports.'
+          '[v8-compile-cache] Dynamic imports are currently not supported. See https://git.io/Jge6z for more information. You should call `NativeCompileCache.uninstall()` before using dynamic imports.'
         );
       },
     });
@@ -199,6 +215,6 @@ if (!process.env.DISABLE_V8_COMPILE_CACHE && supportsCachedData()) {
     if (blobStore.isDirty()) {
       blobStore.save();
     }
-    nativeCompileCache!.uninstall();
+    NativeCompileCache.uninstall();
   });
 }
