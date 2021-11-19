@@ -6975,9 +6975,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.176":
-  version: 1.0.176
-  resolution: "@teambit/legacy@npm:1.0.176"
+"@teambit/legacy@npm:1.0.177":
+  version: 1.0.177
+  resolution: "@teambit/legacy@npm:1.0.177"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7091,7 +7091,6 @@ __metadata:
     uniqid: 5.3.0
     user-home: 2.0.0
     uuid: 3.4.0
-    v8-compile-cache: 2.2.0
     validate-npm-package-name: 3.0.0
     vinyl: 2.2.1
     vinyl-file: 3.0.0
@@ -7101,7 +7100,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 7cb2213b4e4c4503f361a52a6e4b054ca2a92b1d438de7b8a5ec1a75d0a1da4cf5a852cfbe31173f5a4aa6d0d017d735d9dcddcb6307ff5d5b04e2c937362c53
+  checksum: 93286ad3865e66e1d88e7d078152bc30c0f9bba88d48f70a7765fb2deda415a65c36ca65ffbaa478b5e55d5ec5886362f5ad123093db1fb9a6a23480d29cd81d
   languageName: node
   linkType: hard
 
@@ -7247,7 +7246,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.176
+    "@teambit/legacy": 1.0.177
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7656,7 +7655,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.176
+    "@teambit/legacy": 1.0.177
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -34738,13 +34737,6 @@ typescript@^3.9.3:
   resolution: "v8-cache-817a32@workspace:scopes/toolbox/performance/v8-cache"
   languageName: unknown
   linkType: soft
-
-"v8-compile-cache@npm:2.2.0":
-  version: 2.2.0
-  resolution: "v8-compile-cache@npm:2.2.0"
-  checksum: b5916ac2079a4d3de003d9d657d37e1b96453603158ccf6f3d2cc64d0018b71f3576fd3534f519829f9641b4588c830b9363dc5821fe213a51c1b1b3728a382a
-  languageName: node
-  linkType: hard
 
 "v8-compile-cache@npm:^2.0.3":
   version: 2.3.0
