@@ -26,6 +26,7 @@ export type MergeResultsThreeWay = {
     currentFile: SourceFileModel;
     output: string | null | undefined;
     conflict: string | null | undefined;
+    isBinaryConflict?: boolean;
   }>;
   unModifiedFiles: Array<{
     filePath: PathLinux;
@@ -154,7 +155,8 @@ export default async function threeWayMergeVersions({
     if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
-    if (conflictResult.conflict) results.hasConflicts = true;
+    modifiedFile.isBinaryConflict = conflictResult.isBinaryConflict;
+    if (conflictResult.conflict || conflictResult.isBinaryConflict) results.hasConflicts = true;
   });
 
   return results;

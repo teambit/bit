@@ -293,6 +293,10 @@ export function applyModifiedVersion(
     } else if (file.output) {
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
+    } else if (file.isBinaryConflict) {
+      // leave the file as is and notify the user later about it.
+      foundFile.contents = file.fsFile.contents;
+      filesStatus[file.filePath] = FileStatus.binaryConflict;
     } else {
       throw new GeneralError(`file ${filePath} does not have output nor conflict`);
     }
