@@ -421,7 +421,8 @@ export class Workspace implements ComponentFactory {
     const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
     const workspaceDependents = ids.map((id) => workspaceDependencyGraph.getDependentsInfo(id._legacy));
     const dependentsLegacyIds = workspaceDependents.flat().map((_) => _.id);
-    const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyIds);
+    const dependentsLegacyNoDup = BitIds.uniqFromArray(dependentsLegacyIds);
+    const dependentsIds = await this.resolveMultipleComponentIds(dependentsLegacyNoDup);
     return dependentsIds;
   }
 
