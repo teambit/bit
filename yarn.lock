@@ -6617,9 +6617,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.175":
-  version: 1.0.175
-  resolution: "@teambit/legacy@npm:1.0.175"
+"@teambit/legacy@npm:1.0.178":
+  version: 1.0.178
+  resolution: "@teambit/legacy@npm:1.0.178"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6716,7 +6716,7 @@ __metadata:
     regenerator-runtime: 0.13.7
     resolve: 1.20.0
     resolve-dependency-path: 2.0.0
-    sass: 1.32.8
+    sass: 1.43.4
     sass-lookup: 3.0.0
     semver: 7.3.4
     serialize-error: 5.0.0
@@ -6733,7 +6733,6 @@ __metadata:
     uniqid: 5.3.0
     user-home: 2.0.0
     uuid: 3.4.0
-    v8-compile-cache: 2.2.0
     validate-npm-package-name: 3.0.0
     vinyl: 2.2.1
     vinyl-file: 3.0.0
@@ -6743,7 +6742,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 6e90efd0487728ba67bf7d718165a802801a4cfa0e38fa07dc80fec15356aae90c96e61c314076976eca796933dbee8238dcb69531c4c9b71e8e98ce379b263f
+  checksum: 938b1ebfbed11d4552c99a3baf1b9a159aa4da461f07a73c97fd1c67b0f9314c13fc54ccdc6ee02095235f83db39e2741be5a05af0ea01dea2562d0f5ff4cd68
   languageName: node
   linkType: hard
 
@@ -6889,7 +6888,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.175
+    "@teambit/legacy": 1.0.178
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7065,6 +7064,7 @@ __metadata:
     fs-extra: 10.0.0
     fuse.js: 6.4.6
     get-port: 5.1.1
+    get-xpath: 3.0.1
     gh-release: 3.5.0
     gitconfig: 2.0.8
     glob: 7.1.6
@@ -7224,7 +7224,7 @@ __metadata:
     resolve-url-loader: 3.1.2
     rewire: 4.0.1
     sanitize.css: 12.0.1
-    sass: 1.32.8
+    sass: 1.43.4
     sass-loader: 12.1.0
     sass-lookup: 3.0.0
     semver: 7.3.4
@@ -7270,13 +7270,11 @@ __metadata:
     url: 0.11.0
     url-join: 4.0.1
     url-parse: 1.4.7
-    use-animation-frame: 0.1.0
     use-debounce: 6.0.1
     user-home: 2.0.0
     utf-8-validate: 5.0.5
     util: 0.12.3
     uuid: 3.4.0
-    v8-compile-cache: 2.2.0
     validate-npm-package-name: 3.0.0
     verdaccio: 4.11.0
     vfile: 4.2.0
@@ -7301,7 +7299,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.175
+    "@teambit/legacy": 1.0.178
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -12185,6 +12183,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"bit-component-meta-90f068@workspace:scopes/react/bit-component-meta":
+  version: 0.0.0-use.local
+  resolution: "bit-component-meta-90f068@workspace:scopes/react/bit-component-meta"
+  languageName: unknown
+  linkType: soft
+
 "bit-error-bfca26@workspace:scopes/harmony/bit-error":
   version: 0.0.0-use.local
   resolution: "bit-error-bfca26@workspace:scopes/harmony/bit-error"
@@ -13247,7 +13251,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:>=2.0.0 <4.0.0, chokidar@npm:^3.4.0, chokidar@npm:^3.5.1":
+"chokidar@npm:>=3.0.0 <4.0.0, chokidar@npm:^3.4.0, chokidar@npm:^3.5.1":
   version: 3.5.2
   resolution: "chokidar@npm:3.5.2"
   dependencies:
@@ -18916,6 +18920,13 @@ __metadata:
   dependencies:
     isobject: ^3.0.1
   checksum: d2df36858c34f0ef63d928e760740b23d14a7b955eaf740fea0d908b60cf2504de388a2ff72fb531318719645271f506390005f811a53d35ce4d7f7eba98e470
+  languageName: node
+  linkType: hard
+
+"get-xpath@npm:3.0.1":
+  version: 3.0.1
+  resolution: "get-xpath@npm:3.0.1"
+  checksum: 40ee49c0eb9cd9f79e9cdf38dc53c21371e085c24dddcf6184749efc945dc28884438e55ebf4c7075ae48ea2bb07493e18637bc607bba9e14ee46c0f76e8960a
   languageName: node
   linkType: hard
 
@@ -30531,14 +30542,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.32.8":
-  version: 1.32.8
-  resolution: "sass@npm:1.32.8"
+"sass@npm:1.43.4":
+  version: 1.43.4
+  resolution: "sass@npm:1.43.4"
   dependencies:
-    chokidar: ">=2.0.0 <4.0.0"
+    chokidar: ">=3.0.0 <4.0.0"
   bin:
     sass: sass.js
-  checksum: a4d67e6be7b3c479d44065b1dd63fc76b90cfb5f5c9684a5d93fb9721c283bae4ec3f4dab478125ee21f3618dd408a9ba65bd3ba6482ab5a422fc86e1ca18b17
+  checksum: 9af80105dabd32752c60b4557115832982cf1019c02c952db6a26c61a3e18dc95044c896685e6e9a6d6dd6643fc411ecf2ea4a8a431a8a08a7510a45d5a492ae
   languageName: node
   linkType: hard
 
@@ -34155,16 +34166,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"use-animation-frame@npm:0.1.0":
-  version: 0.1.0
-  resolution: "use-animation-frame@npm:0.1.0"
-  peerDependencies:
-    react: ^16.8.0
-    react-dom: ^16.8.0
-  checksum: f9e54775c014b0886eacafa9b4c18cfd36417648924e594337a35abff6c3cd334c91f1c1a3da0ffdce28f1f7d94896297cac31a06e7fab574fe798193e57ce81
-  languageName: node
-  linkType: hard
-
 "use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key":
   version: 0.0.0-use.local
   resolution: "use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key"
@@ -34435,12 +34436,11 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"v8-compile-cache@npm:2.2.0":
-  version: 2.2.0
-  resolution: "v8-compile-cache@npm:2.2.0"
-  checksum: b5916ac2079a4d3de003d9d657d37e1b96453603158ccf6f3d2cc64d0018b71f3576fd3534f519829f9641b4588c830b9363dc5821fe213a51c1b1b3728a382a
-  languageName: node
-  linkType: hard
+"v8-cache-817a32@workspace:scopes/toolbox/performance/v8-cache":
+  version: 0.0.0-use.local
+  resolution: "v8-cache-817a32@workspace:scopes/toolbox/performance/v8-cache"
+  languageName: unknown
+  linkType: soft
 
 "v8-compile-cache@npm:^2.0.3":
   version: 2.3.0

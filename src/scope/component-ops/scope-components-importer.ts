@@ -88,8 +88,11 @@ export default class ScopeComponentsImporter {
         ids: ids.toString(),
       }
     );
-    const idsToImport = compact(ids);
-    if (R.isEmpty(idsToImport)) return [];
+    const idsToImport = compact(ids.filter((id) => id.hasScope()));
+    if (R.isEmpty(idsToImport)) {
+      logger.debug(`importMany, nothing to import`);
+      return [];
+    }
 
     const externalsToFetch: BitId[] = [];
 

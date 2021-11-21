@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePopper, Modifier } from 'react-popper';
-import useAnimationFrame from 'use-animation-frame';
 import classnames from 'classnames';
 import '@popperjs/core';
 
 import { ignorePopperSize } from '@teambit/base-ui.utils.popper-js.ignore-popper-size';
 import { resizeToMatchReference } from '@teambit/base-ui.utils.popper-js.resize-to-match-reference';
 
+import { useAnimationFrame } from '../use-animation-frame';
 import classStyles from './frame.module.scss';
 
 const BASE_OFFSET = +classStyles.offset;
@@ -31,12 +31,13 @@ const popperModifiers: Modifier<any>[] = [
 export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
   targetRef: HTMLElement | null;
   stylesClass?: string;
-  motionTracking?: boolean;
+  /** continually update frame position to match moving elements */
+  watchMotion?: boolean;
 }
 
 export function Frame({
   targetRef,
-  motionTracking,
+  watchMotion,
   className,
   stylesClass = classStyles.overlayBorder,
   style,
@@ -48,23 +49,7 @@ export function Frame({
     placement: 'top-start',
   });
 
-  useEffect(() => {
-    const triggerRefocus = update;
-    if (!triggerRefocus || !motionTracking) return () => {};
-
-    let animationFrameId = 0;
-    const f = () => {
-      triggerRefocus().catch(() => {});
-      animationFrameId = window.requestAnimationFrame(f);
-    };
-    f();
-
-    return () => {
-      if (animationFrameId > -1) window.cancelAnimationFrame(animationFrameId);
-    };
-  }, [update, motionTracking]);
-
-  useAnimationFrame(() => update?.(), [update]);
+  useAnimationFrame(!!watchMotion && update);
 
   if (!targetRef) return null;
 

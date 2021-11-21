@@ -12,6 +12,8 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
   placement?: Placement;
   /** customize styles */
   classes?: HighlightClasses;
+  /** continually update highlighter to match moving elements */
+  watchMotion?: boolean;
 }
 
 export { Placement };
@@ -36,16 +38,26 @@ export type HighlightClasses = {
 export function ElementHighlighter({
   target,
   placement = 'top',
+  watchMotion = true,
   className,
   classes,
   ...props
 }: ElementHighlighterProps) {
   return (
     <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, styles.container, className)}>
-      <Frame targetRef={target.element} className={classes?.frame} />
+      <Frame
+        targetRef={target.element}
+        className={classnames(styles.frame, classes?.frame)}
+        watchMotion={watchMotion}
+      />
 
       {target.id && (
-        <LabelContainer className={styles.label} targetRef={target.element} placement={placement}>
+        <LabelContainer
+          className={styles.label}
+          targetRef={target.element}
+          placement={placement}
+          watchMotion={watchMotion}
+        >
           <Label
             componentId={target.id}
             link={target.link}
