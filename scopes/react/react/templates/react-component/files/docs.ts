@@ -6,7 +6,7 @@ export const docsFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.docs.mdx`,
     content: `---
-description: 'A ${Name} component.'
+description: A ${Name} component.
 ---
 
 import { ${Name} } from './${name}';
@@ -18,7 +18,7 @@ A component that does something special and renders text in a div.
 <${Name}>Hello world!</${Name}>
 \`\`\`
 
-### Render 
+### Render hello world!
 
 \`\`\`js live
 <${Name}>Hello world!</${Name}>
