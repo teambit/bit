@@ -22,6 +22,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
+import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
@@ -185,7 +186,12 @@ export default async function provideWorkspace(
   graphql.register(workspaceSchema);
   const capsuleCmd = new CapsuleCmd();
   capsuleCmd.commands = [new CapsuleListCmd(isolator, workspace), new CapsuleCreateCmd(workspace, isolator)];
-  const commands: CommandList = [new InstallCmd(workspace, logger), new EjectConfCmd(workspace), capsuleCmd];
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new UpdateCmd(workspace),
+    new EjectConfCmd(workspace),
+    capsuleCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
