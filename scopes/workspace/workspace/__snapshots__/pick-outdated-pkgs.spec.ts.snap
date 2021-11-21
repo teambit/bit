@@ -3,24 +3,29 @@
 exports[`makeOutdatedPkgChoices should render choices in correct order 1`] = `
 Array [
   Object {
-    "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m   ",
-    "name": Object {
-      "currentRange": "1.0.0",
-      "latestRange": "1.1.0",
-      "name": "bar",
-      "source": "rootPolicy",
-      "targetField": "peerDependencies",
-    },
-  },
-  Object {
-    "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
-    "name": Object {
-      "currentRange": "1.0.0",
-      "latestRange": "2.0.0",
-      "name": "foo",
-      "source": "rootPolicy",
-      "targetField": "dependencies",
-    },
+    "choices": Array [
+      Object {
+        "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "rootPolicy",
+          "targetField": "peerDependencies",
+        },
+      },
+      Object {
+        "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "Root Policy",
   },
 ]
 `;
@@ -28,26 +33,36 @@ Array [
 exports[`makeOutdatedPkgChoices should render choices with context information 1`] = `
 Array [
   Object {
-    "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m {comp2} ",
-    "name": Object {
-      "currentRange": "1.0.0",
-      "latestRange": "1.1.0",
-      "name": "bar",
-      "source": "variants",
-      "targetField": "peerDependencies",
-      "variantPattern": "{comp2}",
-    },
+    "choices": Array [
+      Object {
+        "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "variants",
+          "targetField": "peerDependencies",
+          "variantPattern": "{comp2}",
+        },
+      },
+    ],
+    "message": "{comp2}",
   },
   Object {
-    "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m comp1   ",
-    "name": Object {
-      "componentId": "comp1",
-      "currentRange": "1.0.0",
-      "latestRange": "2.0.0",
-      "name": "foo",
-      "source": "component",
-      "targetField": "dependencies",
-    },
+    "choices": Array [
+      Object {
+        "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
+        "name": Object {
+          "componentId": "comp1",
+          "currentRange": "1.0.0",
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "component",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "comp1",
   },
 ]
 `;

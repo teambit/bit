@@ -30,6 +30,7 @@ import {
   LinkingOptions,
   LinkResults,
   DependencyList,
+  OutdatedPkg,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -1307,6 +1308,11 @@ export class Workspace implements ComponentFactory {
     };
   }
 
+  /**
+   * Updates out-of-date dependencies in the workspace.
+   *
+   * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
+   */
   async updateDependencies(options: { all: boolean }) {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
@@ -1316,7 +1322,14 @@ export class Workspace implements ComponentFactory {
       variantPoliciesByPatterns,
       componentPoliciesById,
     });
-    const outdatedPkgsToUpdate = options.all ? outdatedPkgs : await pickOutdatedPkgs(outdatedPkgs);
+    let outdatedPkgsToUpdate!: OutdatedPkg[];
+    if (options.all) {
+      outdatedPkgsToUpdate = outdatedPkgs;
+    } else {
+      this.logger.off();
+      outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
+      this.logger.on();
+    }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
       componentPoliciesById,

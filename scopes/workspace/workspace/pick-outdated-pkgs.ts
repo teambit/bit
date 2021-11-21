@@ -5,7 +5,10 @@ import { getBorderCharacters, table } from '@zkochan/table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 
-export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]) {
+/**
+ * Lets the user pick the packages that should be updated.
+ */
+export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<OutdatedPkg[]> {
   const { updateDependencies } = (await prompt({
     choices: makeOutdatedPkgChoices(outdatedPkgs),
     footer: '\nEnter to start updating. Ctrl-c to cancel.',
@@ -29,16 +32,30 @@ export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]) {
       }
       return true;
     },
-  } as any)) as { updateDependencies: OutdatedPkg[] };
-  return updateDependencies;
+  } as any)) as { updateDependencies: Array<string | OutdatedPkg> };
+  return updateDependencies.filter((updateDependency) => typeof updateDependency !== 'string') as OutdatedPkg[];
 }
 
+/**
+ * Groups the outdated packages and makes choices for enquirer's prompt.
+ */
 export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
   outdatedPkgs.sort((pkg1, pkg2) => pkg1.name.localeCompare(pkg2.name));
   const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgs));
-  const choices = outdatedPkgs.map((outdatedPkg, index) => ({
-    message: renderedTable[index],
-    name: outdatedPkg,
+  const groupedChoices = {};
+  outdatedPkgs.forEach((outdatedPkg, index) => {
+    const context = outdatedPkg.variantPattern ?? outdatedPkg.componentId ?? 'Root Policy';
+    if (!groupedChoices[context]) {
+      groupedChoices[context] = [];
+    }
+    groupedChoices[context].push({
+      message: renderedTable[index],
+      name: outdatedPkg,
+    });
+  });
+  const choices = Object.entries(groupedChoices).map(([context, subChoices]) => ({
+    message: context,
+    choices: subChoices,
   }));
   return choices;
 }
@@ -58,13 +75,12 @@ function outdatedPkgsRows(outdatedPkgs: OutdatedPkg[]) {
       default:
         break;
     }
-    const context = outdatedPkg.variantPattern ?? outdatedPkg.componentId ?? ' '; // column cannot be empty string
     const { change, diff } = semverDiff(outdatedPkg.currentRange, outdatedPkg.latestRange);
     const latest = colorizeSemverDiff({
       change: change ?? 'breaking',
       diff,
     });
-    return [label, outdatedPkg.currentRange, '❯', latest, context];
+    return [label, outdatedPkg.currentRange, '❯', latest];
   });
 }
 
