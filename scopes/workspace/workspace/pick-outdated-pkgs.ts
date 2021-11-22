@@ -17,7 +17,9 @@ export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<Out
       'Choose which packages to update ' +
       `(Press ${chalk.cyan('<space>')} to select, ` +
       `${chalk.cyan('<a>')} to toggle all, ` +
-      `${chalk.cyan('<i>')} to invert selection)`,
+      `${chalk.cyan('<i>')} to invert selection)
+${chalk.green('Green')} - indicates a semantically safe update
+${chalk.red('Red')} - indicates a semantically breaking change`,
     name: 'updateDependencies',
     pointer: '❯',
     styles: {
@@ -32,19 +34,34 @@ export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<Out
       }
       return true;
     },
+    j() {
+      return this.down();
+    },
+    k() {
+      return this.up();
+    },
   } as any)) as { updateDependencies: Array<string | OutdatedPkg> };
   return updateDependencies.filter((updateDependency) => typeof updateDependency !== 'string') as OutdatedPkg[];
 }
+
+const DEP_TYPE_PRIORITY = {
+  dependencies: 0,
+  devDependencies: 1,
+  peerDependencies: 2,
+};
 
 /**
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
 export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
-  outdatedPkgs.sort((pkg1, pkg2) => pkg1.name.localeCompare(pkg2.name));
+  outdatedPkgs.sort((pkg1, pkg2) => {
+    if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
+    return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
+  });
   const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgs));
   const groupedChoices = {};
   outdatedPkgs.forEach((outdatedPkg, index) => {
-    const context = outdatedPkg.variantPattern ?? outdatedPkg.componentId ?? 'Root Policy';
+    const context = renderContext(outdatedPkg);
     if (!groupedChoices[context]) {
       groupedChoices[context] = [];
     }
@@ -54,33 +71,46 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
     });
   });
   const choices = Object.entries(groupedChoices).map(([context, subChoices]) => ({
-    message: context,
+    message: chalk.cyan(context),
     choices: subChoices,
   }));
   return choices;
 }
 
+function renderContext(outdatedPkg: OutdatedPkg) {
+  if (outdatedPkg.variantPattern) {
+    return `${outdatedPkg.variantPattern} (variant)`;
+  }
+  if (outdatedPkg.componentId) {
+    return `${outdatedPkg.componentId} (component)`;
+  }
+  return 'Root policies';
+}
+
+const TARGET_FIELD_TO_DEP_TYPE = {
+  devDependencies: 'dev',
+  dependencies: 'runtime',
+  peerDependencies: 'peer',
+};
+
 function outdatedPkgsRows(outdatedPkgs: OutdatedPkg[]) {
   return outdatedPkgs.map((outdatedPkg) => {
-    let label = outdatedPkg.name;
-    switch (outdatedPkg.targetField) {
-      case 'devDependencies': {
-        label += ' (dev)';
-        break;
-      }
-      case 'peerDependencies': {
-        label += ' (peer)';
-        break;
-      }
-      default:
-        break;
-    }
     const { change, diff } = semverDiff(outdatedPkg.currentRange, outdatedPkg.latestRange);
+    let colorizeChange = change ?? 'breaking';
+    if (change === 'feature') {
+      colorizeChange = 'fix';
+    }
     const latest = colorizeSemverDiff({
-      change: change ?? 'breaking',
+      change: colorizeChange,
       diff,
     });
-    return [label, outdatedPkg.currentRange, '❯', latest];
+    return [
+      outdatedPkg.name,
+      chalk.grey(`(${TARGET_FIELD_TO_DEP_TYPE[outdatedPkg.targetField]})`),
+      outdatedPkg.currentRange,
+      '❯',
+      latest,
+    ];
   });
 }
 
@@ -92,7 +122,8 @@ function alignColumns(rows: string[][]) {
       paddingRight: 1,
     },
     columns: {
-      1: { alignment: 'right' },
+      // This is the current range column
+      2: { alignment: 'right' },
     },
     drawHorizontalLine: () => false,
   }).split('\n');

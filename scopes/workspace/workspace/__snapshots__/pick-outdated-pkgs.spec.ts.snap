@@ -5,17 +5,7 @@ Array [
   Object {
     "choices": Array [
       Object {
-        "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m ",
-        "name": Object {
-          "currentRange": "1.0.0",
-          "latestRange": "1.1.0",
-          "name": "bar",
-          "source": "rootPolicy",
-          "targetField": "peerDependencies",
-        },
-      },
-      Object {
-        "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
         "name": Object {
           "currentRange": "1.0.0",
           "latestRange": "2.0.0",
@@ -24,8 +14,18 @@ Array [
           "targetField": "dependencies",
         },
       },
+      Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "rootPolicy",
+          "targetField": "peerDependencies",
+        },
+      },
     ],
-    "message": "Root Policy",
+    "message": "[36mRoot policies[39m",
   },
 ]
 `;
@@ -35,23 +35,7 @@ Array [
   Object {
     "choices": Array [
       Object {
-        "message": "bar (peer) 1.0.0 ❯ 1.[93m[1m1.0[22m[39m ",
-        "name": Object {
-          "currentRange": "1.0.0",
-          "latestRange": "1.1.0",
-          "name": "bar",
-          "source": "variants",
-          "targetField": "peerDependencies",
-          "variantPattern": "{comp2}",
-        },
-      },
-    ],
-    "message": "{comp2}",
-  },
-  Object {
-    "choices": Array [
-      Object {
-        "message": "foo        1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
         "name": Object {
           "componentId": "comp1",
           "currentRange": "1.0.0",
@@ -62,7 +46,23 @@ Array [
         },
       },
     ],
-    "message": "comp1",
+    "message": "[36mcomp1 (component)[39m",
+  },
+  Object {
+    "choices": Array [
+      Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "variants",
+          "targetField": "peerDependencies",
+          "variantPattern": "{comp2}",
+        },
+      },
+    ],
+    "message": "[36m{comp2} (variant)[39m",
   },
 ]
 `;
