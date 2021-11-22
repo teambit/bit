@@ -15,6 +15,26 @@ Array [
         },
       },
       Object {
+        "message": "qar [90m(runtime)[39m 1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "qar",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+      Object {
+        "message": "zoo [90m(dev)[39m     1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
+        "name": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "zoo",
+          "source": "rootPolicy",
+          "targetField": "devDependencies",
+        },
+      },
+      Object {
         "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
         "name": Object {
           "currentRange": "1.0.0",

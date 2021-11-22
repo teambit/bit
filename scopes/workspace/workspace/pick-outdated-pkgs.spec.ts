@@ -4,6 +4,20 @@ describe('makeOutdatedPkgChoices', () => {
   it('should render choices in correct order', () => {
     const choices = makeOutdatedPkgChoices([
       {
+        name: 'zoo',
+        currentRange: '1.0.0',
+        latestRange: '1.1.0',
+        source: 'rootPolicy',
+        targetField: 'devDependencies',
+      },
+      {
+        name: 'qar',
+        currentRange: '1.0.0',
+        latestRange: '1.1.0',
+        source: 'rootPolicy',
+        targetField: 'dependencies',
+      },
+      {
         name: 'foo',
         currentRange: '1.0.0',
         latestRange: '2.0.0',
