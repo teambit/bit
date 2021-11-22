@@ -556,6 +556,9 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit install ${packages} ${parsedOpts}`);
   }
+  update(flags?: string) {
+    return this.runCmd(`bit update ${flags || ''}`);
+  }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
   }
