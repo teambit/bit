@@ -1,2 +1,2 @@
-export type { VariantsMain } from './variants.main.runtime';
+export type { VariantsMain, Patterns } from './variants.main.runtime';
 export { VariantsAspect } from './variants.aspect';

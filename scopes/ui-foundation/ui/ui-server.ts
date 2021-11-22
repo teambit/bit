@@ -78,14 +78,8 @@ export class UIServer {
    */
   async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
-    const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 
-    return devConfig(
-      this.uiRoot.path,
-      [await this.ui.generateRoot(aspects, this.uiRootExtension)],
-      this.uiRoot.name,
-      aspectsPaths
-    );
+    return devConfig(this.uiRoot.path, [await this.ui.generateRoot(aspects, this.uiRootExtension)], this.uiRoot.name);
   }
 
   private setReady: () => void;
@@ -186,7 +180,7 @@ export class UIServer {
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(devServerConfig, compiler);
-    
+
     await devServer.start();
     this._port = devServerPort;
     return devServer;

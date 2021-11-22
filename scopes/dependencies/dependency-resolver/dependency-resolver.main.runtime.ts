@@ -32,11 +32,13 @@ import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
+import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
+import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -934,6 +936,80 @@ export class DependencyResolverMain {
     return manifest;
   }
 
+  /**
+   * Return a list of outdated policy dependencies.
+   */
+  getOutdatedPkgsFromPolicies({
+    rootDir,
+    variantPoliciesByPatterns,
+    componentPoliciesById,
+  }: {
+    rootDir: string;
+    variantPoliciesByPatterns: Record<string, any>;
+    componentPoliciesById: Record<string, any>;
+  }): Promise<OutdatedPkg[]> {
+    const allPkgs = getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPoliciesById,
+    });
+    return this.getOutdatedPkgs(rootDir, allPkgs);
+  }
+
+  /**
+   * Accepts a list of package dependency policies and returns a list of outdated policies extended with their "latestRange"
+   */
+  async getOutdatedPkgs<T>(
+    rootDir: string,
+    pkgs: Array<{ name: string; currentRange: string } & T>
+  ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
+    const resolver = this.getVersionResolver();
+    const resolve = async (spec: string) =>
+      (
+        await resolver.resolveRemoteVersion(spec, {
+          rootDir,
+        })
+      ).version;
+    return (
+      await Promise.all(
+        pkgs.map(async (pkg) => {
+          const latestVersion = await resolve(`${pkg.name}@latest`);
+          return {
+            ...pkg,
+            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+          } as any;
+        })
+      )
+    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+  }
+
+  /**
+   * Update the specified packages to their latest versions in all policies;
+   * root polcies, variant pocilicies, and component configuration policies (component.json).
+   */
+  applyUpdates(
+    outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
+    options: {
+      variantPoliciesByPatterns: Record<string, any>;
+      componentPoliciesById: Record<string, any>;
+    }
+  ): {
+    updatedVariants: string[];
+    updatedComponents: string[];
+  } {
+    const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
+      variantPoliciesByPatterns: options.variantPoliciesByPatterns,
+      componentPoliciesById: options.componentPoliciesById,
+    });
+    this.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    return {
+      updatedVariants,
+      updatedComponents,
+    };
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
@@ -1053,3 +1129,13 @@ export class DependencyResolverMain {
 }
 
 DependencyResolverAspect.addRuntime(DependencyResolverMain);
+
+function repeatPrefix(originalSpec: string, newVersion: string): string {
+  switch (originalSpec[0]) {
+    case '~':
+    case '^':
+      return `${originalSpec[0]}${newVersion}`;
+    default:
+      return newVersion;
+  }
+}
