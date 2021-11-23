@@ -6,7 +6,7 @@ import { MultiHighlighter } from './multi-highlighter';
 
 export const MultiHighlighterPreview = () => {
   return (
-    <MultiHighlighter style={{ padding: 40 }}>
+    <MultiHighlighter style={{ padding: 40, minWidth: 200 }}>
       <MockedComponentWithMeta>hover here</MockedComponentWithMeta>
       <br />
       <br />
@@ -19,7 +19,7 @@ export const MultiHighlighterPreview = () => {
 export const MultiHighlighterWithCustomColors = () => {
   return (
     <MultiHighlighter
-      style={{ padding: 40, color: 'yellow' }}
+      style={{ padding: 40, minWidth: 200, color: 'yellow' }}
       bgColor="cornflowerblue"
       bgColorHover="blue"
       bgColorActive="DarkSlateBlue"

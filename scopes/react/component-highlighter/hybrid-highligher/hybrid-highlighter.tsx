@@ -1,10 +1,10 @@
-import React, { useState, useEffect, CSSProperties, useRef, createRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, createRef, CSSProperties } from 'react';
 import classnames from 'classnames';
 import { v4 } from 'uuid';
 
 import { useHoverHighlighter } from '../hover-highlighter';
 import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
-import { useMultiHighlighter } from '../multi-highlighter/multi-highlighter';
+import { useMultiHighlighter } from '../multi-highlighter/use-multi-highlighter';
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** default pop location for the label */
@@ -28,18 +28,26 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
    * `hover` - highlighters the component immediately under the mouse cursor
    * */
   mode: 'disabled' | 'allChildren' | 'hover';
+  bgColor?: string;
+  bgColorHover?: string;
+  bgColorActive?: string;
 }
 
 /** automatically highlight components on hover */
 export function HybridHighlighter({
-  children,
-  classes,
-  highlightStyle,
-  placement,
+  mode = 'hover',
   debounceSelection = 80,
   watchMotion = true,
+  placement,
+
+  classes,
+  highlightStyle,
   className,
-  mode = 'hover',
+  style,
+  bgColor,
+  bgColorHover,
+  bgColorActive,
+  children,
   ...rest
 }: HybridHighlighterProps) {
   const ref = createRef<HTMLDivElement>();
@@ -69,11 +77,22 @@ export function HybridHighlighter({
     scopeClass,
   });
 
+  const _styles = useMemo(
+    () => ({
+      '--bit-highlighter-color': bgColor,
+      '--bit-highlighter-color-hover': bgColorHover,
+      '--bit-highlighter-color-active': bgColorActive,
+      ...style,
+    }),
+    [bgColor, bgColorHover, bgColorActive, style]
+  );
+
   return (
     <div
       ref={ref}
       {...rest}
       {...handlers}
+      style={_styles}
       className={classnames(className, scopeClass)}
       data-nullify-component-highlight
     >
