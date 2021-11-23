@@ -177,8 +177,8 @@ export async function install(
     storeDir,
     dir: rootPathToManifest.rootDir,
     storeController,
-    update: true,
     workspacePackages,
+    preferFrozenLockfile: true,
     registries: registriesMap,
     rawConfig: authConfig,
     // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
