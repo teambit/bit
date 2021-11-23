@@ -22,6 +22,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
+import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
@@ -189,6 +190,7 @@ export default async function provideWorkspace(
   const commands: CommandList = [
     new InstallCmd(workspace, logger),
     new UpdateCmd(workspace),
+    new UninstallCmd(workspace),
     new EjectConfCmd(workspace),
     capsuleCmd,
   ];
