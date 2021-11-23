@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -11,7 +11,9 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import ComponentWriter from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { ArtifactList } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
@@ -36,6 +38,16 @@ export type BuilderData = {
   aspectsData: AspectData[];
 };
 
+type ArtifactPropsToPopulate = {
+  aspectName: string;
+  /**
+   * Name of the artifact to populate
+   */
+  name?: string;
+};
+
+type ArtifactsToPopulate = ArtifactPropsToPopulate[];
+
 export class BuilderMain {
   constructor(
     private envs: EnvsMain,
@@ -45,6 +57,7 @@ export class BuilderMain {
     private snapService: BuilderService,
     private scope: ScopeMain,
     private isolator: IsolatorMain,
+    private componentAspect: ComponentMain,
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
@@ -106,7 +119,7 @@ export class BuilderMain {
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
-    await this.storeArtifacts(allTasksResults);
+    const storeArtifactsResults = await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
     return { builderDataMap, pipeResults };
   }
@@ -126,9 +139,14 @@ export class BuilderMain {
     return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
-  // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
-  async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
+  async getArtifactsVinylByExtension(
+    component: Component,
+    aspectName: string,
+    name?: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = name
+      ? this.getArtifactsByExtensionAndName(component, aspectName, name)
+      : this.getArtifactsByExtension(component, aspectName);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map((artifactObject) =>
         artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
@@ -137,18 +155,28 @@ export class BuilderMain {
     return flatten(vinyls);
   }
 
-  async getArtifactsVinylByExtensionAndName(
+  async getArtifactsVinylByMultiExtension(
     component: Component,
-    aspectName: string,
-    name: string
+    artifactPropsToPopulate: ArtifactsToPopulate
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
-      )
-    );
+    const vinylsP = artifactPropsToPopulate.map((props) => {
+      return this.getArtifactsVinylByExtension(component, props.aspectName, props.name);
+    });
+    const vinyls = await Promise.all(vinylsP);
     return flatten(vinyls);
+  }
+
+  async getArtifactsVinylByMultiExtensionFromLegacyComponent(
+    legacyComponent: LegacyComponent,
+    artifactPropsToPopulate: ArtifactsToPopulate
+  ): Promise<ArtifactVinyl[]> {
+    const host = this.componentAspect.getHost();
+    const id = await host.resolveComponentId(legacyComponent.id);
+    const component = await host.get(id, undefined, legacyComponent);
+    if (!component) {
+      throw new Error(`component ${legacyComponent.id.toString()} not found when trying to fetch artifacts`);
+    }
+    return this.getArtifactsVinylByMultiExtension(component, artifactPropsToPopulate);
   }
 
   getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
@@ -277,7 +305,7 @@ export class BuilderMain {
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, componentAspect]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -285,7 +313,8 @@ export class BuilderMain {
       IsolatorMain,
       LoggerMain,
       AspectLoaderMain,
-      GraphqlMain
+      GraphqlMain,
+      ComponentMain
     ],
     config,
     [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
@@ -308,6 +337,7 @@ export class BuilderMain {
       snapService,
       scope,
       isolator,
+      componentAspect,
       aspectLoader,
       buildTaskSlot,
       tagTaskSlot,
@@ -323,6 +353,11 @@ export class BuilderMain {
       cli.unregister('build');
       cli.register(...commands);
     }
+    ComponentWriter.registerOnPopulateArtifacts(
+      BuilderAspect.id,
+      builder.getArtifactsVinylByMultiExtensionFromLegacyComponent.bind(builder)
+    );
+
     return builder;
   }
 }

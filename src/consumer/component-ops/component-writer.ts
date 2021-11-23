@@ -1,5 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import pMapSeries from 'p-map-series';
+import Vinyl from 'vinyl';
 import R from 'ramda';
 import semver from 'semver';
 import { flatten } from 'lodash';
@@ -22,11 +24,8 @@ import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
-import {
-  ArtifactFiles,
-  deserializeArtifactFiles,
-  getArtifactFilesByExtension,
-} from '../component/sources/artifact-files';
+import { ArtifactFiles, getArtifactFilesByExtension } from '../component/sources/artifact-files';
+import { AbstractVinyl } from '../component/sources';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -46,6 +45,16 @@ export type ComponentWriterProps = {
   saveOnLane?: boolean;
   applyPackageJsonTransformers?: boolean;
 };
+
+type PopulateArtifactsRegistry = { [extId: string]: Function };
+type ArtifactPropsToPopulate = {
+  aspectName: string;
+  /**
+   * Name of the artifact to populate
+   */
+  name?: string;
+};
+type ArtifactsToPopulate = ArtifactPropsToPopulate[];
 
 export default class ComponentWriter {
   component: Component;
@@ -99,6 +108,14 @@ export default class ComponentWriter {
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.saveOnLane = saveOnLane;
     this.applyPackageJsonTransformers = applyPackageJsonTransformers;
+  }
+
+  static populateArtifactsRegistry: PopulateArtifactsRegistry = {};
+  static registerOnPopulateArtifacts(
+    extId,
+    func: (component: Component, artifactsToPopulate: ArtifactsToPopulate) => Vinyl[]
+  ) {
+    this.populateArtifactsRegistry[extId] = func;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -228,29 +245,39 @@ export default class ComponentWriter {
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
-    const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
-    const artifactsFiles = flatten(
-      extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
+
+    logger.debugAndAddBreadCrumb(
+      'componentWriterPopulateArtifacts',
+      `running populate artifacts for component ${this.component.id.toString()}`
     );
-    const scope = this.scope;
-    const artifactsVinylFlattened: ArtifactVinyl[] = [];
-    await Promise.all(
-      artifactsFiles.map(async (artifactFiles) => {
-        if (!artifactFiles) return;
-        if (!(artifactFiles instanceof ArtifactFiles)) {
-          artifactFiles = deserializeArtifactFiles(artifactFiles);
+    try {
+      const subscribers = ComponentWriter.populateArtifactsRegistry;
+      const artifactsToPopulate: ArtifactsToPopulate = [{ aspectName: 'teambit.compilation/compiler' }];
+      const vinyls = await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+        const func = subscribers[extId];
+        return func(this.component, artifactsToPopulate);
+      });
+      const artifactsDir = this.getArtifactsDir();
+      const abstractVinyls: AbstractVinyl[] = vinyls.map((vinyl) => {
+        const abstractVinyl = AbstractVinyl.fromVinyl(vinyl);
+        if (artifactsDir) {
+          abstractVinyl.updatePaths({ newBase: artifactsDir });
         }
-        // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
-        // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
-        artifactsVinylFlattened.push(...vinylFiles);
-      })
-    );
-    const artifactsDir = this.getArtifactsDir();
-    if (artifactsDir) {
-      artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
+        return abstractVinyl;
+      });
+      this.component.dataToPersist.addManyFiles(abstractVinyls);
+    } catch (err: any) {
+      // TODO: improve texts
+      logger.console(
+        `\nfailed populate artifacts for component ${this.component.id.toString()}, error is:`,
+        'warn',
+        'yellow'
+      );
+      // TODO: this show an ugly error, we should somehow show a proper errors
+      logger.console(err, 'warn', 'yellow');
+      logger.console('the error has been ignored', 'warn', 'yellow');
+      logger.warn('extension on populate artifacts event throw an error', err);
     }
-    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
   }
 
   private getArtifactsDir() {

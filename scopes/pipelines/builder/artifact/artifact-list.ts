@@ -19,6 +19,18 @@ export class ArtifactList {
   }
 
   /**
+   * Get the artifacts indexed by their names
+   * @returns
+   */
+  indexByArtifactName(): { [artifactName: string]: Artifact } {
+    const map = {};
+    this.artifacts.forEach((artifact) => {
+      map[artifact.name] = artifact;
+    });
+    return map;
+  }
+
+  /**
    * group artifacts by the storage resolver.
    */
   groupByResolver(): ResolverMap {
@@ -57,17 +69,12 @@ export class ArtifactList {
    * store all artifacts using the configured storage resolvers.
    */
   async store(component: Component, storageResolvers: { [resolverName: string]: ArtifactsStorageResolver }) {
-    console.log('storing compoennt', component.id.toString());
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (resolverName) => {
       const artifacts = byResolvers[resolverName];
       // if (!artifacts.length) return undefined;
       const storageResolver =
         resolverName === this.defaultResolver.name ? this.defaultResolver : storageResolvers[resolverName];
-      if (resolverName !== 'default') {
-        console.log('resolverName', resolverName);
-        console.log('storageResolver', storageResolver);
-      }
       if (!storageResolver) {
         throw new StorageResolverNotFoundError(resolverName, component);
       }

@@ -1,6 +1,5 @@
-import fs from 'fs-extra';
-import path from 'path';
 import R from 'ramda';
+import { compact } from 'lodash';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -9,11 +8,9 @@ import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
-
 import { ArtifactVinyl } from './artifact';
+import { ArtifactFile, ArtifactModel, ArtifactFileObject } from './artifact-file';
 
-export type ArtifactRef = { relativePath: string; ref: Ref };
-export type ArtifactModel = { relativePath: string; file: string };
 export type ArtifactSource = { relativePath: string; source: Source };
 export type ArtifactObject = {
   name: string;
@@ -39,38 +36,46 @@ export type ArtifactObject = {
  * 3. Finally, once the Version object is saved, it needs to save only the hash of the artifacts, hence ArtifactModel.
  */
 export class ArtifactFiles {
-  constructor(public paths: string[] = [], public vinyls: ArtifactVinyl[] = [], public refs: ArtifactRef[] = []) {}
+  constructor(public files: ArtifactFile[]) {}
 
   clone() {
-    const vinyls = this.vinyls.map((vinyl) => vinyl.clone());
-    const refs = this.refs.map((ref) => ({ ...ref }));
-    return new ArtifactFiles({ ...this.paths }, vinyls, refs);
+    const files = this.files.map((file) => file.clone());
+    return new ArtifactFiles(files);
   }
 
-  populateRefsFromSources(sources: ArtifactSource[]) {
-    this.refs = sources.map((source) => ({ relativePath: source.relativePath, ref: source.source.hash() }));
-  }
+  // populateRefsFromSources(sources: ArtifactSource[]) {
+  //   this.refs = sources.map((source) => ({ relativePath: source.relativePath, ref: source.source.hash() }));
+  // }
 
   populateVinylsFromPaths(rootDir: string) {
-    this.vinyls = this.paths.map(
-      (file) => new ArtifactVinyl({ path: file, contents: fs.readFileSync(path.join(rootDir, file)) })
-    );
+    this.files.forEach((file) => file.populateVinylFromPath(rootDir));
+  }
+
+  getRefs(): Ref[] {
+    const refs = this.files.map((file) => file.getRef());
+    return compact(refs);
   }
 
   getExistingVinyls() {
-    return this.vinyls;
+    return this.files.map((file) => file.vinyl);
   }
 
   isEmpty() {
-    return !this.vinyls.length && !this.refs.length && !this.paths.length;
+    return !this.files.length;
+  }
+
+  toModelObject() {
+    return this.files.map((file) => file.toModelObject());
+  }
+
+  static parse(files: ArtifactFileObject[]): ArtifactFiles {
+    const parsedFiles = files.map((file) => ArtifactFile.parse(file));
+    return new ArtifactFiles(parsedFiles);
   }
 
   static fromModel(artifactModels: ArtifactModel[] = []) {
-    const refs: ArtifactRef[] = artifactModels.map((artifactModel) => ({
-      relativePath: artifactModel.relativePath,
-      ref: Ref.from(artifactModel.file),
-    }));
-    return new ArtifactFiles([], [], refs);
+    const files = artifactModels.map((artifactModel) => ArtifactFile.fromModel(artifactModel));
+    return new ArtifactFiles(files);
   }
 
   static fromVinylsToSources(vinyls: ArtifactVinyl[]): ArtifactSource[] {
@@ -84,17 +89,44 @@ export class ArtifactFiles {
 
   async getVinylsAndImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
-    if (this.vinyls.length) return this.vinyls;
-    const allHashes = this.refs.map((artifact) => artifact.ref.hash);
+    const vinyls: ArtifactVinyl[] = [];
+    const hashes: string[] = [];
+    const artifactsToLoadFromScope: ArtifactFile[] = [];
+    const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
+
+    this.files.forEach((file) => {
+      if (file.vinyl) {
+        return vinyls.push(file.vinyl);
+      }
+      // By default try to fetch artifact from the default resolver
+      const ref = file.getRef();
+      if (ref) {
+        artifactsToLoadFromScope.push(file);
+        return hashes.push(ref.hash);
+      }
+      return artifactsToLoadFromOtherResolver.push(file);
+    });
+
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-    await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
-    const getOneArtifact = async (artifact: ArtifactRef) => {
-      const content = (await artifact.ref.load(scope.objects)) as Source;
-      if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
-      return new ArtifactVinyl({ base: '.', path: artifact.relativePath, contents: content.contents });
-    };
-    this.vinyls = await Promise.all(this.refs.map((artifact) => getOneArtifact(artifact)));
-    return this.vinyls;
+    await scopeComponentsImporter.importManyObjects({ [scopeName]: hashes });
+
+    const vinylsFromScope = await Promise.all(
+      artifactsToLoadFromScope.map(async (file) => {
+        const ref = file.getRef();
+        if (!ref) return undefined;
+        const content = (await ref.load(scope.objects)) as Source;
+        if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
+        return new ArtifactVinyl({ base: '.', path: file.relativePath, contents: content.contents });
+      })
+    );
+
+    const vinylsFromOtherStorage = await Promise.all(
+      artifactsToLoadFromOtherResolver.map(async (file) => {
+        return file.populateVinylFromStorage();
+      })
+    );
+
+    return vinyls.concat(compact(vinylsFromScope)).concat(compact(vinylsFromOtherStorage));
   }
 }
 
@@ -105,12 +137,13 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
     artifactsFiles.forEach((artifactFiles) => {
       if (!artifactFiles) return;
-      if (!(artifactFiles instanceof ArtifactFiles)) {
-        artifactFiles = deserializeArtifactFiles(artifactFiles);
-      }
+      // if (!(artifactFiles instanceof ArtifactFiles)) {
+      //   artifactFiles = deserializeArtifactFiles(artifactFiles);
+      // }
       if (artifactFiles.isEmpty()) return;
-      if (artifactFiles.vinyls.length) return;
-      const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
+      // if (artifactFiles.vinyls.length) return;
+      // const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
+      const allHashes = artifactFiles.getRefs().map((ref) => ref.hash);
       (groupedHashes[component.scope as string] ||= []).push(...allHashes);
     });
   });
@@ -118,19 +151,10 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   await scopeComponentsImporter.importManyObjects(groupedHashes);
 }
 
-export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {
-  return refs.map((artifact) => {
-    return {
-      relativePath: artifact.relativePath,
-      file: artifact.ref.hash,
-    };
-  });
-}
-
 export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
-  const artifactsFiles = getArtifactsFiles(extensions);
-  const refs = artifactsFiles.map((artifactFiles) => artifactFiles.refs.map((r) => r.ref));
-  return R.flatten(refs).filter((ref) => ref);
+  const artifactsFilesList = getArtifactsFiles(extensions);
+  const refs = artifactsFilesList.map((artifactsFiles) => artifactsFiles.getRefs());
+  return R.flatten(refs);
 }
 
 export function getArtifactFilesByExtension(extensions: ExtensionDataList, extensionName: string): ArtifactFiles[] {
@@ -142,7 +166,7 @@ export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifact) => {
     // @ts-ignore
-    artifact.files = refsToModelObjects(artifact.files.refs);
+    artifact.files = artifact.files.toModelObject();
   });
 }
 
@@ -159,19 +183,17 @@ export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[
   return buildArtifacts.map((artifacts) => artifacts.files);
 }
 
-export function reStructureBuildArtifacts(extensions: ExtensionDataList) {
+export function cloneBuildArtifacts(extensions: ExtensionDataList) {
+  // convertBuildArtifactsFromModelObject(extensions);
   const buildArtifacts = getBuildArtifacts(extensions);
-  buildArtifacts.forEach((artifacts) => {
-    artifacts.files = deserializeArtifactFiles(artifacts.files);
-  });
-}
-
-export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: ArtifactVinyl[]; refs: ArtifactRef[] }) {
-  const refs = obj.refs.map((ref) => ({
-    relativePath: ref.relativePath,
-    ref: new Ref(ref.ref.hash),
-  }));
-  return new ArtifactFiles(obj.paths, obj.vinyls, refs);
+  const ext = extensions.findExtension('teambit.pipelines/builder');
+  if (buildArtifacts && buildArtifacts.length && ext) {
+    buildArtifacts.forEach((artifact) => {
+      // During the original clone the files might be converted from instance of ArtifactFiles to regular array
+      // so we re-create the ArtifactFiles instance
+      artifact.files = artifact.files.files ? ArtifactFiles.parse(artifact.files.files) : artifact.files.files;
+    });
+  }
 }
 
 function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {

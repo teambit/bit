@@ -7,7 +7,7 @@ import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
-  reStructureBuildArtifacts,
+  cloneBuildArtifacts,
 } from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
@@ -156,6 +156,12 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return extensionDataList;
   }
 
+  fromModelObject() {
+    debugger;
+    console.log('ext data from model object', this[7].data.artifacts);
+    convertBuildArtifactsFromModelObject(this);
+  }
+
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
@@ -220,7 +226,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     const extensionDataList = new ExtensionDataList(...extensionDataEntries);
-    reStructureBuildArtifacts(extensionDataList);
+    // console.log('data clone', extensionDataList[7].data.artifacts[0]);
+    cloneBuildArtifacts(extensionDataList);
+    // reStructureBuildArtifacts(extensionDataList);
     return extensionDataList;
   }
 

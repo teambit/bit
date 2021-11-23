@@ -348,7 +348,7 @@ export default class ComponentConfig extends AbstractConfig {
    * @memberof ComponentConfig
    */
   static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: BitId): Promise<any[]> {
-    logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);
+    logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load event for component ${id.toString()}`);
     try {
       const res = await mapSeries(Object.keys(subscribers), async (extId: string) => {
         const func = subscribers[extId];
