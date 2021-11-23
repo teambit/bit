@@ -1,7 +1,7 @@
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { OutdatedPkg } from '@teambit/dependency-resolver';
-import { getBorderCharacters, table } from '@zkochan/table';
+import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 

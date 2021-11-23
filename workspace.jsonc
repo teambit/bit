@@ -184,7 +184,6 @@
         "@yarnpkg/fslib": "2.5.1",
         "@yarnpkg/plugin-npm": "2.5.0",
         "@yarnpkg/plugin-pack": "3.0.0",
-        "@zkochan/table": "1.0.0",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
@@ -213,6 +212,7 @@
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
+        "enquirer": "2.3.6",
         "eslint-config-airbnb-typescript": {
           "version": "5.1.0",
           "preserve": true
@@ -302,6 +302,7 @@
         "string-to-color": "2.2.2",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
+        "table": "6.7.3",
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
