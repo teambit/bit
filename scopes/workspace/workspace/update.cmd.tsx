@@ -22,10 +22,9 @@ export default class UpdateCmd implements Command {
   ) {}
 
   async report(args: [string[]], options: UpdateCmdOptions) {
-    if (!options.yes) {
-      throw new Error('Interactive update is not implemented yet. Use the --yes option.');
-    }
-    await this.workspace.updateDependencies();
+    await this.workspace.updateDependencies({
+      all: options.yes === true,
+    });
     return '';
   }
 }

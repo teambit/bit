@@ -22,6 +22,7 @@
         "@mdx-js/react": "1.6.22",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.1",
         "@pnpm/client": "6.0.5",
+        "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "13.5.0",
         "@pnpm/core": "1.3.0",
         "@pnpm/default-reporter": "8.3.7",
@@ -36,6 +37,7 @@
         "@pnpm/package-store": "12.1.2",
         "@pnpm/pick-registry-for-package": "2.0.6",
         "@pnpm/resolver-base": "8.1.1",
+        "@pnpm/semver-diff": "1.1.0",
         "@pnpm/store-connection-manager": "3.1.9",
         "@pnpm/tarball-fetcher": "9.3.9",
         "@pnpm/tarball-resolver": "5.0.6",
@@ -210,6 +212,7 @@
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
+        "enquirer": "2.3.6",
         "eslint-config-airbnb-typescript": {
           "version": "5.1.0",
           "preserve": true
@@ -299,6 +302,7 @@
         "string-to-color": "2.2.2",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
+        "table": "6.7.3",
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",

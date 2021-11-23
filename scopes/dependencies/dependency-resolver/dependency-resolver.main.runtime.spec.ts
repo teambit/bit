@@ -193,7 +193,12 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
     {} as any,
     {} as any,
     {} as any,
-    {} as any,
+    {
+      // @ts-ignore
+      setStatusLine: jest.fn(),
+      // @ts-ignore
+      consoleSuccess: jest.fn(),
+    } as any,
     {} as any,
     {} as any,
     {

@@ -963,6 +963,7 @@ export class DependencyResolverMain {
     rootDir: string,
     pkgs: Array<{ name: string; currentRange: string } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
+    this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = this.getVersionResolver();
     const resolve = async (spec: string) =>
       (
@@ -970,7 +971,7 @@ export class DependencyResolverMain {
           rootDir,
         })
       ).version;
-    return (
+    const outdatedPkgs = (
       await Promise.all(
         pkgs.map(async (pkg) => {
           const latestVersion = await resolve(`${pkg.name}@latest`);
@@ -981,6 +982,8 @@ export class DependencyResolverMain {
         })
       )
     ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+    this.logger.consoleSuccess();
+    return outdatedPkgs;
   }
 
   /**
