@@ -2,7 +2,7 @@ import React, { useState, useEffect, CSSProperties, useRef, createRef } from 're
 import classnames from 'classnames';
 import { v4 } from 'uuid';
 
-import { useHoverHighlighter } from '../component-highlighter/hover-highlighter';
+import { useHoverHighlighter } from '../hover-highlighter';
 import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
 import { useMultiHighlighter } from '../multi-highlighter/multi-highlighter';
 

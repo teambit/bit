@@ -1,5 +1,5 @@
 import React from 'react';
-import { HybridHighlighter, HybridHighlighterProps } from '../../hybrid-highligher';
+import { HybridHighlighter, HybridHighlighterProps } from '../hybrid-highligher';
 
 export interface HoverHighlighterProps extends Omit<HybridHighlighterProps, 'mode'> {
   disabled?: boolean;

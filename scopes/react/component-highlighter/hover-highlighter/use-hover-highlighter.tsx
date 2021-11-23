@@ -4,8 +4,8 @@ import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
 import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
-import { excludeHighlighterSelector } from '../../ignore-highlighter';
-import { HighlightTarget } from '../../element-highlighter';
+import { excludeHighlighterSelector } from '../ignore-highlighter';
+import { HighlightTarget } from '../element-highlighter';
 
 export type useHoverHighlighterOptions = {
   debounceDuration: number;
