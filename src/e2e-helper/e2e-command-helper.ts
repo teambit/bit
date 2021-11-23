@@ -154,6 +154,9 @@ export default class CommandHelper {
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
+  dependencies(values = '') {
+    return this.runCmd(`bit dependencies ${values}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
