@@ -317,6 +317,13 @@ export function applyModifiedVersion(
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
+  mergeResults.updatedFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    foundFile.contents = file.content;
+    filesStatus[file.filePath] = FileStatus.updated;
+  });
 
   return filesStatus;
 }
