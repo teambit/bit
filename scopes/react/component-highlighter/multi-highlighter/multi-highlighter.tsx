@@ -1,10 +1,14 @@
-import React, { useEffect, useState, createRef, useRef } from 'react';
+import React, { useEffect, useState, createRef, useRef, RefObject, useMemo } from 'react';
 import classNames from 'classnames';
 import getXPath from 'get-xpath';
 import { v4 } from 'uuid';
-import { ElementHighlighter, ElementHighlighterProps, HighlightTarget } from '@teambit/react.ui.component-highlighter';
 import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
-import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import {
+  hasComponentMeta,
+  componentMetaField,
+  componentMetaProperties,
+} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import { ElementHighlighter, ElementHighlighterProps, HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 
 const targetsSelector = (
@@ -28,7 +32,7 @@ export interface MultiHighlighterProps extends React.HTMLAttributes<HTMLDivEleme
   bgColor?: string;
   bgColorHover?: string;
   bgColorActive?: string;
-  highlighterOptions?: ElementHighlighterProps;
+  highlighterOptions?: Omit<ElementHighlighterProps, 'target'>;
 }
 
 export function MultiHighlighter({
@@ -50,15 +54,49 @@ export function MultiHighlighter({
     if (disabled) setTargets({});
   }, [disabled]);
 
+  useMultiHighlighter({ onChange: setTargets, scopeRef: ref, disabled, scopeClass: scopeClass.current });
+
+  const _styles = useMemo(
+    () => ({
+      '--bit-highlighter-color': bgColor,
+      '--bit-highlighter-color-hover': bgColorHover,
+      '--bit-highlighter-color-active': bgColorActive,
+      ...style,
+    }),
+    [bgColor, bgColorHover, bgColorActive, style]
+  );
+
+  return (
+    <div ref={ref} {...rest} className={classNames(scopeClass.current, rest.className)} style={_styles}>
+      {children}
+      {Object.entries(targets).map(([key, target]) => (
+        <ElementHighlighter key={key} target={target} watchMotion={watchMotion} {...highlighterOptions} />
+      ))}
+    </div>
+  );
+}
+
+type useMultiHighlighterProps = {
+  onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
+  disabled?: boolean;
+  scopeRef: RefObject<HTMLElement>;
+  scopeClass?: string;
+};
+
+export function useMultiHighlighter({
+  onChange,
+  disabled,
+  scopeRef,
+  scopeClass: scopeSelector = '',
+}: useMultiHighlighterProps) {
   useEffect(() => {
     const nextTargets: Record<string, HighlightTarget> = {};
-    const { current } = ref;
-    if (!current || disabled) return;
+    const scopeElement = scopeRef.current;
+    if (!scopeElement || disabled) return;
 
-    // select all non-highlighter elements
-    const allElements = Array.from(current.querySelectorAll<HTMLElement>(targetsSelector(`.${scopeClass.current}`)));
-
-    // converge on the root element of components
+    // select all elements (except excluded)
+    const allElements = Array.from(scopeElement.querySelectorAll<HTMLElement>(targetsSelector(`.${scopeSelector}`)));
+    // seek the root element:
     const rootElements = allElements.map(toRootElement).filter((x) => !!x);
     // deduplicate
     const uniqueRoots = new Set(rootElements);
@@ -68,25 +106,13 @@ export function MultiHighlighter({
       if (!element || !hasComponentMeta(comp)) return;
 
       const key = getXPath(element);
-      // eslint-disable-next-line no-underscore-dangle
-      nextTargets[key] = { element, id: comp.__bit_component.id };
+      const meta = comp[componentMetaField];
+      const compId = meta[componentMetaProperties.componentId];
+      const link = meta[componentMetaProperties.homepageUrl];
+      const local = meta[componentMetaProperties.isExported] === false;
+      nextTargets[key] = { element, id: compId, link, local };
     });
 
-    setTargets(nextTargets);
-  }, [disabled]);
-
-  const colors = {
-    '--bit-highlighter-color': bgColor,
-    '--bit-highlighter-color-hover': bgColorHover,
-    '--bit-highlighter-color-active': bgColorActive,
-  };
-
-  return (
-    <div ref={ref} {...rest} className={classNames(scopeClass.current, rest.className)} style={{ ...colors, ...style }}>
-      {children}
-      {Object.entries(targets).map(([key, target]) => (
-        <ElementHighlighter key={key} target={target} watchMotion={watchMotion} {...highlighterOptions} />
-      ))}
-    </div>
-  );
+    onChange(nextTargets);
+  }, [disabled, scopeSelector]);
 }
