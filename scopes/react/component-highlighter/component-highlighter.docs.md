@@ -12,18 +12,18 @@ It is mostly used for compositions debugging.
 
 ## How to use?
 
-Simplest way to use the component is by wrapping your code with `HoverHighlighter`.  
+Simplest way to use the component is by wrapping your code with `ComponentHighlighter`.  
 It will automatically detect components from DOM elements, just by hovering on them.
 
 ```tsx
-import { HoverHighlighter } from '@teambit/react.ui.component-highlighter';
+import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
 
 function App() {
   return (
-    <HoverHighlighter>
+    <ComponentHighlighter>
       <Header />
       <Feed />
-    </HoverHighlighter>
+    </ComponentHighlighter>
   );
 }
 ```
@@ -31,25 +31,29 @@ function App() {
 You can also use it manually, to have more control:
 
 ```tsx
-const [element, setElement] = useState<HTMLElement | undefined>(undefined);
+import { ElementHighlighter } from '@teambit/react.ui.component-highlighter';
 
-useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
+function ManualHighlight() {
+  const [element, setElement] = useState<HTMLElement | undefined>(undefined);
 
-const target = targetElement && {
-  element: targetElement,
-  id: 'teambit.design/ui/icon-button',
+  useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
 
-  // explicit overrides:
-  link: 'https://bit.dev/teambit/design/ui/icon-button',
-  scopeLink: 'https://bit.dev/teambit/design',
-};
+  const target = targetElement && {
+    element: targetElement,
+    id: 'teambit.design/ui/icon-button',
 
-return (
-  <div>
-    <div id="to-highlight">highlight target</div>
-    {target && <ElementHighlighter target={target} />}
-  </div>
-);
+    // explicit overrides:
+    link: 'https://bit.dev/teambit/design/ui/icon-button',
+    scopeLink: 'https://bit.dev/teambit/design',
+  };
+
+  return (
+    <div>
+      <div id="to-highlight">highlight target</div>
+      {target && <ElementHighlighter target={target} />}
+    </div>
+  );
+}
 ```
 
 ## How does it work?
@@ -60,7 +64,7 @@ The automatic highlighter then adds an event listener for hover events, which au
 
 Where does the metadata come from? The highlighter assumes the code has been transpiled by Bit's [custom babel plugin](https://bit.dev/teambit/react/babel/bit-react-transformer). The plugin looks for React components (i.e. functions or classes), and attaches a metadata object to them.
 
-> The `Bit React Transformer` babel plugin is already running in the Preview during `bit start`.  
+> The `Bit React Transformer` babel plugin is already running in the Preview, during `bit start`.  
 > It only effects the browser bundle, and not the dists.
 
 The result looks like this:
@@ -80,6 +84,33 @@ export function Button() {
 Button.__bit_component = __bit_component;
 ```
 
+### Modes
+
+The Component Highlighter comes in a few different modes:
+
+- `hover` - this will track your mouse movements, and show the highlighter for the element the user is currently hovering on.
+- `allChildren` - this automatically detects all components nested inside the highlighter, and apply a highlighter to them. Currently, this detection only happens once on initial setup, so it does not detect changes.
+
+In addition to changing the `mode` prop, you can also use convenience exports from the same package:
+
+```tsx
+import { MultiHighlighter, HoverHighlighter } from '@teambit/react.ui.component-highlighter';
+
+function example() {
+  return (
+    <div>
+      <HoverHighlighter>
+        <App />
+      </HoverHighlighter>
+
+      <MultiHighlighter>
+        <App />
+      </MultiHighlighter>
+    </div>
+  );
+}
+```
+
 ### Debounce
 
 Normally, moving quickly between elements could produce a jitter effect, where the highlighter "jumps" between elements, making interaction difficult.
@@ -87,24 +118,6 @@ A debounce mitigates this by batching re-targets and smooths out the experience.
 First time selection will always happen immediately, for a snappy experience.
 
 You can control the debounce rate with the `debounceSelection` prop. (default - `80ms`)
-
-## Multi highlighter
-
-This component is similar to the Hover Highlighter, but provides automatic highlighting to all components nested inside it.
-
-Simply wrap your code like so, and see the highlighting in action:
-
-```tsx
-import { MultiHighlighter } from '@teambit/react.ui.component-highlighter';
-
-// ...
-
-return (
-  <MultiHighlighter highlighterOptions={{...}}>
-    <App />
-  </MultiHighlighter>
-);
-```
 
 ## Exclusions Zones
 
@@ -122,9 +135,22 @@ return (
     </ExcludeHighlighter>
 
     {/* you can also add the exclude attribute without making a new div */}
-    <Card {...excludeHighlighterAtt}>this component will not be highlighted</Card>
+    <Card {...excludeHighlighterAtt}>this component will also be skipped</Card>
   </div>
 );
+```
+
+Another options would be use use the `rule` prop.  
+Inspired by Webpack rules, it provides a query selector or function that the highlighter target will have to match.  
+For example:
+
+```tsx
+<ComponentHighlighter rule="#include *">
+  <Button>will not be highlighted</Button>
+  <div id="include">
+    <Button>this will be highlighted</Button>
+  </div>
+</ComponentHighlighter>
 ```
 
 ## Customization
@@ -140,9 +166,9 @@ Use these CSS variables to edit the highlighter color
 While it is preferred to use the css variables, you can also set them using react props:
 
 ```tsx
-<MultiHighlighter bgColor="#eebcc9" bgColorHover="#f6dae2" bgColorActive="#e79db1">
+<ComponentHighlighter bgColor="#eebcc9" bgColorHover="#f6dae2" bgColorActive="#e79db1">
   ...
-</MultiHighlighter>
+</ComponentHighlighter>
 ```
 
 And for complete control, you can pass these classes:
@@ -157,9 +183,9 @@ const classes = {
   label?: string;
 };
 
-<HoverHighlighter classes={classes}>
+<ComponentHighlighter classes={classes}>
   ...
-</HoverHighlighter>
+</ComponentHighlighter>
 ```
 
 You can control the size using regular `font-size`.  

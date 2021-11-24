@@ -5,6 +5,7 @@ import { v4 } from 'uuid';
 import { useHoverHighlighter } from '../hover-highlighter';
 import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
 import { useMultiHighlighter } from '../multi-highlighter/use-multi-highlighter';
+import type { MatchRule } from '../rule-matcher';
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** stop all highlighting and drop listeners */
@@ -24,6 +25,9 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
   /** continually update frame position to match moving elements */
   watchMotion?: boolean;
 
+  /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
+  rule?: MatchRule;
+
   /** set the behavior of the highlighter.
    * `disabled` - stops highlighting.
    * `allChildren` - highlights all components rendered under children
@@ -42,6 +46,7 @@ export function HybridHighlighter({
   debounceSelection = 80,
   watchMotion = true,
   placement,
+  rule,
 
   classes,
   highlightStyle,
@@ -70,6 +75,7 @@ export function HybridHighlighter({
       debounceDuration: hasTargets ? debounceSelection : 0,
       scopeClass,
       disabled: disabled || mode !== 'hover',
+      rule,
     }
   );
 
@@ -78,6 +84,7 @@ export function HybridHighlighter({
     scopeRef: ref,
     scopeClass,
     disabled: disabled || mode !== 'allChildren',
+    rule,
   });
 
   const _styles = useMemo(

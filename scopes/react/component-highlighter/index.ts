@@ -16,3 +16,5 @@ export {
   excludeHighlighterSelector,
   excludeHighlighterAttrName,
 } from './ignore-highlighter';
+
+export type { MatchRule } from './rule-matcher';

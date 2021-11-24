@@ -8,12 +8,15 @@ import {
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
+import { ruleMatcher, MatchRule } from '../rule-matcher';
 
 type useMultiHighlighterProps = {
   onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
   disabled?: boolean;
   scopeRef: RefObject<HTMLElement>;
   scopeClass?: string;
+  /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
+  rule?: MatchRule;
 
   // /** automatically update when children update. Use with caution, might be slow */
   // watchDom?: boolean;
@@ -24,6 +27,7 @@ export function useMultiHighlighter({
   disabled,
   scopeRef,
   scopeClass: scopeSelector = '',
+  rule,
 }: useMultiHighlighterProps) {
   useEffect(() => {
     const nextTargets: Record<string, HighlightTarget> = {};
@@ -31,7 +35,9 @@ export function useMultiHighlighter({
     if (!scopeElement || disabled) return;
 
     // select all elements (except excluded)
-    const allElements = Array.from(scopeElement.querySelectorAll<HTMLElement>(targetsSelector(`.${scopeSelector}`)));
+    let allElements = Array.from(scopeElement.querySelectorAll<HTMLElement>(targetsSelector(`.${scopeSelector}`)));
+    // apply rule filtering
+    if (rule) allElements = allElements.filter((elem) => ruleMatcher(elem, rule));
     // seek the root element:
     const rootElements = allElements.map(toRootElement).filter((x) => !!x);
     // deduplicate

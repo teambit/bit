@@ -53,6 +53,23 @@ export const MultiHighlighterInsideIgnore = () => {
   );
 };
 
+export const MultiHighlighterWithRule = () => {
+  return (
+    <MultiHighlighter rule="#someSubTree *">
+      <br />
+      <br />
+      <br />
+      <MockedComponentWithMeta>no highlighter</MockedComponentWithMeta>
+      <br />
+      <br />
+      <br />
+      <div id="someSubTree">
+        <MockedComponentWithMeta>this will be highlighted</MockedComponentWithMeta>
+      </div>
+    </MultiHighlighter>
+  );
+};
+
 // export const HighlightingAllElementsInTheEnterprisePage = () => {
 //   return (
 //     <MultiHighlighter>

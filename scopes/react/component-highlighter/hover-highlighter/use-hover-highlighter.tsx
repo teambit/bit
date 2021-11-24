@@ -6,20 +6,22 @@ import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metada
 
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 import { HighlightTarget } from '../element-highlighter';
+import { ruleMatcher, MatchRule } from '../rule-matcher';
 
 export type useHoverHighlighterOptions = {
   debounceDuration: number;
   scopeClass: string;
   disabled?: boolean;
+  rule?: MatchRule;
 };
 
 /** fires onChange when targeting a new component */
 export function useHoverHighlighter<T extends HTMLElement = HTMLElement>(
   onChange: (target?: HighlightTarget) => void,
   props: React.HTMLAttributes<T> = {},
-  { debounceDuration, scopeClass, disabled }: useHoverHighlighterOptions
+  { debounceDuration, scopeClass, disabled, rule }: useHoverHighlighterOptions
 ) {
-  const { handleElement } = useHoverHandler({ onChange, scopeClass, debounceDuration, disabled });
+  const { handleElement } = useHoverHandler({ onChange, scopeClass, debounceDuration, disabled, rule });
 
   const handlers = useHoverSelection(disabled ? undefined : handleElement, props);
 
@@ -31,9 +33,10 @@ type useHoverHighlighterProps = {
   scopeClass?: string;
   debounceDuration?: number;
   disabled?: boolean;
+  rule?: MatchRule;
 };
 
-function useHoverHandler({ onChange, scopeClass = '', debounceDuration, disabled }: useHoverHighlighterProps) {
+function useHoverHandler({ onChange, scopeClass = '', debounceDuration, disabled, rule }: useHoverHighlighterProps) {
   // debounced method is ref'ed, so no need for useCallback
   const _handleElement = (element: HTMLElement | null) => {
     // clear highlighter at the edges:
@@ -45,7 +48,7 @@ function useHoverHandler({ onChange, scopeClass = '', debounceDuration, disabled
     // skip DOM trees having 'data-ignore-component-highlight'
     if (element.closest(`.${scopeClass} ${excludeHighlighterSelector}`)) return;
 
-    const result = bubbleToBitComponent(element);
+    const result = bubbleToBitComponent(element, rule ? (current) => ruleMatcher(current, rule) : undefined);
     if (!result) return;
 
     onChange({
@@ -68,7 +71,7 @@ function useHoverHandler({ onChange, scopeClass = '', debounceDuration, disabled
 }
 
 /** go up the dom tree until reaching a react bit component */
-function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Element) => boolean) {
+function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: HTMLElement) => boolean) {
   for (let current = element; current; current = current.parentElement) {
     current = toRootElement(current);
     if (!current || filter?.(current) === false) return undefined;
