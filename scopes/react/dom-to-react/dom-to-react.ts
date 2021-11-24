@@ -25,12 +25,8 @@ export function toRootElement(element: HTMLElement | null) {
 }
 
 export function domToReact(element: HTMLElement | null) {
-  if (element === null) return null;
-
-  const fiberNode = domToFiber(element);
-  const rootFiber = toRootFiber(fiberNode);
-
-  return rootFiber?.type || null;
+  const components = domToReacts(element);
+  return components.pop();
 }
 
 export function domToReacts(element: HTMLElement | null): ComponentType[] {
