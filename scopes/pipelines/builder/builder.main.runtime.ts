@@ -274,7 +274,6 @@ export class BuilderMain {
     LoggerAspect,
     AspectLoaderAspect,
     GraphqlAspect,
-    ComponentAspect,
     GeneratorAspect,
   ];
 
@@ -310,7 +309,6 @@ export class BuilderMain {
       scope
     );
     envs.registerService(buildService);
-    generator.registerComponentTemplate([buildTaskTemplate]);
     const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
     const snapService = new BuilderService(
       isolator,
@@ -337,6 +335,7 @@ export class BuilderMain {
     );
 
     graphql.register(builderSchema(builder));
+    generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
     if (workspace && !workspace.consumer.isLegacy) {

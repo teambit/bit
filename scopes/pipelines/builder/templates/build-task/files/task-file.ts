@@ -28,7 +28,7 @@ export class ${namePascalCase} implements BuildTask {
       const componentName = capsule.component.id.name;
       const capsuleDir = capsule.path;
 
-      const artifactContent = 'This component's name is ' + componentName;
+      const artifactContent = \`The component name is \${componentName}\`
 
       try {
         // Generate the artifact inside the capsule's diretory
@@ -36,7 +36,7 @@ export class ${namePascalCase} implements BuildTask {
           path.join(capsuleDir, 'output.my-artifact.txt'),
           artifactContent
         );
-      } catch (err) {
+      } catch (err: any) {
         errors.push(err);
       }
       componentsResults.push({ component: capsule.component, errors });

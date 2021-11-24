@@ -777,6 +777,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
     },
+    "test-task": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "components"
+    },
     "tester": {
         "scope": "teambit.defender",
         "version": "0.0.569",
