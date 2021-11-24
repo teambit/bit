@@ -62,3 +62,4 @@ export {
 export { InstallOptions } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource } from './policy/variant-policy/variant-policy';
+export { OutdatedPkg } from './get-all-policy-pkgs';

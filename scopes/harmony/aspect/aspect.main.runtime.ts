@@ -70,28 +70,7 @@ export class AspectMain {
       compiler.createTask('TypescriptCompiler', tsCompiler),
     ]);
 
-    const pkgJsonOverride = react.overridePackageJsonProps({
-      files: [
-        babelCompiler.distDir,
-        `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`,
-        '**/*.md',
-        '**/*.mdx',
-        '**/*.js',
-        '**/*.json',
-        '**/*.sass',
-        '**/*.scss',
-        '**/*.less',
-        '**/*.css',
-        '**/*.css',
-        '**/*.jpeg',
-        '**/*.gif',
-      ],
-    });
-
-    const aspectEnv = react.compose(
-      [compilerOverride, compilerTasksOverride, pkgJsonOverride],
-      new AspectEnv(react.reactEnv)
-    );
+    const aspectEnv = react.compose([compilerOverride, compilerTasksOverride], new AspectEnv(react.reactEnv));
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
