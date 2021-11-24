@@ -7,6 +7,8 @@ import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from
 import { useMultiHighlighter } from '../multi-highlighter/use-multi-highlighter';
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** stop all highlighting and drop listeners */
+  disabled?: boolean;
   /** default pop location for the label */
   placement?: Placement;
   /** customize styles */
@@ -27,7 +29,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
    * `allChildren` - highlights all components rendered under children
    * `hover` - highlighters the component immediately under the mouse cursor
    * */
-  mode: 'disabled' | 'allChildren' | 'hover';
+  mode?: 'allChildren' | 'hover';
   bgColor?: string;
   bgColorHover?: string;
   bgColorActive?: string;
@@ -35,6 +37,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
 
 /** automatically highlight components on hover */
 export function HybridHighlighter({
+  disabled,
   mode = 'hover',
   debounceSelection = 80,
   watchMotion = true,
@@ -57,8 +60,8 @@ export function HybridHighlighter({
 
   // clear targets when disabled
   useEffect(() => {
-    if (mode === 'disabled') setTarget({});
-  }, [mode]);
+    if (disabled) setTarget({});
+  }, [disabled]);
 
   const handlers = useHoverHighlighter(
     (nextTarget) => setTarget(nextTarget ? { 'hover-target': nextTarget } : {}),
@@ -66,15 +69,15 @@ export function HybridHighlighter({
     {
       debounceDuration: hasTargets ? debounceSelection : 0,
       scopeClass,
-      disabled: mode !== 'hover',
+      disabled: disabled || mode !== 'hover',
     }
   );
 
   useMultiHighlighter({
     onChange: setTarget,
     scopeRef: ref,
-    disabled: mode !== 'allChildren',
     scopeClass,
+    disabled: disabled || mode !== 'allChildren',
   });
 
   const _styles = useMemo(

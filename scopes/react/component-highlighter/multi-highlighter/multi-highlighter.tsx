@@ -2,10 +2,8 @@ import React from 'react';
 
 import { HybridHighlighter, HybridHighlighterProps } from '../hybrid-highligher';
 
-export interface MultiHighlighterProps extends Omit<HybridHighlighterProps, 'mode'> {
-  disabled?: boolean;
-}
+export type MultiHighlighterProps = Omit<HybridHighlighterProps, 'mode'>;
 
-export function MultiHighlighter({ disabled, ...props }: MultiHighlighterProps) {
-  return <HybridHighlighter {...props} mode={disabled ? 'disabled' : 'allChildren'} />;
+export function MultiHighlighter({ watchMotion = false, ...props }: MultiHighlighterProps) {
+  return <HybridHighlighter {...props} mode={'allChildren'} watchMotion={watchMotion} />;
 }
