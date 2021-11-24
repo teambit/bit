@@ -2,7 +2,7 @@ import R from 'ramda';
 
 import { Consumer } from '../..';
 import GeneralError from '../../../error/general-error';
-import { Version } from '../../../scope/models';
+import { Source, Version } from '../../../scope/models';
 import { SourceFileModel } from '../../../scope/models/version';
 import { Tmp } from '../../../scope/repositories';
 import { eol, sha1 } from '../../../utils';
@@ -26,6 +26,7 @@ export type MergeResultsThreeWay = {
     currentFile: SourceFileModel;
     output: string | null | undefined;
     conflict: string | null | undefined;
+    isBinaryConflict?: boolean;
   }>;
   unModifiedFiles: Array<{
     filePath: PathLinux;
@@ -34,6 +35,11 @@ export type MergeResultsThreeWay = {
   overrideFiles: Array<{
     filePath: PathLinux;
     fsFile: SourceFile;
+  }>;
+  updatedFiles: Array<{
+    filePath: PathLinux;
+    currentFile: SourceFileModel;
+    content: Buffer;
   }>;
   hasConflicts: boolean;
 };
@@ -56,6 +62,22 @@ export type MergeResultsThreeWay = {
  * current-file => bar/foo@0.0.1
  * base-file    => bar/foo@0.0.2
  * other-file   => bar/foo@0.0.2 + modification
+ *
+ *
+ * another example. bar/foo is locally 0.0.1 with local changes, and the latest on the remote is 0.0.2.
+ * the user is running `bit checkout latest bar/foo` to checkout to 0.0.2.
+ * current-file => bar/foo@0.0.2
+ * base-file    => bar/foo@0.0.1
+ * other-file   => bar/foo@0.0.1 + modification
+ *
+ *
+ * another example. bar/foo is locally 0.0.1 with no local changes, and the latest on the remote is 0.0.2.
+ * the user is running `bit checkout latest bar/foo` to checkout to 0.0.2.
+ * current-file => bar/foo@0.0.2
+ * base-file    => bar/foo@0.0.1
+ * other-file   => bar/foo@0.0.1
+ * in this case, the base-file and other-file are the same and we want to write the current without checking
+ * for conflicts.
  */
 export default async function threeWayMergeVersions({
   consumer,
@@ -95,9 +117,10 @@ export default async function threeWayMergeVersions({
     modifiedFiles: [],
     unModifiedFiles: [],
     overrideFiles: [],
+    updatedFiles: [],
     hasConflicts: false,
   };
-  const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
+  const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
     if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag, no need to do any
@@ -106,7 +129,7 @@ export default async function threeWayMergeVersions({
         results.addFiles.push({ filePath, fsFile });
         return;
       }
-      // if !currentFile && baseFile,  the file was created as part of the last tag but not
+      // if !currentFile && baseFile, the file was created as part of the last tag but not
       // available on the current, so it needs to be removed.
       results.removeFiles.push({ filePath });
       return;
@@ -127,8 +150,11 @@ export default async function threeWayMergeVersions({
       return;
     }
     if (fsFileHash === baseFileHash) {
-      // the file has no local modification
-      results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
+      // the file has no local modification.
+      // the file currently in the fs, is not the same as the file we want to write (current).
+      // but no need to check whether it has conflicts because we always want to write the current.
+      const content = (await currentFile.file.load(consumer.scope.objects)) as Source;
+      results.updatedFiles.push({ filePath, currentFile, content: content.contents });
       return;
     }
     // it was changed in both, there is a chance for conflict
@@ -139,13 +165,14 @@ export default async function threeWayMergeVersions({
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
-  fsFiles.forEach((fsFile) => {
-    const relativePath = pathNormalizeToLinux(fsFile.relative);
-    const baseFile = baseFiles.find((file) => file.relativePath === relativePath);
-    const currentFile = currentFiles.find((file) => file.relativePath === relativePath);
-    getFileResult(fsFile, baseFile, currentFile);
-  });
-
+  await Promise.all(
+    fsFiles.map(async (fsFile) => {
+      const relativePath = pathNormalizeToLinux(fsFile.relative);
+      const baseFile = baseFiles.find((file) => file.relativePath === relativePath);
+      const currentFile = currentFiles.find((file) => file.relativePath === relativePath);
+      await getFileResult(fsFile, baseFile, currentFile);
+    })
+  );
   if (R.isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
@@ -154,7 +181,8 @@ export default async function threeWayMergeVersions({
     if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
-    if (conflictResult.conflict) results.hasConflicts = true;
+    modifiedFile.isBinaryConflict = conflictResult.isBinaryConflict;
+    if (conflictResult.conflict || conflictResult.isBinaryConflict) results.hasConflicts = true;
   });
 
   return results;
