@@ -498,7 +498,7 @@ export class DependencyResolverMain {
     return this.config.packageManager;
   }
 
-  getVersionResolver(options: GetVersionResolverOptions = {}) {
+  async getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
@@ -510,8 +510,9 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
+    const { networkConcurrency } = await this.getNetworkConfig();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyVersionResolver(packageManager, cacheRootDir);
+    return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
   }
 
   /**
@@ -964,7 +965,7 @@ export class DependencyResolverMain {
     pkgs: Array<{ name: string; currentRange: string } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
-    const resolver = this.getVersionResolver();
+    const resolver = await this.getVersionResolver();
     const resolve = async (spec: string) =>
       (
         await resolver.resolveRemoteVersion(spec, {

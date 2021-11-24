@@ -227,6 +227,7 @@
         "flatted": "3.1.0",
         "fuse.js": "6.4.6",
         "get-port": "5.1.1",
+        "get-xpath": "3.0.1",
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
@@ -264,6 +265,7 @@
         "mousetrap": "1.6.5",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
+        "p-limit": "3.1.0",
         "parallel-webpack": "2.6.0",
         "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
@@ -327,7 +329,6 @@
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
         "ws": "7.4.2",
-        "get-xpath": "3.0.1",
         "yaml": "1.10.2"
       },
       "peerDependencies": {
