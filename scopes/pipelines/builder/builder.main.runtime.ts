@@ -12,6 +12,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
@@ -26,6 +27,7 @@ import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
 import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
+import { buildTaskTemplate } from './templates/build-task';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
@@ -273,10 +275,11 @@ export class BuilderMain {
     AspectLoaderAspect,
     GraphqlAspect,
     ComponentAspect,
+    GeneratorAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -284,7 +287,8 @@ export class BuilderMain {
       IsolatorMain,
       LoggerMain,
       AspectLoaderMain,
-      GraphqlMain
+      GraphqlMain,
+      GeneratorMain
     ],
     config,
     [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
@@ -306,6 +310,7 @@ export class BuilderMain {
       scope
     );
     envs.registerService(buildService);
+    generator.registerComponentTemplate([buildTaskTemplate]);
     const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
     const snapService = new BuilderService(
       isolator,
