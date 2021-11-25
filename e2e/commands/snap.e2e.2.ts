@@ -477,11 +477,10 @@ describe('bit snap command', function () {
             helper.fixtures.createComponentBarFoo('');
             helper.command.untag('bar/foo');
           });
-          it('bit status should not show the component as a component with conflicts but as outdated', () => {
+          it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
             expect(status.modifiedComponent).to.have.lengthOf(1);
-            expect(status.outdatedComponents).to.have.lengthOf(1);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(0);
           });
