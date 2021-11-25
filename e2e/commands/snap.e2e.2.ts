@@ -721,5 +721,23 @@ describe('bit snap command', function () {
       const firstTag = compData.versions['0.0.1'];
       expect(() => helper.command.catObject(firstTag)).to.not.throw();
     });
+    it('bit status should suggest running either "bit untag" or "bit merge"', () => {
+      const output = helper.command.status();
+      expect(output).to.have.string('bit untag');
+      expect(output).to.have.string('bit merge');
+    });
+    describe('bit untag a diverge component', () => {
+      before(() => {
+        helper.command.untagAll();
+      });
+      it('should change the head to point to the remote head and not to the parent of the untagged version', () => {
+        const head = helper.command.getHead('comp1');
+        const remoteHead = helper.general.getRemoteHead('comp1');
+        expect(head).to.be.equal(remoteHead);
+      });
+      it('bit status after untag should show the component as modified only', () => {
+        helper.command.expectStatusToBeClean(['modifiedComponent']);
+      });
+    });
   });
 });
