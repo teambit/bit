@@ -275,7 +275,7 @@ export class GraphqlMain {
       .filter((module) => !!module);
   }
 
-  static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>()];
+  static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>(), Slot.withType<PubSubSlot>()];
 
   static defaultConfig = {
     port: 4000,
