@@ -1246,7 +1246,7 @@ export class Workspace implements ComponentFactory {
         throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
       }
       this.logger.debug(`installing the following packages: ${packages.join()}`);
-      const resolver = this.dependencyResolver.getVersionResolver();
+      const resolver = await this.dependencyResolver.getVersionResolver();
       const resolvedPackagesP = packages.map((packageName) =>
         resolver.resolveRemoteVersion(packageName, {
           rootDir: this.path,
