@@ -6,13 +6,15 @@ export const ShowWhenHovering = () => {
   const [disabled, setDisabled] = useState<boolean>(false);
 
   return (
-    <div style={{ padding: '16px 80px 32px 16px' }}>
+    <div style={{ padding: '16px 50px 32px 16px', minWidth: 300 }}>
       <HoverHighlighter style={{ padding: 16 }} disabled={disabled}>
         <div>
-          some div
           <br />
           <div>
             <IconButton onClick={() => setDisabled((x) => !x)}>Hover here</IconButton>
+          </div>
+          <div>
+            {disabled ? 'X' : '✓'} highlighter is {disabled ? 'disabled' : 'enabled'}
           </div>
         </div>
       </HoverHighlighter>

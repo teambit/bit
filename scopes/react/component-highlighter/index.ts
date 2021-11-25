@@ -1,5 +1,8 @@
-export { HoverHighlighter as ComponentHighlighter } from './component-highlighter';
-export type { HoverHighlighterProps as ComponentHighlightProps } from './component-highlighter';
+export { HybridHighlighter as ComponentHighlighter } from './hybrid-highligher';
+export type { HybridHighlighterProps as ComponentHighlightProps } from './hybrid-highligher';
+
+export { HoverHighlighter } from './hover-highlighter';
+export type { HoverHighlighterProps } from './hover-highlighter';
 
 export { MultiHighlighter } from './multi-highlighter';
 export type { MultiHighlighterProps } from './multi-highlighter';
@@ -13,3 +16,5 @@ export {
   excludeHighlighterSelector,
   excludeHighlighterAttrName,
 } from './ignore-highlighter';
+
+export type { MatchRule } from './rule-matcher';

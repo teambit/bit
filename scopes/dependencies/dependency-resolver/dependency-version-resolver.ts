@@ -1,4 +1,5 @@
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import pLimit from 'p-limit';
 
 import { PackageManager, PackageManagerResolveRemoteVersionOptions, ResolvedPackageVersion } from './package-manager';
 
@@ -8,14 +9,20 @@ const DEFAULT_REMOTE_RESOLVE_VERSIONS = {
 };
 
 export class DependencyVersionResolver {
+  private limitRequests: pLimit.Limit;
+
   constructor(
     /**
      * package manager instance.
      */
     private packageManager: PackageManager,
 
-    private cacheRootDir?: string | PathAbsolute
-  ) {}
+    private cacheRootDir?: string | PathAbsolute,
+
+    networkConcurrency?: number
+  ) {
+    this.limitRequests = pLimit(networkConcurrency ?? 16);
+  }
 
   async resolveRemoteVersion(
     packageName: string,
@@ -29,7 +36,7 @@ export class DependencyVersionResolver {
       options
     );
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    const resolved = await this.packageManager.resolveRemoteVersion(packageName, calculatedOpts);
+    const resolved = this.limitRequests(() => this.packageManager.resolveRemoteVersion(packageName, calculatedOpts));
     return resolved;
   }
 }

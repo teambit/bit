@@ -56,3 +56,9 @@ This is a <b>tip</b> message
 :::important
 This is an <b>important</b> message
 :::
+
+:::info
+This is an <b>info</b> message
+:::
+
+<br />
