@@ -493,13 +493,21 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
       // update the snap head if needed
-      if (component.getHeadStr() === refStr) {
+      const getHead = () => {
+        const divergeData = component.getDivergeData();
+        if (divergeData.isDiverged()) {
+          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
+          return component.remoteHead;
+        }
         if (versionObject.parents.length > 1) {
           throw new Error(
             `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
           );
         }
-        const head = versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
+        return versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
+      };
+      if (component.getHeadStr() === refStr) {
+        const head = getHead();
         component.setHead(head);
       }
 
