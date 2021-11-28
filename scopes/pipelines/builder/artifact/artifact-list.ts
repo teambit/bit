@@ -7,6 +7,8 @@ import { ArtifactsStorageResolver } from '..';
 import { Artifact } from './artifact';
 import { StorageResolverNotFoundError } from './exceptions';
 import { DefaultResolver } from '../storage';
+import { FsArtifact } from '.';
+import { StoreResult } from '../storage/storage-resolver';
 // import { FsArtifact } from './fs-artifact';
 
 export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
@@ -118,7 +120,10 @@ export class ArtifactList<T extends Artifact> {
   /**
    * store all artifacts using the configured storage resolvers.
    */
-  async store(component: Component, storageResolvers: { [resolverName: string]: ArtifactsStorageResolver }) {
+  async store(
+    component: Component,
+    storageResolvers: { [resolverName: string]: ArtifactsStorageResolver }
+  ): Promise<StoreResult[]> {
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (resolverName) => {
       const artifacts = byResolvers[resolverName];
@@ -128,8 +133,8 @@ export class ArtifactList<T extends Artifact> {
       if (!storageResolver) {
         throw new StorageResolverNotFoundError(resolverName, component);
       }
-      const artifactList = new ArtifactList(artifacts);
-      return storageResolver.store(component, artifactList);
+      const artifactList = new ArtifactList<T>(artifacts);
+      return storageResolver.store(component, artifactList as any as ArtifactList<FsArtifact>);
     });
 
     const results = await Promise.all(promises);
