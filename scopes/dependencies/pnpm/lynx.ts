@@ -185,7 +185,7 @@ export async function install(
     // reporter: logger ? getReporter(logger) : undefined,
   };
 
-  defaultReporter({
+  const stopReporting = defaultReporter({
     context: {
       argv: [],
     },
@@ -197,7 +197,11 @@ export async function install(
     },
     streamParser,
   });
-  await mutateModules(packagesToBuild, opts);
+  try {
+    await mutateModules(packagesToBuild, opts);
+  } finally {
+    stopReporting();
+  }
 }
 
 export async function resolveRemoteVersion(
