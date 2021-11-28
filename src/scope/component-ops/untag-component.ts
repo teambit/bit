@@ -59,6 +59,7 @@ as a result, newer versions have this version as part of their history`);
   const allVersionsObjects = await Promise.all(
     localVersions.map((localVer) => component.loadVersion(localVer, scope.objects))
   );
+  await component.setDivergeData(scope.objects);
   scope.sources.removeComponentVersions(component, versionsToRemove, allVersionsObjects);
 
   return { id, versions: versionsToRemove, component };

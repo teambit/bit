@@ -1,5 +1,5 @@
+import chalk from 'chalk';
 import execa from 'execa';
-
 import logger from '../logger/logger';
 import { PathLinux, PathOsBased } from '../utils/path';
 import GitNotFound from './git/exceptions/git-not-found';
@@ -70,9 +70,14 @@ export default async function mergeFiles({
       return mergeResult;
     }
     if (err.exitCodeName === 'ENOENT') {
-      logger.error(`failed running Git at ${gitExecutablePath}. full command: ${err.cmd}`);
+      logger.error(`failed running Git at ${gitExecutablePath}. full command: ${err.command}`);
       throw new GitNotFound(gitExecutablePath, err);
     }
+    throw new Error(`failed merging "${filePath}" by Git.
+
+${chalk.bold('command:')} ${err.command}
+${chalk.bold('message:')} ${err.message}
+${chalk.bold('original error:')} ${err.stderr}`);
     throw err;
   }
 }

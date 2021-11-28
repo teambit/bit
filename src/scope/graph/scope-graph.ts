@@ -8,6 +8,7 @@ import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies
 import Consumer from '../../consumer/consumer';
 import { getLatestVersionNumber } from '../../utils';
 import { getAllVersionsInfo } from '../component-ops/traverse-versions';
+import { IdNotFoundInGraph } from '../exceptions/id-not-found-in-graph';
 import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
@@ -283,7 +284,7 @@ export default class DependencyGraph {
     const nodes = this.graph.nodes();
     const ids = nodes.filter((n) => n.startsWith(id.toString()));
     if (!ids.length) {
-      throw new Error(`failed finding ${id.toString()} in the graph`);
+      throw new IdNotFoundInGraph(id.toString());
     }
     const bitIds = ids.map((idStr) => this.graph.node(idStr));
     return getLatestVersionNumber(BitIds.fromArray(bitIds), id);
