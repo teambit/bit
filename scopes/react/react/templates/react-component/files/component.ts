@@ -10,13 +10,13 @@ export type ${Name}Props = {
   /**
    * a node to be rendered in the special component.
    */
-  children?: ReactNode
+  children?: ReactNode;
 };
 
 export function ${Name}({ children }: ${Name}Props) {
   return (
     <div>
-      {children || <div />}
+      {children}
     </div>
   );
 }

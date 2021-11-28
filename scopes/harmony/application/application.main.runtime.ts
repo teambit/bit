@@ -167,6 +167,7 @@ export class ApplicationMain {
     const id = this.getAppIdOrThrow(appName);
     const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
+    // console.log(comp)
 
     const env = await this.envs.createEnvironment([component]);
     const res = await env.run(this.appService);

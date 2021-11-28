@@ -119,7 +119,7 @@ export class SchemaExtractorContext {
     const file = exportDec.getSourceFile().fileName;
     const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
-    const absPath = resolve(file, '..', specifierPath!);
+    const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFile(absPath);
     if (!sourceFile) return [];
     return this.extractor.computeExportedIdentifiers(sourceFile, this);
@@ -155,11 +155,12 @@ export class SchemaExtractorContext {
       : await this.typeDefinition(node);
 
     const def = await Promise.all(
-      typeDef?.body?.map(async (def) => {
-        const file = this.findFileInComponent(def.file);
+      typeDef?.body?.map(async (definition) => {
+        const file = this.findFileInComponent(definition.file);
         // TODO: find component id is exists, otherwise add the package name.
         if (!file) return new TypeRefSchema(typeStr, undefined, '');
-        if (file) return new TypeRefSchema(typeStr, undefined, undefined, this.jump(file, def.start));
+        if (file) return new TypeRefSchema(typeStr, undefined, undefined, this.jump(file, definition.start));
+        return undefined;
       }) || []
     );
 

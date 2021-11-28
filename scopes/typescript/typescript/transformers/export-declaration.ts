@@ -33,16 +33,19 @@ export class ExportDeclaration implements SchemaTransformer {
     const exportClause = exportDec.exportClause;
     if (exportClause?.kind === SyntaxKind.NamedExports) {
       exportClause as NamedExports;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const exports = await Promise.all(
         exportClause.elements.map(async (element) => {
-          const sig = await context.visitDefinition(element.name);
+          // const sig = await context.visitDefinition(element.name);
+          await context.visitDefinition(element.name);
           return element.name;
         })
       );
 
-      return exports.map((identifier) => {
-        // const type = context.resolveType(identifier);
-      });
+      return [];
+      // return exports.map((identifier) => {
+      //   // const type = context.resolveType(identifier);
+      // });
     }
 
     return {};
