@@ -6,13 +6,14 @@ import { Component, ComponentMap } from '@teambit/component';
 import { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver, ArtifactsStorageResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
-import { Artifact } from './artifact';
+// import { Artifact } from './artifact';
+import { FsArtifact } from './fs-artifact';
 import type { BuildContext, BuildTask } from '../build-task';
 import { CapsuleNotFound } from '../exceptions';
 
 export const DEFAULT_CONTEXT = 'component';
 
-export type ArtifactMap = ComponentMap<ArtifactList>;
+export type ArtifactMap = ComponentMap<ArtifactList<FsArtifact>>;
 
 export class ArtifactFactory {
   constructor(private resolversMap: { [resolverName: string]: ArtifactsStorageResolver }) {}
@@ -43,14 +44,14 @@ export class ArtifactFactory {
     component: Component,
     def: ArtifactDefinition,
     task: BuildTask
-  ): Artifact | undefined {
+  ): FsArtifact | undefined {
     const storageResolvers = this.getStorageResolvers(def);
     const rootDir = this.getArtifactContextPath(context, component, def);
     const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
     if (!paths || !paths.length) {
       return undefined;
     }
-    return new Artifact(def, storageResolvers, new ArtifactFiles(paths), rootDir, task);
+    return new FsArtifact(def, storageResolvers, ArtifactFiles.fromPaths(paths), task, undefined, rootDir);
     // return new Artifact(def, def.storageResolver || ['default'], new ArtifactFiles(paths), rootDir, task);
   }
 
@@ -61,8 +62,8 @@ export class ArtifactFactory {
     return def.storageResolver?.map((resolverName) => this.resolversMap[resolverName]);
   }
 
-  private toComponentMap(context: BuildContext, artifactMap: [string, Artifact][]) {
-    return ComponentMap.as<ArtifactList>(context.components, (component) => {
+  private toComponentMap(context: BuildContext, artifactMap: [string, FsArtifact][]) {
+    return ComponentMap.as<ArtifactList<FsArtifact>>(context.components, (component) => {
       const id = component.id.toString();
       const artifacts = artifactMap.filter(([targetId]) => targetId === id).map(([, artifact]) => artifact);
 
@@ -78,8 +79,8 @@ export class ArtifactFactory {
   /**
    * generate artifacts from a build context according to the spec defined in the artifact definitions.
    */
-  generate(context: BuildContext, defs: ArtifactDefinition[], task: BuildTask): ComponentMap<ArtifactList> {
-    const tupleArr: [string, Artifact][] = [];
+  generate(context: BuildContext, defs: ArtifactDefinition[], task: BuildTask): ComponentMap<ArtifactList<FsArtifact>> {
+    const tupleArr: [string, FsArtifact][] = [];
 
     defs.forEach((def) => {
       const artifactContext = this.getArtifactContext(def);
@@ -88,12 +89,13 @@ export class ArtifactFactory {
         const rootDir = this.getRootDir(capsuleDir, def);
         const paths = this.resolvePaths(rootDir, def);
         if (paths && paths.length) {
-          const artifact = new Artifact(
+          const artifact = new FsArtifact(
             def,
             this.getStorageResolvers(def),
-            new ArtifactFiles(this.resolvePaths(rootDir, def)),
-            rootDir,
-            task
+            ArtifactFiles.fromPaths(this.resolvePaths(rootDir, def)),
+            task,
+            undefined,
+            rootDir
           );
 
           return context.components.forEach((component) => {

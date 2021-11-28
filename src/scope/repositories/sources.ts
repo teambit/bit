@@ -240,9 +240,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
     const artifacts: ArtifactSource[] = [];
     artifactsFiles.forEach((artifactFiles) => {
-      const artifactsSource = ArtifactFiles.fromVinylsToSources(artifactFiles.vinyls);
-      if (artifactsSource.length) artifactFiles.populateRefsFromSources(artifactsSource);
-      artifacts.push(...artifactsSource);
+      artifactFiles.populateArtifactSourceFromVinyl();
+      artifactFiles.populateRefsFromSources();
     });
     return artifacts;
   }

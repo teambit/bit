@@ -1,7 +1,9 @@
 import { join } from 'path';
 import fs from 'fs-extra';
 import { Ref } from '../../../scope/objects';
+import { pathNormalizeToLinux } from '../../../utils';
 import { ArtifactVinyl } from './artifact';
+import { ArtifactSource } from './artifact-files';
 
 export type ArtifactRef = { relativePath: string; ref: Ref };
 export type ArtifactStore = { name: string; metadata?: Object };
@@ -17,6 +19,7 @@ export type ArtifactFileObject = {
 
 export class ArtifactFile {
   ref: Ref | undefined | null;
+  source: ArtifactSource | undefined | null;
   // constructor(public path: string, public vinyl?: ArtifactVinyl, public ref?: ArtifactRef) {}
   constructor(public relativePath: string, public vinyl?: ArtifactVinyl, public stores?: Array<ArtifactStore>) {}
 
@@ -26,7 +29,7 @@ export class ArtifactFile {
     return new ArtifactFile(this.relativePath, vinyl, stores);
   }
 
-  static parse(fileObject: FileObject): ArtifactFile {
+  static parse(fileObject: ArtifactFileObject): ArtifactFile {
     if (fileObject instanceof ArtifactFile) {
       return fileObject;
     }
@@ -56,7 +59,25 @@ export class ArtifactFile {
     return this.ref;
   }
 
-  async populateVinylFromStorage(): Promise<ArtifactVinyl> {}
+  populateArtifactSourceFromVinyl(): ArtifactSource | undefined {
+    if (this.vinyl) {
+      const source = {
+        relativePath: pathNormalizeToLinux(this.vinyl.relative),
+        source: this.vinyl.toSourceAsLinuxEOL(),
+      };
+      this.source = source;
+      return source;
+    }
+    return undefined;
+  }
+
+  populateRefFromSource() {
+    if (this.source) {
+      this.ref = this.source.source.hash();
+    }
+  }
+
+  // async populateVinylFromStorage(): Promise<ArtifactVinyl> {}
 
   getDefaultStore(): ArtifactStore | undefined {
     return this.stores?.find((store) => store.name === 'default');
@@ -70,10 +91,28 @@ export class ArtifactFile {
     this.vinyl = vinyl;
   }
 
+  compatibleWithBackwardModelObject(): boolean {
+    if (this.stores?.length === 1 && this.getDefaultStore()) {
+      return true;
+    }
+    return false;
+  }
+
   toModelObject() {
+    // If there is no new stores, save it in the model is it used to be saved
+    if (this.compatibleWithBackwardModelObject()) {
+      return this.toBackwardCompatibleObject();
+    }
     return {
       relativePath: this.relativePath,
       stores: this.stores,
+    };
+  }
+
+  toBackwardCompatibleObject() {
+    return {
+      relativePath: this.relativePath,
+      file: this.getRef()?.hash,
     };
   }
 

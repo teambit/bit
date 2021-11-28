@@ -1,14 +1,11 @@
 import R from 'ramda';
 import { compact } from 'lodash';
-import ShowDoctorError from '../../../error/show-doctor-error';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
-import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
-import { ArtifactVinyl } from './artifact';
 import { ArtifactFile, ArtifactModel, ArtifactFileObject } from './artifact-file';
 
 export type ArtifactSource = { relativePath: string; source: Source };
@@ -27,9 +24,9 @@ export type ArtifactObject = {
 /**
  * Artifacts utilize lazy loading mechanism. As such, when loading them from the objects, they are
  * not converted to ArtifactVinyl[]. Instead, they are loaded as ArtifactRef[].
- * Later, when they're needed, the `getVinylsAndImportIfMissing` method is used to load them and if
- * needed, to import them from a remote.
+ * Later, when they're needed, the `importMissingArtifactObjects` method is used to import them from a remote.
  *
+ * TODO: update the flow here to show about stores
  * the workflow of an artifact during the tag is as follows:
  * 1. First, it got created on a capsule and saved to the ConsumerComponent as ArtifactVinyl.
  * 2. On tag, it is transformed to ArtifactSource in order to save the Sources (BitObjects) in the objects.
@@ -43,17 +40,44 @@ export class ArtifactFiles {
     return new ArtifactFiles(files);
   }
 
-  // populateRefsFromSources(sources: ArtifactSource[]) {
-  //   this.refs = sources.map((source) => ({ relativePath: source.relativePath, ref: source.source.hash() }));
-  // }
+  map(cb: (ArtifactFile) => any) {
+    this.files.map((file) => cb(file));
+  }
+
+  forEach(fn: (file: ArtifactFile) => void) {
+    return this.files.forEach((artifact) => fn(artifact));
+  }
+
+  filter(fn: (file: ArtifactFile) => boolean): ArtifactFiles {
+    const filtered = this.files.filter((artifact) => fn(artifact));
+    return new ArtifactFiles(filtered);
+  }
+
+  populateRefsFromSources() {
+    this.files.forEach((file) => file.populateRefFromSource());
+  }
 
   populateVinylsFromPaths(rootDir: string) {
     this.files.forEach((file) => file.populateVinylFromPath(rootDir));
   }
 
+  populateArtifactSourceFromVinyl() {
+    this.files.forEach((file) => file.populateArtifactSourceFromVinyl());
+  }
+
   getRefs(): Ref[] {
     const refs = this.files.map((file) => file.getRef());
     return compact(refs);
+  }
+
+  getSources(): ArtifactSource[] {
+    const sources = this.files.map((file) => file.source);
+    return compact(sources);
+  }
+
+  getRelativePaths(): string[] {
+    const paths = this.files.map((file) => file.relativePath);
+    return paths;
   }
 
   getExistingVinyls() {
@@ -78,25 +102,24 @@ export class ArtifactFiles {
     return new ArtifactFiles(files);
   }
 
-  static fromVinylsToSources(vinyls: ArtifactVinyl[]): ArtifactSource[] {
-    return vinyls.map((artifact) => {
-      return {
-        relativePath: pathNormalizeToLinux(artifact.relative),
-        source: artifact.toSourceAsLinuxEOL(),
-      };
-    });
+  static fromPaths(paths: string[]) {
+    const files = paths.map((path) => new ArtifactFile(path));
+    return new ArtifactFiles(files);
   }
 
-  async getVinylsAndImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
-    if (this.isEmpty()) return [];
-    const vinyls: ArtifactVinyl[] = [];
+  fromVinylsToSources(): ArtifactSource[] {
+    const sources = this.files.map((file) => file.populateArtifactSourceFromVinyl());
+    return compact(sources);
+  }
+
+  async importMissingArtifactObjects(scopeName: string, scope: Scope): Promise<void> {
+    if (this.isEmpty()) return;
     const hashes: string[] = [];
     const artifactsToLoadFromScope: ArtifactFile[] = [];
-    const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
 
     this.files.forEach((file) => {
       if (file.vinyl) {
-        return vinyls.push(file.vinyl);
+        return undefined;
       }
       // By default try to fetch artifact from the default resolver
       const ref = file.getRef();
@@ -104,29 +127,11 @@ export class ArtifactFiles {
         artifactsToLoadFromScope.push(file);
         return hashes.push(ref.hash);
       }
-      return artifactsToLoadFromOtherResolver.push(file);
+      return undefined;
     });
 
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     await scopeComponentsImporter.importManyObjects({ [scopeName]: hashes });
-
-    const vinylsFromScope = await Promise.all(
-      artifactsToLoadFromScope.map(async (file) => {
-        const ref = file.getRef();
-        if (!ref) return undefined;
-        const content = (await ref.load(scope.objects)) as Source;
-        if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
-        return new ArtifactVinyl({ base: '.', path: file.relativePath, contents: content.contents });
-      })
-    );
-
-    const vinylsFromOtherStorage = await Promise.all(
-      artifactsToLoadFromOtherResolver.map(async (file) => {
-        return file.populateVinylFromStorage();
-      })
-    );
-
-    return vinyls.concat(compact(vinylsFromScope)).concat(compact(vinylsFromOtherStorage));
   }
 }
 

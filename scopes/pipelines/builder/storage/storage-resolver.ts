@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { ArtifactList } from '../artifact';
+import { ArtifactList, FsArtifact } from '../artifact';
 
 export type ArtifactFileStoreResult = {
   /**
@@ -45,5 +45,5 @@ export interface StorageResolver {
   /**
    * store artifacts in the storage.
    */
-  store(component: Component, artifacts: ArtifactList): Promise<StoreResult>;
+  store(component: Component, artifacts: ArtifactList<FsArtifact>): Promise<StoreResult>;
 }

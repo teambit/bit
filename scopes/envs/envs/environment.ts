@@ -4,7 +4,7 @@ import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
 import type { Compiler } from '@teambit/compiler';
 import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import type { ArtifactsStorageResolver, BuildTask } from '@teambit/builder';
+import type { StorageResolversMap, BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
@@ -150,9 +150,7 @@ export interface BuilderEnv extends PreviewEnv {
    */
   getSnapPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
 
-  getStorageResolvers?: () => {
-    [resolverName: string]: ArtifactsStorageResolver;
-  };
+  getStorageResolvers?: () => StorageResolversMap;
 }
 
 export interface TesterEnv extends Environment {

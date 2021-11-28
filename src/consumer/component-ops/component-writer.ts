@@ -1,10 +1,8 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import pMapSeries from 'p-map-series';
-import Vinyl from 'vinyl';
 import R from 'ramda';
 import semver from 'semver';
-import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
 import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TESTER_ENV_TYPE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -24,7 +22,6 @@ import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
-import { ArtifactFiles, getArtifactFilesByExtension } from '../component/sources/artifact-files';
 import { AbstractVinyl } from '../component/sources';
 
 export type ComponentWriterProps = {
@@ -113,7 +110,7 @@ export default class ComponentWriter {
   static populateArtifactsRegistry: PopulateArtifactsRegistry = {};
   static registerOnPopulateArtifacts(
     extId,
-    func: (component: Component, artifactsToPopulate: ArtifactsToPopulate) => Vinyl[]
+    func: (component: Component, artifactsToPopulate: ArtifactsToPopulate) => Promise<ArtifactVinyl[]>
   ) {
     this.populateArtifactsRegistry[extId] = func;
   }

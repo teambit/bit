@@ -8,6 +8,7 @@ import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import { ArtifactFile } from '../consumer/component/sources/artifact-file';
 import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
 import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
 import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
@@ -134,11 +135,24 @@ export default function validateVersionInstance(version: Version): void {
     }
   };
 
+  const _validateArtifactFile = (artifactFile: ArtifactFile) => {
+    if (artifactFile.compatibleWithBackwardModelObject()) {
+      const ref = artifactFile.getRef();
+      validateFile(ref, 'artifact');
+      return;
+    }
+    validateType(message, artifactFile.relativePath, 'relativePath', 'string');
+    validateType(message, artifactFile.stores, 'stores', 'array');
+    artifactFile.stores?.forEach((store) => {
+      validateType(message, store.name, 'store.name', 'string');
+    });
+  };
+
   const validateArtifacts = (extensions: ExtensionDataList) => {
     const artifactsFiles = getArtifactsFiles(extensions);
     artifactsFiles.forEach((artifacts) => {
-      artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
-      const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
+      artifacts.map((artifactFile) => _validateArtifactFile(artifactFile));
+      const filesPaths = artifacts.getRelativePaths();
       const duplicateArtifacts = filesPaths.filter(
         (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
       );

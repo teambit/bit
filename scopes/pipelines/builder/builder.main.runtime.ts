@@ -14,7 +14,6 @@ import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import ComponentWriter from '@teambit/legacy/dist/consumer/component-ops/component-writer';
-import { ArtifactList } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
@@ -26,7 +25,7 @@ import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
 import { Serializable } from './types';
-import { ArtifactsCmd } from './artifact/artifacts.cmd';
+import { Artifact, FsArtifact, ArtifactsCmd, ArtifactList } from './artifact';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
@@ -48,6 +47,10 @@ type ArtifactPropsToPopulate = {
 
 type ArtifactsToPopulate = ArtifactPropsToPopulate[];
 
+export type StorageResolversMap = {
+  [resolverName: string]: ArtifactsStorageResolver;
+};
+
 export class BuilderMain {
   constructor(
     private envs: EnvsMain,
@@ -67,11 +70,10 @@ export class BuilderMain {
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
     const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
+    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
-          const environment = this.envs.getEnv(component).env;
-          const storageResolvers = environment.getStorageResolvers?.();
+          const storageResolvers = this.getStorageResolversMap(component);
           try {
             return await artifactList.store(component, storageResolvers);
           } catch (err: any) {
@@ -81,6 +83,17 @@ export class BuilderMain {
       );
     });
     return Promise.all(storeP);
+  }
+
+  getStorageResolversMap(component: Component): StorageResolversMap {
+    const environment = this.envs.getEnv(component).env;
+    const storageResolvers = environment.getStorageResolvers?.() || {};
+    return storageResolvers;
+  }
+
+  getStorageResolversArray(component: Component): ArtifactsStorageResolver[] {
+    const map = this.getStorageResolversMap(component);
+    return Object.values(map);
   }
 
   private pipelineResultsToBuilderData(
@@ -132,27 +145,17 @@ export class BuilderMain {
     return this;
   }
 
-  /**
-   * get storage resolver by name. otherwise, returns default.
-   */
-  getArtifactsStorageResolver(name: string): ArtifactsStorageResolver | undefined {
-    return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
-  }
-
   async getArtifactsVinylByExtension(
     component: Component,
     aspectName: string,
     name?: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = name
+    const artifactList = name
       ? this.getArtifactsByExtensionAndName(component, aspectName, name)
       : this.getArtifactsByExtension(component, aspectName);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+
+    const vinyls = await artifactList.getVinylsAndImportIfMissing(component.id.scope as string, this.scope);
+    return vinyls;
   }
 
   async getArtifactsVinylByMultiExtension(
@@ -179,19 +182,19 @@ export class BuilderMain {
     return this.getArtifactsVinylByMultiExtension(component, artifactPropsToPopulate);
   }
 
-  getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.name === name);
+  getArtifactsByName(component: Component, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(undefined, name);
+    return artifacts;
   }
 
-  getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  getArtifactsByExtension(component: Component, aspectName: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName);
+    return artifacts;
   }
 
-  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName, name);
+    return artifacts;
   }
 
   getDataByAspect(component: Component, aspectName: string): Serializable | undefined {
@@ -200,8 +203,11 @@ export class BuilderMain {
     return data?.data;
   }
 
-  getArtifacts(component: Component): ArtifactObject[] | undefined {
-    return this.getBuilderData(component)?.artifacts;
+  getArtifacts(component: Component): ArtifactList<Artifact> {
+    const artifactObjects = this.getBuilderData(component)?.artifacts || [];
+    const storageResolvers = this.getStorageResolversArray(component);
+    const list = ArtifactList.fromArtifactObjects(artifactObjects, storageResolvers);
+    return list;
   }
 
   getBuilderData(component: Component): BuilderData | undefined {

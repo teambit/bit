@@ -30,6 +30,12 @@ export interface BuildContext extends ExecutionContext {
   previousTasksResults: TaskResults[];
 }
 
+export interface TaskDescriptor {
+  aspectId: string;
+  name?: string;
+  description?: string;
+}
+
 export interface BuildTask {
   /**
    * aspect id serialized of the creator of the task.
