@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { ComponentType } from 'react';
 import classnames from 'classnames';
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
-import { Label, LabelContainer, Placement } from '../label';
+import { /* Label, */ LabelContainer, Placement } from '../label';
 import { excludeHighlighterAtt } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
+import { NewLabel } from './new-label';
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** target element to highlight */
@@ -27,6 +29,8 @@ export type HighlightTarget = {
   scopeLink?: string;
   /** use full production url, or local workspace url */
   local?: boolean;
+
+  components?: (ComponentType & ComponentMetaHolder)[];
 };
 
 export type HighlightClasses = {
@@ -51,20 +55,21 @@ export function ElementHighlighter({
         watchMotion={watchMotion}
       />
 
-      {target.id && (
+      {target.components && (
         <LabelContainer
           className={styles.label}
           targetRef={target.element}
           placement={placement}
           watchMotion={watchMotion}
         >
-          <Label
+          <NewLabel components={target.components} className={classes?.label} />
+          {/* <Label
             componentId={target.id}
             link={target.link}
             scopeLink={target.scopeLink}
             local={target.local}
             className={classes?.label}
-          />
+          /> */}
         </LabelContainer>
       )}
     </div>
