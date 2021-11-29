@@ -50,6 +50,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     extensions,
     mainFile,
     deprecated,
+    componentMetadata,
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
@@ -104,6 +105,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
   obj.overridesPackageJsonProps = JSON.stringify(component.overrides.componentOverridesPackageJsonData);
+  obj.componentMetadata = component.componentMetadata ? JSON.stringify(component.componentMetadata) : null;
   return obj;
 }
 

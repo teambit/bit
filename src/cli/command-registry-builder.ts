@@ -27,7 +27,6 @@ import Build from './commands/public-cmds/build-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
-import Deprecate from './commands/public-cmds/deprecate-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
@@ -128,8 +127,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Move(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remove(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Deprecate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Undeprecate(),
       new Delete(),

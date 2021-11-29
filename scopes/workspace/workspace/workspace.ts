@@ -65,7 +65,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, isEqual } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -1642,6 +1642,28 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       }
     });
     return Promise.all(resolveMergedExtensionsP);
+  }
+
+  /**
+   * adds component metadata to the .bitmap file.
+   * later, upon `bit tag`, the data is saved in the scope.
+   * returns a boolean indicating whether a chance has been made.
+   */
+  async addComponentMetadata(aspectId: string, id: ComponentID, metadata?: Record<string, any>): Promise<boolean> {
+    if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
+    const bitMapEntry = this.consumer.bitMap.getComponent(id._legacy, { ignoreScopeAndVersion: true });
+    const currentMetadata = (bitMapEntry.metadata ||= {})[aspectId];
+    if (isEqual(currentMetadata, metadata)) {
+      return false; // no changes
+    }
+    if (!metadata) {
+      delete bitMapEntry.metadata[aspectId];
+    } else {
+      bitMapEntry.metadata[aspectId] = metadata;
+    }
+    this.consumer.bitMap.markAsChanged();
+    await this.writeBitMap();
+    return true; // changes have been made
   }
 
   /**

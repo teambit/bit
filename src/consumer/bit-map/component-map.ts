@@ -51,6 +51,7 @@ export type ComponentMapData = {
   defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
+  metadata?: { [aspectId: string]: Record<string, any> };
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -81,6 +82,7 @@ export default class ComponentMap {
   scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
   version?: string; // Harmony only. empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
+  metadata?: { [aspectId: string]: Record<string, any> };
   constructor({
     id,
     files,
@@ -95,6 +97,7 @@ export default class ComponentMap {
     defaultVersion,
     isAvailableOnCurrentLane,
     nextVersion,
+    metadata,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
@@ -109,6 +112,7 @@ export default class ComponentMap {
     this.defaultVersion = defaultVersion;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
+    this.metadata = metadata;
   }
 
   static fromJson(
@@ -143,6 +147,7 @@ export default class ComponentMap {
         ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
         : null,
       nextVersion: this.nextVersion,
+      metadata: this.metadata,
     };
     const notNil = (val) => {
       return !R.isNil(val);

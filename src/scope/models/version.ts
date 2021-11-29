@@ -40,6 +40,8 @@ export type SourceFileModel = {
 
 export type DistFileModel = SourceFileModel;
 
+export type ComponentMetadata = { [aspectId: string]: Record<string, any> };
+
 export type ArtifactFileModel = {
   relativePath: PathLinux;
   file: Ref;
@@ -84,6 +86,7 @@ export type VersionProps = {
   extensions?: ExtensionDataList;
   buildStatus?: BuildStatus;
   componentId?: BitId;
+  componentMetadata?: ComponentMetadata;
 };
 
 /**
@@ -120,6 +123,7 @@ export default class Version extends BitObject {
   extensions: ExtensionDataList;
   buildStatus?: BuildStatus;
   componentId?: BitId; // can help debugging errors when validating Version object
+  componentMetadata?: ComponentMetadata;
 
   constructor(props: VersionProps) {
     super();
@@ -152,6 +156,7 @@ export default class Version extends BitObject {
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.buildStatus = props.buildStatus;
     this.componentId = props.componentId;
+    this.componentMetadata = props.componentMetadata;
     this.validateVersion();
   }
 
@@ -228,6 +233,7 @@ export default class Version extends BitObject {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides,
           extensions: getExtensions(this.extensions),
+          componentMetadata: this.componentMetadata,
         },
         filterFunction
       )
@@ -399,6 +405,7 @@ export default class Version extends BitObject {
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         buildStatus: this.buildStatus,
+        componentMetadata: this.componentMetadata,
         packageJsonChangedProps: this.packageJsonChangedProps,
         parents: this.parents.map((p) => p.toString()),
       },
@@ -451,6 +458,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps,
       extensions,
       buildStatus,
+      componentMetadata,
       parents,
     } = contentParsed;
 
@@ -560,6 +568,7 @@ export default class Version extends BitObject {
       parents: parents ? parents.map((p) => Ref.from(p)) : [],
       extensions: _getExtensions(extensions),
       buildStatus,
+      componentMetadata,
     });
   }
 
@@ -611,7 +620,7 @@ export default class Version extends BitObject {
       bindingPrefix: component.bindingPrefix,
       tester,
       log: component.log as Log,
-      specsResults: (component.specsResults as any) as Results,
+      specsResults: component.specsResults as any as Results,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
@@ -635,6 +644,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,
+      componentMetadata: component.componentMetadata,
       componentId: component.id,
     });
     if (isHash(component.version)) {

@@ -33,7 +33,7 @@ import TesterExtension from '../../legacy-extensions/tester-extension';
 import logger from '../../logger/logger';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
-import Version, { Log } from '../../scope/models/version';
+import Version, { ComponentMetadata, Log } from '../../scope/models/version';
 import Scope from '../../scope/scope';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
@@ -109,6 +109,7 @@ export type ComponentProps = {
   extensions: ExtensionDataList;
   componentFromModel?: Component;
   buildStatus?: BuildStatus;
+  componentMetadata?: ComponentMetadata;
 };
 
 export default class Component {
@@ -183,6 +184,7 @@ export default class Component {
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;
+  componentMetadata?: ComponentMetadata;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -229,6 +231,7 @@ export default class Component {
     scopesList,
     extensions,
     buildStatus,
+    componentMetadata,
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -266,6 +269,7 @@ export default class Component {
     this.componentFromModel = componentFromModel;
     this.schema = schema;
     this.buildStatus = buildStatus;
+    this.componentMetadata = componentMetadata;
     this.issues = new IssuesList();
   }
 
@@ -1160,6 +1164,7 @@ export default class Component {
       packageJsonChangedProps,
       extensions,
       buildStatus: componentFromModel ? componentFromModel.buildStatus : undefined,
+      componentMetadata: componentMap.metadata || componentFromModel?.componentMetadata,
     });
   }
 }
