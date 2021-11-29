@@ -11,7 +11,7 @@ export class TypeAliasTransformer implements SchemaTransformer {
     return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
-  async transform(node: Node) {
+  async transform() {
     return {};
   }
 }

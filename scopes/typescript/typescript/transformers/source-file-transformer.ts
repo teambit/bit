@@ -30,8 +30,8 @@ export class SourceFileTransformer implements SchemaTransformer {
   async transform(node: SourceFile, context: SchemaExtractorContext) {
     const exports = this.listExports(node);
     const schemas = await Promise.all(
-      exports.map((node) => {
-        return context.computeSchema(node);
+      exports.map((exportNode) => {
+        return context.computeSchema(exportNode);
       })
     );
 
@@ -51,6 +51,7 @@ export class SourceFileTransformer implements SchemaTransformer {
           })
         );
 
+        // eslint-disable-next-line consistent-return
         if (!isExport) return;
         return statement;
       })

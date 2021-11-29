@@ -144,7 +144,8 @@ export class SchemaExtractorContext {
     const sourceFile = this.extractor.parseSourceFile(file);
     const pos = this.getPosition(sourceFile, start.line, start.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
-    return this.visit(nodeAtPos!);
+    if (!nodeAtPos) return undefined;
+    return this.visit(nodeAtPos);
   }
 
   async resolveType(node: Node, typeStr: string, type = true): Promise<TypeRefSchema> {

@@ -24,6 +24,7 @@ export class FunctionDeclaration implements SchemaTransformer {
         const type = param.type;
         return {
           name: param.name.getText(),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           type: await context.resolveType(type!, type?.getText() || 'any'),
         };
       })
@@ -39,10 +40,13 @@ export class FunctionDeclaration implements SchemaTransformer {
   async transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const funcDec = node as FunctionDeclarationNode;
     const name = this.getName(funcDec);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const info = await context.getQuickInfo(funcDec.name!);
     const displaySig = info?.body?.displayString;
     const returnTypeStr = this.parseReturnValue(displaySig);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const args = await this.getArgs(funcDec, context);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
 
     return new FunctionSchema(name || '', [], returnType);
