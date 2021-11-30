@@ -30,7 +30,7 @@ export type HighlightTarget = {
   /** use full production url, or local workspace url */
   local?: boolean;
 
-  components?: (ComponentType & ComponentMetaHolder)[];
+  components?: ComponentMetaHolder[];
 };
 
 export type HighlightClasses = {

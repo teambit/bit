@@ -2,6 +2,7 @@
   display: flex;
   box-shadow: var(--bit-shadow-hover-high);
   line-height: 1.5;
+  border-radius: 4px;
 
   > * {
     padding: 0 1em;
@@ -39,5 +40,40 @@
 
       margin-right: unset;
     }
+  }
+}
+
+.othersTooltip {
+  display: inline-block;
+  transition: transform 300ms;
+  &[aria-expanded='true'] {
+    transform: rotate(-180deg);
+  }
+}
+
+.extraComponentsPad {
+  min-width: max-content;
+  line-height: normal;
+  border: 2px solid var(--bit-highlighter-color, #eebcc9);
+  padding: 8px;
+
+  .otherInfo {
+    color: var(--bit-text-color-light);
+  }
+}
+
+.othersTitle {
+  place-self: center;
+  font-weight: bold;
+}
+
+.extraComponent {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 4px;
+
+  > * {
+    border-radius: 8px;
+    // margin-right: 8px;
   }
 }
