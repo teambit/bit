@@ -1,10 +1,9 @@
 import { useEffect, RefObject } from 'react';
 import getXPath from 'get-xpath';
-import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
+import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import {
   hasComponentMeta,
-  componentMetaField,
-  componentMetaProperties,
+  ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
@@ -44,15 +43,13 @@ export function useMultiHighlighter({
     const uniqueRoots = new Set(rootElements);
 
     uniqueRoots.forEach((element) => {
-      const comp = domToReact(element);
-      if (!element || !hasComponentMeta(comp)) return;
+      if (!element) return;
+      const comps = domToReacts(element);
+      const componentsWithMeta = comps.filter(hasComponentMeta) as ReactComponentMetaHolder[];
 
       const key = getXPath(element);
-      const meta = comp[componentMetaField];
-      const compId = meta[componentMetaProperties.componentId];
-      const link = meta[componentMetaProperties.homepageUrl];
-      const local = meta[componentMetaProperties.isExported] === false;
-      nextTargets[key] = { element, id: compId, link, local };
+
+      nextTargets[key] = { element, components: componentsWithMeta };
     });
 
     onChange(nextTargets);

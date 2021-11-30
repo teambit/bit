@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 export const componentMetaField = '__bit_component';
 
 export const componentMetaProperties = {
@@ -15,6 +16,8 @@ export type ComponentMeta = {
 export interface ComponentMetaHolder {
   [componentMetaField]: ComponentMeta;
 }
+
+export type ReactComponentMetaHolder = ComponentType & ComponentMetaHolder;
 
 export function hasComponentMeta(component: any): component is ComponentMetaHolder {
   return component && typeof component.__bit_component === 'object' && typeof component.__bit_component.id === 'string';

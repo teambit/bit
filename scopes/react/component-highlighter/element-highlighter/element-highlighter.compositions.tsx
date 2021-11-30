@@ -1,10 +1,19 @@
+import { componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import React, { useState, createRef, useEffect, CSSProperties } from 'react';
 import { ElementHighlighter, HighlightTarget } from './element-highlighter';
 
 const mockTarget: Partial<HighlightTarget> = {
-  id: 'teambit.design/ui/icon-button',
-  link: 'https://bit.dev/teambit/design/ui/icon-button',
-  scopeLink: 'https://bit.dev/teambit/design',
+  components: [
+    {
+      [componentMetaField]: {
+        id: 'teambit.design/ui/icon-button',
+      },
+    },
+  ],
+
+  // id: 'teambit.design/ui/icon-button',
+  // link: 'https://bit.dev/teambit/design/ui/icon-button',
+  // scopeLink: 'https://bit.dev/teambit/design',
 };
 
 type HighlightedElementProps = {
