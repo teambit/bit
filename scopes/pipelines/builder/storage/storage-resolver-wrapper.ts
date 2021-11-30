@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { StorageResolver } from './storage-resolver';
-import { ArtifactList } from '../artifact';
+import { ArtifactList, FsArtifact } from '../artifact';
 
 /**
  * A wrapper class to manage the user's artifacts storage resolver
@@ -10,7 +10,7 @@ export default class StorageResolverWrapper {
   constructor(
     private storageResolver: StorageResolver,
     private component: Component,
-    private artifactList: ArtifactList
+    private artifactList: ArtifactList<FsArtifact>
   ) {}
 
   async store() {

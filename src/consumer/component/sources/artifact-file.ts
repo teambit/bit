@@ -6,7 +6,7 @@ import { ArtifactVinyl } from './artifact';
 import { ArtifactSource } from './artifact-files';
 
 export type ArtifactRef = { relativePath: string; ref: Ref };
-export type ArtifactStore = { name: string; metadata?: Object };
+export type ArtifactStore = { name: string; url?: string; metadata?: Object };
 export type LegacyArtifactModel = { relativePath: string; file: string };
 export type NewArtifactModel = { relativePath: string; stores?: Array<ArtifactStore> };
 export type ArtifactModel = NewArtifactModel | LegacyArtifactModel;
@@ -57,6 +57,15 @@ export class ArtifactFile {
     }
     this.ref = new Ref(fileHash);
     return this.ref;
+  }
+
+  getArtifactRef(): ArtifactRef | undefined {
+    const ref = this.getRef();
+    if (!ref) return undefined;
+    return {
+      ref,
+      relativePath: this.relativePath,
+    };
   }
 
   populateArtifactSourceFromVinyl(): ArtifactSource | undefined {
@@ -129,7 +138,7 @@ export class ArtifactFile {
   static fromLegacyModel(artifactModel: LegacyArtifactModel) {
     const store: ArtifactStore = {
       name: 'default',
-      metadata: { relativePath: artifactModel.relativePath, file: artifactModel.file },
+      metadata: { file: artifactModel.file },
     };
     return new ArtifactFile(artifactModel.relativePath, undefined, [store]);
   }

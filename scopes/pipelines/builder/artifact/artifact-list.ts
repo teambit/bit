@@ -1,17 +1,18 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactStore } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import { ScopeMain } from '@teambit/scope';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { flatten } from 'lodash';
 import { ArtifactsStorageResolver } from '..';
 import { Artifact } from './artifact';
 import { StorageResolverNotFoundError } from './exceptions';
-import { DefaultResolver } from '../storage';
+import { DefaultResolver, ArtifactListStoreResult } from '../storage';
 import { FsArtifact } from '.';
-import { StoreResult } from '../storage/storage-resolver';
 // import { FsArtifact } from './fs-artifact';
 
 export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
+type StoreResultsByResolver = { [resolverName: string]: ArtifactListStoreResult };
 
 export class ArtifactList<T extends Artifact> {
   defaultResolver = new DefaultResolver();
@@ -32,7 +33,7 @@ export class ArtifactList<T extends Artifact> {
     return this.artifacts;
   }
 
-  map(fn: (file: T) => any) {
+  map(fn: (file: T) => any): Array<any> {
     return this.artifacts.map((artifact) => fn(artifact));
   }
 
@@ -64,7 +65,7 @@ export class ArtifactList<T extends Artifact> {
   /**
    * group artifacts by the storage resolver.
    */
-  groupByResolver(): ResolverMap<T> {
+  private groupByResolver(): ResolverMap<T> {
     const resolverMap: ResolverMap<T> = {};
     this.artifacts.forEach((artifact) => {
       const storageResolvers = artifact.storage;
@@ -123,7 +124,9 @@ export class ArtifactList<T extends Artifact> {
   async store(
     component: Component,
     storageResolvers: { [resolverName: string]: ArtifactsStorageResolver }
-  ): Promise<StoreResult[]> {
+    // ): Promise<StoreResult[]> {
+  ): Promise<void> {
+    const resultsByResolver: StoreResultsByResolver = {};
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (resolverName) => {
       const artifacts = byResolvers[resolverName];
@@ -134,10 +137,49 @@ export class ArtifactList<T extends Artifact> {
         throw new StorageResolverNotFoundError(resolverName, component);
       }
       const artifactList = new ArtifactList<T>(artifacts);
-      return storageResolver.store(component, artifactList as any as ArtifactList<FsArtifact>);
+      const resolverResult = await storageResolver.store(component, artifactList as any as ArtifactList<FsArtifact>);
+      resultsByResolver[resolverName] = resolverResult;
     });
 
-    const results = await Promise.all(promises);
-    return results;
+    await Promise.all(promises);
+    this.setFilesStoreResults(resultsByResolver);
+  }
+
+  private setFilesStoreResults(resultsByResolver: StoreResultsByResolver) {
+    this.artifacts.forEach((artifact) => this.setFilesStoreResultsForArtifact(artifact, resultsByResolver));
+  }
+
+  private setFilesStoreResultsForArtifact(artifact: Artifact, resultsByResolver: StoreResultsByResolver) {
+    artifact.storage.forEach((storageResolver) =>
+      this.setFilesStoreResultsForArtifactStorage(artifact, storageResolver, resultsByResolver)
+    );
+  }
+
+  private setFilesStoreResultsForArtifactStorage(
+    artifact: Artifact,
+    storageResolver: ArtifactsStorageResolver,
+    resultsByResolver: StoreResultsByResolver
+  ) {
+    const resolverName = storageResolver.name;
+    const resultsForResolver = resultsByResolver[resolverName];
+    if (!resultsForResolver) return;
+    const relevantResultArtifact = resultsForResolver.artifacts?.find(
+      (artifactResult) => artifactResult.name === artifact.name
+    );
+    if (!relevantResultArtifact) return;
+    artifact.files.forEach((file) => {
+      const relevantResultFile = relevantResultArtifact.files?.find(
+        (fileResult) => fileResult.relativePath === file.relativePath
+      );
+      const newStore: ArtifactStore = {
+        name: resolverName,
+        url: relevantResultFile?.url,
+        metadata: relevantResultFile?.metadata,
+      };
+      if (!file.stores) {
+        file.stores = [];
+      }
+      file.stores.push(newStore);
+    });
   }
 }

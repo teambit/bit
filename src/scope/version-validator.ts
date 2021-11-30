@@ -137,8 +137,8 @@ export default function validateVersionInstance(version: Version): void {
 
   const _validateArtifactFile = (artifactFile: ArtifactFile) => {
     if (artifactFile.compatibleWithBackwardModelObject()) {
-      const ref = artifactFile.getRef();
-      validateFile(ref, 'artifact');
+      const artifactRef = artifactFile.getArtifactRef();
+      validateFile(artifactRef, 'artifact');
       return;
     }
     validateType(message, artifactFile.relativePath, 'relativePath', 'string');

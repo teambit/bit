@@ -132,7 +132,7 @@ export class BuilderMain {
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
-    const storeArtifactsResults = await this.storeArtifacts(allTasksResults);
+    await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
     return { builderDataMap, pipeResults };
   }

@@ -40,8 +40,8 @@ export class ArtifactFiles {
     return new ArtifactFiles(files);
   }
 
-  map(cb: (ArtifactFile) => any) {
-    this.files.map((file) => cb(file));
+  map(cb: (ArtifactFile: ArtifactFile) => any): Array<any> {
+    return this.files.map((file) => cb(file));
   }
 
   forEach(fn: (file: ArtifactFile) => void) {
