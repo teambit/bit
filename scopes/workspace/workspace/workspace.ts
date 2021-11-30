@@ -1661,6 +1661,17 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     });
     return Promise.all(resolveMergedExtensionsP);
   }
+
+  /**
+   * Uninstall the specified packages from dependencies.
+   *
+   * @param {string[]} the list of packages that should be removed from dependencies.
+   */
+  async uninstallDependencies(packages: string[]) {
+    this.dependencyResolver.removeFromRootPolicy(packages);
+    await this.dependencyResolver.persistConfig(this.path);
+    return this._installModules({ dedupe: true });
+  }
 }
 
 /**

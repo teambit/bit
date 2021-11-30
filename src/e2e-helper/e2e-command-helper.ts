@@ -559,6 +559,9 @@ export default class CommandHelper {
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
   }
+  uninstall(flags?: string) {
+    return this.runCmd(`bit uninstall ${flags || ''}`);
+  }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
   }
