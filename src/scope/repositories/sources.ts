@@ -27,6 +27,7 @@ import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
+import { flatten } from 'lodash';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -238,12 +239,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
-    const artifacts: ArtifactSource[] = [];
-    artifactsFiles.forEach((artifactFiles) => {
+    const artifacts = artifactsFiles.map((artifactFiles) => {
       artifactFiles.populateArtifactSourceFromVinyl();
       artifactFiles.populateRefsFromSources();
+      return artifactFiles.getSources();
     });
-    return artifacts;
+    return flatten(artifacts);
   }
 
   /**
