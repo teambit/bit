@@ -1,7 +1,8 @@
-import React, { useMemo, ReactNode } from 'react';
+import React, { useMemo, ReactNode, useState } from 'react';
 import classNames from 'classnames';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentUrl, ScopeUrl } from '@teambit/component.modules.component-url';
+import { ScopeUrl } from '@teambit/component.modules.component-url';
 import {
   componentMetaField,
   ComponentMetaHolder,
@@ -9,48 +10,58 @@ import {
 
 import styles from './new-label.module.scss';
 import { OtherComponents } from './other-components';
+import { calcComponentLink } from './links';
 
 export interface NewLabelProps extends React.HTMLAttributes<HTMLDivElement> {
   components: ComponentMetaHolder[];
 }
 
 export function NewLabel({ components, ...props }: NewLabelProps) {
+  const [appendTo, setAppendTo] = useState<HTMLDivElement | null>(null);
   const last = components.slice(-1).pop();
   if (!last) return null;
 
   return (
-    <div {...props} className={classNames(props.className, styles.newLabel)}>
-      <ComponentStrip component={last} />
+    <>
+      <div {...props} className={classNames(props.className, styles.newLabel)}>
+        <ComponentStrip component={last} />
 
-      {components.length > 1 && (
-        <OtherComponents components={components}>
-          <span className={styles.othersTooltip}>▾</span>
-        </OtherComponents>
-      )}
-    </div>
+        {components.length > 1 && (
+          <OtherComponents components={components} appendTo={appendTo || undefined} visible>
+            <span className={styles.othersTooltip} />
+          </OtherComponents>
+        )}
+      </div>
+      <div ref={setAppendTo}></div>
+    </>
   );
 }
 
-function Block({ link, children }: { link?: string; children: ReactNode }) {
-  const Comp = link ? 'a' : 'span';
-  return <Comp href={link}>{children}</Comp>;
-}
-
 function ComponentStrip({ component }: { component: ComponentMetaHolder }) {
-  const { id, homepage } = component[componentMetaField];
+  const { id, homepage, exported } = component[componentMetaField];
 
   const parsedId = useMemo(() => ComponentID.tryFromString(id), [id]);
+  const componentLink = homepage || calcComponentLink(parsedId, exported);
 
   return (
     <>
-      {!parsedId && <Block link={homepage}>{id}</Block>}
-      {parsedId && <Block link={ScopeUrl.toUrl(parsedId.scope)}>{parsedId.scope}</Block>}
+      {!parsedId && <LabelBlock link={homepage}>{id}</LabelBlock>}
+      {parsedId && <LabelBlock link={ScopeUrl.toUrl(parsedId.scope)}>{parsedId.scope}</LabelBlock>}
       {parsedId && (
-        <Block link={ComponentUrl.toUrl(parsedId, { includeVersion: true })}>
+        <LabelBlock link={componentLink}>
           {parsedId.fullName}
           {parsedId.version && parsedId.version !== 'latest' && `@${parsedId.version}`}
-        </Block>
+        </LabelBlock>
       )}
     </>
+  );
+}
+
+function LabelBlock({ link, children }: { link?: string; children: ReactNode }) {
+  const Comp = link ? NativeLink : 'span';
+  return (
+    <Comp href={link} external={!!link}>
+      {children}
+    </Comp>
   );
 }
