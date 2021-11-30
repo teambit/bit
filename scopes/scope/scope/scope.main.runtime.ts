@@ -825,7 +825,7 @@ export class ScopeMain implements ComponentFactory {
       return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
     });
 
-    const components = await this.getMany(targetIds);
+    const components = await this.loadMany(targetIds);
     return components;
   }
 
