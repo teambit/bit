@@ -59,7 +59,7 @@ import type {
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -840,6 +840,9 @@ export class Workspace implements ComponentFactory {
     const mergeFromScope = true;
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
 
+    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapExtensions = bitMapEntry?.metadata;
+
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
@@ -882,6 +885,14 @@ export class Workspace implements ComponentFactory {
 
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
+    }
+
+    if (bitMapExtensions) {
+      const extensionsDataEntries = Object.keys(bitMapExtensions).map((aspectId) => {
+        return new ExtensionDataEntry(aspectId, undefined, undefined, undefined, bitMapExtensions[aspectId]);
+      });
+      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      extensionsToMerge.push(extensionDataList);
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions

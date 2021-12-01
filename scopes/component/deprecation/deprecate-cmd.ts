@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { DeprecationMain } from './deprecation.main.runtime';
 
@@ -19,8 +18,8 @@ export default class DeprecateCmd implements Command {
   async report([id]: [string], { newId }: { newId?: string }): Promise<string> {
     const result = await this.deprecation.deprecate(id, newId);
     if (result) {
-      return `the component "${id}" has been deprecated successfully`;
+      return chalk.green(`the component "${id}" has been deprecated successfully`);
     }
-    return `the component "${id}" is already deprecated. no changes have been made`;
+    return chalk.bold(`the component "${id}" is already deprecated. no changes have been made`);
   }
 }
