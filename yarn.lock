@@ -7691,6 +7691,7 @@ __metadata:
     "@yarnpkg/cli": 3.0.1
     "@yarnpkg/core": ^3.1.0-rc.1
     "@yarnpkg/fslib": 2.5.1
+    "@yarnpkg/parsers": 2.4.1
     "@yarnpkg/plugin-npm": 2.5.0
     "@yarnpkg/plugin-pack": 3.0.0
     acorn: 6.4.2
@@ -10382,7 +10383,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/parsers@npm:^2.3.0, @yarnpkg/parsers@npm:^2.4.0, @yarnpkg/parsers@npm:^2.4.1":
+"@yarnpkg/parsers@npm:2.4.1, @yarnpkg/parsers@npm:^2.3.0, @yarnpkg/parsers@npm:^2.4.0, @yarnpkg/parsers@npm:^2.4.1":
   version: 2.4.1
   resolution: "@yarnpkg/parsers@npm:2.4.1"
   dependencies:

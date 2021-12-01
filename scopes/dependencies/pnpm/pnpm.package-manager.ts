@@ -83,6 +83,9 @@ export class PnpmPackageManager implements PackageManager {
       registries,
       proxyConfig,
       networkConfig,
+      {
+        overrides: installOptions.overrides,
+      },
       this.logger
     );
     this.logger.on();

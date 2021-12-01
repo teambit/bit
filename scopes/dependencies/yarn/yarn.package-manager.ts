@@ -30,6 +30,7 @@ import {
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
+import { parseResolution, Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
@@ -78,7 +79,7 @@ export class YarnPackageManager implements PackageManager {
 
     // @ts-ignore
     project.setupResolutions();
-    const rootWs = await this.createWorkspace(rootDir, project, rootManifest);
+    const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
     const manifests = this.computeComponents(
@@ -192,7 +193,7 @@ export class YarnPackageManager implements PackageManager {
     return result;
   }
 
-  private async createWorkspace(rootDir: string, project: Project, manifest: any) {
+  private async createWorkspace(rootDir: string, project: Project, manifest: any, overrides?: Record<string, string>) {
     const wsPath = npath.toPortablePath(rootDir);
     const name = manifest.name || 'workspace';
 
@@ -205,6 +206,9 @@ export class YarnPackageManager implements PackageManager {
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
+    if (overrides) {
+      ws.manifest.resolutions = convertOverridesToResolutions(overrides);
+    }
 
     // if (needOverrideInternal) this.overrideInternalWorkspaceParams(ws);
 
@@ -413,4 +417,13 @@ export class YarnPackageManager implements PackageManager {
       isSemver: true,
     };
   }
+}
+
+function convertOverridesToResolutions(
+  overrides: Record<string, string>
+): Array<{ pattern: Resolution; reference: string }> {
+  return Object.entries(overrides).map(([selector, override]) => ({
+    pattern: parseResolution(selector),
+    reference: override,
+  }));
 }

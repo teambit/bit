@@ -169,4 +169,50 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  describe('overrides', function () {
+    describe('using Yarn as a package manager', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+          'is-odd': '1.0.0',
+          'glob@^7.1.3': '6.0.4',
+        });
+        helper.command.install('is-even@0.1.2 rimraf@3.0.2');
+      });
+      it('should force a newer version of a subdependency using just the dependency name', function () {
+        // Without the override, is-odd would be 0.1.2
+        expect(helper.fixtures.fs.readJsonFile('node_modules/is-odd/package.json').version).to.eq('1.0.0');
+      });
+      it('should force a newer version of a subdependency using the dependency name and version', function () {
+        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/package.json').version).to.eq('6.0.4');
+      });
+    });
+    describe('using pnpm as a package manager', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+          'is-odd': '1.0.0',
+          'glob@^7.1.3': '6.0.4',
+        });
+        helper.command.install('is-even@0.1.2 rimraf@3.0.2');
+      });
+      it('should force a newer version of a subdependency using just the dependency name', function () {
+        // Without the override, is-odd would be 0.1.2
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+is-odd@1.0.0/node_modules/is-odd/package.json'
+          ).version
+        ).to.eq('1.0.0');
+      });
+      it('should force a newer version of a subdependency using the dependency name and version', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/glob/package.json'
+          ).version
+        ).to.eq('6.0.4');
+      });
+    });
+  });
 });

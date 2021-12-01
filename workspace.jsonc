@@ -182,6 +182,7 @@
         "@yarnpkg/cli": "3.0.1",
         "@yarnpkg/core": "^3.1.0-rc.1",
         "@yarnpkg/fslib": "2.5.1",
+        "@yarnpkg/parsers": "2.4.1",
         "@yarnpkg/plugin-npm": "2.5.0",
         "@yarnpkg/plugin-pack": "3.0.0",
         "agentkeepalive": "4.1.4",

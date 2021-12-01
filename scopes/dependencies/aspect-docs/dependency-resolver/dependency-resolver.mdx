@@ -373,6 +373,24 @@ The maximum amount of time (in milliseconds) to wait for HTTP requests to comple
 
 The maximum number of connections to use per origin (protocol/host/port combination).
 
+## Overrides
+
+This field allows you to instruct Bit to override any dependency in the dependency graph. This is useful to enforce all your packages to use a single version of a dependency, backport a fix, or replace a dependency with a fork.
+
+An example of the `"overrides"` field:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "overrides": {
+      "foo": "^1.0.0",
+      "quux": "npm:@myorg/quux@^1.0.0",
+      "bar@^2.1.0": "3.0.0"
+    }
+  }
+}
+```
+
 ## CLI reference
 
 ### install

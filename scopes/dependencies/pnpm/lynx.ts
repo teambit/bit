@@ -133,6 +133,9 @@ export async function install(
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
+  options?: {
+    overrides?: Record<string, string>;
+  },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -187,6 +190,7 @@ export async function install(
     preferFrozenLockfile: true,
     registries: registriesMap,
     rawConfig: authConfig,
+    overrides: options?.overrides,
     // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
     // reporter: logger ? getReporter(logger) : undefined,
   };
