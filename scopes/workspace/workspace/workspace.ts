@@ -889,7 +889,7 @@ export class Workspace implements ComponentFactory {
 
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map((aspectId) => {
-        return new ExtensionDataEntry(aspectId, undefined, undefined, undefined, bitMapExtensions[aspectId]);
+        return new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId]);
       });
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
       extensionsToMerge.push(extensionDataList);
