@@ -71,11 +71,6 @@ function useHoverHandler({
     onChange({
       element: result.element,
       components: result.components,
-
-      id: result.meta.id,
-      scopeLink: undefined,
-      link: result.meta.homepage,
-      local: result.meta.exported === false,
     });
   };
 

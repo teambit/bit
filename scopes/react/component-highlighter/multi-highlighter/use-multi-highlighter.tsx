@@ -2,12 +2,13 @@ import { useEffect, RefObject } from 'react';
 import getXPath from 'get-xpath';
 import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import {
+  componentMetaField,
   hasComponentMeta,
   ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
-import { ruleMatcher, MatchRule } from '../rule-matcher';
+import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
 type useMultiHighlighterProps = {
   onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
@@ -16,6 +17,7 @@ type useMultiHighlighterProps = {
   scopeClass?: string;
   /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
   rule?: MatchRule;
+  componentRule?: ComponentMatchRule;
 
   // /** automatically update when children update. Use with caution, might be slow */
   // watchDom?: boolean;
@@ -27,6 +29,7 @@ export function useMultiHighlighter({
   scopeRef,
   scopeClass: scopeSelector = '',
   rule,
+  componentRule,
 }: useMultiHighlighterProps) {
   useEffect(() => {
     const nextTargets: Record<string, HighlightTarget> = {};
@@ -45,7 +48,11 @@ export function useMultiHighlighter({
     uniqueRoots.forEach((element) => {
       if (!element) return;
       const comps = domToReacts(element);
-      const componentsWithMeta = comps.filter(hasComponentMeta) as ReactComponentMetaHolder[];
+      const componentsWithMeta = comps.filter(
+        (x) => hasComponentMeta(x) && componentRuleMatcher({ meta: x[componentMetaField] }, componentRule)
+      ) as ReactComponentMetaHolder[];
+
+      if (componentsWithMeta.length < 1) return;
 
       const key = getXPath(element);
 

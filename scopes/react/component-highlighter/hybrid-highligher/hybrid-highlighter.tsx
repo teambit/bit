@@ -88,6 +88,7 @@ export function HybridHighlighter({
     scopeClass,
     disabled: disabled || mode !== 'allChildren',
     rule,
+    componentRule,
   });
 
   const _styles = useMemo(

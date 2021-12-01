@@ -27,7 +27,7 @@ export function NewLabel({ components, ...props }: NewLabelProps) {
         <ComponentStrip component={last} />
 
         {components.length > 1 && (
-          <OtherComponents components={components} appendTo={appendTo || undefined} visible>
+          <OtherComponents components={components} appendTo={appendTo || undefined}>
             <span className={styles.othersTooltip} />
           </OtherComponents>
         )}

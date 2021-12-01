@@ -1,5 +1,5 @@
 // in the future, we will add more options here, like include / exclude objects.
-
+import { ComponentID } from '@teambit/component-id';
 import { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 export type MatchRule = undefined | string | ((element: HTMLElement) => boolean);
@@ -21,11 +21,11 @@ export type ComponentMatchTarget = { meta: ComponentMeta };
 
 export function componentRuleMatcher(target: ComponentMatchTarget, rule: ComponentMatchRule): boolean {
   if (typeof rule === 'string') {
-    return target.meta.id === rule;
+    return ComponentID.isEqualStr(target.meta.id, rule, { ignoreVersion: true });
   }
 
   if (Array.isArray(rule)) {
-    return rule.includes(target.meta.id);
+    return rule.some((x) => ComponentID.isEqualStr(target.meta.id, x, { ignoreVersion: true }));
   }
 
   if (typeof rule === 'function') {

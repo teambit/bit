@@ -70,6 +70,21 @@ export const MultiHighlighterWithRule = () => {
   );
 };
 
+export const MultiHighlighterWithComponentRule = () => {
+  return (
+    <MultiHighlighter componentRule="teambit.design/ui/icon-button">
+      <br />
+      <br />
+      <br />
+      <MockedComponentWithMeta>no highlighter</MockedComponentWithMeta>
+      <br />
+      <br />
+      <br />
+      <IconButton>this will be highlighted</IconButton>
+    </MultiHighlighter>
+  );
+};
+
 // export const HighlightingAllElementsInTheEnterprisePage = () => {
 //   return (
 //     <MultiHighlighter>
