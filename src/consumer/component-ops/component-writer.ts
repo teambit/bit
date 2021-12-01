@@ -23,6 +23,7 @@ import ComponentConfig from '../config/component-config';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
 import { AbstractVinyl } from '../component/sources';
+import { flatten } from 'lodash';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -250,10 +251,12 @@ export default class ComponentWriter {
     try {
       const subscribers = ComponentWriter.populateArtifactsRegistry;
       const artifactsToPopulate: ArtifactsToPopulate = [{ aspectName: 'teambit.compilation/compiler' }];
-      const vinyls = await pMapSeries(Object.keys(subscribers), async (extId: string) => {
-        const func = subscribers[extId];
-        return func(this.component, artifactsToPopulate);
-      });
+      const vinyls = flatten(
+        await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+          const func = subscribers[extId];
+          return func(this.component, artifactsToPopulate);
+        })
+      );
       const artifactsDir = this.getArtifactsDir();
       const abstractVinyls: AbstractVinyl[] = vinyls.map((vinyl) => {
         const abstractVinyl = AbstractVinyl.fromVinyl(vinyl);

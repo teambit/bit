@@ -12,7 +12,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import ComponentWriter from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
@@ -211,7 +211,15 @@ export class BuilderMain {
   }
 
   getBuilderData(component: Component): BuilderData | undefined {
-    return component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.state.aspects.get(BuilderAspect.id)?.data;
+    if (!data) return undefined;
+    data?.artifacts?.forEach((artifactObj) => {
+      artifactObj.files =
+        artifactObj.files instanceof ArtifactFiles
+          ? artifactObj.files
+          : ArtifactFiles.fromModel(artifactObj.files.files);
+    });
+    return data as BuilderData;
   }
 
   /**

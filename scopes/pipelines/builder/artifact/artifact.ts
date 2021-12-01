@@ -1,6 +1,6 @@
 import Vinyl from 'vinyl';
 import { compact, flatten } from 'lodash';
-import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { ArtifactFile } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import { Source } from '@teambit/legacy/dist/scope/models';
