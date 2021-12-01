@@ -796,7 +796,6 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       schema: version.schema,
       extensions,
       buildStatus: version.buildStatus,
-      componentMetadata: clone(version.componentMetadata),
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
