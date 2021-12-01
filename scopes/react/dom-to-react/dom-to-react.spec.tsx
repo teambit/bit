@@ -48,20 +48,20 @@ describe('domToReact', () => {
     expect(component).toEqual(BasicFragmentComponent);
   });
 
-  test('should return the outer component, when a component is a decoration of two components', () => {
+  test('should return the inner component, when a component is a decoration of two components', () => {
     const { getByText } = render(<DecoratedDiv />);
 
     const target = getByText('hello');
     const component = domToReact(target);
-    expect(component).toEqual(DecoratedDiv);
+    expect(component).toEqual(DivComponent);
   });
 
-  test('should return the outer component, when a component is wrapper of another component', () => {
+  test('should return the inner component, when a component is wrapper of another component', () => {
     const { getByText } = render(<WrappedDiv />);
 
     const target = getByText('hello');
     const component = domToReact(target);
-    expect(component).toEqual(WrappedDiv);
+    expect(component).toEqual(DivComponent);
   });
 });
 
