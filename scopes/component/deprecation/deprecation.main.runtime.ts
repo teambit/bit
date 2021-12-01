@@ -7,7 +7,8 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
 import { DeprecationFragment } from './deprecation.fragment';
-import DeprecateCmd from './deprecate-cmd';
+import { DeprecateCmd } from './deprecate-cmd';
+import { UndeprecateCmd } from './undeprecate-cmd';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
@@ -41,9 +42,13 @@ export class DeprecationMain {
     return results;
   }
 
-  async unDeprecate(ids: string[]) {
-    const results = undeprecate({ path: this.scope.path, ids }, null);
-    this.scope.clearCache();
+  async unDeprecate(id: string) {
+    const componentId = await this.workspace.resolveComponentId(id);
+    const results = await this.workspace.addComponentMetadata(DeprecationAspect.id, componentId, {
+      deprecate: false,
+      newId: '',
+    });
+
     return results;
   }
 
@@ -55,7 +60,7 @@ export class DeprecationMain {
     CLIMain
   ]) {
     const deprecation = new DeprecationMain(scope, workspace);
-    cli.register(new DeprecateCmd(deprecation));
+    cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(deprecationSchema(deprecation));
   }

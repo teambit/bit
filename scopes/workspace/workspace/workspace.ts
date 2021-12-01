@@ -863,7 +863,15 @@ export class Workspace implements ComponentFactory {
       wsDefaultExtensions = this.getDefaultExtensions();
     }
     // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
+    // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: ExtensionDataList[] = [];
+    if (bitMapExtensions) {
+      const extensionsDataEntries = Object.keys(bitMapExtensions).map(
+        (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
+      );
+      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      extensionsToMerge.push(extensionDataList);
+    }
     if (configFileExtensions) {
       extensionsToMerge.push(configFileExtensions);
     }
@@ -885,14 +893,6 @@ export class Workspace implements ComponentFactory {
 
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
-    }
-
-    if (bitMapExtensions) {
-      const extensionsDataEntries = Object.keys(bitMapExtensions).map((aspectId) => {
-        return new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId]);
-      });
-      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
-      extensionsToMerge.push(extensionDataList);
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions

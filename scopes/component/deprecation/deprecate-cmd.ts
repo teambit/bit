@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { DeprecationMain } from './deprecation.main.runtime';
 
-export default class DeprecateCmd implements Command {
-  name = 'deprecate <ids...>';
-  description = 'deprecate a component (local/remote)';
+export class DeprecateCmd implements Command {
+  name = 'deprecate <id>';
+  description = 'deprecate a component';
   group = 'collaborate';
   skipWorkspace = true;
   alias = 'd';
