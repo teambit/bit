@@ -52,7 +52,6 @@ import Snap from './commands/public-cmds/snap-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import Switch from './commands/public-cmds/switch-cmd';
 import Test from './commands/public-cmds/test-cmd';
-import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
@@ -127,8 +126,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Move(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remove(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Undeprecate(),
       new Delete(),
       new DeprecatePrivate(),
       new UndeprecatePrivate(),
