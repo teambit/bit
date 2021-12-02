@@ -1,70 +1,67 @@
-import React, { useMemo, useState } from 'react';
-import { usePopper } from 'react-popper';
+import React, { useMemo, ReactNode, useState } from 'react';
+import classNames from 'classnames';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { ComponentID } from '@teambit/component-id';
-import type { CardProps } from '@teambit/base-ui.surfaces.card';
-import type { Placement, Modifier } from '@popperjs/core';
-import '@popperjs/core';
+import { ScopeUrl } from '@teambit/component.modules.component-url';
+import {
+  componentMetaField,
+  ComponentMetaHolder,
+} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
-import { DefaultLabel } from './default-label';
-import { ComponentLabel } from './component-label';
-import { useAnimationFrame } from '../use-animation-frame';
+import styles from './label.module.scss';
+import { OtherComponents } from './other-components';
+import { calcComponentLink } from './links';
 
-export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  targetRef: HTMLElement | null;
-  offset?: [number, number];
-  placement?: Placement;
-  flip?: boolean;
-  /** continually update label position to match moving elements */
-  watchMotion?: boolean;
+export interface LabelProps extends React.HTMLAttributes<HTMLDivElement> {
+  components: ComponentMetaHolder[];
 }
 
-export type { Placement };
+export function Label({ components, ...props }: LabelProps) {
+  const [appendTo, setAppendTo] = useState<HTMLDivElement | null>(null);
+  const last = components.slice(-1).pop();
+  if (!last) return null;
 
-// TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
-export function LabelContainer({
-  targetRef,
-  offset,
-  placement,
-  flip = true,
-  watchMotion,
-  className,
-  ...rest
-}: LabelContainerProps) {
-  const [sourceRef, setSourceRef] = useState<HTMLDivElement | null>(null);
+  return (
+    <>
+      <div {...props} className={classNames(props.className, styles.newLabel)}>
+        <ComponentStrip component={last} />
 
-  const modifiers = useMemo<Partial<Modifier<any, any>>[]>(
-    () => [{ name: 'offset', options: { offset } }],
-    [flip, offset]
+        {components.length > 1 && (
+          <OtherComponents components={components} appendTo={appendTo || undefined} hideOnClick={false}>
+            <span className={styles.othersTooltip} />
+          </OtherComponents>
+        )}
+      </div>
+      <div ref={setAppendTo}></div>
+    </>
   );
-
-  const { styles, attributes, update } = usePopper(targetRef, sourceRef, {
-    modifiers,
-    placement,
-  });
-
-  useAnimationFrame(!!watchMotion && update);
-
-  if (!targetRef) return null;
-
-  return <div {...rest} ref={setSourceRef} className={className} style={styles.popper} {...attributes.popper} />;
 }
 
-export interface LabelProps extends CardProps {
-  componentId: string;
-  link?: string;
-  scopeLink?: string;
-  local?: boolean;
+function ComponentStrip({ component }: { component: ComponentMetaHolder }) {
+  const { id, homepage, exported } = component[componentMetaField];
+
+  const parsedId = useMemo(() => ComponentID.tryFromString(id), [id]);
+  const componentLink = homepage || calcComponentLink(parsedId, exported);
+
+  return (
+    <>
+      {!parsedId && <LabelBlock link={homepage}>{id}</LabelBlock>}
+      {parsedId && <LabelBlock link={ScopeUrl.toUrl(parsedId.scope)}>{parsedId.scope}</LabelBlock>}
+      {parsedId && (
+        <LabelBlock link={componentLink}>
+          {parsedId.fullName}
+          {parsedId.version && parsedId.version !== 'latest' && `@${parsedId.version}`}
+        </LabelBlock>
+      )}
+    </>
+  );
 }
 
-export function Label({ componentId, link, scopeLink, local, ...rest }: LabelProps) {
-  const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
-
-  if (!parsedId)
-    return (
-      <DefaultLabel {...rest} href={link}>
-        {componentId}
-      </DefaultLabel>
-    );
-
-  return <ComponentLabel {...rest} local={local} componentId={parsedId} link={link} scopeLink={scopeLink} />;
+function LabelBlock({ link, children }: { link?: string; children: ReactNode }) {
+  const Comp = link ? NativeLink : 'span';
+  return (
+    <Comp href={link} external={!!link}>
+      {children}
+    </Comp>
+  );
 }

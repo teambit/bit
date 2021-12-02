@@ -2,10 +2,9 @@ import React from 'react';
 import classnames from 'classnames';
 import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
-import { /* Label, */ LabelContainer, Placement } from '../label';
+import { Label, LabelContainer, Placement } from '../label';
 import { excludeHighlighterAtt } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
-import { NewLabel } from './new-label';
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** target element to highlight */
@@ -62,14 +61,7 @@ export function ElementHighlighter({
           placement={placement}
           watchMotion={watchMotion}
         >
-          <NewLabel components={target.components} className={classes?.label} />
-          {/* <Label
-            componentId={target.id}
-            link={target.link}
-            scopeLink={target.scopeLink}
-            local={target.local}
-            className={classes?.label}
-          /> */}
+          <Label components={target.components} className={classes?.label} />
         </LabelContainer>
       )}
     </div>
