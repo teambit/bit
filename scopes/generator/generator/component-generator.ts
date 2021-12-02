@@ -78,6 +78,7 @@ export class ComponentGenerator {
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
+      defaultScope: this.options.scope,
     });
     const component = await this.workspace.get(componentId);
     const env = this.envs.getEnv(component);

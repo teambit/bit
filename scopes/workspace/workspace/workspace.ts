@@ -128,6 +128,7 @@ export type TrackData = {
   rootDir: PathOsBasedRelative; // path relative to the workspace
   componentName?: string; // if empty, it'll be generated from the path
   mainFile?: string; // if empty, attempts will be made to guess the best candidate
+  defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
 };
 
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
@@ -718,7 +719,13 @@ export class Workspace implements ComponentFactory {
   async track(trackData: TrackData): Promise<TrackResult> {
     const addComponent = new AddComponents(
       { consumer: this.consumer },
-      { componentPaths: [trackData.rootDir], id: trackData.componentName, main: trackData.mainFile, override: false }
+      {
+        componentPaths: [trackData.rootDir],
+        id: trackData.componentName,
+        main: trackData.mainFile,
+        override: false,
+        defaultScope: trackData.defaultScope,
+      }
     );
     const result = await addComponent.add();
     const addedComponent = result.addedComponents[0];
