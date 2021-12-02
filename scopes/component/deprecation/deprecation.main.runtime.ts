@@ -1,4 +1,3 @@
-import { deprecate, undeprecate } from '@teambit/legacy/dist/api/scope';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentMain, ComponentAspect, Component } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
@@ -15,7 +14,7 @@ export type DeprecationInfo = {
 };
 
 export type DeprecationMetadata = {
-  deprecate: boolean;
+  deprecate?: boolean;
   newId?: string;
 };
 
@@ -24,9 +23,12 @@ export class DeprecationMain {
   static runtime = MainRuntime;
   static dependencies = [GraphqlAspect, ScopeAspect, ComponentAspect, WorkspaceAspect, CLIAspect];
 
-  getDeprecationInfo(component: Component): DeprecationInfo {
-    const deprecated = component.state._consumer.deprecated;
-    const isDeprecate = !!deprecated;
+  async getDeprecationInfo(component: Component): Promise<DeprecationInfo> {
+    const data = component.config.extensions.findExtension(DeprecationAspect.id)?.config as
+      | DeprecationMetadata
+      | undefined;
+    const deprecatedBackwardCompatibility = component.state._consumer.deprecated;
+    const isDeprecate = Boolean(data?.deprecate || deprecatedBackwardCompatibility);
     return {
       isDeprecate,
     };

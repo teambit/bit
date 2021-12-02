@@ -9,7 +9,7 @@ export class DeprecationFragment implements ShowFragment {
   async renderRow(component: Component) {
     return {
       title: this.title,
-      content: this.deprecation.getDeprecationInfo(component).isDeprecate.toString(),
+      content: (await this.deprecation.getDeprecationInfo(component)).isDeprecate.toString(),
     };
   }
 
