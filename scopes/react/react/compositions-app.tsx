@@ -3,7 +3,7 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { RenderingContext } from '@teambit/preview';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
-import { LoaderFallback } from '@teambit/react.ui.loader-fallback';
+import { useFallback } from '@teambit/react.ui.loader-fallback';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ReactAspect } from './react.aspect';
 
@@ -20,11 +20,13 @@ export function CompositionsApp({
   const reactContext = previewContext.get(ReactAspect.id);
   const providers = reactContext?.providers || [];
 
+  const safeComposition = useFallback(Composition && <Composition />, <StandaloneNotFoundPage />);
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
       <Composer components={providers}>
         <style>{hideScrollbars}</style>
-        <LoaderFallback Target={Composition} DefaultComponent={StandaloneNotFoundPage} />
+        {safeComposition}
       </Composer>
     </ErrorBoundary>
   );
