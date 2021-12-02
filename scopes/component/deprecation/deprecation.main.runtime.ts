@@ -11,6 +11,7 @@ import { UndeprecateCmd } from './undeprecate-cmd';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
+  newId?: string;
 };
 
 export type DeprecationMetadata = {
@@ -31,6 +32,7 @@ export class DeprecationMain {
     const isDeprecate = Boolean(data?.deprecate || deprecatedBackwardCompatibility);
     return {
       isDeprecate,
+      newId: data?.newId,
     };
   }
 

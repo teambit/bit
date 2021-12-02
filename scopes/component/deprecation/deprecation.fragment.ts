@@ -7,9 +7,12 @@ export class DeprecationFragment implements ShowFragment {
   title = 'deprecated';
 
   async renderRow(component: Component) {
+    const deprecationInfo = await this.deprecation.getDeprecationInfo(component);
+    const isDeprecate = deprecationInfo.isDeprecate.toString();
+    const newId = deprecationInfo.newId ? ` (new-id: ${deprecationInfo.newId})` : '';
     return {
       title: this.title,
-      content: (await this.deprecation.getDeprecationInfo(component)).isDeprecate.toString(),
+      content: isDeprecate + newId,
     };
   }
 
