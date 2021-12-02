@@ -1,13 +1,25 @@
 import { LoaderFallback } from './loader-fallback';
 
-Renders a component, and show a placeholder when it is undefined.
+Safely render a component, with a default fallback when it is `undefined`.  
+The `LoaderFallback` component also provides a grace period, where it shows a loader before switching to the default.  
+Set `timeout = 0` to skip the grace period.
 
-Logic is as follows:
+#### Example usage:
 
-1. when component is defined -> render it
-1. when the initial value of the component is undefined -> show the default immediately
-1. when the component had just changed to be undefined -> show Loader for _x_ seconds
-   1. then, after _x_ seconds - show NotFound
+```tsx
+// as a hook:
+const safeTarget = useFallback(Target && <Target />, <DefaultComponent />, { timeout: 10000, loader: <Loader /> });
+
+// as a component:
+<LoaderFallback Target={Target} DefaultComponent={DefaultComponent} timeout={10000} loader={Loader}>
+```
+
+### Logic is as follows:
+
+1. when component is `defined` -> render it
+1. when the initial value of the component is `undefined` -> show the default immediately
+1. when the component changes to be `undefined` -> show Loader for _x_ seconds
+   1. then, after _x_ seconds - show the default.
 
 <!-- live playground doesn't keep state when editing :( -->
 <!-- Try it out:

@@ -1,49 +1,45 @@
-import React, { ComponentType, useRef, useEffect, useState } from 'react';
+import React, { ComponentType, useEffect, useState, ReactElement } from 'react';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 
 export type LoaderProps = {
   /** component to render */
   Target: ComponentType | undefined;
+  /** component to render when Target is undefined */
+  DefaultComponent: ComponentType;
   /** component to render when target is missing, for a grace period, until rendering the default */
   Loader?: ComponentType;
   /** cool-down period (in ms) to show Loader, before showing the default */
   timeout?: number;
-  /** component to render when Target is undefined */
-  DefaultComponent: ComponentType;
 };
 
 export function LoaderFallback({ Target, Loader = LoaderComponent, DefaultComponent, timeout = 15000 }: LoaderProps) {
-  const [ToRender, setRenderTarget] = useState<JSX.Element | null>(Target ? <Target /> : <DefaultComponent />);
-  const prevValue = useRef<ComponentType | undefined>(undefined);
+  return useFallback(Target && <Target />, <DefaultComponent />, { timeout, loader: <Loader /> });
+}
 
-  // could re-implement with a state machine or a reducer
+export type useFallbackOptions = { timeout?: number; loader?: ReactElement };
+
+export function useFallback(
+  target: ReactElement | null | undefined,
+  fallback: ReactElement,
+  { timeout = 15000, loader = <LoaderComponent /> }: useFallbackOptions = {}
+): ReactElement | null {
+  const [working, setWorking] = useState(!!target);
+  const hasTarget = !!target;
+
   useEffect(() => {
-    const prev = prevValue.current;
-    prevValue.current = Target;
-
-    if (Target) {
-      setRenderTarget(<Target />);
+    if (timeout <= 0) return () => {};
+    if (hasTarget) {
+      setWorking(true);
       return () => {};
     }
-    // else -> Target === undefined
 
-    // Target has changed from a value to undefined.
-    // show loader and hope webpack will supply a component
-    if (prev) {
-      setRenderTarget(<Loader />);
+    const tmId = setTimeout(() => setWorking(false), timeout);
+    return () => clearTimeout(tmId);
+  }, [hasTarget, timeout]);
 
-      const tmId = setTimeout(() => setRenderTarget(<DefaultComponent />), timeout);
-      return () => clearTimeout(tmId);
-    }
-    // else -> Target === undefined, prev === undefined
-
-    // comp changed from undefined to undefined
-    // could happen on first render, or when one of the other values change.
-
-    return () => {}; // nothing to do here
-  }, [Target, DefaultComponent, Loader, timeout]);
-
-  return ToRender;
+  if (target) return target;
+  if (working && timeout > 0) return loader;
+  return fallback;
 }
 
 /*
