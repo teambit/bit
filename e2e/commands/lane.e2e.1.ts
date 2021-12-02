@@ -431,7 +431,7 @@ describe('bit lane command', function () {
     });
     it('should block the tag and suggest to switch to main and merge the changes', () => {
       expect(output).to.have.string(
-        'unable to tag on a lane, please switch to main, merge the lane and then use `bit tag` again'
+        'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
       );
     });
   });
