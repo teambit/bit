@@ -7,7 +7,7 @@ import express, { Express } from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
-import { PubSub } from 'graphql-subscriptions';
+import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
@@ -31,6 +31,8 @@ export type GraphQLConfig = {
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
 export type SchemaSlot = SlotRegistry<Schema>;
+
+export type PubSubSlot = SlotRegistry<PubSubEngine>;
 
 export type GraphQLServerOptions = {
   schemaSlot?: SchemaSlot;
@@ -59,17 +61,23 @@ export class GraphqlMain {
     private context: Harmony,
 
     /**
-     * graphql pubsub. allows to emit events to clients.
-     */
-    readonly pubsub: PubSub,
-
-    /**
      * logger extension.
      */
     readonly logger: Logger,
 
-    private graphQLServerSlot: GraphQLServerSlot
+    private graphQLServerSlot: GraphQLServerSlot,
+
+    /**
+     * graphql pubsub. allows to emit events to clients.
+     */
+    private pubSubSlot: PubSubSlot
   ) {}
+
+  get pubsub(): PubSubEngine {
+    const pubSubSlots = this.pubSubSlot.values();
+    if (pubSubSlots.length) return pubSubSlots[0];
+    return new PubSub();
+  }
 
   private modules = new Map<string, GraphQLModule>();
 
@@ -128,6 +136,16 @@ export class GraphqlMain {
    */
   registerServer(server: GraphQLServer) {
     this.graphQLServerSlot.register(server);
+    return this;
+  }
+
+  /**
+   * register a pubsub client
+   */
+  registerPubSub(pubsub: PubSubEngine) {
+    const pubSubSlots = this.pubSubSlot.toArray();
+    if (pubSubSlots.length) throw new Error('can not register more then one pubsub provider');
+    this.pubSubSlot.register(pubsub);
     return this;
   }
 
@@ -257,7 +275,7 @@ export class GraphqlMain {
       .filter((module) => !!module);
   }
 
-  static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>()];
+  static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>(), Slot.withType<PubSubSlot>()];
 
   static defaultConfig = {
     port: 4000,
@@ -271,11 +289,12 @@ export class GraphqlMain {
   static async provider(
     [loggerFactory]: [LoggerMain],
     config: GraphQLConfig,
-    [moduleSlot, graphQLServerSlot]: [SchemaSlot, GraphQLServerSlot],
+    [moduleSlot, graphQLServerSlot, pubSubSlot]: [SchemaSlot, GraphQLServerSlot, PubSubSlot],
     context: Harmony
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
-    return new GraphqlMain(config, moduleSlot, context, new PubSub(), logger, graphQLServerSlot);
+    const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    return graphqlMain;
   }
 }
 
