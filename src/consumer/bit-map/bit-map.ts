@@ -786,6 +786,12 @@ export default class BitMap {
     return newId;
   }
 
+  removeMetadata(id: BitId) {
+    const componentMap = this.getComponent(id);
+    delete componentMap.metadata;
+    this.markAsChanged();
+  }
+
   updateLanesProperty(workspaceLane: WorkspaceLane, remoteLaneId: RemoteLaneId) {
     workspaceLane.ids.forEach((bitIdOnLane) => {
       // we ignore version but we do require the scope to be the same because if the scope is
