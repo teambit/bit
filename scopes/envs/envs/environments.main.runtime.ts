@@ -92,49 +92,49 @@ export class EnvsMain {
   }
 
   /**
-   * compose a new environment from a list of environment transformers.
+   * apply a list of environment transformers on an env, to produce a transformed env
    */
-  compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
-    const a = envTransformers.reduce((acc, transformer) => {
+  transformEnv(baseEnv: Environment, envTransformers: EnvTransformer[]) {
+    const transformedEnv = envTransformers.reduce((acc, transformer) => {
       acc = transformer(acc);
       return acc;
-    }, targetEnv);
+    }, baseEnv);
 
-    return a;
+    return transformedEnv;
   }
 
   /**
    * create an env transformer which overrides specific env properties.
    */
-  override(propsToOverride: Environment): EnvTransformer {
+  createEnvTransformer(propsToOverride: Environment): EnvTransformer {
     return (env: Environment) => {
       return this.merge(propsToOverride, env);
     };
   }
 
   /**
-   * compose two environments into one.
+   * merge two environments into one.
    */
-  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
+  merge<T>(transformationEnv: Environment, baseEnv: Environment): T {
     const allNames = new Set<string>();
     const keys = ['icon', 'name', 'description'];
-    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+    for (let o = baseEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
         allNames.add(name);
       }
     }
 
     allNames.forEach((key: string) => {
-      const fn = sourceEnv[key];
-      if (targetEnv[key]) return;
-      if (keys.includes(key)) targetEnv[key] = fn;
+      const fn = baseEnv[key];
+      if (transformationEnv[key]) return;
+      if (keys.includes(key)) transformationEnv[key] = fn;
       if (!fn || !fn.bind) {
         return;
       }
-      targetEnv[key] = fn.bind(sourceEnv);
+      transformationEnv[key] = fn.bind(baseEnv);
     });
 
-    return targetEnv as T;
+    return transformationEnv as T;
   }
 
   getEnvData(component: Component): AspectData {
