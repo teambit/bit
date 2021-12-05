@@ -42,22 +42,6 @@ export function useFallback(
   return fallback;
 }
 
-/*
- * TIP:
- * useState() and setState() can receive a function as value.
- * So, be careful when using a react Function Component, like:
- * ```
- * useState(ButtonComponent) // will try to run ButtonComponent as a function
- * setState(ButtonComponent)
- *
- * // instead, do:
- * useState(() => ButtonComponent)
- * setState(() => ButtonComponent)
- * ```
- *
- * or don't set components as state to begin with.
- */
-
 function LoaderComponent() {
   return <LoaderRibbon active style={{ position: 'fixed', top: 0, left: 0, right: 0 }} />;
 }

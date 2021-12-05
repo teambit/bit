@@ -296,7 +296,7 @@ export function diffBetweenComponentsObjects(
     const dependenciesRight: BitIds = componentRight.depsIdsGroupedByType[fieldName];
     if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
     const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
-      const dependencyRight = dependenciesRight.searchWithoutScopeAndVersion(dependencyLeft);
+      const dependencyRight = dependenciesRight.searchWithoutVersion(dependencyLeft);
       if (dependencyRight && dependencyLeft.isEqual(dependencyRight)) return acc;
 
       acc.push({
@@ -308,7 +308,7 @@ export function diffBetweenComponentsObjects(
       return acc;
     }, []);
     const diffs = dependenciesRight.reduce<DepDiff[]>((acc, dependencyRight) => {
-      if (!dependenciesLeft.hasWithoutScopeAndVersion(dependencyRight)) {
+      if (!dependenciesLeft.hasWithoutVersion(dependencyRight)) {
         // otherwise it was taken care already above
         acc.push({
           name: dependencyRight.toStringWithoutVersion(),
