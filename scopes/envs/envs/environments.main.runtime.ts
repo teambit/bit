@@ -92,7 +92,7 @@ export class EnvsMain {
   }
 
   /**
-   * apply a list of environment transformers on an env, to produce a transformed env
+   * apply a list of Env Transformers on an Env, to produce a new (transformed) Env
    */
   transformEnv(baseEnv: Environment, envTransformers: EnvTransformer[]) {
     const transformedEnv = envTransformers.reduce((acc, transformer) => {
