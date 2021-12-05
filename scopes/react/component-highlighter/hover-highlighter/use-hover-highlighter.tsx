@@ -2,7 +2,11 @@ import React, { useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
-import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import {
+  componentMetaField,
+  hasComponentMeta,
+  ReactComponentMetaHolder,
+} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 import { HighlightTarget } from '../element-highlighter';
@@ -88,18 +92,17 @@ function bubbleToBitComponent(
     current = toRootElement(current);
     if (!current) return undefined;
     if (ruleMatcher(current, elementRule)) {
-      const component = domToReacts(current);
+      const components = domToReacts(current);
 
-      if (hasComponentMeta(component)) {
-        const meta = component.__bit_component;
+      const relevantComponents = components.filter(
+        (x) => hasComponentMeta(x) && componentRuleMatcher({ meta: x[componentMetaField] }, componentRule)
+      ) as ReactComponentMetaHolder[];
 
-        if (componentRuleMatcher({ meta }, componentRule))
-          return {
-            element: current,
-            component,
-            meta,
-          };
-      }
+      if (relevantComponents.length < 1) return undefined;
+      return {
+        element: current,
+        components: relevantComponents,
+      };
     }
   }
 
