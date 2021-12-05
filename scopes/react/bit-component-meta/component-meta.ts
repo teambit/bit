@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+
 export const componentMetaField = '__bit_component';
 
 export const componentMetaProperties = {
