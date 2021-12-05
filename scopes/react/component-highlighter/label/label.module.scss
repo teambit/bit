@@ -1,10 +1,6 @@
 .othersContainer {
   > * {
-    margin: 8px 0px;
-
-    &:first-child {
-      margin-top: unset;
-    }
+    margin-bottom: 8px;
 
     &:last-child {
       margin-bottom: unset;
