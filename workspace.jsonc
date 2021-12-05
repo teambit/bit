@@ -35,6 +35,7 @@
         "@pnpm/logger": "4.0.0",
         "@pnpm/npm-resolver": "12.1.2",
         "@pnpm/package-store": "12.1.3",
+        "@pnpm/parse-overrides": "1.0.0",
         "@pnpm/pick-registry-for-package": "2.0.6",
         "@pnpm/resolver-base": "8.1.1",
         "@pnpm/semver-diff": "1.1.0",

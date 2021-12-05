@@ -30,8 +30,9 @@ import {
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
-import { parseResolution, Resolution } from '@yarnpkg/parsers';
+import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
+import parseOverrides from '@pnpm/parse-overrides';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
@@ -422,8 +423,19 @@ export class YarnPackageManager implements PackageManager {
 function convertOverridesToResolutions(
   overrides: Record<string, string>
 ): Array<{ pattern: Resolution; reference: string }> {
-  return Object.entries(overrides).map(([selector, override]) => ({
-    pattern: parseResolution(selector),
-    reference: override,
+  const parsedOverrides = parseOverrides(overrides);
+  return parsedOverrides.map((override) => ({
+    pattern: {
+      from: override.parentPkg ? toYarnResolutionSelector(override.parentPkg) : undefined,
+      descriptor: toYarnResolutionSelector(override.targetPkg),
+    },
+    reference: override.newPref,
   }));
+}
+
+function toYarnResolutionSelector({ name, pref }: { name: string; pref?: string }) {
+  return {
+    fullName: name,
+    description: pref,
+  };
 }
