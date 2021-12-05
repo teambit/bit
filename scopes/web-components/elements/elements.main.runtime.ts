@@ -1,5 +1,5 @@
 import camelCase from 'camelcase';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { ArtifactStorageResolver, BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -19,8 +19,8 @@ export class ElementsMain {
     return '__element';
   }
 
-  createTask() {
-    return new ElementTask(this);
+  createTask(storageResolver?: ArtifactStorageResolver) {
+    return new ElementTask(this, storageResolver);
   }
 
   getWebpackTransformers(): WebpackConfigTransformer[] {
@@ -51,9 +51,15 @@ export class ElementsMain {
   }
 
   async getElementUrl(component: Component): Promise<string | undefined> {
+    const artifacts = await this.getElements(component);
     // In case there are no elements return as undefined
-    if (!this.isElementsExist(component)) return undefined;
-    // TODO: Check if deployed
+    if (artifacts?.isEmpty()) return undefined;
+    const url = artifacts?.getMainElementsFileUrl();
+    // In case of public url (like cdn) return the public url
+    if (url) {
+      return url;
+    }
+    // return the url in the scope
     return this.componentExtension.getRoute(component.id, this.baseRoute);
   }
 

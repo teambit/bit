@@ -25,8 +25,11 @@ export function ComponentOverview({
   elementsUrl,
   ...rest
 }: ComponentOverviewProps) {
-  const origin = typeof window !== undefined ? window.location.origin : undefined;
-  const finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+  let finalElementsUrl = elementsUrl;
+  if (finalElementsUrl && !finalElementsUrl.startsWith('http')) {
+    const origin = typeof window !== undefined ? window.location.origin : undefined;
+    finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+  }
   return (
     <Section {...rest}>
       <div className={textColumn}>

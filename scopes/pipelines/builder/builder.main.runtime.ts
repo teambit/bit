@@ -11,7 +11,7 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
-import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
@@ -20,7 +20,7 @@ import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
-import { StorageResolver } from './storage';
+import { ArtifactStorageResolver } from './storage';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -31,7 +31,7 @@ import { buildTaskTemplate } from './templates/build-task';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
-export type StorageResolverSlot = SlotRegistry<StorageResolver>;
+export type StorageResolverSlot = SlotRegistry<ArtifactStorageResolver>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
@@ -51,8 +51,7 @@ export class BuilderMain {
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
-    private snapTaskSlot: TaskSlot,
-    private storageResolversSlot: StorageResolverSlot
+    private snapTaskSlot: TaskSlot
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -112,21 +111,6 @@ export class BuilderMain {
     return { builderDataMap, pipeResults };
   }
 
-  /**
-   * register a new storage resolver.
-   */
-  registerStorageResolver(storageResolver: StorageResolver) {
-    this.storageResolversSlot.register(storageResolver);
-    return this;
-  }
-
-  /**
-   * get storage resolver by name. otherwise, returns default.
-   */
-  getStorageResolver(name: string): StorageResolver | undefined {
-    return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
-  }
-
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
@@ -178,7 +162,14 @@ export class BuilderMain {
   }
 
   getBuilderData(component: Component): BuilderData | undefined {
-    return component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    if (!data) return undefined;
+    data.artifacts?.forEach((artifact) => {
+      if (!(artifact.files instanceof ArtifactFiles)) {
+        artifact.files = ArtifactFiles.fromObject(artifact.files);
+      }
+    });
+    return data;
   }
 
   /**
@@ -259,7 +250,7 @@ export class BuilderMain {
 
   static slots = [
     Slot.withType<BuildTask>(),
-    Slot.withType<StorageResolver>(),
+    Slot.withType<ArtifactStorageResolver>(),
     Slot.withType<BuildTask>(),
     Slot.withType<BuildTask>(),
   ];
@@ -290,14 +281,9 @@ export class BuilderMain {
       GeneratorMain
     ],
     config,
-    [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
-      TaskSlot,
-      StorageResolverSlot,
-      TaskSlot,
-      TaskSlot
-    ]
+    [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
   ) {
-    const artifactFactory = new ArtifactFactory(storageResolversSlot);
+    const artifactFactory = new ArtifactFactory();
     const logger = loggerExt.createLogger(BuilderAspect.id);
     const buildService = new BuilderService(
       isolator,
@@ -330,8 +316,7 @@ export class BuilderMain {
       aspectLoader,
       buildTaskSlot,
       tagTaskSlot,
-      snapTaskSlot,
-      storageResolversSlot
+      snapTaskSlot
     );
 
     graphql.register(builderSchema(builder));
