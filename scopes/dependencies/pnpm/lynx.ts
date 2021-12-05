@@ -8,11 +8,7 @@ import { streamParser } from '@pnpm/logger';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
-import { createNewStoreController } from '@pnpm/store-connection-manager';
-// TODO: this should be taken from - @pnpm/store-connection-manager
-// it's not taken from there since it's not exported.
-// here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
-import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
+import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -48,12 +44,13 @@ type RegistriesMap = {
 // }
 
 async function createStoreController(
+  rootDir: string,
   storeDir: string,
   cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {}
-): Promise<StoreController> {
+): Promise<{ ctrl: StoreController; dir: string }> {
   // const fetchFromRegistry = createFetchFromRegistry({});
   // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
   // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
@@ -75,7 +72,8 @@ async function createStoreController(
   // });
   // const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
-  const opts: CreateNewStoreControllerOptions = {
+  const opts: CreateStoreControllerOptions = {
+    dir: rootDir,
     cacheDir,
     storeDir,
     rawConfig: authConfig,
@@ -91,8 +89,9 @@ async function createStoreController(
     maxSockets: networkConfig.maxSockets,
     networkConcurrency: networkConfig.networkConcurrency,
   };
-  const { ctrl } = await createNewStoreController(opts);
-  return ctrl;
+  // Although it would be enough to call createNewStoreController(),
+  // that doesn't resolve the store directory location.
+  return createOrConnectStoreController(opts);
 }
 
 async function generateResolverAndFetcher(
@@ -172,11 +171,18 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(storeDir, cacheDir, registries, proxyConfig, networkConfig);
-  const opts = {
+  const storeController = await createStoreController(
+    rootPathToManifest.rootDir,
     storeDir,
+    cacheDir,
+    registries,
+    proxyConfig,
+    networkConfig
+  );
+  const opts = {
+    storeDir: storeController.dir,
     dir: rootPathToManifest.rootDir,
-    storeController,
+    storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
     registries: registriesMap,
