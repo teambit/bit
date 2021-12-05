@@ -104,9 +104,33 @@ export class EnvsMain {
   }
 
   /**
+   * @deprecated use 'trnasformEnv' instead
+   * compose a new environment from a list of environment transformers.
+   */
+  compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
+    const a = envTransformers.reduce((acc, transformer) => {
+      acc = transformer(acc);
+      return acc;
+    }, targetEnv);
+
+    return a;
+  }
+
+  /**
+   * create an Env Transformer out of an Env.
+   * (an Env Transformer modifies or adds specific properties to an Env)
+   */
+  createEnvTransformer(transformationEnv: Environment): EnvTransformer {
+    return (env: Environment) => {
+      return this.merge(transformationEnv, env);
+    };
+  }
+
+  /**
+   * @deprecated use 'createEnvTransformer' instead
    * create an env transformer which overrides specific env properties.
    */
-  createEnvTransformer(propsToOverride: Environment): EnvTransformer {
+  override(propsToOverride: Environment): EnvTransformer {
     return (env: Environment) => {
       return this.merge(propsToOverride, env);
     };
