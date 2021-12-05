@@ -20,15 +20,9 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
 export { Placement };
 
 export type HighlightTarget = {
-  // id?: string;
+  /** element to show the highlight at */
   element: HTMLElement;
-  // /** e.g. 'https://bit.dev/teambit/base-ui/elements/dots-loader', */
-  // link?: string;
-  // /** e.g. 'https://bit.dev/teambit/base-ui' */
-  // scopeLink?: string;
-  // /** use full production url, or local workspace url */
-  // local?: boolean;
-
+  /** components with metadata to show in the label */
   components?: ComponentMetaHolder[];
 };
 

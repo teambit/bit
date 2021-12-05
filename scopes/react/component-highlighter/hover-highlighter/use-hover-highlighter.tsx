@@ -92,23 +92,23 @@ function bubbleToBitComponent(
 ) {
   for (let current = element; current; current = current.parentElement) {
     current = toRootElement(current);
-    if (!current || filter?.(current) === false) return undefined;
+    if (!current) return undefined;
 
-    const components = domToReacts(current);
-    const componentsWithMeta = components.filter(hasComponentMeta) as (ComponentType & ComponentMetaHolder)[];
+    if (filter?.(current) !== false) {
+      const components = domToReacts(current);
+      const componentsWithMeta = components.filter(hasComponentMeta) as (ComponentType & ComponentMetaHolder)[];
 
-    if (componentsWithMeta.length > 0) {
-      const main = componentsWithMeta.slice(-1).pop() as ComponentMetaHolder;
-      const mainMeta = main.__bit_component;
+      if (componentsWithMeta.length > 0) {
+        const main = componentsWithMeta.slice(-1).pop() as ComponentMetaHolder;
+        const mainMeta = main.__bit_component;
 
-      // skip components not matching filter
-      if (componentFilter?.({ meta: mainMeta }) !== false) {
-        return {
-          element: current,
-          component: main,
-          meta: mainMeta,
-          components: componentsWithMeta,
-        };
+        // skip components not matching filter
+        if (componentFilter?.({ meta: mainMeta }) !== false) {
+          return {
+            element: current,
+            components: componentsWithMeta,
+          };
+        }
       }
     }
   }

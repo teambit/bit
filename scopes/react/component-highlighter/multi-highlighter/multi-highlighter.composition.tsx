@@ -1,6 +1,7 @@
 import React from 'react';
 // import { EnterpriseOffering } from '@teambit/evangelist.pages.enterprise-offering';
 import { MockedComponentWithMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import { IconButton } from '@teambit/design.ui.icon-button';
 import { ExcludeHighlighter } from '../ignore-highlighter';
 import { MultiHighlighter } from './multi-highlighter';
 
@@ -11,7 +12,7 @@ export const MultiHighlighterPreview = () => {
       <br />
       <br />
       <br />
-      <MockedComponentWithMeta>also here</MockedComponentWithMeta>
+      <IconButton>this will be highlighted with dropdown</IconButton>
     </MultiHighlighter>
   );
 };
@@ -55,9 +56,10 @@ export const MultiHighlighterInsideIgnore = () => {
 
 export const MultiHighlighterWithRule = () => {
   return (
-    <MultiHighlighter rule="#someSubTree *">
-      <br />
-      <br />
+    <MultiHighlighter rule="#someSubTree *" style={{ minWidth: 300 }}>
+      <div>
+        element filter: <code>"#someSubTree *"</code>
+      </div>
       <br />
       <MockedComponentWithMeta>no highlighter</MockedComponentWithMeta>
       <br />
@@ -72,9 +74,10 @@ export const MultiHighlighterWithRule = () => {
 
 export const MultiHighlighterWithComponentRule = () => {
   return (
-    <MultiHighlighter componentRule="teambit.design/ui/icon-button">
-      <br />
-      <br />
+    <MultiHighlighter componentRule="teambit.design/ui/icon-button" style={{ minWidth: 300 }}>
+      <div>
+        component filter: <code>"teambit.design/ui/icon-button"</code>
+      </div>
       <br />
       <MockedComponentWithMeta>no highlighter</MockedComponentWithMeta>
       <br />

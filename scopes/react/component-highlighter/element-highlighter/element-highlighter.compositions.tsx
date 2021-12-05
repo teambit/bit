@@ -6,14 +6,10 @@ const mockTarget: Partial<HighlightTarget> = {
   components: [
     {
       [componentMetaField]: {
-        id: 'teambit.design/ui/icon-button',
+        id: 'teambit.design/ui/icon-button@1.6.2',
       },
     },
   ],
-
-  // id: 'teambit.design/ui/icon-button',
-  // link: 'https://bit.dev/teambit/design/ui/icon-button',
-  // scopeLink: 'https://bit.dev/teambit/design',
 };
 
 type HighlightedElementProps = {

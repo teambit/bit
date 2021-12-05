@@ -1,67 +1,82 @@
-import React, { useMemo, ReactNode, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { NativeLink } from '@teambit/base-ui.routing.native-link';
-import { ComponentID } from '@teambit/component-id';
-import { ScopeUrl } from '@teambit/component.modules.component-url';
-import {
-  componentMetaField,
-  ComponentMetaHolder,
-} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import Tippy, { TippyProps } from '@tippyjs/react/headless';
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import styles from './label.module.scss';
-import { OtherComponents } from './other-components';
-import { calcComponentLink } from './links';
+import { ComponentStrip } from './component-strip';
 
 export interface LabelProps extends React.HTMLAttributes<HTMLDivElement> {
   components: ComponentMetaHolder[];
 }
 
 export function Label({ components, ...props }: LabelProps) {
-  const [appendTo, setAppendTo] = useState<HTMLDivElement | null>(null);
+  const [showMore, setShowMore] = useState(false);
   const last = components.slice(-1).pop();
   if (!last) return null;
 
-  return (
-    <>
-      <div {...props} className={classNames(props.className, styles.newLabel)}>
-        <ComponentStrip component={last} />
+  const hasMore = components.length > 1;
 
-        {components.length > 1 && (
-          <OtherComponents components={components} appendTo={appendTo || undefined} hideOnClick={false}>
-            <span className={styles.othersTooltip} />
-          </OtherComponents>
+  // reset when switching targets
+  useEffect(() => {
+    setShowMore(false);
+  }, [components]);
+
+  return (
+    <OtherComponentsPopper components={components} visible={showMore} placement="bottom-start">
+      <ComponentStrip {...props} component={last}>
+        {hasMore && (
+          <span
+            className={classNames(styles.othersTooltip, showMore && styles.active)}
+            onClick={() => setShowMore((x) => !x)}
+          />
         )}
-      </div>
-      <div ref={setAppendTo}></div>
-    </>
+      </ComponentStrip>
+    </OtherComponentsPopper>
   );
 }
 
-function ComponentStrip({ component }: { component: ComponentMetaHolder }) {
-  const { id, homepage, exported } = component[componentMetaField];
+type OtherComponentsProps = {
+  components: ComponentMetaHolder[];
+  start?: number;
+  end?: number;
+} & TippyProps;
 
-  const parsedId = useMemo(() => ComponentID.tryFromString(id), [id]);
-  const componentLink = homepage || calcComponentLink(parsedId, exported);
-
-  return (
+// a popper ("tooltip") that shows the additional React Components related to this dom element
+export function OtherComponentsPopper({
+  components,
+  children,
+  placement = 'bottom',
+  interactive = true,
+  start,
+  end = -1,
+  ...tippyProps
+}: OtherComponentsProps) {
+  const content = (
     <>
-      {!parsedId && <LabelBlock link={homepage}>{id}</LabelBlock>}
-      {parsedId && <LabelBlock link={ScopeUrl.toUrl(parsedId.scope)}>{parsedId.scope}</LabelBlock>}
-      {parsedId && (
-        <LabelBlock link={componentLink}>
-          {parsedId.fullName}
-          {parsedId.version && parsedId.version !== 'latest' && `@${parsedId.version}`}
-        </LabelBlock>
-      )}
+      {components
+        .slice(start, end)
+        .reverse()
+        .map((comp, idx) => (
+          <ComponentStrip key={idx} component={comp} />
+        ))}
     </>
   );
-}
 
-function LabelBlock({ link, children }: { link?: string; children: ReactNode }) {
-  const Comp = link ? NativeLink : 'span';
   return (
-    <Comp href={link} external={!!link}>
+    <Tippy
+      placement={placement}
+      interactive={interactive}
+      {...tippyProps}
+      // second parameter "content" is always undefined, use content inline
+      // https://github.com/atomiks/tippyjs-react/issues/341
+      render={(attrs) => (
+        <div {...attrs} className={styles.othersContainer}>
+          {content}
+        </div>
+      )}
+    >
       {children}
-    </Comp>
+    </Tippy>
   );
 }

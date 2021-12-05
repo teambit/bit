@@ -1,83 +1,28 @@
-$borderRadius: 4px;
-
-.newLabel {
-  display: flex;
-  box-shadow: var(--bit-shadow-hover-high);
-  line-height: 1.5;
-  border-radius: $borderRadius;
-
+.othersContainer {
   > * {
-    padding: 0 1em;
-
-    transition: filter 300ms, background-color 300ms;
-    transform: translateZ(0); //fix blurriness in Safari
-
-    background: var(--bit-highlighter-color, #eebcc9);
-
-    &:link,
-    &:visited {
-      text-decoration: inherit; // reset browser defaults
-      color: inherit; // reset browser defaults
-
-      &:hover {
-        background: var(--bit-highlighter-color-hover, #f6dae2);
-      }
-
-      &:active {
-        background: var(--bit-highlighter-color-active, #e79db1);
-        color: inherit;
-      }
-    }
+    margin: 8px 0px;
 
     &:first-child {
-      border-top-left-radius: $borderRadius;
-      border-bottom-left-radius: $borderRadius;
+      margin-top: unset;
     }
 
-    margin-right: 2px;
-
     &:last-child {
-      border-top-right-radius: $borderRadius;
-      border-bottom-right-radius: $borderRadius;
-
-      margin-right: unset;
+      margin-bottom: unset;
     }
   }
 }
 
 .othersTooltip {
+  user-select: none;
+  cursor: pointer;
+
   &::before {
     display: inline-block;
     transition: transform 300ms;
     content: '▾';
   }
 
-  &[aria-expanded='true']::before {
+  &.active::before {
     transform: rotate(-180deg);
-  }
-}
-
-.extraComponentsPad {
-  min-width: max-content;
-  border: 2px solid var(--bit-highlighter-color, #eebcc9);
-  padding: 8px;
-
-  .otherInfo {
-    color: var(--bit-text-color-light);
-  }
-}
-
-.othersTitle {
-  place-self: center;
-  font-weight: bold;
-}
-
-.extraComponent {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 2px 4px;
-
-  > * {
-    border-radius: 8px;
   }
 }
