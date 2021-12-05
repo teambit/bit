@@ -27,6 +27,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
 
   /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
   rule?: MatchRule;
+  /** filter components to match this rule. Can be id, array of ids, or a function */
   componentRule?: ComponentMatchRule;
 
   /** set the behavior of the highlighter.

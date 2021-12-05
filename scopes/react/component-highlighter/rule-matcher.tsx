@@ -21,11 +21,17 @@ export type ComponentMatchTarget = { meta: ComponentMeta };
 
 export function componentRuleMatcher(target: ComponentMatchTarget, rule: ComponentMatchRule): boolean {
   if (typeof rule === 'string') {
-    return ComponentID.isEqualStr(target.meta.id, rule, { ignoreVersion: true });
+    const targetCmpId = ComponentID.tryFromString(target.meta.id);
+    const ruleCmpId = ComponentID.tryFromString(rule);
+
+    return ComponentID.isEqual(ruleCmpId, targetCmpId, { ignoreVersion: true });
   }
 
   if (Array.isArray(rule)) {
-    return rule.some((x) => ComponentID.isEqualStr(target.meta.id, x, { ignoreVersion: true }));
+    const targetCmpId = ComponentID.tryFromString(target.meta.id);
+    const ruleCmpIds = rule.map((x) => ComponentID.tryFromString(x));
+
+    return ruleCmpIds.some((cmdId) => ComponentID.isEqual(targetCmpId, cmdId, { ignoreVersion: true }));
   }
 
   if (typeof rule === 'function') {

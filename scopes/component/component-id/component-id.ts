@@ -196,17 +196,6 @@ export class ComponentID {
     return result;
   }
 
-  static isEqualStr(a: string | undefined, b: string | undefined, opts: EqualityOption = {}): boolean {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
-
-    const aStr = ComponentID.tryFromString(a);
-    const bStr = ComponentID.tryFromString(b);
-    if (!a || !b) return false;
-
-    return ComponentID.isEqual(aStr, bStr, opts);
-  }
-
   static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {
     if (!a && !b) return true;
     if (!a || !b) return false;

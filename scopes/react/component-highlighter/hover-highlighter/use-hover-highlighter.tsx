@@ -1,12 +1,8 @@
-import React, { useEffect, ComponentType } from 'react';
+import React, { useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
-import {
-  hasComponentMeta,
-  ComponentMeta,
-  ComponentMetaHolder,
-} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import { hasComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 import { HighlightTarget } from '../element-highlighter';
@@ -16,7 +12,9 @@ export type useHoverHighlighterOptions = {
   debounceDuration: number;
   scopeClass: string;
   disabled?: boolean;
+  /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
   rule?: MatchRule;
+  /** filter targets by this component match rule */
   componentRule?: ComponentMatchRule;
 };
 
@@ -61,11 +59,7 @@ function useHoverHandler({
     // skip DOM trees having 'data-ignore-component-highlight'
     if (element.closest(`.${scopeClass} ${excludeHighlighterSelector}`)) return;
 
-    const result = bubbleToBitComponent(
-      element,
-      rule ? (current) => ruleMatcher(current, rule) : undefined,
-      componentRule ? (current) => componentRuleMatcher(current, componentRule) : undefined
-    );
+    const result = bubbleToBitComponent(element, rule, componentRule);
     if (!result) return;
 
     onChange({
@@ -87,28 +81,24 @@ function useHoverHandler({
 /** go up the dom tree until reaching a react bit component */
 function bubbleToBitComponent(
   element: HTMLElement | null,
-  filter?: (elem: HTMLElement) => boolean,
-  componentFilter?: (component: { meta: ComponentMeta }) => boolean
+  elementRule?: MatchRule,
+  componentRule?: ComponentMatchRule
 ) {
   for (let current = element; current; current = current.parentElement) {
     current = toRootElement(current);
     if (!current) return undefined;
+    if (ruleMatcher(current, elementRule)) {
+      const component = domToReacts(current);
 
-    if (filter?.(current) !== false) {
-      const components = domToReacts(current);
-      const componentsWithMeta = components.filter(hasComponentMeta) as (ComponentType & ComponentMetaHolder)[];
+      if (hasComponentMeta(component)) {
+        const meta = component.__bit_component;
 
-      if (componentsWithMeta.length > 0) {
-        const main = componentsWithMeta.slice(-1).pop() as ComponentMetaHolder;
-        const mainMeta = main.__bit_component;
-
-        // skip components not matching filter
-        if (componentFilter?.({ meta: mainMeta }) !== false) {
+        if (componentRuleMatcher({ meta }, componentRule))
           return {
             element: current,
-            components: componentsWithMeta,
+            component,
+            meta,
           };
-        }
       }
     }
   }
