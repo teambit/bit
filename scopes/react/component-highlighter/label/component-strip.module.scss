@@ -7,6 +7,7 @@ $gap: 2px;
   font-size: 14px;
   line-height: 16px;
   border-radius: $borderRadius;
+  box-shadow: 0px 11px 29px 0px rgba(0, 0, 0, 0.23);
 
   &[data-size='s'] {
     font-size: 12px;
