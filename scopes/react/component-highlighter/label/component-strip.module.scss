@@ -8,8 +8,23 @@ $gap: 2px;
   line-height: 16px;
   border-radius: $borderRadius;
 
+  &[data-size='s'] {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  &[data-size='m'] {
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  &[data-size='l'] {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
   > * {
-    padding: 4px 1em;
+    padding: 4px 8px;
 
     transition: filter 300ms, background-color 300ms;
     transform: translateZ(0); //fix blurriness in Safari

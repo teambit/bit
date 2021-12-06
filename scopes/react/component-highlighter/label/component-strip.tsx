@@ -9,11 +9,14 @@ import {
 import styles from './component-strip.module.scss';
 import { calcComponentLink } from './links';
 
+export type ComponentStripSize = 's' | 'm' | 'l';
+
 interface ComponentStripProps extends React.HTMLAttributes<HTMLDivElement> {
   component: ComponentMetaHolder;
+  size?: ComponentStripSize;
 }
 export const ComponentStrip = forwardRef(function ComponentStrip(
-  { component, children }: ComponentStripProps,
+  { component, size = 'm', children }: ComponentStripProps,
   ref: ForwardedRef<HTMLDivElement>
 ) {
   const { id, homepage, exported } = component[componentMetaField];
@@ -22,7 +25,7 @@ export const ComponentStrip = forwardRef(function ComponentStrip(
   const componentLink = homepage || calcComponentLink(parsedId, exported);
 
   return (
-    <div className={styles.componentStrip} ref={ref}>
+    <div className={styles.componentStrip} ref={ref} data-size={size}>
       {!parsedId && <LabelBlock link={homepage}>{id}</LabelBlock>}
       {parsedId && <LabelBlock link={ScopeUrl.toUrl(parsedId.scope)}>{parsedId.scope}</LabelBlock>}
       {parsedId && (

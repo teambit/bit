@@ -16,7 +16,11 @@ export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) 
   }, [hash]);
 
   return (
-    <ComponentHighlighter disabled={!isActive} className={classnames(styles.highlighter, isActive && styles.active)}>
+    <ComponentHighlighter
+      disabled={!isActive}
+      className={classnames(styles.highlighter, isActive && styles.active)}
+      size="s"
+    >
       {children}
     </ComponentHighlighter>
   );
