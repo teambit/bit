@@ -3,9 +3,15 @@ import classnames from 'classnames';
 import { v4 } from 'uuid';
 
 import { useHoverHighlighter } from '../hover-highlighter';
-import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
+import {
+  ElementHighlighter,
+  HighlightTarget,
+  Placement,
+  HighlightClasses,
+  HighlighterSize,
+} from '../element-highlighter';
 import { useMultiHighlighter } from '../multi-highlighter/use-multi-highlighter';
-import type { MatchRule } from '../rule-matcher';
+import type { MatchRule, ComponentMatchRule } from '../rule-matcher';
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** stop all highlighting and drop listeners */
@@ -27,6 +33,8 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
 
   /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
   rule?: MatchRule;
+  /** filter components to match this rule. Can be id, array of ids, or a function */
+  componentRule?: ComponentMatchRule;
 
   /** set the behavior of the highlighter.
    * `disabled` - stops highlighting.
@@ -37,6 +45,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
   bgColor?: string;
   bgColorHover?: string;
   bgColorActive?: string;
+  size?: HighlighterSize;
 }
 
 /** automatically highlight components on hover */
@@ -47,6 +56,7 @@ export function HybridHighlighter({
   watchMotion = true,
   placement,
   rule,
+  componentRule,
 
   classes,
   highlightStyle,
@@ -55,6 +65,7 @@ export function HybridHighlighter({
   bgColor,
   bgColorHover,
   bgColorActive,
+  size,
   children,
   ...rest
 }: HybridHighlighterProps) {
@@ -76,6 +87,7 @@ export function HybridHighlighter({
       scopeClass,
       disabled: disabled || mode !== 'hover',
       rule,
+      componentRule,
     }
   );
 
@@ -85,6 +97,7 @@ export function HybridHighlighter({
     scopeClass,
     disabled: disabled || mode !== 'allChildren',
     rule,
+    componentRule,
   });
 
   const _styles = useMemo(
@@ -119,6 +132,7 @@ export function HybridHighlighter({
           style={highlightStyle}
           placement={placement}
           watchMotion={watchMotion}
+          size={size}
         />
       ))}
     </div>

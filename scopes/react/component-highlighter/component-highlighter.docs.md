@@ -153,6 +153,15 @@ For example:
 </ComponentHighlighter>
 ```
 
+You can also filter by component id, using the `componentRule` prop:
+
+```tsx
+<ComponentHighlighter componentRule="teambit.design/ui/icon-button">
+  <Paragraph>will not be highlighted</Paragraph>
+  <Button>this will be highlighted</Button>
+</ComponentHighlighter>
+```
+
 ## Customization
 
 Use these CSS variables to edit the highlighter color
