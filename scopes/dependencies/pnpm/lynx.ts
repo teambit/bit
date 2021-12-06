@@ -1,12 +1,7 @@
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
-// import createClient from '@pnpm/client'
-// import { createFetchFromRegistry } from '@pnpm/fetch';
 import { streamParser } from '@pnpm/logger';
-// import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import {
@@ -17,13 +12,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-// import execa from 'execa';
-// import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from '@pnpm/core';
-// import { ReporterFunction } from '@pnpm/core/lib/types';
-// import { createResolver } from './create-resolver';
-// import {isValidPath} from '@teambit/legacy/dist/utils';
-// import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
@@ -35,14 +24,6 @@ type RegistriesMap = {
   [registryName: string]: string;
 };
 
-// TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
-// function getReporter(logger: Logger): ReporterFunction {
-//   return ((logObj) => {
-//     // TODO: print correctly not the entire object
-//     logger.console(logObj)
-//   });
-// }
-
 async function createStoreController(
   rootDir: string,
   storeDir: string,
@@ -51,26 +32,6 @@ async function createStoreController(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {}
 ): Promise<{ ctrl: StoreController; dir: string }> {
-  // const fetchFromRegistry = createFetchFromRegistry({});
-  // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
-  // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
-  //   metaCache: new Map(),
-  //   storeDir,
-  // });
-  // const fetcher = createFetcher(fetchFromRegistry, getCredentials, {});
-  // const { resolve, fetchers } = createClient({
-  //   // authConfig,
-  //   metaCache: new Map(),
-  //   // retry: retryOpts,
-  //   storeDir,
-  //   // ...resolveOpts,
-  //   // ...fetchOpts,
-  // })
-  // const storeController = await createStore(resolve, fetchers, {
-  //   storeDir,
-  //   verifyStoreIntegrity: true,
-  // });
-  // const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
   const opts: CreateStoreControllerOptions = {
     dir: rootDir,
@@ -191,8 +152,6 @@ export async function install(
     registries: registriesMap,
     rawConfig: authConfig,
     overrides: options?.overrides,
-    // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
-    // reporter: logger ? getReporter(logger) : undefined,
   };
 
   const stopReporting = defaultReporter({
@@ -201,8 +160,6 @@ export async function install(
     },
     reportingOptions: {
       appendOnly: false,
-      // logLevel: 'error' as LogLevel,
-      // streamLifecycleOutput: opts.config.stream,
       throttleProgress: 200,
     },
     streamParser,
@@ -239,7 +196,6 @@ export async function resolveRemoteVersion(
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     const version = isValidRange ? parsedPackage.version : val.manifest.version;
-    // const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
 
     return {
       packageName: val.manifest.name,
