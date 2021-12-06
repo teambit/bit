@@ -55,6 +55,18 @@ describe('bit deprecate and undeprecate commands', function () {
           const bitmap = helper.bitMap.read();
           expect(bitmap.comp2).to.not.have.property('metadata');
         });
+        describe('testing some config-merge', () => {
+          before(() => {
+            helper.bitJsonc.setVariant(undefined, 'comp2', {
+              'teambit.component/deprecation': { someRandomData: true },
+            });
+          });
+          // @todo: fix. currently it overrides the data unexpectedly.
+          it('should not delete the deprecation data from the config', () => {
+            const deprecationData = getDeprecationData('comp2');
+            expect(deprecationData.config.deprecate).to.be.true;
+          });
+        });
       });
     });
   });
