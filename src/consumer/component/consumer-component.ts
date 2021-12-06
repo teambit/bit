@@ -634,7 +634,7 @@ export default class Component {
             shouldBuildDependencies,
             writeDists: false,
             installNpmPackages,
-            keepExistingCapsule: true,
+            keepExistingCapsule,
           });
           return new ExtensionIsolateResult(isolator, componentWithDependencies);
         };
