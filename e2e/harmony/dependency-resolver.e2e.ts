@@ -170,6 +170,26 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('overrides', function () {
+    // This is the dependency graph that the overrides will modify:
+    // is-odd 1.0.0
+    // └─┬ is-number 3.0.0
+    //   └─┬ kind-of 3.2.2
+    //     └── is-buffer 1.1.6
+    // rimraf 3.0.2
+    // └─┬ glob 7.2.0
+    //   ├── fs.realpath 1.0.0
+    //   ├─┬ inflight 1.0.6
+    //   │ ├─┬ once 1.4.0
+    //   │ │ └── wrappy 1.0.2
+    //   │ └── wrappy 1.0.2
+    //   ├── inherits 2.0.4
+    //   ├─┬ minimatch 3.0.4
+    //   │ └─┬ brace-expansion 1.1.11
+    //   │   ├── balanced-match 1.0.2
+    //   │   └── concat-map 0.0.1
+    //   ├─┬ once 1.4.0
+    //   │ └── wrappy 1.0.2
+    //   └── path-is-absolute 1.0.1
     describe('using Yarn as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
@@ -177,6 +197,7 @@ describe('dependency-resolver extension', function () {
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
+          'inflight>once': '1.3.0',
         });
         helper.command.install('is-even@0.1.2 rimraf@3.0.2');
       });
@@ -187,6 +208,15 @@ describe('dependency-resolver extension', function () {
       it('should force a newer version of a subdependency using the dependency name and version', function () {
         expect(helper.fixtures.fs.readJsonFile('node_modules/glob/package.json').version).to.eq('6.0.4');
       });
+      it('should not change the version of the package if the parent package does not match the pattern', function () {
+        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/node_modules/once/package.json').version).to.eq(
+          '1.4.0'
+        );
+      });
+      it('should change the version of the package if the parent package matches the pattern', function () {
+        // This gets hoisted from the dependencies of inflight
+        expect(helper.fixtures.fs.readJsonFile('node_modules/once/package.json').version).to.eq('1.3.0');
+      });
     });
     describe('using pnpm as a package manager', () => {
       before(() => {
@@ -195,6 +225,7 @@ describe('dependency-resolver extension', function () {
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
           'glob@^7.1.3': '6.0.4',
+          'inflight>once': '1.3.0',
         });
         helper.command.install('is-even@0.1.2 rimraf@3.0.2');
       });
@@ -212,6 +243,20 @@ describe('dependency-resolver extension', function () {
             'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/glob/package.json'
           ).version
         ).to.eq('6.0.4');
+      });
+      it('should not change the version of the package if the parent package does not match the pattern', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/once/package.json'
+          ).version
+        ).to.eq('1.4.0');
+      });
+      it('should change the version of the package if the parent package matches the pattern', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+inflight@1.0.6/node_modules/once/package.json'
+          ).version
+        ).to.eq('1.3.0');
       });
     });
   });

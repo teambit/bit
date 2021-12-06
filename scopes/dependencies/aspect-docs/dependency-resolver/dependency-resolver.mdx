@@ -385,11 +385,14 @@ An example of the `"overrides"` field:
     "overrides": {
       "foo": "^1.0.0",
       "quux": "npm:@myorg/quux@^1.0.0",
-      "bar@^2.1.0": "3.0.0"
+      "bar@^2.1.0": "3.0.0",
+      "qar@1>zoo": "2"
     }
   }
 }
 ```
+
+You may specify the package the overriden dependency belongs to by separating the package selector from the dependency selector with a `">"`, for example `qar@1>zoo` will only override the `zoo` dependency of `qar@1`, not for any other dependencies.
 
 ## CLI reference
 
