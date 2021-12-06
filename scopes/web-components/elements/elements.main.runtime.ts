@@ -16,7 +16,7 @@ export class ElementsMain {
   baseRoute = `elements/`;
 
   getElementsDirName(): string {
-    return '__element';
+    return '__bit__elements';
   }
 
   createTask(storageResolver?: ArtifactStorageResolver) {

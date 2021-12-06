@@ -30,7 +30,7 @@ export async function computeResults(
 function getArtifactDef(outDirName: string, storageResolver?: ArtifactStorageResolver): ArtifactDefinition[] {
   return [
     {
-      name: 'element',
+      name: 'elements',
       globPatterns: [`${outDirName}/public/**`],
       storageResolver,
     },

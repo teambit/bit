@@ -29,7 +29,7 @@ export class ElementTask implements BuildTask {
   readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const url = `/element/${context.envRuntime.id}`;
+    const url = `/elements/${context.envRuntime.id}`;
 
     const outDirName = this.elements.getElementsDirName();
 
