@@ -39,7 +39,7 @@ describe('artifacts storage resolver', function () {
       helper.command.export();
     });
     it('should store the urls for the artifacts', () => {
-      const comp1 = helper.command.catComponent('comp1@latest', helper.scopes.remotePath);
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       const files = getElementsArtifactsFromModel(comp1);
       files.forEach((file) => {
         const url = file.url;
@@ -54,7 +54,7 @@ describe('artifacts storage resolver', function () {
       helper.command.importComponent('comp1');
     });
     it('should store the urls for the artifacts', () => {
-      const comp1 = helper.command.catComponent('comp1@latest', helper.scopes.remotePath);
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       const files = getElementsArtifactsFromModel(comp1);
       files.forEach((file) => {
         const url = file.url;
