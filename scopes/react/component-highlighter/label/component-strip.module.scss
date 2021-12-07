@@ -1,0 +1,64 @@
+$borderRadius: 8px;
+$gap: 2px;
+
+.componentStrip {
+  display: flex;
+
+  font-size: 14px;
+  line-height: 16px;
+  border-radius: $borderRadius;
+  box-shadow: 0px 11px 29px 0px rgba(0, 0, 0, 0.23);
+
+  &[data-size='s'] {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  &[data-size='m'] {
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  &[data-size='l'] {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  > * {
+    padding: 4px 8px;
+
+    transition: filter 300ms, background-color 300ms;
+    transform: translateZ(0); //fix blurriness in Safari
+
+    background: var(--bit-highlighter-color, #eebcc9);
+
+    &:link,
+    &:visited {
+      text-decoration: inherit; // reset browser defaults
+      color: inherit; // reset browser defaults
+
+      &:hover {
+        background: var(--bit-highlighter-color-hover, #f6dae2);
+      }
+
+      &:active {
+        background: var(--bit-highlighter-color-active, #e79db1);
+        color: inherit;
+      }
+    }
+
+    &:first-child {
+      border-top-left-radius: $borderRadius;
+      border-bottom-left-radius: $borderRadius;
+    }
+
+    margin-right: $gap;
+
+    &:last-child {
+      border-top-right-radius: $borderRadius;
+      border-bottom-right-radius: $borderRadius;
+
+      margin-right: unset;
+    }
+  }
+}
