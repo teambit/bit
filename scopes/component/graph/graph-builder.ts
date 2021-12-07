@@ -22,6 +22,7 @@ export class GraphBuilder {
     const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
     this._graph = graph;
     this._initialized = true;
+    graph.seederIds = ids || (await componentHost.listIds());
     return this._graph;
   }
 
