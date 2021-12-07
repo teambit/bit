@@ -3,7 +3,7 @@ import React from 'react';
 import { MockedComponentWithMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { IconButton } from '@teambit/design.ui.icon-button';
 import { ExcludeHighlighter } from '../ignore-highlighter';
-import { MultiHighlighter } from './multi-highlighter';
+import { MultiHighlighter } from './children-highlighter';
 
 export const MultiHighlighterPreview = () => {
   return (

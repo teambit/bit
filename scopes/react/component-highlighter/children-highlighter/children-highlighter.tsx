@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { HybridHighlighter, HybridHighlighterProps } from '../hybrid-highligher';
+import { HybridHighlighter, HybridHighlighterProps } from '../hybrid-highlighter';
 
 export type MultiHighlighterProps = Omit<HybridHighlighterProps, 'mode'>;
 

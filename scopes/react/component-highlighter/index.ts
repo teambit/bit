@@ -1,11 +1,11 @@
-export { HybridHighlighter as ComponentHighlighter } from './hybrid-highligher';
-export type { HybridHighlighterProps as ComponentHighlightProps } from './hybrid-highligher';
+export { HybridHighlighter as ComponentHighlighter } from './hybrid-highlighter';
+export type { HybridHighlighterProps as ComponentHighlightProps } from './hybrid-highlighter';
 
 export { HoverHighlighter } from './hover-highlighter';
 export type { HoverHighlighterProps } from './hover-highlighter';
 
-export { MultiHighlighter } from './multi-highlighter';
-export type { MultiHighlighterProps } from './multi-highlighter';
+export { MultiHighlighter } from './children-highlighter';
+export type { MultiHighlighterProps } from './children-highlighter';
 
 export { ElementHighlighter } from './element-highlighter';
 export type { ElementHighlighterProps, HighlightTarget, Placement, HighlightClasses } from './element-highlighter';

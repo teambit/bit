@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { MultiHighlighterPreview } from './multi-highlighter.composition';
+import { MultiHighlighterPreview } from './children-highlighter.composition';
 
 it('should not throw when rendering the multi-highlighter', () => {
   const { getByText } = render(<MultiHighlighterPreview />);
