@@ -1,2 +1,2 @@
-export { MultiHighlighter } from './children-highlighter';
-export type { MultiHighlighterProps } from './children-highlighter';
+export { ChildrenHighlighter } from './children-highlighter';
+export type { ChildrenHighlighterProps } from './children-highlighter';

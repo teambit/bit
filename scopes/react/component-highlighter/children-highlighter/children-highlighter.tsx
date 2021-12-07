@@ -2,8 +2,8 @@ import React from 'react';
 
 import { HybridHighlighter, HybridHighlighterProps } from '../hybrid-highlighter';
 
-export type MultiHighlighterProps = Omit<HybridHighlighterProps, 'mode'>;
+export type ChildrenHighlighterProps = Omit<HybridHighlighterProps, 'mode'>;
 
-export function MultiHighlighter({ watchMotion = false, ...props }: MultiHighlighterProps) {
+export function ChildrenHighlighter({ watchMotion = false, ...props }: ChildrenHighlighterProps) {
   return <HybridHighlighter {...props} mode={'allChildren'} watchMotion={watchMotion} />;
 }

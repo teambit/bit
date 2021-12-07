@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { MultiHighlighterPreview } from './children-highlighter.composition';
+import { ChildrenHighlighterPreview } from './children-highlighter.composition';
 
-it('should not throw when rendering the multi-highlighter', () => {
-  const { getByText } = render(<MultiHighlighterPreview />);
+it('should not throw when rendering the children-highlighter', () => {
+  const { getByText } = render(<ChildrenHighlighterPreview />);
 
   const rendered = getByText('hover here');
 
