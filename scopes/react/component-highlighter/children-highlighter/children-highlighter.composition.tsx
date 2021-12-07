@@ -3,23 +3,23 @@ import React from 'react';
 import { MockedComponentWithMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { IconButton } from '@teambit/design.ui.icon-button';
 import { ExcludeHighlighter } from '../ignore-highlighter';
-import { MultiHighlighter } from './multi-highlighter';
+import { ChildrenHighlighter } from './children-highlighter';
 
-export const MultiHighlighterPreview = () => {
+export const ChildrenHighlighterPreview = () => {
   return (
-    <MultiHighlighter style={{ padding: 40, minWidth: 200 }}>
+    <ChildrenHighlighter style={{ padding: 40, minWidth: 200 }}>
       <MockedComponentWithMeta>hover here</MockedComponentWithMeta>
       <br />
       <br />
       <br />
       <IconButton>this will be highlighted with dropdown</IconButton>
-    </MultiHighlighter>
+    </ChildrenHighlighter>
   );
 };
 
-export const MultiHighlighterWithCustomColors = () => {
+export const ChildrenHighlighterWithCustomColors = () => {
   return (
-    <MultiHighlighter
+    <ChildrenHighlighter
       style={{ padding: 40, minWidth: 200, color: 'yellow' }}
       bgColor="cornflowerblue"
       bgColorHover="blue"
@@ -30,14 +30,14 @@ export const MultiHighlighterWithCustomColors = () => {
       <br />
       <br />
       <MockedComponentWithMeta>also here</MockedComponentWithMeta>
-    </MultiHighlighter>
+    </ChildrenHighlighter>
   );
 };
 
-export const MultiHighlighterInsideIgnore = () => {
+export const ChildrenHighlighterInsideIgnore = () => {
   return (
     <ExcludeHighlighter>
-      <MultiHighlighter>
+      <ChildrenHighlighter>
         Multi Highlighter should still work when inside <code>{'<ExcludeHighlighter>'}</code>
         <br />
         It should only skip exclusion zones inside of it.
@@ -49,14 +49,14 @@ export const MultiHighlighterInsideIgnore = () => {
         <br />
         <br />
         <MockedComponentWithMeta>also here</MockedComponentWithMeta>
-      </MultiHighlighter>
+      </ChildrenHighlighter>
     </ExcludeHighlighter>
   );
 };
 
-export const MultiHighlighterWithRule = () => {
+export const ChildrenHighlighterWithRule = () => {
   return (
-    <MultiHighlighter rule="#someSubTree *" style={{ minWidth: 300 }}>
+    <ChildrenHighlighter rule="#someSubTree *" style={{ minWidth: 300 }}>
       <div>
         element filter: <code>"#someSubTree *"</code>
       </div>
@@ -68,13 +68,13 @@ export const MultiHighlighterWithRule = () => {
       <div id="someSubTree">
         <MockedComponentWithMeta>this will be highlighted</MockedComponentWithMeta>
       </div>
-    </MultiHighlighter>
+    </ChildrenHighlighter>
   );
 };
 
-export const MultiHighlighterWithComponentRule = () => {
+export const ChildrenHighlighterWithComponentRule = () => {
   return (
-    <MultiHighlighter componentRule="teambit.design/ui/icon-button" style={{ minWidth: 300 }}>
+    <ChildrenHighlighter componentRule="teambit.design/ui/icon-button" style={{ minWidth: 300 }}>
       <div>
         component filter: <code>"teambit.design/ui/icon-button"</code>
       </div>
@@ -84,14 +84,14 @@ export const MultiHighlighterWithComponentRule = () => {
       <br />
       <br />
       <IconButton>this will be highlighted</IconButton>
-    </MultiHighlighter>
+    </ChildrenHighlighter>
   );
 };
 
 // export const HighlightingAllElementsInTheEnterprisePage = () => {
 //   return (
-//     <MultiHighlighter>
+//     <ChildrenHighlighter>
 //       <EnterpriseOffering style={{ height: 300 }} />
-//     </MultiHighlighter>
+//     </ChildrenHighlighter>
 //   );
 // };

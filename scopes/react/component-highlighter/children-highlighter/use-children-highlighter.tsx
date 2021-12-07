@@ -10,7 +10,7 @@ import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
-type useMultiHighlighterProps = {
+export type ChildrenHighlighterOptions = {
   onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
   disabled?: boolean;
   scopeRef: RefObject<HTMLElement>;
@@ -23,14 +23,14 @@ type useMultiHighlighterProps = {
   // watchDom?: boolean;
 };
 
-export function useMultiHighlighter({
+export function useChildrenHighlighter({
   onChange,
   disabled,
   scopeRef,
   scopeClass: scopeSelector = '',
   rule,
   componentRule,
-}: useMultiHighlighterProps) {
+}: ChildrenHighlighterOptions) {
   useEffect(() => {
     const nextTargets: Record<string, HighlightTarget> = {};
     const scopeElement = scopeRef.current;
