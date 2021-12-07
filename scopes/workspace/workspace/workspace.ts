@@ -806,6 +806,11 @@ export class Workspace implements ComponentFactory {
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
+    const bitMapId = this.consumer.bitMap.getExistingBitId(name);
+    const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
+    if (bitMapEntry && bitMapEntry.defaultScope) {
+      return bitMapEntry.defaultScope;
+    }
     return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 

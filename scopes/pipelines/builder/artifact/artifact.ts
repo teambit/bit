@@ -1,6 +1,6 @@
 import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { BuildTask } from '../build-task';
-import type { StorageResolver } from '../storage';
+import type { ArtifactStorageResolver } from '../storage';
 import type { ArtifactDefinition } from './artifact-definition';
 
 export class Artifact {
@@ -13,7 +13,7 @@ export class Artifact {
     /**
      * storage resolver. can be used to replace where artifacts are stored.
      */
-    readonly storageResolver: StorageResolver,
+    readonly storageResolver: ArtifactStorageResolver,
 
     readonly files: ArtifactFiles,
 

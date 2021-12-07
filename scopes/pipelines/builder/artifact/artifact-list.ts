@@ -1,6 +1,12 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { Artifact } from './artifact';
+import {
+  ArtifactStorageResolver,
+  FileStorageResolver,
+  WholeArtifactStorageResolver,
+  DefaultResolver,
+} from '../storage';
 
 export type ResolverMap = { [key: string]: Artifact[] };
 
@@ -56,9 +62,62 @@ export class ArtifactList {
       if (!artifacts.length) return;
       const storageResolver = artifacts[0].storageResolver;
       const artifactList = new ArtifactList(artifacts);
-      await storageResolver.store(component, artifactList);
+      const artifactPromises = artifactList.artifacts.map(async (artifact) => {
+        return this.storeArtifact(storageResolver, artifact, component);
+      });
+      await Promise.all(artifactPromises);
     });
 
+    return Promise.all(promises);
+  }
+
+  private async storeArtifact(storageResolver: ArtifactStorageResolver, artifact: Artifact, component: Component) {
+    // For now we are always storing also using the default resolver
+    if (storageResolver.name !== 'default') {
+      const defaultResolver = new DefaultResolver();
+      await defaultResolver.store(component, artifact);
+    }
+    // @ts-ignore
+    if (storageResolver.store && typeof storageResolver.store === 'function') {
+      return this.storeWholeArtifactByResolver(storageResolver as WholeArtifactStorageResolver, artifact, component);
+    }
+    return this.storeArtifactFilesByResolver(storageResolver as FileStorageResolver, artifact, component);
+  }
+
+  /**
+   * Send the entire artifact to the resolver then get back the result for all files from the resolver
+   * @param storageResolver
+   * @param artifact
+   * @param component
+   */
+  private async storeWholeArtifactByResolver(
+    storageResolver: WholeArtifactStorageResolver,
+    artifact: Artifact,
+    component: Component
+  ) {
+    const results = await storageResolver.store(component, artifact);
+    if (!results) return;
+    artifact.files.vinyls.map(async (file) => {
+      const url = results[file.relative];
+      if (url) {
+        file.url = url;
+      }
+    });
+  }
+
+  /**
+   * Go over the artifact files and send them to the resolver one by one
+   * @param storageResolver
+   * @param artifact
+   * @param component
+   */
+  private storeArtifactFilesByResolver(storageResolver: FileStorageResolver, artifact: Artifact, component: Component) {
+    const promises = artifact.files.vinyls.map(async (file) => {
+      const url = await storageResolver.storeFile(component, artifact, file);
+      if (url) {
+        file.url = url;
+      }
+    });
     return Promise.all(promises);
   }
 }

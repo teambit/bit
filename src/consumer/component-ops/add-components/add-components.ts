@@ -358,6 +358,7 @@ export default class AddComponents {
       const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
+        defaultScope: this.defaultScope,
         mainFile,
         trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
         origin: COMPONENT_ORIGINS.AUTHORED,
