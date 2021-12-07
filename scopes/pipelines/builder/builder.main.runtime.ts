@@ -20,7 +20,6 @@ import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
-import { ArtifactStorageResolver } from './storage';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -30,8 +29,6 @@ import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
-
-export type StorageResolverSlot = SlotRegistry<ArtifactStorageResolver>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
@@ -248,12 +245,7 @@ export class BuilderMain {
     return this;
   }
 
-  static slots = [
-    Slot.withType<BuildTask>(),
-    Slot.withType<ArtifactStorageResolver>(),
-    Slot.withType<BuildTask>(),
-    Slot.withType<BuildTask>(),
-  ];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
   static dependencies = [
