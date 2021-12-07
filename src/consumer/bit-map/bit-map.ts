@@ -628,6 +628,7 @@ export default class BitMap {
   addComponent({
     componentId,
     files,
+    defaultScope,
     mainFile,
     origin,
     rootDir,
@@ -638,6 +639,7 @@ export default class BitMap {
   }: {
     componentId: BitId;
     files: ComponentMapFile[];
+    defaultScope?: string;
     mainFile: PathLinux;
     origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
@@ -682,6 +684,9 @@ export default class BitMap {
     }
     if (onLanesOnly) {
       componentMap.onLanesOnly = onLanesOnly;
+    }
+    if (defaultScope) {
+      componentMap.defaultScope = defaultScope;
     }
     componentMap.removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -778,6 +783,10 @@ export default class BitMap {
       // change the version only on the lane, not on .bitmap
       this.workspaceLane.addEntry(newId);
       componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
+    }
+    if (updateScopeOnly) {
+      // in case it had defaultScope, no need for it anymore.
+      delete componentMap.defaultScope;
     }
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);

@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { ExecutionContext } from '@teambit/envs';
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ArtifactStorageResolver } from '@teambit/builder';
 import { CompilerAspect } from '@teambit/compiler';
 import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { ElementsMain } from './elements.main.runtime';
@@ -19,7 +19,8 @@ export class ElementTask implements BuildTask {
     /**
      * elements extension.
      */
-    private elements: ElementsMain
+    private elements: ElementsMain,
+    private storageResolver?: ArtifactStorageResolver
   ) {}
 
   aspectId = ElementsAspect.id;
@@ -28,7 +29,7 @@ export class ElementTask implements BuildTask {
   readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const url = `/element/${context.envRuntime.id}`;
+    const url = `/elements/${context.envRuntime.id}`;
 
     const outDirName = this.elements.getElementsDirName();
 
@@ -46,7 +47,7 @@ export class ElementTask implements BuildTask {
     const bundler: Bundler = await context.env.getElementsBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
-    return computeResults(bundlerContext, bundlerResults, outDirName);
+    return computeResults(bundlerContext, bundlerResults, outDirName, this.storageResolver);
   }
 
   getElementsDir(context: ExecutionContext) {
