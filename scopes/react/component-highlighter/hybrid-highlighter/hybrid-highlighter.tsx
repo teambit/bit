@@ -10,7 +10,7 @@ import {
   HighlightClasses,
   HighlighterSize,
 } from '../element-highlighter';
-import { useMultiHighlighter } from '../children-highlighter/use-children-highlighter';
+import { useChildrenHighlighter } from '../children-highlighter';
 import type { MatchRule, ComponentMatchRule } from '../rule-matcher';
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -91,7 +91,7 @@ export function HybridHighlighter({
     }
   );
 
-  useMultiHighlighter({
+  useChildrenHighlighter({
     onChange: setTarget,
     scopeRef: ref,
     scopeClass,

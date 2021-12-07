@@ -90,8 +90,8 @@ export const ChildrenHighlighterWithComponentRule = () => {
 
 // export const HighlightingAllElementsInTheEnterprisePage = () => {
 //   return (
-//     <MultiHighlighter>
+//     <ChildrenHighlighter>
 //       <EnterpriseOffering style={{ height: 300 }} />
-//     </MultiHighlighter>
+//     </ChildrenHighlighter>
 //   );
 // };

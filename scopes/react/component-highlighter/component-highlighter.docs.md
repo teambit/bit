@@ -94,7 +94,7 @@ The Component Highlighter comes in a few different modes:
 In addition to changing the `mode` prop, you can also use convenience exports from the same package:
 
 ```tsx
-import { MultiHighlighter, HoverHighlighter } from '@teambit/react.ui.component-highlighter';
+import { ChildrenHighlighter, HoverHighlighter } from '@teambit/react.ui.component-highlighter';
 
 function example() {
   return (
@@ -103,9 +103,9 @@ function example() {
         <App />
       </HoverHighlighter>
 
-      <MultiHighlighter>
+      <ChildrenHighlighter>
         <App />
-      </MultiHighlighter>
+      </ChildrenHighlighter>
     </div>
   );
 }
