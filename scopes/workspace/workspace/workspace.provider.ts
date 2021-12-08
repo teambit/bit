@@ -33,7 +33,7 @@ import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { Tag } from './tag-cmd';
-import { CapsuleCmd, CapsuleCreateCmd, CapsuleListCmd } from './capsule.cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -186,7 +186,11 @@ export default async function provideWorkspace(
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
   const capsuleCmd = new CapsuleCmd();
-  capsuleCmd.commands = [new CapsuleListCmd(isolator, workspace), new CapsuleCreateCmd(workspace, isolator)];
+  capsuleCmd.commands = [
+    new CapsuleListCmd(isolator, workspace),
+    new CapsuleCreateCmd(workspace, isolator),
+    new CapsuleDeleteCmd(isolator, workspace),
+  ];
   const commands: CommandList = [
     new InstallCmd(workspace, logger),
     new UpdateCmd(workspace),
