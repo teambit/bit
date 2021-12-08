@@ -128,7 +128,7 @@ export class CapsuleDeleteCmd implements Command {
 
   constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
 
-  async report([args], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
+  async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
     const capsuleBaseDirToDelete = (): string | null => {
       if (all) return null;
       if (scopeAspects) return this.workspace.scope.getAspectCapsulePath();

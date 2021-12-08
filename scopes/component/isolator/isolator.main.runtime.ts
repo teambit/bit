@@ -43,7 +43,6 @@ import { IsolatorAspect } from './isolator.aspect';
 import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
-import { DeleteCapsulesOpts } from '@teambit/workspace/capsule.cmd';
 
 const DEFAULT_CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
