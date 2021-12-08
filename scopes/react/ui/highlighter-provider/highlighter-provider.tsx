@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect, ReactNode, FC } from 'react';
 import classnames from 'classnames';
-import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
+import { ComponentHighlighter, HighlightClasses } from '@teambit/react.ui.component-highlighter';
 import queryString from 'query-string';
 import styles from './highlighter-provider.module.scss';
 
 export const PARAM_NAME = 'highlighter';
+const classes: HighlightClasses = { container: styles.label };
 
 export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) => {
   const hash = useHash();
@@ -19,6 +20,7 @@ export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) 
     <ComponentHighlighter
       disabled={!isActive}
       className={classnames(styles.highlighter, isActive && styles.active)}
+      classes={classes}
       size="s"
     >
       {children}
