@@ -2,6 +2,8 @@ import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
@@ -13,6 +15,7 @@ import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';
 import { nodeTemplate } from './templates/node';
+import { NodeAppType } from './node.app-type';
 
 export class NodeMain {
   constructor(
@@ -126,11 +129,20 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
+  static dependencies = [LoggerAspect, EnvsAspect, ApplicationAspect, ReactAspect, GeneratorAspect];
 
-  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
-    const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
+  static async provider([loggerAspect, envs, application, react, generator]: [
+    LoggerMain,
+    EnvsMain,
+    ApplicationMain,
+    ReactMain,
+    GeneratorMain
+  ]) {
+    const logger = loggerAspect.createLogger(NodeAspect.id);
+    const nodeEnv: NodeEnv = envs.merge(new NodeEnv(react.reactEnv), react.reactEnv);
     envs.registerEnv(nodeEnv);
+    const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
+    application.registerAppType(nodeAppType);
     generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate]);
     return new NodeMain(react, nodeEnv, envs);
   }

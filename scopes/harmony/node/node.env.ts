@@ -1,8 +1,15 @@
-import { DependenciesEnv } from '@teambit/envs';
+import { DependenciesEnv, CompilerEnv } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { ReactEnv } from '@teambit/react';
 
-export class NodeEnv implements DependenciesEnv {
+export class NodeEnv implements DependenciesEnv, CompilerEnv {
+  constructor(private react: ReactEnv) {}
+
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
+
+  getCompiler() {
+    return this.react.getCompiler();
+  }
 
   getDependencies(): VariantPolicyConfigObject {
     return {
