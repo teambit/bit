@@ -53,8 +53,9 @@ export class ComponentCompiler {
 
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
+    const deleteDistDir = options.deleteDistDir ?? this.compilerInstance.deleteDistDir;
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
-    if (options.deleteDistDir) {
+    if (deleteDistDir) {
       dataToPersist = new DataToPersist();
       dataToPersist.removePath(new RemovePath(this.distDir));
       dataToPersist.addBasePath(this.workspace.path);
