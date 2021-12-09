@@ -11,7 +11,7 @@ type Edge = { sourceId: string; targetId: string; edge: Dependency };
 
 export class ComponentGraph extends Graph<Component, Dependency> {
   versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
-  seederIds: ComponentID[]; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
+  seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
   constructor(nodes: Node[] = [], edges: Edge[] = []) {
     super(nodes, edges);
     this.versionMap = new Map();
@@ -25,8 +25,11 @@ export class ComponentGraph extends Graph<Component, Dependency> {
    * overrides the super class to eliminate non-seeders components
    */
   findCycles(graph?: this): string[][] {
-    const seederIdsStr = this.getSeederIdsStr();
     const cycles = super.findCycles(graph);
+    if (!this.shouldLimitToSeedersOnly()) {
+      return cycles;
+    }
+    const seederIdsStr = this.getSeederIdsStr();
     const cyclesWithSeeders = cycles.filter((cycle) => {
       const cycleNoVersions = cycle.map((id) => id.split('@')[0]);
       return cycleNoVersions.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
@@ -54,7 +57,8 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           versionSubgraphs.push(versionSubgraph);
         });
         const isSeeder = seederIdsNoVersions.includes(compFullName);
-        if (isSeeder && versionSubgraphs.length > 0) {
+        const shouldDisplayDueToBeingSeeder = !this.shouldLimitToSeedersOnly() || isSeeder;
+        if (shouldDisplayDueToBeingSeeder && versionSubgraphs.length > 0) {
           const duplicateDep = new DuplicateDependency(versions.latestVersionNode, versionSubgraphs);
           duplicateDependencies.set(compFullName, duplicateDep);
         }
@@ -89,6 +93,10 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   runtimeOnly(componentIds: string[]) {
     return this.successorsSubgraph(componentIds, (edge) => edge.attr.type === 'runtime');
+  }
+
+  private shouldLimitToSeedersOnly() {
+    return this.seederIds.length;
   }
 
   private getSeederIdsStr() {

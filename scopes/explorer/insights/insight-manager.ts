@@ -1,3 +1,4 @@
+import pMapSeries from 'p-map-series';
 import InsightAlreadyExists from './exceptions/insight-already-exists';
 import InsightNotFound from './exceptions/insight-not-found';
 import { Insight, InsightResult } from './insight';
@@ -59,18 +60,16 @@ export class InsightManager {
    */
   async run(insightNames: string[], opts: RunInsightOptions): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
-    await Promise.all(
-      insightNames.map(async (insightName) => {
-        const insight = this.getByName(insightName);
-        if (insight) {
-          const insightRes: InsightResult = await insight.run();
-          if (!opts.renderData) {
-            delete insightRes.renderedData;
-          }
-          res.push(insightRes);
+    await pMapSeries(insightNames, async (insightName) => {
+      const insight = this.getByName(insightName);
+      if (insight) {
+        const insightRes: InsightResult = await insight.run();
+        if (!opts.renderData) {
+          delete insightRes.renderedData;
         }
-      })
-    );
+        res.push(insightRes);
+      }
+    });
     return res;
   }
 
