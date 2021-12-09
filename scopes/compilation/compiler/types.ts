@@ -71,6 +71,11 @@ export interface Compiler extends CompilerOptions {
   id: string;
 
   /**
+   * Delete dist folder before writing the new compiled files
+   */
+  deleteDistDir?: boolean;
+
+  /**
    * serialized config of the compiler.
    */
   displayConfig?(): string;
