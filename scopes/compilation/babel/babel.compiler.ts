@@ -35,6 +35,7 @@ export class BabelCompiler implements Compiler {
   }
 
   displayName = 'Babel';
+  deleteDistDir = false;
 
   version() {
     return this.babelModule.version;
