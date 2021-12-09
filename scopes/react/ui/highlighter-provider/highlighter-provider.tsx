@@ -21,7 +21,6 @@ export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) 
       disabled={!isActive}
       className={classnames(styles.highlighter, isActive && styles.active)}
       classes={classes}
-      size="s"
     >
       {children}
     </ComponentHighlighter>
