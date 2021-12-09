@@ -39,6 +39,7 @@ type LaneVersion = { remoteLane: RemoteLaneId; version: string };
 export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux;
   trackDir?: PathLinux;
@@ -59,6 +60,7 @@ export type PathChange = { from: PathLinux; to: PathLinux };
 export default class ComponentMap {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux; // always set for IMPORTED and NESTED.
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
@@ -86,6 +88,7 @@ export default class ComponentMap {
   constructor({
     id,
     files,
+    defaultScope,
     mainFile,
     rootDir,
     trackDir,
@@ -101,6 +104,7 @@ export default class ComponentMap {
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
+    this.defaultScope = defaultScope;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
@@ -135,6 +139,7 @@ export default class ComponentMap {
       scope: this.scope,
       version: this.version,
       files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
+      defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,

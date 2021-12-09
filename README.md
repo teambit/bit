@@ -34,6 +34,8 @@ Bit is a toolchain for component-driven software development.
 </p>
 <p align="left">
   
+**Leave behind monolithic apps and build in a distributed scalable way**.  
+  
 Bit stands at the intersection between product and engineering. It helps you take complex product requirements, and break them down into independent, reusable pieces called "components" that fit well together. Components can be anything independent by nature from a general purpose module, UI components, UI applications, pages, blocks, backend services, content and anything else you might imagine. Think of Bit as a ways to build larger projects from smaller pieces together with more people.
   
 As a developer, imagine having a single mini-repository for each of your components, and a dev experience that makes the development of them seamless together. As an arhictect, imagine having your entire software architecture built from service-oriented components, sorted and controlled on a single architectural graph, it is like scaling Microservices for everything. As a designer, think of composing a design out of symbols, each symbol is indepednent and reusable.

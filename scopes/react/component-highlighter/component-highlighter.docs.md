@@ -94,7 +94,7 @@ The Component Highlighter comes in a few different modes:
 In addition to changing the `mode` prop, you can also use convenience exports from the same package:
 
 ```tsx
-import { MultiHighlighter, HoverHighlighter } from '@teambit/react.ui.component-highlighter';
+import { ChildrenHighlighter, HoverHighlighter } from '@teambit/react.ui.component-highlighter';
 
 function example() {
   return (
@@ -103,9 +103,9 @@ function example() {
         <App />
       </HoverHighlighter>
 
-      <MultiHighlighter>
+      <ChildrenHighlighter>
         <App />
-      </MultiHighlighter>
+      </ChildrenHighlighter>
     </div>
   );
 }
@@ -153,6 +153,15 @@ For example:
 </ComponentHighlighter>
 ```
 
+You can also filter by component id, using the `componentRule` prop:
+
+```tsx
+<ComponentHighlighter componentRule="teambit.design/ui/icon-button">
+  <Paragraph>will not be highlighted</Paragraph>
+  <Button>this will be highlighted</Button>
+</ComponentHighlighter>
+```
+
 ## Customization
 
 Use these CSS variables to edit the highlighter color
@@ -161,6 +170,7 @@ Use these CSS variables to edit the highlighter color
 --bit-highlighter-color: #eebcc9;
 --bit-highlighter-color-hover: #f6dae2;
 --bit-highlighter-color-active: #e79db1;
+--bit-highlighter-shadow: 0px 11px 29px 0px rgba(0, 0, 0, 0.23));
 ```
 
 While it is preferred to use the css variables, you can also set them using react props:

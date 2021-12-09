@@ -1,4 +1,4 @@
-export { ArtifactDefinition } from './artifact-definition';
+export { ArtifactDefinition, ArtifactModelDefinition } from './artifact-definition';
 export { ExtensionArtifact } from './extension-artifact';
 export { Artifact } from './artifact';
 export { ArtifactList } from './artifact-list';
