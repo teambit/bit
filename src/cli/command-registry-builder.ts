@@ -51,7 +51,6 @@ import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Snap from './commands/public-cmds/snap-cmd';
 import Status from './commands/public-cmds/status-cmd';
-import Switch from './commands/public-cmds/switch-cmd';
 import Test from './commands/public-cmds/test-cmd';
 import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
@@ -153,8 +152,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Doctor(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Graph(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Switch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Fetch(),
       new RunAction(),
