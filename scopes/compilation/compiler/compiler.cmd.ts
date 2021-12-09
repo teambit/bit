@@ -28,6 +28,7 @@ export class CompileCmd implements Command {
     ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],
     ['j', 'json', 'return the compile results in json format'],
+    ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
   ] as CommandOptions;
 
   constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
@@ -41,7 +42,6 @@ export class CompileCmd implements Command {
     await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdReport,
-      deleteDistDir: true,
     });
     const compileTimeLength = process.hrtime(startTimestamp);
 
@@ -66,7 +66,6 @@ export class CompileCmd implements Command {
     const compileResults = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdJson,
-      deleteDistDir: true,
     });
     return {
       data: compileResults,
