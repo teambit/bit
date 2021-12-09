@@ -717,6 +717,7 @@ export class Workspace implements ComponentFactory {
    * to write the .bitmap file once completed, run "await this.writeBitMap();"
    */
   async track(trackData: TrackData): Promise<TrackResult> {
+    const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
     const addComponent = new AddComponents(
       { consumer: this.consumer },
       {
@@ -724,7 +725,7 @@ export class Workspace implements ComponentFactory {
         id: trackData.componentName,
         main: trackData.mainFile,
         override: false,
-        defaultScope: trackData.defaultScope,
+        defaultScope,
       }
     );
     const result = await addComponent.add();
@@ -732,6 +733,26 @@ export class Workspace implements ComponentFactory {
     const componentName = addedComponent?.id.name || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
+  }
+
+  /**
+   * scopes in bit.dev are "owner.collection".
+   * we might have the scope-name only without the owner and we need to retrieve it from the defaultScope in the
+   * workspace.jsonc file.
+   *
+   * @param scopeName scopeName that might not have the owner part.
+   * @returns full scope name
+   */
+  private async addOwnerToScopeName(scopeName: string): Promise<string> {
+    if (scopeName.includes('.')) return scopeName; // it has owner.
+    const isSelfHosted = !(await this.isHostedByBit(scopeName));
+    if (isSelfHosted) return scopeName;
+    const wsDefaultScope = this.defaultScope;
+    if (!wsDefaultScope.includes('.')) {
+      throw new Error(`the entered scope has no owner nor the defaultScope in workspace.jsonc`);
+    }
+    const [owner] = wsDefaultScope.split('.');
+    return `${owner}.${scopeName}`;
   }
 
   async write(rootPath: string, component: Component) {
@@ -1458,6 +1479,16 @@ export class Workspace implements ComponentFactory {
       });
       return filtered;
     };
+  }
+
+  /**
+   * whether a scope is hosted by Bit cloud.
+   * otherwise, it is self-hosted
+   */
+  private async isHostedByBit(scopeName: string): Promise<boolean> {
+    // TODO: once scope create a new API for this, replace it with the new one
+    const remotes = await this.scope._legacyRemotes();
+    return remotes.isHub(scopeName);
   }
 
   /**
