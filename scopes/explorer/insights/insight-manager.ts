@@ -60,6 +60,9 @@ export class InsightManager {
    */
   async run(insightNames: string[], opts: RunInsightOptions): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
+    // the reason for not using Promise.all here is that the current both insights building the graph.
+    // if it happens at the same time, some props are not populated in one of the instances. it obviously
+    // should be fixed in the GraphBuilder class. see "todo" there.
     await pMapSeries(insightNames, async (insightName) => {
       const insight = this.getByName(insightName);
       if (insight) {

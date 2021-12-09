@@ -10,6 +10,12 @@ type GetGraphOpts = {
 type BuildFromLegacyGraphOpts = {
   host?: ComponentFactory;
 };
+
+/**
+ * @todo: potential issues with the current way the class is built.
+ * it's possible to call `getGraph` multiple times and at the same time (Promise.all).
+ * which makes the _graph prop and other props unpredictable.
+ */
 export class GraphBuilder {
   _graph?: ComponentGraph;
   _initialized = false;
