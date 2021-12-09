@@ -2495,15 +2495,15 @@ __metadata:
   linkType: hard
 
 "@graphql-tools/import@npm:^6.2.4, @graphql-tools/import@npm:^6.2.6":
-  version: 6.6.1
-  resolution: "@graphql-tools/import@npm:6.6.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Fimport%2F-%2Fimport-6.6.1.tgz"
+  version: 6.6.2
+  resolution: "@graphql-tools/import@npm:6.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Fimport%2F-%2Fimport-6.6.2.tgz"
   dependencies:
-    "@graphql-tools/utils": 8.5.3
+    "@graphql-tools/utils": 8.5.4
     resolve-from: 5.0.0
     tslib: ~2.3.0
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 392ce25c15875e94883ac092300ca1d1cac8d6f78e0cf0050632c3d672cc454a0fbda86a465d23ead512218ebf28d331fd3d6c68d41b524310277a8e5fa8b53b
+  checksum: 32ebcdf0de1ad137e37ec173fe64bb91b6e8f1fced98ba7228cff331c982ad65c38d82899199e087cc2a406a3115e1e10378bc834308edc426c1692aa96ed422
   languageName: node
   linkType: hard
 
@@ -2742,14 +2742,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/utils@npm:8.5.3, @graphql-tools/utils@npm:^8.5.1":
-  version: 8.5.3
-  resolution: "@graphql-tools/utils@npm:8.5.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Futils%2F-%2Futils-8.5.3.tgz"
+"@graphql-tools/utils@npm:8.5.4, @graphql-tools/utils@npm:^8.5.1":
+  version: 8.5.4
+  resolution: "@graphql-tools/utils@npm:8.5.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Futils%2F-%2Futils-8.5.4.tgz"
   dependencies:
     tslib: ~2.3.0
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: f5f8e82c46f205c0d48c2d6d160e28183706a86755e7ea31db6e54b32da7db9eecf988d0935538e27cc3706b5031b75798dc85532e11724fdb4578a9a1b00450
+  checksum: 9d20be6fb50ce723bd9cff79462bbb82cb490a18f04619b8e1e5e82ad92f9a5fa0365933f0b2fcef95fcd124ff204858858aa2ff49e68a4cede57c79892bc2dd
   languageName: node
   linkType: hard
 
@@ -28232,12 +28232,12 @@ __metadata:
   linkType: hard
 
 "postcss-selector-parser@npm:^6.0.2, postcss-selector-parser@npm:^6.0.4, postcss-selector-parser@npm:^6.0.5":
-  version: 6.0.6
-  resolution: "postcss-selector-parser@npm:6.0.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-selector-parser%2F-%2Fpostcss-selector-parser-6.0.6.tgz"
+  version: 6.0.7
+  resolution: "postcss-selector-parser@npm:6.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-selector-parser%2F-%2Fpostcss-selector-parser-6.0.7.tgz"
   dependencies:
     cssesc: ^3.0.0
     util-deprecate: ^1.0.2
-  checksum: 3602758798048bffbd6a97d6f009b32a993d6fd2cc70775bb59593e803d7fa8738822ecffb2fafc745edf7fad297dad53c30d2cfe78446a7d3f4a4a258cb15b2
+  checksum: 661808ad629e3f289e0d237fbe9bb13766dadd2d548ec09ae86f68118f5d98be0f25bbaf5cd88486c5416e2eefaa9f73c59c2fc98dc370872fa51b250c7d1d9c
   languageName: node
   linkType: hard
 
