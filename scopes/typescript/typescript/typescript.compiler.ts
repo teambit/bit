@@ -32,6 +32,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   displayName = 'TypeScript';
+  deleteDistDir = false;
 
   displayConfig() {
     return this.stringifyTsconfig(this.options.tsconfig);

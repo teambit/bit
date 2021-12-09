@@ -1,4 +1,6 @@
 import { ElementsWrapperContext, ElementsWrapperFn } from '@teambit/elements';
+import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
+
 import decamelize from 'decamelize';
 
 export type GetWrapperOpts = {
@@ -11,7 +13,7 @@ export function getWrapperTemplateFn({ elementsPrefix = 'x' }: GetWrapperOpts) {
     const elementName = elementsPrefix ? `${elementsPrefix}-${kababName}` : kababName;
     return `import React from 'react';
 import ReactDOM from 'react-dom';
-import Component from '${context.mainFilePath}';
+import Component from '${toWindowsCompatiblePath(context.mainFilePath)}';
 class ${context.componentName} extends HTMLElement {
   connectedCallback() {
     const mountPoint = document.createElement('span');
