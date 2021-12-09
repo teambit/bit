@@ -1,31 +1,16 @@
-$borderRadius: 8px;
-$gap: 2px;
+$borderRadius: 0.5em;
+$gap: 0.125em;
 
 .componentStrip {
   display: flex;
+  width: fit-content; // for correct shadow size
 
-  font-size: 14px;
-  line-height: 16px;
   border-radius: $borderRadius;
-  box-shadow: 0px 11px 29px 0px rgba(0, 0, 0, 0.23);
-
-  &[data-size='s'] {
-    font-size: 12px;
-    line-height: 16px;
-  }
-
-  &[data-size='m'] {
-    font-size: 14px;
-    line-height: 16px;
-  }
-
-  &[data-size='l'] {
-    font-size: 16px;
-    line-height: 24px;
-  }
+  box-shadow: var(--bit-highlighter-shadow);
 
   > * {
-    padding: 4px 8px;
+    padding: 0 0.5em;
+    line-height: 1.5; //use line height to get rounder values than 0.25em padding
 
     transition: filter 300ms, background-color 300ms;
     transform: translateZ(0); //fix blurriness in Safari

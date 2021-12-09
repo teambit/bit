@@ -14,7 +14,8 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "resolveJsonModule": true
   },
   "exclude": [
     "dist"

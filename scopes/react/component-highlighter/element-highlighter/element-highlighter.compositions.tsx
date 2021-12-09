@@ -28,7 +28,7 @@ export const HighlightedElement = ({ style, targetStyle, watchMotion, className,
   const target = targetElement && { ...mockTarget, element: targetElement };
 
   return (
-    <div className={className} style={{ padding: '16px 16px 40px 16px', width: 300 }}>
+    <div className={className} style={{ padding: '16px 16px 40px 16px', width: 300, fontFamily: 'sans-serif' }}>
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
@@ -56,9 +56,9 @@ export const Customized = () => {
 export const Sizes = () => {
   return (
     <div>
-      <HighlightedElement size="s" />
-      <HighlightedElement size="m" />
-      <HighlightedElement size="l" />
+      <HighlightedElement style={{ fontSize: 10 }} />
+      <HighlightedElement style={{ fontSize: 14 }} />
+      <HighlightedElement style={{ fontSize: 18 }} />
     </div>
   );
 };

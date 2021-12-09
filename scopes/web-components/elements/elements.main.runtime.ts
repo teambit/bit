@@ -53,7 +53,9 @@ export class ElementsMain {
   async getElementUrl(component: Component): Promise<string | undefined> {
     const artifacts = await this.getElements(component);
     // In case there are no elements return as undefined
+    if (!artifacts) return undefined;
     if (artifacts?.isEmpty()) return undefined;
+
     const url = artifacts?.getMainElementsFileUrl();
     // In case of public url (like cdn) return the public url
     if (url) {
