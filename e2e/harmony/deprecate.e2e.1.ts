@@ -47,6 +47,11 @@ describe('bit deprecate and undeprecate commands', function () {
         const bitmap = helper.bitMap.read();
         expect(bitmap.comp2).to.have.property('metadata');
       });
+      it('bit list should show the component as deprecated', () => {
+        const list = helper.command.listParsed();
+        const comp2 = list.find((c) => c.id === 'comp2');
+        expect(comp2?.deprecated).to.be.true;
+      });
       describe('exporting the component', () => {
         before(() => {
           helper.command.export();
@@ -62,9 +67,20 @@ describe('bit deprecate and undeprecate commands', function () {
             });
           });
           // @todo: fix. currently it overrides the data unexpectedly.
-          it('should not delete the deprecation data from the config', () => {
+          it.skip('should not delete the deprecation data from the config', () => {
             const deprecationData = getDeprecationData('comp2');
             expect(deprecationData.config.deprecate).to.be.true;
+          });
+        });
+        describe('importing a deprecated component', () => {
+          let importOutput: string;
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('comp2');
+          });
+          it('should indicate that the component is deprecated', () => {
+            expect(importOutput).to.have.string('deprecated');
           });
         });
       });

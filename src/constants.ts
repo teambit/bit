@@ -483,6 +483,7 @@ export enum Extensions {
   compiler = 'teambit.compilation/compiler',
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
+  deprecation = 'teambit.component/deprecation',
 }
 
 export enum BuildStatus {
