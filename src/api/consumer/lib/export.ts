@@ -158,7 +158,6 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
   const nonExistOnBitMap = new BitIds();
   componentsIds.forEach((componentsId) => {
     const resultId = bitMap.updateComponentId(componentsId, true);
-    bitMap.removeMetadata(resultId);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (resultId.hasVersion()) updatedIds.push(resultId);
     else nonExistOnBitMap.push(resultId);
