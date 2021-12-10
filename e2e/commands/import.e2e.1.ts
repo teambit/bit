@@ -518,32 +518,6 @@ describe('bit import', function () {
     it.skip('should create bit.json file with envs in the folder', () => {});
   });
 
-  describe('import deprecated component', () => {
-    let output;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fs.createFile('src', 'imprel.js');
-      helper.fs.createFile('src', 'imprel.spec.js');
-      helper.fs.createFile('src/utils', 'myUtil.js');
-      helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
-        t: 'src/imprel.spec.js',
-        m: 'src/imprel.js',
-        i: 'imprel/imprel',
-      });
-      helper.command.tagComponent('imprel/imprel');
-      helper.command.deprecateComponent('imprel/imprel');
-      helper.command.exportComponent('imprel/imprel');
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      output = helper.command.importComponent('imprel/imprel');
-    });
-    it('should import component with deprecated msg', () => {
-      expect(output).to.have.string('successfully imported one component');
-      expect(output).to.have.string('imprel/imprel');
-      // expect(output).to.have.string('Deprecated');
-    });
-  });
-
   describe('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {

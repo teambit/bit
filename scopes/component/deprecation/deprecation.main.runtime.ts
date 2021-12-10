@@ -3,6 +3,8 @@ import { ComponentMain, ComponentAspect, Component } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { deprecateMany, undeprecateMany } from '@teambit/legacy/dist/scope/component-ops/components-deprecation';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
 import { DeprecationFragment } from './deprecation.fragment';
@@ -37,6 +39,13 @@ export class DeprecationMain {
   }
 
   async deprecate(id: string, newId?: string) {
+    if (this.workspace.isLegacy) {
+      const bitId = this.workspace.consumer.getParsedId(id);
+      await deprecateMany(this.workspace.consumer.scope, new BitIds(bitId));
+      return {
+        deprecate: true,
+      };
+    }
     const componentId = await this.workspace.resolveComponentId(id);
     const results = await this.workspace.addComponentMetadata(DeprecationAspect.id, componentId, {
       deprecate: true,
@@ -47,6 +56,13 @@ export class DeprecationMain {
   }
 
   async unDeprecate(id: string) {
+    if (this.workspace.isLegacy) {
+      const bitId = this.workspace.consumer.getParsedId(id);
+      await undeprecateMany(this.workspace.consumer.scope, new BitIds(bitId));
+      return {
+        deprecate: false,
+      };
+    }
     const componentId = await this.workspace.resolveComponentId(id);
     const results = await this.workspace.addComponentMetadata(DeprecationAspect.id, componentId, {
       deprecate: false,
