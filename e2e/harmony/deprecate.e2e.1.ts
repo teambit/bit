@@ -43,9 +43,9 @@ describe('bit deprecate and undeprecate commands', function () {
         const deprecationData = getDeprecationData('comp2');
         expect(deprecationData.config.deprecate).to.be.true;
       });
-      it('.bitmap should keep containing the metadata', () => {
+      it('.bitmap should not containing the metadata', () => {
         const bitmap = helper.bitMap.read();
-        expect(bitmap.comp2).to.have.property('metadata');
+        expect(bitmap.comp2).to.not.have.property('metadata');
       });
       it('bit list should show the component as deprecated', () => {
         const list = helper.command.listParsed();
@@ -81,6 +81,17 @@ describe('bit deprecate and undeprecate commands', function () {
           });
           it('should indicate that the component is deprecated', () => {
             expect(importOutput).to.have.string('deprecated');
+          });
+        });
+        describe('bit list of a remote deprecated component', () => {
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+          });
+          it('should indicate that the component is deprecated', () => {
+            const list = helper.command.listRemoteScopeParsed();
+            const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+            expect(comp2.deprecated).to.equal(true);
           });
         });
       });

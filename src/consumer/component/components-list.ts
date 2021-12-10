@@ -487,10 +487,12 @@ export default class ComponentsList {
       ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
       : components;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    return componentsSorted.map((component: ModelComponent) => ({
-      id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated,
-    }));
+    return Promise.all(
+      componentsSorted.map(async (component: ModelComponent) => ({
+        id: component.toBitIdWithLatestVersion(),
+        deprecated: await component.isDeprecated(scope.objects),
+      }))
+    );
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | BitId[]

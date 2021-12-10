@@ -43,7 +43,7 @@ describe('bit deprecate and undeprecate commands', function () {
       scopeAfterDeprecation = helper.scopeHelper.cloneLocalScope();
     });
     it('should show deprecated component', () => {
-      expect(output).to.have.string('deprecated components: bar/foo');
+      expect(output).to.have.string('component "bar/foo" has been deprecated successfully');
     });
     it('should list components with deprecated components', () => {
       const listOutput = helper.command.listLocalScope();
@@ -62,7 +62,7 @@ describe('bit deprecate and undeprecate commands', function () {
         output = helper.command.undeprecateComponent('bar/foo');
       });
       it('should indicate the undeprecated components', () => {
-        expect(output).to.have.string('undeprecated components: bar/foo');
+        expect(output).to.have.string('component "bar/foo" has been undeprecated successfully');
       });
       it('bit list should not show the component as deprecated', () => {
         const listOutput = helper.command.listLocalScope();
@@ -71,7 +71,8 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
-  describe('with remote scope', () => {
+  // the option to deprecate a remote component is disabled now
+  describe.skip('with remote scope', () => {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -107,7 +108,8 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
-  describe('with remote scope with dependencies', () => {
+  // the option to deprecate a remote component is disabled now
+  describe.skip('with remote scope with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
