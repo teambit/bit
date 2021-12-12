@@ -24,6 +24,7 @@ export function toRootElement(element: HTMLElement | null) {
   return null;
 }
 
+/** @deprecated */
 export function domToReact(element: HTMLElement | null) {
   const components = domToReacts(element);
   return components.pop();

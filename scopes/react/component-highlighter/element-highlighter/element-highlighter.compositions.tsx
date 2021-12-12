@@ -1,10 +1,15 @@
+import { componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import React, { useState, createRef, useEffect, CSSProperties } from 'react';
-import { ElementHighlighter, HighlightTarget } from './element-highlighter';
+import { ElementHighlighter, HighlighterSize, HighlightTarget } from './element-highlighter';
 
 const mockTarget: Partial<HighlightTarget> = {
-  id: 'teambit.design/ui/icon-button',
-  link: 'https://bit.dev/teambit/design/ui/icon-button',
-  scopeLink: 'https://bit.dev/teambit/design',
+  components: [
+    {
+      [componentMetaField]: {
+        id: 'teambit.design/ui/icon-button@1.6.2',
+      },
+    },
+  ],
 };
 
 type HighlightedElementProps = {
@@ -12,9 +17,10 @@ type HighlightedElementProps = {
   targetStyle?: CSSProperties;
   className?: string;
   watchMotion?: boolean;
+  size?: HighlighterSize;
 };
 
-export const HighlightedElement = ({ style, targetStyle, watchMotion, className }: HighlightedElementProps) => {
+export const HighlightedElement = ({ style, targetStyle, watchMotion, className, size }: HighlightedElementProps) => {
   const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
 
@@ -22,11 +28,13 @@ export const HighlightedElement = ({ style, targetStyle, watchMotion, className 
   const target = targetElement && { ...mockTarget, element: targetElement };
 
   return (
-    <div className={className} style={{ padding: '16px 16px 50px 16px', width: 300 }}>
+    <div className={className} style={{ padding: '16px 16px 40px 16px', width: 300, fontFamily: 'sans-serif' }}>
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
-      {target && <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" />}
+      {target && (
+        <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" size={size} />
+      )}
     </div>
   );
 };
@@ -46,7 +54,13 @@ export const Customized = () => {
 };
 
 export const Sizes = () => {
-  return <HighlightedElement style={{ fontSize: '16px' }} />;
+  return (
+    <div>
+      <HighlightedElement style={{ fontSize: 10 }} />
+      <HighlightedElement style={{ fontSize: 14 }} />
+      <HighlightedElement style={{ fontSize: 18 }} />
+    </div>
+  );
 };
 
 export const MovingElement = () => {

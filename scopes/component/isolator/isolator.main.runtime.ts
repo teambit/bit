@@ -406,9 +406,14 @@ export class IsolatorMain {
   }
 
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string): PathOsBasedAbsolute {
-    const capsulesRootBaseDir =
-      rootBaseDir || this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
+    const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
     return path.join(capsulesRootBaseDir, hash(baseDir));
+  }
+
+  async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
+    const dirToDelete = capsuleBaseDir ? this.getCapsulesRootDir(capsuleBaseDir) : this.getRootDirOfAllCapsules();
+    await fs.remove(dirToDelete);
+    return dirToDelete;
   }
 
   private async createCapsulesFromComponents(
@@ -422,6 +427,10 @@ export class IsolatorMain {
       })
     );
     return capsules;
+  }
+
+  private getRootDirOfAllCapsules(): string {
+    return this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
   }
 
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {

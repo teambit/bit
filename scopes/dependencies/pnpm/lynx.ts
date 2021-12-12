@@ -1,18 +1,9 @@
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
-// import createClient from '@pnpm/client'
-// import { createFetchFromRegistry } from '@pnpm/fetch';
 import { streamParser } from '@pnpm/logger';
-// import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
-import { createNewStoreController } from '@pnpm/store-connection-manager';
-// TODO: this should be taken from - @pnpm/store-connection-manager
-// it's not taken from there since it's not exported.
-// here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
-import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
+import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -21,13 +12,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-// import execa from 'execa';
-// import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from '@pnpm/core';
-// import { ReporterFunction } from '@pnpm/core/lib/types';
-// import { createResolver } from './create-resolver';
-// import {isValidPath} from '@teambit/legacy/dist/utils';
-// import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
@@ -39,43 +24,17 @@ type RegistriesMap = {
   [registryName: string]: string;
 };
 
-// TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
-// function getReporter(logger: Logger): ReporterFunction {
-//   return ((logObj) => {
-//     // TODO: print correctly not the entire object
-//     logger.console(logObj)
-//   });
-// }
-
 async function createStoreController(
+  rootDir: string,
   storeDir: string,
   cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {}
-): Promise<StoreController> {
-  // const fetchFromRegistry = createFetchFromRegistry({});
-  // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
-  // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
-  //   metaCache: new Map(),
-  //   storeDir,
-  // });
-  // const fetcher = createFetcher(fetchFromRegistry, getCredentials, {});
-  // const { resolve, fetchers } = createClient({
-  //   // authConfig,
-  //   metaCache: new Map(),
-  //   // retry: retryOpts,
-  //   storeDir,
-  //   // ...resolveOpts,
-  //   // ...fetchOpts,
-  // })
-  // const storeController = await createStore(resolve, fetchers, {
-  //   storeDir,
-  //   verifyStoreIntegrity: true,
-  // });
-  // const pnpmConfig = await readConfig();
+): Promise<{ ctrl: StoreController; dir: string }> {
   const authConfig = getAuthConfig(registries);
-  const opts: CreateNewStoreControllerOptions = {
+  const opts: CreateStoreControllerOptions = {
+    dir: rootDir,
     cacheDir,
     storeDir,
     rawConfig: authConfig,
@@ -91,8 +50,9 @@ async function createStoreController(
     maxSockets: networkConfig.maxSockets,
     networkConcurrency: networkConfig.networkConcurrency,
   };
-  const { ctrl } = await createNewStoreController(opts);
-  return ctrl;
+  // Although it would be enough to call createNewStoreController(),
+  // that doesn't resolve the store directory location.
+  return createOrConnectStoreController(opts);
 }
 
 async function generateResolverAndFetcher(
@@ -134,6 +94,9 @@ export async function install(
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
+  options?: {
+    overrides?: Record<string, string>;
+  },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -172,17 +135,23 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(storeDir, cacheDir, registries, proxyConfig, networkConfig);
-  const opts = {
+  const storeController = await createStoreController(
+    rootPathToManifest.rootDir,
     storeDir,
+    cacheDir,
+    registries,
+    proxyConfig,
+    networkConfig
+  );
+  const opts = {
+    storeDir: storeController.dir,
     dir: rootPathToManifest.rootDir,
-    storeController,
+    storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
     registries: registriesMap,
     rawConfig: authConfig,
-    // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
-    // reporter: logger ? getReporter(logger) : undefined,
+    overrides: options?.overrides,
   };
 
   const stopReporting = defaultReporter({
@@ -191,8 +160,6 @@ export async function install(
     },
     reportingOptions: {
       appendOnly: false,
-      // logLevel: 'error' as LogLevel,
-      // streamLifecycleOutput: opts.config.stream,
       throttleProgress: 200,
     },
     streamParser,
@@ -229,7 +196,6 @@ export async function resolveRemoteVersion(
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     const version = isValidRange ? parsedPackage.version : val.manifest.version;
-    // const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
 
     return {
       packageName: val.manifest.name,

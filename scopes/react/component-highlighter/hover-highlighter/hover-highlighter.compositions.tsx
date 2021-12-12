@@ -6,7 +6,7 @@ export const ShowWhenHovering = () => {
   const [disabled, setDisabled] = useState<boolean>(false);
 
   return (
-    <div style={{ padding: '16px 50px 32px 16px', minWidth: 300 }}>
+    <div style={{ padding: '16px 50px 32px 16px', minWidth: 300, fontFamily: 'sans-serif' }}>
       <HoverHighlighter style={{ padding: 16 }} disabled={disabled}>
         <div>
           <br />

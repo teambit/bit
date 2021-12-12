@@ -1,11 +1,8 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
-.container {
-  font-size: 12px;
-}
-
 .label {
-  font-family: sans-serif;
+  // space between the label and the target
+  // keep this space so users can move their cursor in this space.
   padding: 8px;
 }
 

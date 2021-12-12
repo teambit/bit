@@ -1,9 +1,12 @@
 import React from 'react';
 import classnames from 'classnames';
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
-import { Label, LabelContainer, Placement } from '../label';
+import { Label, LabelContainer, Placement, LabelSize } from '../label';
 import { excludeHighlighterAtt } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
+
+export type HighlighterSize = LabelSize;
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** target element to highlight */
@@ -14,19 +17,16 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
   classes?: HighlightClasses;
   /** continually update highlighter to match moving elements */
   watchMotion?: boolean;
+  size?: HighlighterSize;
 }
 
 export { Placement };
 
 export type HighlightTarget = {
-  id?: string;
+  /** element to show the highlight at */
   element: HTMLElement;
-  /** e.g. 'https://bit.dev/teambit/base-ui/elements/dots-loader', */
-  link?: string;
-  /** e.g. 'https://bit.dev/teambit/base-ui' */
-  scopeLink?: string;
-  /** use full production url, or local workspace url */
-  local?: boolean;
+  /** components with metadata to show in the label */
+  components?: ComponentMetaHolder[];
 };
 
 export type HighlightClasses = {
@@ -41,6 +41,7 @@ export function ElementHighlighter({
   watchMotion = true,
   className,
   classes,
+  size,
   ...props
 }: ElementHighlighterProps) {
   return (
@@ -51,20 +52,14 @@ export function ElementHighlighter({
         watchMotion={watchMotion}
       />
 
-      {target.id && (
+      {target.components && (
         <LabelContainer
           className={styles.label}
           targetRef={target.element}
           placement={placement}
           watchMotion={watchMotion}
         >
-          <Label
-            componentId={target.id}
-            link={target.link}
-            scopeLink={target.scopeLink}
-            local={target.local}
-            className={classes?.label}
-          />
+          <Label components={target.components} className={classes?.label} size={size} />
         </LabelContainer>
       )}
     </div>
