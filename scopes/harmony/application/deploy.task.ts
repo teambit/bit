@@ -5,10 +5,10 @@ import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 
-export const BUILD_UI_TASK = 'build_ui_application';
+export const BUILD_TASK = 'build_application';
 
 export class DeployTask implements BuildTask {
-  name = BUILD_UI_TASK;
+  name = BUILD_TASK;
   aspectId = ApplicationAspect.id;
 
   constructor(private application: ApplicationMain) {}

@@ -1,3 +1,4 @@
+import { Capsule } from '@teambit/isolator';
 import { BuildContext } from '@teambit/builder';
 
 export interface DeployContext extends BuildContext {
@@ -24,5 +25,5 @@ export type NodeAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: (context: DeployContext) => Promise<void>;
+  deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>;
 };
