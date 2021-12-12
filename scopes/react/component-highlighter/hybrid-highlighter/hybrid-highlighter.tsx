@@ -3,13 +3,7 @@ import classnames from 'classnames';
 import { v4 } from 'uuid';
 
 import { useHoverHighlighter } from '../hover-highlighter';
-import {
-  ElementHighlighter,
-  HighlightTarget,
-  Placement,
-  HighlightClasses,
-  HighlighterSize,
-} from '../element-highlighter';
+import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
 import { useChildrenHighlighter } from '../children-highlighter';
 import type { MatchRule, ComponentMatchRule } from '../rule-matcher';
 
@@ -45,7 +39,6 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
   bgColor?: string;
   bgColorHover?: string;
   bgColorActive?: string;
-  size?: HighlighterSize;
 }
 
 /** automatically highlight components on hover */
@@ -65,7 +58,6 @@ export function HybridHighlighter({
   bgColor,
   bgColorHover,
   bgColorActive,
-  size,
   children,
   ...rest
 }: HybridHighlighterProps) {
@@ -132,7 +124,6 @@ export function HybridHighlighter({
           style={highlightStyle}
           placement={placement}
           watchMotion={watchMotion}
-          size={size}
         />
       ))}
     </div>
