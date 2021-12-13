@@ -68,6 +68,7 @@ export default class Status implements LegacyCommand {
     componentsWithTrackDirs,
     softTaggedComponents,
     snappedComponents,
+    laneName,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -236,26 +237,29 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
+    const laneStr = laneName ? `\nchecked out to "${chalk.bold(laneName)}" lane` : '';
+
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
-    return (
+    const statusMsg =
       importPendingWarning +
-        [
-          outdatedStr,
-          pendingMergeStr,
-          compWithConflictsStr,
-          newComponentsOutput,
-          modifiedComponentOutput,
-          snappedComponentsOutput,
-          stagedComponentsOutput,
-          autoTagPendingOutput,
-          invalidComponentOutput,
-          individualFilesOutput,
-          trackDirOutput,
-        ]
-          .filter((x) => x)
-          .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
-        troubleshootingStr || chalk.yellow(statusWorkspaceIsCleanMsg)
-    );
+      [
+        outdatedStr,
+        pendingMergeStr,
+        compWithConflictsStr,
+        newComponentsOutput,
+        modifiedComponentOutput,
+        snappedComponentsOutput,
+        stagedComponentsOutput,
+        autoTagPendingOutput,
+        invalidComponentOutput,
+        individualFilesOutput,
+        trackDirOutput,
+      ]
+        .filter((x) => x)
+        .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      troubleshootingStr;
+
+    return (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
   }
 }
