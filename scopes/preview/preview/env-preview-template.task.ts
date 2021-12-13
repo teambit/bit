@@ -20,6 +20,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const envComponents = context.components.filter((component) => this.envs.getEnvFromComponent(component));
     if (!envComponents.length) return { componentsResults: [] };
+
     const targets: Target[] = await Promise.all(
       envComponents.map(async (envComponent) => {
         // const module = await this.getPreviewModule(envComponent);
@@ -47,6 +48,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const bundlerContext: BundlerContext = Object.assign({}, context, {
       targets,
       entry: [],
+      development: context.dev,
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, []);

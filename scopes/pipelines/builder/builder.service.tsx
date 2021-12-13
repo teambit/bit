@@ -20,7 +20,7 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
-export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[]; skipTests?: boolean };
+export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[]; skipTests?: boolean; dev?: boolean };
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -98,6 +98,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
           previousTasksResults: [],
+          dev: options.dev,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
