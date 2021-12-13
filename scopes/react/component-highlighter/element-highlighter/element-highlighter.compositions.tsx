@@ -1,6 +1,6 @@
 import { componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import React, { useState, createRef, useEffect, CSSProperties } from 'react';
-import { ElementHighlighter, HighlighterSize, HighlightTarget } from './element-highlighter';
+import { ElementHighlighter, HighlightTarget } from './element-highlighter';
 
 const mockTarget: Partial<HighlightTarget> = {
   components: [
@@ -17,10 +17,9 @@ type HighlightedElementProps = {
   targetStyle?: CSSProperties;
   className?: string;
   watchMotion?: boolean;
-  size?: HighlighterSize;
 };
 
-export const HighlightedElement = ({ style, targetStyle, watchMotion, className, size }: HighlightedElementProps) => {
+export const HighlightedElement = ({ style, targetStyle, watchMotion, className }: HighlightedElementProps) => {
   const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
 
@@ -32,9 +31,7 @@ export const HighlightedElement = ({ style, targetStyle, watchMotion, className,
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
-      {target && (
-        <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" size={size} />
-      )}
+      {target && <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" />}
     </div>
   );
 };
