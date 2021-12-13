@@ -185,6 +185,13 @@ export interface DependencyResolverWorkspaceConfig {
    * of dependencies.
    */
   packageManagerArgs?: string[];
+
+  /*
+   * This field allows to instruct the package manager to override any dependency in the dependency graph.
+   * This is useful to enforce all your packages to use a single version of a dependency, backport a fix,
+   * or replace a dependency with a fork.
+   */
+  overrides?: Record<string, string>;
 }
 
 export interface DependencyResolverVariantConfig {

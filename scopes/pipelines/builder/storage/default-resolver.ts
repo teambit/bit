@@ -1,13 +1,11 @@
 import { Component } from '@teambit/component';
-import { StorageResolver } from './storage-resolver';
-import type { ArtifactList } from '../artifact';
+import { WholeArtifactStorageResolver } from './storage-resolver';
+import type { Artifact } from '../artifact';
 
-export class DefaultResolver implements StorageResolver {
+export class DefaultResolver implements WholeArtifactStorageResolver {
   name = 'default';
 
-  async store(component: Component, artifactList: ArtifactList) {
-    artifactList.artifacts.forEach((artifact) => {
-      artifact.files.populateVinylsFromPaths(artifact.rootDir);
-    });
+  async store(component: Component, artifact: Artifact) {
+    artifact.files.populateVinylsFromPaths(artifact.rootDir);
   }
 }

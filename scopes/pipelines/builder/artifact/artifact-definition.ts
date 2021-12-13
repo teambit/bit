@@ -1,3 +1,5 @@
+import { ArtifactStorageResolver } from '..';
+
 export type ArtifactDefinition = {
   /**
    * name of the artifact.
@@ -48,5 +50,9 @@ export type ArtifactDefinition = {
    * storage resolver. can be used to replace where artifacts are stored.
    * default resolver persists artifacts on scope. (not recommended for large files!)
    */
+  storageResolver?: ArtifactStorageResolver;
+};
+
+export type ArtifactModelDefinition = Omit<ArtifactDefinition, 'storageResolver'> & {
   storageResolver?: string;
 };

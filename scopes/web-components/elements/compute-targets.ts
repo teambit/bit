@@ -46,7 +46,7 @@ async function getEntryFile(
 ): Promise<string> {
   const mainFilePath = getMainFilePath(context, component);
   const entryContent = elementsWrapperFn({ mainFilePath, componentName: component.id.name });
-  const targetPath = join(outputPath, `__element.js`);
+  const targetPath = join(outputPath, `__elements.js`);
   writeFileSync(targetPath, entryContent);
   return targetPath;
 }

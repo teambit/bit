@@ -1,34 +1,36 @@
 import { useEffect, RefObject } from 'react';
 import getXPath from 'get-xpath';
-import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
+import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import {
-  hasComponentMeta,
   componentMetaField,
-  componentMetaProperties,
+  hasComponentMeta,
+  ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
-import { ruleMatcher, MatchRule } from '../rule-matcher';
+import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
-type useMultiHighlighterProps = {
+export type ChildrenHighlighterOptions = {
   onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
   disabled?: boolean;
   scopeRef: RefObject<HTMLElement>;
   scopeClass?: string;
   /** filter highlighter targets by this query selector. (May be a more complex object in the future) */
   rule?: MatchRule;
+  componentRule?: ComponentMatchRule;
 
   // /** automatically update when children update. Use with caution, might be slow */
   // watchDom?: boolean;
 };
 
-export function useMultiHighlighter({
+export function useChildrenHighlighter({
   onChange,
   disabled,
   scopeRef,
   scopeClass: scopeSelector = '',
   rule,
-}: useMultiHighlighterProps) {
+  componentRule,
+}: ChildrenHighlighterOptions) {
   useEffect(() => {
     const nextTargets: Record<string, HighlightTarget> = {};
     const scopeElement = scopeRef.current;
@@ -44,15 +46,17 @@ export function useMultiHighlighter({
     const uniqueRoots = new Set(rootElements);
 
     uniqueRoots.forEach((element) => {
-      const comp = domToReact(element);
-      if (!element || !hasComponentMeta(comp)) return;
+      if (!element) return;
+      const comps = domToReacts(element);
+      const componentsWithMeta = comps.filter(
+        (x) => hasComponentMeta(x) && componentRuleMatcher({ meta: x[componentMetaField] }, componentRule)
+      ) as ReactComponentMetaHolder[];
+
+      if (componentsWithMeta.length < 1) return;
 
       const key = getXPath(element);
-      const meta = comp[componentMetaField];
-      const compId = meta[componentMetaProperties.componentId];
-      const link = meta[componentMetaProperties.homepageUrl];
-      const local = meta[componentMetaProperties.isExported] === false;
-      nextTargets[key] = { element, id: compId, link, local };
+
+      nextTargets[key] = { element, components: componentsWithMeta };
     });
 
     onChange(nextTargets);

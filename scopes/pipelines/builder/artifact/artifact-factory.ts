@@ -3,9 +3,8 @@ import globby from 'globby';
 import { flatten } from 'lodash';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
-import type { StorageResolverSlot } from '../builder.main.runtime';
 import { ArtifactDefinition } from './artifact-definition';
-import { DefaultResolver, StorageResolver } from '../storage';
+import { DefaultResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
 import { Artifact } from './artifact';
 import type { BuildContext, BuildTask } from '../build-task';
@@ -16,14 +15,6 @@ export const DEFAULT_CONTEXT = 'component';
 export type ArtifactMap = ComponentMap<ArtifactList>;
 
 export class ArtifactFactory {
-  constructor(private storageResolverSlot: StorageResolverSlot) {}
-
-  private getResolver(resolvers: StorageResolver[], name?: string) {
-    const defaultResolver = new DefaultResolver();
-    const userResolver = resolvers.find((resolver) => resolver.name === name);
-    return userResolver || defaultResolver;
-  }
-
   private resolvePaths(root: string, def: ArtifactDefinition): string[] {
     const patternsFlattened = flatten(def.globPatterns);
     const paths = globby.sync(patternsFlattened, { cwd: root });
@@ -61,8 +52,7 @@ export class ArtifactFactory {
   }
 
   private getStorageResolver(def: ArtifactDefinition) {
-    const storageResolvers = this.storageResolverSlot.values();
-    return this.getResolver(storageResolvers, def.storageResolver);
+    return def.storageResolver || new DefaultResolver();
   }
 
   private toComponentMap(context: BuildContext, artifactMap: [string, Artifact][]) {
