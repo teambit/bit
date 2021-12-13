@@ -43,9 +43,9 @@ describe('bit deprecate and undeprecate commands', function () {
         const deprecationData = getDeprecationData('comp2');
         expect(deprecationData.config.deprecate).to.be.true;
       });
-      it('.bitmap should not containing the metadata', () => {
+      it('.bitmap should not containing the config', () => {
         const bitmap = helper.bitMap.read();
-        expect(bitmap.comp2).to.not.have.property('metadata');
+        expect(bitmap.comp2).to.not.have.property('config');
       });
       it('bit list should show the component as deprecated', () => {
         const list = helper.command.listParsed();
@@ -56,9 +56,9 @@ describe('bit deprecate and undeprecate commands', function () {
         before(() => {
           helper.command.export();
         });
-        it('should delete the metadata from the .bitmap file.', () => {
+        it('should delete the config from the .bitmap file.', () => {
           const bitmap = helper.bitMap.read();
-          expect(bitmap.comp2).to.not.have.property('metadata');
+          expect(bitmap.comp2).to.not.have.property('config');
         });
         describe('testing some config-merge', () => {
           before(() => {

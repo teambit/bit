@@ -759,7 +759,7 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      this.bitMap.removeMetadata(id);
+      this.bitMap.removeConfig(id);
       const availableOnMain = await isAvailableOnMain(unknownComponent);
       if (!availableOnMain) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);

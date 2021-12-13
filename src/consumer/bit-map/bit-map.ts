@@ -795,9 +795,9 @@ export default class BitMap {
     return newId;
   }
 
-  removeMetadata(id: BitId) {
+  removeConfig(id: BitId) {
     const componentMap = this.getComponent(id);
-    delete componentMap.metadata;
+    delete componentMap.config;
     this.markAsChanged();
   }
 
