@@ -14,7 +14,8 @@ export default function (externalizePeer: boolean, dev?: boolean): Configuration
     // 'react-dom': 'ReactDOM'
     // } : undefined,
     optimization: dev
-      ? {
+      ? undefined
+      : {
           minimize: true,
           minimizer: [
             // This is only used in production mode
@@ -78,8 +79,7 @@ export default function (externalizePeer: boolean, dev?: boolean): Configuration
           // runtimeChunk: {
           // name: (entrypoint) => `runtime-${entrypoint.name}`,
           // },
-        }
-      : undefined,
+        },
 
     plugins: [
       // Generate an asset manifest file with the following content:
