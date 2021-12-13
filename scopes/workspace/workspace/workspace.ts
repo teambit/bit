@@ -874,7 +874,7 @@ export class Workspace implements ComponentFactory {
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
-    const bitMapExtensions = bitMapEntry?.metadata;
+    const bitMapExtensions = bitMapEntry?.config;
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
@@ -1700,21 +1700,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   /**
-   * adds component metadata to the .bitmap file.
+   * adds component config to the .bitmap file.
    * later, upon `bit tag`, the data is saved in the scope.
    * returns a boolean indicating whether a chance has been made.
    */
-  async addComponentMetadata(aspectId: string, id: ComponentID, metadata?: Record<string, any>): Promise<boolean> {
+  async addComponentConfigToBitmap(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.consumer.bitMap.getComponent(id._legacy, { ignoreScopeAndVersion: true });
-    const currentMetadata = (bitMapEntry.metadata ||= {})[aspectId];
-    if (isEqual(currentMetadata, metadata)) {
+    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    if (isEqual(currentConfig, config)) {
       return false; // no changes
     }
-    if (!metadata) {
-      delete bitMapEntry.metadata[aspectId];
+    if (!config) {
+      delete bitMapEntry.config[aspectId];
     } else {
-      bitMapEntry.metadata[aspectId] = metadata;
+      bitMapEntry.config[aspectId] = config;
     }
     this.consumer.bitMap.markAsChanged();
     await this.writeBitMap();
