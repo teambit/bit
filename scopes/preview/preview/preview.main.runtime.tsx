@@ -26,6 +26,7 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
+import { EnvPreviewTemplateTask } from './env-preview-template.task';
 
 const noopResult = {
   results: [],
@@ -42,6 +43,8 @@ export type PreviewConfig = {
 };
 
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
+
+export type GenerateLinkFn = (prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string) => string;
 
 export class PreviewMain {
   constructor(
@@ -101,8 +104,12 @@ export class PreviewMain {
    */
   writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
+    return this.writeLinkContents(contents, dirName, prefix);
+  }
+
+  writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
-    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    const targetPath = join(targetDir, `__${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -197,7 +204,7 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this, this.pkg), new ComponentBundlingStrategy()];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -303,7 +310,7 @@ export class PreviewMain {
     harmony: Harmony
   ) {
     const logger = loggerMain.createLogger(PreviewAspect.id);
-
+    // app.registerApp(new PreviewApp());
     const preview = new PreviewMain(
       harmony,
       previewSlot,
@@ -327,7 +334,8 @@ export class PreviewMain {
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+    if (!config.disabled)
+      builder.registerBuildTasks([new PreviewTask(bundler, preview), new EnvPreviewTemplateTask(preview, envs)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>

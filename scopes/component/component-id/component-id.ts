@@ -1,4 +1,5 @@
 import { BitId } from '@teambit/legacy-bit-id';
+import { camelCase } from 'lodash';
 import { MissingScope } from './exceptions';
 
 /**
@@ -119,12 +120,15 @@ export class ComponentID {
   /**
    * serialize the component ID.
    */
-  toString(opts: { ignoreVersion?: boolean } = {}) {
+  toString(opts: { ignoreVersion?: boolean; fsCompatible?: boolean } = {}) {
     let id = this._legacy;
     if (this._scope && !this._legacy.scope) {
       id = id.changeScope(this._scope);
     }
-    return id.toString(false, opts.ignoreVersion);
+
+    const idStr = id.toString(false, opts.ignoreVersion);
+    if (opts.fsCompatible) return idStr.replace(/\//g, '_').replace(/\./g, '_').replace(/-/g, '_');
+    return idStr;
   }
 
   toObject() {

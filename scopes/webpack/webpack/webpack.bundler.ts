@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { Bundler, BundlerResult, Target } from '@teambit/bundler';
+import { Bundler, BundlerResult, Asset, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
-import { Compiler, Configuration } from 'webpack';
+import { Compiler, Configuration, StatsCompilation } from 'webpack';
 
 export class WebpackBundler implements Bundler {
   constructor(
@@ -40,7 +40,9 @@ export class WebpackBundler implements Bundler {
           }
           if (!stats) throw new BitError('unknown build error');
           const info = stats.toJson();
+
           return resolve({
+            assets: this.getAssets(info),
             errors: info.errors,
             outputPath: stats.compilation.outputOptions.path,
             components,
@@ -53,6 +55,16 @@ export class WebpackBundler implements Bundler {
     });
     longProcessLogger.end();
     return componentOutput as BundlerResult[];
+  }
+
+  private getAssets(stats: StatsCompilation): Asset[] {
+    if (!stats.assets) return [];
+    return stats.assets.map((asset) => {
+      return {
+        name: asset.name,
+        size: asset.size,
+      };
+    });
   }
 
   private getComponents(outputPath: string) {

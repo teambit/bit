@@ -242,8 +242,8 @@ export class ReactEnv
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
-    const baseConfig = basePreviewConfigFactory(true);
-    const baseProdConfig = basePreviewProdConfigFactory();
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer));
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory();
 

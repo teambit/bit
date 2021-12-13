@@ -397,6 +397,11 @@ export class EnvsMain {
     return undefined;
   }
 
+  getEnvFromComponent(envComponent: Component) {
+    const env = this.getEnvDefinitionById(envComponent.id);
+    return env;
+  }
+
   private printWarningIfFirstTime(envId: string, message: string) {
     if (!this.alreadyShownWarning[envId]) {
       this.alreadyShownWarning[envId] = true;

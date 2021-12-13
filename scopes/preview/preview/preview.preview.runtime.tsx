@@ -57,12 +57,47 @@ export class PreviewPreview {
         const includedPreview = this.getPreview(prevName);
         if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(componentId.fullName, PREVIEW_MODULES[prevName]);
+        return includedPreview.selectPreviewModel?.(componentId.fullName, this.getPreviewModule(prevName, componentId));
       })
       .filter((module) => !!module);
 
-    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes, this.getRenderingContext());
+    return preview.render(
+      componentId.fullName,
+      this.getPreviewModule(name, componentId),
+      includes,
+      this.getRenderingContext()
+    );
   };
+
+  getPreviewModule(name: string, id: ComponentID): PreviewModule {
+    if (PREVIEW_MODULES[name]) return PREVIEW_MODULES[name];
+    if (!window[name]) throw new PreviewNotFound(name);
+    const component = window[`${id.toStringWithoutVersion()}-preview`];
+
+    return {
+      mainModule: window[name],
+      componentMap: {
+        [id.fullName]: component ? component[name] : undefined,
+      },
+    };
+  }
+
+  fetchComponentPreview(id: ComponentID, name: string) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `https://localhost:3000/api/${id.toString()}/preview`; // generate path to remote scope. [scope url]/
+      script.onload = () => {
+        const componentPreview = window[id.toStringWithoutVersion()];
+        if (!componentPreview) return reject(new PreviewNotFound(name));
+        const targetPreview = componentPreview[name];
+        if (!targetPreview) return reject(new PreviewNotFound(name));
+
+        return resolve(targetPreview);
+      };
+
+      document.head.appendChild(script);
+    });
+  }
 
   /**
    * register a new preview.
