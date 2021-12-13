@@ -69,7 +69,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         import: path,
         // dependOn: component.id.toStringWithoutVersion(),
         library: {
-          name: this.pkg.getPackageName(component),
+          // name: this.pkg.getPackageName(component),
+          name: `${component.id.toStringWithoutVersion()}-preview`,
           type: 'umd',
         },
       },
