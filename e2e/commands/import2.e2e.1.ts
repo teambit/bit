@@ -180,7 +180,10 @@ describe('bit import', function () {
         });
       });
     });
-    describe('re-import with a specific path', () => {
+    // on Windows, on CircleCI (not locally!), it shows the following error:
+    // Error: Command failed: set "BIT_FEATURES=legacy-workspace-config" && bit import m9t9r8rl-remote/bar/foo -p new-location
+    // EPERM: operation not permitted, rmdir 'C:\Users\circleci\AppData\Local\Temp\bit\e2e\7y3wfa5m-local\components\bar\foo\bar'
+    (IS_WINDOWS ? describe.skip : describe)('re-import with a specific path', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
