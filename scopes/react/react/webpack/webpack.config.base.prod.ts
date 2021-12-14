@@ -8,11 +8,38 @@ import { Configuration } from 'webpack';
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
 export default function (externalizePeer: boolean, dev?: boolean): Configuration {
+  const externals = externalizePeer
+    ? {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      }
+    : undefined;
+
+  const module = !externalizePeer
+    ? {
+        rules: [
+          {
+            test: require.resolve('react'),
+            loader: require.resolve('expose-loader'),
+            options: {
+              exposes: ['React'],
+            },
+          },
+          {
+            test: require.resolve('react-dom'),
+            loader: require.resolve('expose-loader'),
+            options: {
+              exposes: ['ReactDOM'],
+            },
+          },
+        ],
+      }
+    : undefined;
+
+  console.log(externals);
   return {
-    // externals: externalizePeer ? {
-    // 'react': 'React',
-    // 'react-dom': 'ReactDOM'
-    // } : undefined,
+    module,
+    externals,
     optimization: dev
       ? undefined
       : {

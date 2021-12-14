@@ -7311,7 +7311,7 @@ __metadata:
     "@types/postcss-normalize": 9.0.1
     "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
-    "@types/react": ^17.0.8
+    "@types/react": 17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7422,6 +7422,7 @@ __metadata:
     eslint-plugin-simple-import-sort: 5.0.3
     eventemitter2: 6.4.4
     execa: 2.1.0
+    expose-loader: 3.1.0
     express: 4.17.1
     express-graphql: 0.12.0
     express-history-api-fallback: 2.2.1
@@ -7477,6 +7478,7 @@ __metadata:
     jest-watcher: 26.6.2
     join-path: 1.1.1
     json-formatter-js: 2.3.4
+    json-schema: 0.4.0
     jsx-to-string: 1.4.0
     junit-report-builder: 3.0.0
     less: ^4.1.1
@@ -7625,6 +7627,7 @@ __metadata:
     terser-webpack-plugin: 5.2.0
     timers-browserify: 2.0.12
     tippy.js: 6.2.7
+    tsutils: 3.21.0
     tsyringe: 4.4.0
     tty-browserify: 0.0.1
     type-coverage: 2.15.1
@@ -7670,7 +7673,6 @@ __metadata:
     yn: 2.0.0
   peerDependencies:
     "@teambit/legacy": 1.0.184
-    jest: 26.6.3
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8905,7 +8907,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^17.0.8":
+"@types/react@npm:*":
   version: 17.0.37
   resolution: "@types/react@npm:17.0.37"
   dependencies:
@@ -8913,6 +8915,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: e68b0d59aa69577fc6a6d654b25d5d8408625498f4c483f160b557fac21e840f6e8807cbde93e9f039949b6d624a019b1990d18499c1d65aecf3605c25e30242
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:17.0.8":
+  version: 17.0.8
+  resolution: "@types/react@npm:17.0.8"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
   languageName: node
   linkType: hard
 
@@ -18031,6 +18044,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"expose-loader@npm:3.1.0":
+  version: 3.1.0
+  resolution: "expose-loader@npm:3.1.0"
+  peerDependencies:
+    webpack: ^5.0.0
+  checksum: c9bc3c220f9f5e46f7897a8a884fbe3b494b7e2a7fca454dc4642ad73664367c2501dfdf8476477a1ee3fd6c32d18aae1187e428c03f310de2f465eb4157d33c
+  languageName: node
+  linkType: hard
+
 "express-a4799d@workspace:scopes/harmony/express":
   version: 0.0.0-use.local
   resolution: "express-a4799d@workspace:scopes/harmony/express"
@@ -23132,6 +23154,13 @@ __metadata:
   version: 0.2.3
   resolution: "json-schema@npm:0.2.3"
   checksum: bbc2070988fb5f2a2266a31b956f1b5660e03ea7eaa95b33402901274f625feb586ae0c485e1df854fde40a7f0dc679f3b3ca8e5b8d31f8ea07a0d834de785c7
+  languageName: node
+  linkType: hard
+
+"json-schema@npm:0.4.0":
+  version: 0.4.0
+  resolution: "json-schema@npm:0.4.0"
+  checksum: 66389434c3469e698da0df2e7ac5a3281bcff75e797a5c127db7c5b56270e01ae13d9afa3c03344f76e32e81678337a8c912bdbb75101c62e487dc3778461d72
   languageName: node
   linkType: hard
 
@@ -33822,7 +33851,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsutils@npm:3, tsutils@npm:^3.17.1, tsutils@npm:^3.21.0":
+"tsutils@npm:3, tsutils@npm:3.21.0, tsutils@npm:^3.17.1, tsutils@npm:^3.21.0":
   version: 3.21.0
   resolution: "tsutils@npm:3.21.0"
   dependencies:

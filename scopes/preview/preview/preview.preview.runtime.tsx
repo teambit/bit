@@ -44,7 +44,7 @@ export class PreviewPreview {
   /**
    * render the preview.
    */
-  render = () => {
+  render = async () => {
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
 
@@ -52,40 +52,47 @@ export class PreviewPreview {
     if (!preview || !componentId) {
       throw new PreviewNotFound(previewName);
     }
-    const includes = (preview.include || [])
-      .map((prevName) => {
+    const includesAll = await Promise.all(
+      (preview.include || []).map(async (prevName) => {
         const includedPreview = this.getPreview(prevName);
         if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(componentId.fullName, this.getPreviewModule(prevName, componentId));
+        return includedPreview.selectPreviewModel?.(
+          componentId.fullName,
+          await this.getPreviewModule(prevName, componentId)
+        );
       })
-      .filter((module) => !!module);
+    );
+
+    const includes = includesAll.filter((module) => !!module);
 
     return preview.render(
       componentId.fullName,
-      this.getPreviewModule(name, componentId),
+      await this.getPreviewModule(name, componentId),
       includes,
       this.getRenderingContext()
     );
   };
 
-  getPreviewModule(name: string, id: ComponentID): PreviewModule {
-    if (PREVIEW_MODULES[name]) return PREVIEW_MODULES[name];
-    if (!window[name]) throw new PreviewNotFound(name);
-    const component = window[`${id.toStringWithoutVersion()}-preview`];
+  async getPreviewModule(name: string, id: ComponentID): Promise<PreviewModule> {
+    if (PREVIEW_MODULES[name].componentMap[id.fullName]) return PREVIEW_MODULES[name];
+    // if (!window[name]) throw new PreviewNotFound(name);
+
+    // const component = window[id.toStringWithoutVersion()];
+    const component: any = await this.fetchComponentPreview(id, name);
 
     return {
-      mainModule: window[name],
+      mainModule: PREVIEW_MODULES[name].mainModule,
       componentMap: {
-        [id.fullName]: component ? component[name] : undefined,
+        [id.fullName]: component,
       },
     };
   }
 
-  fetchComponentPreview(id: ComponentID, name: string) {
+  async fetchComponentPreview(id: ComponentID, name: string) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = `https://localhost:3000/api/${id.toString()}/preview`; // generate path to remote scope. [scope url]/
+      script.src = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`; // generate path to remote scope. [scope url]/
       script.onload = () => {
         const componentPreview = window[id.toStringWithoutVersion()];
         if (!componentPreview) return reject(new PreviewNotFound(name));
@@ -166,6 +173,7 @@ export class PreviewPreview {
     const preview = new PreviewPreview(pubsub, previewSlot, renderingContextSlot);
 
     window.addEventListener('hashchange', () => {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       preview.render();
     });
 

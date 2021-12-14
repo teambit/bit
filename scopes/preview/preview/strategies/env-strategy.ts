@@ -7,12 +7,13 @@ import { Compiler } from '@teambit/compiler';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { BuildContext, ComponentResult } from '@teambit/builder';
+import { PkgMain } from '@teambit/pkg';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BundlerResult, BundlerContext, Asset } from '@teambit/bundler';
 import { BundlingStrategy } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
-import { PkgMain } from '@teambit/pkg';
 
 /**
  * bundles all components in a given env into the same bundle.
@@ -20,7 +21,7 @@ import { PkgMain } from '@teambit/pkg';
 export class EnvBundlingStrategy implements BundlingStrategy {
   name = 'env';
 
-  constructor(private preview: PreviewMain, private pkg: PkgMain) {}
+  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
 
   async computeTargets(context: BuildContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
@@ -39,14 +40,29 @@ export class EnvBundlingStrategy implements BundlingStrategy {
       return entriesMap;
     }, {});
 
-    // const modules = entriesArr.map((entry) => {
+    // const modules = await Promise.all(entriesArr.map(async (entry) => {
+    //   const dependencies = await this.dependencyResolver.getDependencies(entry.component);
+    //   const manifest = dependencies.toDependenciesManifest();
+    //   const peer = Object.entries(manifest.peerDependencies || {}).reduce((acc, [packageName, version]) => {
+    //     acc[packageName] = {
+    //       singleton: true,
+    //       requiredVersion: version
+    //     };
+
+    //     return acc;
+    //   }, {});
+    //   // console.log(entry);
     //   return {
     //     name: entry.library.name,
     //     exposes: {
     //       '.': entry.import || ''
     //     },
+    //     shared: {
+    //       ...manifest.dependencies,
+    //       ...peer
+    //     },
     //   };
-    // });
+    // }));
 
     return [
       {
@@ -70,7 +86,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         // dependOn: component.id.toStringWithoutVersion(),
         library: {
           // name: this.pkg.getPackageName(component),
-          name: `${component.id.toStringWithoutVersion()}-preview`,
+          name: `${component.id.toStringWithoutVersion()}`,
           type: 'umd',
         },
       },

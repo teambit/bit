@@ -67,11 +67,24 @@ export function previewConfigFactory(target: Target, context: BundlerContext): C
 }
 
 function createModuleFederationPlugins(modules: ModuleTarget[]) {
+  // const exposes = modules.reduce((acc, current) => {
+  //   acc[current.name] = current.exposes['.'];
+  //   return acc;
+  // }, {});
+
+  // return new ModuleFederationPlugin({
+  //   name: '',
+  //   filename: 'remote-entry.js',
+  //   exposes
+  // });
+
   return modules.map((module) => {
+    console.log(module.shared);
     return new ModuleFederationPlugin({
       name: module.name,
       filename: `${module.name}.js`,
       exposes: module.exposes,
+      shared: module.shared,
     });
   });
   // return [new ModuleFederationPlugin({

@@ -1,5 +1,5 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
-import { Component } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { EnvsMain } from '@teambit/envs';
 import { compact } from 'lodash';
@@ -25,18 +25,23 @@ export class EnvPreviewTemplateTask implements BuildTask {
       envComponents.map(async (envComponent) => {
         // const module = await this.getPreviewModule(envComponent);
         // const entries = Object.keys(module).map((key) => module.exposes[key]);
+        const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
+        if (!capsule) throw new Error('not capsule found');
         const previewRoot = await this.preview.writePreviewRuntime(context);
         const previewModules = await this.getPreviewModules(envComponent);
-        const entries = this.getEntries(
-          previewModules.concat({
-            name: 'main',
-            path: previewRoot,
-          })
-        );
+        const templatesFile = previewModules.map((template) => {
+          return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
+        });
+        // const entries = this.getEntries(
+        //   previewModules.concat({
+        //     name: 'main',
+        //     path: previewRoot,
+        //   })
+        // );
 
         return {
-          entries,
-          development: true,
+          entries: templatesFile.concat(previewRoot),
+          // externalizePeer: false,
           // externalizePeer: true,
           components: [envComponent],
           outputPath: this.computeOutputPath(context, envComponent),
@@ -53,6 +58,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
+    console.log(bundlerResults);
 
     return {
       componentsResults: [],

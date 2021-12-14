@@ -35,6 +35,10 @@ export type ModuleTarget = {
   exposes: {
     [internalPath: string]: string;
   };
+
+  shared: {
+    [key: string]: any;
+  };
 };
 
 export interface BundlerContext extends BuildContext {

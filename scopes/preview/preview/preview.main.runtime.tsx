@@ -15,6 +15,7 @@ import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -74,7 +75,9 @@ export class PreviewMain {
 
     private workspace: Workspace | undefined,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   get tempFolder(): string {
@@ -204,7 +207,7 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this, this.pkg), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver), new ComponentBundlingStrategy()];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -285,6 +288,7 @@ export class PreviewMain {
     PubsubAspect,
     AspectLoaderAspect,
     LoggerAspect,
+    DependencyResolverAspect,
   ];
 
   static defaultConfig = {
@@ -293,7 +297,20 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader, loggerMain]: [
+    // eslint-disable-next-line max-len
+    [
+      bundler,
+      builder,
+      componentExtension,
+      uiMain,
+      envs,
+      workspace,
+      pkg,
+      pubsub,
+      aspectLoader,
+      loggerMain,
+      dependencyResolver,
+    ]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
@@ -303,7 +320,8 @@ export class PreviewMain {
       PkgMain,
       PubsubMain,
       AspectLoaderMain,
-      LoggerMain
+      LoggerMain,
+      DependencyResolverMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -322,7 +340,8 @@ export class PreviewMain {
       bundlingStrategySlot,
       builder,
       workspace,
-      logger
+      logger,
+      dependencyResolver
     );
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
