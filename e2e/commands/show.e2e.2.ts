@@ -284,26 +284,6 @@ describe('bit show command', function () {
       it('should return correct json', () => {});
     });
   });
-
-  describe('show deprecated remote component', () => {
-    let output;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
-      helper.command.exportAllComponents();
-      helper.command.deprecateComponent(`${helper.scopes.remote}/bar/foo`, '-r');
-    });
-    it('should show the component as deprecated when using "--remote" flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j -r`));
-      expect(output).to.include({ deprecated: true });
-    });
-    it('should not show the component as deprecated when not using "--remote" flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j`));
-      expect(output).to.include({ deprecated: false });
-    });
-  });
   describe('show non-deprecated remote component', () => {
     let output;
     before(() => {

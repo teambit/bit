@@ -59,13 +59,13 @@ import type {
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, isEqual } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -873,6 +873,9 @@ export class Workspace implements ComponentFactory {
     const mergeFromScope = true;
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
 
+    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapExtensions = bitMapEntry?.config;
+
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
@@ -893,7 +896,15 @@ export class Workspace implements ComponentFactory {
       wsDefaultExtensions = this.getDefaultExtensions();
     }
     // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
+    // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: ExtensionDataList[] = [];
+    if (bitMapExtensions) {
+      const extensionsDataEntries = Object.keys(bitMapExtensions).map(
+        (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
+      );
+      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      extensionsToMerge.push(extensionDataList);
+    }
     if (configFileExtensions) {
       extensionsToMerge.push(configFileExtensions);
     }
@@ -1686,6 +1697,28 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       }
     });
     return Promise.all(resolveMergedExtensionsP);
+  }
+
+  /**
+   * adds component config to the .bitmap file.
+   * later, upon `bit tag`, the data is saved in the scope.
+   * returns a boolean indicating whether a chance has been made.
+   */
+  async addComponentConfigToBitmap(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
+    if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
+    const bitMapEntry = this.consumer.bitMap.getComponent(id._legacy, { ignoreScopeAndVersion: true });
+    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    if (isEqual(currentConfig, config)) {
+      return false; // no changes
+    }
+    if (!config) {
+      delete bitMapEntry.config[aspectId];
+    } else {
+      bitMapEntry.config[aspectId] = config;
+    }
+    this.consumer.bitMap.markAsChanged();
+    await this.writeBitMap();
+    return true; // changes have been made
   }
 
   /**

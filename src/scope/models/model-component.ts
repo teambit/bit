@@ -12,6 +12,7 @@ import {
   DEFAULT_BIT_VERSION,
   DEFAULT_LANE,
   DEFAULT_LANGUAGE,
+  Extensions,
   TESTER_ENV_TYPE,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -90,6 +91,9 @@ export default class Component extends BitObject {
   versions: Versions;
   orphanedVersions: Versions;
   lang: string;
+  /**
+   * @deprecated moved to the Version object inside teambit/deprecation aspect
+   */
   deprecated: boolean;
   bindingPrefix: string;
   /**
@@ -158,6 +162,14 @@ export default class Component extends BitObject {
 
   getHead(): Ref | undefined {
     return this.head;
+  }
+
+  /**
+   * returns the head hash. regardless of whether current lane is the default or not.
+   * if on a lane, it returns the head of the component on the lane.
+   */
+  getHeadRegardlessOfLane(): Ref | undefined {
+    return this.laneHeadLocal || this.getHead();
   }
 
   getHeadAsTagIfExist(): string | undefined {
@@ -702,6 +714,29 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return new ComponentVersion(this, versionNum!);
+  }
+
+  async isDeprecated(repo: Repository) {
+    // backward compatibility
+    if (this.deprecated) {
+      return true;
+    }
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's legacy, or new. If legacy, the "deprecated" prop should do. if it's new, the workspace should
+      // have the answer.
+      return false;
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's deprecated
+      return null;
+    }
+    const deprecationAspect = version.extensions.findCoreExtension(Extensions.deprecation);
+    if (!deprecationAspect) {
+      return false;
+    }
+    return deprecationAspect.config.deprecate;
   }
 
   /**
