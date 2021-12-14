@@ -160,7 +160,7 @@ export class ComponentUI {
     ),
   });
   private yarnMethod: ConsumePlugin = (comp) => ({
-    Title: <img style={{ height: '17px', paddingTop: '2px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />,
+    Title: <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />,
     Component: (
       <Install
         componentName={comp.id.name}

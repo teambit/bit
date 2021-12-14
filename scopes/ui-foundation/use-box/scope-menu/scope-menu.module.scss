@@ -1,5 +1,5 @@
 .top {
-  padding: 15px 24px;
+  padding: 16px 24px;
   color: var(--bit-text-color, #414141);
 }
 
@@ -23,5 +23,19 @@
   }
   > div:nth-child(2) {
     margin-bottom: 24px;
+  }
+}
+
+.drawer {
+  justify-content: space-between;
+  > div {
+    display: flex;
+    align-items: center;
+    > span {
+      &:first-child {
+        margin-right: 8px;
+        font-size: var(--bit-p-md, 16px);
+      }
+    }
   }
 }

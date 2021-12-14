@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
+import AnimateHeight from 'react-animate-height';
 import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
@@ -15,10 +17,7 @@ export type MenuProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function Menu({ scopeName, ...rest }: MenuProps) {
-  const [active, setActive] = useState<string | undefined>(undefined);
-  if (active === 'import') {
-    return <BitInfo prevTab={active} setActive={() => setActive(undefined)} />;
-  }
+  const [open, toggle] = useState(false);
 
   return (
     <div {...rest}>
@@ -30,10 +29,18 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
       </div>
       <TabContent
         bottom={
-          <div className={linkStyles} onClick={() => setActive('import')}>
-            <Icon of="download" />
-            <span>Install Bit on your computer</span>
-          </div>
+          <>
+            <div className={classNames(linkStyles, styles.drawer)} onClick={() => toggle(!open)}>
+              <div>
+                <Icon of="download" />
+                <span>Install Bit on your computer</span>
+              </div>
+              <Icon of="down-rounded-corners" className={open && styles.open} />
+            </div>
+            <AnimateHeight height={open ? 'auto' : 0}>
+              <BitInfo />
+            </AnimateHeight>
+          </>
         }
       >
         <div className={styles.importContent}>

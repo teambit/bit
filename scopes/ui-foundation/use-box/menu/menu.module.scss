@@ -1,6 +1,6 @@
 .top {
-  padding: 15px 24px;
-  color: var(--bit-text-color, #414141);
+  padding: 16px 24px 24px 24px;
+  color: var(--bit-text-color-heavy, #2b2b2b);
 }
 
 .title {
@@ -8,11 +8,9 @@
   align-items: center;
   font-size: var(--bit-p-xs);
   font-weight: bold;
-  margin-bottom: 12px;
   > span {
     &:first-child {
-      color: var(--bit-text-color-heavy, #2b2b2b);
-      font-weight: bold;
+      font-weight: inherit;
       margin-right: 8px;
     }
   }
@@ -37,14 +35,14 @@
   padding: 0 24px;
   line-height: 14px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  .yarnTab {
-    color: #2c8ebb;
-    font-size: 16px;
-    padding-bottom: 6px;
-  }
-  .npmTab {
-    color: #c7363a;
-  }
+  // .yarnTab {
+  //   color: #2c8ebb;
+  //   font-size: 16px;
+  //   padding-bottom: 6px;
+  // }
+  // .npmTab {
+  //   color: #c7363a;
+  // }
   .elementsTab {
     font-size: 16px;
   }
