@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import AnimateHeight from 'react-animate-height';
 import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { TooltipCopybox } from './tooltip-copybox';
+// import {} from './'
 import styles from './menu.module.scss';
 
 export type ImportProps = {
@@ -24,15 +28,24 @@ export type ImportProps = {
   componentName: string;
 } & TabContentProps;
 
-export function Import({ componentId, packageName, componentName = '', back, ...rest }: ImportProps) {
+export function Import({ componentId, packageName, componentName = '', ...rest }: ImportProps) {
+  const [open, toggle] = useState(false);
   return (
     <TabContent
       {...rest}
       bottom={
-        <div className={linkStyles} onClick={back}>
-          <Icon of="download" />
-          <span>Install Bit on your computer</span>
-        </div>
+        <>
+          <div className={classNames(styles.drawer, linkStyles)} onClick={() => toggle(!open)}>
+            <div>
+              <Icon of="download" />
+              <span>Install Bit on your computer</span>
+            </div>
+            <Icon of="down-rounded-corners" className={open && styles.open} />
+          </div>
+          <AnimateHeight height={open ? 'auto' : 0}>
+            <BitInfo />
+          </AnimateHeight>
+        </>
       }
     >
       <div className={styles.importContent}>

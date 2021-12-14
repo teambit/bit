@@ -1,2 +1,2 @@
 export { Menu } from './menu';
-export type { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
+export type { NavPlugin, OrderedNavigationSlot, ConsumePlugin, OrderedConsumeSlot } from './nav-plugin';
