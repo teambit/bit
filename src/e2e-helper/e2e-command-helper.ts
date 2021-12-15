@@ -275,8 +275,8 @@ export default class CommandHelper {
   untag(id: string, version = '') {
     return this.runCmd(`bit untag ${id} ${version}`);
   }
-  untagAll() {
-    return this.runCmd(`bit untag --all`);
+  untagAll(options = '') {
+    return this.runCmd(`bit untag ${options} --all`);
   }
   untagSoft(id: string) {
     return this.runCmd(`bit untag ${id} --soft`);

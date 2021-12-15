@@ -524,6 +524,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         } else {
           lane?.removeComponent(component.toBitId());
         }
+        component.laneHeadLocal = head;
         objectRepo.add(lane);
       }
 
@@ -544,12 +545,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (componentHadHead && !component.hasHead() && component.versionArray.length) {
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
-    if (component.versionArray.length || component.hasHead()) {
+    if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
-      // @todo: make sure not to delete the component when it has snaps but not versions!
-      // if all versions were deleted, delete also the component itself from the model
-      delete component.laneHeadLocal;
       objectRepo.removeObject(component.hash());
     }
     objectRepo.unmergedComponents.removeComponent(component.name);

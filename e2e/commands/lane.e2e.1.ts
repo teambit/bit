@@ -1147,13 +1147,15 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe('snapping and un-tagging on a lane', () => {
+  describe.only('snapping and un-tagging on a lane', () => {
+    let afterFirstSnap: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
+      afterFirstSnap = helper.scopeHelper.cloneLocalScope();
       helper.command.untagAll();
     });
     it('bit lane show should not show the component as belong to the lane anymore', () => {
@@ -1172,6 +1174,19 @@ describe('bit lane command', function () {
       it('bit status should show the component as new', () => {
         const status = helper.command.statusJson();
         expect(status.newComponents).to.have.lengthOf(1);
+      });
+    });
+    describe('add another snap and then untag only the last snap', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+        helper.command.snapComponentWithoutBuild('comp1', '--force');
+        const head = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.untagAll(head);
+      });
+      it('should not show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(0);
+        expect(status.stagedComponents).to.have.lengthOf(1);
       });
     });
   });
