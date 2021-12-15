@@ -1147,8 +1147,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  // @todo: this is currently failing.
-  describe.skip('snapping and un-tagging on a lane then switching to main', () => {
+  describe('snapping and un-tagging on a lane then switching to main', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -1164,7 +1163,7 @@ describe('bit lane command', function () {
     // a previous bug kept the WorkspaceLane object as is with the previous, untagged version
     it('bit list should not show the currentVersion as the untagged version', () => {
       const list = helper.command.listParsed();
-      expect(list[0].currentVersion).to.equal('<new>');
+      expect(list[0].currentVersion).to.equal('N/A');
     });
     describe('switching to main', () => {
       before(() => {
