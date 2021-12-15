@@ -1147,4 +1147,47 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe.only('snapping and un-tagging on a lane', () => {
+    let afterFirstSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      afterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.command.untagAll();
+    });
+    it('bit lane show should not show the component as belong to the lane anymore', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(0);
+    });
+    // a previous bug kept the WorkspaceLane object as is with the previous, untagged version
+    it('bit list should not show the currentVersion as the untagged version', () => {
+      const list = helper.command.listParsed();
+      expect(list[0].currentVersion).to.equal('N/A');
+    });
+    describe('switching to main', () => {
+      before(() => {
+        helper.command.switchLocalLane('main');
+      });
+      it('bit status should show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(1);
+      });
+    });
+    describe('add another snap and then untag only the last snap', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+        helper.command.snapComponentWithoutBuild('comp1', '--force');
+        const head = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.untagAll(head);
+      });
+      it('should not show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(0);
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+    });
+  });
 });

@@ -237,7 +237,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    const laneStr = laneName ? `\nchecked out to "${chalk.bold(laneName)}" lane` : '';
+    const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
