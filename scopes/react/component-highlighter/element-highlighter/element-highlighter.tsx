@@ -2,11 +2,9 @@ import React from 'react';
 import classnames from 'classnames';
 import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
-import { Label, LabelContainer, Placement, LabelSize } from '../label';
+import { Label, LabelContainer, Placement } from '../label';
 import { excludeHighlighterAtt } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
-
-export type HighlighterSize = LabelSize;
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** target element to highlight */
@@ -17,7 +15,6 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
   classes?: HighlightClasses;
   /** continually update highlighter to match moving elements */
   watchMotion?: boolean;
-  size?: HighlighterSize;
 }
 
 export { Placement };
@@ -41,7 +38,6 @@ export function ElementHighlighter({
   watchMotion = true,
   className,
   classes,
-  size,
   ...props
 }: ElementHighlighterProps) {
   return (
@@ -59,7 +55,7 @@ export function ElementHighlighter({
           placement={placement}
           watchMotion={watchMotion}
         >
-          <Label components={target.components} className={classes?.label} size={size} />
+          <Label components={target.components} className={classes?.label} />
         </LabelContainer>
       )}
     </div>
