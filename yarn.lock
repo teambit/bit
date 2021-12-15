@@ -7351,9 +7351,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.187, @teambit/legacy@npm:1.0.187::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.187.tgz":
-  version: 1.0.187
-  resolution: "@teambit/legacy@npm:1.0.187::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.187.tgz"
+"@teambit/legacy@npm:1.0.188, @teambit/legacy@npm:1.0.188::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.188.tgz":
+  version: 1.0.188
+  resolution: "@teambit/legacy@npm:1.0.188::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.188.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7476,7 +7476,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: c8f25988468393658e10bd5a55f7262629aa96736166924ce322cf4060ee272cd7320c9d9161fa1b701e0d858ef0672fd540cca1b7c3e336154edf8ad01c133e
+  checksum: 8a3b05ae38bd443b2fafb10582dbb6b8ed292d463407bbf09c1e0ce52d120b3d37d943877541466d42b6693a444fea7522c93e160cc40bc3210d77f2283d761e
   languageName: node
   linkType: hard
 
@@ -7625,7 +7625,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.187
+    "@teambit/legacy": 1.0.188
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -8037,7 +8037,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.187
+    "@teambit/legacy": 1.0.188
     jest: 26.6.3
   bin:
     bit: bin/bit.js
