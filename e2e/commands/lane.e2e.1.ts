@@ -1147,7 +1147,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe('snapping and un-tagging on a lane then switching to main', () => {
+  describe('snapping and un-tagging on a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
