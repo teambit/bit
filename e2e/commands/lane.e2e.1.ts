@@ -1147,4 +1147,33 @@ describe('bit lane command', function () {
       });
     });
   });
+  // @todo: this is currently failing.
+  describe.skip('snapping and un-tagging on a lane then switching to main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.untagAll();
+    });
+    it('bit lane show should not show the component as belong to the lane anymore', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(0);
+    });
+    // a previous bug kept the WorkspaceLane object as is with the previous, untagged version
+    it('bit list should not show the currentVersion as the untagged version', () => {
+      const list = helper.command.listParsed();
+      expect(list[0].currentVersion).to.equal('<new>');
+    });
+    describe('switching to main', () => {
+      before(() => {
+        helper.command.switchLocalLane('main');
+      });
+      it('bit status should show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(1);
+      });
+    });
+  });
 });

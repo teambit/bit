@@ -6,7 +6,7 @@ import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import ModelComponent from '../models/model-component';
 
-export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
+export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
 
 /**
  * If not specified version, remove all local versions.
@@ -15,8 +15,7 @@ export async function removeLocalVersion(
   scope: Scope,
   id: BitId,
   version?: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force? = false
+  force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
   const localVersions = component.getLocalTagsOrHashes();

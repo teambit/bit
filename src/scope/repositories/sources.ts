@@ -533,6 +533,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     } else {
       // @todo: make sure not to delete the component when it has snaps but not versions!
       // if all versions were deleted, delete also the component itself from the model
+      delete component.laneHeadLocal;
       objectRepo.removeObject(component.hash());
     }
     objectRepo.unmergedComponents.removeComponent(component.name);
