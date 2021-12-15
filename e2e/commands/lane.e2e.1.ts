@@ -1147,7 +1147,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe.only('snapping and un-tagging on a lane', () => {
+  describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
