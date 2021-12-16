@@ -1,12 +1,14 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState, useMemo, ReactNode } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 
 import styles from './menu.module.scss';
 
+// TODO where should we place this type? its being created in component ui runtime as well
 export type ConsumeMethod = {
   Title: ReactNode;
   Component: ReactNode;
+  order: number;
 };
 
 export type ConsumeMethodsMenuProps = {
@@ -23,7 +25,16 @@ export type ConsumeMethodsMenuProps = {
 
 export function ConsumeMethodsMenu({ methods, componentName, ...rest }: ConsumeMethodsMenuProps) {
   const [activeTab, setActiveTab] = useState(0);
-  const content = methods.flat();
+  const content = useMemo(
+    () =>
+      methods.flat().sort((a, b) => {
+        if (a.order === undefined) return 1;
+        if (b.order === undefined) return -1;
+        return a.order - b.order;
+      }),
+    [methods]
+  );
+
   const { Component } = content[activeTab];
 
   return (
@@ -46,8 +57,6 @@ export function ConsumeMethodsMenu({ methods, componentName, ...rest }: ConsumeM
       </div>
 
       {Component}
-
-      {/* {activeTab === 'elements' && elementsUrl && <Elements componentName={componentName} url={elementsUrl} />} */}
     </div>
   );
 }

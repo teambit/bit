@@ -121,6 +121,7 @@ export class ComponentUI {
   private bitMethod: ConsumePlugin = (comp) => ({
     Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
     Component: <Import componentId={comp.id.toString()} packageName={comp.packageName} componentName={comp.id.name} />,
+    order: 0,
   });
 
   // TODO - move to npm aspect
@@ -137,6 +138,7 @@ export class ComponentUI {
           registryName={registry}
         />
       ),
+      order: 10,
     };
   };
 
@@ -156,6 +158,7 @@ export class ComponentUI {
           registryName={registry}
         />
       ),
+      order: 20,
     };
   };
 
@@ -173,6 +176,7 @@ export class ComponentUI {
           registryName={registry}
         />
       ),
+      order: 30,
     };
   };
 

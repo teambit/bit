@@ -13,6 +13,7 @@ export type OrderedNavigationSlot = SlotRegistry<NavPlugin>;
 export type ConsumePlugin = (componentModel: ComponentModel) => {
   Title?: ReactNode;
   Component?: ReactNode;
+  order?: number;
 };
 
 export type OrderedConsumeSlot = SlotRegistry<ConsumePlugin[]>;
