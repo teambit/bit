@@ -145,6 +145,7 @@ export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
+  bitMap: BitMap;
   constructor(
     /**
      * private pubsub.
@@ -205,9 +206,7 @@ export class Workspace implements ComponentFactory {
 
     private onPreWatchSlot: OnPreWatchSlot,
 
-    private graphql: GraphqlMain,
-
-    public bitMap: BitMap
+    private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
