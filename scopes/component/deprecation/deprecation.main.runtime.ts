@@ -47,7 +47,7 @@ export class DeprecationMain {
       };
     }
     const componentId = await this.workspace.resolveComponentId(id);
-    const results = await this.workspace.addComponentConfigToBitmap(DeprecationAspect.id, componentId, {
+    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
       deprecate: true,
       newId,
     });
@@ -64,7 +64,7 @@ export class DeprecationMain {
       };
     }
     const componentId = await this.workspace.resolveComponentId(id);
-    const results = await this.workspace.addComponentConfigToBitmap(DeprecationAspect.id, componentId, {
+    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
       deprecate: false,
       newId: '',
     });

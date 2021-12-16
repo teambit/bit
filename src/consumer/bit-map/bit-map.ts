@@ -22,7 +22,7 @@ import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } fr
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { ComponentFsCache } from '../component/component-fs-cache';
-import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
+import ComponentMap, { ComponentMapFile, ComponentOrigin, Config, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
@@ -636,6 +636,7 @@ export default class BitMap {
     originallySharedDir,
     wrapDir,
     onLanesOnly,
+    config,
   }: {
     componentId: BitId;
     files: ComponentMapFile[];
@@ -647,6 +648,7 @@ export default class BitMap {
     originallySharedDir?: PathLinux;
     wrapDir?: PathLinux;
     onLanesOnly?: boolean;
+    config?: Config;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -687,6 +689,9 @@ export default class BitMap {
     }
     if (defaultScope) {
       componentMap.defaultScope = defaultScope;
+    }
+    if (config) {
+      componentMap.config = config;
     }
     componentMap.removeTrackDirIfNeeded();
     if (originallySharedDir) {

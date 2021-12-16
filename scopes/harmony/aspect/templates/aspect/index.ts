@@ -23,4 +23,9 @@ export const aspectTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/aspect',
+    },
+  },
 };
