@@ -94,17 +94,17 @@ export class EnvsMain {
   /**
    * apply a list of Env Transformers on an Env, to produce a new (transformed) Env
    */
-  transformEnv(baseEnv: Environment, envTransformers: EnvTransformer[]) {
+  applyTransformers(targetEnv: Environment, envTransformers: EnvTransformer[]) {
     const transformedEnv = envTransformers.reduce((acc, transformer) => {
       acc = transformer(acc);
       return acc;
-    }, baseEnv);
+    }, targetEnv);
 
     return transformedEnv;
   }
 
   /**
-   * @deprecated use 'trnasformEnv' instead
+   * @deprecated use 'applyTransformers' instead
    * compose a new environment from a list of environment transformers.
    */
   compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
@@ -117,12 +117,12 @@ export class EnvsMain {
   }
 
   /**
-   * create an Env Transformer out of an Env.
+   * create an Env Transformer out of Env properties.
    * (an Env Transformer modifies or adds specific properties to an Env)
    */
-  createEnvTransformer(transformationEnv: Environment): EnvTransformer {
+  createEnvTransformer(envProps: Environment): EnvTransformer {
     return (env: Environment) => {
-      return this.merge(transformationEnv, env);
+      return this.merge(envProps, env);
     };
   }
 
@@ -137,28 +137,29 @@ export class EnvsMain {
   }
 
   /**
-   * merge two environments into one.
+   * merge sourceEnv into the targetEnv (return the merged targetEnv).
+   * in case of conflicting properties, override sourceEnv.
    */
-  merge<T>(transformationEnv: Environment, baseEnv: Environment): T {
+  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
     const allNames = new Set<string>();
     const keys = ['icon', 'name', 'description'];
-    for (let o = baseEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
         allNames.add(name);
       }
     }
 
     allNames.forEach((key: string) => {
-      const fn = baseEnv[key];
-      if (transformationEnv[key]) return;
-      if (keys.includes(key)) transformationEnv[key] = fn;
+      const fn = sourceEnv[key];
+      if (targetEnv[key]) return;
+      if (keys.includes(key)) targetEnv[key] = fn;
       if (!fn || !fn.bind) {
         return;
       }
-      transformationEnv[key] = fn.bind(baseEnv);
+      targetEnv[key] = fn.bind(sourceEnv);
     });
 
-    return transformationEnv as T;
+    return targetEnv as T;
   }
 
   getEnvData(component: Component): AspectData {
