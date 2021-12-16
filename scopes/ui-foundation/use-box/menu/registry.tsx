@@ -8,7 +8,6 @@ import { Link } from '@teambit/base-ui.routing.link';
 import styles from './menu.module.scss';
 
 export type RegistryProps = {
-  registryName: string;
   copyString: string;
 } & TabContentProps;
 

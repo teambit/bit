@@ -1,4 +1,4 @@
-import React, { useState, ComponentType, ReactNode } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 
@@ -21,13 +21,7 @@ export type ConsumeMethodsMenuProps = {
   componentName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ConsumeMethodsMenu({
-  methods,
-
-  componentName,
-  // elementsUrl,
-  ...rest
-}: ConsumeMethodsMenuProps) {
+export function ConsumeMethodsMenu({ methods, componentName, ...rest }: ConsumeMethodsMenuProps) {
   const [activeTab, setActiveTab] = useState(0);
   const content = methods.flat();
   const { Component } = content[activeTab];
@@ -41,8 +35,8 @@ export function ConsumeMethodsMenu({
         </div>
       </div>
       <div className={styles.tabs}>
-        {content.map(({ Title }, index) => {
-          if (!Title) return null;
+        {content.map(({ Title, Component: comp }, index) => {
+          if (!Title || !comp) return null;
           return (
             <Tab key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
               {Title}

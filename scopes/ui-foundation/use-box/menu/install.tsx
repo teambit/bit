@@ -1,45 +1,39 @@
-import React, { useState } from 'react';
-import classNames from 'classnames';
-import AnimateHeight from 'react-animate-height';
+import React from 'react';
+
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
-import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { ConsumeMethodTemplate, ConsumeMethodTemplateProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { TooltipCopybox } from './tooltip-copybox';
 import { Registry } from './registry';
 import styles from './menu.module.scss';
 
 export type InstallProps = {
   componentName: string;
+  config: string;
   copyString: string;
   registryName: string;
   packageManager: string;
-} & TabContentProps;
+} & ConsumeMethodTemplateProps;
 
-export function Install({ componentName, copyString, registryName, packageManager, ...rest }: InstallProps) {
-  const [open, toggle] = useState(false);
+export function Install({ componentName, copyString, registryName, packageManager, config, ...rest }: InstallProps) {
   return (
-    <TabContent
+    <ConsumeMethodTemplate
       {...rest}
-      bottom={
+      content={
         <>
-          <div className={classNames(linkStyles, styles.drawer)} onClick={() => toggle(!open)}>
-            <div>
-              <Icon of="settings" />
-              <span>
-                Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
-              </span>
-            </div>
-            <Icon of="down-rounded-corners" className={open && styles.open} />
-          </div>
-          <AnimateHeight height={open ? 'auto' : 0}>
-            <Registry registryName={registryName} copyString={copyString} />
-          </AnimateHeight>
+          <div>{`Install ${componentName} with ${packageManager}`}</div>
+          <TooltipCopybox content={copyString} />
         </>
       }
-    >
-      <div>{`Install ${componentName} with ${packageManager}`}</div>
-      <TooltipCopybox content={copyString} />
-    </TabContent>
+      drawerTitle={
+        <div className={styles.bottom}>
+          <Icon of="settings" />
+          <span>
+            Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
+          </span>
+        </div>
+      }
+      drawerContent={<Registry copyString={config} />}
+    />
   );
 }

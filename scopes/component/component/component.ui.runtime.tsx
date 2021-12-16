@@ -118,58 +118,63 @@ export class ComponentUI {
     },
   ];
 
-  // private consumeMethods: ConsumePlugin[] = [
-  //   (comp) => {
-  //     console.log('ss', comp);
-  //     return {
-  //       Title: 'bit',
-  //       Component: (
-  //         <Import componentId={comp.id.toString()} packageName={comp.packageName} componentName={comp.id.name} />
-  //       ),
-  //     };
-  //   },
-  //   (comp) => {
-  //     console.log('ss', comp);
-  //     return {
-  //       Title: 'npm',
-  //       Component: <Install componentName={comp.id.name} packageManager="npm" copyString="sds" registryName="npm" />,
-  //     };
-  //   },
-  //   (comp) => {
-  //     console.log('ss', comp);
-  //     return {
-  //       Title: 'yarn',
-  //       Component: <Install componentName={comp.id.name} packageManager="npm" copyString="sds" registryName="npm" />,
-  //     };
-  //   },
-  // ];
-
   private bitMethod: ConsumePlugin = (comp) => ({
     Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
     Component: <Import componentId={comp.id.toString()} packageName={comp.packageName} componentName={comp.id.name} />,
   });
-  private npmMethod: ConsumePlugin = (comp) => ({
-    Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
-    Component: (
-      <Install
-        componentName={comp.id.name}
-        packageManager="npm"
-        copyString={`npm i ${comp.packageName}`}
-        registryName="npm"
-      />
-    ),
-  });
-  private yarnMethod: ConsumePlugin = (comp) => ({
-    Title: <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />,
-    Component: (
-      <Install
-        componentName={comp.id.name}
-        packageManager="yarn"
-        copyString={`yarn add ${comp.packageName}`}
-        registryName="yarn"
-      />
-    ),
-  });
+
+  // TODO - move to npm aspect
+  private npmMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    return {
+      Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
+      Component: (
+        <Install
+          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="npm"
+          copyString={`npm i ${comp.packageName}`}
+          registryName={registry}
+        />
+      ),
+    };
+  };
+
+  // TODO - move to yarn? aspect
+  private yarnMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    return {
+      Title: (
+        <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
+      ),
+      Component: (
+        <Install
+          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="yarn"
+          copyString={`yarn add ${comp.packageName}`}
+          registryName={registry}
+        />
+      ),
+    };
+  };
+
+  // TODO - move to pnpm aspect
+  private pnpmMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    return {
+      Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
+      Component: (
+        <Install
+          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="pnpm"
+          copyString={`pnpm i ${comp.packageName}`}
+          registryName={registry}
+        />
+      ),
+    };
+  };
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
@@ -284,7 +289,12 @@ export class ComponentUI {
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
-    componentUI.registerConsumeMethod(componentUI.bitMethod, componentUI.npmMethod, componentUI.yarnMethod);
+    componentUI.registerConsumeMethod(
+      componentUI.bitMethod,
+      componentUI.npmMethod,
+      componentUI.yarnMethod,
+      componentUI.pnpmMethod
+    );
     // componentUI.registerConsumeMethod(componentUI.consumeMethods);
     return componentUI;
   }
