@@ -1189,5 +1189,14 @@ describe('bit lane command', function () {
         expect(status.stagedComponents).to.have.lengthOf(1);
       });
     });
+    describe('un-snap by specifying the component name', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+      });
+      // a previous bug was showing "unable to untag comp1, the component is not staged" error.
+      it('should not throw an error', () => {
+        expect(() => helper.command.untag('comp1')).to.not.throw();
+      });
+    });
   });
 });

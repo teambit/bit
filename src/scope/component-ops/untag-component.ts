@@ -20,8 +20,9 @@ export async function removeLocalVersion(
   force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
-  const localVersions = component.getLocalTagsOrHashes();
+  await component.setDivergeData(scope.objects);
   const idStr = id.toString();
+  const localVersions = component.getLocalTagsOrHashes();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   if (version) {
     const hasVersion = await component.hasVersion(version, scope.objects, false);
@@ -60,7 +61,6 @@ as a result, newer versions have this version as part of their history`);
   const allVersionsObjects = await Promise.all(
     localVersions.map((localVer) => component.loadVersion(localVer, scope.objects))
   );
-  await component.setDivergeData(scope.objects);
   scope.sources.removeComponentVersions(component, versionsToRemove, allVersionsObjects, lane);
 
   return { id, versions: versionsToRemove, component };
