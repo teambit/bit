@@ -35,7 +35,7 @@ export default class VersionDependencies {
 
   async toConsumer(
     repo: Repository,
-    manipulateDirData: ManipulateDirItem[] | null | undefined
+    manipulateDirData?: ManipulateDirItem[] | null // not relevant for Harmony
   ): Promise<ComponentWithDependencies> {
     const depToConsumer = (dep) => dep.toConsumer(repo, manipulateDirData);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));

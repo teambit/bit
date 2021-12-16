@@ -2,6 +2,7 @@ import mdx from '@mdx-js/mdx';
 import detectFrontmatter from 'remark-frontmatter';
 import visit from 'unist-util-visit';
 import remove from 'unist-util-remove';
+import remarkNotes from 'remark-admonitions';
 import parseImports from 'parse-es6-imports';
 import yaml from 'yaml';
 import vfile from 'vfile';
@@ -28,7 +29,7 @@ import { mdx } from '@mdx-js/react'
 
 function computeOptions(opts: Partial<MDXCompileOptions>) {
   const defaultOptions = {
-    remarkPlugins: [],
+    remarkPlugins: [remarkNotes],
     compilers: [],
     renderer: DEFAULT_RENDERER,
     bitFlavour: true,

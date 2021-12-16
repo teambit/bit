@@ -1,13 +1,14 @@
-import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-// import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { Module, SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
-import { Module } from './schemas';
-import { SemanticSchema } from './semantic-schema';
 import { SchemaExtractor } from './schema-extractor';
+import { SchemaCommand } from './schema.cmd';
+import { schemaSchema } from './schema.graphql';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -58,6 +59,15 @@ export class SchemaMain {
     return parser.parseModule(path);
   }
 
+  private getSchemaExtractorContext() {}
+
+  getSchemaExtractor(component: Component) {
+    const env = this.envs.getEnv(component).env;
+    if (typeof env.getSchemaExtractor === 'undefined') {
+      throw new Error(`No SchemaExtractor defined for ${env.name}`);
+    }
+  }
+
   /**
    * get a schema of a component.
    * @param component target component.
@@ -68,11 +78,7 @@ export class SchemaMain {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
     }
     const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
-    await schemaExtractor.extract(component);
-
-    return {
-      exports: [],
-    };
+    return schemaExtractor.extract(component);
   }
 
   /**
@@ -84,17 +90,22 @@ export class SchemaMain {
   }
 
   static runtime = MainRuntime;
-
-  static dependencies = [EnvsAspect];
+  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect];
+  static slots = [Slot.withType<Parser>()];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
   };
 
-  static slots = [Slot.withType<Parser>()];
-
-  static async provider([envs]: [EnvsMain], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
+  static async provider(
+    [envs, cli, component, graphql]: [EnvsMain, CLIMain, ComponentMain, GraphqlMain],
+    config: SchemaConfig,
+    [parserSlot]: [ParserSlot]
+  ) {
     const schema = new SchemaMain(parserSlot, envs, config);
+    cli.register(new SchemaCommand(schema, component));
+    graphql.register(schemaSchema(schema));
+
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
     //   return {};

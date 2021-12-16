@@ -43,6 +43,11 @@ export type LinkingOptions = {
    * similar to npm/yarn link
    */
   linkToDir?: string;
+
+  /**
+   * whether link should import objects before linking
+   */
+  fetchObject?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -117,6 +122,7 @@ export class DependencyLinker {
     options: LinkingOptions = {}
   ): Promise<LinkResults> {
     this.logger.setStatusLine('linking components');
+    this.logger.debug('linking components with options', options);
     const result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
@@ -429,6 +435,8 @@ export class DependencyLinker {
       return true;
     });
 
+    this.logger.debug(`linkNonExistingCoreAspects: linking the following core aspects ${filtered.join()}`);
+
     const results = filtered.map((id) => {
       return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id), hasLocalInstallation);
     });
@@ -461,6 +469,7 @@ export class DependencyLinker {
     if (!shouldSymlink) return undefined;
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {
+      this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
       aspectDir = getAspectDir(id);
       createSymlinkOrCopy(aspectDir, target);
       return { aspectId: id, linkDetail: { from: aspectDir, to: target } };
@@ -473,8 +482,10 @@ export class DependencyLinker {
       // in this case we want the symlinks to be relative links
       // Using the fs module to make sure it is relative to the target
       if (fs.existsSync(target)) {
+        this.logger.debug(`linkCoreAspect: aspectPath ${aspectPath} skip linking`);
         return undefined;
       }
+      this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
       createSymlinkOrCopy(aspectPath, target);
       return { aspectId: id, linkDetail: { from: aspectPath, to: target } };
     } catch (err: any) {

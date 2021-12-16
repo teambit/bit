@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
@@ -28,17 +29,19 @@ import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-
 import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import ManyComponentsWriter from './many-components-writer';
+import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
+import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
   verbose: boolean; // default: false
   merge?: boolean; // default: false
   mergeStrategy?: MergeStrategy;
-  withEnvironments: boolean; // default: false
+  withEnvironments?: boolean; // default: false. Ignored by Harmony - always false.
   writeToPath?: string;
-  writePackageJson: boolean; // default: true
+  writePackageJson?: boolean; // default: true. Ignored by Harmony - always false.
   writeConfig: boolean; // default: false
-  writeDists: boolean; // default: true
+  writeDists?: boolean; // default: true. Ignored by Harmony - always true, as they're inside node_modules.
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
   objectsOnly: boolean; // default: false
@@ -62,12 +65,13 @@ export type ImportDetails = {
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
+  deprecated: boolean;
 };
-export type ImportResult = Promise<{
+export type ImportResult = {
   dependencies: ComponentWithDependencies[];
   envComponents?: Component[];
   importDetails: ImportDetails[];
-}>;
+};
 
 export default class ImportComponents {
   consumer: Consumer;
@@ -75,6 +79,7 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
+  private laneObjects: Lane[] = [];
   private divergeData: Array<ModelComponent> = [];
   // @ts-ignore
   constructor(consumer: Consumer, options: ImportOptions) {
@@ -83,10 +88,10 @@ export default class ImportComponents {
     this.options = options;
   }
 
-  importComponents(): ImportResult {
+  importComponents(): Promise<ImportResult> {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
-    if (!this.options.writePackageJson) {
+    if (this.consumer.isLegacy && !this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
@@ -97,17 +102,14 @@ export default class ImportComponents {
     return this.importSpecificComponents();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async importSpecificComponents(): ImportResult {
+  async importSpecificComponents(): Promise<ImportResult> {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(
-      bitIds,
-      true,
-      this.options.saveDependenciesAsComponents
-    );
+    const componentsWithDependencies = this.consumer.isLegacy
+      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
+      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
@@ -166,9 +168,7 @@ export default class ImportComponents {
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
     if (this.options.lanes) {
-      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
-      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+      await this.populateBitIdsFromLanes(bitIds);
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -194,6 +194,24 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
+  }
+
+  private async populateBitIdsFromLanes(bitIds: BitId[]) {
+    if (!this.options.lanes) return;
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+    try {
+      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
+      this.laneObjects = lanes;
+      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+    } catch (err) {
+      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
+      } else {
+        throw err;
+      }
+    }
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
@@ -225,7 +243,7 @@ export default class ImportComponents {
     return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
-  async importAccordingToBitMap(): ImportResult {
+  async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
@@ -267,7 +285,7 @@ export default class ImportComponents {
               this.options.fromOriginalScope,
               this.options.allHistory
             )
-          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
@@ -362,12 +380,14 @@ export default class ImportComponents {
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
+      const deprecated = await modelComponent.isDeprecated(this.scope.objects);
       return {
         id: idStr,
         versions: versionDifference,
         status: getStatus(),
         filesStatus,
         missingDeps: component.missingDependencies,
+        deprecated,
       };
     });
     return Promise.all(detailsP);

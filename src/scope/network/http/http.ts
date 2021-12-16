@@ -27,6 +27,14 @@ import {
   CFG_PROXY_KEY,
   CFG_PROXY_NO_PROXY,
   CFG_PROXY_STRICT_SSL,
+  CFG_FETCH_RETRIES,
+  CFG_FETCH_RETRY_FACTOR,
+  CFG_FETCH_RETRY_MINTIMEOUT,
+  CFG_FETCH_RETRY_MAXTIMEOUT,
+  CFG_FETCH_TIMEOUT,
+  CFG_LOCAL_ADDRESS,
+  CFG_MAX_SOCKETS,
+  CFG_NETWORK_CONCURRENCY,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -54,6 +62,17 @@ export type ProxyConfig = {
   strictSSL?: boolean;
 };
 
+export type NetworkConfig = {
+  fetchRetries?: number;
+  fetchRetryFactor?: number;
+  fetchRetryMintimeout?: number;
+  fetchRetryMaxtimeout?: number;
+  fetchTimeout?: number;
+  localAddress?: string;
+  maxSockets?: number;
+  networkConcurrency?: number;
+};
+
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
 
 /**
@@ -71,7 +90,8 @@ export class Http implements Network {
     private scopeName: string,
     private proxyConfig?: ProxyConfig,
     private agent?: Agent,
-    private localScopeName?: string
+    private localScopeName?: string,
+    private networkConfig?: NetworkConfig
   ) {}
 
   static getToken() {
@@ -100,6 +120,21 @@ export class Http implements Network {
       key: obj[CFG_PROXY_KEY],
       noProxy: obj[CFG_PROXY_NO_PROXY],
       strictSSL: obj[CFG_PROXY_STRICT_SSL],
+    };
+  }
+
+  static async getNetworkConfig(): Promise<NetworkConfig> {
+    const obj = await list();
+
+    return {
+      fetchRetries: obj[CFG_FETCH_RETRIES],
+      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT],
+      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT],
+      fetchTimeout: obj[CFG_FETCH_TIMEOUT],
+      localAddress: obj[CFG_LOCAL_ADDRESS],
+      maxSockets: obj[CFG_MAX_SOCKETS],
+      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
     };
   }
 
@@ -345,35 +380,43 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    const DEPRECATE_COMPONENTS = gql`
-      mutation deprecate($bitIds: [String!]!) {
-        deprecate(bitIds: $bitIds) {
-          bitIds
-          missingComponents
-        }
-      }
-    `;
-    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
-      bitIds: ids,
-    });
-    return res.deprecate;
+    throw new Error(
+      `deprecation of a remote component has been disabled. deprecate locally with an updated version of bit and then tag and export`
+    );
+    // const DEPRECATE_COMPONENTS = gql`
+    //   mutation deprecate($bitIds: [String!]!) {
+    //     deprecate(bitIds: $bitIds) {
+    //       bitIds
+    //       missingComponents
+    //     }
+    //   }
+    // `;
+    // const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
+    //   bitIds: ids,
+    // });
+    // return res.deprecate;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    const UNDEPRECATE_COMPONENTS = gql`
-      mutation deprecate($bitIds: [String!]!) {
-        undeprecate(bitIds: $bitIds) {
-          bitIds
-          missingComponents
-        }
-      }
-    `;
-    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
-      bitIds: ids,
-    });
+    throw new Error(
+      `un-deprecation of a remote component has been disabled. undeprecate locally with an updated version of bit and then tag and export`
+    );
+    // const UNDEPRECATE_COMPONENTS = gql`
+    //   mutation deprecate($bitIds: [String!]!) {
+    //     undeprecate(bitIds: $bitIds) {
+    //       bitIds
+    //       missingComponents
+    //     }
+    //   }
+    // `;
+    // const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
+    //   bitIds: ids,
+    // });
 
-    return res.undeprecate;
+    // return res.undeprecate;
   }
 
   async log(id: BitId): Promise<ComponentLog[]> {
@@ -494,11 +537,16 @@ export class Http implements Network {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
     const proxyConfig = await Http.getProxyConfig();
-    const agent = await Http.getAgent(host, proxyConfig);
+    const networkConfig = await Http.getNetworkConfig();
+    const agent = await Http.getAgent(host, {
+      ...proxyConfig,
+      localAddress: networkConfig.localAddress,
+      maxSockets: networkConfig.maxSockets,
+    });
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
     const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
-    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName);
+    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName, networkConfig);
   }
 }
 
@@ -513,7 +561,12 @@ export function getAuthHeader(token: string) {
  */
 export async function getFetcherWithAgent(uri: string) {
   const proxyConfig = await Http.getProxyConfig();
-  const agent = await Http.getAgent(uri, proxyConfig);
+  const networkConfig = await Http.getNetworkConfig();
+  const agent = await Http.getAgent(uri, {
+    ...proxyConfig,
+    localAddress: networkConfig.localAddress,
+    maxSockets: networkConfig.maxSockets,
+  });
   const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
 }

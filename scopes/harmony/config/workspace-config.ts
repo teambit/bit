@@ -18,7 +18,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'lodash';
 
-import { SetExtensionOptions } from './config';
+import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -255,13 +255,9 @@ export class WorkspaceConfig implements HostConfig {
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const workspaceJsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
-    if (resetHard) {
-      // Call the legacy reset hard to make sure there is no old bit.json kept
-      await LegacyWorkspaceConfig.reset(dirPath, true);
-      if (workspaceJsoncPath) {
-        logger.info(`deleting the consumer bit.jsonc file at ${workspaceJsoncPath}`);
-        await fs.remove(workspaceJsoncPath);
-      }
+    if (resetHard && workspaceJsoncPath) {
+      logger.info(`deleting the consumer workspace.jsonc file at ${workspaceJsoncPath}`);
+      await fs.remove(workspaceJsoncPath);
     }
   }
 

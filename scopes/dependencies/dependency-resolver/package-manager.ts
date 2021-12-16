@@ -2,7 +2,7 @@ import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { WorkspacePolicy } from './policy';
-import { ProxyConfig } from './dependency-resolver.main.runtime';
+import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -16,6 +16,8 @@ export type PackageManagerInstallOptions = {
   copyPeerToRuntimeOnComponents?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
+
+  overrides?: Record<string, string>;
 };
 
 export type ResolvedPackageVersion = {
@@ -52,4 +54,6 @@ export interface PackageManager {
   getRegistries?(): Promise<Registries>;
 
   getProxyConfig?(): Promise<ProxyConfig>;
+
+  getNetworkConfig?(): Promise<NetworkConfig>;
 }

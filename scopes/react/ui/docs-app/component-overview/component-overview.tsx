@@ -14,9 +14,22 @@ export type ComponentOverviewProps = {
   version: string;
   labels: string[];
   packageName: string;
+  elementsUrl?: string;
 };
 
-export function ComponentOverview({ displayName, abstract, labels, packageName, ...rest }: ComponentOverviewProps) {
+export function ComponentOverview({
+  displayName,
+  abstract,
+  labels,
+  packageName,
+  elementsUrl,
+  ...rest
+}: ComponentOverviewProps) {
+  let finalElementsUrl = elementsUrl;
+  if (finalElementsUrl && !finalElementsUrl.startsWith('http')) {
+    const origin = typeof window !== undefined ? window.location.origin : undefined;
+    finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+  }
   return (
     <Section {...rest}>
       <div className={textColumn}>
@@ -24,6 +37,7 @@ export function ComponentOverview({ displayName, abstract, labels, packageName, 
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
         <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
+        {finalElementsUrl && <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>}
       </div>
       <Separator isPresentational />
     </Section>

@@ -11,7 +11,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
+import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -22,7 +22,6 @@ import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packe
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
 import { PreparePackagesTask } from './prepare-packages.task';
-import { PublishDryRunTask } from './publish-dry-run.task';
 import { PublishCmd } from './publish.cmd';
 import { Publisher } from './publisher';
 import { PublishTask } from './publish.task';
@@ -148,10 +147,13 @@ export class PkgMain {
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
-    builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
+    // we ended up not using the publish-dry-run task. It used to run "npm publish --dry-run"
+    // and also "npm pack --dry-run", but it's not that useful and it takes long to complete.
+    // we might revise our decision later.
+    // const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher, envs);
+    // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
+    builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([packTask, publishTask]);
     builder.registerSnapTasks([packTask]);
     if (workspace) {
@@ -267,10 +269,16 @@ export class PkgMain {
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps: PackageJsonProps = {};
+    const mergeToNewProps = (otherProps: PackageJsonProps) => {
+      const files = [...(newProps.files || []), ...(otherProps.files || [])];
+      const merged = { ...newProps, ...otherProps };
+      if (files.length) merged.files = files;
+      return merged;
+    };
     const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
-      newProps = Object.assign(newProps, propsFromEnv);
+      newProps = mergeToNewProps(propsFromEnv);
     }
 
     const configuredIds = component.state.aspects.ids;
@@ -278,14 +286,14 @@ export class PkgMain {
       // Only get props from configured extensions on this specific component
       const props = this.packageJsonPropsRegistry.get(extId);
       if (props) {
-        newProps = Object.assign(newProps, props);
+        newProps = mergeToNewProps(props);
       }
     });
 
     const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentConfig = currentExtension?.config as unknown as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
-      newProps = Object.assign(newProps, currentConfig.packageJson);
+      newProps = mergeToNewProps(currentConfig.packageJson);
     }
     // Keys not allowed to override
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];

@@ -40,6 +40,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         component,
         errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
         warning: result.warnings,
+        startTime: result.startTime,
+        endTime: result.endTime,
       };
     });
 

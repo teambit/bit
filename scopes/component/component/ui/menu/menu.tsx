@@ -68,6 +68,9 @@ function VersionRelatedDropdowns({ component }: { component: ComponentModel }) {
 
   const isLatestVersion = useMemo(() => component.version === versionList[0], [component.version]);
   const packageVersion = useMemo(() => (isLatestVersion ? '' : `@${component.version}`), [component.version]);
+  const origin = typeof window !== undefined ? window.location.origin : undefined;
+  const finalElementsUrl = origin && component.elementsUrl ? `${origin}${component.elementsUrl}` : undefined;
+
   return (
     <>
       {versionList.length > 0 && (
@@ -79,6 +82,7 @@ function VersionRelatedDropdowns({ component }: { component: ComponentModel }) {
               componentName={component.id.name}
               componentId={component.id.toString({ ignoreVersion: isLatestVersion })}
               packageName={`${component.packageName}${packageVersion}`}
+              elementsUrl={finalElementsUrl}
               registryName={component.packageName.split('/')[0]}
             />
           )}

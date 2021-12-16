@@ -31,6 +31,8 @@ import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
+import { ReactElementsAspect } from '@teambit/react-elements';
+import { ElementsAspect } from '@teambit/elements';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
@@ -60,6 +62,7 @@ import MDXAspect from '@teambit/mdx';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
+import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
@@ -98,6 +101,8 @@ export const manifestsMap = {
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
   [ReactNativeAspect.id]: ReactNativeAspect,
+  [ReactElementsAspect.id]: ReactElementsAspect,
+  [ElementsAspect.id]: ElementsAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -126,6 +131,7 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
+  [ImporterAspect.id]: ImporterAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,

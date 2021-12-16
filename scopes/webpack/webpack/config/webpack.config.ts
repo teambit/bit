@@ -1,9 +1,7 @@
 import webpack, { Configuration } from 'webpack';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
-import { html } from './html';
 
 export function configFactory(entries: string[], rootPath: string): Configuration {
   return {
@@ -21,48 +19,14 @@ export function configFactory(entries: string[], rootPath: string): Configuratio
       filename: 'static/js/[name].[contenthash:8].js',
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
-      // webpack uses `publicPath` to determine where the app is being served from.
-      // It requires a trailing slash, or the file assets will get an incorrect path.
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      publicPath: ``,
-      // this defaults to 'window', but by setting it to 'this' then
-      // module chunks which are built will work in web workers as well.
-      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
-      // globalObject: 'this',
     },
 
     resolve: {
       alias: fallbacksAliases,
 
-      // @ts-ignore
       fallback: fallbacks,
     },
 
-    plugins: [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            templateContent: html('Preview'),
-          },
-          {
-            minify: {
-              removeComments: true,
-              collapseWhitespace: true,
-              removeRedundantAttributes: true,
-              useShortDoctype: true,
-              removeEmptyAttributes: true,
-              removeStyleLinkTypeAttributes: true,
-              keepClosingSlash: true,
-              minifyJS: true,
-              minifyCSS: true,
-              minifyURLs: true,
-            },
-          }
-        )
-      ),
-      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
-    ],
+    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig)],
   };
 }

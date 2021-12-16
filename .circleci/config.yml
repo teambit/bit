@@ -175,6 +175,17 @@ jobs:
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit:latest
 
+  docker_non_root_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:latest .
+      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-non-root:latest
+
   server_docker_build:
     machine: true
     steps:
@@ -683,6 +694,9 @@ jobs:
     <<: *defaults
     steps:
       - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -723,6 +737,9 @@ jobs:
       - run: yarn cache clean
       - run: yarn -v
       - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -760,6 +777,9 @@ jobs:
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
+      - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -1160,6 +1180,7 @@ jobs:
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
+      - run: 'cd bit\bit; npm run build:types:windows'
       - persist_to_workspace:
           root: .
           paths:
@@ -1536,6 +1557,9 @@ workflows:
       - docker_build:
           requires:
             - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_publish_to_gcloud
       - server_docker_build:
           requires:
             - docker_build
@@ -1648,7 +1672,27 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
       - server_docker_build:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+  # uncomment and change the filter branch name to debug the bvm bundle jobs
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+

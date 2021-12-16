@@ -153,7 +153,7 @@ export default class Import implements LegacyCommand {
       importDependents: dependents,
       allHistory,
     };
-    return importAction(environmentOptions, importOptions, packageManagerArgs).then((importResults) => ({
+    return importAction(importOptions, packageManagerArgs, environmentOptions).then((importResults) => ({
       displayDependencies,
       json,
       ...importResults,

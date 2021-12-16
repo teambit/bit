@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import moment from 'moment';
-
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
@@ -8,15 +7,23 @@ import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { Watcher } from './watcher';
+import { Watcher, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { OnComponentEventResult } from '../on-component-events';
+import { CheckTypes } from './check-types';
+
+export type WatchCmdOpts = {
+  verbose?: boolean;
+  skipPreCompilation?: boolean;
+  checkTypes?: string | boolean;
+};
 
 export class WatchCommand implements Command {
   msgs = {
     onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
+      clearOutdatedData();
       if (verbose) {
         this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
@@ -27,6 +34,7 @@ export class WatchCommand implements Command {
       );
     },
     onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      clearOutdatedData();
       if (!buildResults.length) {
         this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
         return;
@@ -37,6 +45,7 @@ export class WatchCommand implements Command {
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
     onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      clearOutdatedData();
       this.logger.console(`The file ${filePath} has been added.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
@@ -55,7 +64,15 @@ export class WatchCommand implements Command {
   alias = '';
   group = 'development';
   shortDescription = '';
-  options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
+  options = [
+    ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
+    [
+      't',
+      'check-types [string]',
+      'EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
+    ],
+  ] as CommandOptions;
 
   constructor(
     /**
@@ -89,8 +106,37 @@ export class WatchCommand implements Command {
     }
   };
 
-  async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
-    await this.watcher.watch({ msgs: this.msgs, verbose });
+  async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
+    const { verbose, checkTypes } = watchCmdOpts;
+    const getCheckTypesEnum = () => {
+      switch (checkTypes) {
+        case undefined:
+        case false:
+          return CheckTypes.None;
+        case 'project':
+        case true: // project is the default
+          return CheckTypes.EntireProject;
+        case 'file':
+          return CheckTypes.ChangedFile;
+        default:
+          throw new Error(`check-types can be either "file" or "project". got "${checkTypes}"`);
+      }
+    };
+    const watchOpts: WatchOptions = {
+      msgs: this.msgs,
+      verbose,
+      preCompile: !watchCmdOpts.skipPreCompilation,
+      spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
+      checkTypes: getCheckTypesEnum(),
+    };
+    await this.watcher.watchAll(watchOpts);
     return 'watcher terminated';
   }
+}
+
+/**
+ * with console.clear() all history is deleted from the console. this function preserver the history.
+ */
+function clearOutdatedData() {
+  process.stdout.write('\x1Bc');
 }

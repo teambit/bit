@@ -91,6 +91,7 @@ export type AddProps = {
   override: boolean;
   trackDirFeature?: boolean;
   origin?: ComponentOrigin;
+  defaultScope?: string;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
 // In that case , give the value false to overridenConsumer .
@@ -121,6 +122,7 @@ export default class AddComponents {
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
   isLegacy: boolean;
+  defaultScope?: string; // helpful for out-of-sync
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -141,6 +143,7 @@ export default class AddComponents {
     };
     this.addedComponents = [];
     this.isLegacy = context.consumer.isLegacy;
+    this.defaultScope = addProps.defaultScope;
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -296,18 +299,21 @@ export default class AddComponents {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
         }
-        // $FlowFixMe null is removed later on
         return null;
       }
       if (!foundComponentFromBitMap && componentFromScope) {
         const newId = componentFromScope.toBitIdWithLatestVersion();
-        component.componentId = newId;
-        this.warnings.existInScope.push(newId);
+        if (!this.defaultScope || this.defaultScope === newId.scope) {
+          // otherwise, if defaultScope !== newId.scope, they're different components,
+          // and no need to change the id.
+          // for more details about this scenario, see https://github.com/teambit/bit/issues/1543, last case.
+          component.componentId = newId;
+          this.warnings.existInScope.push(newId);
+        }
       }
       return file;
     });
-    // $FlowFixMe it can't be null due to the filter function
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore it can't be null due to the filter function
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter((file) => file);
     if (!componentFiles.length) return { id: component.componentId, files: [] };
     if (foundComponentFromBitMap) {
@@ -352,6 +358,7 @@ export default class AddComponents {
       const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
+        defaultScope: this.defaultScope,
         mainFile,
         trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
         origin: COMPONENT_ORIGINS.AUTHORED,

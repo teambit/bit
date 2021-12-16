@@ -152,7 +152,8 @@ describe('publish functionality', function () {
       });
     });
   });
-  describe('with invalid package name', () => {
+  // we ended up not running the publish dry-run tasks
+  describe.skip('with invalid package name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);

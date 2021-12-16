@@ -29,6 +29,13 @@
   }
 }
 
+.img {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  filter: grayscale(1);
+}
+
 .left {
   display: flex;
   align-items: center;
@@ -40,10 +47,4 @@
     white-space: nowrap;
     margin-right: 8px;
   }
-}
-
-.childrenTree {
-  overflow: hidden;
-  transition: max-height 400ms ease-in-out;
-  font-size: var(--bit-p-xs);
 }

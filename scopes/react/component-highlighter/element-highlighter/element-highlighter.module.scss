@@ -1,8 +1,12 @@
-.container {
-  font-size: 12px;
-}
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .label {
-  font-family: sans-serif;
+  // space between the label and the target
+  // keep this space so users can move their cursor in this space.
   padding: 8px;
+}
+
+.frame,
+.label {
+  z-index: $highlighter-z-index;
 }

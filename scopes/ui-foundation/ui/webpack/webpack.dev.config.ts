@@ -1,22 +1,24 @@
+import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
-const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
-const path = require('path');
-const { html } = require('./html');
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import path from 'path';
+import { html } from './html';
 
 /*
  * Webpack config for the bit ui
  * i.e. `bit start --dev`,
  */
 
+const matchNothingRegex = 'a^';
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
@@ -42,12 +44,7 @@ const moduleFileExtensions = [
   'jsx',
 ];
 
-module.exports = {
-  createWebpackConfig,
-  devConfig: createWebpackConfig,
-};
-
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
+export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -59,7 +56,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
   return {
     // Environment mode
     mode: 'development',
-    // improves HMR
+    // improves HMR - assume node_modules might change
     snapshot: { managedPaths: [] },
 
     devtool: 'inline-source-map',
@@ -67,7 +64,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
     // Entry point of app
     entry: {
       main: entryFiles,
-      // preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
     },
 
     output: {
@@ -206,22 +202,27 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
           include: /node_modules/,
           // only apply to packages with componentId in their package.json (ie. bit components)
           descriptionData: { componentId: (value) => !!value },
-          use: [require.resolve('source-map-loader')],
+          use: [require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'), require.resolve('source-map-loader')],
         },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
           include: workspaceDir,
-          loader: require.resolve('babel-loader'),
-          options: {
-            configFile: false,
-            babelrc: false,
-            presets: [
-              // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app'),
-            ],
-            plugins: [require.resolve('react-refresh/babel')],
-          },
+          use: [
+            require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'),
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                configFile: false,
+                babelrc: false,
+                presets: [
+                  // Preset includes JSX, TypeScript, and some ESnext features
+                  require.resolve('babel-preset-react-app'),
+                ],
+                plugins: [require.resolve('react-refresh/babel')],
+              },
+            },
+          ],
         },
         {
           test: stylesRegexps.sassModuleRegex,
@@ -315,14 +316,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        include: aspectPaths, // original default value was /\.([cm]js|[jt]sx?|flow)$/i
-        // replaces the default value of `/node_modules/`
-        exclude: [
-          /react-refresh-webpack-plugin/i,
-          // file type filtering was done by `include`, so need to negative-filter them out here
-          // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!\.jsx)(?<!\.js)(?<!\.tsx)(?<!\.ts)$/i,
-        ],
+        // we use '@pmmmwh/react-refresh-webpack-plugin/loader' directly where relevant.
+        // FYI, original defaults of the plugin are:
+        // include: /\.([cm]js|[jt]sx?|flow)$/i, exclude: /node_modules/,
+        include: matchNothingRegex,
       }),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the
@@ -333,11 +330,9 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Webp
         chunks: ['main'],
         filename: 'index.html',
       }),
-      // new HtmlWebpackPlugin({
-      //   templateContent: html('Component preview'),
-      //   chunks: ['preview'],
-      //   filename: 'preview.html'
-      // })
+      new ProvidePlugin({
+        process: require.resolve('process/browser'),
+      }),
     ],
   };
 }

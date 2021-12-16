@@ -43,6 +43,7 @@ export default class Fetch implements LegacyCommand {
       type,
       withoutDependencies: noDependencies,
       includeArtifacts,
+      allowExternal: false, // not relevant for SSH. only used in http for lanes.
     };
     return migrate(scopePath, false)
       .then(() => fetch(scopePath, payload, fetchOptions, headers))

@@ -37,7 +37,6 @@ import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsS
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
-import { getAllVersionHashes } from './component-ops/traverse-versions';
 import ComponentVersion from './component-version';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import DependencyGraph from './graph/scope-graph';
@@ -141,8 +140,8 @@ export default class Scope {
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany(ids, cache);
+  async import(ids: BitIds, cache = true, reFetchUnBuiltVersion = true): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany({ ids, cache, throwForDependencyNotFound: false, reFetchUnBuiltVersion });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -513,50 +512,21 @@ export default class Scope {
   }
 
   /**
-   * findDependentBits
-   * foreach component in array find the componnet that uses that component
+   * for each one of the given components, find its dependents
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async findDependentBits(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
-    const allComponents = await this.list();
-    const allComponentVersions = await Promise.all(
-      allComponents.map(async (component: ModelComponent) => {
-        const allRefs = await getAllVersionHashes(component, this.objects, false);
-        const loadedVersions = await Promise.all(
-          allRefs.map(async (ref) => {
-            const componentVersion = await component.loadVersion(ref.toString(), this.objects, false);
-            if (!componentVersion) return null;
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            componentVersion.id = component.toBitId();
-            return componentVersion;
-          })
-        );
-        return loadedVersions.filter((x) => x);
-      })
-    );
-    const allScopeComponents = R.flatten(allComponentVersions);
-    const dependentBits = {};
-    bitIds.forEach((bitId) => {
-      const dependencies = [];
-      allScopeComponents.forEach((scopeComponents) => {
-        scopeComponents.flattenedDependencies.forEach((flattenedDependency) => {
-          if (flattenedDependency.isEqualWithoutVersion(bitId)) {
-            if (returnResultsWithVersion) {
-              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              dependencies.push(scopeComponents.id);
-            } else {
-              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              dependencies.push(scopeComponents.id.changeVersion(null));
-            }
-          }
-        });
-      });
-
-      if (!R.isEmpty(dependencies)) {
-        dependentBits[bitId.toStringWithoutVersion()] = BitIds.uniqFromArray(dependencies);
+  async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+    const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
+    const dependencyGraph = new DependencyGraph(idsGraph);
+    const dependentsGraph = bitIds.reduce((acc, current) => {
+      const dependents = dependencyGraph.getDependentsForAllVersions(current);
+      if (dependents.length) {
+        const dependentsIds = dependents.map((id) => (returnResultsWithVersion ? id : id.changeVersion(undefined)));
+        acc[current.toStringWithoutVersion()] = BitIds.uniqFromArray(dependentsIds);
       }
-    });
-    return Promise.resolve(dependentBits);
+      return acc;
+    }, {});
+
+    return dependentsGraph;
   }
 
   /**

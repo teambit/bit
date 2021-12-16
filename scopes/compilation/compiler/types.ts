@@ -11,6 +11,7 @@ export enum CompilationInitiator {
   CmdReport,
   CmdJson,
   PreStart,
+  PreWatch,
   Start,
   ComponentChanged,
   AspectLoadFail,
@@ -68,6 +69,11 @@ export interface Compiler extends CompilerOptions {
    * id of the compiler.
    */
   id: string;
+
+  /**
+   * Delete dist folder before writing the new compiled files
+   */
+  deleteDistDir?: boolean;
 
   /**
    * serialized config of the compiler.

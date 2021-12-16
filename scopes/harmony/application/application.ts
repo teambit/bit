@@ -17,10 +17,16 @@ export interface Application {
   /**
    * build the application.
    */
-  build(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
+  build?(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
 
   /**
    * application deployment. this is a build task.
    */
   deploy?(context: BuildContext): Promise<void>;
+
+  /**
+   * prerender routes of application (will create static file for the route)
+   * e.g ['/plugins', '/learn', '/docs/quick-start]
+   */
+  prerenderRoutes?: string[];
 }

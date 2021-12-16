@@ -15,15 +15,15 @@ export class AppListCmd implements Command {
   constructor(private applicationAspect: ApplicationMain) {}
 
   async report(args: [string], { json }: { json: boolean }) {
-    const apps = this.applicationAspect.listApps();
-    if (json) return JSON.stringify(apps, null, 2);
-    if (!apps.length) return chalk.yellow('no apps found');
+    const appComponents = this.applicationAspect.mapApps();
+    if (json) return JSON.stringify(appComponents, null, 2);
+    if (!appComponents.length) return chalk.yellow('no apps found');
 
-    const rows = apps.map((app) => {
-      return [app.name];
+    const rows = appComponents.flatMap(([id, apps]) => {
+      return apps.map((app) => [id, app.name]);
     });
 
-    const table = new CLITable([], rows);
+    const table = new CLITable(['id', 'name'], rows);
     return table.render();
   }
 }

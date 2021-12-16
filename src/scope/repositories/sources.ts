@@ -483,24 +483,49 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * it doesn't persist anything to the filesystem.
    * (repository.persist() needs to be called at the end of the operation)
    */
-  removeComponentVersions(component: ModelComponent, versions: string[], allVersionsObjects: Version[]): void {
+  removeComponentVersions(
+    component: ModelComponent,
+    versions: string[],
+    allVersionsObjects: Version[],
+    lane: Lane | null
+  ): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
+    const laneItem = lane?.getComponentByName(component.toBitId());
+    const headOnLane = laneItem?.head.hash;
     const removedRefs = versions.map((version) => {
       const ref = component.removeVersion(version);
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
       const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
       // update the snap head if needed
-      if (component.getHeadStr() === refStr) {
+      const getHead = () => {
+        const divergeData = component.getDivergeData();
+        if (divergeData.isDiverged()) {
+          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
+          return component.remoteHead;
+        }
         if (versionObject.parents.length > 1) {
           throw new Error(
             `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
           );
         }
-        const head = versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
+        return versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
+      };
+      if (component.getHeadStr() === refStr) {
+        const head = getHead();
         component.setHead(head);
+      }
+      if (laneItem && headOnLane === refStr) {
+        const head = getHead();
+        if (head) {
+          laneItem.head = head;
+        } else {
+          lane?.removeComponent(component.toBitId());
+        }
+        component.laneHeadLocal = head;
+        objectRepo.add(lane);
       }
 
       objectRepo.removeObject(ref);
@@ -520,11 +545,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (componentHadHead && !component.hasHead() && component.versionArray.length) {
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
-    if (component.versionArray.length || component.hasHead()) {
+    if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
-      // @todo: make sure not to delete the component when it has snaps but not versions!
-      // if all versions were deleted, delete also the component itself from the model
       objectRepo.removeObject(component.hash());
     }
     objectRepo.unmergedComponents.removeComponent(component.name);

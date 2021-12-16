@@ -41,6 +41,16 @@ In the example above, the aspect `teambit.harmony/aspect` is configured to be av
 
 Introduce a new command `bit templates`, which groups all available templates by aspects.
 
+## Hide core templates
+
+Configure the Generator aspect to hide core templates when running `bit templates`. They'll be only shown when using `--show-all` flag.
+
+```json
+"teambit.generator/generator": {
+    "hideCoreTemplates": true
+  },
+```
+
 ## Generate a template from CLI
 
 Introduce a `create` command to use templates.

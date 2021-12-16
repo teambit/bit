@@ -39,7 +39,7 @@ Overview.examples = [
         isDeprecate: true,
       };
       // @ts-ignore
-      const component = new ComponentModel(null, null, null, null, null, null, null, null, deprecation, null, null);
+      const component = new ComponentModel(null, null, null, null, null, null, null, null, null, deprecation, null, null);
       return (
         <div style={style}>
           <DeprecationIcon component={component} />
