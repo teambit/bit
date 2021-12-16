@@ -8,13 +8,13 @@ export function jestConfigFile() {
   // const {
   //   generateNodeModulesPattern,
   // } = require('@teambit/dependencies.modules.packages-excluder');
-  // const packagesToExclude = ['prop-types', '@teambit'];
+  // const packagesToExclude = ['@my-org', 'my-package-name'];
 
   // module.exports = {
   //   ...reactJestConfig,
   //   transformIgnorePatterns: [
-  //     ...reactJestConfig.transformIgnorePatterns,
-  //     '/' + generateNodeModulesPattern({ packages: packagesToExclude }),
+  //     '^.+\\.module\\.(css|sass|scss)$',
+  //     generateNodeModulesPattern({ packages: packagesToExclude }),
   //   ],
   // };
   `;

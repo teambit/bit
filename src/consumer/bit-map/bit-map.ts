@@ -628,6 +628,7 @@ export default class BitMap {
   addComponent({
     componentId,
     files,
+    defaultScope,
     mainFile,
     origin,
     rootDir,
@@ -638,6 +639,7 @@ export default class BitMap {
   }: {
     componentId: BitId;
     files: ComponentMapFile[];
+    defaultScope?: string;
     mainFile: PathLinux;
     origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
@@ -682,6 +684,9 @@ export default class BitMap {
     }
     if (onLanesOnly) {
       componentMap.onLanesOnly = onLanesOnly;
+    }
+    if (defaultScope) {
+      componentMap.defaultScope = defaultScope;
     }
     componentMap.removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -776,14 +781,30 @@ export default class BitMap {
     if (this.workspaceLane && !updateScopeOnly) {
       // this code is executed when snapping/tagging and user is on a lane.
       // change the version only on the lane, not on .bitmap
-      this.workspaceLane.addEntry(newId);
+      if (newId.hasVersion()) {
+        this.workspaceLane.addEntry(newId);
+      } else {
+        // component was un-snapped and is back to "new".
+        this.workspaceLane.removeEntry(oldId);
+        componentMap.onLanesOnly = false;
+      }
       componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
+    }
+    if (updateScopeOnly) {
+      // in case it had defaultScope, no need for it anymore.
+      delete componentMap.defaultScope;
     }
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
     this.markAsChanged();
     this.updatedIds[oldIdStr] = componentMap;
     return newId;
+  }
+
+  removeConfig(id: BitId) {
+    const componentMap = this.getComponent(id);
+    delete componentMap.config;
+    this.markAsChanged();
   }
 
   updateLanesProperty(workspaceLane: WorkspaceLane, remoteLaneId: RemoteLaneId) {

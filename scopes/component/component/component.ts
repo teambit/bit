@@ -55,6 +55,10 @@ export class Component {
     private factory: ComponentFactory
   ) {}
 
+  get mainFile() {
+    return this.state.mainFile;
+  }
+
   get state(): State {
     return this._state;
   }

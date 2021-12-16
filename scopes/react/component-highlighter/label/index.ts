@@ -1,2 +1,5 @@
-export { LabelContainer, Label } from './label';
-export type { LabelContainerProps, LabelProps, Placement } from './label';
+export { Label } from './label';
+export type { LabelProps } from './label';
+
+export { LabelContainer } from './label-container';
+export type { LabelContainerProps, Placement } from './label-container';

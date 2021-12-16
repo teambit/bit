@@ -21,6 +21,7 @@ export class DeployTask implements BuildTask {
       const capsules = context.capsuleNetwork.seedersCapsules;
       const capsule = this.getCapsule(capsules, aspectId);
       if (!capsule) return undefined;
+      if (!app.build) return undefined;
       const deployContext = await app.build(context, aspectId, capsule);
       if (app.deploy) await app.deploy(deployContext, capsule);
       await this.deployToProviders(deployContext, capsule);

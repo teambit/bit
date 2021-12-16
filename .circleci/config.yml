@@ -694,6 +694,9 @@ jobs:
     <<: *defaults
     steps:
       - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -734,6 +737,9 @@ jobs:
       - run: yarn cache clean
       - run: yarn -v
       - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -771,6 +777,9 @@ jobs:
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
+      - run:
+          name: set bit.dev registry
+          command: npm config set @bit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -1671,3 +1680,19 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+  # uncomment and change the filter branch name to debug the bvm bundle jobs
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+

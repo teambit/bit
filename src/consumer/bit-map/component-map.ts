@@ -39,6 +39,7 @@ type LaneVersion = { remoteLane: RemoteLaneId; version: string };
 export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux;
   trackDir?: PathLinux;
@@ -51,6 +52,7 @@ export type ComponentMapData = {
   defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
+  config?: { [aspectId: string]: Record<string, any> };
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -58,6 +60,7 @@ export type PathChange = { from: PathLinux; to: PathLinux };
 export default class ComponentMap {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux; // always set for IMPORTED and NESTED.
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
@@ -81,9 +84,11 @@ export default class ComponentMap {
   scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
   version?: string; // Harmony only. empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
+  config?: { [aspectId: string]: Record<string, any> };
   constructor({
     id,
     files,
+    defaultScope,
     mainFile,
     rootDir,
     trackDir,
@@ -95,9 +100,11 @@ export default class ComponentMap {
     defaultVersion,
     isAvailableOnCurrentLane,
     nextVersion,
+    config,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
+    this.defaultScope = defaultScope;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
@@ -109,6 +116,7 @@ export default class ComponentMap {
     this.defaultVersion = defaultVersion;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
+    this.config = config;
   }
 
   static fromJson(
@@ -131,6 +139,7 @@ export default class ComponentMap {
       scope: this.scope,
       version: this.version,
       files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
+      defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
@@ -143,6 +152,7 @@ export default class ComponentMap {
         ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
         : null,
       nextVersion: this.nextVersion,
+      config: this.config,
     };
     const notNil = (val) => {
       return !R.isNil(val);

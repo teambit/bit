@@ -47,17 +47,17 @@ Bit does not prescribe how you build your entire application. It helps you defin
 ### How to Start?
 
 #### Installation
-  
+
 To get started, we would first have to make sure the bit binary is installed on your machine and configured to your PATH.
-  
+
 ```
 $ npx @teambit/bvm install
 ```
-  
+
 (NodeJS installation is required)
 
 #### Creating the workspace
-  
+
 The first step in the Bit journey is to create a component development workspace. Workspaces allow the creation and maintanance of isolated and independent pieces called "components". Since every component is isolated, the workspace is tech agnostic and allows for components, with a different tech stack to co-exist. A single workspace might include React components, general purpose node modules, Angular modules and even backend services.
 
 To create a new workspace, run:
@@ -66,16 +66,16 @@ To create a new workspace, run:
 bit new great-inventions
 cd my-workspace
 ```
-  
+
 #### Start the Workspace UI console:
 
 ```
 bit start
 ```
-  
+
 ### Popular Use-Cases
 
-[Here are 4 common use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) to start your transition to component-driven development. 
+[Here are 4 common use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) to start your transition to component-driven development.
 
 - Micro Frontends
 - Design Systems (Component Marketplace)

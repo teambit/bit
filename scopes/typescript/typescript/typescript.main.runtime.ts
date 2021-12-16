@@ -1,23 +1,36 @@
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts from 'typescript';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-import WorkspaceAspect from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import type { WatchOptions, Workspace } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
+import { SchemaTransformer } from './schema-transformer';
+import { SchemaTransformerPlugin } from './schema-transformer.plugin';
+import {
+  ExportDeclaration,
+  TypeAliasTransformer,
+  FunctionDeclaration,
+  VariableStatementTransformer,
+  SourceFileTransformer,
+} from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
 export type TsMode = 'build' | 'dev';
+
+export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
 
 export type TsConfigTransformContext = {
   // mode: TsMode;
@@ -29,14 +42,13 @@ export type TsConfigTransformer = (
 ) => TypescriptConfigMutator;
 
 export class TypescriptMain {
+  constructor(
+    private logger: Logger,
+    private schemaTransformerSlot: SchemaTransformerSlot,
+    private workspace: Workspace
+  ) {}
+
   private tsServer: TsserverClient;
-  constructor(private logger: Logger, private workspace?: Workspace) {
-    if (this.workspace) {
-      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
-      this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
-      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
-    }
-  }
   /**
    * create a new compiler.
    */
@@ -94,8 +106,8 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
-    return new TypeScriptExtractor(tsconfig);
+  createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
+    return new TypeScriptExtractor(tsconfig, this.schemaTransformerSlot, this, path || this.workspace.path);
   }
 
   /**
@@ -141,17 +153,36 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, WorkspaceAspect, CLIAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect, WorkspaceAspect, CLIAspect];
+  static slots = [Slot.withType<SchemaTransformer[]>()];
 
-  static async provider([schema, loggerExt, workspace, cli]: [SchemaMain, LoggerMain, Workspace, CLIMain]) {
+  static async provider(
+    [schema, loggerExt, aspectLoader, workspace, cli]: [SchemaMain, LoggerMain, AspectLoaderMain, Workspace, CLIMain],
+    config,
+    [schemaTransformerSlot]: [SchemaTransformerSlot]
+  ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    schema.registerParser(new TypeScriptParser(logger));
-    const typescriptMain = new TypescriptMain(logger, workspace);
-    const checkTypesCmd = new CheckTypesCmd(typescriptMain, workspace, logger);
+    aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
+    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace);
+    schemaTransformerSlot.register([
+      new ExportDeclaration(),
+      new FunctionDeclaration(),
+      new VariableStatementTransformer(),
+      new SourceFileTransformer(),
+      new TypeAliasTransformer(),
+    ]);
+
+    if (workspace) {
+      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(this));
+      workspace.registerOnComponentChange(tsMain.onComponentChange.bind(this));
+      workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(this));
+    }
+
+    const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     cli.register(checkTypesCmd);
 
-    return typescriptMain;
+    return tsMain;
   }
 }
 

@@ -611,7 +611,7 @@ export default class Version extends BitObject {
       bindingPrefix: component.bindingPrefix,
       tester,
       log: component.log as Log,
-      specsResults: (component.specsResults as any) as Results,
+      specsResults: component.specsResults as any as Results,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),

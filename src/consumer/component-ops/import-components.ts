@@ -65,6 +65,7 @@ export type ImportDetails = {
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
+  deprecated: boolean;
 };
 export type ImportResult = {
   dependencies: ComponentWithDependencies[];
@@ -379,12 +380,14 @@ export default class ImportComponents {
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
+      const deprecated = await modelComponent.isDeprecated(this.scope.objects);
       return {
         id: idStr,
         versions: versionDifference,
         status: getStatus(),
         filesStatus,
         missingDeps: component.missingDependencies,
+        deprecated,
       };
     });
     return Promise.all(detailsP);
