@@ -18,6 +18,7 @@ import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
 import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
+import { AppContext } from './app-context';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -64,6 +65,21 @@ export class ApplicationMain {
   }
 
   /**
+   * map all apps by component ID.
+   */
+  mapApps() {
+    return this.appSlot.toArray();
+  }
+
+  /**
+   * list apps by a component id.
+   */
+  listAppsById(id?: ComponentID): Application[] | undefined {
+    if (!id) return undefined;
+    return this.appSlot.get(id.toString());
+  }
+
+  /**
    * register new deployment provider like netlify, cloudflare pages or custom deployment.
    */
   registerDeploymentProvider(provider: DeploymentProvider) {
@@ -81,8 +97,8 @@ export class ApplicationMain {
   /**
    * get an app.
    */
-  getApp(appName: string): Application | undefined {
-    const apps = this.listApps();
+  getApp(appName: string, id?: ComponentID): Application | undefined {
+    const apps = this.listAppsById(id) || this.listApps();
     return apps.find((app) => app.name === appName);
   }
 
@@ -145,16 +161,22 @@ export class ApplicationMain {
     return ComponentID.fromString(maybeApp[0]);
   }
 
-  private async createAppContext(appName: string) {
+  private async createAppContext(appName: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
     const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
+    // console.log(comp)
 
     const env = await this.envs.createEnvironment([component]);
     const res = await env.run(this.appService);
-    return res.results[0].data;
+    const context = res.results[0].data;
+    if (!context) throw new AppNotFound(appName);
+    return Object.assign({}, context, {
+      appName,
+      appComponent: component,
+    });
   }
 
   static runtime = MainRuntime;

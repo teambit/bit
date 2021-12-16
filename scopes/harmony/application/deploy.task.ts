@@ -16,21 +16,19 @@ export class DeployTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const apps = this.application.listApps();
-    const componentsResultsUi = await mapSeries(
-      apps,
-      async (app): Promise<ComponentResult | undefined> => {
-        const aspectId = this.application.getAppAspect(app.name);
-        if (!aspectId) return undefined;
-        const capsules = context.capsuleNetwork.seedersCapsules;
-        const capsule = this.getCapsule(capsules, aspectId);
-        if (!capsule) return undefined;
-        const deployContext = await app.build(context, aspectId, capsule);
-        if (!deployContext.publicDir) return undefined;
-        if (app.deploy) await app.deploy(deployContext);
-        await this.deployToProviders(deployContext);
-        return { component: capsule.component, metadata: { publicDir: deployContext.publicDir } };
-      }
-    );
+    const componentsResultsUi = await mapSeries(apps, async (app): Promise<ComponentResult | undefined> => {
+      const aspectId = this.application.getAppAspect(app.name);
+      if (!aspectId) return undefined;
+      const capsules = context.capsuleNetwork.seedersCapsules;
+      const capsule = this.getCapsule(capsules, aspectId);
+      if (!capsule) return undefined;
+      if (!app.build) return undefined;
+      const deployContext = await app.build(context, aspectId, capsule);
+      if (!deployContext || !deployContext.publicDir) return undefined;
+      if (app.deploy) await app.deploy(deployContext);
+      await this.deployToProviders(deployContext);
+      return { component: capsule.component, metadata: { publicDir: deployContext.publicDir } };
+    });
 
     return {
       componentsResults: componentsResultsUi.flatMap((f) => (f ? [f] : [])),

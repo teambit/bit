@@ -74,7 +74,7 @@ export class CompilerMain {
     AspectLoaderAspect,
     BuilderAspect,
     UIAspect,
-    GeneratorAspect
+    GeneratorAspect,
   ];
 
   static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui, generator]: [
