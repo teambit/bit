@@ -45,32 +45,6 @@ describe('bit remote command', function () {
       const output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
       expect(output).to.have.string('bar/foo');
     });
-    describe('bit deprecate with --remote flag', () => {
-      let output;
-      before(() => {
-        output = helper.command.deprecateComponent(`${helper.scopes.remote}/bar/foo`, '--remote');
-      });
-      it('should not throw an error', () => {
-        expect(output).to.have.string('deprecated components');
-      });
-      it('should deprecate successfully', () => {
-        const list = helper.command.listRemoteScopeParsed();
-        expect(list[0].deprecated).to.be.true;
-      });
-      describe('bit undeprecate with --remote flag', () => {
-        let undeprecateOutput;
-        before(() => {
-          undeprecateOutput = helper.command.undeprecateComponent(`${helper.scopes.remote}/bar/foo`, '--remote');
-        });
-        it('should not throw an error', () => {
-          expect(undeprecateOutput).to.have.string('undeprecated components');
-        });
-        it('should deprecate successfully', () => {
-          const list = helper.command.listRemoteScopeParsed();
-          expect(list[0].deprecated).to.be.false;
-        });
-      });
-    });
     describe('bit remove with --remote flag', () => {
       let output;
       before(() => {
