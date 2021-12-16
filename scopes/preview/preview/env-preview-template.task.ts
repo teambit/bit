@@ -26,7 +26,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
         // const module = await this.getPreviewModule(envComponent);
         // const entries = Object.keys(module).map((key) => module.exposes[key]);
         const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
-        if (!capsule) throw new Error('not capsule found');
+        if (!capsule) throw new Error('no capsule found');
         const previewRoot = await this.preview.writePreviewRuntime(context);
         const previewModules = await this.getPreviewModules(envComponent);
         const templatesFile = previewModules.map((template) => {
@@ -53,6 +53,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const bundlerContext: BundlerContext = Object.assign({}, context, {
       targets,
       entry: [],
+      externalizePeer: false,
       development: context.dev,
     });
 
