@@ -7,7 +7,8 @@ import { ChildrenHighlighter } from './children-highlighter';
 
 export const ChildrenHighlighterPreview = () => {
   return (
-    <ChildrenHighlighter style={{ padding: 40, minWidth: 200 }}>
+    // highlighter runs in compositions, therefor should not have our font
+    <ChildrenHighlighter style={{ padding: 40, minWidth: 200, fontFamily: 'sans-serif' }}>
       <MockedComponentWithMeta>hover here</MockedComponentWithMeta>
       <br />
       <br />
@@ -20,7 +21,7 @@ export const ChildrenHighlighterPreview = () => {
 export const ChildrenHighlighterWithCustomColors = () => {
   return (
     <ChildrenHighlighter
-      style={{ padding: 40, minWidth: 200, color: 'yellow' }}
+      style={{ padding: 40, minWidth: 200, color: 'yellow', fontFamily: 'sans-serif' }}
       bgColor="cornflowerblue"
       bgColorHover="blue"
       bgColorActive="DarkSlateBlue"
@@ -37,7 +38,7 @@ export const ChildrenHighlighterWithCustomColors = () => {
 export const ChildrenHighlighterInsideIgnore = () => {
   return (
     <ExcludeHighlighter>
-      <ChildrenHighlighter>
+      <ChildrenHighlighter style={{ fontFamily: 'sans-serif' }}>
         Multi Highlighter should still work when inside <code>{'<ExcludeHighlighter>'}</code>
         <br />
         It should only skip exclusion zones inside of it.
@@ -56,7 +57,7 @@ export const ChildrenHighlighterInsideIgnore = () => {
 
 export const ChildrenHighlighterWithRule = () => {
   return (
-    <ChildrenHighlighter rule="#someSubTree *" style={{ minWidth: 300 }}>
+    <ChildrenHighlighter rule="#someSubTree *" style={{ minWidth: 300, fontFamily: 'sans-serif' }}>
       <div>
         element filter: <code>"#someSubTree *"</code>
       </div>
@@ -74,7 +75,10 @@ export const ChildrenHighlighterWithRule = () => {
 
 export const ChildrenHighlighterWithComponentRule = () => {
   return (
-    <ChildrenHighlighter componentRule="teambit.design/ui/icon-button" style={{ minWidth: 300 }}>
+    <ChildrenHighlighter
+      componentRule="teambit.design/ui/icon-button"
+      style={{ minWidth: 300, fontFamily: 'sans-serif' }}
+    >
       <div>
         component filter: <code>"teambit.design/ui/icon-button"</code>
       </div>

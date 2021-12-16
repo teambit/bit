@@ -27,7 +27,6 @@ import Build from './commands/public-cmds/build-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
-import Deprecate from './commands/public-cmds/deprecate-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
@@ -51,9 +50,7 @@ import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Snap from './commands/public-cmds/snap-cmd';
 import Status from './commands/public-cmds/status-cmd';
-import Switch from './commands/public-cmds/switch-cmd';
 import Test from './commands/public-cmds/test-cmd';
-import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
@@ -128,10 +125,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Move(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remove(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Deprecate(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Undeprecate(),
       new Delete(),
       new DeprecatePrivate(),
       new UndeprecatePrivate(),
@@ -153,8 +146,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Doctor(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Graph(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Switch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Fetch(),
       new RunAction(),

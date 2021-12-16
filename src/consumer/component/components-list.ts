@@ -436,13 +436,16 @@ export default class ComponentsList {
       ? ComponentsList.filterComponentsByWildcard(allIds, namespacesUsingWildcards)
       : allIds;
     const idsSorted = ComponentsList.sortComponentsByName(idsFilteredByWildcards);
-    const listAllResults: ListScopeResult[] = idsSorted.map((id: BitId) => {
-      const component = modelComponents.find((c) => c.toBitId().isEqualWithoutVersion(id));
-      return {
-        id: component ? component.toBitIdWithLatestVersion() : id,
-        deprecated: component ? component.deprecated : false,
-      };
-    });
+    const listAllResults: ListScopeResult[] = await Promise.all(
+      idsSorted.map(async (id: BitId) => {
+        const component = modelComponents.find((c) => c.toBitId().isEqualWithoutVersion(id));
+        const deprecated = await component?.isDeprecated(this.scope.objects);
+        return {
+          id: component ? component.toBitIdWithLatestVersion() : id,
+          deprecated,
+        };
+      })
+    );
     const componentsIds = listAllResults.map((result) => result.id);
     if (showRemoteVersion) {
       const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
@@ -484,10 +487,12 @@ export default class ComponentsList {
       ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
       : components;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    return componentsSorted.map((component: ModelComponent) => ({
-      id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated,
-    }));
+    return Promise.all(
+      componentsSorted.map(async (component: ModelComponent) => ({
+        id: component.toBitIdWithLatestVersion(),
+        deprecated: await component.isDeprecated(scope.objects),
+      }))
+    );
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | BitId[]

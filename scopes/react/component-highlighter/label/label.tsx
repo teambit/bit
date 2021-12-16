@@ -3,16 +3,14 @@ import classNames from 'classnames';
 import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import styles from './label.module.scss';
-import { ComponentStrip, ComponentStripSize } from './component-strip';
+import { ComponentStrip } from './component-strip';
 import { OtherComponentsPopper } from './other-components';
 
-export type LabelSize = ComponentStripSize;
 export interface LabelProps extends React.HTMLAttributes<HTMLDivElement> {
   components: ComponentMetaHolder[];
-  size?: LabelSize;
 }
 
-export function Label({ components, size, ...props }: LabelProps) {
+export function Label({ components, ...props }: LabelProps) {
   const [showMore, setShowMore] = useState(false);
   const last = components.slice(-1).pop();
   if (!last) return null;
@@ -25,8 +23,8 @@ export function Label({ components, size, ...props }: LabelProps) {
   }, [components]);
 
   return (
-    <OtherComponentsPopper components={components} visible={showMore} placement="bottom-start" size={size}>
-      <ComponentStrip {...props} component={last} size={size}>
+    <OtherComponentsPopper components={components} visible={showMore} placement="bottom-start">
+      <ComponentStrip {...props} component={last}>
         {hasMore && (
           <span
             className={classNames(styles.othersTooltip, showMore && styles.active)}

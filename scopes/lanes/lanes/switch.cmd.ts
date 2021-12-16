@@ -1,20 +1,19 @@
 import chalk from 'chalk';
 import R from 'ramda';
+import { Command, CommandOptions } from '@teambit/cli';
+import { switchAction } from '@teambit/legacy/dist/api/consumer';
+import { SwitchProps } from '@teambit/legacy/dist/consumer/lanes/switch-lanes';
+import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { applyVersionReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge-cmd';
+import { BitError } from '@teambit/bit-error';
 
-import { switchAction } from '../../../api/consumer';
-import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
-import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
-import { ApplyVersionResults, MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import GeneralError from '../../../error/general-error';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { applyVersionReport } from './merge-cmd';
-
-export default class Switch implements LegacyCommand {
+export class SwitchCmd implements Command {
   name = 'switch <lane>';
   description = `switch to the specified lane`;
   private = true;
   alias = '';
-  opts = [
+  options = [
     ['r', 'remote <scope>', 'fetch remote lane objects and switch to a local lane tracked to the remote'],
     ['n', 'as <as>', 'relevant when --remote flag is used. name a local lane differently than the remote lane'],
     [
@@ -28,7 +27,7 @@ export default class Switch implements LegacyCommand {
   ] as CommandOptions;
   loader = true;
 
-  action(
+  async report(
     [lane]: [string],
     {
       remote,
@@ -46,12 +45,12 @@ export default class Switch implements LegacyCommand {
       override?: boolean;
       json?: boolean;
     }
-  ): Promise<ApplyVersionResults> {
+  ) {
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
-        throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
+        throw new BitError(`merge must be one of the following: ${options.join(', ')}`);
       }
       mergeStrategy = merge;
     }
@@ -73,20 +72,7 @@ export default class Switch implements LegacyCommand {
       reset: false,
       all: false,
     };
-    return switchAction(switchProps, checkoutProps).then((results) => ({ ...results, lane, json }));
-  }
-
-  report({
-    components,
-    failedComponents,
-    lane,
-    json,
-  }: {
-    components: ApplyVersionResults['components'];
-    failedComponents: ApplyVersionResults['failedComponents'];
-    lane: string;
-    json: boolean;
-  }): string {
+    const { components, failedComponents } = await switchAction(switchProps, checkoutProps);
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }

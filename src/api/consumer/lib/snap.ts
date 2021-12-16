@@ -13,6 +13,7 @@ export type SnapResults = {
   autoSnappedResults: AutoTagResult[];
   warnings: string[];
   newComponents: BitIds;
+  laneName: string | null; // null if default
 };
 
 export async function snapAction(args: {
@@ -42,10 +43,11 @@ export async function snapAction(args: {
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy) throw new LanesIsDisabled();
   const componentsList = new ComponentsList(consumer);
-  const newComponents = await componentsList.listNewComponents();
+  const newComponents = (await componentsList.listNewComponents()) as BitIds;
   const ids = await getIdsToSnap();
   if (!ids) return null;
-  const tagResults = await consumer.snap({
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const snapResults: SnapResults = await consumer.snap({
     ids,
     ignoreIssues,
     message,
@@ -57,11 +59,13 @@ export async function snapAction(args: {
     disableTagAndSnapPipelines,
     forceDeploy,
   });
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  tagResults.newComponents = newComponents;
+
+  snapResults.newComponents = newComponents;
+  const currentLane = consumer.getCurrentLaneId();
+  snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
   await consumer.onDestroy();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return tagResults;
+  return snapResults;
 
   async function getIdsToSnap(): Promise<BitIds> {
     const idHasWildcard = id && hasWildcard(id);
