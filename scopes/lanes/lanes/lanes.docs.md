@@ -50,7 +50,7 @@ Currently, if it imports with no-deps, it doesn't ask for parents, if it imports
 Lane data, for the most cases is a map of component-id:snap-head, in other words, it saves per component the head snap. There are 3 different places where we store such data for different purposes.
 
 - `lane-object` "Lane" is saved in the scope `.bit/objects` (.bit can be .git/bit locally), it has a unique hash and contains a map of components and their heads. This object exists on both local and remote scopes. Its main purpose is to sync lane-data between scopes. See `Lane` class (in scope/model) for the implementation details.
-- `workspace-lane` (component and their heads) is saved in `.bit/workspace/lanes/lane-name`. Remote scopes don't have this data. Its main purpose is to store data that exists only locally and does not exist on the remote. See `WorkspaceLane` class for the implementation details.
+- `workspace-lane` (component and their versions) is saved in `.bit/workspace/lanes/lane-name`. Remote scopes don't have this data. Its main purpose is to store data that exists only locally and does not exist on the remote. See `WorkspaceLane` class for the implementation details. Without this, when a user is on a lane and check out to another snap, we can't save this checked out snap, because .bitmap has only main version and `Lane` object has only the heads.
 - `remote-lane` (component and their heads) is saved in `.bit/refs/remote/remote-name/lane-name`. These refs files are saved in both, local and remote scopes. Its main purpose is to keep track where the remote-heads are per lane. See `RemoteLanes` class for the implementation details.
 
 More places that stores lanes related data:

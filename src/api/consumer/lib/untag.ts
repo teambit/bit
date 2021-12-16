@@ -19,19 +19,20 @@ export default async function unTagAction(
   const consumer: Consumer = await loadConsumer();
   const idHasWildcard = hasWildcard(id);
   const untag = async (): Promise<untagResult[]> => {
+    const currentLane = await consumer.getCurrentLaneObject();
     if (idHasWildcard) {
-      return removeLocalVersionsForComponentsMatchedByWildcard(consumer, version, force, id);
+      return removeLocalVersionsForComponentsMatchedByWildcard(consumer, currentLane, version, force, id);
     }
     if (id) {
       const bitId = consumer.getParsedId(id);
       // a user might run the command `bit untag id@version` instead of `bit untag id version`
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (bitId.hasVersion() && !version) version = bitId.version;
-      const result = await removeLocalVersion(consumer.scope, bitId, version, force);
+      const result = await removeLocalVersion(consumer.scope, bitId, currentLane, version, force);
       return [result];
     }
     // untag all
-    return removeLocalVersionsForAllComponents(consumer, version, force);
+    return removeLocalVersionsForAllComponents(consumer, currentLane, version, force);
   };
   const softUntag = () => {
     const getIds = (): BitId[] => {

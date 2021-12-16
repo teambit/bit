@@ -781,7 +781,13 @@ export default class BitMap {
     if (this.workspaceLane && !updateScopeOnly) {
       // this code is executed when snapping/tagging and user is on a lane.
       // change the version only on the lane, not on .bitmap
-      this.workspaceLane.addEntry(newId);
+      if (newId.hasVersion()) {
+        this.workspaceLane.addEntry(newId);
+      } else {
+        // component was un-snapped and is back to "new".
+        this.workspaceLane.removeEntry(oldId);
+        componentMap.onLanesOnly = false;
+      }
       componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
     }
     if (updateScopeOnly) {
