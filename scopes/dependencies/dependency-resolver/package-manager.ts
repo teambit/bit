@@ -1,8 +1,11 @@
+import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { WorkspacePolicy } from './policy';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
+
+export { PeerDependencyIssuesByProjects };
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -50,6 +53,13 @@ export interface PackageManager {
     packageName: string,
     options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion>;
+
+  getPeerDependencyIssues?(
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
+    installOptions: PackageManagerInstallOptions
+  ): Promise<PeerDependencyIssuesByProjects>;
 
   getRegistries?(): Promise<Registries>;
 

@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
@@ -57,7 +57,7 @@ import {
   WorkspacePolicyEntry,
   SerializedVariantPolicy,
 } from './policy';
-import { PackageManager } from './package-manager';
+import { PackageManager, PeerDependencyIssuesByProjects, PackageManagerInstallOptions } from './package-manager';
 
 import {
   SerializedDependency,
@@ -627,6 +627,37 @@ export class DependencyResolverMain {
 
   private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
     return Http.getProxyConfig();
+  }
+
+  async getMissingPeerDependencies(
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
+    installOptions: PackageManagerInstallOptions
+  ): Promise<Record<string, string>> {
+    this.logger.setStatusLine('finding missing peer dependencies');
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    let peerDependencyIssues!: PeerDependencyIssuesByProjects;
+    if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
+      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
+        installOptions
+      );
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getPeerDependencyIssues)
+        throw new Error('system package manager must implement `getPeerDependencyIssues()`');
+      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
+        installOptions
+      );
+    }
+    this.logger.consoleSuccess();
+    return peerDependencyIssues['.']?.intersections;
   }
 
   async getRegistries(): Promise<Registries> {
