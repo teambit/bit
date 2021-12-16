@@ -58,7 +58,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
-    console.log(bundlerResults);
 
     return {
       componentsResults: [],

@@ -2,41 +2,25 @@ import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
+import { getExternals } from './get-externals';
+import { getExposedRules } from './get-exposed-rules';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (externalizePeer: boolean, dev?: boolean): Configuration {
-  const externals = externalizePeer
-    ? {
-        react: 'React',
-        'react-dom': 'ReactDOM',
-      }
-    : undefined;
+export default function (externalizePeer: boolean, peers: string[], dev?: boolean): Configuration {
+  const externals = externalizePeer ? (getExternals(peers) as any) : undefined;
+  const exposedRules = externalizePeer ? undefined : getExposedRules(peers);
 
-  const module = !externalizePeer
-    ? {
-        rules: [
-          {
-            test: require.resolve('react'),
-            loader: require.resolve('expose-loader'),
-            options: {
-              exposes: ['React'],
-            },
-          },
-          {
-            test: require.resolve('react-dom'),
-            loader: require.resolve('expose-loader'),
-            options: {
-              exposes: ['ReactDOM'],
-            },
-          },
-        ],
-      }
-    : undefined;
+  const module = externalizePeer
+    ? undefined
+    : {
+        rules: exposedRules,
+      };
 
-  console.log(externals);
+  console.log('externals', externals);
+  console.log('module', module);
   return {
     module,
     externals,

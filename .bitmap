@@ -339,17 +339,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
-    "entities/semantic-schema": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/entities/semantic-schema"
-    },
     "elements": {
         "scope": "teambit.web-components",
         "version": "0.0.29",
         "mainFile": "index.ts",
         "rootDir": "scopes/web-components/elements"
+    },
+    "entities/semantic-schema": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/entities/semantic-schema"
     },
     "envs": {
         "scope": "teambit.envs",
@@ -548,6 +548,18 @@
         "version": "0.0.85",
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
+    },
+    "modules/generate-expose-loaders": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-expose-loaders"
+    },
+    "modules/generate-externals": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-externals"
     },
     "modules/generate-style-loaders": {
         "scope": "teambit.webpack",

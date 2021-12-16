@@ -54,6 +54,11 @@ export interface BundlerContext extends BuildContext {
   externalizePeer?: boolean;
 
   /**
+   * List of peer dependencies
+   */
+  peers?: string[];
+
+  /**
    * determines whether it is a production build, default is `true`.
    * in development, expect the bundler to favour debugging on the expanse of optimization.
    */
