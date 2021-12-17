@@ -25,13 +25,13 @@ See the docs for more info on [Customizing your Generator](https://harmony-docs.
 How to use this generator locally, essentially for development purposes:
 
 \\\`\\\`\\\`js
-bit new <template-name> <workspace-name> --load-from /Users/me/path/to/this/dir --aspect <workspace-template-id>
+bit new <workspace-name> <template-name> --load-from /Users/me/path/to/this/dir --aspect <workspace-template-id>
 \\\`\\\`\\\`
 
 How to use this generator after exporting to a remote scope:
 
 \\\`\\\`\\\`js
-bit new <template-name> <workspace-name> --aspect <workspace-template-id>
+bit new <workspace-name> <template-name> --aspect <workspace-template-id>
 \\\`\\\`\\\`
 \`;
 }
