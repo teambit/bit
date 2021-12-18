@@ -64,4 +64,24 @@ describe('untag components on Harmony', function () {
       helper.command.expectStatusToBeClean(['newComponents']);
     });
   });
+  describe('untagging multiple versions when the new head is exported', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagScopeWithoutBuild(); // 0.0.1
+      helper.command.export();
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.tagScopeWithoutBuild(); // 0.0.3
+      helper.command.untagAll();
+    });
+    // a previous bug saved the hash of 0.0.2 as the head.
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    it('bitmap should show a version, not a hash', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('0.0.1');
+    });
+  });
 });
