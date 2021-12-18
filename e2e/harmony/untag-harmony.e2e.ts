@@ -51,4 +51,17 @@ describe('untag components on Harmony', function () {
       );
     });
   });
+  describe('untagging multiple versions', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagScopeWithoutBuild(); // 0.0.1
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.untagAll();
+    });
+    // a previous bug saved the hash of 0.0.1 as the head, which made the component both: staged and snapped.
+    it('should show the component as new only, not as staged nor snapped', () => {
+      helper.command.expectStatusToBeClean(['newComponents']);
+    });
+  });
 });

@@ -449,24 +449,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
     repo.add(component);
-
-    // const isObjectShouldBeAdded = (obj) => {
-    //   // don't add a component if it's already exist locally with more versions
-    //   if (obj instanceof ModelComponent) {
-    //     const loaded = repo.loadSync(obj.hash(), false);
-    //     if (loaded) {
-    //       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    //       if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
-    //         return false;
-    //       }
-    //     }
-    //   }
-    //   return true;
-    // };
-
     objects.forEach((obj) => {
-      // @todo: do we need this?
-      // if (isObjectShouldBeAdded(obj)) repo.add(obj);
       repo.add(obj);
     });
     return component;
@@ -493,45 +476,43 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
     const laneItem = lane?.getComponentByName(component.toBitId());
-    const headOnLane = laneItem?.head.hash;
     const removedRefs = versions.map((version) => {
       const ref = component.removeVersion(version);
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
       const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
-      // update the snap head if needed
-      const getHead = () => {
-        const divergeData = component.getDivergeData();
-        if (divergeData.isDiverged()) {
-          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
-          return component.remoteHead;
-        }
-        if (versionObject.parents.length > 1) {
-          throw new Error(
-            `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
-          );
-        }
-        return versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
-      };
-      if (component.getHeadStr() === refStr) {
-        const head = getHead();
-        component.setHead(head);
-      }
-      if (laneItem && headOnLane === refStr) {
-        const head = getHead();
-        if (head) {
-          laneItem.head = head;
-        } else {
-          lane?.removeComponent(component.toBitId());
-        }
-        component.laneHeadLocal = head;
-        objectRepo.add(lane);
-      }
-
       objectRepo.removeObject(ref);
       return ref;
     });
+
+    const getNewHead = () => {
+      const divergeData = component.getDivergeData();
+      if (divergeData.isDiverged()) {
+        if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
+        return component.remoteHead;
+      }
+      if (!component.head) {
+        return undefined;
+      }
+      const headVersion = allVersionsObjects.find((ver) => ver.hash().isEqual(component.head as Ref));
+      return this.findHeadInExistingVersions(allVersionsObjects, component.id(), headVersion);
+    };
     const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
+    if (component.head && refWasDeleted(component.head)) {
+      const newHead = getNewHead();
+      component.setHead(newHead);
+    }
+    if (laneItem && refWasDeleted(laneItem.head)) {
+      const newHead = getNewHead();
+      if (newHead) {
+        laneItem.head = newHead;
+      } else {
+        lane?.removeComponent(component.toBitId());
+      }
+      component.laneHeadLocal = newHead;
+      objectRepo.add(lane);
+    }
+
     allVersionsObjects.forEach((versionObj) => {
       const wasDeleted = refWasDeleted(versionObj.hash());
       if (!wasDeleted && versionObj.parents.some((parent) => refWasDeleted(parent))) {
@@ -551,6 +532,34 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       objectRepo.removeObject(component.hash());
     }
     objectRepo.unmergedComponents.removeComponent(component.name);
+  }
+
+  /**
+   * needed during untag.
+   * given all removed versions, find the new head by traversing the versions objects until finding a parent
+   * that was not removed. this is the new head of the component.
+   */
+  private findHeadInExistingVersions(versions: Version[], componentId: string, current?: Version): Ref | undefined {
+    if (!current) {
+      return undefined;
+    }
+    const parents = current.parents;
+    if (!parents.length) {
+      return undefined;
+    }
+    if (parents.length > 1) {
+      // @todo: it needs to be optimized. we can check if both parents were removed, then traverse each one of them
+      // and find the new head.
+      throw new Error(
+        `removeComponentVersions found multiple parents for a local (un-exported) version ${current.hash()} of ${componentId}`
+      );
+    }
+    const parentRef = parents[0];
+    const parentExists = versions.find((ver) => ver.hash().isEqual(parentRef));
+    if (!parentExists) {
+      return parentRef;
+    }
+    return this.findHeadInExistingVersions(versions, componentId, parentExists);
   }
 
   /**
