@@ -7860,6 +7860,7 @@ __metadata:
     jest-watcher: 26.6.2
     join-path: 1.1.1
     json-formatter-js: 2.3.4
+    json-schema: 0.4.0
     jsx-to-string: 1.4.0
     junit-report-builder: 3.0.0
     less: ^4.1.1
@@ -8008,6 +8009,7 @@ __metadata:
     terser-webpack-plugin: 5.2.0
     timers-browserify: 2.0.12
     tippy.js: 6.2.7
+    tsutils: 3.21.0
     tsyringe: 4.4.0
     tty-browserify: 0.0.1
     type-coverage: 2.15.1
@@ -34276,7 +34278,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsutils@npm:3, tsutils@npm:^3.17.1, tsutils@npm:^3.21.0":
+"tsutils@npm:3, tsutils@npm:3.21.0, tsutils@npm:^3.17.1, tsutils@npm:^3.21.0":
   version: 3.21.0
   resolution: "tsutils@npm:3.21.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftsutils%2F-%2Ftsutils-3.21.0.tgz"
   dependencies:
