@@ -1,5 +1,6 @@
-import { DeployContext } from './deploy-context';
+import { BuildContext } from '@teambit/builder';
+import { Capsule } from '@teambit/isolator';
 
 export interface DeploymentProvider {
-  deploy(context: DeployContext): Promise<void>;
+  deploy(context: BuildContext, capsule: Capsule): Promise<void>;
 }
