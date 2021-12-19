@@ -1087,12 +1087,31 @@ export class Workspace implements ComponentFactory {
       workspaceAspects,
       throwOnError
     );
+    const potentialPluginsIndexes = compact(
+      workspaceManifests.map((manifest, index) => {
+        if (this.aspectLoader.isValidAspect(manifest)) return undefined;
+        return index;
+      })
+    );
+
     const manifestsIds = workspaceManifests.map((m) => m.id);
 
     const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+
+    // Try require components for potential plugins
+    const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
+      return workspaceComps[index];
+    });
+    // Do the require again now that the plugins defs already registered
+    const pluginsWorkspaceAspects = await this.requireComponents(pluginsWorkspaceComps);
+    const pluginsWorkspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
+      pluginsWorkspaceAspects,
+      throwOnError
+    );
+    await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
     return compact(allManifests.map((manifest) => manifest.id));
   }
