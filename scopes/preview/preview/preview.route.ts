@@ -41,7 +41,7 @@ export class PreviewRoute implements Route {
         // TODO: please fix file path concatenation here.
         const file =
           artifact?.getFileEndsWith(`public/${req.params.previewPath}`) ||
-          artifact?.getFileEndsWith(`public/${req.params.previewPath}`) ||
+          artifact?.getFileEndsWith(`${req.params.previewPath}`) ||
           artifact?.getFileEndsWith('index.html');
         if (!file) return res.status(404).send(noPreview());
 
