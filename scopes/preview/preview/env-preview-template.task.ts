@@ -1,8 +1,10 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ComponentResult } from '@teambit/builder';
 import { Component, ComponentMap } from '@teambit/component';
-import { Bundler, BundlerContext, Target } from '@teambit/bundler';
+import { Bundler, BundlerContext, BundlerResult, Target } from '@teambit/bundler';
 import { EnvsMain } from '@teambit/envs';
+import { join } from 'path';
 import { compact } from 'lodash';
+import { existsSync, mkdirpSync } from 'fs-extra';
 import { PreviewMain } from './preview.main.runtime';
 
 export type ModuleExpose = {
@@ -32,6 +34,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
         const templatesFile = previewModules.map((template) => {
           return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
         });
+        const outputPath = this.computeOutputPath(context, envComponent);
+        if (!existsSync(outputPath)) mkdirpSync(outputPath);
+
         // const entries = this.getEntries(
         //   previewModules.concat({
         //     name: 'main',
@@ -41,10 +46,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
         return {
           entries: templatesFile.concat(previewRoot),
-          // externalizePeer: false,
-          // externalizePeer: true,
           components: [envComponent],
-          outputPath: this.computeOutputPath(context, envComponent),
+          outputPath,
           // modules: [module],
         };
       })
@@ -59,10 +62,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
-
-    return {
-      componentsResults: [],
-    };
+    const results = await this.computeResults(bundlerContext, bundlerResults);
+    return results;
   }
 
   getEntries(previewModules: ModuleExpose[]): { [key: string]: string } {
@@ -80,6 +81,27 @@ export class EnvPreviewTemplateTask implements BuildTask {
       entriesMap[entry.library.name] = entry;
       return entriesMap;
     }, {});
+  }
+
+  async computeResults(context: BundlerContext, results: BundlerResult[]) {
+    const result = results[0];
+
+    const componentsResults: ComponentResult[] = result.components.map((component) => {
+      return {
+        component,
+        errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
+        warning: result.warnings,
+        startTime: result.startTime,
+        endTime: result.endTime,
+      };
+    });
+
+    const artifacts = this.getArtifactDef();
+
+    return {
+      componentsResults,
+      artifacts,
+    };
   }
 
   async getPreviewModules(envComponent: Component): Promise<ModuleExpose[]> {
@@ -100,9 +122,25 @@ export class EnvPreviewTemplateTask implements BuildTask {
     return modules;
   }
 
+  private getArtifactDirectory() {
+    return `__bit__env-template`;
+  }
+
   private computeOutputPath(context: BuildContext, component: Component) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
-    return `${capsule?.path}`;
+    if (!capsule) throw new Error('no capsule found');
+    return join(capsule.path, this.getArtifactDirectory());
+  }
+
+  private getArtifactDef() {
+    return [
+      {
+        name: 'env-template',
+        globPatterns: [`${this.getArtifactDirectory()}/**`],
+        // rootDir,
+        // context: env,
+      },
+    ];
   }
 
   // private async getPreviewModule(envComponent: Component): Promise<ModuleTarget> {

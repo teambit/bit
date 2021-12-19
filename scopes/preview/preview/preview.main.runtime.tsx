@@ -22,7 +22,7 @@ import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
-import { PreviewTask } from './preview.task';
+import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
@@ -85,8 +85,12 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
-    if (!artifacts.length) return undefined;
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+      component,
+      PreviewAspect.id,
+      PREVIEW_TASK_NAME
+    );
+    if (!artifacts || !artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
   }

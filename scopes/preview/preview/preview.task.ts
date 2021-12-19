@@ -10,6 +10,7 @@ import { flatten } from 'lodash';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 
+export const PREVIEW_TASK_NAME = 'GeneratePreview';
 export class PreviewTask implements BuildTask {
   constructor(
     /**
@@ -24,7 +25,7 @@ export class PreviewTask implements BuildTask {
   ) {}
 
   aspectId = 'teambit.preview/preview';
-  name = 'GeneratePreview';
+  name = PREVIEW_TASK_NAME;
   location: TaskLocation = 'end';
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

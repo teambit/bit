@@ -9,4 +9,10 @@ export class PreviewArtifact {
       return pathNormalizeToLinux(file.relative) === path;
     });
   }
+
+  getFileEndsWith(path: string) {
+    return this.artifacts.find((file) => {
+      return pathNormalizeToLinux(file.relative).endsWith(path);
+    });
+  }
 }

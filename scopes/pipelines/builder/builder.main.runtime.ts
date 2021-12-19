@@ -152,6 +152,20 @@ export class BuilderMain {
     return flatten(vinyls);
   }
 
+  async getArtifactsVinylByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
   getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
     const artifacts = this.getArtifacts(component);
     return artifacts?.filter((artifact) => artifact.name === name);
@@ -165,6 +179,15 @@ export class BuilderMain {
   getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
     const artifacts = this.getArtifacts(component);
     return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  }
+
+  getArtifactsByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
   }
 
   getDataByAspect(component: Component, aspectName: string): Serializable | undefined {
