@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
+import { ReactEnv } from '@teambit/react';
 import { Application } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
 import { NodeEnv } from './node.env';
@@ -12,7 +13,7 @@ export class NodeApp implements Application {
     readonly name: string,
     readonly entry: string,
     readonly portRange: number[],
-    readonly nodeEnv: NodeEnv,
+    readonly nodeEnv: NodeEnv & ReactEnv,
     readonly logger: Logger,
     readonly deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>
   ) {}
