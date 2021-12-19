@@ -2,24 +2,28 @@ import { ComponentContext } from '@teambit/generator';
 
 export function appFile({ namePascalCase: Name }: ComponentContext) {
   return `import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 export function ${Name}App() {
   return (
-    {/* header component */}
+    <BrowserRouter>
 
-    <Routes>
-      <Route path="/" element={<div>Hello World!!</div>}>
-          {/* home page component */}
-      </Route>
+       {/* header component */}
 
-      <Route path="/about">
-          {/* about page component */}
-      </Route>
+        <Routes>
+          <Route path="/" element={<div>Hello World!!</div>}>
+             {/* home page component */}
+          </Route>
 
-    </Routes>
+          <Route path="/about">
+             {/* about page component */}
+          </Route>
 
-    {/* footer component */}
+        </Switch>
+
+        {/* footer component */}
+
+    </BrowserRouter>
   );
 }
 `;

@@ -746,20 +746,27 @@ export default class Consumer {
       return componentMap.rootDir;
     };
     const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMain = async (component: ModelComponent | Component): Promise<boolean> => {
-      if (currentLane.isDefault()) return true;
+    const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
+      if (currentLane.isDefault()) {
+        return true;
+      }
+      if (!id.hasVersion()) {
+        // component was unsnapped on the current lane and is back to a new component
+        return true;
+      }
       const modelComponent =
         component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
       return modelComponent.hasHead();
     };
 
-    const updateVersions = async (unknownComponent) => {
+    const updateVersions = async (unknownComponent: ModelComponent | Component) => {
       const id: BitId =
         unknownComponent instanceof ModelComponent
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const availableOnMain = await isAvailableOnMain(unknownComponent);
+      this.bitMap.removeConfig(id);
+      const availableOnMain = await isAvailableOnMain(unknownComponent, id);
       if (!availableOnMain) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }

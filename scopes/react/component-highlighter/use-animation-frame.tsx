@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 // TODO - extract to its own component
 
-export function useAnimationFrame(cb?: false | null | (() => any), deps: [] = []) {
+export function useAnimationFrame(cb?: false | null | (() => any), deps: any[] = []) {
   useEffect(() => {
     if (!cb) return () => {};
 

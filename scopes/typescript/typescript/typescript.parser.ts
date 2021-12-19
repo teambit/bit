@@ -34,13 +34,13 @@ export class TypeScriptParser implements Parser {
       if (isFunctionDeclaration(statement)) {
         if (!statement.name) return undefined;
         const name = statement.name.text;
-        return new Export(name, staticProperties.get(name));
+        return new Export(name, undefined, staticProperties.get(name));
       }
 
       if (isClassDeclaration(statement)) {
         if (!statement.name) return undefined;
         const name = statement.name.text;
-        return new Export(name, staticProperties.get(name));
+        return new Export(name, undefined, staticProperties.get(name));
       }
 
       return undefined;

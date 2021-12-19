@@ -16,6 +16,8 @@ export type PackageManagerInstallOptions = {
   copyPeerToRuntimeOnComponents?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
+
+  overrides?: Record<string, string>;
 };
 
 export type ResolvedPackageVersion = {

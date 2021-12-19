@@ -12,9 +12,9 @@ import Component from '../consumer-component';
 
 import { ArtifactVinyl } from './artifact';
 
-export type ArtifactRef = { relativePath: string; ref: Ref };
-export type ArtifactModel = { relativePath: string; file: string };
-export type ArtifactSource = { relativePath: string; source: Source };
+export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
+export type ArtifactModel = { relativePath: string; file: string; url?: string };
+export type ArtifactSource = { relativePath: string; source: Source; url?: string };
 export type ArtifactObject = {
   name: string;
   description?: string;
@@ -25,6 +25,11 @@ export type ArtifactObject = {
     name?: string;
   };
   files: ArtifactFiles;
+};
+type ArtifactFilesObject = {
+  paths?: string[];
+  vinyls?: ArtifactVinyl[];
+  refs?: ArtifactRef[];
 };
 
 /**
@@ -48,7 +53,11 @@ export class ArtifactFiles {
   }
 
   populateRefsFromSources(sources: ArtifactSource[]) {
-    this.refs = sources.map((source) => ({ relativePath: source.relativePath, ref: source.source.hash() }));
+    this.refs = sources.map((source) => ({
+      relativePath: source.relativePath,
+      ref: source.source.hash(),
+      url: source.url,
+    }));
   }
 
   populateVinylsFromPaths(rootDir: string) {
@@ -69,8 +78,21 @@ export class ArtifactFiles {
     const refs: ArtifactRef[] = artifactModels.map((artifactModel) => ({
       relativePath: artifactModel.relativePath,
       ref: Ref.from(artifactModel.file),
+      url: artifactModel.url,
     }));
     return new ArtifactFiles([], [], refs);
+  }
+
+  static fromObject(obj: ArtifactFilesObject) {
+    const refs = obj.refs?.map((ref) => {
+      const artifactRef: ArtifactRef = {
+        relativePath: ref.relativePath,
+        url: ref.url,
+        ref: new Ref(ref.ref.hash),
+      };
+      return artifactRef;
+    });
+    return new ArtifactFiles(obj.paths, obj.vinyls, refs);
   }
 
   static fromVinylsToSources(vinyls: ArtifactVinyl[]): ArtifactSource[] {
@@ -78,6 +100,7 @@ export class ArtifactFiles {
       return {
         relativePath: pathNormalizeToLinux(artifact.relative),
         source: artifact.toSourceAsLinuxEOL(),
+        url: artifact.url,
       };
     });
   }
@@ -91,7 +114,12 @@ export class ArtifactFiles {
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
       if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
-      return new ArtifactVinyl({ base: '.', path: artifact.relativePath, contents: content.contents });
+      return new ArtifactVinyl({
+        base: '.',
+        path: artifact.relativePath,
+        contents: content.contents,
+        url: artifact.url,
+      });
     };
     this.vinyls = await Promise.all(this.refs.map((artifact) => getOneArtifact(artifact)));
     return this.vinyls;
@@ -123,6 +151,7 @@ export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {
     return {
       relativePath: artifact.relativePath,
       file: artifact.ref.hash,
+      url: artifact.url,
     };
   });
 }
@@ -170,6 +199,7 @@ export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: Artifac
   const refs = obj.refs.map((ref) => ({
     relativePath: ref.relativePath,
     ref: new Ref(ref.ref.hash),
+    url: ref.url,
   }));
   return new ArtifactFiles(obj.paths, obj.vinyls, refs);
 }

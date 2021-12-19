@@ -151,6 +151,7 @@ export class SchemaExtractorContext {
   async resolveType(node: Node, typeStr: string, type = true): Promise<TypeRefSchema> {
     if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
+
     const typeDef = type
       ? await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node))
       : await this.typeDefinition(node);
