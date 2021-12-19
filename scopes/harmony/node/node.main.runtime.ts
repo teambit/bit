@@ -10,7 +10,7 @@ import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';
@@ -139,7 +139,7 @@ export class NodeMain {
     GeneratorMain
   ]) {
     const logger = loggerAspect.createLogger(NodeAspect.id);
-    const nodeEnv: NodeEnv = envs.merge(new NodeEnv(react.reactEnv), react.reactEnv);
+    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
