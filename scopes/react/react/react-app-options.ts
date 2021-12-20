@@ -1,5 +1,10 @@
 import { Bundler, DevServer } from '@teambit/bundler';
 import { DeployContext } from '@teambit/application';
+import { Capsule } from '@teambit/isolator';
+
+export interface ReactAppDeployContext extends DeployContext {
+  publicDir: string;
+}
 
 export type ReactAppOptions = {
   /**
@@ -35,7 +40,7 @@ export type ReactAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: (context: DeployContext) => Promise<void>;
+  deploy?: (context: ReactAppDeployContext, capsule: Capsule) => Promise<void>;
 
   /**
    * prerender routes of application (will create static file for the route)
