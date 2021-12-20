@@ -14,7 +14,7 @@ export class ReactApp implements Application {
     readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    readonly deploy?: (context: ReactAppDeployContext) => Promise<void>,
+    readonly deploy?: (context: ReactAppDeployContext, capsule: Capsule) => Promise<void>,
     readonly prerenderRoutes?: string[]
   ) {}
 
