@@ -491,10 +491,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
         return component.remoteHead;
       }
-      if (!component.head) {
+      const head = component.head || laneItem?.head;
+      if (!head) {
         return undefined;
       }
-      const headVersion = allVersionsObjects.find((ver) => ver.hash().isEqual(component.head as Ref));
+      const headVersion = allVersionsObjects.find((ver) => ver.hash().isEqual(head));
       return this.findHeadInExistingVersions(allVersionsObjects, component.id(), headVersion);
     };
     const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
