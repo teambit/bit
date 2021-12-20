@@ -21,7 +21,13 @@ This method allows you to register new ways to consume a component, and present 
 
 First, require the component aspect to your aspect's code, and use `registerConsumeMethod` to add your custom **consume method**.
 
-`registerConsumeMethod` expects a callback function that is provided with the `ComponentModel` data in it's `args` and returns an object with `component` and a `title` of type `ReactNode` that you would need to supply in order for them to render in the menu.
+`registerConsumeMethod` expects a callback function that is provided with the `ComponentModel` data in it's `args` and returns an object with `Component` and a `Title` of type `ReactNode` that you would need to supply in order for them to render in the menu.
+
+Another optional parameter is the `order`. This will allow you to decide the order of your method in the tabs.
+
+```note
+If `Title` or `Component` are undefined, the method will not be presented in the menu.
+```
 
 ```
 // in your aspect
@@ -41,6 +47,7 @@ private pnpmMethod: ConsumePlugin = (componentModel) => {
           registryName={registry}
         />
       ),
+      order: 1,
     };
   };
 
