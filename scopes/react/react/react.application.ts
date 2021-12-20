@@ -7,13 +7,17 @@ import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { ReactEnv } from './react.env';
 
+export interface ReactAppDeployContext extends DeployContext {
+  publicDir: string;
+}
+
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
     readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    readonly deploy?: (context: DeployContext) => Promise<void>,
+    readonly deploy?: (context: ReactAppDeployContext) => Promise<void>,
     readonly prerenderRoutes?: string[]
   ) {}
 
