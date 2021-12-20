@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { ConsumeMethodTemplate, ConsumeMethodTemplateProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { TooltipCopybox } from './tooltip-copybox';
 import { Registry } from './registry';
 import styles from './menu.module.scss';
@@ -13,11 +13,11 @@ export type InstallProps = {
   copyString: string;
   registryName: string;
   packageManager: string;
-} & ConsumeMethodTemplateProps;
+} & ExpandableTabContentProps;
 
 export function Install({ componentName, copyString, registryName, packageManager, config, ...rest }: InstallProps) {
   return (
-    <ConsumeMethodTemplate
+    <ExpandableTabContent
       {...rest}
       content={
         <>

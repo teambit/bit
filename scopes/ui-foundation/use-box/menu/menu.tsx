@@ -1,55 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, ReactNode } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
-import { Registry } from './registry';
-import { Install } from './install';
-import { Import } from './import';
+import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
+
 import styles from './menu.module.scss';
-import { Tabs } from './tabs';
-import { Elements } from './elements';
+
+// TODO where should we place this type? its being created in component ui runtime as well
+export type ConsumeMethod = {
+  Title?: ReactNode;
+  Component?: ReactNode;
+  order?: number;
+};
 
 export type MenuProps = {
   /**
-   * package link to be copied
+   * consume methods to be displayed in the menu.
    */
-  packageName: string;
+  methods: ConsumeMethod[];
 
-  /**
-   * Elements url
-   */
-  elementsUrl?: string;
-  /**
-   * import link to be copied
-   */
-  componentId: string;
-  /**
-   * registry link to be copied
-   */
-  registryName: string;
   /**
    * component name to be presented
    */
   componentName: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Menu({ packageName, componentId, registryName, componentName, elementsUrl, ...rest }: MenuProps) {
-  const [activeTab, setActiveTab] = useState('bit');
-  const [activeRegistry, setActiveRegistry] = useState<string | undefined>(undefined);
+export function Menu({ methods, componentName, ...rest }: MenuProps) {
+  const [activeTab, setActiveTab] = useState(0);
+  const content = useMemo(
+    () =>
+      methods.flat().sort((a, b) => {
+        if (!a && !b) return 0;
+        if (a.order === undefined) return 1;
+        if (b.order === undefined) return -1;
+        return a?.order - b?.order;
+      }),
+    [methods]
+  );
 
-  if (activeRegistry === 'import') {
-    return <BitInfo prevTab={activeTab} setActive={() => setActiveRegistry(undefined)} />;
-  }
-
-  if (activeRegistry === 'install') {
-    return (
-      <Registry
-        prevTab={activeTab}
-        registryName={registryName}
-        copyString={`npm config set '${registryName}:registry' https://node.bit.dev`}
-        setActive={() => setActiveRegistry(undefined)}
-      />
-    );
-  }
+  const { Component } = content[activeTab] || {};
 
   return (
     <div {...rest}>
@@ -59,34 +46,18 @@ export function Menu({ packageName, componentId, registryName, componentName, el
           <span>{`Use ${componentName}`}</span>
         </div>
       </div>
-      <Tabs activeTab={activeTab} onClick={setActiveTab} />
-      {(activeTab === 'bit' || !activeTab) && (
-        <Import
-          componentName={componentName}
-          componentId={componentId}
-          packageName={packageName}
-          back={() => setActiveRegistry('import')}
-        />
-      )}
-      {activeTab === 'npm' && (
-        <Install
-          componentName={componentName}
-          registryName={registryName}
-          copyString={`npm i ${packageName}`}
-          packageManager="npm"
-          back={() => setActiveRegistry('install')}
-        />
-      )}
-      {activeTab === 'yarn' && (
-        <Install
-          componentName={componentName}
-          registryName={registryName}
-          copyString={`yarn add ${packageName}`}
-          packageManager="yarn"
-          back={() => setActiveRegistry('install')}
-        />
-      )}
-      {activeTab === 'elements' && elementsUrl && <Elements componentName={componentName} url={elementsUrl} />}
+      <div className={styles.tabs}>
+        {content.map(({ Title, Component: comp }, index) => {
+          if (!Title || !comp) return null;
+          return (
+            <Tab key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
+              {Title}
+            </Tab>
+          );
+        })}
+      </div>
+
+      {Component}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { ConsumeMethodTemplate, ConsumeMethodTemplateProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
@@ -18,11 +18,11 @@ export type ImportProps = {
    * component display name
    */
   componentName: string;
-} & ConsumeMethodTemplateProps;
+} & ExpandableTabContentProps;
 
 export function Import({ componentId, packageName, componentName, ...rest }: ImportProps) {
   return (
-    <ConsumeMethodTemplate
+    <ExpandableTabContent
       {...rest}
       content={
         <div className={styles.importContent}>

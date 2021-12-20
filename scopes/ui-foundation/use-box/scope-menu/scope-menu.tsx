@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { ConsumeMethodTemplate } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { ExpandableTabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import styles from './scope-menu.module.scss';
@@ -22,7 +22,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
           <Ellipsis>{`Bulk import from ${scopeName}`}</Ellipsis>
         </div>
       </div>
-      <ConsumeMethodTemplate
+      <ExpandableTabContent
         content={
           <div className={styles.importContent}>
             <div>Use a glob-pattern to import multiple components</div>

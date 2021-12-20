@@ -6,14 +6,14 @@ import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './tab-content.module.scss';
 
-export type ConsumeMethodTemplateProps = {
+export type ExpandableTabContentProps = {
   content?: ReactNode;
   drawerContent?: ReactNode;
   drawerTitle?: ReactNode;
   isOpen?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ConsumeMethodTemplate({ content, drawerContent, drawerTitle, ...rest }: ConsumeMethodTemplateProps) {
+export function ExpandableTabContent({ content, drawerContent, drawerTitle, ...rest }: ExpandableTabContentProps) {
   const [open, toggle] = useState(false);
   return (
     <TabContent

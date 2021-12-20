@@ -5,12 +5,38 @@ labels: ['react', 'ui-component', 'component', 'menu']
 
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu } from './menu';
+import { Install } from './install';
+import { Import } from './import';
+
+Menu accepts an array of methods with a `Title` to be displayed in the tab and a `Component` to be rendered in the content section.
+
+The menu has some more concrete components available for the most common usages, `Install` and `Import`. both can be used to supply the menu with it's methods.
 
 ```js live
-<Menu
-  packageName="@teambit/design.ui.input.radio"
-  componentId="teambit.design/ui/input/radio"
-  registryName="@teambit"
-  componentName="radio"
-/>
+() => {
+  const methods = [
+    {
+      Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
+      Component: (
+        <Install
+          config={`npm config set @teambit:registry' https://node.bit.dev`}
+          componentName="radio"
+          packageManager="npm"
+          copyString="npm i @teambit/design.ui.radio"
+          registryName="@teambit"
+        />
+      ),
+      order: 1,
+    },
+    {
+      Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
+      Component: (
+        <Import componentId="teambit.design/ui/radio" packageName="@teambit/design.ui.radio" componentName="radio" />
+      ),
+      order: 0,
+    },
+  ];
+
+  return <Menu methods={methods} componentName="radio" />;
+};
 ```
