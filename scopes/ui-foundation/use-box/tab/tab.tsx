@@ -4,7 +4,7 @@ import styles from './tab.module.scss';
 
 export type TabProps = {
   isActive?: boolean;
-  onClick: (target: string) => void;
+  onClick?: (target: string) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function Tab({ onClick, isActive, className, children, ...rest }: TabProps) {
