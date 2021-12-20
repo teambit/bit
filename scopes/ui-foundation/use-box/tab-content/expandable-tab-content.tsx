@@ -10,7 +10,6 @@ export type ExpandableTabContentProps = {
   content?: ReactNode;
   drawerContent?: ReactNode;
   drawerTitle?: ReactNode;
-  isOpen?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ExpandableTabContent({ content, drawerContent, drawerTitle, ...rest }: ExpandableTabContentProps) {
