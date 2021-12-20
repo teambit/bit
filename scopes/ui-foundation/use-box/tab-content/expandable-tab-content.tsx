@@ -14,6 +14,7 @@ export type ExpandableTabContentProps = {
 
 export function ExpandableTabContent({ content, drawerContent, drawerTitle, ...rest }: ExpandableTabContentProps) {
   const [open, toggle] = useState(false);
+  const iconStyles = open ? styles.open : '';
   return (
     <TabContent
       {...rest}
@@ -21,7 +22,7 @@ export function ExpandableTabContent({ content, drawerContent, drawerTitle, ...r
         <>
           <div className={classNames(linkStyles, styles.drawer)} onClick={() => toggle(!open)}>
             <div>{drawerTitle}</div>
-            <Icon of="down-rounded-corners" className={open && styles.open} />
+            <Icon of="down-rounded-corners" className={iconStyles} />
           </div>
           <AnimateHeight height={open ? 'auto' : 0}>{drawerContent}</AnimateHeight>
         </>
