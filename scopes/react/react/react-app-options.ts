@@ -18,14 +18,19 @@ export type ReactAppOptions = {
   ssr?: boolean;
 
   /**
-   * instance of bundler to use.
+   * instance of bundler to use. default is Webpack.
    */
   bundler?: Bundler;
 
   /**
-   * instance of dev server to use.
+   * instance of dev server to use. default is Webpack.
    */
   devServer?: DevServer;
+
+  /**
+   * decide whether to prerender your app. accepts an array of routes. if none, prerender would not apply.
+   */
+  prerender?: string[];
 
   /**
    * deploy function.

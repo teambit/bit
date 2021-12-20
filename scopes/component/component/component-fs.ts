@@ -42,9 +42,14 @@ export default class ComponentFS extends MemoryFS {
     });
   }
 
-  toObject() {}
-
-  toJSON() {}
+  toObject() {
+    return this.files.map((file) => {
+      return {
+        path: file.path,
+        contents: file.contents,
+      };
+    });
+  }
 
   static fromVinyls(files: AbstractVinyl[]) {
     const fs = new ComponentFS(files);

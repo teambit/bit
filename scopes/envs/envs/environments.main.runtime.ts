@@ -115,7 +115,7 @@ export class EnvsMain {
   /**
    * compose two environments into one.
    */
-  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
+  merge<T extends Environment, S extends Environment>(targetEnv: Environment, sourceEnv: Environment): T & S {
     const allNames = new Set<string>();
     const keys = ['icon', 'name', 'description'];
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
@@ -134,7 +134,7 @@ export class EnvsMain {
       targetEnv[key] = fn.bind(sourceEnv);
     });
 
-    return targetEnv as T;
+    return targetEnv as T & S;
   }
 
   getEnvData(component: Component): AspectData {

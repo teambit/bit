@@ -46,7 +46,7 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
   run?(context: EnvContext, options?: TOpts): Promise<TExecResponse>;
 
   /**
-   *
+   * run the service only once.
    */
   runOnce?(context: EnvContext[], options?: TOpts): Promise<any>;
 }

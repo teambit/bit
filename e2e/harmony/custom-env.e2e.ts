@@ -20,6 +20,20 @@ describe('custom env', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+  describe('non existing env', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.extensions.addExtensionToVariant('*', 'company.scope/envs/fake-env');
+    });
+    // before, it was throwing: "company.scope: access denied"
+    it('bit status should show a descriptive error', () => {
+      expect(() => helper.command.status()).to.throw(
+        'unable to import the following component(s): company.scope/envs/fake-env'
+      );
+    });
+  });
   describe('custom env with 3 components', () => {
     let wsAllNew;
     let envId;
