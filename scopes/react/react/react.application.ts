@@ -6,10 +6,7 @@ import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { ReactEnv } from './react.env';
-
-export interface ReactAppDeployContext extends DeployContext {
-  publicDir: string;
-}
+import { ReactAppDeployContext } from './react-app-options';
 
 export class ReactApp implements Application {
   constructor(
