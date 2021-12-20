@@ -322,7 +322,6 @@ export class ComponentUI {
       componentUI.yarnMethod,
       componentUI.pnpmMethod
     );
-    // componentUI.registerConsumeMethod(componentUI.consumeMethods);
     return componentUI;
   }
 }
