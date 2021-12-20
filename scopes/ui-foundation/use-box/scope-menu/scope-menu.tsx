@@ -30,7 +30,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
           </div>
         }
         drawerTitle={
-          <div>
+          <div className={styles.drawerTitle}>
             <Icon of="download" />
             <span>Install Bit on your computer</span>
           </div>

@@ -26,16 +26,13 @@
   }
 }
 
-.drawer {
-  justify-content: space-between;
-  > div {
-    display: flex;
-    align-items: center;
-    > span {
-      &:first-child {
-        margin-right: 8px;
-        font-size: var(--bit-p-md, 16px);
-      }
+.drawerTitle {
+  display: flex;
+  align-items: center;
+  > span {
+    &:first-child {
+      margin-right: 8px;
+      font-size: var(--bit-p-md, 16px);
     }
   }
 }
