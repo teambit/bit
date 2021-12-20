@@ -657,9 +657,15 @@ export default class BitMap {
       const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
       const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
-        logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+        logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
         componentMap.files = files;
         componentMap.id = componentId;
+        if (componentId.hasVersion() && this.workspaceLane) {
+          // happening during checkout for example
+          // @todo: needs to decide, maybe the best place to sync the workspaceLane is before writing to the .bitmap
+          // file. maybe in `toObject` method in this class.
+          this.workspaceLane.addEntry(componentId);
+        }
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {

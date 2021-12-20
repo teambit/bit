@@ -51,4 +51,37 @@ describe('untag components on Harmony', function () {
       );
     });
   });
+  describe('untagging multiple versions', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagScopeWithoutBuild(); // 0.0.1
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.untagAll();
+    });
+    // a previous bug saved the hash of 0.0.1 as the head, which made the component both: staged and snapped.
+    it('should show the component as new only, not as staged nor snapped', () => {
+      helper.command.expectStatusToBeClean(['newComponents']);
+    });
+  });
+  describe('untagging multiple versions when the new head is exported', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagScopeWithoutBuild(); // 0.0.1
+      helper.command.export();
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.tagScopeWithoutBuild(); // 0.0.3
+      helper.command.untagAll();
+    });
+    // a previous bug saved the hash of 0.0.2 as the head.
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    it('bitmap should show a version, not a hash', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('0.0.1');
+    });
+  });
 });

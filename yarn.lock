@@ -2550,15 +2550,15 @@ __metadata:
   linkType: hard
 
 "@graphql-tools/load-files@npm:^6.2.4":
-  version: 6.5.3
-  resolution: "@graphql-tools/load-files@npm:6.5.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Fload-files%2F-%2Fload-files-6.5.3.tgz"
+  version: 6.5.2
+  resolution: "@graphql-tools/load-files@npm:6.5.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40graphql-tools%2Fload-files%2F-%2Fload-files-6.5.2.tgz"
   dependencies:
     globby: 11.0.4
     tslib: ~2.3.0
     unixify: 1.0.0
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 4eb7997ce17e9f01d11dbb054aea084e7ad77ccd3c260a6b6147e24287c86366f9e4bd56b66988d875b4bc40f3f1b67a7be8ae9a51f7196087797ed22d697d07
+  checksum: ac90ce84578b39a61bd4b10138d1380d7020523e3ade2f9b21fe852a7d9f8f64d8f09a82465af31dcf303e21efdfbfec908e38f63c76fa31ee420e3b1bc09a69
   languageName: node
   linkType: hard
 
@@ -7364,9 +7364,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.190, @teambit/legacy@npm:1.0.190::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.190.tgz":
-  version: 1.0.190
-  resolution: "@teambit/legacy@npm:1.0.190::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.190.tgz"
+"@teambit/legacy@npm:1.0.191, @teambit/legacy@npm:1.0.191::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.191.tgz":
+  version: 1.0.191
+  resolution: "@teambit/legacy@npm:1.0.191::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.191.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7489,7 +7489,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 22ee4084ec2a7531dafd02d030b93f10b2f4dcc09dbb3e4286b63ff413eac230b02c03a8e2fdc9e37fdff08ebe8f31305c470fc61be5bc3bd7f2e2ad90f7603c
+  checksum: 7364e567f6b057902a61872212f3e871b1c4b0e66c44b14f48c4e399952d9dc04bddddd35f26744e16d317635037b1c923acb61b194f71dec6da642fbfe7c6e9
   languageName: node
   linkType: hard
 
@@ -7638,7 +7638,8 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.190
+    "@teambit/legacy": 1.0.191
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
     "@teambit/react.instructions.react.adding-tests": 0.0.6
@@ -7692,7 +7693,7 @@ __metadata:
     "@types/postcss-normalize": 9.0.1
     "@types/prettier": 2.3.2
     "@types/puppeteer": 3.0.5
-    "@types/react": 17.0.8
+    "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -8053,7 +8054,8 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.190
+    "@teambit/legacy": 1.0.191
+    jest: 26.6.3
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8638,12 +8640,12 @@ __metadata:
   linkType: hard
 
 "@types/eslint-scope@npm:^3.7.0":
-  version: 3.7.2
-  resolution: "@types/eslint-scope@npm:3.7.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Feslint-scope%2F-%2Feslint-scope-3.7.2.tgz"
+  version: 3.7.1
+  resolution: "@types/eslint-scope@npm:3.7.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Feslint-scope%2F-%2Feslint-scope-3.7.1.tgz"
   dependencies:
     "@types/eslint": "*"
     "@types/estree": "*"
-  checksum: 7ce2b4a07c22e7b265d4ee145196fcf00993b8aaeecaf5cecc8231c820a000c00bfaee6c026a2f363c215822c8fbf5dbedb2d3f56621cdda87a6601db2a05319
+  checksum: 4271c9adad19ad8a1d23062d9020468a51c7f81594b12b8e68f7d460c09e14d57cae3e82b077c402766369c0c17e2de72da72c405fa465d18a46c0b14ce92530
   languageName: node
   linkType: hard
 
@@ -9098,9 +9100,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 17.0.0
-  resolution: "@types/node@npm:17.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fnode%2F-%2Fnode-17.0.0.tgz"
-  checksum: 30970a70c2eb78dbe80613d73243c255aaa9ce057d9e8595069ca0aef0363db0af45dc0d35f445cc804576a99df2970c170130663d76cd60319b779872e92ad6
+  version: 16.11.13
+  resolution: "@types/node@npm:16.11.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fnode%2F-%2Fnode-16.11.13.tgz"
+  checksum: 7c9d62c024537d7c9f2229097b9e7a93a60bc60efbc9171977f172819e229b01d0b6ed276d335996d39b0096aed2cefa58c4a34b264d712ae3595449e8d96ab7
   languageName: node
   linkType: hard
 
@@ -9288,7 +9290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*":
+"@types/react@npm:*, @types/react@npm:^17.0.8":
   version: 17.0.37
   resolution: "@types/react@npm:17.0.37::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.37.tgz"
   dependencies:
@@ -9296,17 +9298,6 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: e68b0d59aa69577fc6a6d654b25d5d8408625498f4c483f160b557fac21e840f6e8807cbde93e9f039949b6d624a019b1990d18499c1d65aecf3605c25e30242
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:17.0.8":
-  version: 17.0.8
-  resolution: "@types/react@npm:17.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.8.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
   languageName: node
   linkType: hard
 
@@ -13038,7 +13029,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"body-parser@npm:1.19.1, body-parser@npm:^1.18.3":
+"body-parser@npm:^1.18.3":
   version: 1.19.1
   resolution: "body-parser@npm:1.19.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbody-parser%2F-%2Fbody-parser-1.19.1.tgz"
   dependencies:
@@ -13293,7 +13284,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.14.5, browserslist@npm:^4.16.0, browserslist@npm:^4.16.6, browserslist@npm:^4.17.5, browserslist@npm:^4.19.1, browserslist@npm:^4.6.4":
+"browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.14.5, browserslist@npm:^4.16.0, browserslist@npm:^4.16.6, browserslist@npm:^4.17.5, browserslist@npm:^4.18.1, browserslist@npm:^4.6.4":
   version: 4.19.1
   resolution: "browserslist@npm:4.19.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbrowserslist%2F-%2Fbrowserslist-4.19.1.tgz"
   dependencies:
@@ -13775,9 +13766,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.0, caniuse-lite@npm:^1.0.30000981, caniuse-lite@npm:^1.0.30001109, caniuse-lite@npm:^1.0.30001125, caniuse-lite@npm:^1.0.30001181, caniuse-lite@npm:^1.0.30001286":
-  version: 1.0.30001287
-  resolution: "caniuse-lite@npm:1.0.30001287::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcaniuse-lite%2F-%2Fcaniuse-lite-1.0.30001287.tgz"
-  checksum: b53c26a3a267a2920394e4aa5d1f60a76f891943914068066700e5497dda512f096d8a77dfefda17306a9df06e16ce9c6b5179f8856cc0efbcd8873d13b2fbea
+  version: 1.0.30001286
+  resolution: "caniuse-lite@npm:1.0.30001286::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcaniuse-lite%2F-%2Fcaniuse-lite-1.0.30001286.tgz"
+  checksum: 04de4742552d4aeb713677b40693d9ac1fbd259573e0ff739565278bcecb6f398f3227546a4e930f4d5cf95b61458f4a53c9c1f90f5b0c4f6063b32e4c54b89e
   languageName: node
   linkType: hard
 
@@ -14614,9 +14605,9 @@ __metadata:
   linkType: hard
 
 "colord@npm:^2.9.1":
-  version: 2.9.2
-  resolution: "colord@npm:2.9.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcolord%2F-%2Fcolord-2.9.2.tgz"
-  checksum: 2aa6a9b3abbce74ba3c563886cfeb433ea0d7df5ad6f4a560005eddab1ddf7c0fc98f39b09b599767a19c86dd3837b77f66f036e479515d4b17347006dbd6d9f
+  version: 2.9.1
+  resolution: "colord@npm:2.9.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcolord%2F-%2Fcolord-2.9.1.tgz"
+  checksum: c47ff86c6ffc28ac55812c64fe35563809ccf860687506e4127137dcd27595b49610b85dcf3551b39a1c19af6a1a41ed41a42043ef6e795f787f29e4e49b4014
   languageName: node
   linkType: hard
 
@@ -15154,15 +15145,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-disposition@npm:0.5.4":
-  version: 0.5.4
-  resolution: "content-disposition@npm:0.5.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcontent-disposition%2F-%2Fcontent-disposition-0.5.4.tgz"
-  dependencies:
-    safe-buffer: 5.2.1
-  checksum: afb9d545e296a5171d7574fcad634b2fdf698875f4006a9dd04a3e1333880c5c0c98d47b560d01216fb6505a54a2ba6a843ee3a02ec86d7e911e8315255f56c3
-  languageName: node
-  linkType: hard
-
 "content-type@npm:^1.0.4, content-type@npm:~1.0.4":
   version: 1.0.4
   resolution: "content-type@npm:1.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcontent-type%2F-%2Fcontent-type-1.0.4.tgz"
@@ -15222,7 +15204,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cookie@npm:0.4.1, cookie@npm:~0.4.1":
+"cookie@npm:~0.4.1":
   version: 0.4.1
   resolution: "cookie@npm:0.4.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcookie%2F-%2Fcookie-0.4.1.tgz"
   checksum: bd7c47f5d94ab70ccdfe8210cde7d725880d2fcda06d8e375afbdd82de0c8d3b73541996e9ce57d35f67f672c4ee6d60208adec06b3c5fc94cebb85196084cf8
@@ -15286,19 +15268,19 @@ __metadata:
   linkType: hard
 
 "core-js-compat@npm:^3.18.0, core-js-compat@npm:^3.19.1, core-js-compat@npm:^3.6.2, core-js-compat@npm:^3.8.0":
-  version: 3.20.0
-  resolution: "core-js-compat@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-compat%2F-%2Fcore-js-compat-3.20.0.tgz"
+  version: 3.19.3
+  resolution: "core-js-compat@npm:3.19.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-compat%2F-%2Fcore-js-compat-3.19.3.tgz"
   dependencies:
-    browserslist: ^4.19.1
+    browserslist: ^4.18.1
     semver: 7.0.0
-  checksum: d2887ab75f8d65b8b8f0ba218c191bd69a1a58db2583671e9656da5915920fe47a92f933d4552225a4c8979d81ea294758fe71b23580fa6c7e5c89da542cfe2d
+  checksum: 4f00f734d8745bcd111e41c79d6195939f6b29951c83cc83f4d50a7d352329367d164b0985b947f83313d7dd31d6ee7b1e20a1d3d8ae7566df744ad914fc4e16
   languageName: node
   linkType: hard
 
 "core-js-pure@npm:^3.10.2, core-js-pure@npm:^3.19.0, core-js-pure@npm:^3.8.1":
-  version: 3.20.0
-  resolution: "core-js-pure@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-pure%2F-%2Fcore-js-pure-3.20.0.tgz"
-  checksum: b5ae6601536104cad63bb91100477d9718442d348ac47dad22a60e22bd9c86ffe10ef5ea23ddaabb97a1492727e4f2bd4bb8848031271d5d1b2f31c860b4b362
+  version: 3.19.3
+  resolution: "core-js-pure@npm:3.19.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-pure%2F-%2Fcore-js-pure-3.19.3.tgz"
+  checksum: 1c9db965010751e9242f8c3697f55c63a8a1a152e6128aff85ea29dd040f78417e63a9d493293eba46351e7ef22e89d1fc077ead5b8121f8d88244952c73585a
   languageName: node
   linkType: hard
 
@@ -15338,9 +15320,9 @@ __metadata:
   linkType: hard
 
 "core-js@npm:^3.0.0, core-js@npm:^3.14.0, core-js@npm:^3.5.0, core-js@npm:^3.6.5":
-  version: 3.20.0
-  resolution: "core-js@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.20.0.tgz"
-  checksum: 4dca42f27553e1068b5329fbe133bca9256be819b64b4d0e244b8dc0db69181430d79aed3c33eeb7388f8ec019ea125e76fbd0c28523d112779f9bb5147a0939
+  version: 3.19.3
+  resolution: "core-js@npm:3.19.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.19.3.tgz"
+  checksum: eaa7afd87411393a7b1637fd0813957f689e91007219b6a951a1fe1aa08edccfddbbfbb1acb281a76dbe90b42fe7768377289258d81ba46e13c9919527aee95a
   languageName: node
   linkType: hard
 
@@ -15829,14 +15811,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cssnano-preset-default@npm:^5.1.9":
-  version: 5.1.9
-  resolution: "cssnano-preset-default@npm:5.1.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcssnano-preset-default%2F-%2Fcssnano-preset-default-5.1.9.tgz"
+"cssnano-preset-default@npm:^5.1.8":
+  version: 5.1.8
+  resolution: "cssnano-preset-default@npm:5.1.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcssnano-preset-default%2F-%2Fcssnano-preset-default-5.1.8.tgz"
   dependencies:
     css-declaration-sorter: ^6.0.3
     cssnano-utils: ^2.0.1
     postcss-calc: ^8.0.0
-    postcss-colormin: ^5.2.2
+    postcss-colormin: ^5.2.1
     postcss-convert-values: ^5.0.2
     postcss-discard-comments: ^5.0.1
     postcss-discard-duplicates: ^5.0.1
@@ -15855,7 +15837,7 @@ __metadata:
     postcss-normalize-string: ^5.0.1
     postcss-normalize-timing-functions: ^5.0.1
     postcss-normalize-unicode: ^5.0.1
-    postcss-normalize-url: ^5.0.4
+    postcss-normalize-url: ^5.0.3
     postcss-normalize-whitespace: ^5.0.1
     postcss-ordered-values: ^5.0.2
     postcss-reduce-initial: ^5.0.2
@@ -15864,7 +15846,7 @@ __metadata:
     postcss-unique-selectors: ^5.0.2
   peerDependencies:
     postcss: ^8.2.15
-  checksum: 1530d1cec62a076cb9b70f0a8ae29fdd5612ddd5a5b781b04a82d3595b9eccfc6bf4c5a9047ebdbea713e7e7d800eb1c3c6ae697aa5b0159366a5c90bf868b31
+  checksum: 89d6878cef19fd235f1c4d73234646bc6d5c7abefb36fc8d98fdfffcd16a2ee75d6bce033b000f627315a285a9a1baca70f54039ccdb91153cf86c536a7e73c7
   languageName: node
   linkType: hard
 
@@ -15878,16 +15860,16 @@ __metadata:
   linkType: hard
 
 "cssnano@npm:^5.0.6":
-  version: 5.0.13
-  resolution: "cssnano@npm:5.0.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcssnano%2F-%2Fcssnano-5.0.13.tgz"
+  version: 5.0.12
+  resolution: "cssnano@npm:5.0.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcssnano%2F-%2Fcssnano-5.0.12.tgz"
   dependencies:
-    cssnano-preset-default: ^5.1.9
+    cssnano-preset-default: ^5.1.8
     is-resolvable: ^1.1.0
     lilconfig: ^2.0.3
     yaml: ^1.10.2
   peerDependencies:
     postcss: ^8.2.15
-  checksum: 096324bf1eb811fa826b54fd0d6515557aa1738868a009285ef3615f2166438ce75817ed12d5aba71bd3b5edbb73bcfa25abd2384356d68ee87df5892b7b573c
+  checksum: c756f4c2b513852c755f12a7622cdb6388d3e92d3a452fcbc49080dc31ba803ace9d66c4b3a51fa2030201dd1918ef50f953437b65edf252756cafc8ee3889a2
   languageName: node
   linkType: hard
 
@@ -17065,9 +17047,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.3.564, electron-to-chromium@npm:^1.3.649, electron-to-chromium@npm:^1.4.17":
-  version: 1.4.24
-  resolution: "electron-to-chromium@npm:1.4.24::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Felectron-to-chromium%2F-%2Felectron-to-chromium-1.4.24.tgz"
-  checksum: 71c065ae9cb74bc7e44abeea20c1639a2057bee4927f09ccc2a6d492fa5c7a31da63ad5d5d8659f7d04db680225543aae54579793f269c9d2ecc1c1541018688
+  version: 1.4.18
+  resolution: "electron-to-chromium@npm:1.4.18::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Felectron-to-chromium%2F-%2Felectron-to-chromium-1.4.18.tgz"
+  checksum: 59d8da47d997b35fca63286cc486e84b0b84587e62c632dd22f9c2b98b5c2116fa8ff0ca3b64518f0957a7f3d6812b42459a7301f5e81607b600526e1bb55227
   languageName: node
   linkType: hard
 
@@ -18525,7 +18507,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:4.17.1":
+"express@npm:4.17.1, express@npm:^4.0.0, express@npm:^4.16.2, express@npm:^4.17.1":
   version: 4.17.1
   resolution: "express@npm:4.17.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress%2F-%2Fexpress-4.17.1.tgz"
   dependencies:
@@ -18560,44 +18542,6 @@ __metadata:
     utils-merge: 1.0.1
     vary: ~1.1.2
   checksum: d964e9e17af331ea6fa2f84999b063bc47189dd71b4a735df83f9126d3bb2b92e830f1cb1d7c2742530eb625e2689d7a9a9c71f0c3cc4dd6015c3cd32a01abd5
-  languageName: node
-  linkType: hard
-
-"express@npm:^4.0.0, express@npm:^4.16.2, express@npm:^4.17.1":
-  version: 4.17.2
-  resolution: "express@npm:4.17.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress%2F-%2Fexpress-4.17.2.tgz"
-  dependencies:
-    accepts: ~1.3.7
-    array-flatten: 1.1.1
-    body-parser: 1.19.1
-    content-disposition: 0.5.4
-    content-type: ~1.0.4
-    cookie: 0.4.1
-    cookie-signature: 1.0.6
-    debug: 2.6.9
-    depd: ~1.1.2
-    encodeurl: ~1.0.2
-    escape-html: ~1.0.3
-    etag: ~1.8.1
-    finalhandler: ~1.1.2
-    fresh: 0.5.2
-    merge-descriptors: 1.0.1
-    methods: ~1.1.2
-    on-finished: ~2.3.0
-    parseurl: ~1.3.3
-    path-to-regexp: 0.1.7
-    proxy-addr: ~2.0.7
-    qs: 6.9.6
-    range-parser: ~1.2.1
-    safe-buffer: 5.2.1
-    send: 0.17.2
-    serve-static: 1.14.2
-    setprototypeof: 1.2.0
-    statuses: ~1.5.0
-    type-is: ~1.6.18
-    utils-merge: 1.0.1
-    vary: ~1.1.2
-  checksum: 1535d56d20e65a1a39b5f056c025dd635290a744478ac69cc47633aeb4b2ce51458f8eb4080cfb7ba47c853ba5cfd794d404cff822a25127f1556b726ec3914a
   languageName: node
   linkType: hard
 
@@ -19509,13 +19453,6 @@ __metadata:
   version: 1.0.0
   resolution: "fs.realpath@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffs.realpath%2F-%2Ffs.realpath-1.0.0.tgz"
   checksum: 99ddea01a7e75aa276c250a04eedeffe5662bce66c65c07164ad6264f9de18fb21be9433ead460e54cff20e31721c811f4fb5d70591799df5f85dce6d6746fd0
-  languageName: node
-  linkType: hard
-
-"fsevents@^2.1.2, fsevents@~2.3.1, fsevents@~2.3.2":
-  version: 2.3.2
-  resolution: "fsevents@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffsevents%2F-%2Ffsevents-2.3.2.tgz"
-  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
   languageName: node
   linkType: hard
 
@@ -21865,6 +21802,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-absolute-url@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "is-absolute-url@npm:3.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-absolute-url%2F-%2Fis-absolute-url-3.0.3.tgz"
+  checksum: 5159b51d065d9ad29e16a2f78d6c0e41c43227caf90a45e659c54ea6fd50ef0595b1871ce392e84b1df7cfdcad9a8e66eec0813a029112188435abf115accb16
+  languageName: node
+  linkType: hard
+
 "is-accessor-descriptor@npm:^0.1.6":
   version: 0.1.6
   resolution: "is-accessor-descriptor@npm:0.1.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-accessor-descriptor%2F-%2Fis-accessor-descriptor-0.1.6.tgz"
@@ -23309,7 +23253,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-worker@npm:^27.0.2, jest-worker@npm:^27.0.6, jest-worker@npm:^27.4.1":
+"jest-worker@npm:^27.0.2, jest-worker@npm:^27.0.6":
   version: 27.4.5
   resolution: "jest-worker@npm:27.4.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fjest-worker%2F-%2Fjest-worker-27.4.5.tgz"
   dependencies:
@@ -25889,7 +25833,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ms@npm:*, ms@npm:2.1.3, ms@npm:^2.0.0, ms@npm:^2.1.1":
+"ms@npm:*, ms@npm:^2.0.0, ms@npm:^2.1.1":
   version: 2.1.3
   resolution: "ms@npm:2.1.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fms%2F-%2Fms-2.1.3.tgz"
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
@@ -26006,8 +25950,6 @@ __metadata:
 "nan@npm:^2.14.0, nan@npm:^2.14.1, nan@npm:^2.15.0":
   version: 2.15.0
   resolution: "nan@npm:2.15.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fnan%2F-%2Fnan-2.15.0.tgz"
-  dependencies:
-    node-gyp: latest
   checksum: 33e1bb4dfca447fe37d4bb5889be55de154828632c8d38646db67293a21afd61ed9909cdf1b886214a64707d935926c4e60e2b09de9edfc2ad58de31d6ce8f39
   languageName: node
   linkType: hard
@@ -28112,17 +28054,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-colormin@npm:^5.2.2":
-  version: 5.2.2
-  resolution: "postcss-colormin@npm:5.2.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-colormin%2F-%2Fpostcss-colormin-5.2.2.tgz"
+"postcss-colormin@npm:^5.2.1":
+  version: 5.2.1
+  resolution: "postcss-colormin@npm:5.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-colormin%2F-%2Fpostcss-colormin-5.2.1.tgz"
   dependencies:
     browserslist: ^4.16.6
     caniuse-api: ^3.0.0
     colord: ^2.9.1
-    postcss-value-parser: ^4.2.0
+    postcss-value-parser: ^4.1.0
   peerDependencies:
     postcss: ^8.2.15
-  checksum: 55f7e4306cf771a99d9a2e9d5d62b979c9fa557b165f72bbecc49fbbf002dcc2fdaa9deb18cce2e4455f5bf6680ac07e673095b95b2f3391f05e68a2a2b21568
+  checksum: c5337ae9477a6ad787a5bd366a6a418da65fd6212e4dade2ba14c5975faec5b16b69533fc0e5130f34b42a81bc2d1db17436b60f204ef7935cfc555187731579
   languageName: node
   linkType: hard
 
@@ -28547,15 +28489,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-normalize-url@npm:^5.0.4":
-  version: 5.0.4
-  resolution: "postcss-normalize-url@npm:5.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-normalize-url%2F-%2Fpostcss-normalize-url-5.0.4.tgz"
+"postcss-normalize-url@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "postcss-normalize-url@npm:5.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-normalize-url%2F-%2Fpostcss-normalize-url-5.0.3.tgz"
   dependencies:
+    is-absolute-url: ^3.0.3
     normalize-url: ^6.0.1
-    postcss-value-parser: ^4.2.0
+    postcss-value-parser: ^4.1.0
   peerDependencies:
     postcss: ^8.2.15
-  checksum: 3c5a1d1723ab48811f1b888d065f8d9694d37f93fe3378a7672ec9c356a3ee96c84f1f7021c8c4a65f7caaa403f45df12b9b88de1fe66b0d1091d0f4fddf8233
+  checksum: 34dfc8d1d71f0cf073d3f3edfc94a5381d659275103240c15bb3d4f424e70ceec431dc663c7403e1b813d98f45fb5174f7f0c3fe9fb6b00cdbd62f3ac2f0032c
   languageName: node
   linkType: hard
 
@@ -28786,7 +28729,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-value-parser@npm:^4.0.2, postcss-value-parser@npm:^4.1.0, postcss-value-parser@npm:^4.2.0":
+"postcss-value-parser@npm:^4.0.2, postcss-value-parser@npm:^4.1.0":
   version: 4.2.0
   resolution: "postcss-value-parser@npm:4.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-value-parser%2F-%2Fpostcss-value-parser-4.2.0.tgz"
   checksum: 819ffab0c9d51cf0acbabf8996dffbfafbafa57afc0e4c98db88b67f2094cb44488758f06e5da95d7036f19556a4a732525e84289a425f4f6fd8e412a9d7442f
@@ -29288,7 +29231,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-addr@npm:~2.0.5, proxy-addr@npm:~2.0.7":
+"proxy-addr@npm:~2.0.5":
   version: 2.0.7
   resolution: "proxy-addr@npm:2.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fproxy-addr%2F-%2Fproxy-addr-2.0.7.tgz"
   dependencies:
@@ -31013,16 +30956,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@1.20.0, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.20.0, resolve@^1.3.2, resolve@^1.8.1":
-  version: 1.20.0
-  resolution: "resolve@npm:1.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fresolve%2F-%2Fresolve-1.20.0.tgz"
-  dependencies:
-    is-core-module: ^2.2.0
-    path-parse: ^1.0.6
-  checksum: 40cf70b2cde00ef57f99daf2dc63c6a56d6c14a1b7fc51735d06a6f0a3b97cb67b4fb7ef6c747b4e13a7baba83b0ef625d7c4ce92a483cd5af923c3b65fd16fe
-  languageName: node
-  linkType: hard
-
 "resolve@patch:resolve@1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.18.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.20.0
   resolution: "resolve@patch:resolve@npm%3A1.20.0%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Fresolve%252F-%252Fresolve-1.20.0.tgz#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
@@ -31338,7 +31271,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safe-buffer@npm:5.2.1, safe-buffer@npm:>=5.1.0, safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.0, safe-buffer@npm:^5.1.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:^5.2.0, safe-buffer@npm:~5.2.0":
+"safe-buffer@npm:>=5.1.0, safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.0, safe-buffer@npm:^5.1.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:^5.2.0, safe-buffer@npm:~5.2.0":
   version: 5.2.1
   resolution: "safe-buffer@npm:5.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsafe-buffer%2F-%2Fsafe-buffer-5.2.1.tgz"
   checksum: b99c4b41fdd67a6aaf280fcd05e9ffb0813654894223afb78a31f14a19ad220bba8aba1cb14eddce1fcfb037155fe6de4e861784eb434f7d11ed58d1e70dd491
@@ -31789,27 +31722,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"send@npm:0.17.2":
-  version: 0.17.2
-  resolution: "send@npm:0.17.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsend%2F-%2Fsend-0.17.2.tgz"
-  dependencies:
-    debug: 2.6.9
-    depd: ~1.1.2
-    destroy: ~1.0.4
-    encodeurl: ~1.0.2
-    escape-html: ~1.0.3
-    etag: ~1.8.1
-    fresh: 0.5.2
-    http-errors: 1.8.1
-    mime: 1.6.0
-    ms: 2.1.3
-    on-finished: ~2.3.0
-    range-parser: ~1.2.1
-    statuses: ~1.5.0
-  checksum: c28f36deb4ccba9b8d6e6a1e472b8e7c40a1f51575bdf8f67303568cc9e71131faa3adc36fdb72611616ccad1584358bbe4c3ebf419e663ecc5de868ad3d3f03
-  languageName: node
-  linkType: hard
-
 "separator-7e051b@workspace:scopes/design/ui/separator":
   version: 0.0.0-use.local
   resolution: "separator-7e051b@workspace:scopes/design/ui/separator"
@@ -31875,18 +31787,6 @@ __metadata:
     parseurl: ~1.3.3
     send: 0.17.1
   checksum: c6b268e8486d39ecd54b86c7f2d0ee4a38cd7514ddd9c92c8d5793bb005afde5e908b12395898ae206782306ccc848193d93daa15b86afb3cbe5a8414806abe8
-  languageName: node
-  linkType: hard
-
-"serve-static@npm:1.14.2":
-  version: 1.14.2
-  resolution: "serve-static@npm:1.14.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fserve-static%2F-%2Fserve-static-1.14.2.tgz"
-  dependencies:
-    encodeurl: ~1.0.2
-    escape-html: ~1.0.3
-    parseurl: ~1.3.3
-    send: 0.17.2
-  checksum: d97f3183b1dfcd8ce9c0e37e18e87fd31147ed6c8ee0b2c3a089d795e44ee851ca5061db01574f806d54f4e4b70bc694d9ca64578653514e04a28cbc97a1de05
   languageName: node
   linkType: hard
 
@@ -33729,10 +33629,10 @@ __metadata:
   linkType: hard
 
 "terser-webpack-plugin@npm:^5.1.3":
-  version: 5.3.0
-  resolution: "terser-webpack-plugin@npm:5.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fterser-webpack-plugin%2F-%2Fterser-webpack-plugin-5.3.0.tgz"
+  version: 5.2.5
+  resolution: "terser-webpack-plugin@npm:5.2.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fterser-webpack-plugin%2F-%2Fterser-webpack-plugin-5.2.5.tgz"
   dependencies:
-    jest-worker: ^27.4.1
+    jest-worker: ^27.0.6
     schema-utils: ^3.1.1
     serialize-javascript: ^6.0.0
     source-map: ^0.6.1
@@ -33746,7 +33646,7 @@ __metadata:
       optional: true
     uglify-js:
       optional: true
-  checksum: f6735b8bb2604e8ca8b78d21f610fb2488866db72bb38e8d7c32aab97ea81fa0a19cabed074a431ff3dd9510d6efd505fc6930cdd8c1d3faa71c1bf7da4c7469
+  checksum: 2a9616466becf2e968bfc0f585678581b5c83a9dd96723c49329b11a8ccc1aaa41701877fbad2b0ce570364fde58c558fb6e7e053171512624e644b99b2f83af
   languageName: node
   linkType: hard
 
@@ -34595,46 +34495,6 @@ __metadata:
   bin:
     typescript-language-server: ./lib/cli.js
   checksum: e133ff7625c71f448b09c0dd58cc335c29d0f489b793ff8d096c72d8a475f599cfc7e3b696206c46d83df516a0b3580906192c0c32802d1f038fdf664287892a
-  languageName: node
-  linkType: hard
-
-typescript@3.9.7:
-  version: 3.9.7
-  resolution: "typescript@npm:3.9.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.7.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: d549bf1d3a93796b45be9d1dbebbef63777f8cc4d788461f4bfdb6cb07371a97d3e471c7f39dbe31107e8a25d6d8b2ef5e967af7e8e1768d9560bd95095b360b
-  languageName: node
-  linkType: hard
-
-typescript@4.4.2:
-  version: 4.4.2
-  resolution: "typescript@npm:4.4.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-4.4.2.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 194e08e9d1971d667d6fd1a0554616b7022312a2319d70e81a64e502a265992061ee7817ed9a69b52bbabe7a9b85e7938cb8c11c433e40a516b277f8c4dacd51
-  languageName: node
-  linkType: hard
-
-typescript@^2.6.2:
-  version: 2.9.2
-  resolution: "typescript@npm:2.9.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-2.9.2.tgz"
-  bin:
-    tsc: ./bin/tsc
-    tsserver: ./bin/tsserver
-  checksum: 88be998ac339b6e45f1cd15e22e4a0fedcdb5320d8d1d736e3996a0b9dff03728ebb2580a0658f0c52152b139ea9a405443f42a4ff8a2c4a1a6f4d58e0320132
-  languageName: node
-  linkType: hard
-
-typescript@^3.9.3:
-  version: 3.9.10
-  resolution: "typescript@npm:3.9.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.10.tgz"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 46c842e2cd4797b88b66ef06c9c41dd21da48b95787072ccf39d5f2aa3124361bc4c966aa1c7f709fae0509614d76751455b5231b12dbb72eb97a31369e1ff92
   languageName: node
   linkType: hard
 
@@ -36004,8 +35864,8 @@ typescript@^3.9.3:
   linkType: soft
 
 "webpack-dev-middleware@npm:^5.0.0":
-  version: 5.3.0
-  resolution: "webpack-dev-middleware@npm:5.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-dev-middleware%2F-%2Fwebpack-dev-middleware-5.3.0.tgz"
+  version: 5.2.2
+  resolution: "webpack-dev-middleware@npm:5.2.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-dev-middleware%2F-%2Fwebpack-dev-middleware-5.2.2.tgz"
   dependencies:
     colorette: ^2.0.10
     memfs: ^3.2.2
@@ -36014,7 +35874,7 @@ typescript@^3.9.3:
     schema-utils: ^4.0.0
   peerDependencies:
     webpack: ^4.0.0 || ^5.0.0
-  checksum: 01f9e11583bb682cd5ab5a1b9d6dc99545f777513c4c15aa67d10f5d057fc3d0c6f9365e02c07792d3c9b17bd47a16c8185e66eb66e9de74d8ccf561e75085e7
+  checksum: 8dfcb1244ba564e525f9d6644174a558cebd4857317bbdbcd394848641f7f0c0aeb0e7b2803dd56286b4820a7f66d27b8e58e8f1dec5515417ffa40da1f6197d
   languageName: node
   linkType: hard
 

@@ -465,9 +465,9 @@ export default class CommandHelper {
     return status.stagedComponents.includes(id);
   }
 
-  statusComponentIsModified(id: string): boolean {
+  statusComponentIsModified(fullId: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(id);
+    return status.modifiedComponent.includes(fullId);
   }
 
   showComponent(id = 'bar/foo') {
