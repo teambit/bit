@@ -6,9 +6,9 @@ import styles from './menu.module.scss';
 
 // TODO where should we place this type? its being created in component ui runtime as well
 export type ConsumeMethod = {
-  Title: ReactNode;
-  Component: ReactNode;
-  order: number;
+  Title?: ReactNode;
+  Component?: ReactNode;
+  order?: number;
 };
 
 export type ConsumeMethodsMenuProps = {

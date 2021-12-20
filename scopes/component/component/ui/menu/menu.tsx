@@ -72,19 +72,14 @@ function VersionRelatedDropdowns({
       [component.tags]
     ) || [];
 
-  // const isLatestVersion = useMemo(() => component.version === versionList[0], [component.version]);
-  // const packageVersion = useMemo(() => (isLatestVersion ? '' : `@${component.version}`), [component.version]);
-  // const origin = typeof window !== undefined ? window.location.origin : undefined;
-  // const finalElementsUrl = origin && component.elementsUrl ? `${origin}${component.elementsUrl}` : undefined;
   const methods = getConsumeMethodsComponents(consumeMethods, component);
-  // console.log('method components', methods);
   return (
     <>
       {versionList.length > 0 && (
         <UseBoxDropdown
           position="bottom-end"
           className={styles.useBox}
-          Menu={() => <ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
+          Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
       <VersionDropdown versions={versionList} currentVersion={component.version} />
@@ -94,14 +89,11 @@ function VersionRelatedDropdowns({
 
 function getConsumeMethodsComponents(consumeMethods: OrderedConsumeSlot, componentModel: ComponentModel) {
   const methods = flatten(consumeMethods.values());
-  // console.log('method', methods);
   return useMemo(
     () =>
       methods.map((method) => {
-        // console.log('meth', method);
         return method?.(componentModel);
       }),
-    [consumeMethods]
+    [consumeMethods, componentModel]
   );
-  // return methodComponentsArray;
 }

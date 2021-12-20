@@ -32,13 +32,13 @@ export function Import({ componentId, packageName, componentName, ...rest }: Imp
           <TooltipCopybox content={`bit import ${componentId}`} />
         </div>
       }
-      drawerContent={<BitInfo />}
       drawerTitle={
         <div className={styles.bottom}>
           <Icon of="download" />
           <span>Install Bit on your computer</span>
         </div>
       }
+      drawerContent={<BitInfo />}
     />
   );
 }

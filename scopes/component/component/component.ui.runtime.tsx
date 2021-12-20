@@ -118,15 +118,25 @@ export class ComponentUI {
     },
   ];
 
-  private bitMethod: ConsumePlugin = (comp) => ({
-    Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
-    Component: <Import componentId={comp.id.toString()} packageName={comp.packageName} componentName={comp.id.name} />,
-    order: 0,
-  });
+  private bitMethod: ConsumePlugin = (comp) => {
+    const version = this.getCurrentVersion(comp);
+    return {
+      Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
+      Component: (
+        <Import
+          componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
+          packageName={`${comp.packageName}${version}`}
+          componentName={comp.id.name}
+        />
+      ),
+      order: 0,
+    };
+  };
 
   // TODO - move to npm aspect
   private npmMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
+    const packageVersion = this.getCurrentVersion(comp);
     return {
       Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
@@ -134,7 +144,7 @@ export class ComponentUI {
           config={`npm config set ${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="npm"
-          copyString={`npm i ${comp.packageName}`}
+          copyString={`npm i ${comp.packageName}${packageVersion}`}
           registryName={registry}
         />
       ),
@@ -145,6 +155,7 @@ export class ComponentUI {
   // TODO - move to yarn? aspect
   private yarnMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
+    const packageVersion = this.getCurrentVersion(comp);
     return {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
@@ -154,7 +165,7 @@ export class ComponentUI {
           config={`npm config set ${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="yarn"
-          copyString={`yarn add ${comp.packageName}`}
+          copyString={`yarn add ${comp.packageName}${packageVersion}`}
           registryName={registry}
         />
       ),
@@ -165,6 +176,7 @@ export class ComponentUI {
   // TODO - move to pnpm aspect
   private pnpmMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
+    const packageVersion = this.getCurrentVersion(comp);
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
       Component: (
@@ -172,13 +184,24 @@ export class ComponentUI {
           config={`npm config set ${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="pnpm"
-          copyString={`pnpm i ${comp.packageName}`}
+          copyString={`pnpm i ${comp.packageName}${packageVersion}`}
           registryName={registry}
         />
       ),
       order: 30,
     };
   };
+
+  getCurrentVersion(component: ComponentModel) {
+    const versionList = component.tags
+      ?.toArray()
+      .map((tag) => tag?.version?.version)
+      .filter((x) => x !== undefined)
+      .reverse();
+
+    const isLatestVersion = component.version === versionList[0];
+    return isLatestVersion ? '' : `@${component.version}`;
+  }
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {

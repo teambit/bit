@@ -14,14 +14,14 @@ export const UseBoxExample = () => {
       <div style={styles}>
         <UseBoxDropdown
           position="bottom-end"
-          Menu={() => (
+          Menu={
             <Menu
               packageName="@teambit/design.ui.input.radio"
               componentId="teambit.design/ui/input/radio"
               registryName="@teambit"
               componentName="radio"
             />
-          )}
+          }
         ></UseBoxDropdown>
       </div>
     </ThemeCompositions>
@@ -39,7 +39,7 @@ export const UseBoxScopeExample = () => {
   return (
     <ThemeCompositions>
       <div style={styles}>
-        <UseBoxDropdown position="bottom-end" Menu={() => <ScopeMenu scopeName="@teambit.design" />}></UseBoxDropdown>
+        <UseBoxDropdown position="bottom-end" Menu={<ScopeMenu scopeName="@teambit.design" />}></UseBoxDropdown>
       </div>
     </ThemeCompositions>
   );
