@@ -32,7 +32,7 @@ import {
   retrieveIgnoreList,
 } from '../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../utils/path';
-import ComponentMap, { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
+import ComponentMap, { ComponentMapFile, ComponentOrigin, Config } from '../../bit-map/component-map';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import ComponentNotFoundInPath from '../../component/exceptions/component-not-found-in-path';
 import determineMainFile from './determine-main-file';
@@ -92,6 +92,7 @@ export type AddProps = {
   trackDirFeature?: boolean;
   origin?: ComponentOrigin;
   defaultScope?: string;
+  config?: Config;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
 // In that case , give the value false to overridenConsumer .
@@ -123,6 +124,7 @@ export default class AddComponents {
   addedComponents: AddResult[];
   isLegacy: boolean;
   defaultScope?: string; // helpful for out-of-sync
+  config?: Config;
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -144,6 +146,7 @@ export default class AddComponents {
     this.addedComponents = [];
     this.isLegacy = context.consumer.isLegacy;
     this.defaultScope = addProps.defaultScope;
+    this.config = addProps.config;
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -359,6 +362,7 @@ export default class AddComponents {
         componentId,
         files: component.files,
         defaultScope: this.defaultScope,
+        config: this.config,
         mainFile,
         trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
         origin: COMPONENT_ORIGINS.AUTHORED,

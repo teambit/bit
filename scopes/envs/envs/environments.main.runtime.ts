@@ -287,18 +287,49 @@ export class EnvsMain {
     return this.getDefaultEnv();
   }
 
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns #1 if exists, otherwise, #2.
+   */
   getAllEnvsConfiguredOnComponent(component: Component): EnvDefinition[] {
     // if a component has "envs" config, use it and ignore other components that are set up
     // in this components which happen to be envs.
-    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
-    if (envIdFromEnvsConfig) {
-      const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
-      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
-      if (envDef) {
-        return [envDef];
-      }
+    const envDef = this.getEnvFromEnvsConfig(component);
+    if (envDef) {
+      return [envDef];
     }
 
+    return this.getEnvsNotFromEnvsConfig(component);
+  }
+
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns only #1
+   */
+  getEnvFromEnvsConfig(component: Component): EnvDefinition | undefined {
+    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
+    if (!envIdFromEnvsConfig) {
+      return undefined;
+    }
+    const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+    const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+    return envDef;
+  }
+
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns only #2
+   */
+  getEnvsNotFromEnvsConfig(component: Component): EnvDefinition[] {
     return component.state.aspects.entries.reduce((acc: EnvDefinition[], aspectEntry) => {
       const envDef = this.getEnvDefinitionById(aspectEntry.id);
       if (envDef) acc.push(envDef);
