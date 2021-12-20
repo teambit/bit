@@ -6,6 +6,7 @@ import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { ReactEnv } from './react.env';
+import { ReactAppDeployContext } from './react-app-options';
 
 export class ReactApp implements Application {
   constructor(
@@ -13,7 +14,7 @@ export class ReactApp implements Application {
     readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    readonly deploy?: (context: DeployContext) => Promise<void>,
+    readonly deploy?: (context: ReactAppDeployContext, capsule: Capsule) => Promise<void>,
     readonly prerenderRoutes?: string[]
   ) {}
 
