@@ -3,7 +3,7 @@ import detectFrontmatter from 'remark-frontmatter';
 import visit from 'unist-util-visit';
 import remove from 'unist-util-remove';
 import remarkNotes from 'remark-admonitions';
-import parseImports from 'parse-es6-imports';
+import detectiveEs6 from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detectives/detective-es6';
 import yaml from 'yaml';
 import vfile from 'vfile';
 import { CompileOutput } from './compile-output';
@@ -67,12 +67,7 @@ export function wrapWithScopeContext() {
     const imports: ImportSpecifier[] = file.data?.imports || [];
     const ids = imports.reduce<string[]>((identifiers: string[], importSpecifier: ImportSpecifier) => {
       const newIds: string[] = [];
-      if (importSpecifier.defaultImport) newIds.push(importSpecifier.defaultImport);
-      if (importSpecifier.starImport) newIds.push(importSpecifier.starImport);
-      importSpecifier.namedImports.forEach((namedImport) => {
-        newIds.push(namedImport.value);
-      });
-
+      if (importSpecifier.identifier) newIds.push(importSpecifier.identifier);
       return identifiers.concat(newIds);
     }, []);
 
@@ -140,7 +135,14 @@ function extractMetadata() {
 function extractImports() {
   return function transformer(tree, file) {
     visit(tree, 'import', (node: any) => {
-      const imports = parseImports(node.value);
+      const es6Import = detectiveEs6(node.value);
+      const imports: ImportSpecifier[] = Object.keys(es6Import).flatMap((dep) => {
+        return es6Import[dep].importSpecifiers.map((importSpecifier) => ({
+          fromModule: dep,
+          identifier: importSpecifier.name,
+          isDefault: importSpecifier.isDefault,
+        }));
+      });
       file.data.imports = imports;
     });
 
