@@ -74,7 +74,7 @@ export class ComponentGenerator {
     const nameCamelCase = camelcase(name);
     const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
     const mainFile = files.find((file) => file.isMain);
-    const config = this.template.config;
+    const config = this.addEnvIfProvidedByUser(this.template.config);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({
       rootDir: componentPath,
@@ -92,6 +92,23 @@ export class ComponentGenerator {
       files: addResults.files,
       envId: env.id,
     };
+  }
+
+  private addEnvIfProvidedByUser(config?: ComponentConfig): ComponentConfig | undefined {
+    const userEnv = this.options.env; // env entered by the user when running `bit create --env`
+    const templateEnv = config?.[EnvsAspect.id]?.env;
+    if (!userEnv || userEnv === templateEnv) {
+      return config;
+    }
+    config = config || {};
+    if (templateEnv) {
+      // the component template has an env and the user wants a different env.
+      delete config[templateEnv];
+    }
+    config[userEnv] = {};
+    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
+    config[EnvsAspect.id].env = userEnv;
+    return config;
   }
 
   private async removeOtherEnvs(component: Component, env: EnvDefinition, config?: ComponentConfig) {
