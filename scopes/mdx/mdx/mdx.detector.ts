@@ -4,11 +4,11 @@ import { compileSync } from '@teambit/mdx.modules.mdx-compiler';
 export class MDXDependencyDetector implements DependencyDetector {
   constructor(private supportedExtensions: string[]) {}
 
-  isSupported(context: FileContext) {
+  isSupported(context: FileContext): boolean {
     return this.supportedExtensions.includes(context.ext);
   }
 
-  detect(source: string) {
+  detect(source: string): string[] {
     const output = compileSync(source);
     const imports = output.getImportSpecifiers();
     if (!imports) return [];
