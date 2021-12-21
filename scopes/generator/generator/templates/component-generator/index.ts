@@ -29,4 +29,10 @@ export const componentGeneratorTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.harmony/aspect': {},
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/aspect',
+    },
+  },
 };

@@ -45,4 +45,18 @@ describe('importing internal files flow (component imports from a non-index file
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.ImportNonMainFiles.name);
     });
   });
+  describe('importing of a non-main json file (or any not .js(x)/.ts(x) file)', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2, false);
+      helper.fs.outputFile('comp2/non-main.json', '{}');
+      helper.fs.outputFile('comp1/index.js', `import nonMain from '@${helper.scopes.remote}/comp2/non-main.json';`);
+      helper.command.link();
+    });
+    it('bit status should not show it as an invalid component', () => {
+      const status = helper.command.statusJson();
+      expect(status.componentsWithIssues).to.have.lengthOf(0);
+    });
+  });
 });

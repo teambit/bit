@@ -1147,4 +1147,82 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('snapping and un-tagging on a lane', () => {
+    let afterFirstSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      afterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.command.untagAll();
+    });
+    it('bit lane show should not show the component as belong to the lane anymore', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(0);
+    });
+    // a previous bug kept the WorkspaceLane object as is with the previous, untagged version
+    it('bit list should not show the currentVersion as the untagged version', () => {
+      const list = helper.command.listParsed();
+      expect(list[0].currentVersion).to.equal('N/A');
+    });
+    describe('switching to main', () => {
+      before(() => {
+        helper.command.switchLocalLane('main');
+      });
+      it('bit status should show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(1);
+      });
+    });
+    describe('add another snap and then untag only the last snap', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+        helper.command.snapComponentWithoutBuild('comp1', '--force');
+        const head = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.untagAll(head);
+      });
+      it('should not show the component as new', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(0);
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+    });
+    describe('un-snap by specifying the component name', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+      });
+      // a previous bug was showing "unable to untag comp1, the component is not staged" error.
+      it('should not throw an error', () => {
+        expect(() => helper.command.untag('comp1')).to.not.throw();
+      });
+    });
+  });
+  describe('bit checkout to a previous snap', () => {
+    let firstSnap: string;
+    let secondSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapComponentWithoutBuild('comp1');
+      secondSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.checkoutVersion(firstSnap, 'comp1');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponent).to.have.lengthOf(0);
+    });
+    it('bit list should show the scope-version as latest and workspace-version as the checked out one', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list[0];
+      expect(comp1.currentVersion).to.equal(firstSnap);
+      expect(comp1.localVersion).to.equal(secondSnap);
+    });
+  });
 });

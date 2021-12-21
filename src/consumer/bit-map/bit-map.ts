@@ -22,7 +22,7 @@ import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } fr
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { ComponentFsCache } from '../component/component-fs-cache';
-import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
+import ComponentMap, { ComponentMapFile, ComponentOrigin, Config, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
@@ -636,6 +636,7 @@ export default class BitMap {
     originallySharedDir,
     wrapDir,
     onLanesOnly,
+    config,
   }: {
     componentId: BitId;
     files: ComponentMapFile[];
@@ -647,6 +648,7 @@ export default class BitMap {
     originallySharedDir?: PathLinux;
     wrapDir?: PathLinux;
     onLanesOnly?: boolean;
+    config?: Config;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -655,9 +657,15 @@ export default class BitMap {
       const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
       const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
-        logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+        logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
         componentMap.files = files;
         componentMap.id = componentId;
+        if (componentId.hasVersion() && this.workspaceLane) {
+          // happening during checkout for example
+          // @todo: needs to decide, maybe the best place to sync the workspaceLane is before writing to the .bitmap
+          // file. maybe in `toObject` method in this class.
+          this.workspaceLane.addEntry(componentId);
+        }
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -687,6 +695,9 @@ export default class BitMap {
     }
     if (defaultScope) {
       componentMap.defaultScope = defaultScope;
+    }
+    if (config) {
+      componentMap.config = config;
     }
     componentMap.removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -781,7 +792,13 @@ export default class BitMap {
     if (this.workspaceLane && !updateScopeOnly) {
       // this code is executed when snapping/tagging and user is on a lane.
       // change the version only on the lane, not on .bitmap
-      this.workspaceLane.addEntry(newId);
+      if (newId.hasVersion()) {
+        this.workspaceLane.addEntry(newId);
+      } else {
+        // component was un-snapped and is back to "new".
+        this.workspaceLane.removeEntry(oldId);
+        componentMap.onLanesOnly = false;
+      }
       componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
     }
     if (updateScopeOnly) {

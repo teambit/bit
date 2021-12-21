@@ -6,26 +6,22 @@ export const docsFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.docs.mdx`,
     content: `---
-description: 'A ${Name} component.'
-labels: ['label1', 'label2', 'label3']
+description: A ${Name} component.
 ---
 
 import { ${Name} } from './${name}';
 
-## React Component for rendering text
-
-A basic div that renders some text
+A component that does something special and renders text in a div.
 
 ### Component usage
 \`\`\`js
-<${Name} text="hello from ${Name}" />
+<${Name}>Hello world!</${Name}>
 \`\`\`
 
-### Using props to customize the text
+### Render hello world!
 
-Modify the text to see it change live:
 \`\`\`js live
-<${Name} text="hello from ${Name}" />
+<${Name}>Hello world!</${Name}>
 \`\`\`
 `,
   };

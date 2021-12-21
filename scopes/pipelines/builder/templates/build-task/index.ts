@@ -19,4 +19,10 @@ export const buildTaskTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.harmony/aspect': {},
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/aspect',
+    },
+  },
 };
