@@ -137,6 +137,11 @@ function extractImports() {
     visit(tree, 'import', (node: any) => {
       const es6Import = detectiveEs6(node.value);
       const imports: ImportSpecifier[] = Object.keys(es6Import).flatMap((dep) => {
+        if (!es6Import[dep].importSpecifiers) {
+          return {
+            fromModule: dep,
+          };
+        }
         return es6Import[dep].importSpecifiers.map((importSpecifier) => ({
           fromModule: dep,
           identifier: importSpecifier.name,
