@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { MDXDependencyDetector } from './mdx.detector';
 
-describe.only('MDXDependencyDetector', () => {
+describe('MDXDependencyDetector', () => {
   function expectDependencies(src: string, expectedDeps: string[]) {
     expect(new MDXDependencyDetector(['mdx']).detect(src)).to.deep.equal(expectedDeps);
   }
