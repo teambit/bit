@@ -531,7 +531,7 @@ jobs:
             - /home/circleci/.bvm
       - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
       # check whether "YARN_CHECKSUM_BEHAVIOR=update" made changes
-      - run: git diff
+      - run: cd bit && git diff
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
 
