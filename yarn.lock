@@ -7366,6 +7366,7 @@ __metadata:
     "@types/lodash.compact": 3.0.6
     "@types/lodash.flatten": 4.4.6
     "@types/lodash.head": 4.0.6
+    "@types/lodash.orderby": 4.6.6
     "@types/lodash.pick": 4.4.6
     "@types/mdx-js__react": 1.5.3
     "@types/memoizee": 0.4.5
@@ -7563,6 +7564,7 @@ __metadata:
     lodash.groupby: 4.6.0
     lodash.head: 4.0.1
     lodash.merge: 4.6.2
+    lodash.orderby: 4.6.0
     lodash.partition: 4.6.0
     lodash.pick: 4.4.0
     lodash.set: 4.3.2
@@ -8673,6 +8675,15 @@ __metadata:
   dependencies:
     "@types/lodash": "*"
   checksum: dfc8f1c6386188601354fe96b9b44f7b715dbf2defac5986db937c944930e9965a82a9d9561f026e8bb02500cb841a61fc2158e451dbdd7b19c668a92ab2c806
+  languageName: node
+  linkType: hard
+
+"@types/lodash.orderby@npm:4.6.6":
+  version: 4.6.6
+  resolution: "@types/lodash.orderby@npm:4.6.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Flodash.orderby%2F-%2Flodash.orderby-4.6.6.tgz"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: fdaeab55df9c259241b78162d361739c9a5aedff8ba83490054c3ae7673359bb57238bcc505893c7a547f467dccb1f67d7a77ad9a6c4c448b6199d680671a295
   languageName: node
   linkType: hard
 
@@ -17985,6 +17996,7 @@ __metadata:
   resolution: "evp_bytestokey@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fevp_bytestokey%2F-%2Fevp_bytestokey-1.0.3.tgz"
   dependencies:
     md5.js: ^1.3.4
+    node-gyp: latest
     safe-buffer: ^5.1.1
   checksum: ad4e1577f1a6b721c7800dcc7c733fe01f6c310732bb5bf2240245c2a5b45a38518b91d8be2c610611623160b9d1c0e91f1ce96d639f8b53e8894625cf20fa45
   languageName: node
@@ -19168,6 +19180,8 @@ __metadata:
 "fsevents@npm:^2.1.2, fsevents@npm:~2.3.1, fsevents@npm:~2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffsevents%2F-%2Ffsevents-2.3.2.tgz"
+  dependencies:
+    node-gyp: latest
   checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
   conditions: os=darwin
   languageName: node
@@ -19176,6 +19190,8 @@ __metadata:
 "fsevents@patch:fsevents@^2.1.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#~builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
+  dependencies:
+    node-gyp: latest
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -24127,6 +24143,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.orderby@npm:4.6.0":
+  version: 4.6.0
+  resolution: "lodash.orderby@npm:4.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flodash.orderby%2F-%2Flodash.orderby-4.6.0.tgz"
+  checksum: 2e0430b07eb575e9cef9c0a8937db82857bb741d0680baf58f99d4731092c11b103f95cbeeb9cdd207514701bd925b5c71eb81044df97b7e36a3735a3484fb8f
+  languageName: node
+  linkType: hard
+
 "lodash.padend@npm:^4.6.1":
   version: 4.6.1
   resolution: "lodash.padend@npm:4.6.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flodash.padend%2F-%2Flodash.padend-4.6.1.tgz"
@@ -25521,6 +25544,8 @@ __metadata:
 "nan@npm:^2.14.1, nan@npm:^2.15.0":
   version: 2.15.0
   resolution: "nan@npm:2.15.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fnan%2F-%2Fnan-2.15.0.tgz"
+  dependencies:
+    node-gyp: latest
   checksum: 33e1bb4dfca447fe37d4bb5889be55de154828632c8d38646db67293a21afd61ed9909cdf1b886214a64707d935926c4e60e2b09de9edfc2ad58de31d6ce8f39
   languageName: node
   linkType: hard
@@ -28292,12 +28317,12 @@ __metadata:
   linkType: hard
 
 "postcss-selector-parser@npm:^6.0.2, postcss-selector-parser@npm:^6.0.4, postcss-selector-parser@npm:^6.0.5":
-  version: 6.0.7
-  resolution: "postcss-selector-parser@npm:6.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-selector-parser%2F-%2Fpostcss-selector-parser-6.0.7.tgz"
+  version: 6.0.8
+  resolution: "postcss-selector-parser@npm:6.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpostcss-selector-parser%2F-%2Fpostcss-selector-parser-6.0.8.tgz"
   dependencies:
     cssesc: ^3.0.0
     util-deprecate: ^1.0.2
-  checksum: 661808ad629e3f289e0d237fbe9bb13766dadd2d548ec09ae86f68118f5d98be0f25bbaf5cd88486c5416e2eefaa9f73c59c2fc98dc370872fa51b250c7d1d9c
+  checksum: 550351c8d04216106e259f7c433652aa6742dd7ddbedf7afdc313526963bb170589a6fefd1bc1fe6268a2cf9f5073d4ecb09bc7b5b4bef49edf80634300500af
   languageName: node
   linkType: hard
 
