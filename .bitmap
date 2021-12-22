@@ -549,6 +549,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
+    "modules/generate-expose-loaders": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-expose-loaders"
+    },
+    "modules/generate-externals": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-externals"
+    },
     "modules/generate-style-loaders": {
         "scope": "teambit.webpack",
         "version": "0.0.100",
