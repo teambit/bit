@@ -27,7 +27,8 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
-import { EnvPreviewTemplateTask } from './env-preview-template.task';
+import { EnvPreviewTemplateTask, GENERATE_ENV_TEMPLATE_TASK_NAME } from './env-preview-template.task';
+import { EnvTemplateRoute } from './env-template.route';
 
 const noopResult = {
   results: [],
@@ -89,6 +90,17 @@ export class PreviewMain {
       component,
       PreviewAspect.id,
       PREVIEW_TASK_NAME
+    );
+    if (!artifacts || !artifacts.length) return undefined;
+
+    return new PreviewArtifact(artifacts);
+  }
+
+  async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+      component,
+      PreviewAspect.id,
+      GENERATE_ENV_TEMPLATE_TASK_NAME
     );
     if (!artifacts || !artifacts.length) return undefined;
 
@@ -350,7 +362,7 @@ export class PreviewMain {
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
 
-    componentExtension.registerRoute([new PreviewRoute(preview, logger)]);
+    componentExtension.registerRoute([new PreviewRoute(preview, logger), new EnvTemplateRoute(preview, logger)]);
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),

@@ -12,9 +12,11 @@ export type ModuleExpose = {
   path: string;
 };
 
+export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
+
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
-  name = 'GenerateEnvTemplate';
+  name = GENERATE_ENV_TEMPLATE_TASK_NAME;
   location: TaskLocation = 'end';
 
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}

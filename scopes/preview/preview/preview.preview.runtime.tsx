@@ -92,7 +92,11 @@ export class PreviewPreview {
   async fetchComponentPreview(id: ComponentID, name: string) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`; // generate path to remote scope. [scope url]/
+      const stringId = id.toString();
+      const previewRoute = `~aspect/preview`;
+      const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`;
+      const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
+      script.src = src; // generate path to remote scope. [scope url]/
       script.onload = () => {
         const componentPreview = window[id.toStringWithoutVersion()];
         if (!componentPreview) return reject(new PreviewNotFound(name));

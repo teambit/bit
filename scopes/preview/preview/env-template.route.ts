@@ -8,11 +8,11 @@ import { PreviewMain } from './preview.main.runtime';
 import { PreviewArtifact } from './preview-artifact';
 
 type UrlParams = {
-  /** `/preview/:previewPath(*)` */
-  previewPath?: string;
+  /** `/preview/:filePath(*)` */
+  filePath?: string;
 };
 
-export class PreviewRoute implements Route {
+export class EnvTemplateRoute implements Route {
   constructor(
     /**
      * preview extension.
@@ -21,12 +21,13 @@ export class PreviewRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/preview/:previewPath(*)`;
+  route = `/env-template/:filePath(*)`;
   method = 'get';
 
   middlewares = [
     async (req: Request<UrlParams>, res: Response) => {
       try {
+        console.log('env template route');
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());
@@ -34,18 +35,15 @@ export class PreviewRoute implements Route {
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          artifact = await this.preview.getPreview(component);
+          artifact = await this.preview.getEnvTemplate(component);
         } catch (e: any) {
           return res.status(404).send(noPreview());
         }
         // TODO: please fix file path concatenation here.
-        let file = artifact?.getFileEndsWith('index.html');
-        if (req.params.previewPath) {
-          const matchedFile =
-            artifact?.getFileEndsWith(`public/${req.params.previewPath}`) ||
-            artifact?.getFileEndsWith(`${req.params.previewPath}`);
-          file = matchedFile || file;
-        }
+        const file =
+          artifact?.getFileEndsWith(`public/${req.params.filePath}`) ||
+          artifact?.getFileEndsWith(`${req.params.filePath}`) ||
+          artifact?.getFileEndsWith('index.html');
         if (!file) return res.status(404).send(noPreview());
 
         const contents = file.contents;
