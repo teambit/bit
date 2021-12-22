@@ -57,7 +57,11 @@ import {
   WorkspacePolicyEntry,
   SerializedVariantPolicy,
 } from './policy';
-import { PackageManager, PeerDependencyIssuesByProjects, PackageManagerInstallOptions } from './package-manager';
+import {
+  PackageManager,
+  PeerDependencyIssuesByProjects,
+  PackageManagerGetPeerDependencyIssuesOptions,
+} from './package-manager';
 
 import {
   SerializedDependency,
@@ -637,7 +641,7 @@ export class DependencyResolverMain {
     rootDir: string,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
-    installOptions: PackageManagerInstallOptions
+    options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<Record<string, string>> {
     this.logger.setStatusLine('finding missing peer dependencies');
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
@@ -647,7 +651,7 @@ export class DependencyResolverMain {
         rootDir,
         rootPolicy,
         componentDirectoryMap,
-        installOptions
+        options
       );
     } else {
       const systemPm = this.getSystemPackageManager();
@@ -657,7 +661,7 @@ export class DependencyResolverMain {
         rootDir,
         rootPolicy,
         componentDirectoryMap,
-        installOptions
+        options
       );
     }
     this.logger.consoleSuccess();

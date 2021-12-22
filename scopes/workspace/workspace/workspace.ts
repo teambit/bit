@@ -1308,6 +1308,11 @@ export class Workspace implements ComponentFactory {
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
     if (options?.addMissingPeers) {
+      if (packages?.length) {
+        throw new Error(
+          'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
+        );
+      }
       const compDirMap = await this.getComponentsDirectory([]);
       const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
       const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();

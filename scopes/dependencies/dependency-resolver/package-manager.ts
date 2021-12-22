@@ -23,6 +23,8 @@ export type PackageManagerInstallOptions = {
   overrides?: Record<string, string>;
 };
 
+export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
+
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
@@ -58,7 +60,7 @@ export interface PackageManager {
     rootDir: string,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
-    installOptions: PackageManagerInstallOptions
+    options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<PeerDependencyIssuesByProjects>;
 
   getRegistries?(): Promise<Registries>;

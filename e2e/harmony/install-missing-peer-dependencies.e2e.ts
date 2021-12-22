@@ -49,9 +49,12 @@ chai.use(require('chai-fs'));
         helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
+    it('should throw an exception if new dependencies are added and missing dependencies are added', () => {
+      expect(() => helper.command.install('lodash --add-missing-peers')).throw(
+        /Adding new dependencies and adding missing peer dependencies at the same time is currently not supported/
+      );
+    });
   });
-  // Skipping temporarily Yarn as it fails with the following error when adding `foo@100`:
-  //   Registry failed to return tag "100"
   describe(`using Yarn as a package manager`, () => {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony({ registry: npmCiRegistry.ciRegistry });
