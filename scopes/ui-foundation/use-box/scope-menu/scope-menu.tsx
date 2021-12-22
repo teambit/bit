@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { ExpandableTabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
-import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './scope-menu.module.scss';
 
 export type MenuProps = {
@@ -15,11 +14,6 @@ export type MenuProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function Menu({ scopeName, ...rest }: MenuProps) {
-  const [active, setActive] = useState<string | undefined>(undefined);
-  if (active === 'import') {
-    return <BitInfo prevTab={active} setActive={() => setActive(undefined)} />;
-  }
-
   return (
     <div {...rest}>
       <div className={styles.top}>
@@ -28,19 +22,21 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
           <Ellipsis>{`Bulk import from ${scopeName}`}</Ellipsis>
         </div>
       </div>
-      <TabContent
-        bottom={
-          <div className={linkStyles} onClick={() => setActive('import')}>
+      <ExpandableTabContent
+        content={
+          <div className={styles.importContent}>
+            <div>Use a glob-pattern to import multiple components</div>
+            <CopyBox>{`bit import "${scopeName}/*"`}</CopyBox>
+          </div>
+        }
+        drawerTitle={
+          <div className={styles.drawerTitle}>
             <Icon of="download" />
             <span>Install Bit on your computer</span>
           </div>
         }
-      >
-        <div className={styles.importContent}>
-          <div>Use a glob-pattern to import multiple components</div>
-          <CopyBox>{`bit import "${scopeName}/*"`}</CopyBox>
-        </div>
-      </TabContent>
+        drawerContent={<BitInfo />}
+      />
     </div>
   );
 }

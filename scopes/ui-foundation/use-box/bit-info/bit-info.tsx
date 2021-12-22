@@ -3,20 +3,17 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { links } from '@teambit/documenter.content.documentation-links';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
-import { Back } from '@teambit/ui-foundation.ui.use-box.back-button';
 import { Link } from '@teambit/base-ui.routing.link';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import styles from './bit-info.module.scss';
 
-export type BitInfoProps = {
-  setActive: (active: string) => void;
-  prevTab: string;
-} & React.HTMLAttributes<HTMLDivElement>;
+export type BitInfoProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
-export function BitInfo({ setActive, prevTab, ...rest }: BitInfoProps) {
+export function BitInfo({ ...rest }: BitInfoProps) {
   return (
     <div {...rest}>
-      <Back onClick={() => setActive(prevTab)} />
       <TabContent
+        className={styles.moreInfo}
         bottom={
           <Link external href={links.installBit} className={linkStyles}>
             <Icon of="information-sign" />

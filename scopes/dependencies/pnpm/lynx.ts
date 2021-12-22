@@ -12,7 +12,8 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { MutatedProject, mutateModules } from '@pnpm/core';
+import { MutatedProject, mutateModules, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
@@ -23,6 +24,8 @@ type RegistriesMap = {
   default: string;
   [registryName: string]: string;
 };
+
+const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 
 async function createStoreController(
   rootDir: string,
@@ -50,9 +53,15 @@ async function createStoreController(
     maxSockets: networkConfig.maxSockets,
     networkConcurrency: networkConfig.networkConcurrency,
   };
-  // Although it would be enough to call createNewStoreController(),
-  // that doesn't resolve the store directory location.
-  return createOrConnectStoreController(opts);
+  // We should avoid the recreation of store.
+  // The store holds cache that makes subsequent resolutions faster.
+  const cacheKey = JSON.stringify(opts);
+  if (!STORE_CACHE[cacheKey]) {
+    // Although it would be enough to call createNewStoreController(),
+    // that doesn't resolve the store directory location.
+    STORE_CACHE[cacheKey] = await createOrConnectStoreController(opts);
+  }
+  return STORE_CACHE[cacheKey];
 }
 
 async function generateResolverAndFetcher(
@@ -86,9 +95,53 @@ async function generateResolverAndFetcher(
   return result;
 }
 
+export async function getPeerDependencyIssues(
+  rootManifest,
+  manifestsByPaths: Record<string, any>,
+  opts: {
+    storeDir: string;
+    cacheDir: string;
+    registries: Registries;
+    proxyConfig: PackageManagerProxyConfig;
+    networkConfig: PackageManagerNetworkConfig;
+    overrides?: Record<string, string>;
+  }
+): Promise<PeerDependencyIssuesByProjects> {
+  const projects: ProjectOptions[] = [];
+  const workspacePackages = {};
+  for (const [rootDir, manifest] of Object.entries(manifestsByPaths)) {
+    projects.push({
+      manifest,
+      rootDir,
+    });
+    workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
+    workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
+  }
+  projects.push({
+    manifest: rootManifest.manifest,
+    rootDir: rootManifest.rootDir,
+  });
+  const registriesMap = getRegistriesMap(opts.registries);
+  const storeController = await createStoreController(
+    rootManifest.rootDir,
+    opts.storeDir,
+    opts.cacheDir,
+    opts.registries,
+    opts.proxyConfig,
+    opts.networkConfig
+  );
+  return pnpm.getPeerDependencyIssues(projects, {
+    storeController: storeController.ctrl,
+    storeDir: storeController.dir,
+    overrides: opts.overrides,
+    workspacePackages,
+    registries: registriesMap,
+  });
+}
+
 export async function install(
-  rootPathToManifest,
-  pathsToManifests,
+  rootManifest,
+  manifestsByPaths,
   storeDir: string,
   cacheDir: string,
   registries: Registries,
@@ -116,8 +169,8 @@ export async function install(
   // This is the rational behind not deleting this completely, but need further check that it really works
 
   // eslint-disable-next-line
-  for (const rootDir in pathsToManifests) {
-    const manifest = pathsToManifests[rootDir];
+  for (const rootDir in manifestsByPaths) {
+    const manifest = manifestsByPaths[rootDir];
     packagesToBuild.push({
       buildIndex: 0, // workspace components should be installed before the root
       manifest,
@@ -129,14 +182,14 @@ export async function install(
   }
   packagesToBuild.push({
     buildIndex: 1, // install the root package after the workspace components were installed
-    manifest: rootPathToManifest.manifest,
+    manifest: rootManifest.manifest,
     mutation: 'install',
-    rootDir: rootPathToManifest.rootDir,
+    rootDir: rootManifest.rootDir,
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController(
-    rootPathToManifest.rootDir,
+    rootManifest.rootDir,
     storeDir,
     cacheDir,
     registries,
@@ -145,7 +198,7 @@ export async function install(
   );
   const opts = {
     storeDir: storeController.dir,
-    dir: rootPathToManifest.rootDir,
+    dir: rootManifest.rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
