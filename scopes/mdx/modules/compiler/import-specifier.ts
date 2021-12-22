@@ -15,22 +15,17 @@ export type NamedImport = {
 
 export type ImportSpecifier = {
   /**
-   * name of the default import if exists.
-   */
-  defaultImport: null | string;
-
-  /**
-   * list of all named imports.
-   */
-  namedImports: NamedImport[];
-
-  /**
-   * If star import was defined.
-   */
-  starImport: null | string;
-
-  /**
-   * file to import from.
+   * relative/absolute or module name. e.g. the `y` in the example of `import x from 'y';`
    */
   fromModule: string;
+
+  /**
+   * is default import (e.g. `import x from 'y';`)
+   */
+  isDefault?: boolean;
+
+  /**
+   * the name used to identify the module, e.g. the `x` in the example of `import x from 'y';`
+   */
+  identifier?: string;
 };

@@ -20,6 +20,8 @@ import OutsideRootDir from './exceptions/outside-root-dir';
 // TODO: should be better defined
 export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
 
+export type Config = { [aspectId: string]: Record<string, any> };
+
 export type ComponentMapFile = {
   name: string;
   relativePath: PathLinux;
@@ -52,7 +54,7 @@ export type ComponentMapData = {
   defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
-  config?: { [aspectId: string]: Record<string, any> };
+  config?: Config;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };

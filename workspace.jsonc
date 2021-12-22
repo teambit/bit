@@ -272,7 +272,6 @@
         "nerf-dart": "1.0.0",
         "p-limit": "3.1.0",
         "parallel-webpack": "2.6.0",
-        "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
         "penpal": "5.3.0",
         "pluralize": "8.0.0",
@@ -339,7 +338,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.192",
+        "@teambit/legacy": "1.0.194",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -406,7 +405,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.192"
+            "@teambit/legacy": "1.0.194"
           }
         }
       },
@@ -457,7 +456,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.192"
+            "@teambit/legacy": "1.0.194"
           }
         }
       },
@@ -639,7 +638,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.192"
+            "@teambit/legacy": "1.0.194"
           }
         }
       }
@@ -696,7 +695,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.192",
+            "@teambit/legacy": "1.0.194",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -804,7 +803,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.192"
+            "@teambit/legacy": "1.0.194"
           }
         }
       }

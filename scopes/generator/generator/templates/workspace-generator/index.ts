@@ -49,4 +49,10 @@ export const workspaceGeneratorTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.harmony/aspect': {},
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/aspect',
+    },
+  },
 };
