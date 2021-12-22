@@ -629,6 +629,10 @@ export class DependencyResolverMain {
     return Http.getProxyConfig();
   }
 
+  /**
+   * Return the peer dependencies and their ranges that may be installed
+   * without causing unmet peer dependency issues in some of the dependencies.
+   */
   async getMissingPeerDependencies(
     rootDir: string,
     rootPolicy: WorkspacePolicy,
