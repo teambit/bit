@@ -12,6 +12,7 @@ type InstallCmdOptions = {
   skipImport: boolean;
   updateExisting: boolean;
   savePrefix: string;
+  addMissingPeers: boolean;
 };
 
 export default class InstallCmd implements Command {
@@ -27,6 +28,7 @@ export default class InstallCmd implements Command {
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
+    ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
   ] as CommandOptions;
 
   constructor(
@@ -46,11 +48,12 @@ export default class InstallCmd implements Command {
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
-      lifecycleType: options.type,
+      lifecycleType: options.addMissingPeers ? 'peer' : options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
       updateExisting: options.updateExisting,
       savePrefix: options.savePrefix,
+      addMissingPeers: options.addMissingPeers,
     };
     const components = await this.workspace.install(packages, installOpts);
     const endTime = Date.now();

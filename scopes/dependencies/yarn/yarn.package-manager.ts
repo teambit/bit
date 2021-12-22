@@ -1,4 +1,3 @@
-import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
   WorkspacePolicy,
@@ -36,6 +35,7 @@ import parseOverrides from '@pnpm/parse-overrides';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
+import versionSelectorType from 'version-selector-type';
 
 type BackupJsons = {
   [path: string]: Buffer | undefined;
@@ -371,7 +371,8 @@ export class YarnPackageManager implements PackageManager {
   ): Promise<ResolvedPackageVersion> {
     const parsedPackage = parsePackageName(packageName);
     const parsedVersion = parsedPackage.version;
-    if (parsedVersion && semver.valid(parsedVersion)) {
+    const versionType = parsedVersion && versionSelectorType(parsedVersion)?.type;
+    if (versionType === 'version') {
       return {
         packageName: parsedPackage.name,
         version: parsedVersion,
@@ -395,7 +396,7 @@ export class YarnPackageManager implements PackageManager {
     const report = new LightReport({ configuration: config, stdout: process.stdout });
 
     // Handle cases when the version is a dist tag like dev / latest for example bit install lodash@latest
-    if (parsedPackage.version) {
+    if (versionType === 'tag') {
       resolver = new NpmTagResolver();
       range = `npm:${parsedPackage.version}`;
     }
