@@ -7364,9 +7364,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.191, @teambit/legacy@npm:1.0.191::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.191.tgz":
-  version: 1.0.191
-  resolution: "@teambit/legacy@npm:1.0.191::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.191.tgz"
+"@teambit/legacy@npm:1.0.192, @teambit/legacy@npm:1.0.192::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.192.tgz":
+  version: 1.0.192
+  resolution: "@teambit/legacy@npm:1.0.192::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.192.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7489,7 +7489,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 7364e567f6b057902a61872212f3e871b1c4b0e66c44b14f48c4e399952d9dc04bddddd35f26744e16d317635037b1c923acb61b194f71dec6da642fbfe7c6e9
+  checksum: dc1292628a1e242751463c6cf7e32bb734a305e9e438a90640219a77e6d1d30abafbf0b9041c3399632bc5e294d50154a2e4f5b15735a62980cd5532c9dc3378
   languageName: node
   linkType: hard
 
@@ -7638,7 +7638,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.191
+    "@teambit/legacy": 1.0.192
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -8054,7 +8054,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.191
+    "@teambit/legacy": 1.0.192
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -19459,6 +19459,8 @@ __metadata:
 "fsevents@patch:fsevents@^2.1.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
+  dependencies:
+    node-gyp: latest
   checksum: 78db9daf1f6526a49cefee3917cc988f62dc7f25b5dd80ad6de4ffc4af7f0cab7491ac737626ff53e482a111bc53aac9e411fe3602458eca36f6a003ecf69c16
   languageName: node
   linkType: hard

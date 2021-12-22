@@ -1,3 +1,4 @@
+import { Specifier } from '../../types/dependency-tree-type';
 import {
   getDependenciesFromCallExpression,
   getDependenciesFromMemberExpression,
@@ -15,23 +16,23 @@ const Walker = require('node-source-walk');
  * @param  {String|Object} src - File's content or AST
  * @return {String[]}
  */
-export default function (src) {
+export default function (src): { [dependency: string]: { importSpecifiers: Specifier[] } } {
   const walker = new Walker();
 
   const dependencies = {};
-  const addDependency = (dependency) => {
+  const addDependency = (dependency: string) => {
     if (!dependencies[dependency]) {
       dependencies[dependency] = {};
     }
   };
-  const addImportSpecifier = (dependency, importSpecifier) => {
+  const addImportSpecifier = (dependency: string, importSpecifier: Specifier) => {
     if (dependencies[dependency].importSpecifiers) {
       dependencies[dependency].importSpecifiers.push(importSpecifier);
     } else {
       dependencies[dependency].importSpecifiers = [importSpecifier];
     }
   };
-  const addExportedToImportSpecifier = (name) => {
+  const addExportedToImportSpecifier = (name: string) => {
     Object.keys(dependencies).forEach((dependency) => {
       if (!dependencies[dependency].importSpecifiers) return;
       const specifier = dependencies[dependency].importSpecifiers.find((i) => i.name === name);
