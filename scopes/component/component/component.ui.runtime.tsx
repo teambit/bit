@@ -119,7 +119,7 @@ export class ComponentUI {
   ];
 
   private bitMethod: ConsumePlugin = (comp) => {
-    const version = this.getCurrentVersion(comp);
+    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
       Component: (
@@ -136,7 +136,7 @@ export class ComponentUI {
   // TODO - move to npm aspect
   private npmMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = this.getCurrentVersion(comp);
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
       Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
@@ -155,7 +155,7 @@ export class ComponentUI {
   // TODO - move to yarn? aspect
   private yarnMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = this.getCurrentVersion(comp);
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
@@ -176,7 +176,7 @@ export class ComponentUI {
   // TODO - move to pnpm aspect
   private pnpmMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = this.getCurrentVersion(comp);
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
       Component: (
@@ -191,17 +191,6 @@ export class ComponentUI {
       order: 30,
     };
   };
-
-  getCurrentVersion(component: ComponentModel) {
-    const versionList = component.tags
-      ?.toArray()
-      .map((tag) => tag?.version?.version)
-      .filter((x) => x !== undefined)
-      .reverse();
-
-    const isLatestVersion = component.version === versionList[0];
-    return isLatestVersion ? '' : `@${component.version}`;
-  }
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
