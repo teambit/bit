@@ -30,7 +30,7 @@ const methods = [
 export const UseBoxExample = () => {
   return (
     <ThemeCompositions>
-      <div>
+      <div style={{ width: 'fit-content', float: 'right' }}>
         <UseBoxDropdown position="bottom-end" Menu={<Menu methods={methods} componentName="radio" />}></UseBoxDropdown>
       </div>
     </ThemeCompositions>
@@ -48,7 +48,7 @@ UseBoxExample.canvas = {
 export const UseBoxScopeExample = () => {
   return (
     <ThemeCompositions>
-      <div>
+      <div style={{ width: 'fit-content', float: 'right' }}>
         <UseBoxDropdown position="bottom-end" Menu={<ScopeMenu scopeName="@teambit.design" />}></UseBoxDropdown>
       </div>
     </ThemeCompositions>
