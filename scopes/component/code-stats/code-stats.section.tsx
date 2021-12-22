@@ -13,5 +13,5 @@ export class CodeStatsSection implements Section {
     href: '~codeStats',
     children: <MenuWidgetIcon icon="Info" tooltipContent="Code Stats" />,
   };
-  order = 90;
+  order = 40;
 }
