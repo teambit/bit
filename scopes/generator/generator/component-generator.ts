@@ -10,7 +10,6 @@ import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
