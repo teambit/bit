@@ -173,25 +173,6 @@ export class ComponentUI {
     };
   };
 
-  // TODO - move to pnpm aspect
-  private pnpmMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
-    return {
-      Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.dev`}
-          componentName={comp.id.name}
-          packageManager="pnpm"
-          copyString={`pnpm i ${comp.packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ),
-      order: 30,
-    };
-  };
-
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
       if (be.type === ClickInsideAnIframeEvent.TYPE) {
@@ -305,12 +286,7 @@ export class ComponentUI {
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
-    componentUI.registerConsumeMethod(
-      componentUI.bitMethod,
-      componentUI.npmMethod,
-      componentUI.yarnMethod,
-      componentUI.pnpmMethod
-    );
+    componentUI.registerConsumeMethod(componentUI.bitMethod, componentUI.npmMethod, componentUI.yarnMethod);
     return componentUI;
   }
 }
