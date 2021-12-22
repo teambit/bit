@@ -366,6 +366,10 @@ export class AspectLoaderMain {
     return !!(manifest.addRuntime && manifest.getRuntime);
   }
 
+  isValidAspect(manifest: any): boolean {
+    return this.isAspect(manifest) || manifest.provider;
+  }
+
   isAspectComponent(component: Component): boolean {
     const data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
     return Boolean(data && data.type === 'aspect');
@@ -430,8 +434,7 @@ export class AspectLoaderMain {
   async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
     try {
       const manifests = extensionsManifests.filter((manifest) => {
-        // @ts-ignore TODO: fix this
-        const isValid = this.isAspect(manifest) || manifest.provider;
+        const isValid = this.isValidAspect(manifest);
         if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
         return isValid;
       });

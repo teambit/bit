@@ -1199,4 +1199,30 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('bit checkout to a previous snap', () => {
+    let firstSnap: string;
+    let secondSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapComponentWithoutBuild('comp1');
+      secondSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.checkoutVersion(firstSnap, 'comp1');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponent).to.have.lengthOf(0);
+    });
+    it('bit list should show the scope-version as latest and workspace-version as the checked out one', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list[0];
+      expect(comp1.currentVersion).to.equal(firstSnap);
+      expect(comp1.localVersion).to.equal(secondSnap);
+    });
+  });
 });

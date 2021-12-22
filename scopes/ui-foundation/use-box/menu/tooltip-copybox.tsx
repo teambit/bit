@@ -1,16 +1,16 @@
 import React from 'react';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { Tooltip } from '@teambit/design.ui.tooltip';
+import { Tooltip, TooltipProps } from '@teambit/design.ui.tooltip';
 
 type TooltipCopyboxProps = {
   content: string;
-};
+} & TooltipProps;
 
 // consider adding tooltip to the CopyBox directly, using `props.tooltip ? Tooltip : (Noop as Tooltip);`
 // forward ref required by tippy
-export function TooltipCopybox({ content }: TooltipCopyboxProps) {
+export function TooltipCopybox({ content, ...rest }: TooltipCopyboxProps) {
   return (
-    <Tooltip content={content} placement="bottom" maxWidth="" breakline={true}>
+    <Tooltip {...rest} content={content} placement="bottom" maxWidth="" breakline={true}>
       <div>
         <CopyBox>{content}</CopyBox>
       </div>

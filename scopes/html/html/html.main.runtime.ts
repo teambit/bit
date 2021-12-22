@@ -7,7 +7,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { htmlEnvTemplate } from './templates/html-env';
 import { htmlComponentTemplate, deprecatedHtmlComponentTemplate } from './templates/html-component';
@@ -111,7 +111,7 @@ export class HtmlMain {
   }
 
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
-    const htmlEnv: HtmlEnv = envs.merge(new HtmlEnv(), react.reactEnv);
+    const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
     generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate, deprecatedHtmlComponentTemplate]);
     return new HtmlMain(react, htmlEnv, envs);

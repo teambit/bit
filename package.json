@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.190",
+  "version": "1.0.194",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -67,7 +67,7 @@
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
-    "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
+    "e2e-test": "registry-mock prepare && mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test:ssh": "npm run e2e-test --with-ssh",
     "e2e-test:ssh-debug": "npm run e2e-test --with-ssh --debug --keep-envs",
@@ -305,7 +305,6 @@
     "sinon": "5.1.1",
     "tar": "6.1.11",
     "type-coverage": "2.15.1",
-    "typescript": "4.4.2",
-    "verdaccio": "4.11.0"
+    "typescript": "4.4.2"
   }
 }

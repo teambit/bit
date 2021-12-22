@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
@@ -19,6 +20,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
+import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
@@ -65,7 +67,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick, isEqual } from 'lodash';
+import { slice, uniqBy, difference, compact, pick } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -95,6 +97,7 @@ import {
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
+import { BitMap } from './bit-map';
 
 export type EjectConfResult = {
   configPath: string;
@@ -110,6 +113,7 @@ export interface EjectConfOptions {
 }
 
 export type WorkspaceInstallOptions = {
+  addMissingPeers?: boolean;
   variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe: boolean;
@@ -129,6 +133,7 @@ export type TrackData = {
   componentName?: string; // if empty, it'll be generated from the path
   mainFile?: string; // if empty, attempts will be made to guess the best candidate
   defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
+  config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
 };
 
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
@@ -143,6 +148,7 @@ export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
+  bitMap: BitMap;
   constructor(
     /**
      * private pubsub.
@@ -209,6 +215,7 @@ export class Workspace implements ComponentFactory {
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
     this.validateConfig();
+    this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile = memoize(
       this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
@@ -522,7 +529,7 @@ export class Workspace implements ComponentFactory {
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
     // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.writeBitMap();
+    await this.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
@@ -707,7 +714,7 @@ export class Workspace implements ComponentFactory {
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
-    await this.writeBitMap();
+    await this.bitMap.write();
     return addResults;
   }
 
@@ -726,6 +733,7 @@ export class Workspace implements ComponentFactory {
         main: trackData.mainFile,
         override: false,
         defaultScope,
+        config: trackData.config,
       }
     );
     const result = await addComponent.add();
@@ -762,10 +770,6 @@ export class Workspace implements ComponentFactory {
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
-  }
-
-  async writeBitMap() {
-    await this.consumer.writeBitMap();
   }
 
   /**
@@ -1087,12 +1091,31 @@ export class Workspace implements ComponentFactory {
       workspaceAspects,
       throwOnError
     );
+    const potentialPluginsIndexes = compact(
+      workspaceManifests.map((manifest, index) => {
+        if (this.aspectLoader.isValidAspect(manifest)) return undefined;
+        return index;
+      })
+    );
+
     const manifestsIds = workspaceManifests.map((m) => m.id);
 
     const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
     await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+
+    // Try require components for potential plugins
+    const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
+      return workspaceComps[index];
+    });
+    // Do the require again now that the plugins defs already registered
+    const pluginsWorkspaceAspects = await this.requireComponents(pluginsWorkspaceComps);
+    const pluginsWorkspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
+      pluginsWorkspaceAspects,
+      throwOnError
+    );
+    await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
     return compact(allManifests.map((manifest) => manifest.id));
   }
@@ -1285,6 +1308,30 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (options?.addMissingPeers) {
+      if (packages?.length) {
+        throw new BitError(
+          'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
+        );
+      }
+      const compDirMap = await this.getComponentsDirectory([]);
+      const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
+      const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
+      const pmInstallOptions: PackageManagerInstallOptions = {
+        dedupe: options?.dedupe,
+        copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+        copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+        dependencyFilterFn: depsFilterFn,
+        overrides: this.dependencyResolver.config.overrides,
+      };
+      const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
+        this.path,
+        mergedRootPolicy,
+        compDirMap,
+        pmInstallOptions
+      );
+      packages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+    }
     if (packages && packages.length) {
       if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
         throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
@@ -1697,28 +1744,6 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       }
     });
     return Promise.all(resolveMergedExtensionsP);
-  }
-
-  /**
-   * adds component config to the .bitmap file.
-   * later, upon `bit tag`, the data is saved in the scope.
-   * returns a boolean indicating whether a chance has been made.
-   */
-  async addComponentConfigToBitmap(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
-    if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.consumer.bitMap.getComponent(id._legacy, { ignoreScopeAndVersion: true });
-    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
-    if (isEqual(currentConfig, config)) {
-      return false; // no changes
-    }
-    if (!config) {
-      delete bitMapEntry.config[aspectId];
-    } else {
-      bitMapEntry.config[aspectId] = config;
-    }
-    this.consumer.bitMap.markAsChanged();
-    await this.writeBitMap();
-    return true; // changes have been made
   }
 
   /**
