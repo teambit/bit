@@ -30,7 +30,7 @@ export class ComponentGenerator {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.getComponentPath(componentId);
+        const componentPath = this.workspace.getNewComponentPath(componentId, this.options.path);
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
         }
@@ -127,10 +127,5 @@ export class ComponentGenerator {
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
     return results;
-  }
-
-  private getComponentPath(componentId: ComponentID) {
-    if (this.options.path) return this.options.path;
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }

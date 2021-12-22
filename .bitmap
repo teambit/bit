@@ -387,6 +387,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
+    "forking": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/forking",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "formatter": {
         "scope": "teambit.defender",
         "version": "0.0.143",

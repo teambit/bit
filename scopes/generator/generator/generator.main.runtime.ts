@@ -200,16 +200,10 @@ export class GeneratorMain {
     const { namespace, aspect: aspectId } = options;
     const template = this.getComponentTemplate(templateName, aspectId);
     if (!template) throw new BitError(`template "${templateName}" was not found`);
-    const scope = options.scope || this.workspace.defaultScope;
-    if (!isValidScopeName(scope)) {
-      throw new InvalidScopeName(scope);
-    }
-    if (!scope) throw new BitError(`failed finding defaultScope`);
 
-    const componentIds = componentNames.map((componentName) => {
-      const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
-      return ComponentID.fromObject({ name: fullComponentName }, scope);
-    });
+    const componentIds = componentNames.map((componentName) =>
+      this.workspace.getNewComponentId(componentName, namespace, options.scope)
+    );
 
     const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
     return componentGenerator.generate();

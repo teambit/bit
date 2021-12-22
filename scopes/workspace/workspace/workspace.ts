@@ -62,13 +62,19 @@ import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptio
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import {
+  PathOsBased,
+  PathOsBasedRelative,
+  PathOsBasedAbsolute,
+  PathLinuxRelative,
+} from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference, compact, pick } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { CompilationInitiator } from '@teambit/compiler';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
@@ -680,6 +686,38 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * don't throw an error if the component was not found, simply return undefined.
+   */
+  async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
+    return this.componentLoader.getIfExist(componentId);
+  }
+
+  /**
+   * when creating/forking a component, the user provides the new name and optionally the scope/namespace.
+   * from this user input, create a ComponentID.
+   */
+  getNewComponentId(name: string, namespace?: string, scope?: string): ComponentID {
+    scope = scope || this.defaultScope;
+    if (!isValidScopeName(scope)) {
+      throw new InvalidScopeName(scope);
+    }
+    if (!scope) throw new BitError(`failed finding defaultScope`);
+
+    const fullComponentName = namespace ? `${namespace}/${name}` : name;
+    return ComponentID.fromObject({ name: fullComponentName }, scope);
+  }
+
+  /**
+   * when creating/forking a component, the user may or may not provide a path.
+   * if not provided, generate the path based on the component-id.
+   * the component will be written to that path.
+   */
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
+    if (pathFromUser) return pathFromUser;
+    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.defaultDirectory);
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
@@ -763,7 +801,7 @@ export class Workspace implements ComponentFactory {
   async write(rootPath: string, component: Component) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.path);
+        const pathToWrite = path.join(this.path, rootPath, file.relative);
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
