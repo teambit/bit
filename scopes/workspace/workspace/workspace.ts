@@ -65,7 +65,6 @@ import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/cons
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference, compact, pick } from 'lodash';
 import path from 'path';
