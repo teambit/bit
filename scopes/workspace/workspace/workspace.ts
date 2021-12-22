@@ -20,6 +20,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
+import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
@@ -1309,7 +1310,7 @@ export class Workspace implements ComponentFactory {
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
     if (options?.addMissingPeers) {
       if (packages?.length) {
-        throw new Error(
+        throw new BitError(
           'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
         );
       }
