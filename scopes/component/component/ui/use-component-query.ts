@@ -22,6 +22,7 @@ const componentFields = gql`
     packageName
     elementsUrl
     displayName
+    latest
     server {
       env
       url

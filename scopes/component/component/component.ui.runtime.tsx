@@ -7,12 +7,13 @@ import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import React from 'react';
+import { Install, Import } from '@teambit/ui-foundation.ui.use-box.menu';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
-import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import { Menu, NavPlugin, OrderedNavigationSlot, ConsumeMethodSlot, ConsumePlugin } from './ui/menu';
 import { AspectSection } from './aspect.section';
 import { ComponentModel } from './ui';
 
@@ -39,6 +40,8 @@ export class ComponentUI {
     private routeSlot: RouteSlot,
 
     private navSlot: OrderedNavigationSlot,
+
+    private consumeMethodSlot: ConsumeMethodSlot,
 
     /**
      * slot for registering a new widget to the menu.
@@ -115,6 +118,80 @@ export class ComponentUI {
     },
   ];
 
+  private bitMethod: ConsumePlugin = (comp) => {
+    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
+    return {
+      Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
+      Component: (
+        <Import
+          componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
+          packageName={`${comp.packageName}${version}`}
+          componentName={comp.id.name}
+        />
+      ),
+      order: 0,
+    };
+  };
+
+  // TODO - move to npm aspect
+  private npmMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+    return {
+      Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
+      Component: (
+        <Install
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="npm"
+          copyString={`npm i ${comp.packageName}${packageVersion}`}
+          registryName={registry}
+        />
+      ),
+      order: 10,
+    };
+  };
+
+  // TODO - move to yarn? aspect
+  private yarnMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+    return {
+      Title: (
+        <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
+      ),
+      Component: (
+        <Install
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="yarn"
+          copyString={`yarn add ${comp.packageName}${packageVersion}`}
+          registryName={registry}
+        />
+      ),
+      order: 20,
+    };
+  };
+
+  // TODO - move to pnpm aspect
+  private pnpmMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
+    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+    return {
+      Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
+      Component: (
+        <Install
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
+          componentName={comp.id.name}
+          packageManager="pnpm"
+          copyString={`pnpm i ${comp.packageName}${packageVersion}`}
+          registryName={registry}
+        />
+      ),
+      order: 30,
+    };
+  };
+
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
       if (be.type === ClickInsideAnIframeEvent.TYPE) {
@@ -147,7 +224,13 @@ export class ComponentUI {
 
   getMenu(host: string) {
     return (
-      <Menu navigationSlot={this.navSlot} widgetSlot={this.widgetSlot} host={host} menuItemSlot={this.menuItemSlot} />
+      <Menu
+        navigationSlot={this.navSlot}
+        consumeMethodSlot={this.consumeMethodSlot}
+        widgetSlot={this.widgetSlot}
+        host={host}
+        menuItemSlot={this.menuItemSlot}
+      />
     );
   }
 
@@ -161,6 +244,10 @@ export class ComponentUI {
       props: nav,
       order,
     });
+  }
+
+  registerConsumeMethod(...consumeMethods: ConsumePlugin[]) {
+    this.consumeMethodSlot.register(consumeMethods);
   }
 
   registerWidget(widget: NavLinkProps, order?: number) {
@@ -183,6 +270,7 @@ export class ComponentUI {
     Slot.withType<RouteProps>(),
     Slot.withType<NavPlugin>(),
     Slot.withType<NavigationSlot>(),
+    Slot.withType<ConsumeMethodSlot>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<ComponentPageSlot>(),
   ];
@@ -190,9 +278,10 @@ export class ComponentUI {
   static async provider(
     [pubsub, commandBarUI]: [PubsubUI, CommandBarUI],
     config,
-    [routeSlot, navSlot, widgetSlot, menuItemSlot, pageSlot]: [
+    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
+      ConsumeMethodSlot,
       OrderedNavigationSlot,
       MenuItemSlot,
       ComponentPageSlot
@@ -200,13 +289,28 @@ export class ComponentUI {
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
-    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot, menuItemSlot, pageSlot, commandBarUI);
+    const componentUI = new ComponentUI(
+      pubsub,
+      routeSlot,
+      navSlot,
+      consumeMethodSlot,
+      widgetSlot,
+      menuItemSlot,
+      pageSlot,
+      commandBarUI
+    );
     const section = new AspectSection();
 
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
+    componentUI.registerConsumeMethod(
+      componentUI.bitMethod,
+      componentUI.npmMethod,
+      componentUI.yarnMethod,
+      componentUI.pnpmMethod
+    );
     return componentUI;
   }
 }

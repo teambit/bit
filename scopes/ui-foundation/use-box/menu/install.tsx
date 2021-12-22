@@ -1,38 +1,39 @@
 import React from 'react';
-import classNames from 'classnames';
+
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { TabContent, TabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
-import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { TooltipCopybox } from './tooltip-copybox';
+import { Registry } from './registry';
 import styles from './menu.module.scss';
 
 export type InstallProps = {
   componentName: string;
+  config: string;
   copyString: string;
-  back: () => void;
   registryName: string;
   packageManager: string;
-} & TabContentProps;
+} & ExpandableTabContentProps;
 
-export function Install({ componentName, copyString, back, registryName, packageManager, ...rest }: InstallProps) {
+export function Install({ componentName, copyString, registryName, packageManager, config, ...rest }: InstallProps) {
   return (
-    <TabContent
+    <ExpandableTabContent
       {...rest}
-      bottom={
-        <div className={classNames(linkStyles, styles.installLink)} onClick={back}>
-          <div>
-            <Icon of="settings" />
-            <span>
-              Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
-            </span>
-          </div>
-          <Icon of="arrow_right" />
+      content={
+        <>
+          <div>{`Install ${componentName} with ${packageManager}`}</div>
+          <TooltipCopybox content={copyString} />
+        </>
+      }
+      drawerTitle={
+        <div className={styles.bottom}>
+          <Icon of="settings" />
+          <span>
+            Configure <HighlightedText>{registryName}</HighlightedText> as a Scoped Registry
+          </span>
         </div>
       }
-    >
-      <div>{`Install ${componentName} with ${packageManager}`}</div>
-      <TooltipCopybox content={copyString} />
-    </TabContent>
+      drawerContent={<Registry copyString={config} />}
+    />
   );
 }

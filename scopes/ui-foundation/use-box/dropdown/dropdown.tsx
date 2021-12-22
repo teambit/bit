@@ -1,16 +1,17 @@
-import React, { useState, ComponentType } from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
 import { Dropdown, DropdownProps } from '@teambit/evangelist.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './dropdown.module.scss';
 
 export type UseBoxDropdownProps = {
-  Menu: ComponentType;
+  Menu: React.ReactElement;
   containerClass?: string;
 } & Omit<DropdownProps, 'placeholder'>;
 
 export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
   const [key, setKey] = useState(0);
+  const DropdownMenu = React.cloneElement(Menu, { key });
   return (
     <Dropdown
       className={classNames(className)}
@@ -21,7 +22,7 @@ export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps
       clickToggles={false}
       clickPlaceholderToggles={true}
     >
-      <Menu key={key} />
+      {DropdownMenu}
     </Dropdown>
   );
 }
