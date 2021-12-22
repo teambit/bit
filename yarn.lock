@@ -15100,6 +15100,7 @@ __metadata:
   resolution: "cpu-features@npm:0.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcpu-features%2F-%2Fcpu-features-0.0.2.tgz"
   dependencies:
     nan: ^2.14.1
+    node-gyp: latest
   checksum: 15177f9a2d465e4d84390f902c977b34f237dadb29fd8553853b13d906ffe5f15be9f091c72db4f34c71412d5ff4e0e4edf04caebc875b02d1d7ecfce2963299
   languageName: node
   linkType: hard
