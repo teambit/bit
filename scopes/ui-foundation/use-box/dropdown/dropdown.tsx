@@ -11,7 +11,7 @@ export type UseBoxDropdownProps = {
 
 export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
   const [key, setKey] = useState(0);
-  const NewMenu = React.cloneElement(Menu, { key });
+  const DropdownMenu = React.cloneElement(Menu, { key });
   return (
     <Dropdown
       className={classNames(className)}
@@ -22,7 +22,7 @@ export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps
       clickToggles={false}
       clickPlaceholderToggles={true}
     >
-      {NewMenu}
+      {DropdownMenu}
     </Dropdown>
   );
 }

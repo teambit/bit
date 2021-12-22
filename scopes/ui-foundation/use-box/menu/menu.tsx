@@ -1,10 +1,11 @@
 import React, { useState, useMemo, ReactNode } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import orderBy from 'lodash.orderby';
+import flatten from 'lodash.flatten';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 
 import styles from './menu.module.scss';
 
-// TODO where should we place this type? its being created in component ui runtime as well
 export type ConsumeMethod = {
   Title?: ReactNode;
   Component?: ReactNode;
@@ -25,18 +26,11 @@ export type MenuProps = {
 
 export function Menu({ methods, componentName, ...rest }: MenuProps) {
   const [activeTab, setActiveTab] = useState(0);
-  const content = useMemo(
-    () =>
-      methods.flat().sort((a, b) => {
-        if (!a && !b) return 0;
-        if (a.order === undefined) return 1;
-        if (b.order === undefined) return -1;
-        return a?.order - b?.order;
-      }),
-    [methods]
-  );
+  const OrderedMethods = useMemo(() => {
+    return orderBy(flatten(methods), ['order']);
+  }, [methods]);
 
-  const { Component } = content[activeTab] || {};
+  const { Component } = OrderedMethods[activeTab] || {};
 
   return (
     <div {...rest}>
@@ -47,8 +41,7 @@ export function Menu({ methods, componentName, ...rest }: MenuProps) {
         </div>
       </div>
       <div className={styles.tabs}>
-        {content.map(({ Title, Component: comp }, index) => {
-          if (!Title || !comp) return null;
+        {OrderedMethods.map(({ Title }, index) => {
           return (
             <Tab key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
               {Title}

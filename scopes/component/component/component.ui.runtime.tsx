@@ -13,7 +13,7 @@ import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-b
 import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
-import { Menu, NavPlugin, OrderedNavigationSlot, OrderedConsumeSlot, ConsumePlugin } from './ui/menu';
+import { Menu, NavPlugin, OrderedNavigationSlot, ConsumeMethodSlot, ConsumePlugin } from './ui/menu';
 import { AspectSection } from './aspect.section';
 import { ComponentModel } from './ui';
 
@@ -41,7 +41,7 @@ export class ComponentUI {
 
     private navSlot: OrderedNavigationSlot,
 
-    private consumeMethodSlot: OrderedConsumeSlot,
+    private consumeMethodSlot: ConsumeMethodSlot,
 
     /**
      * slot for registering a new widget to the menu.
@@ -141,7 +141,7 @@ export class ComponentUI {
       Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
         <Install
-          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="npm"
           copyString={`npm i ${comp.packageName}${packageVersion}`}
@@ -162,7 +162,7 @@ export class ComponentUI {
       ),
       Component: (
         <Install
-          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="yarn"
           copyString={`yarn add ${comp.packageName}${packageVersion}`}
@@ -181,7 +181,7 @@ export class ComponentUI {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
       Component: (
         <Install
-          config={`npm config set ${registry}:registry' https://node.bit.dev`}
+          config={`npm config set '${registry}:registry' https://node.bit.dev`}
           componentName={comp.id.name}
           packageManager="pnpm"
           copyString={`pnpm i ${comp.packageName}${packageVersion}`}
@@ -281,7 +281,7 @@ export class ComponentUI {
     Slot.withType<RouteProps>(),
     Slot.withType<NavPlugin>(),
     Slot.withType<NavigationSlot>(),
-    Slot.withType<OrderedConsumeSlot>(),
+    Slot.withType<ConsumeMethodSlot>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<ComponentPageSlot>(),
   ];
@@ -292,7 +292,7 @@ export class ComponentUI {
     [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
-      OrderedConsumeSlot,
+      ConsumeMethodSlot,
       OrderedNavigationSlot,
       MenuItemSlot,
       ComponentPageSlot

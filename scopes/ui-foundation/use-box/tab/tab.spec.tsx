@@ -12,7 +12,7 @@ describe('basic tab', () => {
   it('should render without active class', () => {
     const { getByText } = render(<TabWithText />);
     const rendered = getByText('bit');
-    expect(rendered.classList.contains('active')).not.toBeTruthy();
+    expect(rendered.classList).not.toContain('active');
   });
 
   it('should accept an element as a child', () => {
@@ -26,6 +26,6 @@ describe('active tab', () => {
   it('should render with the active class', () => {
     const { getByText } = render(<ActiveTab />);
     const rendered = getByText('bit');
-    expect(rendered.classList.contains('active')).toBeTruthy();
+    expect(rendered.classList).toContain('active');
   });
 });

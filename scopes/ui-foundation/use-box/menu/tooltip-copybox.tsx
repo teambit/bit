@@ -10,7 +10,7 @@ type TooltipCopyboxProps = {
 // forward ref required by tippy
 export function TooltipCopybox({ content, ...rest }: TooltipCopyboxProps) {
   return (
-    <Tooltip {...rest} content={content} disabled={content.length < 30} placement="bottom" maxWidth="" breakline={true}>
+    <Tooltip {...rest} content={content} placement="bottom" maxWidth="" breakline={true}>
       <div>
         <CopyBox>{content}</CopyBox>
       </div>

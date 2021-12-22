@@ -1,6 +1,7 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
+import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
@@ -10,7 +11,7 @@ import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
 import styles from './menu.module.scss';
-import { OrderedNavigationSlot, OrderedConsumeSlot } from './nav-plugin';
+import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 
 export type MenuProps = {
   className?: string;
@@ -28,7 +29,7 @@ export type MenuProps = {
    */
   menuItemSlot: MenuItemSlot;
 
-  consumeMethodSlot: OrderedConsumeSlot;
+  consumeMethodSlot: ConsumeMethodSlot;
 };
 
 /**
@@ -59,7 +60,7 @@ function VersionRelatedDropdowns({
   consumeMethods,
 }: {
   component: ComponentModel;
-  consumeMethods: OrderedConsumeSlot;
+  consumeMethods: ConsumeMethodSlot;
 }) {
   const versionList =
     useMemo(
@@ -72,7 +73,7 @@ function VersionRelatedDropdowns({
       [component.tags]
     ) || [];
 
-  const methods = getConsumeMethodsComponents(consumeMethods, component);
+  const methods = useConsumeMethods(consumeMethods, component);
   return (
     <>
       {versionList.length > 0 && (
@@ -87,13 +88,14 @@ function VersionRelatedDropdowns({
   );
 }
 
-function getConsumeMethodsComponents(consumeMethods: OrderedConsumeSlot, componentModel: ComponentModel) {
-  const methods = flatten(consumeMethods.values());
+function useConsumeMethods(consumeMethods: ConsumeMethodSlot, componentModel: ComponentModel): ConsumeMethod[] {
   return useMemo(
     () =>
-      methods.map((method) => {
-        return method?.(componentModel);
-      }),
+      flatten(consumeMethods.values())
+        .map((method) => {
+          return method?.(componentModel);
+        })
+        .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
     [consumeMethods, componentModel]
   );
 }
