@@ -6,19 +6,18 @@ import { ForkingAspect } from './forking.aspect';
 import { ForkOptions } from './fork.cmd';
 
 export class Forker {
-  private sourceId: ComponentID;
   constructor(
     private workspace: Workspace,
     private dependencyResolver: DependencyResolverMain,
     private harmony: Harmony
   ) {}
 
-  async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
-    this.sourceId = await this.workspace.resolveComponentId(sourceId);
-    const existingInWorkspace = await this.workspace.getIfExist(this.sourceId);
+  async fork(sourceIdStr: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
+    const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
+    const existingInWorkspace = await this.workspace.getIfExist(sourceId);
     return existingInWorkspace
       ? this.forkExistingInWorkspace(existingInWorkspace, targetId, options)
-      : this.forkRemoteComponent(targetId, options);
+      : this.forkRemoteComponent(sourceId, targetId, options);
   }
 
   async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
@@ -33,11 +32,11 @@ please specify the target-id arg`);
 
     return targetCompId;
   }
-  async forkRemoteComponent(targetId?: string, options?: ForkOptions) {
-    const targetName = targetId || this.sourceId.fullName;
+  async forkRemoteComponent(sourceId: ComponentID, targetId?: string, options?: ForkOptions) {
+    const targetName = targetId || sourceId.fullName;
     const targetCompId = this.workspace.getNewComponentId(targetName, undefined, options?.scope);
     const targetPath = this.workspace.getNewComponentPath(targetCompId, options?.path);
-    const comp = await this.workspace.scope.getRemoteComponent(this.sourceId);
+    const comp = await this.workspace.scope.getRemoteComponent(sourceId);
 
     const deps = await this.dependencyResolver.getDependencies(comp);
     // only bring auto-resolved dependencies, others should be set in the workspace.jsonc template
@@ -98,7 +97,7 @@ please specify the target-id arg`);
     return {
       ...fromExisting,
       [ForkingAspect.id]: {
-        forkedFrom: this.sourceId.toObject(),
+        forkedFrom: comp.id.toObject(),
       },
     };
   }
