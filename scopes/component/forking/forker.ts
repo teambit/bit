@@ -1,12 +1,17 @@
 import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Harmony } from '@teambit/harmony';
 import { Workspace } from '@teambit/workspace';
-import ForkingAspect from '.';
+import { ForkingAspect } from './forking.aspect';
 import { ForkOptions } from './fork.cmd';
 
 export class Forker {
   private sourceId: ComponentID;
-  constructor(private workspace: Workspace, private dependencyResolver: DependencyResolverMain) {}
+  constructor(
+    private workspace: Workspace,
+    private dependencyResolver: DependencyResolverMain,
+    private harmony: Harmony
+  ) {}
 
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     this.sourceId = await this.workspace.resolveComponentId(sourceId);
@@ -61,22 +66,34 @@ please specify the target-id arg`);
 
   private async writeAndAddTheNewComp(comp: Component, targetPath: string, targetId: ComponentID) {
     await this.workspace.write(targetPath, comp);
+    const config = await this.getConfig(comp);
     await this.workspace.track({
       rootDir: targetPath,
       componentName: targetId.fullName,
       mainFile: comp.state._consumer.mainFile,
-      config: this.getConfig(comp),
+      config,
     });
     await this.workspace.bitMap.write();
     this.workspace.clearCache();
     // @todo: compile components.
   }
 
-  private getConfig(comp: Component) {
+  private async getConfig(comp: Component) {
+    const aspectIds = comp.state.aspects.entries.map((e) => e.id.toString());
+    await this.workspace.loadAspects(aspectIds);
     const fromExisting = {};
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
-      fromExisting[entry.id.toString()] = entry.config;
+      const aspectId = entry.id.toString();
+      const aspect = this.harmony.get<ForkAspectConfig>(aspectId);
+      if (!aspect) throw new Error(`error: unable to get "${aspectId}" aspect from Harmony`);
+      if (
+        'shouldPreserveConfigForForkedComponent' in aspect &&
+        aspect.shouldPreserveConfigForForkedComponent === false
+      ) {
+        return;
+      }
+      fromExisting[aspectId] = entry.config;
     });
     return {
       ...fromExisting,
@@ -85,4 +102,8 @@ please specify the target-id arg`);
       },
     };
   }
+}
+
+export interface ForkAspectConfig {
+  readonly shouldPreserveConfigForForkedComponent?: boolean; // default true
 }
