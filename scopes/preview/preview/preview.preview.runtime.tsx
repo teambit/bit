@@ -93,7 +93,8 @@ export class PreviewPreview {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       const stringId = id.toString();
-      const previewRoute = `~aspect/preview`;
+      // const previewRoute = `~aspect/preview`;
+      const previewRoute = `~aspect/component-preview`;
       const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`;
       const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
       script.src = src; // generate path to remote scope. [scope url]/

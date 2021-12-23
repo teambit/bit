@@ -29,6 +29,8 @@ import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import { EnvPreviewTemplateTask, GENERATE_ENV_TEMPLATE_TASK_NAME } from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
+import { BitError } from '@teambit/bit-error';
+import { ComponentPreviewRoute } from './component-preview.route';
 
 const noopResult = {
   results: [],
@@ -64,6 +66,8 @@ export class PreviewMain {
 
     private envs: EnvsMain,
 
+    private componentAspect: ComponentMain,
+
     private pkg: PkgMain,
 
     private aspectLoader: AspectLoaderMain,
@@ -96,6 +100,15 @@ export class PreviewMain {
     return new PreviewArtifact(artifacts);
   }
 
+  /**
+   * Getting the env template artifact
+   * This should be called with the env itself or it will return undefined
+   * If you want to get the env template from the env of the component,
+   * use: getEnvTemplateFromComponentEnv below
+   *
+   * @param component
+   * @returns
+   */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
     const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
       component,
@@ -105,6 +118,21 @@ export class PreviewMain {
     if (!artifacts || !artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
+  }
+
+  /**
+   * This will fetch the component env, then will take the env template from the component env
+   * @param component
+   */
+  async getEnvTemplateFromComponentEnv(component: Component): Promise<PreviewArtifact | undefined> {
+    const envId = this.envs.getEnv(component).id;
+    const host = this.componentAspect.getHost();
+    const resolvedEnvId = await host.resolveComponentId(envId);
+    const envComponent = await host.get(resolvedEnvId);
+    if (!envComponent) {
+      throw new BitError(`can't load env for ${component.id.toString()}. env id is ${envId}`);
+    }
+    return this.getEnvTemplate(envComponent);
   }
 
   getDefs(): PreviewDefinition[] {
@@ -350,6 +378,7 @@ export class PreviewMain {
       previewSlot,
       uiMain,
       envs,
+      componentExtension,
       pkg,
       aspectLoader,
       config,
@@ -362,7 +391,11 @@ export class PreviewMain {
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
 
-    componentExtension.registerRoute([new PreviewRoute(preview, logger), new EnvTemplateRoute(preview, logger)]);
+    componentExtension.registerRoute([
+      new PreviewRoute(preview, logger),
+      new ComponentPreviewRoute(preview, logger),
+      new EnvTemplateRoute(preview, logger),
+    ]);
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),

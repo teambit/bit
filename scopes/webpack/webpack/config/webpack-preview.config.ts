@@ -35,34 +35,9 @@ export function previewConfigFactory(target: Target, context: BundlerContext): C
       fallback: fallbacks,
     },
 
-    plugins: [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            templateContent: html('Preview'),
-          },
-          {
-            minify: dev
-              ? {
-                  removeComments: true,
-                  collapseWhitespace: true,
-                  removeRedundantAttributes: true,
-                  useShortDoctype: true,
-                  removeEmptyAttributes: true,
-                  removeStyleLinkTypeAttributes: true,
-                  keepClosingSlash: true,
-                  minifyJS: true,
-                  minifyCSS: true,
-                  minifyURLs: true,
-                }
-              : undefined,
-          }
-        )
-      ),
-      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
-    ].concat(createModuleFederationPlugins(target.modules || [])),
+    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig)].concat(
+      createModuleFederationPlugins(target.modules || [])
+    ),
   };
 }
 

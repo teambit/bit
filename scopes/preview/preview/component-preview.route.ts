@@ -7,7 +7,7 @@ import { PreviewMain } from './preview.main.runtime';
 import { PreviewArtifact } from './preview-artifact';
 import { getArtifactFileMiddleware, PreviewUrlParams } from './artifact-file-middleware';
 
-export class PreviewRoute implements Route {
+export class ComponentPreviewRoute implements Route {
   constructor(
     /**
      * preview extension.
@@ -16,7 +16,7 @@ export class PreviewRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/preview/:previewName/:previewPath(*)`;
+  route = `/component-preview/:previewPath(*)`;
   method = 'get';
 
   middlewares = [
@@ -30,13 +30,8 @@ export class PreviewRoute implements Route {
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          // Taking the env template by default
-          artifact = await this.preview.getEnvTemplateFromComponentEnv(component);
-          // If there is no env template artifact, consider it a legacy
-          if (!artifact) {
-            isLegacyPath = true;
-            artifact = await this.preview.getPreview(component);
-          }
+          isLegacyPath = true;
+          artifact = await this.preview.getPreview(component);
         } catch (e: any) {
           return res.status(404).send(noPreview());
         }

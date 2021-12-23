@@ -1,10 +1,12 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ComponentResult } from '@teambit/builder';
 import { Component, ComponentMap } from '@teambit/component';
+import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerResult, Target } from '@teambit/bundler';
 import { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
+import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
 import { PreviewMain } from './preview.main.runtime';
 
 export type ModuleExpose = {
@@ -13,6 +15,7 @@ export type ModuleExpose = {
 };
 
 export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
+export const PREVIEW_ROOT_CHUNK_NAME = 'previewRoot';
 
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
@@ -24,7 +27,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const envComponents = context.components.filter((component) => this.envs.getEnvFromComponent(component));
     if (!envComponents.length) return { componentsResults: [] };
-
     const targets: Target[] = await Promise.all(
       envComponents.map(async (envComponent) => {
         // const module = await this.getPreviewModule(envComponent);
@@ -33,11 +35,12 @@ export class EnvPreviewTemplateTask implements BuildTask {
         if (!capsule) throw new Error('no capsule found');
         const previewRoot = await this.preview.writePreviewRuntime(context);
         const previewModules = await this.getPreviewModules(envComponent);
-        const templatesFile = previewModules.map((template) => {
-          return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
-        });
+        // const templatesFile = previewModules.map((template) => {
+        //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
+        // });
         const outputPath = this.computeOutputPath(context, envComponent);
         if (!existsSync(outputPath)) mkdirpSync(outputPath);
+        const entries = this.getEntries(previewModules, capsule, previewRoot);
 
         // const entries = this.getEntries(
         //   previewModules.concat({
@@ -47,7 +50,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
         // );
 
         return {
-          entries: templatesFile.concat(previewRoot),
+          // entries: templatesFile.concat(previewRoot),
+          entries,
           components: [envComponent],
           outputPath,
           // modules: [module],
@@ -62,27 +66,51 @@ export class EnvPreviewTemplateTask implements BuildTask {
       development: context.dev,
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
+    const previewDefs = this.preview.getDefs();
+    const htmlPluginsTransformer = generateHtmlPluginTransformer(previewDefs, PREVIEW_ROOT_CHUNK_NAME, {
+      dev: context.dev,
+    });
+    const transformers = [...envTemplateTransformersArray, htmlPluginsTransformer];
+
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, transformers);
     const bundlerResults = await bundler.run();
     const results = await this.computeResults(bundlerContext, bundlerResults);
     return results;
   }
 
-  getEntries(previewModules: ModuleExpose[]): { [key: string]: string } {
-    const entriesArr = previewModules.map((module) => {
-      return {
-        import: module.path,
-        library: {
-          name: module.name,
-          type: 'umd',
-        },
-      };
-    });
+  getEntries(previewModules: ModuleExpose[], capsule: Capsule, previewRoot: string): { [key: string]: Object } {
+    const previewRootEntry = {
+      // filename: 'preview-root.[contenthash].js',
+      // filename: 'preview-root.[chunkhash].js',
+      filename: 'preview-root.js',
+      import: previewRoot,
+    };
 
-    return entriesArr.reduce((entriesMap, entry) => {
-      entriesMap[entry.library.name] = entry;
-      return entriesMap;
-    }, {});
+    const entries = previewModules.reduce(
+      (acc, module) => {
+        const linkFile = this.preview.writeLink(module.name, ComponentMap.create([]), module.path, capsule.path);
+        acc[module.name] = {
+          // filename: `${module.name}.[contenthash].js`,
+          // filename: `${module.name}.[chunkhash].js`,
+          filename: `${module.name}.js`,
+          import: linkFile,
+          // library: {
+          //   name: module.name,
+          //   type: 'umd',
+          // },
+        };
+        return acc;
+      },
+      { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry }
+    );
+
+    console.log('entries', entries);
+    return entries;
+
+    // const mergedEntries = return entriesArr.reduce((entriesMap, entry) => {
+    //   entriesMap[entry.library.name] = entry;
+    //   return entriesMap;
+    // }, {previewRoot: previewRootEntry});
   }
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
@@ -125,7 +153,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private getArtifactDirectory() {
-    return `__bit__env-template`;
+    return join('artifacts', 'env-template');
   }
 
   private computeOutputPath(context: BuildContext, component: Component) {
