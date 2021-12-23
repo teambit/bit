@@ -458,9 +458,7 @@
             "@types/mocha": "5.2.7",
             "@teambit/legacy": "-"
           },
-          "peerDependencies": {
-            "@teambit/legacy": "1.0.195"
-          }
+          "peerDependencies": {}
         }
       },
       "teambit.envs/envs": {
@@ -564,28 +562,37 @@
     "scopes/component/component-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      // Removing policies that should be defined only for aspects
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/component/component-version": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      // Removing policies that should be defined only for aspects
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/component/legacy-bit-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      // Removing policies that should be defined only for aspects
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server": {
       "teambit.harmony/aspect": "-",
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      // Removing policies that should be defined only for aspects
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/component/legacy-component-log": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      "teambit.dependencies/dependency-resolver": {}
     },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation",
