@@ -12,11 +12,11 @@ export class PnpmUI {
 
   static async provider([componentUI]: [ComponentUI]) {
     const pnpm = new PnpmUI();
-    componentUI.registerConsumeMethod(pnpm.pnpmMethod);
+    componentUI.registerConsumeMethod(pnpm.consumeMethod);
     return pnpm;
   }
 
-  private pnpmMethod: ConsumePlugin = (comp) => {
+  private consumeMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {

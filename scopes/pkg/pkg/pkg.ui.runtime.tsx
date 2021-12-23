@@ -11,12 +11,12 @@ export class PkgUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const npm = new PkgUI();
-    componentUI.registerConsumeMethod(npm.npmMethod);
-    return npm;
+    const pkg = new PkgUI();
+    componentUI.registerConsumeMethod(pkg.npmConsumeMethod);
+    return pkg;
   }
 
-  private npmMethod: ConsumePlugin = (comp) => {
+  private npmConsumeMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {

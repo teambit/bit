@@ -12,11 +12,11 @@ export class YarnUI {
 
   static async provider([componentUI]: [ComponentUI]) {
     const yarn = new YarnUI();
-    componentUI.registerConsumeMethod(yarn.yarnMethod);
+    componentUI.registerConsumeMethod(yarn.consumeMethod);
     return yarn;
   }
 
-  private yarnMethod: ConsumePlugin = (comp) => {
+  private consumeMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
