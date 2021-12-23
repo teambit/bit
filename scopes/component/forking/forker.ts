@@ -1,6 +1,7 @@
 import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Harmony } from '@teambit/harmony';
+import { ComponentIdObj } from '@teambit/component-id';
 import { Workspace } from '@teambit/workspace';
 import { ForkingAspect } from './forking.aspect';
 import { ForkOptions } from './fork.cmd';
@@ -106,3 +107,7 @@ please specify the target-id arg`);
 export interface ForkAspectConfig {
   readonly shouldPreserveConfigForForkedComponent?: boolean; // default true
 }
+
+export type ForkConfig = {
+  forkedFrom: ComponentIdObj;
+};
