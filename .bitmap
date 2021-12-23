@@ -391,13 +391,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/forking",
-        "config": {
-            "teambit.harmony/aspect": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
-            }
-        }
+        "rootDir": "scopes/component/forking"
     },
     "formatter": {
         "scope": "teambit.defender",
