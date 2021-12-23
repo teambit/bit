@@ -7,7 +7,7 @@ import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import React from 'react';
-import { Install, Import } from '@teambit/ui-foundation.ui.use-box.menu';
+import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
