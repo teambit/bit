@@ -7,7 +7,7 @@ import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import React from 'react';
-import { Install, Import } from '@teambit/ui-foundation.ui.use-box.menu';
+import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
@@ -133,65 +133,6 @@ export class ComponentUI {
     };
   };
 
-  // TODO - move to npm aspect
-  private npmMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
-    return {
-      Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
-      Component: (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.dev`}
-          componentName={comp.id.name}
-          packageManager="npm"
-          copyString={`npm i ${comp.packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ),
-      order: 10,
-    };
-  };
-
-  // TODO - move to yarn? aspect
-  private yarnMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
-    return {
-      Title: (
-        <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
-      ),
-      Component: (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.dev`}
-          componentName={comp.id.name}
-          packageManager="yarn"
-          copyString={`yarn add ${comp.packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ),
-      order: 20,
-    };
-  };
-
-  // TODO - move to pnpm aspect
-  private pnpmMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
-    return {
-      Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.dev`}
-          componentName={comp.id.name}
-          packageManager="pnpm"
-          copyString={`pnpm i ${comp.packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ),
-      order: 30,
-    };
-  };
-
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
       if (be.type === ClickInsideAnIframeEvent.TYPE) {
@@ -305,12 +246,7 @@ export class ComponentUI {
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
-    componentUI.registerConsumeMethod(
-      componentUI.bitMethod,
-      componentUI.npmMethod,
-      componentUI.yarnMethod,
-      componentUI.pnpmMethod
-    );
+    componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }
 }
