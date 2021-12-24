@@ -645,6 +645,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
+    "new-component-helper": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/new-component-helper",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "node": {
         "scope": "teambit.harmony",
         "version": "0.0.592",
@@ -740,6 +753,19 @@
         "version": "0.0.592",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
+    },
+    "renaming": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/renaming",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
     },
     "schema": {
         "scope": "teambit.semantics",

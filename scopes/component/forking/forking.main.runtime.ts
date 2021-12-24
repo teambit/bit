@@ -1,10 +1,10 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Harmony } from '@teambit/harmony';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
-import { ForkCmd } from './fork.cmd';
-import { Forker, ForkConfig } from './forker';
+import { ComponentIdObj } from '@teambit/component-id';
+import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 
@@ -13,6 +13,20 @@ export type ForkInfo = {
 };
 
 export class ForkingMain {
+  constructor(
+    private workspace: Workspace,
+    private dependencyResolver: DependencyResolverMain,
+    private newComponentHelper: NewComponentHelperMain
+  ) {}
+
+  async fork(sourceIdStr: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
+    const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
+    const existingInWorkspace = await this.workspace.getIfExist(sourceId);
+    return existingInWorkspace
+      ? this.forkExistingInWorkspace(existingInWorkspace, targetId, options)
+      : this.forkRemoteComponent(sourceId, targetId, options);
+  }
+
   getForkInfo(component: Component): ForkInfo | null {
     const forkConfig = component.state.aspects.get(ForkingAspect.id)?.config as ForkConfig | undefined;
     if (!forkConfig) return null;
@@ -21,21 +35,89 @@ export class ForkingMain {
     };
   }
 
+  private async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
+    if (!targetId) {
+      throw new Error(`error: unable to create "${existing.id.toStringWithoutVersion()}" component, a component with the same name already exists.
+please specify the target-id arg`);
+    }
+    const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
+    const targetPath = this.newComponentHelper.getNewComponentPath(targetCompId, options?.path);
+
+    await this.newComponentHelper.writeAndAddNewComp(existing, targetPath, targetCompId);
+
+    return targetCompId;
+  }
+  private async forkRemoteComponent(sourceId: ComponentID, targetId?: string, options?: ForkOptions) {
+    const targetName = targetId || sourceId.fullName;
+    const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
+    const targetPath = this.newComponentHelper.getNewComponentPath(targetCompId, options?.path);
+    const comp = await this.workspace.scope.getRemoteComponent(sourceId);
+
+    const deps = await this.dependencyResolver.getDependencies(comp);
+    // only bring auto-resolved dependencies, others should be set in the workspace.jsonc template
+    const workspacePolicyEntries = deps
+      .filter((dep) => dep.source === 'auto')
+      .map((dep) => ({
+        dependencyId: dep.getPackageName?.() || dep.id,
+        lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
+        value: {
+          version: dep.version,
+        },
+      }));
+    this.dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
+    const config = await this.getConfig(comp);
+    await this.newComponentHelper.writeAndAddNewComp(comp, targetPath, targetCompId, config);
+    await this.dependencyResolver.persistConfig(this.workspace.path);
+    await this.workspace.install(undefined, {
+      dedupe: true,
+      import: false,
+      copyPeerToRuntimeOnRoot: true,
+      copyPeerToRuntimeOnComponents: false,
+      updateExisting: false,
+    });
+
+    return targetCompId;
+  }
+
+  private async getConfig(comp: Component) {
+    const fromExisting = await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
+    return {
+      ...fromExisting,
+      [ForkingAspect.id]: {
+        forkedFrom: comp.id.toObject(),
+      },
+    };
+  }
+
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DependencyResolverAspect, ComponentAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    DependencyResolverAspect,
+    ComponentAspect,
+    NewComponentHelperAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider(
-    [cli, workspace, dependencyResolver, componentMain]: [CLIMain, Workspace, DependencyResolverMain, ComponentMain],
-    config,
-    _,
-    harmony: Harmony
-  ) {
-    const forker = new Forker(workspace, dependencyResolver, harmony);
-    cli.register(new ForkCmd(forker));
-    const forkingMain = new ForkingMain();
+  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper]: [
+    CLIMain,
+    Workspace,
+    DependencyResolverMain,
+    ComponentMain,
+    NewComponentHelperMain
+  ]) {
+    const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper);
+    cli.register(new ForkCmd(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
     return forkingMain;
   }
 }
 
 ForkingAspect.addRuntime(ForkingMain);
+
+export interface ForkAspectConfig {
+  readonly shouldPreserveConfigForForkedComponent?: boolean; // default true
+}
+
+export type ForkConfig = {
+  forkedFrom: ComponentIdObj;
+};

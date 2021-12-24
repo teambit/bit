@@ -14,7 +14,7 @@ export class BitMap {
   /**
    * adds component config to the .bitmap file.
    * later, upon `bit tag`, the data is saved in the scope.
-   * returns a boolean indicating whether a chance has been made.
+   * returns a boolean indicating whether a change has been made.
    */
   async addComponentConfig(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);

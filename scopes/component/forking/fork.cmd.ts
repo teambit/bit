@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Forker } from './forker';
+import { ForkingMain } from '.';
 
 export type ForkOptions = {
   scope?: string;
@@ -21,10 +21,10 @@ export class ForkCmd implements Command {
   migration = true;
   remoteOp = true;
 
-  constructor(private forker: Forker) {}
+  constructor(private forking: ForkingMain) {}
 
   async report([sourceId, targetId]: [string, string], options: ForkOptions): Promise<string> {
-    const results = await this.forker.fork(sourceId, targetId, options);
+    const results = await this.forking.fork(sourceId, targetId, options);
     const targetIdStr = results.toString();
     return chalk.green(`successfully forked ${chalk.bold(targetIdStr)} from ${chalk.bold(sourceId)}`);
   }
