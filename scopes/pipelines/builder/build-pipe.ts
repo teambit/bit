@@ -47,7 +47,7 @@ export class BuildPipe {
   private failedTasks: BuildTask[] = [];
   private failedDependencyTask: BuildTask | undefined;
   private longProcessLogger: LongProcessLogger;
-  private taskResults: TaskResults[] = [];
+  private taskResults: TaskResults[];
   constructor(
     /**
      * array of services to apply on the components.
@@ -55,8 +55,11 @@ export class BuildPipe {
     readonly tasksQueue: TasksQueue,
     readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
-    readonly artifactFactory: ArtifactFactory
-  ) {}
+    readonly artifactFactory: ArtifactFactory,
+    previousTaskResults?: TaskResults[]
+  ) {
+    this.taskResults = previousTaskResults || [];
+  }
 
   /**
    * execute a pipeline of build tasks.
@@ -160,8 +163,9 @@ export class BuildPipe {
     tasksQueue: TasksQueue,
     envsBuildContext: EnvsBuildContext,
     logger: Logger,
-    artifactFactory: ArtifactFactory
+    artifactFactory: ArtifactFactory,
+    previousTaskResults?: TaskResults[]
   ) {
-    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory);
+    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory, previousTaskResults);
   }
 }
