@@ -12,6 +12,7 @@ import { PreviewMain } from './preview.main.runtime';
 export type ModuleExpose = {
   name: string;
   path: string;
+  include?: string[];
 };
 
 export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
@@ -99,6 +100,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
           //   type: 'umd',
           // },
         };
+        if (module.include) {
+          acc[module.name].dependOn = module.include;
+        }
         return acc;
       },
       { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry }
@@ -144,6 +148,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           return {
             name: def.prefix,
             path: await def.renderTemplatePathByEnv(env.env),
+            include: def.include,
           };
         })
       )

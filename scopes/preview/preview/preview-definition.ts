@@ -9,6 +9,11 @@ export interface PreviewDefinition {
   prefix: string;
 
   /**
+   * which other extension modules to include in the preview context.
+   */
+  include?: string[];
+
+  /**
    * path of the default template to be executed.
    */
   renderTemplatePath?: (context: ExecutionContext) => Promise<string>;

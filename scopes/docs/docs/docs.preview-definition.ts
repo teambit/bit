@@ -7,6 +7,7 @@ import { DocsMain } from './docs.main.runtime';
 
 export class DocsPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'overview';
+  readonly include = ['compositions'];
 
   constructor(
     /**

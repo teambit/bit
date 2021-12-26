@@ -43,10 +43,11 @@ function generateHtmlPluginForModule(
   previewRootChunkName: string,
   options: { dev?: boolean }
 ) {
+  const previewDeps = previewDef.include || [];
   const baseConfig = {
     inject: true,
     cache: false,
-    chunks: [previewDef.prefix, previewRootChunkName],
+    chunks: [...previewDeps, previewDef.prefix, previewRootChunkName],
     filename: `${previewDef.prefix}.html`,
     templateContent: html('Preview'),
     minify: options?.dev ?? true,
