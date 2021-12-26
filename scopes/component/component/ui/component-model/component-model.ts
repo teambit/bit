@@ -27,6 +27,7 @@ export type ComponentModelProps = {
   env?: Descriptor; // env aspect.
   labels?: string[];
   host?: string;
+  latest?: string;
 };
 
 export type ComponentServer = {
@@ -105,7 +106,12 @@ export class ComponentModel {
     /**
      * host of the component
      */
-    readonly host?: string
+    readonly host?: string,
+
+    /**
+     * latest version of component
+     */
+    readonly latest?: string
   ) {}
 
   get version() {
@@ -132,6 +138,7 @@ export class ComponentModel {
     description,
     labels,
     host,
+    latest,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -148,7 +155,8 @@ export class ComponentModel {
       env,
       description,
       labels,
-      host
+      host,
+      latest
     );
   }
 

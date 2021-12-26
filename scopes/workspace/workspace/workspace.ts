@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
@@ -19,6 +20,7 @@ import {
   InvalidComponent,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
+import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
@@ -63,7 +65,6 @@ import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/cons
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference, compact, pick } from 'lodash';
 import path from 'path';
@@ -111,6 +112,7 @@ export interface EjectConfOptions {
 }
 
 export type WorkspaceInstallOptions = {
+  addMissingPeers?: boolean;
   variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe: boolean;
@@ -1305,6 +1307,30 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (options?.addMissingPeers) {
+      if (packages?.length) {
+        throw new BitError(
+          'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
+        );
+      }
+      const compDirMap = await this.getComponentsDirectory([]);
+      const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
+      const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
+      const pmInstallOptions: PackageManagerInstallOptions = {
+        dedupe: options?.dedupe,
+        copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+        copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+        dependencyFilterFn: depsFilterFn,
+        overrides: this.dependencyResolver.config.overrides,
+      };
+      const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
+        this.path,
+        mergedRootPolicy,
+        compDirMap,
+        pmInstallOptions
+      );
+      packages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+    }
     if (packages && packages.length) {
       if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
         throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);

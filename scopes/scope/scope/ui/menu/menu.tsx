@@ -16,10 +16,6 @@ export function ScopeMenu({ className, ...rest }: MenuProps) {
 export function ScopeUseBox() {
   const scope = useContext(ScopeContext);
   return (
-    <UseBoxDropdown
-      position="bottom-end"
-      className={styles.useBox}
-      Menu={() => <ScopeUseBoxMenu scopeName={scope.name} />}
-    />
+    <UseBoxDropdown position="bottom-end" className={styles.useBox} Menu={<ScopeUseBoxMenu scopeName={scope.name} />} />
   );
 }
