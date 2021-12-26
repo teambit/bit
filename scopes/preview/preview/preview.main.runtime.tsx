@@ -7,6 +7,7 @@ import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
@@ -29,7 +30,6 @@ import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import { EnvPreviewTemplateTask, GENERATE_ENV_TEMPLATE_TASK_NAME } from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
-import { BitError } from '@teambit/bit-error';
 import { ComponentPreviewRoute } from './component-preview.route';
 
 const noopResult = {

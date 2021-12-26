@@ -45,10 +45,15 @@ function generateHtmlPluginForModule(
 ) {
   const baseConfig = {
     inject: true,
+    cache: false,
     chunks: [previewDef.prefix, previewRootChunkName],
     filename: `${previewDef.prefix}.html`,
     templateContent: html('Preview'),
     minify: options?.dev ?? true,
+    // Make sure the order is that the preview root coming after the preview def
+    // we can't make it like this on the entries using depend on because this will
+    // prevent the splitting between different preview defs
+    chunksSortMode: 'manual' as const,
   };
   return new HtmlWebpackPlugin(baseConfig);
 }
