@@ -82,7 +82,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const previewRootEntry = {
       // filename: 'preview-root.[contenthash].js',
       // filename: 'preview-root.[chunkhash].js',
-      filename: 'preview-root.js',
+      filename: 'preview-root.[chunkhash].js',
       import: previewRoot,
     };
 
@@ -91,8 +91,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
         const linkFile = this.preview.writeLink(module.name, ComponentMap.create([]), module.path, capsule.path);
         acc[module.name] = {
           // filename: `${module.name}.[contenthash].js`,
-          // filename: `${module.name}.[chunkhash].js`,
-          filename: `${module.name}.js`,
+          filename: `${module.name}.[chunkhash].js`,
+          // filename: `${module.name}.js`,
           import: linkFile,
           // library: {
           //   name: module.name,
