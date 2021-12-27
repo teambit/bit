@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
@@ -22,9 +23,14 @@ export class ForkingMain {
   async fork(sourceIdStr: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const existingInWorkspace = await this.workspace.getIfExist(sourceId);
-    return existingInWorkspace
-      ? this.forkExistingInWorkspace(existingInWorkspace, targetId, options)
-      : this.forkRemoteComponent(sourceId, targetId, options);
+    if (existingInWorkspace) {
+      return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
+    }
+    ComponentID.fromObject({});
+    const sourceIdWithScope = sourceId._legacy.scope
+      ? sourceId
+      : ComponentID.fromLegacy(BitId.parse(sourceIdStr, true));
+    return this.forkRemoteComponent(sourceIdWithScope, targetId, options);
   }
 
   getForkInfo(component: Component): ForkInfo | null {
@@ -42,8 +48,8 @@ please specify the target-id arg`);
     }
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
     const targetPath = this.newComponentHelper.getNewComponentPath(targetCompId, options?.path);
-
-    await this.newComponentHelper.writeAndAddNewComp(existing, targetPath, targetCompId);
+    const config = await this.getConfig(existing);
+    await this.newComponentHelper.writeAndAddNewComp(existing, targetPath, targetCompId, config);
 
     return targetCompId;
   }
