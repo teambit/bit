@@ -1,5 +1,5 @@
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.to-linux';
 
 export class ElementsArtifact {
   constructor(private artifacts: ArtifactVinyl[]) {}

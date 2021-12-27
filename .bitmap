@@ -807,6 +807,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
     },
+    "path/to-linux": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/path/to-linux"
+    },
     "ts-server": {
         "scope": "teambit.typescript",
         "version": "0.0.30",

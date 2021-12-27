@@ -29,7 +29,7 @@ import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.to-linux';
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';

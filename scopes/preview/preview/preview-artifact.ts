@@ -1,5 +1,5 @@
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.to-linux';
 
 export class PreviewArtifact {
   constructor(private artifacts: AbstractVinyl[]) {}
