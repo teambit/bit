@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { deprecateMany, undeprecateMany } from '@teambit/legacy/dist/scope/component-ops/components-deprecation';
+import { deprecateMany } from '@teambit/legacy/dist/scope/component-ops/components-deprecation';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { DeprecationMain } from './deprecation.main.runtime';
 
