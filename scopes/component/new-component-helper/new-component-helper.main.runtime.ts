@@ -61,11 +61,11 @@ export class NewComponentHelperMain {
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
-      const aspect = this.harmony.get<ForkAspectConfig>(aspectId);
+      const aspect = this.harmony.get<CloneConfig>(aspectId);
       if (!aspect) throw new Error(`error: unable to get "${aspectId}" aspect from Harmony`);
       if (
-        'shouldPreserveConfigForForkedComponent' in aspect &&
-        aspect.shouldPreserveConfigForForkedComponent === false
+        'shouldPreserveConfigForClonedComponent' in aspect &&
+        aspect.shouldPreserveConfigForClonedComponent === false
       ) {
         return;
       }
@@ -83,3 +83,7 @@ export class NewComponentHelperMain {
 }
 
 NewComponentHelperAspect.addRuntime(NewComponentHelperMain);
+
+export interface CloneConfig {
+  readonly shouldPreserveConfigForClonedComponent?: boolean; // default true
+}

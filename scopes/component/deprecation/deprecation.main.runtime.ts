@@ -75,6 +75,8 @@ export class DeprecationMain {
     cli.register(new DeprecateCmd(deprecation, workspace), new UndeprecateCmd(deprecation, workspace));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(deprecationSchema(deprecation));
+
+    return deprecation;
   }
 }
 

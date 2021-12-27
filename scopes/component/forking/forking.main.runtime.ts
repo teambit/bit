@@ -114,10 +114,6 @@ please specify the target-id arg`);
 
 ForkingAspect.addRuntime(ForkingMain);
 
-export interface ForkAspectConfig {
-  readonly shouldPreserveConfigForForkedComponent?: boolean; // default true
-}
-
 export type ForkConfig = {
   forkedFrom: ComponentIdObj;
 };

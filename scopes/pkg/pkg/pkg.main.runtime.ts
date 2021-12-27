@@ -12,7 +12,7 @@ import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { ForkAspectConfig } from '@teambit/forking';
+import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -88,7 +88,7 @@ type VersionPackageManifest = {
   };
 };
 
-export class PkgMain implements ForkAspectConfig {
+export class PkgMain implements CloneConfig {
   static runtime = MainRuntime;
   static dependencies = [
     CLIAspect,
@@ -173,7 +173,7 @@ export class PkgMain implements ForkAspectConfig {
     return pkg;
   }
 
-  readonly shouldPreserveConfigForForkedComponent = false;
+  readonly shouldPreserveConfigForClonedComponent = false;
 
   /**
    * get the package name of a component.

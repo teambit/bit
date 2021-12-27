@@ -8,6 +8,7 @@ import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -46,7 +47,8 @@ export class GeneratorMain {
     private config: GeneratorConfig,
     private workspace: Workspace,
     private envs: EnvsMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private newComponentHelper: NewComponentHelperMain
   ) {}
 
   /**
@@ -200,10 +202,17 @@ export class GeneratorMain {
     if (!template) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
-      this.workspace.getNewComponentId(componentName, namespace, options.scope)
+      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
-    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
+    const componentGenerator = new ComponentGenerator(
+      this.workspace,
+      componentIds,
+      options,
+      template,
+      this.envs,
+      this.newComponentHelper
+    );
     return componentGenerator.generate();
   }
 
@@ -256,12 +265,26 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect, AspectLoaderAspect];
+  static dependencies = [
+    WorkspaceAspect,
+    CLIAspect,
+    GraphqlAspect,
+    EnvsAspect,
+    AspectLoaderAspect,
+    NewComponentHelperAspect,
+  ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader]: [Workspace, CLIMain, GraphqlMain, EnvsMain, AspectLoaderMain],
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper]: [
+      Workspace,
+      CLIMain,
+      GraphqlMain,
+      EnvsMain,
+      AspectLoaderMain,
+      NewComponentHelperMain
+    ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
@@ -271,7 +294,8 @@ export class GeneratorMain {
       config,
       workspace,
       envs,
-      aspectLoader
+      aspectLoader,
+      newComponentHelper
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);

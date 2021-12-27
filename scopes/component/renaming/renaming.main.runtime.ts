@@ -39,13 +39,13 @@ export class RenamingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, NewComponentHelperAspect, DeprecationAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, DeprecationAspect, NewComponentHelperAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, newComponentHelper, deprecation]: [
+  static async provider([cli, workspace, deprecation, newComponentHelper]: [
     CLIMain,
     Workspace,
-    NewComponentHelperMain,
-    DeprecationMain
+    DeprecationMain,
+    NewComponentHelperMain
   ]) {
     const renaming = new RenamingMain(workspace, newComponentHelper, deprecation);
     cli.register(new RenameCmd(renaming));
