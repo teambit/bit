@@ -16,7 +16,7 @@ export class PreviewRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/preview/:previewName/:previewPath(*)`;
+  route = `/preview/:previewName?/:previewPath(*)`;
   method = 'get';
 
   middlewares = [
