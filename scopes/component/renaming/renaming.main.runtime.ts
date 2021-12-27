@@ -1,10 +1,11 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentID } from '@teambit/component';
+import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
+import { RenamingFragment } from './renaming.fragment';
 
 export class RenamingMain {
   constructor(
@@ -28,6 +29,14 @@ export class RenamingMain {
     };
   }
 
+  getRenamingInfo(component: Component): RenamingInfo | null {
+    const renameConfig = component.state.aspects.get(RenamingAspect.id)?.config as RenamingInfo | undefined;
+    if (!renameConfig) return null;
+    return {
+      renamedFrom: ComponentID.fromObject(renameConfig.renamedFrom),
+    };
+  }
+
   private async getConfig(comp: Component) {
     const fromExisting = await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
     return {
@@ -39,16 +48,18 @@ export class RenamingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DeprecationAspect, NewComponentHelperAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, DeprecationAspect, NewComponentHelperAspect, ComponentAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, deprecation, newComponentHelper]: [
+  static async provider([cli, workspace, deprecation, newComponentHelper, componentMain]: [
     CLIMain,
     Workspace,
     DeprecationMain,
-    NewComponentHelperMain
+    NewComponentHelperMain,
+    ComponentMain
   ]) {
     const renaming = new RenamingMain(workspace, newComponentHelper, deprecation);
     cli.register(new RenameCmd(renaming));
+    componentMain.registerShowFragments([new RenamingFragment(renaming)]);
     return renaming;
   }
 }
@@ -56,3 +67,7 @@ export class RenamingMain {
 RenamingAspect.addRuntime(RenamingMain);
 
 export type RenameResult = { sourceId: ComponentID; targetId: ComponentID };
+
+export type RenamingInfo = {
+  renamedFrom: ComponentID;
+};

@@ -8,11 +8,9 @@ export class ForkingFragment implements ShowFragment {
 
   async renderRow(component: Component) {
     const forkingInfo = this.forking.getForkInfo(component);
-    // if (!forkingInfo) return undefined;
     const content = forkingInfo ? `origin: ${forkingInfo.forkedFrom.toString()}` : '';
     return {
       title: this.title,
-      // content: `origin: ${forkingInfo.forkedFrom.toString()}`,
       content,
     };
   }
