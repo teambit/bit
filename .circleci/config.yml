@@ -906,9 +906,6 @@ jobs:
       #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
       - bit_config
-      - run:
-          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
-          command: 'sudo apt-get install expect'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
