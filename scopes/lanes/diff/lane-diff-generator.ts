@@ -32,6 +32,9 @@ export class LaneDiffGenerator {
     }
     const legacyScope = this.scope.legacyScope;
     this.fromLane = fromLaneName ? await legacyScope.lanes.loadLane(new LaneId({ name: fromLaneName })) : null;
+    /* this will always be null if the toLane is the default lane, 
+    i.e merge my current lane to master/main 
+     as the loadLane returns null for the main lane */
     const toLane = await legacyScope.lanes.loadLane(new LaneId({ name: toLaneName }));
     if (!toLane) {
       throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
