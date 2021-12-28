@@ -67,7 +67,6 @@ import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
-import { CodeStatsAspect } from '@teambit/code-stats';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -126,7 +125,6 @@ export const manifestsMap = {
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
   [CodeAspect.id]: CodeAspect,
-  [CodeStatsAspect.id]: CodeStatsAspect,
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,

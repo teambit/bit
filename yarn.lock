@@ -7051,9 +7051,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.194":
-  version: 1.0.194
-  resolution: "@teambit/legacy@npm:1.0.194::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.194.tgz"
+"@teambit/legacy@npm:1.0.192":
+  version: 1.0.192
+  resolution: "@teambit/legacy@npm:1.0.192::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.192.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7176,7 +7176,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 0e9d7dc8862d39d077155ed40c08d2a13f3704b63f41c2c500c81cf6c8bb3ecc1837f65a243c05d269aa9a1444952759cf07cde8028403426eaa447f2aa89e00
+  checksum: dc1292628a1e242751463c6cf7e32bb734a305e9e438a90640219a77e6d1d30abafbf0b9041c3399632bc5e294d50154a2e4f5b15735a62980cd5532c9dc3378
   languageName: node
   linkType: hard
 
@@ -7327,7 +7327,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.194
+    "@teambit/legacy": 1.0.192
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7745,7 +7745,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.194
+    "@teambit/legacy": 1.0.192
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -14268,18 +14268,6 @@ __metadata:
   checksum: 17d5666611f9b16d64fdf48176d9b7fb1c7d1c1607a189f7e600040a11a6616982876af148230336adb7d8fe728a559f743a4e29db3747e3b1a32fa7f4529681
   languageName: node
   linkType: hard
-
-"code-stats-49580b@workspace:scopes/component/code-stats":
-  version: 0.0.0-use.local
-  resolution: "code-stats-49580b@workspace:scopes/component/code-stats"
-  languageName: unknown
-  linkType: soft
-
-"code-stats-tab-page-d6d3a6@workspace:scopes/code/ui/code-stats-tab-page":
-  version: 0.0.0-use.local
-  resolution: "code-stats-tab-page-d6d3a6@workspace:scopes/code/ui/code-stats-tab-page"
-  languageName: unknown
-  linkType: soft
 
 "code-tab-page-51a8df@workspace:scopes/code/ui/code-tab-page":
   version: 0.0.0-use.local

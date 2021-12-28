@@ -249,12 +249,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code"
     },
-    "code-stats": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/code-stats"
-    },
     "command-bar": {
         "scope": "teambit.explorer",
         "version": "0.0.592",
@@ -866,12 +860,6 @@
         "version": "0.0.349",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/cli-snippet"
-    },
-    "ui/code-stats-tab-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-stats-tab-page"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",
