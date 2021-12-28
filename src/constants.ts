@@ -485,6 +485,7 @@ export enum Extensions {
   builder = 'teambit.pipelines/builder',
   deprecation = 'teambit.component/deprecation',
   forking = 'teambit.component/forking',
+  renaming = 'teambit.component/renaming',
 }
 
 export enum BuildStatus {

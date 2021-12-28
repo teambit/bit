@@ -26,7 +26,6 @@ export class ForkingMain {
     if (existingInWorkspace) {
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
     }
-    ComponentID.fromObject({});
     const sourceIdWithScope = sourceId._legacy.scope
       ? sourceId
       : ComponentID.fromLegacy(BitId.parse(sourceIdStr, true));

@@ -157,6 +157,9 @@ export default class CommandHelper {
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
   }
+  rename(sourceId: string, targetId: string, flags = '') {
+    return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
+  }
   dependencies(values = '') {
     return this.runCmd(`bit dependencies ${values}`);
   }
