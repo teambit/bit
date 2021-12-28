@@ -96,15 +96,6 @@ If you are using Linux and getting "System limit for number of file watchers rea
 
 ### End to End Tests
 
-Prerequisites. You need to have Expect installed on your system:
-
-```bash
-  # on Ubuntu
-  sudo apt-get install expect
-  # on Fedora
-  sudo dnf install expect
-```
-
 Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
 
 - run the e2e tests (with default 'bit' command)
