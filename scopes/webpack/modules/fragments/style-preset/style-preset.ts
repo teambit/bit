@@ -1,6 +1,6 @@
 import type { RuleSetRule, WebpackPluginInstance } from 'webpack';
 import type { Options as SassLoaderOptions } from 'sass-loader';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import MiniCssExtractPlugin, { PluginOptions } from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { allCssRegex, cssRegex, sassRegex, lessRegex } from '@teambit/webpack.modules.style-regexps';
 
@@ -26,9 +26,11 @@ export type CssOptions = {
 
   /** override specific path to css-loader */
   cssLoader?: WebpackLoader;
-
   /** loader name or path, override the default postcss loader */
   postcssLoader?: WebpackLoader;
+
+  /** options for MiniCssExtractPlugin */
+  miniCssOptions?: PluginOptions;
   /** override the options of css-loader */
   cssLoaderOptions?: any;
   /** override css injector options */
@@ -65,6 +67,7 @@ export const makeStyleLoaders = ({
   sassLoader = require.resolve('sass-loader'),
   lessLoader = require.resolve('less-loader'),
 
+  miniCssOptions,
   cssLoaderOptions,
   injectorOptions,
   postcssOptions,
@@ -139,7 +142,7 @@ export const makeStyleLoaders = ({
   const stylePlugins: WebpackPluginInstance[] = [
     // setting as 'any' because of this error:
     // ts2321 - Excessive stack depth comparing types 'WebpackPluginInstance' and 'MiniCssExtractPlugin'.
-    styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any),
+    styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin(miniCssOptions) as any),
   ].filter(Boolean);
 
   return {
@@ -156,6 +159,7 @@ export const makeCssLoaders = ({
   cssLoader = require.resolve('css-loader'),
   postcssLoader = require.resolve('postcss-loader'),
 
+  miniCssOptions,
   cssLoaderOptions,
   injectorOptions,
   postcssOptions,
@@ -188,7 +192,7 @@ export const makeCssLoaders = ({
   };
 
   const stylePlugins: WebpackPluginInstance[] = [
-    styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any),
+    styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin(miniCssOptions) as any),
   ].filter(Boolean);
 
   return {
