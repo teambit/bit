@@ -1,14 +1,16 @@
-import path from 'path';
-import { cssLoaders } from '@teambit/react.modules.webpack.fragments.style-preset';
+import { cssLoaders } from '@teambit/webpack.modules.fragments.style-preset';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+
+import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+
 import { postCssConfig } from './postcss.config';
 import { html } from './html';
 

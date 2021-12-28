@@ -25,28 +25,28 @@ export type CssOptions = {
   /** override specific path to css-loader */
   cssLoader?: string;
 
-  /** override specific path to postcss-loader */
+  /** loader name or path, override the default postcss loader */
   postcssLoader?: string;
-  /** override css loader options */
+  /** override the options of css-loader */
   cssLoaderOptions?: any;
   /** override css injector options */
   injectorOptions?: any;
-  /** options for postcss-loader (skipped if undefined) */
+  /** options for postcss-loader (loader is skipped when undefined) */
   postcssOptions?: any;
 };
 
 export type CssDialectOptions = {
-  /** override specific path to resolve-url-loader */
+  /** loader name or path, override the default resolve-url-loader */
   resolveUrlLoader?: string;
-  /** override specific path to sass-loader */
+  /** loader name or path, override the default sass-loader */
   sassLoader?: string;
-  /** override specific path to less-loader */
+  /** loader name or path, override the default less-loader */
   lessLoader?: string;
-  /** override sass loader options */
+  /** override the options for sass loader */
   sassLoaderOptions?: SassLoaderOptions;
-  /** override less loader options */
+  /** override the options for less loader */
   lessLoaderOptions?: any;
-  /** override resolveUrl loader options */
+  /** override the options for resolveUrl loader */
   resolveUrlOptions?: any;
 };
 

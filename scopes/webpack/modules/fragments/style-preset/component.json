@@ -1,6 +1,6 @@
 {
   "componentId": {
-    "name": "modules/style-loaders",
+    "name": "modules/fragments/style-preset",
     "scope": "teambit.webpack"
   },
   "propagate": true,

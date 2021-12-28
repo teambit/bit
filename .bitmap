@@ -603,11 +603,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
-    "modules/webpack/fragments/style-preset": {
+    "modules/fragments/style-preset": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/modules/webpack/fragments/style-preset",
+        "rootDir": "scopes/webpack/modules/fragments/style-preset"
     },
     "modules/style-regexps": {
         "scope": "teambit.webpack",
