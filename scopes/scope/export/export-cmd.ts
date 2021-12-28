@@ -20,27 +20,12 @@ ${WILDCARD_HELP('export remote-scope')}`;
   options = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['a', 'all', 'export all components include non-staged'],
-    [
-      'd',
-      'include-dependencies',
-      "LEGACY ONLY. include the component's dependencies as part of the export to the remote scope",
-    ],
-    [
-      's',
-      'set-current-scope',
-      "LEGACY ONLY. ensure the component's remote scope is set according to the target location",
-    ],
-    [
-      'r',
-      'rewire',
-      'LEGACY ONLY. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
-    ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
     ['', 'all-versions', 'export not only staged versions but all of them'],
     [
       '',
       'origin-directly',
-      'HARMONY ONLY. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
+      'avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
     ],
     [
       '',
