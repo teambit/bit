@@ -1,4 +1,4 @@
-import { cssLoaders } from '@teambit/webpack.modules.fragments.style-preset';
+import { makeStyleLoaders } from '@teambit/webpack.modules.fragments.style-preset';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
@@ -43,7 +43,7 @@ const moduleFileExtensions = [
 export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
-  const { styleLoaders, stylePlugins } = cssLoaders({
+  const { styleLoaders, stylePlugins } = makeStyleLoaders({
     postcssOptions: postCssConfig,
     styleInjector: 'style-loader',
   });

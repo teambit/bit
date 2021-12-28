@@ -1,13 +1,15 @@
-import type { RuleSetRule } from 'webpack';
+import type { RuleSetRule, WebpackPluginInstance } from 'webpack';
 import type { Options as SassLoaderOptions } from 'sass-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { allCssRegex, cssRegex, sassRegex, lessRegex } from '@teambit/webpack.modules.style-regexps';
 
-// all deps are rather small (2kb - 50kb)
 const styleLoaderPath = require.resolve('style-loader');
-// * no need for sourceMaps - loaders respect `devTools` (preferably, 'inline-source-map')
+// * all deps are rather small (2kb - 50kb) - so it's ok to import both style-loader and miniCss
+// * no need for 'sourceMaps' - loaders respect `devTools` (preferably, 'inline-source-map')
 // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
+
+export type WebpackLoader = string;
 
 export type CssOptions = {
   /**
@@ -20,13 +22,13 @@ export type CssOptions = {
    * handle *.module.* as css-modules
    * @default true
    */
-  modules?: boolean;
+  modules?: boolean | RegExp | ((filename: string) => boolean);
 
   /** override specific path to css-loader */
-  cssLoader?: string;
+  cssLoader?: WebpackLoader;
 
   /** loader name or path, override the default postcss loader */
-  postcssLoader?: string;
+  postcssLoader?: WebpackLoader;
   /** override the options of css-loader */
   cssLoaderOptions?: any;
   /** override css injector options */
@@ -37,11 +39,11 @@ export type CssOptions = {
 
 export type CssDialectOptions = {
   /** loader name or path, override the default resolve-url-loader */
-  resolveUrlLoader?: string;
+  resolveUrlLoader?: WebpackLoader;
   /** loader name or path, override the default sass-loader */
-  sassLoader?: string;
+  sassLoader?: WebpackLoader;
   /** loader name or path, override the default less-loader */
-  lessLoader?: string;
+  lessLoader?: WebpackLoader;
   /** override the options for sass loader */
   sassLoaderOptions?: SassLoaderOptions;
   /** override the options for less loader */
@@ -52,7 +54,8 @@ export type CssDialectOptions = {
 
 export type StyleLoadersOptions = CssOptions & CssDialectOptions;
 
-export const cssLoaders = ({
+/** loaders for css, including dialects (sass and less), postcss, and css-modules */
+export const makeStyleLoaders = ({
   styleInjector = 'mini-css-extract-plugin',
   modules = true,
 
@@ -133,7 +136,9 @@ export const cssLoaders = ({
     },
   ];
 
-  const stylePlugins: any[] = [
+  const stylePlugins: WebpackPluginInstance[] = [
+    // setting as 'any' because of this error:
+    // ts2321 - Excessive stack depth comparing types 'WebpackPluginInstance' and 'MiniCssExtractPlugin'.
     styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any),
   ].filter(Boolean);
 
@@ -143,7 +148,8 @@ export const cssLoaders = ({
   };
 };
 
-export const pureCssLoaders = ({
+/** loaders for pure css, including css-modules support and postcss but without and dialects (sass, less) */
+export const makeCssLoaders = ({
   styleInjector = 'mini-css-extract-plugin',
   modules = true,
 
@@ -154,7 +160,7 @@ export const pureCssLoaders = ({
   injectorOptions,
   postcssOptions,
 }: CssOptions) => {
-  const styleLoaders: RuleSetRule = {
+  const loaders: RuleSetRule = {
     test: cssRegex,
     use: [
       {
@@ -181,12 +187,12 @@ export const pureCssLoaders = ({
     ],
   };
 
-  const stylePlugins: any[] = [
+  const stylePlugins: WebpackPluginInstance[] = [
     styleInjector === 'mini-css-extract-plugin' && (new MiniCssExtractPlugin() as any),
   ].filter(Boolean);
 
   return {
-    styleLoaders,
+    styleLoaders: loaders,
     stylePlugins,
   };
 };

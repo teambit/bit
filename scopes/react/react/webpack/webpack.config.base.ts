@@ -1,5 +1,5 @@
 import { Configuration, IgnorePlugin } from 'webpack';
-import { cssLoaders } from '@teambit/webpack.modules.fragments.style-preset';
+import { makeStyleLoaders } from '@teambit/webpack.modules.fragments.style-preset';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
@@ -33,9 +33,9 @@ export default function (isEnvProduction = false): Configuration {
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
 
-  const { styleLoaders, stylePlugins } = cssLoaders({
+  const { styleLoaders, stylePlugins } = makeStyleLoaders({
     postcssOptions: postCssConfig,
-    styleInjector: isEnvProduction ? 'mini-css-extract-plugin' : 'style-loader',
+    styleInjector: isEnvProduction ? undefined : 'style-loader',
   });
 
   // We will provide `paths.publicUrlOrPath` to our app
