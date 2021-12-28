@@ -2,7 +2,7 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
+  version: 5
   cacheKey: 8
 
 "@apideck/better-ajv-errors@npm:^0.2.4":
@@ -309,7 +309,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:7.16.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fcore%2F-%2Fcore-7.16.5.tgz, @babel/core@npm:^7.1.0, @babel/core@npm:^7.11.1, @babel/core@npm:^7.12.3, @babel/core@npm:^7.14.0, @babel/core@npm:^7.7.5":
+"@babel/core@npm:^7.1.0, @babel/core@npm:^7.11.1, @babel/core@npm:^7.12.3, @babel/core@npm:^7.14.0, @babel/core@npm:^7.7.5":
   version: 7.16.5
   resolution: "@babel/core@npm:7.16.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fcore%2F-%2Fcore-7.16.5.tgz"
   dependencies:
@@ -3517,7 +3517,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/error@npm:2.0.0":
+"@pnpm/error@npm:2.0.0, @pnpm/error@npm:^2.0.0":
   version: 2.0.0
   resolution: "@pnpm/error@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40pnpm%2Ferror%2F-%2Ferror-2.0.0.tgz"
   checksum: a3673fb29bd7b639833c6892ce0a7ebcc08d16a019fe1b93b86140f1e7aa0d6b06d149367af0ad06cf43c20b536d56336401c2819157cab606521c1e10ad578a
@@ -4192,9 +4192,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pnpm/registry-mock@npm:2.11.1":
-  version: 2.11.1
-  resolution: "@pnpm/registry-mock@npm:2.11.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40pnpm%2Fregistry-mock%2F-%2Fregistry-mock-2.11.1.tgz"
+"@pnpm/registry-mock@npm:2.12.1":
+  version: 2.12.1
+  resolution: "@pnpm/registry-mock@npm:2.12.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40pnpm%2Fregistry-mock%2F-%2Fregistry-mock-2.12.1.tgz"
   dependencies:
     anonymous-npm-registry-client: ^0.2.0
     cpr: ^3.0.1
@@ -4205,8 +4205,8 @@ __metadata:
     verdaccio: ^5.2.2
     write-yaml-file: ^4.2.0
   bin:
-    registry-mock: bin/pnpm-registry-mock.js
-  checksum: 0e1045eddcc820b3fa1053ec42f09d7edaeaa6202eda0da3f67cab480c0a6421522208dce585c615752a68a9536c6a9eb25c5ffd20b29585061c59f6232ddbc7
+    registry-mock: dist/bin/pnpm-registry-mock.js
+  checksum: 815499aa102ed56b728048b437c03a07dcdab76a23789f9d5d051df4c202cf3dbd331dfbfc4ab5f7238fa3687b732754de499a65e36bfd1e16c0d7e136a7b811
   languageName: node
   linkType: hard
 
@@ -5522,16 +5522,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.text.heading@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.text.heading@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.text.heading%2F-%2Fbase-ui.text.heading-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 2a43e266ba99908743be9f43bc28c32e2de97ec5975dd634b00e63caefcd9c00874da33b17cc11d92011e1daec235c86846f1fa989bdcbee87b3e05846e669ed
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.text.heading@npm:1.0.1":
   version: 1.0.1
   resolution: "@teambit/base-ui.text.heading@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.text.heading%2F-%2Fbase-ui.text.heading-1.0.1.tgz"
@@ -5566,19 +5556,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: fb76def72aed2a9e215fd62af2a2a03bf2b6cc42c170b55b6453c171519aa88aa4b3df969e09c52b4696e71ccf5534634a595f6a4557d614d6f2bfd21bbeb827
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.text.paragraph@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.text.paragraph@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.text.paragraph%2F-%2Fbase-ui.text.paragraph-0.5.9.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.sizes": 0.5.9
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 5e429ea61f25a85f951f2e4edeedf7a1ec6916f9d3d6dc4c7c052824b09ddbb6f1a07852cef3d09d322a375213808567cf9f4ea458f814da33cd7ef7499f96ff
   languageName: node
   linkType: hard
 
@@ -5662,30 +5639,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.brand-definition@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.brand-definition@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-0.5.9.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.5.9
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 3ce01e5cc62c72a6e4bfea379ae99513dddadc3be73fd19cd1bca7b55f0db462ca5a1b752d9e4c74ef5d7734ce5bf7077005a613d6e464161d32498f4fc3be44
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.brand-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.brand-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-0.6.7.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.6.7
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: e8be37bc00153a14f621801fb8cfa01754ad3e1479c1fe4c2e9ec5ad218ef28bc0434e69119ed9e9b0b5ea7af6d10e568d4ce75e3745b02447051b1a947953ab
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.brand-definition@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.theme.brand-definition@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.brand-definition%2F-%2Fbase-ui.theme.brand-definition-1.0.0.tgz"
@@ -5695,30 +5648,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 5e2b06f04b21bbafaab2394cf6943421d62196eb7bf113d5bf42fb54e2e020d7bbacb80ea3654117c87cfc30a37952a37184926ece4506f9369e43932fdd2da6
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.color-definition@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.color-definition@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.color-definition%2F-%2Fbase-ui.theme.color-definition-0.5.9.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.5.9
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 4d4029ab3e66a136c1168c9692aaabd0651d876028e1b834f0f4edd64ea7994caf07a58242e909bebdd05c6ffb0dac50c319fa071aa5519e8fbfc4d4e8dbf9e1
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.color-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.color-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.color-definition%2F-%2Fbase-ui.theme.color-definition-0.6.7.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.colors": 0.6.7
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 4a29d9f7bd28142489bb4420fc5928e4152ba4a657138823fbf75f9f3ae64a2f6a765fccd689750cd77404abdbf28ffb1070562907c8fdd4fbdc472323770acc
   languageName: node
   linkType: hard
 
@@ -5757,16 +5686,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.colors@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.colors@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.colors%2F-%2Fbase-ui.theme.colors-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 3f5afb39f3b2791954a5171d20a4a4ba3b9d98fd73c1611232fadf9b062c46e1ae09e75d75519df9fb06765b41cdac0d10de126c1a8953d6e9af2f1ff15d8768
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.colors@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.theme.colors@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.colors%2F-%2Fbase-ui.theme.colors-1.0.0.tgz"
@@ -5789,26 +5708,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 0aa88ffe611ce839ad2623ef8c4e74a5bd286ea04dca376828ad2dd962577ad3cb66c66e14d704bccd8554b13c5b009b3af14f588d21b0f56031ad997c5faff5
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.fonts.book@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.fonts.book@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.book%2F-%2Fbase-ui.theme.fonts.book-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 91520a6a108ba6776a52162d0308bf35c5b3b383b96a7bfe375dfac463461b94c52bdf71c3fa0e02f392b01364341da255ea9d7529a2f9e226fed8ec4401b043
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.fonts.book@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.fonts.book@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.book%2F-%2Fbase-ui.theme.fonts.book-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 11c46caf8a3f6948f6d55911ae8419972fce94527f61763152cb096d5ed49eb5e077fd3f0262f0486f5b49ac9f5d3383cec4e7091144e2a23aeed7b16aab9960
   languageName: node
   linkType: hard
 
@@ -5836,26 +5735,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.fonts.roboto@npm:0.6.2":
-  version: 0.6.2
-  resolution: "@teambit/base-ui.theme.fonts.roboto@npm:0.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.roboto%2F-%2Fbase-ui.theme.fonts.roboto-0.6.2.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 3350e8553a11bae0577be3bb2a23ad0b36ccb8774bdce77276f55ee56f8d9b249b0483ce5ea9156dda984d2cc1417366ee4dac00b2006988a268741e07c6ef39
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.fonts.roboto@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.fonts.roboto@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.roboto%2F-%2Fbase-ui.theme.fonts.roboto-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: f738e51669aa121e899773659ad58feec54ddd55877085ba8c430baf8ba24de0764a42a15a9ba01ef0738041140d8cb5ab83cee750d6657d6e93fc69234fe4c5
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.fonts.roboto@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.theme.fonts.roboto@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.fonts.roboto%2F-%2Fbase-ui.theme.fonts.roboto-1.0.0.tgz"
@@ -5865,26 +5744,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 76e5178f2921db75978d19ea87a38d2e6fdee4ebc9752dfc15ce583c6f2ce32cf1efee05c3ca504dea6384964dbc607f1ff04c437435b1b6aa63091083748c78
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.heading-margin-definition@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.heading-margin-definition%2F-%2Fbase-ui.theme.heading-margin-definition-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: c6ef15efa28f609c622e5acf5e31176a7f873473cb5cc81100e2fd86107998cb3b0f19a222b832f658a38d6023445b367eecbe767313e3fc547a3807e76da4db
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.heading-margin-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.heading-margin-definition%2F-%2Fbase-ui.theme.heading-margin-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: bb3a91e80b8d33fb11c348d41d1e95f095f7a7279b50144102185b7d9789177a66040cf2c5d1b7bc86179d978c42eafbd07bbb8c7a98939ee6a16dc186d6ead7
   languageName: node
   linkType: hard
 
@@ -5900,26 +5759,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.shadow-definition@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 6e24be49da65aa127bd88c11e918e30f2a95f2a4b2beb9b6164f719d0a615b95ef38af995844ba658e8b2bfc16e3cbfa9cea9e30497c196de4fd47ed44a103f5
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.shadow-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.shadow-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 30f8d6cd53e840d0b807cd7fa63e9c7591bf9d84f741c50ce171c4d1865fec87c8f6b0e14aea52d2b53503e961fac8a1706a2871c5ab91a4f4f060cc98950058
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.shadow-definition@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.theme.shadow-definition@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.shadow-definition%2F-%2Fbase-ui.theme.shadow-definition-1.0.0.tgz"
@@ -5929,26 +5768,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 74c044e2754890cec84bca1e7f5f71ec7701a438246748802f7fadfef2f912a709f0ce4490d1093bf5dbbd76bfef11c8a84f5a1769ddf8f1b5a16df09e4ba648
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.size-definition@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.size-definition@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.size-definition%2F-%2Fbase-ui.theme.size-definition-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: aa43775d8743b0294806f811aec85039d5f8494bf7900a6d65135ba1eac5e669ba4491f3f934668b4267027acab8366b6e1e65ffac0b24daf42c91b8c8c79772
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.size-definition@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.size-definition@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.size-definition%2F-%2Fbase-ui.theme.size-definition-0.6.7.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 576eba0b4544177a86c7982a884cf39219a2163278f09fc8a643ad49d7dc18b5f988482ae1eed22453095ee6954306b52bfdbcdcb27f7730fc80952e297d00fb
   languageName: node
   linkType: hard
 
@@ -5964,16 +5783,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.theme.sizes@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.sizes@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.sizes%2F-%2Fbase-ui.theme.sizes-0.5.9.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: aaaa918d37a15e407d0f2fa0b64ce94b8ab2368185c2add378a3e9a808c838c804fe8a0f78d2e4e8376eda48278cd55d140fc525a59b573564019556b1fcf4da
-  languageName: node
-  linkType: hard
-
 "@teambit/base-ui.theme.sizes@npm:1.0.0":
   version: 1.0.0
   resolution: "@teambit/base-ui.theme.sizes@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.sizes%2F-%2Fbase-ui.theme.sizes-1.0.0.tgz"
@@ -5983,42 +5792,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 1cdde7a3a4949037c3827894e439a8b83783b8e764347cdafdca2e25e8304cbda0623bd113ba51b723c0c0b68c0b58bf41638e9dc319293fedb907ee59ed6668
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.theme-provider@npm:0.5.9":
-  version: 0.5.9
-  resolution: "@teambit/base-ui.theme.theme-provider@npm:0.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.theme-provider%2F-%2Fbase-ui.theme.theme-provider-0.5.9.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.brand-definition": 0.5.9
-    "@teambit/base-ui.theme.color-definition": 0.5.9
-    "@teambit/base-ui.theme.fonts.book": 0.5.9
-    "@teambit/base-ui.theme.heading-margin-definition": 0.5.9
-    "@teambit/base-ui.theme.shadow-definition": 0.5.9
-    "@teambit/base-ui.theme.size-definition": 0.5.9
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 6b6340dfc4426af5ad36421ac059076a6091932efadcbc6eaab2d8670814a10a2181df26693b30145f32673f1fd56cfd5ac224feb6862ab77e7fb0e566cc7479
-  languageName: node
-  linkType: hard
-
-"@teambit/base-ui.theme.theme-provider@npm:0.6.7":
-  version: 0.6.7
-  resolution: "@teambit/base-ui.theme.theme-provider@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.theme.theme-provider%2F-%2Fbase-ui.theme.theme-provider-0.6.7.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.brand-definition": 0.6.7
-    "@teambit/base-ui.theme.color-definition": 0.6.7
-    "@teambit/base-ui.theme.fonts.book": 0.6.7
-    "@teambit/base-ui.theme.heading-margin-definition": 0.6.7
-    "@teambit/base-ui.theme.shadow-definition": 0.6.7
-    "@teambit/base-ui.theme.size-definition": 0.6.7
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 12de24cff9d4f0fcd1ec9b27ec6a566009847e48e5840ece36b3e045639a9b834e9a0f2d40ea478439f7078ca8c83fd4873f8001c1bf4436ef4460ebf7298171
   languageName: node
   linkType: hard
 
@@ -6164,6 +5937,18 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 0466cdb3f775fb29637ac57bcd4048597ebaee750537c02205624ad04d1a5c6fe6df1fa537e539b5c5732d89b15c0057672d5997e5fe95a65de2e99090e97685
+  languageName: node
+  linkType: hard
+
+"@teambit/design.theme.icons-font@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@teambit/design.theme.icons-font@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.theme.icons-font%2F-%2Fdesign.theme.icons-font-1.0.0.tgz"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: ae43bef65572bb2d55c424dcf4809588442ef3120cd84d87dc88941f8d88bfe7cfc082533e7ff6c80b502d7fcd0a7442d23e5b5f5dd7f585aaa9368fd06b07f5
   languageName: node
   linkType: hard
 
@@ -6351,89 +6136,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.theme.theme-compositions@npm:2.0.3":
-  version: 2.0.3
-  resolution: "@teambit/documenter.theme.theme-compositions@npm:2.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-2.0.3.tgz"
+"@teambit/documenter.theme.theme-compositions@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@teambit/documenter.theme.theme-compositions@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-4.1.1.tgz"
   dependencies:
-    "@teambit/documenter.theme.theme-context": 2.0.4
-    "@teambit/evangelist.theme.icon-font": 0.5.5
+    "@teambit/design.theme.icons-font": 1.0.0
+    "@teambit/documenter.theme.theme-context": 4.0.3
+    core-js: ^3.0.0
   peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 6186cd65b4100e4e86a76cace02126559cab8daec7e156aa4a80a5f28c68b5968361901d3f6f2da0e92b9aa5e26b6ca4122a22d481577d312aa81d648c1c5ec1
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-compositions@npm:3.0.8":
-  version: 3.0.8
-  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-3.0.8.tgz"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.8
-    "@teambit/evangelist.theme.icon-font": 0.5.20
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 4be1f4bd4e9c50570a09eeadd8ee6b89f2c326f45131c075666ed7b071a98de349bfb5e9f151527baa62573c92fac3de5937a1492cc920451fca8a8bd2db3f78
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-compositions@npm:3.0.9":
-  version: 3.0.9
-  resolution: "@teambit/documenter.theme.theme-compositions@npm:3.0.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-compositions%2F-%2Fdocumenter.theme.theme-compositions-3.0.9.tgz"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.9
-    "@teambit/evangelist.theme.icon-font": 0.5.20
-    core-js: 3.8.3
-  peerDependencies:
-    react: 16.13.1
-    react-dom: 16.13.1
-  checksum: ccf2be00d1b93dbf3d75eb1747658e857515bc71dfa17e7c5d25168b508bedbc3430e1a6080b6f266a7929f73e82e454ab2044d69e9e9b6fb5c281c31ff22f5d
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-context@npm:2.0.4":
-  version: 2.0.4
-  resolution: "@teambit/documenter.theme.theme-context@npm:2.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-context%2F-%2Fdocumenter.theme.theme-context-2.0.4.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.fonts.roboto": 0.6.2
-    "@teambit/base-ui.theme.theme-provider": 0.5.9
-    classnames: ^2.2.6
-    reset-css: ^5.0.1
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 447c552964f0419c4b6d76f5794e1d649b8bd0998240affa45901fe17a9421bb28efd6201f464854a712e552d862b472320c7583b4ed64fd3c33e241279ce1e5
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-context@npm:3.0.8":
-  version: 3.0.8
-  resolution: "@teambit/documenter.theme.theme-context@npm:3.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-context%2F-%2Fdocumenter.theme.theme-context-3.0.8.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.fonts.roboto": 0.6.7
-    "@teambit/base-ui.theme.theme-provider": 0.6.7
-    classnames: ^2.2.6
-    reset-css: ^5.0.1
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 7c24f5c848ba08b7fc91949917004e6c7dc1c90c8d4c5bdb831f0ac69b10dcbbde95d2f357efdb717b5954035f684115e1904c728232a23d055c1d2a3b5def48
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.theme.theme-context@npm:3.0.9":
-  version: 3.0.9
-  resolution: "@teambit/documenter.theme.theme-context@npm:3.0.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.theme.theme-context%2F-%2Fdocumenter.theme.theme-context-3.0.9.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.fonts.roboto": 0.6.7
-    "@teambit/base-ui.theme.theme-provider": 0.6.7
-    classnames: ^2.2.6
-    core-js: 3.8.3
-    reset-css: ^5.0.1
-  peerDependencies:
-    react: 16.13.1
-    react-dom: 16.13.1
-  checksum: a841bcf3cdcf8b16865261341b7d74a3dbd33a318119a6774c04d7d21d73ea79593c1e72e1e023b167ec926bee5b0a008b67348c901c780bf7efc4457d637c0a
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 593a610fbe75c06124ed4f8c959902720b884aecb031b8d5a02a947a57db799659927f06f26b9bb7a84e972f41fa8c2aac5699a40e71fbc4aad6ff7949bfdca0
   languageName: node
   linkType: hard
 
@@ -6653,19 +6366,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.heading@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@teambit/documenter.ui.heading@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.heading%2F-%2Fdocumenter.ui.heading-1.0.3.tgz"
-  dependencies:
-    "@teambit/base-ui.text.heading": 0.5.9
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: b221aa599a49607ebbd783a9a24d418a9df2f7b3e4d27e3f2ea52e845a2a4693dd8fc061b6b49e9eb9c6dfe934ad2c536148e09d8e951bab87b3fb6618ec2352
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.ui.heading@npm:4.1.1":
   version: 4.1.1
   resolution: "@teambit/documenter.ui.heading@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.heading%2F-%2Fdocumenter.ui.heading-4.1.1.tgz"
@@ -6858,20 +6558,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.paragraph@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@teambit/documenter.ui.paragraph@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.paragraph%2F-%2Fdocumenter.ui.paragraph-1.0.3.tgz"
-  dependencies:
-    "@teambit/base-ui.text.paragraph": 0.5.9
-    "@teambit/base-ui.theme.sizes": 0.5.9
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 875d4889b10694ce95be95635836a7afe5065bafe0eaad20e8cc7178bafd50bc71b789f4cd186d077cfcd10e6b1951c8bc4e557cd296d0a2b60507785b658cd0
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.ui.paragraph@npm:4.1.1":
   version: 4.1.1
   resolution: "@teambit/documenter.ui.paragraph@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.paragraph%2F-%2Fdocumenter.ui.paragraph-4.1.1.tgz"
@@ -6918,18 +6604,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/documenter.ui.section@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@teambit/documenter.ui.section@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.section%2F-%2Fdocumenter.ui.section-1.0.3.tgz"
-  dependencies:
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 33846a07ca76a231ec2058a77a45c6fb4a5b96e05a68e64ec6e648cfa9122b55d8b66d49689cc163dd890451d4352529d294e2256c16248df6a21b30754e281f
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.ui.section@npm:4.1.1":
   version: 4.1.1
   resolution: "@teambit/documenter.ui.section@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.section%2F-%2Fdocumenter.ui.section-4.1.1.tgz"
@@ -6940,18 +6614,6 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 472586e4020a35ba5594f18e6aa0e64305a6a919a7a4991f72574ba3cc3630de4835a63e6d3156ecd60d11cb4ef7752cc1a1c10054d5021daaa4ade6b1eea225
-  languageName: node
-  linkType: hard
-
-"@teambit/documenter.ui.separator@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@teambit/documenter.ui.separator@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.ui.separator%2F-%2Fdocumenter.ui.separator-1.0.3.tgz"
-  dependencies:
-    classnames: ^2.2.6
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 9d04bc16716496addb09a470d6b144aa85e0de8fbf0c0e60ddbcd0b1adbf7392e0e9f7e652a671ca22823067f2dc3f32a77e83fd2ede0325fe47879604e41934
   languageName: node
   linkType: hard
 
@@ -7374,26 +7036,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/evangelist.theme.icon-font@npm:0.5.20":
-  version: 0.5.20
-  resolution: "@teambit/evangelist.theme.icon-font@npm:0.5.20::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.theme.icon-font%2F-%2Fevangelist.theme.icon-font-0.5.20.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: 528633c06b06b03ccc51a6ea7989c3ec123a784ecae81abeea41b57d55042e16e0011c562a0559c16e4b3a33e1b49951204c071066e921d7ff5d1fd8c3b9e98c
-  languageName: node
-  linkType: hard
-
-"@teambit/evangelist.theme.icon-font@npm:0.5.5":
-  version: 0.5.5
-  resolution: "@teambit/evangelist.theme.icon-font@npm:0.5.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.theme.icon-font%2F-%2Fevangelist.theme.icon-font-0.5.5.tgz"
-  peerDependencies:
-    react: ^16.13.1
-    react-dom: ^16.13.1
-  checksum: ee59ececa47931d155fdb75f1fe4edb15e50d5dc0f9f297e2dc6ca75ef5bf750b949e616b558a69828410db87479b6f470267f16bccb1acd837d607b37dcf02a
-  languageName: node
-  linkType: hard
-
 "@teambit/harmony@npm:0.2.11":
   version: 0.2.11
   resolution: "@teambit/harmony@npm:0.2.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fharmony%2F-%2Fharmony-0.2.11.tgz"
@@ -7409,9 +7051,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.194, @teambit/legacy@npm:1.0.194::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.194.tgz":
-  version: 1.0.194
-  resolution: "@teambit/legacy@npm:1.0.194::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.194.tgz"
+"@teambit/legacy@npm:1.0.195":
+  version: 1.0.195
+  resolution: "@teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7534,7 +7176,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 0e9d7dc8862d39d077155ed40c08d2a13f3704b63f41c2c500c81cf6c8bb3ecc1837f65a243c05d269aa9a1444952759cf07cde8028403426eaa447f2aa89e00
+  checksum: 952e8847ba4a48a0b9051ada02cc862f19bf3de35edb6b21184e8cdb051160737da7caf22930977ff5e48ea079eaa482ea351f51567f1db3d8fb3fda62372b67
   languageName: node
   linkType: hard
 
@@ -7579,7 +7221,7 @@ __metadata:
     "@pnpm/package-store": 12.1.5
     "@pnpm/parse-overrides": 1.0.0
     "@pnpm/pick-registry-for-package": 2.0.8
-    "@pnpm/registry-mock": 2.11.1
+    "@pnpm/registry-mock": 2.12.1
     "@pnpm/resolver-base": 8.1.3
     "@pnpm/semver-diff": 1.1.0
     "@pnpm/store-connection-manager": 3.1.16
@@ -7648,7 +7290,7 @@ __metadata:
     "@teambit/documenter.markdown.hybrid-live-code-snippet": 0.1.3
     "@teambit/documenter.markdown.mdx": 0.1.7
     "@teambit/documenter.routing.external-link": 4.1.0
-    "@teambit/documenter.theme.theme-compositions": 2.0.3
+    "@teambit/documenter.theme.theme-compositions": 4.1.1
     "@teambit/documenter.theme.theme-context": 4.0.3
     "@teambit/documenter.types.docs-file": 4.0.3
     "@teambit/documenter.ui.block-quote": 4.0.3
@@ -7665,10 +7307,10 @@ __metadata:
     "@teambit/documenter.ui.label-list": 4.0.3
     "@teambit/documenter.ui.linked-heading": 4.1.6
     "@teambit/documenter.ui.ol": 4.1.1
-    "@teambit/documenter.ui.paragraph": 1.0.3
+    "@teambit/documenter.ui.paragraph": 4.1.1
     "@teambit/documenter.ui.property-table": 4.1.3
-    "@teambit/documenter.ui.section": 1.0.3
-    "@teambit/documenter.ui.separator": 1.0.3
+    "@teambit/documenter.ui.section": 4.1.1
+    "@teambit/documenter.ui.separator": 4.1.1
     "@teambit/documenter.ui.sub-title": 4.1.1
     "@teambit/documenter.ui.sup": 4.0.3
     "@teambit/documenter.ui.table.base-table": 4.1.1
@@ -7685,7 +7327,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.194
+    "@teambit/legacy": 1.0.195
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -8102,7 +7744,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.194
+    "@teambit/legacy": 1.0.195
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -8463,11 +8105,11 @@ __metadata:
   linkType: hard
 
 "@types/babel__generator@npm:*":
-  version: 7.6.3
-  resolution: "@types/babel__generator@npm:7.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fbabel__generator%2F-%2Fbabel__generator-7.6.3.tgz"
+  version: 7.6.4
+  resolution: "@types/babel__generator@npm:7.6.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fbabel__generator%2F-%2Fbabel__generator-7.6.4.tgz"
   dependencies:
     "@babel/types": ^7.0.0
-  checksum: 0aa1881c47e3e471cabb9183ae42176591b168a6fe4714d205aec33a7e480d65a8a1ba7fcd9678337aadc34059dc5baa04841e5adfbbe67ae33bad79e7633b8e
+  checksum: 20effbbb5f8a3a0211e95959d06ae70c097fb6191011b73b38fe86deebefad8e09ee014605e0fd3cdaedc73d158be555866810e9166e1f09e4cfd880b874dcb0
   languageName: node
   linkType: hard
 
@@ -8518,11 +8160,11 @@ __metadata:
   linkType: hard
 
 "@types/bonjour@npm:*":
-  version: 3.5.9
-  resolution: "@types/bonjour@npm:3.5.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fbonjour%2F-%2Fbonjour-3.5.9.tgz"
+  version: 3.5.10
+  resolution: "@types/bonjour@npm:3.5.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fbonjour%2F-%2Fbonjour-3.5.10.tgz"
   dependencies:
     "@types/node": "*"
-  checksum: a04f2eb99ed3b3a8bfc2443dee9c7a7aa904f552e595e9c8459e6cf937ba03599b839197657ebb8ce6be9b93ce4b123092fa19c8bab1d2c84d58f1ef6ad9f571
+  checksum: bfcadb042a41b124c4e3de4925e3be6d35b78f93f27c4535d5ff86980dc0f8bc407ed99b9b54528952dc62834d5a779392f7a12c2947dd19330eb05a6bcae15a
   languageName: node
   linkType: hard
 
@@ -8739,13 +8381,13 @@ __metadata:
   linkType: hard
 
 "@types/express-serve-static-core@npm:*, @types/express-serve-static-core@npm:^4.17.18, @types/express-serve-static-core@npm:^4.17.21":
-  version: 4.17.26
-  resolution: "@types/express-serve-static-core@npm:4.17.26::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fexpress-serve-static-core%2F-%2Fexpress-serve-static-core-4.17.26.tgz"
+  version: 4.17.27
+  resolution: "@types/express-serve-static-core@npm:4.17.27::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fexpress-serve-static-core%2F-%2Fexpress-serve-static-core-4.17.27.tgz"
   dependencies:
     "@types/node": "*"
     "@types/qs": "*"
     "@types/range-parser": "*"
-  checksum: 064080c3c21136f9017e108559602ec5989ce90828d6ede6e3c375e5693a72500b3c06206cdc4a59496ae1ad8af1e282223efb3d79907233fc4811a2cf4d4392
+  checksum: fef52b941f903011e31a5886369301d7765580a034cd011a2d3a7dbe6a6edf4f77537710a52e3e2258c6fc59c611f228594c213f984cda767654ab6c5c199e9e
   languageName: node
   linkType: hard
 
@@ -8893,9 +8535,9 @@ __metadata:
   linkType: hard
 
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0, @types/istanbul-lib-coverage@npm:^2.0.1":
-  version: 2.0.3
-  resolution: "@types/istanbul-lib-coverage@npm:2.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fistanbul-lib-coverage%2F-%2Fistanbul-lib-coverage-2.0.3.tgz"
-  checksum: 0650cba4be8f464bee89b9de0b71a5ea3b5cc676ce24e1196b5d6a51542ce9e613ae4549bf19756bb33dbbbb32b47931040266100062bfb197c597d73e341eb0
+  version: 2.0.4
+  resolution: "@types/istanbul-lib-coverage@npm:2.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fistanbul-lib-coverage%2F-%2Fistanbul-lib-coverage-2.0.4.tgz"
+  checksum: a25d7589ee65c94d31464c16b72a9dc81dfa0bea9d3e105ae03882d616e2a0712a9c101a599ec482d297c3591e16336962878cb3eb1a0a62d5b76d277a890ce7
   languageName: node
   linkType: hard
 
@@ -9157,9 +8799,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 17.0.2
-  resolution: "@types/node@npm:17.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fnode%2F-%2Fnode-17.0.2.tgz"
-  checksum: a827d2542ef7adba5c79ba7f85b7c2ba8256d317bd99d77ed7af237cfebae0034dff5c4182e1845e6fbef29ae4c78186c4b4a7dbf236037a04120783aa30ba74
+  version: 17.0.5
+  resolution: "@types/node@npm:17.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fnode%2F-%2Fnode-17.0.5.tgz"
+  checksum: 105535e78722515c26cfdc1b0cbf1b19f55fe53b814e2e90d8b1e653bc63136d4760c7efc102eca111c6d124a291e37d60d761d569a3f4afb3fba05bad5d9ade
   languageName: node
   linkType: hard
 
@@ -9348,13 +8990,13 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:*, @types/react@npm:^17.0.8":
-  version: 17.0.37
-  resolution: "@types/react@npm:17.0.37::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.37.tgz"
+  version: 17.0.38
+  resolution: "@types/react@npm:17.0.38::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.38.tgz"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: e68b0d59aa69577fc6a6d654b25d5d8408625498f4c483f160b557fac21e840f6e8807cbde93e9f039949b6d624a019b1990d18499c1d65aecf3605c25e30242
+  checksum: 4079f4f959cd4a4bfaeda8b89fe8a1b1f8bdc9d87acfdc5f74a0b39cec9ec6a470724357c62778c0f063180b360c250e920c5a142f1dbcda67d9cc25a6d43a85
   languageName: node
   linkType: hard
 
@@ -10054,16 +9696,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@verdaccio/commons-api@npm:10.0.2":
-  version: 10.0.2
-  resolution: "@verdaccio/commons-api@npm:10.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40verdaccio%2Fcommons-api%2F-%2Fcommons-api-10.0.2.tgz"
-  dependencies:
-    http-errors: 1.8.1
-    http-status-codes: 1.4.0
-  checksum: d831fceb34507401afe1d67cd825ec50f115d02e1eeeaaefbac75ee6ec906025be1bb3c2c681da4782c4fc6602f44d652cfad48e7050a338606b2c8612eedc78
-  languageName: node
-  linkType: hard
-
 "@verdaccio/commons-api@npm:10.1.0":
   version: 10.1.0
   resolution: "@verdaccio/commons-api@npm:10.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40verdaccio%2Fcommons-api%2F-%2Fcommons-api-10.1.0.tgz"
@@ -10117,10 +9749,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@verdaccio/ui-theme@npm:3.2.1":
-  version: 3.2.1
-  resolution: "@verdaccio/ui-theme@npm:3.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40verdaccio%2Fui-theme%2F-%2Fui-theme-3.2.1.tgz"
-  checksum: 1c035f862223d3a57e3e1d416471f696e94fe5b3c28ef28a14713a2a02d7bc5f92ee2a9dec9c3c55a43adf8ebcb78e54267d0f25ec23197ed8225f7fd0d52b25
+"@verdaccio/ui-theme@npm:3.4.1":
+  version: 3.4.1
+  resolution: "@verdaccio/ui-theme@npm:3.4.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40verdaccio%2Fui-theme%2F-%2Fui-theme-3.4.1.tgz"
+  checksum: 9d1fd69bf29a2f61742cc4e51042a2f14a99a6c2dd06215336736a95a5219bb20cc4a34152d46581ed4c00c768abb346d3cda5efb914c4065f599c4bb455569d
   languageName: node
   linkType: hard
 
@@ -11185,11 +10817,11 @@ __metadata:
   linkType: hard
 
 "acorn@npm:^8.2.4, acorn@npm:^8.4.1":
-  version: 8.6.0
-  resolution: "acorn@npm:8.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Facorn%2F-%2Facorn-8.6.0.tgz"
+  version: 8.7.0
+  resolution: "acorn@npm:8.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Facorn%2F-%2Facorn-8.7.0.tgz"
   bin:
     acorn: bin/acorn
-  checksum: 9d0de73b73cb6ea8ccd8263a8144d9e2c4b6af90ea0c429997538af0ebbe83c5addecee814b2a7f91f7f615d0bd1547cc7137b3fa236ce058adc64feccee850b
+  checksum: e0f79409d68923fbf1aa6d4166f3eedc47955320d25c89a20cc822e6ba7c48c5963d5bc657bc242d68f7a4ac9faf96eef033e8f73656da6c640d4219935fdfd0
   languageName: node
   linkType: hard
 
@@ -14580,8 +14212,6 @@ __metadata:
 "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button":
   version: 0.0.0-use.local
   resolution: "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button"
-  dependencies:
-    "@teambit/documenter.theme.theme-compositions": 3.0.8
   languageName: unknown
   linkType: soft
 
@@ -14879,8 +14509,6 @@ __metadata:
 "component-860f6b@workspace:scopes/component/component":
   version: 0.0.0-use.local
   resolution: "component-860f6b@workspace:scopes/component/component"
-  dependencies:
-    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -15329,19 +14957,19 @@ __metadata:
   linkType: hard
 
 "core-js-compat@npm:^3.18.0, core-js-compat@npm:^3.19.1, core-js-compat@npm:^3.6.2, core-js-compat@npm:^3.8.0":
-  version: 3.20.0
-  resolution: "core-js-compat@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-compat%2F-%2Fcore-js-compat-3.20.0.tgz"
+  version: 3.20.1
+  resolution: "core-js-compat@npm:3.20.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-compat%2F-%2Fcore-js-compat-3.20.1.tgz"
   dependencies:
     browserslist: ^4.19.1
     semver: 7.0.0
-  checksum: d2887ab75f8d65b8b8f0ba218c191bd69a1a58db2583671e9656da5915920fe47a92f933d4552225a4c8979d81ea294758fe71b23580fa6c7e5c89da542cfe2d
+  checksum: 6f7101fe7d56d6f0e53779ce5d9ba4a8039cb58e4a89b13e56fa9c6825f07aa870acc727260e1ec8fc452f8fd5f5eecd877c0a0788c7b58ceeb3ab65a1dd5905
   languageName: node
   linkType: hard
 
 "core-js-pure@npm:^3.10.2, core-js-pure@npm:^3.19.0, core-js-pure@npm:^3.8.1":
-  version: 3.20.0
-  resolution: "core-js-pure@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-pure%2F-%2Fcore-js-pure-3.20.0.tgz"
-  checksum: b5ae6601536104cad63bb91100477d9718442d348ac47dad22a60e22bd9c86ffe10ef5ea23ddaabb97a1492727e4f2bd4bb8848031271d5d1b2f31c860b4b362
+  version: 3.20.1
+  resolution: "core-js-pure@npm:3.20.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js-pure%2F-%2Fcore-js-pure-3.20.1.tgz"
+  checksum: b985feaf1c7399a9966fc20b8b94e0e98f29ded1b476a6fd4634225fd19953e9c489b49c8e0f2f849fffa7f89ec6bf387c64816805a7d70242ec658c6a834939
   languageName: node
   linkType: hard
 
@@ -15381,9 +15009,9 @@ __metadata:
   linkType: hard
 
 "core-js@npm:^3.0.0, core-js@npm:^3.14.0, core-js@npm:^3.5.0, core-js@npm:^3.6.5":
-  version: 3.20.0
-  resolution: "core-js@npm:3.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.20.0.tgz"
-  checksum: 4dca42f27553e1068b5329fbe133bca9256be819b64b4d0e244b8dc0db69181430d79aed3c33eeb7388f8ec019ea125e76fbd0c28523d112779f9bb5147a0939
+  version: 3.20.1
+  resolution: "core-js@npm:3.20.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcore-js%2F-%2Fcore-js-3.20.1.tgz"
+  checksum: e45f4f4b5c64d4650d46075b1fa8845c62ea08f5c30ee92ffc14b95147b4a9eb511c8a1184a31d03660061a8570a9610e598e30981afc2d2f8bca460f63dd3cb
   languageName: node
   linkType: hard
 
@@ -15529,12 +15157,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"credentials-by-uri@npm:2.0.0, credentials-by-uri@npm:^2.0.0":
+"credentials-by-uri@npm:2.0.0":
   version: 2.0.0
   resolution: "credentials-by-uri@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcredentials-by-uri%2F-%2Fcredentials-by-uri-2.0.0.tgz"
   dependencies:
     nerf-dart: ^1.0.0
   checksum: dc9c4588638234a439db20e7fb8d877a1677d2c6c776d8b119e48b2f35e020844b53a3415fce42be1ff42a66811a2fff8d721381a4317259ab2df30e68f1235e
+  languageName: node
+  linkType: hard
+
+"credentials-by-uri@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "credentials-by-uri@npm:2.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcredentials-by-uri%2F-%2Fcredentials-by-uri-2.1.0.tgz"
+  dependencies:
+    "@pnpm/error": ^2.0.0
+    nerf-dart: ^1.0.0
+  checksum: 5fbb0212ec3b9b605a70ef20aced2501e612c2c1af3cfb7bc64b86c4db8406b7b6c010748214ad833c6eff3a17aab134644bb1d8e91b6f2f3e65cec15bbc713e
   languageName: node
   linkType: hard
 
@@ -15768,15 +15406,15 @@ __metadata:
   linkType: hard
 
 "css-select@npm:^4.1.3":
-  version: 4.2.0
-  resolution: "css-select@npm:4.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcss-select%2F-%2Fcss-select-4.2.0.tgz"
+  version: 4.2.1
+  resolution: "css-select@npm:4.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcss-select%2F-%2Fcss-select-4.2.1.tgz"
   dependencies:
     boolbase: ^1.0.0
     css-what: ^5.1.0
     domhandler: ^4.3.0
     domutils: ^2.8.0
     nth-check: ^2.0.1
-  checksum: 3847b251ca9f2722dd90c0b464b899a5a3b78b0324936a493d7b837a42120764871ad7c01e5bde6280f97710283b0b01e573e43e3076e61cc3e3a2437e0db415
+  checksum: 6617193ec7c332217204c4ea371d332c6845603fda415e36032e7e9e18206d7c368a14e3c57532082314d2689955b01122aa1097c1c52b6c1cab7ad90970d3c6
   languageName: node
   linkType: hard
 
@@ -16785,8 +16423,6 @@ __metadata:
 "docs-app-55ecfa@workspace:scopes/react/ui/docs-app":
   version: 0.0.0-use.local
   resolution: "docs-app-55ecfa@workspace:scopes/react/ui/docs-app"
-  dependencies:
-    "@teambit/documenter.ui.section": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -17101,9 +16737,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.3.564, electron-to-chromium@npm:^1.3.649, electron-to-chromium@npm:^1.4.17":
-  version: 1.4.26
-  resolution: "electron-to-chromium@npm:1.4.26::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Felectron-to-chromium%2F-%2Felectron-to-chromium-1.4.26.tgz"
-  checksum: f3979df45524d33c68ca9ad6026941e6fca5b2e2ae1068b12dcec9087e490c2ba42189dd360bbf50028893868db9472dbc0edb8d5e8ffdd9bd4b4b806cd7016e
+  version: 1.4.28
+  resolution: "electron-to-chromium@npm:1.4.28::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Felectron-to-chromium%2F-%2Felectron-to-chromium-1.4.28.tgz"
+  checksum: ac3dcd1de0de39fc3ad4df2ca7603a4dce683be7c52896c5bf094157fb0452f261639d3b2984aea783d4467ae05ee5af08435be7a35ff80323bdf521c3eb50db
   languageName: node
   linkType: hard
 
@@ -17185,8 +16821,6 @@ __metadata:
 "empty-box-dbdece@workspace:scopes/design/ui/empty-box":
   version: 0.0.0-use.local
   resolution: "empty-box-dbdece@workspace:scopes/design/ui/empty-box"
-  dependencies:
-    "@teambit/documenter.theme.theme-compositions": 3.0.9
   languageName: unknown
   linkType: soft
 
@@ -18362,7 +17996,6 @@ __metadata:
   resolution: "evp_bytestokey@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fevp_bytestokey%2F-%2Fevp_bytestokey-1.0.3.tgz"
   dependencies:
     md5.js: ^1.3.4
-    node-gyp: latest
     safe-buffer: ^5.1.1
   checksum: ad4e1577f1a6b721c7800dcc7c733fe01f6c310732bb5bf2240245c2a5b45a38518b91d8be2c610611623160b9d1c0e91f1ce96d639f8b53e8894625cf20fa45
   languageName: node
@@ -18549,6 +18182,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-rate-limit@npm:5.5.1":
+  version: 5.5.1
+  resolution: "express-rate-limit@npm:5.5.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress-rate-limit%2F-%2Fexpress-rate-limit-5.5.1.tgz"
+  checksum: 264820bd5fe350794f90497c5bdc7b323eec4394873cd4b9f9d3654b2c47b285e87270a5a11721fb7fb895d56218e9657ea7bb9a544dd43770c6e7beaad217e8
+  languageName: node
+  linkType: hard
+
 "express@npm:4.17.1":
   version: 4.17.1
   resolution: "express@npm:4.17.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress%2F-%2Fexpress-4.17.1.tgz"
@@ -18587,7 +18227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.0.0, express@npm:^4.16.2, express@npm:^4.17.1":
+"express@npm:4.17.2, express@npm:^4.0.0, express@npm:^4.16.2, express@npm:^4.17.1":
   version: 4.17.2
   resolution: "express@npm:4.17.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress%2F-%2Fexpress-4.17.2.tgz"
   dependencies:
@@ -18811,6 +18451,13 @@ __metadata:
   version: 3.0.2
   resolution: "fast-redact@npm:3.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffast-redact%2F-%2Ffast-redact-3.0.2.tgz"
   checksum: f4ffdf48f1647dbe0411884e5dca85ebef0762d1ce1937f6779beaea5c83ef7c35416d800b2bff60f1a252b670d1707f9484c9a5d0ef721e68f3dae94b420fa8
+  languageName: node
+  linkType: hard
+
+"fast-safe-stringify@npm:2.0.8":
+  version: 2.0.8
+  resolution: "fast-safe-stringify@npm:2.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffast-safe-stringify%2F-%2Ffast-safe-stringify-2.0.8.tgz"
+  checksum: be8a07f342817e80c37286509355f91170bd89be9c1df9512ba0c5a61ce20ccf9bdae42ccf65e1fa3834734c78fc524121f709303ebbb97d22df3cb03ff9d7a5
   languageName: node
   linkType: hard
 
@@ -19543,21 +19190,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@^2.1.2, fsevents@~2.3.1, fsevents@~2.3.2":
+"fsevents@npm:^2.1.2, fsevents@npm:~2.3.1, fsevents@npm:~2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffsevents%2F-%2Ffsevents-2.3.2.tgz"
-  dependencies:
-    node-gyp: latest
   checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
 "fsevents@patch:fsevents@^2.1.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
-  dependencies:
-    node-gyp: latest
-  checksum: 78db9daf1f6526a49cefee3917cc988f62dc7f25b5dd80ad6de4ffc4af7f0cab7491ac737626ff53e482a111bc53aac9e411fe3602458eca36f6a003ecf69c16
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#~builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -22792,12 +22436,12 @@ __metadata:
   linkType: hard
 
 "istanbul-reports@npm:^3.0.2":
-  version: 3.1.1
-  resolution: "istanbul-reports@npm:3.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fistanbul-reports%2F-%2Fistanbul-reports-3.1.1.tgz"
+  version: 3.1.2
+  resolution: "istanbul-reports@npm:3.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fistanbul-reports%2F-%2Fistanbul-reports-3.1.2.tgz"
   dependencies:
     html-escaper: ^2.0.0
     istanbul-lib-report: ^3.0.0
-  checksum: a9940767ee960fd21d4c9b24c417c15d38725be2f3517a72070e962e088fdf7b813f50985f660cd48436690237fdc5640bab10a1a91e0e94b0e400c212c85f3c
+  checksum: 052d002f38d74c869bff009e7a59565f45e67f0ea15cb82547b8479fb494b1c85dc84edb9e5bf7925a8f889ef4980e8af2153a0fb016dedf269b050204fe46ed
   languageName: node
   linkType: hard
 
@@ -23144,7 +22788,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-resolve@npm:26.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fjest-resolve%2F-%2Fjest-resolve-26.6.2.tgz, jest-resolve@npm:^26.6.2":
+"jest-resolve@npm:^26.6.2":
   version: 26.6.2
   resolution: "jest-resolve@npm:26.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fjest-resolve%2F-%2Fjest-resolve-26.6.2.tgz"
   dependencies:
@@ -24162,8 +23806,8 @@ __metadata:
   linkType: soft
 
 "lint-staged@npm:>=10":
-  version: 12.1.3
-  resolution: "lint-staged@npm:12.1.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flint-staged%2F-%2Flint-staged-12.1.3.tgz"
+  version: 12.1.4
+  resolution: "lint-staged@npm:12.1.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flint-staged%2F-%2Flint-staged-12.1.4.tgz"
   dependencies:
     cli-truncate: ^3.1.0
     colorette: ^2.0.16
@@ -24180,7 +23824,7 @@ __metadata:
     yaml: ^1.10.2
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: f42fea248f690478ddd3d15ed9dd2302c0744da6af3032d1afe6e9f3c5ff99a7f4af85bf73425d027ff3c53b8c2a4a8f2227ab3e2e1367af786d301debea4bce
+  checksum: f1f829328fbd0878e8c2100fe0968101e94903ce5acf95bae98ec6daa84c4e95f87957f9040782427be2087659f3809626ea42ba53bbe5f0036c4d3806cb313d
   languageName: node
   linkType: hard
 
@@ -29184,13 +28828,13 @@ __metadata:
   linkType: hard
 
 "prop-types@npm:^15.5.0, prop-types@npm:^15.6.0, prop-types@npm:^15.6.1, prop-types@npm:^15.6.2, prop-types@npm:^15.7.2":
-  version: 15.7.2
-  resolution: "prop-types@npm:15.7.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fprop-types%2F-%2Fprop-types-15.7.2.tgz"
+  version: 15.8.0
+  resolution: "prop-types@npm:15.8.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fprop-types%2F-%2Fprop-types-15.8.0.tgz"
   dependencies:
     loose-envify: ^1.4.0
     object-assign: ^4.1.1
-    react-is: ^16.8.1
-  checksum: 5eef82fdda64252c7e75aa5c8cc28a24bbdece0f540adb60ce67c205cf978a5bd56b83e4f269f91c6e4dcfd80b36f2a2dec24d362e278913db2086ca9c6f9430
+    react-is: ^16.13.1
+  checksum: d8d51cf55d70cab207dd1e80df2dc093b8288a4519598a28d25d32d6e02319b2fd66712caa979040451656185f7393341185b0b081158520557aa4cbdcaa4b3a
   languageName: node
   linkType: hard
 
@@ -29761,7 +29405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.6.0, react-is@npm:^16.7.0, react-is@npm:^16.8.1, react-is@npm:^16.8.4, react-is@npm:^16.8.6":
+"react-is@npm:^16.13.1, react-is@npm:^16.6.0, react-is@npm:^16.7.0, react-is@npm:^16.8.4, react-is@npm:^16.8.6":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-is%2F-%2Freact-is-16.13.1.tgz"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
@@ -30852,7 +30496,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"reset-css@npm:5.0.1, reset-css@npm:^5.0.1":
+"reset-css@npm:5.0.1":
   version: 5.0.1
   resolution: "reset-css@npm:5.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freset-css%2F-%2Freset-css-5.0.1.tgz"
   checksum: b93380a2c691bfc85344bfa07e781266a2f58fef194c1aec61923d4591d30d73f54a12e4fe32b48668ce9bc82c2d42715e7e9fdd108d85b3c93b2a319f0a077c
@@ -30949,7 +30593,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@1.20.0, resolve@^1.10.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.14.2, resolve@^1.17.0, resolve@^1.18.1, resolve@^1.19.0, resolve@^1.20.0, resolve@^1.3.2, resolve@^1.8.1":
+"resolve@npm:1.20.0, resolve@npm:^1.10.0, resolve@npm:^1.12.0, resolve@npm:^1.13.1, resolve@npm:^1.14.2, resolve@npm:^1.17.0, resolve@npm:^1.18.1, resolve@npm:^1.19.0, resolve@npm:^1.20.0, resolve@npm:^1.3.2, resolve@npm:^1.8.1":
   version: 1.20.0
   resolution: "resolve@npm:1.20.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fresolve%2F-%2Fresolve-1.20.0.tgz"
   dependencies:
@@ -30961,11 +30605,11 @@ __metadata:
 
 "resolve@patch:resolve@1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.18.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.20.0
-  resolution: "resolve@patch:resolve@npm%3A1.20.0%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Fresolve%252F-%252Fresolve-1.20.0.tgz#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
+  resolution: "resolve@patch:resolve@npm%3A1.20.0%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Fresolve%252F-%252Fresolve-1.20.0.tgz#~builtin<compat/resolve>::version=1.20.0&hash=07638b"
   dependencies:
     is-core-module: ^2.2.0
     path-parse: ^1.0.6
-  checksum: bed00be983cd20a8af0e7840664f655c4b269786dbd9595c5f156cd9d8a0050e65cdbbbdafc30ee9b6245b230c78a2c8ab6447a52545b582f476c29adb188cc5
+  checksum: a0dd7d16a8e47af23afa9386df2dff10e3e0debb2c7299a42e581d9d9b04d7ad5d2c53f24f1e043f7b3c250cbdc71150063e53d0b6559683d37f790b7c8c3cd5
   languageName: node
   linkType: hard
 
@@ -31162,8 +30806,8 @@ __metadata:
   linkType: hard
 
 "rollup@npm:^2.43.1":
-  version: 2.61.1
-  resolution: "rollup@npm:2.61.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Frollup%2F-%2Frollup-2.61.1.tgz"
+  version: 2.62.0
+  resolution: "rollup@npm:2.62.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Frollup%2F-%2Frollup-2.62.0.tgz"
   dependencies:
     fsevents: ~2.3.2
   dependenciesMeta:
@@ -31171,7 +30815,7 @@ __metadata:
       optional: true
   bin:
     rollup: dist/bin/rollup
-  checksum: a41bd821c1d9f296e71e867828150080fb05d08cbdff9b6b5c0e3642da4d0723f7a847189f197c2a695a8a353d968ad89ebd54a4228dc3e92765c00e6bbadf87
+  checksum: 9dfa089a232346bc548bf5110e79e0cf5a2dac6fb9bf3f737a645e72795b4b4a1165d1bf86938f90805c4391e8dd571557afb901aaf81dcb82690c57737ab128
   languageName: node
   linkType: hard
 
@@ -31752,8 +31396,6 @@ __metadata:
 "separator-7e051b@workspace:scopes/design/ui/separator":
   version: 0.0.0-use.local
   resolution: "separator-7e051b@workspace:scopes/design/ui/separator"
-  dependencies:
-    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -31988,8 +31630,6 @@ __metadata:
 "side-bar-b708a4@workspace:scopes/ui-foundation/uis/side-bar":
   version: 0.0.0-use.local
   resolution: "side-bar-b708a4@workspace:scopes/ui-foundation/uis/side-bar"
-  dependencies:
-    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -32007,8 +31647,6 @@ __metadata:
 "sidebar-c63b5b@workspace:scopes/ui-foundation/sidebar":
   version: 0.0.0-use.local
   resolution: "sidebar-c63b5b@workspace:scopes/ui-foundation/sidebar"
-  dependencies:
-    "@teambit/documenter.ui.separator": 4.1.1
   languageName: unknown
   linkType: soft
 
@@ -33855,8 +33493,6 @@ __metadata:
 "time-ago-d19018@workspace:scopes/design/ui/time-ago":
   version: 0.0.0-use.local
   resolution: "time-ago-d19018@workspace:scopes/design/ui/time-ago"
-  dependencies:
-    "@teambit/documenter.ui.heading": 1.0.3
   languageName: unknown
   linkType: soft
 
@@ -34546,7 +34182,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-typescript@3.9.7:
+"typescript@npm:3.9.7":
   version: 3.9.7
   resolution: "typescript@npm:3.9.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.7.tgz"
   bin:
@@ -34556,7 +34192,7 @@ typescript@3.9.7:
   languageName: node
   linkType: hard
 
-typescript@4.4.2:
+"typescript@npm:4.4.2":
   version: 4.4.2
   resolution: "typescript@npm:4.4.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-4.4.2.tgz"
   bin:
@@ -34566,7 +34202,7 @@ typescript@4.4.2:
   languageName: node
   linkType: hard
 
-typescript@^2.6.2:
+"typescript@npm:^2.6.2":
   version: 2.9.2
   resolution: "typescript@npm:2.9.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-2.9.2.tgz"
   bin:
@@ -34576,7 +34212,7 @@ typescript@^2.6.2:
   languageName: node
   linkType: hard
 
-typescript@^3.9.3:
+"typescript@npm:^3.9.3":
   version: 3.9.10
   resolution: "typescript@npm:3.9.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript%2F-%2Ftypescript-3.9.10.tgz"
   bin:
@@ -34588,41 +34224,41 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@3.9.7#~builtin<compat/typescript>":
   version: 3.9.7
-  resolution: "typescript@patch:typescript@npm%3A3.9.7%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.7.tgz#~builtin<compat/typescript>::version=3.9.7&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A3.9.7%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.7.tgz#~builtin<compat/typescript>::version=3.9.7&hash=de8f8a"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 46b87576ee37cc91c86965922ddef0fbee3ba49fc1627a9b6dce77cb41dc72d93f5643cefd175928a2d76e68189123e20c24db382d8b289ac6c27cfb4b7993a6
+  checksum: be4742230d87145344866f264771c0d78fe548479694279de1d8c9b1ea0942b1016a1957f87952924b370f86107bc71d95eb7feea16ad8875c61c571aca280e6
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@4.4.2#~builtin<compat/typescript>":
   version: 4.4.2
-  resolution: "typescript@patch:typescript@npm%3A4.4.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-4.4.2.tgz#~builtin<compat/typescript>::version=4.4.2&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A4.4.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-4.4.2.tgz#~builtin<compat/typescript>::version=4.4.2&hash=de8f8a"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 11d6ab6e868117908c388401e2ac06d503c5c8709115ab80ee69a1a6352c1f98471d1e595636bfe6a2d6b20b03a44df6bb2d3d198cea97c0c328968cd18d2b70
+  checksum: 4e64d212c1b70ed178b0894c23b4c78a5bf2491d08707098b61f24e54331c47c3c166de210551e7edf26fc0bbdfd5b1548d3d15ed3f738880e4f01c6b6a8b63a
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@^2.6.2#~builtin<compat/typescript>":
   version: 2.9.2
-  resolution: "typescript@patch:typescript@npm%3A2.9.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-2.9.2.tgz#~builtin<compat/typescript>::version=2.9.2&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A2.9.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-2.9.2.tgz#~builtin<compat/typescript>::version=2.9.2&hash=de8f8a"
   bin:
     tsc: ./bin/tsc
     tsserver: ./bin/tsserver
-  checksum: 60598f5945c15c00455bb8e76c84eb6910ea3888bc9aa6b381fffd27f3204d5ab2fa58e12197c9aff0cc04fd1130c450f5cd5762a41906b7014eb5d44d5a98b4
+  checksum: 8e4b4eceecd9c4c0d45a74e49d715eb7b12e0d4a12768b70681c9a81a7c2a335f15fe14c78dddda73c90f9ebb5ddac0b2e33c12df606c7d46f7e7829326cc653
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@^3.9.3#~builtin<compat/typescript>":
   version: 3.9.10
-  resolution: "typescript@patch:typescript@npm%3A3.9.10%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.10.tgz#~builtin<compat/typescript>::version=3.9.10&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A3.9.10%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.10.tgz#~builtin<compat/typescript>::version=3.9.10&hash=de8f8a"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 8dcd46a8a2cb81198497f00c7721a34c914bf6b3241bf9687b868bdec9e59f1f44da41e7917cfc1dcabee4595229c73bab047f2d85c1aedacc0d1b526cc81534
+  checksum: dc7141ab555b23a8650a6787f98845fc11692063d02b75ff49433091b3af2fe3d773650dea18389d7c21f47d620fb3b110ea363dab4ab039417a6ccbbaf96fc2
   languageName: node
   linkType: hard
 
@@ -35535,17 +35171,17 @@ typescript@^3.9.3:
   linkType: hard
 
 "verdaccio@npm:^5.2.2":
-  version: 5.3.2
-  resolution: "verdaccio@npm:5.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fverdaccio%2F-%2Fverdaccio-5.3.2.tgz"
+  version: 5.4.0
+  resolution: "verdaccio@npm:5.4.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fverdaccio%2F-%2Fverdaccio-5.4.0.tgz"
   dependencies:
-    "@verdaccio/commons-api": 10.0.2
+    "@verdaccio/commons-api": 10.1.0
     "@verdaccio/local-storage": 10.1.0
     "@verdaccio/readme": 10.2.0
     "@verdaccio/streams": 10.1.0
-    "@verdaccio/ui-theme": 3.2.1
+    "@verdaccio/ui-theme": 3.4.1
     JSONStream: 1.3.5
     async: 3.2.2
-    body-parser: 1.19.0
+    body-parser: 1.19.1
     clipanion: 3.1.0
     compression: 1.7.4
     cookies: 0.8.0
@@ -35554,8 +35190,9 @@ typescript@^3.9.3:
     debug: ^4.3.2
     envinfo: 7.8.1
     eslint-import-resolver-node: 0.3.4
-    express: 4.17.1
-    fast-safe-stringify: ^2.0.8
+    express: 4.17.2
+    express-rate-limit: 5.5.1
+    fast-safe-stringify: 2.0.8
     handlebars: 4.7.7
     http-errors: 1.8.1
     js-yaml: 4.1.0
@@ -35581,7 +35218,7 @@ typescript@^3.9.3:
     verdaccio-htpasswd: 10.1.0
   bin:
     verdaccio: bin/verdaccio
-  checksum: 3af32a66223f2719b2f3ad7eef52b032765b87513ea19a1db7147ee196348b7a8232e21cbdaa59625d1b77833993d589ae6cd3a184a149fd569cd0bd77a06e81
+  checksum: ebd44c24b20d8275dff65d432548b652ee6c5ba81756fe090b4ee220b9ae1b9809ad41ec3ac18d758b2e5f056e1c4fc98e7ae3da87de4949b12b7f843cc0c71e
   languageName: node
   linkType: hard
 
