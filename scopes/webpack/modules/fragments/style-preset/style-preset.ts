@@ -1,10 +1,9 @@
 import type { RuleSetRule, WebpackPluginInstance } from 'webpack';
 import type { Options as SassLoaderOptions } from 'sass-loader';
-import MiniCssExtractPlugin, { PluginOptions } from 'mini-css-extract-plugin';
+import _MiniCssExtractPlugin, { PluginOptions } from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import { allCssRegex, cssRegex, sassRegex, lessRegex } from '@teambit/webpack.modules.style-regexps';
 
-const styleLoaderPath = require.resolve('style-loader');
 // * all deps are rather small (2kb - 50kb) - so it's ok to import both style-loader and miniCss
 // * no need for 'sourceMaps' - loaders respect `devTools` (preferably, 'inline-source-map')
 // * miniCssExtractPlugin - (somehow) breaks hot reloading, so using style-loader in dev mode
@@ -24,10 +23,14 @@ export type CssOptions = {
    */
   modules?: boolean | RegExp | ((filename: string) => boolean);
 
-  /** override specific path to css-loader */
+  /** use this explicit css-loader */
   cssLoader?: WebpackLoader;
-  /** loader name or path, override the default postcss loader */
+  /** use this explicit postcssLoader */
   postcssLoader?: WebpackLoader;
+  /** use this explicit style-loader */
+  styleLoader: WebpackLoader;
+  /** use this explicit miniCssExtractPlugin. It will be by default and when styleInjector is `mini-css-extract-plugin` */
+  MiniCssExtractPlugin: any;
 
   /** options for MiniCssExtractPlugin */
   miniCssOptions?: PluginOptions;
@@ -66,6 +69,8 @@ export const makeStyleLoaders = ({
   resolveUrlLoader = require.resolve('resolve-url-loader'),
   sassLoader = require.resolve('sass-loader'),
   lessLoader = require.resolve('less-loader'),
+  styleLoader = require.resolve('style-loader'),
+  MiniCssExtractPlugin = _MiniCssExtractPlugin,
 
   miniCssOptions,
   cssLoaderOptions,
@@ -85,7 +90,7 @@ export const makeStyleLoaders = ({
       sideEffects: true,
       use: [
         {
-          loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
+          loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoader,
           options: injectorOptions,
         },
         {
@@ -158,6 +163,8 @@ export const makeCssLoaders = ({
 
   cssLoader = require.resolve('css-loader'),
   postcssLoader = require.resolve('postcss-loader'),
+  styleLoader = require.resolve('style-loader'),
+  MiniCssExtractPlugin = _MiniCssExtractPlugin,
 
   miniCssOptions,
   cssLoaderOptions,
@@ -168,7 +175,7 @@ export const makeCssLoaders = ({
     test: cssRegex,
     use: [
       {
-        loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoaderPath,
+        loader: styleInjector === 'mini-css-extract-plugin' ? MiniCssExtractPlugin.loader : styleLoader,
         options: injectorOptions,
       },
       {
