@@ -489,8 +489,8 @@ export default class ImportComponents {
     const component = componentMergeStatus.componentWithDependencies.component;
     const files = component.files;
 
-    const filesStatus = {};
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
+      const filesStatus = {};
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -501,6 +501,7 @@ export default class ImportComponents {
       return filesStatus;
     }
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
+      const filesStatus = {};
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -508,13 +509,16 @@ export default class ImportComponents {
       });
       return filesStatus;
     }
-    return applyModifiedVersion(
+    const { filesStatus, modifiedFiles } = applyModifiedVersion(
       component.files,
       mergeResults,
       this.options.mergeStrategy,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.originallySharedDir
     );
+    component.files = modifiedFiles;
+
+    return filesStatus;
   }
 
   /**
