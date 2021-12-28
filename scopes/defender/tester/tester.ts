@@ -9,8 +9,18 @@ export type Tests = {
 };
 
 export type ComponentsResults = {
+  /**
+   * component id.
+   */
   componentId: ComponentID;
+  /**
+   * test results for the component.
+   */
   results?: TestsResult;
+
+  /**
+   * loading.
+   */
   loading?: boolean;
 };
 
@@ -18,6 +28,11 @@ export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 export type ComponentPatternsMap = ComponentMap<{ path: string; relative: string }[]>;
 
 export interface TesterContext extends ExecutionContext {
+  /**
+   * whether the tester run for release (during bit build/tag) or not (during bit test command).
+   */
+  release: boolean;
+
   /**
    * list of components to test.
    */
@@ -39,7 +54,7 @@ export interface TesterContext extends ExecutionContext {
   specFiles: SpecFiles;
 
   /**
-   * rootPath of the component workspace.
+   * rootPath of the component workspace or the capsule root dir (during build).
    */
   rootPath: string;
 
@@ -57,6 +72,11 @@ export interface TesterContext extends ExecutionContext {
    * determines whether to start the tester in watch mode.
    */
   watch?: boolean;
+
+  /**
+   * whether the tester should show code coverage
+   */
+  coverage?: boolean;
 
   /**
    * array of patterns to test.

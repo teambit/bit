@@ -18,6 +18,7 @@ export type ComponentModelProps = {
   server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
+  elementsUrl?: string; // pkg aspect
   compositions?: CompositionProps[];
   tags?: TagProps[];
   issuesCount?: number; // component/issues aspect
@@ -26,6 +27,7 @@ export type ComponentModelProps = {
   env?: Descriptor; // env aspect.
   labels?: string[];
   host?: string;
+  latest?: string;
 };
 
 export type ComponentServer = {
@@ -75,6 +77,10 @@ export class ComponentModel {
      */
     readonly issuesCount?: number,
     /**
+     * elements url
+     */
+    readonly elementsUrl?: string,
+    /**
      * status of component.
      */
     readonly status?: any,
@@ -100,7 +106,12 @@ export class ComponentModel {
     /**
      * host of the component
      */
-    readonly host?: string
+    readonly host?: string,
+
+    /**
+     * latest version of component
+     */
+    readonly latest?: string
   ) {}
 
   get version() {
@@ -117,6 +128,7 @@ export class ComponentModel {
     displayName,
     compositions = [],
     packageName,
+    elementsUrl,
     tags = [],
     deprecation,
     buildStatus,
@@ -126,6 +138,7 @@ export class ComponentModel {
     description,
     labels,
     host,
+    latest,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -136,12 +149,14 @@ export class ComponentModel {
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
       buildStatus,
       issuesCount,
+      elementsUrl,
       status,
       deprecation,
       env,
       description,
       labels,
-      host
+      host,
+      latest
     );
   }
 

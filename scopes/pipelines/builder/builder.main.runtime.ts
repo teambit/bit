@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -11,7 +11,8 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
-import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
@@ -19,17 +20,15 @@ import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
-import { StorageResolver } from './storage';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
 import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
+import { buildTaskTemplate } from './templates/build-task';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
-
-export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
@@ -49,8 +48,7 @@ export class BuilderMain {
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
-    private snapTaskSlot: TaskSlot,
-    private storageResolversSlot: StorageResolverSlot
+    private snapTaskSlot: TaskSlot
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -110,21 +108,6 @@ export class BuilderMain {
     return { builderDataMap, pipeResults };
   }
 
-  /**
-   * register a new storage resolver.
-   */
-  registerStorageResolver(storageResolver: StorageResolver) {
-    this.storageResolversSlot.register(storageResolver);
-    return this;
-  }
-
-  /**
-   * get storage resolver by name. otherwise, returns default.
-   */
-  getStorageResolver(name: string): StorageResolver | undefined {
-    return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
-  }
-
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
@@ -176,7 +159,14 @@ export class BuilderMain {
   }
 
   getBuilderData(component: Component): BuilderData | undefined {
-    return component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    if (!data) return undefined;
+    data.artifacts?.forEach((artifact) => {
+      if (!(artifact.files instanceof ArtifactFiles)) {
+        artifact.files = ArtifactFiles.fromObject(artifact.files);
+      }
+    });
+    return data;
   }
 
   /**
@@ -214,9 +204,9 @@ export class BuilderMain {
 
   listTasks(component: Component) {
     const compEnv = this.envs.getEnv(component);
-    const buildTasks = this.buildService.getDescriptor(compEnv).tasks;
-    const tagTasks = this.tagService.getDescriptor(compEnv).tasks;
-    const snapTasks = this.snapService.getDescriptor(compEnv).tasks;
+    const buildTasks = this.buildService.getCurrentPipeTasks(compEnv);
+    const tagTasks = this.tagService.getCurrentPipeTasks(compEnv);
+    const snapTasks = this.snapService.getCurrentPipeTasks(compEnv);
     return { id: component.id, envId: compEnv.id, buildTasks, tagTasks, snapTasks };
   }
 
@@ -255,12 +245,7 @@ export class BuilderMain {
     return this;
   }
 
-  static slots = [
-    Slot.withType<BuildTask>(),
-    Slot.withType<StorageResolver>(),
-    Slot.withType<BuildTask>(),
-    Slot.withType<BuildTask>(),
-  ];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -272,11 +257,11 @@ export class BuilderMain {
     LoggerAspect,
     AspectLoaderAspect,
     GraphqlAspect,
-    ComponentAspect,
+    GeneratorAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -284,17 +269,13 @@ export class BuilderMain {
       IsolatorMain,
       LoggerMain,
       AspectLoaderMain,
-      GraphqlMain
+      GraphqlMain,
+      GeneratorMain
     ],
     config,
-    [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
-      TaskSlot,
-      StorageResolverSlot,
-      TaskSlot,
-      TaskSlot
-    ]
+    [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
   ) {
-    const artifactFactory = new ArtifactFactory(storageResolversSlot);
+    const artifactFactory = new ArtifactFactory();
     const logger = loggerExt.createLogger(BuilderAspect.id);
     const buildService = new BuilderService(
       isolator,
@@ -327,11 +308,11 @@ export class BuilderMain {
       aspectLoader,
       buildTaskSlot,
       tagTaskSlot,
-      snapTaskSlot,
-      storageResolversSlot
+      snapTaskSlot
     );
 
     graphql.register(builderSchema(builder));
+    generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
     if (workspace && !workspace.consumer.isLegacy) {

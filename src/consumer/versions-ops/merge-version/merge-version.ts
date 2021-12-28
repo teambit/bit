@@ -20,6 +20,7 @@ export type MergeStrategy = keyof typeof MergeOptions;
 export const FileStatus = {
   merged: chalk.green('auto-merged'),
   manual: chalk.red('CONFLICT'),
+  binaryConflict: chalk.red('unchanged-BINARY-CONFLICT'),
   updated: chalk.green('updated'),
   added: chalk.green('added'),
   removed: chalk.green('removed'),

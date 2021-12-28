@@ -6,6 +6,7 @@ import prettyTime from 'pretty-time';
 import type ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { formatCompileResults } from './output-formatter';
 import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
+import { CompilationInitiator } from './types';
 
 // IDs & events
 import { CompilerAspect } from './compiler.aspect';
@@ -27,6 +28,7 @@ export class CompileCmd implements Command {
     ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],
     ['j', 'json', 'return the compile results in json format'],
+    ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
   ] as CommandOptions;
 
   constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
@@ -37,8 +39,10 @@ export class CompileCmd implements Command {
     this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
     let outputString = '';
-    compilerOptions.deleteDistDir = true;
-    await this.compile.compileComponents(components, compilerOptions);
+    await this.compile.compileComponents(components, {
+      ...compilerOptions,
+      initiator: CompilationInitiator.CmdReport,
+    });
     const compileTimeLength = process.hrtime(startTimestamp);
 
     outputString += '\n';
@@ -59,7 +63,10 @@ export class CompileCmd implements Command {
   async json([components]: [string[]], compilerOptions: CompileOptions) {
     compilerOptions.deleteDistDir = true;
     // @ts-ignore
-    const compileResults = await this.compile.compileComponents(components, compilerOptions);
+    const compileResults = await this.compile.compileComponents(components, {
+      ...compilerOptions,
+      initiator: CompilationInitiator.CmdJson,
+    });
     return {
       data: compileResults,
       // @todo: fix the code once compile is ready.

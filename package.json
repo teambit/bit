@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.153",
+  "version": "1.0.195",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -67,7 +67,7 @@
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
-    "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
+    "e2e-test": "registry-mock prepare && mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test:ssh": "npm run e2e-test --with-ssh",
     "e2e-test:ssh-debug": "npm run e2e-test --with-ssh --debug --keep-envs",
@@ -163,7 +163,7 @@
     "ignore": "3.3.10",
     "ini-builder": "1.1.1",
     "ink": "3.0.8",
-    "ink-spinner": "4.0.1",
+    "ink-spinner": "4.0.3",
     "inquirer": "6.5.2",
     "inquirer-fuzzy-path": "2.3.0",
     "is-glob": "4.0.1",
@@ -216,11 +216,11 @@
     "regenerator-runtime": "0.13.7",
     "resolve": "1.20.0",
     "resolve-dependency-path": "2.0.0",
-    "sass": "1.32.8",
+    "sass": "1.43.4",
     "sass-lookup": "3.0.0",
     "semver": "7.3.4",
     "serialize-error": "5.0.0",
-    "ssh2": "0.8.9",
+    "ssh2": "1.4.0",
     "string-format": "0.5.0",
     "stringify-package": "1.0.1",
     "stylus-lookup": "3.0.2",
@@ -234,7 +234,6 @@
     "uniqid": "5.3.0",
     "user-home": "2.0.0",
     "uuid": "3.4.0",
-    "v8-compile-cache": "2.2.0",
     "validate-npm-package-name": "3.0.0",
     "vinyl": "2.2.1",
     "vinyl-file": "3.0.0",
@@ -306,7 +305,6 @@
     "sinon": "5.1.1",
     "tar": "6.1.11",
     "type-coverage": "2.15.1",
-    "typescript": "4.4.2",
-    "verdaccio": "4.11.0"
+    "typescript": "4.4.2"
   }
 }

@@ -21,10 +21,12 @@ export {
   BIT_DEV_REGISTRY,
   NPM_REGISTRY,
   ProxyConfig as PackageManagerProxyConfig,
+  NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
   DependencyLifecycleType,
+  WorkspaceDependencyLifecycleType,
   DependencyList,
   DependencyFactory,
   SerializedDependency,
@@ -60,3 +62,4 @@ export {
 export { InstallOptions } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource } from './policy/variant-policy/variant-policy';
+export { OutdatedPkg } from './get-all-policy-pkgs';

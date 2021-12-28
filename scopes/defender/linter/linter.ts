@@ -3,7 +3,7 @@ import { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**
-   * id of the linted component.
+   * the linted component.
    */
   component: Component;
 
@@ -12,12 +12,30 @@ export type ComponentLintResult = {
    */
   output: string;
 
+  /**
+   * total errors count of the component (from all of the files).
+   */
   totalErrorCount: number;
+  /**
+   * total fatal errors count of the component (from all of the files).
+   */
   totalFatalErrorCount?: number;
+  /**
+   * total fixable errors count of the component (from all of the files).
+   */
   totalFixableErrorCount?: number;
+  /**
+   * total fatal warning count of the component (from all of the files).
+   */
   totalFixableWarningCount?: number;
+  /**
+   * total warning count of the component (from all of the files).
+   */
   totalWarningCount: number;
 
+  /**
+   * lint results for each one of the component files
+   */
   results: LintResult[];
 };
 
@@ -101,10 +119,25 @@ export type LintMessage = {
 
 export type LintResults = {
   results: ComponentLintResult[];
+  /**
+   * total errors count of the component (from all of the components).
+   */
   totalErrorCount: number;
+  /**
+   * total fatal errors count of the component (from all of the components).
+   */
   totalFatalErrorCount?: number;
+  /**
+   * total fixable errors count of the component (from all of the components).
+   */
   totalFixableErrorCount?: number;
+  /**
+   * total fatal warning count of the component (from all of the components).
+   */
   totalFixableWarningCount?: number;
+  /**
+   * total warning count of the component (from all of the components).
+   */
   totalWarningCount: number;
   errors: Error[];
 };

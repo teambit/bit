@@ -70,7 +70,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     const localLane = lanes.find((lane) => lane.name === laneName);
     if (!localLane) {
       throw new GeneralError(
-        `unable to find a local lane "${laneName}", to create a new lane please use --create flag`
+        `unable to find a local lane "${laneName}", to create a new lane please run "bit lane create"`
       );
     }
     switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));

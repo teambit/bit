@@ -12,12 +12,14 @@ import {
   ComponentWithCollectOptions,
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
+import { LaneNotFound } from './exceptions/lane-not-found';
 
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
   withoutDependencies: boolean;
   includeArtifacts: boolean;
+  allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -48,12 +50,12 @@ export default async function fetch(
   switch (fetchOptions.type) {
     case 'component': {
       const bitIds: BitIds = BitIds.deserialize(ids);
-      const { withoutDependencies, includeArtifacts } = fetchOptions;
+      const { withoutDependencies, includeArtifacts, allowExternal } = fetchOptions;
       const collectParents = !withoutDependencies;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
         if (withoutDependencies) {
-          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(bitIds);
+          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(bitIds, allowExternal);
           return componentsVersions.map((compVersion) => ({
             component: compVersion.component,
             version: compVersion.version,
@@ -61,7 +63,7 @@ export default async function fetch(
             collectParents,
           }));
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds);
+        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal);
         return versionsDependencies
           .map((versionDep) => [
             {
@@ -88,7 +90,10 @@ export default async function fetch(
       const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const bitIdsLatest = bitIdsWithHashToStop.toVersionLatest();
-      const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(bitIdsLatest);
+      const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
+        bitIdsLatest,
+        fetchOptions.allowExternal
+      );
       const componentsWithOptions: ComponentWithCollectOptions[] = importedComponents.map((compVersion) => {
         const hashToStop = bitIdsWithHashToStop.searchWithoutVersion(compVersion.id)?.version;
         return {
@@ -108,8 +113,9 @@ export default async function fetch(
       const lanes = await scope.listLanes();
       const lanesToFetch = laneIds.map((laneId) => {
         const laneToFetch = lanes.find((lane) => lane.name === laneId.name);
-        // @todo: throw LaneNotFound, make sure it shows correctly on the client using ssh
-        if (!laneToFetch) throw new Error(`lane ${laneId.name} was not found in scope ${scope.name}`);
+        if (!laneToFetch) {
+          throw new LaneNotFound(scope.name, laneId.name);
+        }
         return laneToFetch;
       });
       lanesToFetch.forEach((laneToFetch) => {

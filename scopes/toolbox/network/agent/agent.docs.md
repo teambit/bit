@@ -2,7 +2,8 @@
 labels: ['typescript', 'utils', 'network']
 description: 'An http/s agent factory with proxy support'
 ---
-*Based on - https://github.com/pnpm/pnpm/blob/acc1782c6f18e1388e333c6fd44ccd378faba553/packages/npm-registry-agent/src/index.ts#L0-L1*
+
+_Based on - https://github.com/pnpm/pnpm/blob/acc1782c6f18e1388e333c6fd44ccd378faba553/packages/npm-registry-agent/src/index.ts#L0-L1_
 
 Create an http/s agent from uri and options.
 This support http/s proxy server with different configuration.
@@ -11,6 +12,7 @@ In case there is matching proxy option that matching the uri protocol (`httpProx
 To read more about the proxy agent, read the docs of the `proxy-agent` component.
 
 API:
+
 ```js
 function getAgent(uri: string, opts: AgentOptions)
 ```
@@ -59,4 +61,9 @@ Available configuration (AgentOptions):
    * A comma-separated string of domain extensions that a proxy should not be used for.
    */
   noProxy?: string;
+
+  /**
+   * The IP address of the local interface to use when making connections to the npm registry.
+   */
+  localAddress?: string;
 ```

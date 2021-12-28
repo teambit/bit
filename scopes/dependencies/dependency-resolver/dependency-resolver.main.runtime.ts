@@ -1,8 +1,8 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
-import type { Config } from '@teambit/config';
-import { get } from 'lodash';
+import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
+import type { ConfigMain } from '@teambit/config';
+import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -15,7 +15,7 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
-import { Http, ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -32,11 +32,13 @@ import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
+import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
+import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -55,7 +57,11 @@ import {
   WorkspacePolicyEntry,
   SerializedVariantPolicy,
 } from './policy';
-import { PackageManager } from './package-manager';
+import {
+  PackageManager,
+  PeerDependencyIssuesByProjects,
+  PackageManagerGetPeerDependencyIssuesOptions,
+} from './package-manager';
 
 import {
   SerializedDependency,
@@ -68,11 +74,12 @@ import {
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
+import { DependenciesService } from './dependencies.service';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
@@ -126,43 +133,69 @@ export interface DependencyResolverWorkspaceConfig {
   noProxy?: string;
 
   /**
-   * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-   * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-   * an invalid state that can cause build failures or incompatible dependency versions.
-   * (For historical reasons, JavaScript package managers generally do not treat this invalid
-   * state as an error.)
-   *
-   * The default value is false to avoid legacy compatibility issues.
-   * It is strongly recommended to set strictPeerDependencies=true.
+   * The IP address of the local interface to use when making connections to the npm registry.
    */
-  strictPeerDependencies: boolean;
-  /**
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs: string[];
+  localAddress?: string;
 
   /**
-   * regex to determine whether a file is a file meant for development purposes.
+   * How many times to retry if Bit fails to fetch from the registry.
    */
-  devFilePatterns: string[];
+  fetchRetries?: number;
 
-  /**
-   * By default when bit see your default registry in your npmrc is set to 'https://registry.npmjs.org/'
-   * bit will replace it with the bit.dev npm registry (node.bit.dev) during bit install
-   * bit does this in order to save you the need to configure many scoped registries for components from different owners
-   * bit.dev registry will then proxy the request to npmjs registry for non found packages in the bit.dev registry.
-   * in case you want to disable this proxy set this config to false
-   *
+  /*
+   * The exponential factor for retry backoff.
    */
-  installFromBitDevRegistry: boolean;
+  fetchRetryFactor?: number;
 
-  /**
-   * Like https://docs.npmjs.com/cli/v7/using-npm/config#save-prefix
+  /*
+   * The minimum (base) timeout for retrying requests.
+   */
+  fetchRetryMintimeout?: number;
+
+  /*
+   * The maximum fallback timeout to ensure the retry factor does not make requests too long.
+   */
+  fetchRetryMaxtimeout?: number;
+
+  /*
+   * The maximum amount of time (in milliseconds) to wait for HTTP requests to complete.
+   */
+  fetchTimeout?: number;
+
+  /*
+   * The maximum number of connections to use per origin (protocol/host/port combination).
+   */
+  maxSockets?: number;
+
+  /*
+   * Controls the maximum number of HTTP(S) requests to process simultaneously.
+   */
+  networkConcurrency?: number;
+
+  /*
    * Set the prefix to use when adding dependency to workspace.jsonc via bit install
    * to lock version to exact version you can use empty string (default)
    */
-  savePrefix: string;
+  savePrefix?: string;
+
+  /*
+   * in case you want to disable this proxy set this config to false
+   *
+   */
+  installFromBitDevRegistry?: boolean;
+
+  /*
+   * map of extra arguments to pass to the configured package manager upon the installation
+   * of dependencies.
+   */
+  packageManagerArgs?: string[];
+
+  /*
+   * This field allows to instruct the package manager to override any dependency in the dependency graph.
+   * This is useful to enforce all your packages to use a single version of a dependency, backport a fix,
+   * or replace a dependency with a fork.
+   */
+  overrides?: Record<string, string>;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -228,7 +261,7 @@ export class DependencyResolverMain {
 
     private logger: Logger,
 
-    private configAspect: Config,
+    private configAspect: ConfigMain,
 
     private aspectLoader: AspectLoaderMain,
 
@@ -268,11 +301,11 @@ export class DependencyResolverMain {
   }
 
   getSavePrefix(): string {
-    return this.config.savePrefix;
+    return this.config.savePrefix || '';
   }
 
   getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
-    const prefix = overridePrefix || this.getSavePrefix() || '';
+    const prefix = overridePrefix || this.getSavePrefix();
     const versionWithPrefix = `${prefix}${version}`;
     if (!semver.validRange(versionWithPrefix)) {
       throw new InvalidVersionWithPrefix(versionWithPrefix);
@@ -476,7 +509,7 @@ export class DependencyResolverMain {
     return this.config.packageManager;
   }
 
-  getVersionResolver(options: GetVersionResolverOptions = {}) {
+  async getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
@@ -488,8 +521,9 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
+    const { networkConcurrency } = await this.getNetworkConfig();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyVersionResolver(packageManager, cacheRootDir);
+    return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
   }
 
   /**
@@ -547,6 +581,41 @@ export class DependencyResolverMain {
     };
   }
 
+  async getNetworkConfig(): Promise<NetworkConfig> {
+    return {
+      ...(await this.getNetworkConfigFromGlobalConfig()),
+      ...(await this.getNetworkConfigFromPackageManager()),
+      ...this.getNetworkConfigFromDepResolverConfig(),
+    };
+  }
+
+  private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
+    return Http.getNetworkConfig();
+  }
+
+  private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
+    return pick(this.config, [
+      'fetchTimeout',
+      'fetchRetries',
+      'fetchRetryFactor',
+      'fetchRetryMintimeout',
+      'fetchRetryMaxtimeout',
+      'maxSockets',
+      'networkConcurrency',
+    ]);
+  }
+
+  private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
+    const packageManager = this.getPackageManager();
+    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
+    return packageManager.getNetworkConfig();
+  }
+
+  private getPackageManager() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager ?? this.getSystemPackageManager();
+  }
+
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let proxyConfigFromPackageManager: ProxyConfig = {};
@@ -562,6 +631,41 @@ export class DependencyResolverMain {
 
   private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
     return Http.getProxyConfig();
+  }
+
+  /**
+   * Return the peer dependencies and their ranges that may be installed
+   * without causing unmet peer dependency issues in some of the dependencies.
+   */
+  async getMissingPeerDependencies(
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
+    options: PackageManagerGetPeerDependencyIssuesOptions
+  ): Promise<Record<string, string>> {
+    this.logger.setStatusLine('finding missing peer dependencies');
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    let peerDependencyIssues!: PeerDependencyIssuesByProjects;
+    if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
+      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
+        options
+      );
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getPeerDependencyIssues)
+        throw new Error('system package manager must implement `getPeerDependencyIssues()`');
+      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
+        options
+      );
+    }
+    this.logger.consoleSuccess();
+    return peerDependencyIssues['.']?.intersections;
   }
 
   async getRegistries(): Promise<Registries> {
@@ -595,10 +699,12 @@ export class DependencyResolverMain {
 
     const bitDefaultRegistry = getDefaultBitRegistry();
 
+    const installFromBitDevRegistry = this.config.installFromBitDevRegistry ?? true;
+
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
-      this.config.installFromBitDevRegistry &&
+      installFromBitDevRegistry &&
       (!registries.defaultRegistry.uri ||
         registries.defaultRegistry.uri === NPM_REGISTRY ||
         NPM_REGISTRY.startsWith(registries.defaultRegistry.uri))
@@ -670,13 +776,23 @@ export class DependencyResolverMain {
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
+    this.updateConfigPolicy(workspacePolicy);
+    return workspacePolicy;
+  }
+
+  removeFromRootPolicy(dependencyIds: string[]) {
+    const workspacePolicy = this.getWorkspacePolicyFromConfig();
+    const workspacePolicyUpdated = workspacePolicy.remove(dependencyIds);
+    this.updateConfigPolicy(workspacePolicyUpdated);
+  }
+
+  private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
     const workspacePolicyObject = workspacePolicy.toConfigObject();
     this.config.policy = workspacePolicyObject;
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
       overrideExisting: true,
       ignoreVersion: true,
     });
-    return workspacePolicy;
   }
 
   async persistConfig(workspaceDir?: string) {
@@ -867,6 +983,83 @@ export class DependencyResolverMain {
     return manifest;
   }
 
+  /**
+   * Return a list of outdated policy dependencies.
+   */
+  getOutdatedPkgsFromPolicies({
+    rootDir,
+    variantPoliciesByPatterns,
+    componentPoliciesById,
+  }: {
+    rootDir: string;
+    variantPoliciesByPatterns: Record<string, any>;
+    componentPoliciesById: Record<string, any>;
+  }): Promise<OutdatedPkg[]> {
+    const allPkgs = getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPoliciesById,
+    });
+    return this.getOutdatedPkgs(rootDir, allPkgs);
+  }
+
+  /**
+   * Accepts a list of package dependency policies and returns a list of outdated policies extended with their "latestRange"
+   */
+  async getOutdatedPkgs<T>(
+    rootDir: string,
+    pkgs: Array<{ name: string; currentRange: string } & T>
+  ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
+    this.logger.setStatusLine('checking the latest versions of dependencies');
+    const resolver = await this.getVersionResolver();
+    const resolve = async (spec: string) =>
+      (
+        await resolver.resolveRemoteVersion(spec, {
+          rootDir,
+        })
+      ).version;
+    const outdatedPkgs = (
+      await Promise.all(
+        pkgs.map(async (pkg) => {
+          const latestVersion = await resolve(`${pkg.name}@latest`);
+          return {
+            ...pkg,
+            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+          } as any;
+        })
+      )
+    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+    this.logger.consoleSuccess();
+    return outdatedPkgs;
+  }
+
+  /**
+   * Update the specified packages to their latest versions in all policies;
+   * root polcies, variant pocilicies, and component configuration policies (component.json).
+   */
+  applyUpdates(
+    outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
+    options: {
+      variantPoliciesByPatterns: Record<string, any>;
+      componentPoliciesById: Record<string, any>;
+    }
+  ): {
+    updatedVariants: string[];
+    updatedComponents: string[];
+  } {
+    const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
+      variantPoliciesByPatterns: options.variantPoliciesByPatterns,
+      componentPoliciesById: options.componentPoliciesById,
+    });
+    this.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    return {
+      updatedVariants,
+      updatedComponents,
+    };
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
@@ -895,18 +1088,13 @@ export class DependencyResolverMain {
      */
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
-    packageManagerArgs: [],
-    devFilePatterns: ['**/*.spec.ts'],
-    strictPeerDependencies: true,
-    installFromBitDevRegistry: true,
-    savePrefix: '',
   };
 
   static async provider(
     [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
       EnvsMain,
       LoggerMain,
-      Config,
+      ConfigMain,
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,
@@ -976,6 +1164,7 @@ export class DependencyResolverMain {
     );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
+    envs.registerService(new DependenciesService());
 
     return dependencyResolver;
   }
@@ -990,3 +1179,13 @@ export class DependencyResolverMain {
 }
 
 DependencyResolverAspect.addRuntime(DependencyResolverMain);
+
+function repeatPrefix(originalSpec: string, newVersion: string): string {
+  switch (originalSpec[0]) {
+    case '~':
+    case '^':
+      return `${originalSpec[0]}${newVersion}`;
+    default:
+      return newVersion;
+  }
+}

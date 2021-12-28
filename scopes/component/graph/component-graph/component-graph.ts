@@ -1,4 +1,4 @@
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { Graph } from 'cleargraph';
 
 import { Dependency } from '../model/dependency';
@@ -11,6 +11,7 @@ type Edge = { sourceId: string; targetId: string; edge: Dependency };
 
 export class ComponentGraph extends Graph<Component, Dependency> {
   versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
+  seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
   constructor(nodes: Node[] = [], edges: Edge[] = []) {
     super(nodes, edges);
     this.versionMap = new Map();
@@ -20,7 +21,24 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return new ComponentGraph(nodes, edges) as this;
   }
 
+  /**
+   * overrides the super class to eliminate non-seeders components
+   */
+  findCycles(graph?: this): string[][] {
+    const cycles = super.findCycles(graph);
+    if (!this.shouldLimitToSeedersOnly()) {
+      return cycles;
+    }
+    const seederIdsStr = this.getSeederIdsStr();
+    const cyclesWithSeeders = cycles.filter((cycle) => {
+      const cycleNoVersions = cycle.map((id) => id.split('@')[0]);
+      return cycleNoVersions.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
+    });
+    return cyclesWithSeeders;
+  }
+
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
+    const seederIdsNoVersions = this.getSeederIdsStr();
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
     for (const [compFullName, versions] of this.versionMap) {
       if (versions.allVersionNodes.length > 1) {
@@ -38,7 +56,9 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           };
           versionSubgraphs.push(versionSubgraph);
         });
-        if (versionSubgraphs.length > 0) {
+        const isSeeder = seederIdsNoVersions.includes(compFullName);
+        const shouldDisplayDueToBeingSeeder = !this.shouldLimitToSeedersOnly() || isSeeder;
+        if (shouldDisplayDueToBeingSeeder && versionSubgraphs.length > 0) {
           const duplicateDep = new DuplicateDependency(versions.latestVersionNode, versionSubgraphs);
           duplicateDependencies.set(compFullName, duplicateDep);
         }
@@ -73,6 +93,14 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   runtimeOnly(componentIds: string[]) {
     return this.successorsSubgraph(componentIds, (edge) => edge.attr.type === 'runtime');
+  }
+
+  private shouldLimitToSeedersOnly() {
+    return this.seederIds.length;
+  }
+
+  private getSeederIdsStr() {
+    return this.seederIds.map((id) => id.toStringWithoutVersion());
   }
 
   _calculateVersionMap() {

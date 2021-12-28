@@ -38,7 +38,7 @@ function TestLine({ test }: { test: TestResult }) {
   const duration = test.duration && timeFormat(+test.duration);
 
   return (
-    <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
+    <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error || test.failure}>
       <div className={styles.testTitle}>
         <div className={styles.test}>
           {getStatusIcon(test.status)}

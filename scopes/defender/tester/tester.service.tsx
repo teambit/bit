@@ -6,7 +6,7 @@ import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
-import { PubSub } from 'graphql-subscriptions';
+import { PubSubEngine } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Tester, Tests, CallbackFn } from './tester';
 import { TesterAspect } from './tester.aspect';
@@ -38,6 +38,8 @@ export type TesterDescriptor = {
    * string containing the config for display.
    */
   config: string;
+
+  version?: string;
 };
 
 export class TesterService implements EnvService<Tests, TesterDescriptor> {
@@ -52,7 +54,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
     private logger: Logger,
 
-    private pubsub: PubSub,
+    private pubsub: PubSubEngine,
 
     private devFiles: DevFilesMain
   ) {}
@@ -130,6 +132,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       debug: options.debug,
       watch: options.watch,
       ui: options.ui,
+      coverage: options.coverage,
     });
 
     if (options.watch && options.ui && tester.watch) {

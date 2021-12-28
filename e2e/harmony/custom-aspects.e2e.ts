@@ -28,8 +28,13 @@ describe('custom aspects', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.command.create('aspect', 'dep-dep-aspect');
       helper.command.create('aspect', 'dep-aspect');
       helper.command.create('aspect', 'main-aspect');
+      helper.fs.outputFile(
+        `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
+        getDepAspect(helper.scopes.remoteWithoutOwner)
+      );
       helper.fs.outputFile(
         `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
         getMainAspect(helper.scopes.remoteWithoutOwner)
@@ -63,8 +68,7 @@ describe('custom aspects', function () {
       const envId = helper.env.getComponentEnv('comp1');
       expect(envId).to.equal(`${helper.scopes.remote}/my-env`);
     });
-    // @todo: FIX!
-    describe.skip('when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope', () => {
+    describe('when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope', () => {
       before(() => {
         helper.command.importComponent('dep-aspect');
       });
@@ -120,4 +124,25 @@ function getMainAspect(remoteScope: string) {
 
   MainAspectAspect.addRuntime(MainAspectMain);
   `;
+}
+
+function getDepAspect(remoteScope: string) {
+  return `import { MainRuntime } from '@teambit/cli';
+import { DepDepAspectAspect, DepDepAspectMain } from '@ci/${remoteScope}.dep-dep-aspect';
+import { DepAspectAspect } from './dep-aspect.aspect';
+
+export class DepAspectMain {
+  static slots = [];
+  static dependencies = [DepDepAspectAspect];
+  static runtime = MainRuntime;
+  static async provider([depDepAspect]: [DepDepAspectMain]) {
+    if (!depDepAspect) {
+      throw new Error('unable to load the depDepAspect');
+    }
+    return new DepAspectMain();
+  }
+}
+
+DepAspectAspect.addRuntime(DepAspectMain);
+`;
 }

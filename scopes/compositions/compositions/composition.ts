@@ -3,6 +3,7 @@ import { humanizeCompositionId } from '@teambit/compositions.model.composition-i
 export type CompositionProps = {
   identifier: string;
   filepath?: string;
+  displayName?: string;
 };
 
 export class Composition {
@@ -15,23 +16,29 @@ export class Composition {
     /**
      * file path in which the composition is contained.
      */
-    readonly filepath?: string
+    readonly filepath?: string,
+
+    /**
+     * set explicit display name
+     */
+    private _displayName?: string
   ) {}
 
   get displayName() {
-    return humanizeCompositionId(this.identifier);
+    return this._displayName || humanizeCompositionId(this.identifier);
   }
 
   toObject() {
     return {
       identifier: this.identifier,
       filepath: this.filepath,
+      displayName: this._displayName,
     };
   }
 
   static fromArray(compositions: CompositionProps[]): Composition[] {
     return compositions.map((composition) => {
-      return new Composition(composition.identifier, composition.filepath);
+      return new Composition(composition.identifier, composition.filepath, composition.displayName);
     });
   }
 }

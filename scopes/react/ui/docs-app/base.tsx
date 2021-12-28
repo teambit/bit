@@ -30,7 +30,7 @@ const defaultDocs = {
 };
 
 /**
- * base template for react component documentation.
+ * base template for react component documentation
  */
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useFetchDocs(componentId);
@@ -45,7 +45,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { component, docs: docsModel } = data;
 
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
-  const { displayName, version, packageName, description } = component;
+  const { displayName, version, packageName, description, elementsUrl } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
@@ -56,6 +56,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
         abstract={description || Content.abstract || abstract}
         labels={component.labels || Content.labels || labels}
         packageName={packageName}
+        elementsUrl={elementsUrl}
       />
 
       <ErrorBoundary FallbackComponent={ErrorFallback}>

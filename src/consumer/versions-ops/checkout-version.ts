@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
@@ -60,6 +60,7 @@ export default async function checkoutVersion(
   const { version, ids, promptMergeOptions } = checkoutProps;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
+  await consumer.scope.import(BitIds.fromArray(ids || []));
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     (component) => component.mergeResults && component.mergeResults.hasConflicts
@@ -292,6 +293,10 @@ export function applyModifiedVersion(
     } else if (file.output) {
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
+    } else if (file.isBinaryConflict) {
+      // leave the file as is and notify the user later about it.
+      foundFile.contents = file.fsFile.contents;
+      filesStatus[file.filePath] = FileStatus.binaryConflict;
     } else {
       throw new GeneralError(`file ${filePath} does not have output nor conflict`);
     }
@@ -311,6 +316,13 @@ export function applyModifiedVersion(
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
+  });
+  mergeResults.updatedFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    foundFile.contents = file.content;
+    filesStatus[file.filePath] = FileStatus.updated;
   });
 
   return filesStatus;

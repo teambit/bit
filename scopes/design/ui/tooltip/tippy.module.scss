@@ -15,6 +15,11 @@ $textColor: var(--bit-text-color, #fff);
       white-space: nowrap;
     }
 
+    &.tippy-breakLine .tippy-content {
+      white-space: pre-line;
+      word-break: break-all;
+    }
+
     .tippy-svg-arrow {
       fill: $bg;
     }

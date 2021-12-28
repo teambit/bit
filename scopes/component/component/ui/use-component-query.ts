@@ -20,7 +20,9 @@ const componentFields = gql`
       ...componentIdFields
     }
     packageName
+    elementsUrl
     displayName
+    latest
     server {
       env
       url
@@ -28,6 +30,7 @@ const componentFields = gql`
     buildStatus
     compositions {
       identifier
+      displayName
     }
     tags {
       version

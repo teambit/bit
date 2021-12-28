@@ -36,7 +36,7 @@ export const formatPlainComponentItemWithVersions = (component: Component, impor
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles.map((file) => c.bold(file)).join(', ')}) `;
   };
-  const deprecated = component.deprecated ? c.yellow('deprecated') : '';
+  const deprecated = importDetails.deprecated ? c.yellow('deprecated') : '';
   const missingDeps = importDetails.missingDeps.length
     ? c.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';

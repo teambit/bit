@@ -1,5 +1,7 @@
 /* eslint no-console: 0 */
+import { REGISTRY_MOCK_PORT } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
+import fetch from 'cross-fetch';
 import execa from 'execa';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -37,7 +39,7 @@ export default class NpmCiRegistry {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;
-  ciRegistry = 'http://localhost:4873';
+  ciRegistry = `http://localhost:${REGISTRY_MOCK_PORT}`;
   ciDefaultScope = '@ci';
   constructor(helper: Helper) {
     this.helper = helper;
@@ -56,14 +58,22 @@ export default class NpmCiRegistry {
   }
 
   _establishRegistry(): Promise<void> {
-    return new Promise((resolve) => {
-      this.registryServer = execa('verdaccio', { detached: true });
+    return new Promise((resolve, reject) => {
+      this.registryServer = execa('registry-mock', { detached: true });
+      let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.registryServer.stdout.on('data', (data) => {
+      this.registryServer.stdout.on('data', async (data): void => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
-        if (data.includes('4873')) {
-          if (this.helper.debugMode) console.log('Verdaccio server is up and running');
-          resolve();
+        if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
+          resolved = true;
+          // eslint-disable-next-line
+          await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
+          if ((await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`)).status !== 200) {
+            reject(new Error('Registry has not started'));
+          } else {
+            if (this.helper.debugMode) console.log('Verdaccio server is up and running');
+            resolve();
+          }
         }
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -87,8 +97,11 @@ expect {
 EOD`;
     fs.writeFileSync('adduser.sh', addUser);
     const addUserResult = execa.sync('sh', ['adduser.sh']);
-    if (!addUserResult.stdout.includes('Logged in as ci to scope @ci')) {
-      throw new Error(`failed executing npm adduser ${addUserResult.stderr}`);
+    if (
+      !addUserResult.stdout.includes('Logged in as ci to scope @ci') && // npm<7
+      !addUserResult.stdout.includes(`Logged in as ci on ${this.ciRegistry}`) // npm>=7
+    ) {
+      throw new Error(`failed executing npm adduser ${addUserResult.stderr || addUserResult.stdout}`);
     }
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
     fs.removeSync('adduser.sh');

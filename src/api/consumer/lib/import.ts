@@ -18,14 +18,14 @@ import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 const key = R.compose(R.head, R.keys);
 
 export type EnvironmentOptions = {
-  tester: boolean;
-  compiler: boolean;
+  tester?: boolean;
+  compiler?: boolean;
 };
 
 export default async function importAction(
-  environmentOptions: EnvironmentOptions,
   importOptions: ImportOptions,
-  packageManagerArgs: string[]
+  packageManagerArgs: string[],
+  environmentOptions: EnvironmentOptions = {}
 ) {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);

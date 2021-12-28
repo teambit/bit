@@ -8,7 +8,12 @@ export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
   shortDescription = "clears Bit's cache from current working machine";
   group: Group = 'general';
-  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
+  description = `clears bit's cache from current working machine.
+The following gets removed by this command:
+1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
+2) components cache on the filesystem (mainly the dependencies graph and docs)
+3) scope's index file, which maps the component-id:object-hash
+https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
   alias = 'cc';
   opts = [];
   loader = false;

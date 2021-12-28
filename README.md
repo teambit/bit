@@ -1,21 +1,23 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-logo%20(2).png"/>
+  <img src="https://storage.googleapis.com/bit-docs/readme-logo%20(6).png"/>
 </p>
 
 <p align="center">
-  <a href="https://harmony-docs.bit.dev/">Documentation</a> |
-  <a href="https://bit.dev/">Platform</a> |
-  <a href="https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw">Learn</a>
+  <a href="https://harmony-docs.bit.dev/">Docs</a> |
+  <a href="https://github.com/bit-demos/">Demos</a> |
+  <a href="https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw">Videos</a> |
+  <a href="https://bit.dev/">Bit Cloud</a>
+</p>
+
 </p>
 
 <h3 align="center">
-  Build components first.
+  Build anything in components
 </h3>
 
 <p align="center">
-Open infrastructure for component-driven applications to speed and scale development.
-</p>
-
+Bit is a toolchain for component-driven software development.
+  
 <p align="center">
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
@@ -31,69 +33,49 @@ Open infrastructure for component-driven applications to speed and scale develop
   </a>
 </p>
 <p align="left">
-Bit is an OSS Infrastructure for building and composing components. It is an extensible toolchain for component-driven applications / systems which are faster to develop, simpler to understand, test, and maintain, more resilient and performant, and easier to collaborate on.
+  
+**Leave behind monolithic apps and build in a distributed scalable way**.  
+  
+Bit stands at the intersection between product and engineering. It helps you take complex product requirements, and break them down into independent, reusable pieces called "components" that fit well together. Components can be anything independent by nature from a general purpose module, UI components, UI applications, pages, blocks, backend services, content and anything else you might imagine. Think of Bit as a ways to build larger projects from smaller pieces together with more people.
+  
+As a developer, imagine having a single mini-repository for each of your components, and a dev experience that makes the development of them seamless together. As an arhictect, imagine having your entire software architecture built from service-oriented components, sorted and controlled on a single architectural graph, it is like scaling Microservices for everything. As a designer, think of composing a design out of symbols, each symbol is indepednent and reusable.
 
-Instead of building an application that has many components, Bit lets you develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.
+Bit does not prescribe how you build your entire application. It helps you define and compose components and allows for every component to adopt the dev tools that best fit its nature. A React component might be compiled, tested and sometimes even deployed with a different composition of tools than a Microservice component, or a generic function. Bit comes with native support in various dev tools like TypeScript, Babel, Jest, Webpack, ESLint and ready made development environments for React, NodeJS, Angular and more. New tools can be easily integrated by adding one more component into Bit!
 
-</p>
-
-### Key Features
-
-<p align="left">
-
-- **Workspace - build and compose components**. The workspace is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the _Workspace UI_ to visually develop and manage your components with ease.
-
-- **Scope - manage and scale with components**. Scopes are where you push, version, and organize your components. It’s a component store. _Remote Scopes_ let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
+**_We build 100% of our technology with Bit, and so do thousands of developers and many Fortune-50 companies._**
 
 ### How to Start?
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=7afMBwj5fR4">
-    <img alt="Bit Workspace" src="https://storage.googleapis.com/static.bit.dev/harmony-docs/build%20with%20bit%20youtube.png" />
-  </a>
-</p>
+#### Installation
 
-To get started follow the [quick-start guide](https://harmony-docs.bit.dev/getting-started/installing-bit) or try the official [Bit for React tutorial](https://harmony-docs.bit.dev/tutorials/react/create-and-consume-components).
+To get started, we would first have to make sure the bit binary is installed on your machine and configured to your PATH.
 
-Install [Bit Version Manager](https://harmony-docs.bit.dev/getting-started/installing-bit):
-
-```bash
-npm i -g @teambit/bvm
-# or
-yarn global add @teambit/bvm
+```
+$ npx @teambit/bvm install
 ```
 
-Install Bit:
+(NodeJS installation is required)
 
-```bash
-bvm install
+#### Creating the workspace
+
+The first step in the Bit journey is to create a component development workspace. Workspaces allow the creation and maintanance of isolated and independent pieces called "components". Since every component is isolated, the workspace is tech agnostic and allows for components, with a different tech stack to co-exist. A single workspace might include React components, general purpose node modules, Angular modules and even backend services.
+
+To create a new workspace, run:
+
+```
+bit new great-inventions
+cd my-workspace
 ```
 
-Start a [Bit workspace](https://harmony-docs.bit.dev/getting-started/initializing-workspace):
+#### Start the Workspace UI console:
 
-```bash
-bit new react <my-workspace-name>
 ```
-
-Install dependencies:
-
-```bash
-cd <my-workspace-name>
 bit start
 ```
- 
-Open-up your browser on localhost:3000, or any other available port, and view the demo components.
 
-  
-Create components:
+### Popular Use-Cases
 
-```bash
-bit create react ui/button     # TypeScript
-bit create react-js ui/button  # JavaScript
-```
-
-
-### Popular Onboarding Use-Cases
+[Here are 4 common use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) to start your transition to component-driven development.
 
 - Micro Frontends
 - Design Systems (Component Marketplace)

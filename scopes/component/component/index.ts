@@ -10,11 +10,11 @@ export type { AspectList } from './aspect-list';
 export { AspectEntry, AspectData } from './aspect-entry';
 // TODO: check why it's not working when using the index in snap dir like this:
 // export { Snap, Author } from './snap';
-export { Snap } from './snap/snap';
+export { Snap, SnapProps } from './snap/snap';
 export type { Author } from './snap/author';
 // TODO: check why it's not working when using the index in tag dir like this:
 // export { Tag } from './tag';
-export { Tag } from './tag/tag';
+export { Tag, TagProps } from './tag/tag';
 export { State } from './state';
 export type { Hash } from './hash';
 export { TagMap } from './tag-map';
@@ -23,6 +23,7 @@ export type { ComponentMain } from './component.main.runtime';
 export type { ComponentUI } from './component.ui.runtime';
 export { Section } from './section';
 export { ComponentContext } from './ui/context/component-context';
+export { ConsumePlugin } from './ui/menu';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export type { ShowFragment, ShowRow } from './show';
 export { default as Config } from './config';

@@ -11,20 +11,29 @@
   font-size: inherit;
   padding-right: 8px;
   font-size: var(--bit-p-xs);
+  user-select: none;
+  cursor: pointer;
   &:hover {
     background: var(--bit-bg-heavy, #f6f6f6);
   }
 
-  .arrow {
+  .icon {
     display: inline-block;
     line-height: inherit;
     transition: all 300ms;
-    margin-right: 10px;
+    margin-right: 8px;
     color: var(--bit-text-color-light, #6c707c);
     &.collapsed {
       transform: rotate(-0.25turn);
     }
   }
+}
+
+.img {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  filter: grayscale(1);
 }
 
 .left {
@@ -38,10 +47,4 @@
     white-space: nowrap;
     margin-right: 8px;
   }
-}
-
-.childrenTree {
-  overflow: hidden;
-  transition: max-height 400ms ease-in-out;
-  font-size: var(--bit-p-xs);
 }

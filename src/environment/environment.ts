@@ -48,7 +48,7 @@ export default class Environment {
     if (!this.consumer) {
       throw new Error('trying to import component without define consumer');
     }
-    const componentsWithDependencies = await this.consumer.importComponents(
+    const componentsWithDependencies = await this.consumer.importComponentsLegacy(
       BitIds.fromArray([bitId]),
       false,
       saveDependenciesAsComponents

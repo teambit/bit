@@ -9,19 +9,25 @@ Having the added metadata is useful for debbuging and [showcasing](/ui/component
 
 ### Example
 
-#### Input
+Input:
 ```ts
 export function Button() {
   return <div></div>;
 }
 ```
 
-#### Output
-```ts
+Output:
+```tsx
+var __bit_component = {
+  id: 'teambit.base-ui/button@1.0.0',
+  homepage: 'https://bit.dev/teambit/base-ui/input/button', 
+  exported: true,
+}
+
 export function Button() {
   return <div></div>;
 }
 
-// (assuming this is the component-id)
-Button.componentId = 'teambit.base-ui/button@1.0.0';
+// attaches metadata:
+Button.__bit_component = __bit_component;
 ```

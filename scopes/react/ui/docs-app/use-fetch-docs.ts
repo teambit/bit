@@ -15,6 +15,7 @@ const DOCS_QUERY = gql`
         }
         displayName
         packageName
+        elementsUrl
         description
         labels
         compositions {
@@ -48,6 +49,7 @@ type QueryResults = {
       };
       displayName: string;
       packageName: string;
+      elementsUrl?: string;
       description: string;
       labels: string[];
       compositions: {

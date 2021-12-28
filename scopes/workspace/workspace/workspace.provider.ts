@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import { ComponentMain } from '@teambit/component';
+import type { ComponentMain, Component } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -22,16 +22,18 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
+import UninstallCmd from './uninstall.cmd';
+import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { LinkCommand } from './link';
-import { Watcher } from './watch/watcher';
+import { Watcher, WatchOptions } from './watch/watcher';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { Tag } from './tag-cmd';
-import { CapsuleCmd, CapsuleCreateCmd, CapsuleListCmd } from './capsule.cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -57,6 +59,9 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
+export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
+export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
+
 export default async function provideWorkspace(
   [
     pubsub,
@@ -74,11 +79,12 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
-    OnComponentRemoveSlot
+    OnComponentRemoveSlot,
+    OnPreWatchSlot
   ],
   harmony: Harmony
 ) {
@@ -105,6 +111,7 @@ export default async function provideWorkspace(
     envs,
     onComponentAddSlot,
     onComponentRemoveSlot,
+    onPreWatchSlot,
     graphql
   );
 
@@ -179,8 +186,18 @@ export default async function provideWorkspace(
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
   const capsuleCmd = new CapsuleCmd();
-  capsuleCmd.commands = [new CapsuleListCmd(isolator, workspace), new CapsuleCreateCmd(workspace, isolator)];
-  const commands: CommandList = [new InstallCmd(workspace, logger), new EjectConfCmd(workspace), capsuleCmd];
+  capsuleCmd.commands = [
+    new CapsuleListCmd(isolator, workspace),
+    new CapsuleCreateCmd(workspace, isolator),
+    new CapsuleDeleteCmd(isolator, workspace),
+  ];
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new UpdateCmd(workspace),
+    new UninstallCmd(workspace),
+    new EjectConfCmd(workspace),
+    capsuleCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');

@@ -33,7 +33,8 @@ export class RunCmd implements Command {
       dev,
     });
 
-    return `${appName} has started on port ${port}`;
+    if (port) return `${appName} app is running on http://localhost:${port}`;
+    return `${appName} app is running`;
   }
 
   async render(
@@ -45,11 +46,14 @@ export class RunCmd implements Command {
       dev,
     });
 
-    return (
-      <Text>
-        {appName} has started on port {port}
-      </Text>
-    );
+    if (port) {
+      return (
+        <Text>
+          {appName} app is running on http://localhost:{port}
+        </Text>
+      );
+    }
+    return <Text>{appName} app is running</Text>;
     // return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }

@@ -1,3 +1,4 @@
+// TODO: @gilad refactor to an abstract env.
 import type { Linter, LinterContext } from '@teambit/linter';
 import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
@@ -8,6 +9,7 @@ import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { ElementsWrapperContext } from '@teambit/elements';
 
 export type EnvDescriptor = {
   type: string;
@@ -60,6 +62,11 @@ export interface PackageEnv extends Environment {
    * Used by `bit link` to augment package.json with new properties
    */
   getPackageJsonProps?: () => PackageJsonProps;
+
+  /**
+   * return `.npmignore` entries to be written before packing the component
+   */
+  getNpmIgnore?: () => string[];
 }
 
 export interface LinterEnv extends Environment {
@@ -96,6 +103,20 @@ export interface PreviewEnv extends Environment {
    * Required for `bit build` & `bit start`
    */
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
+}
+
+export interface ElementsEnv extends Environment {
+  /**
+   * Returns a function that gets the context and wrap the component with a web component
+   * Required for `bit build`
+   */
+  getElementsWrapper: (context: ElementsWrapperContext) => string;
+
+  /**
+   * Returns a bundler for elements.
+   * Required for `bit build``
+   */
+  getElementsBundler: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 }
 
 export type PipeServiceModifiersMap = Record<string, PipeServiceModifier>;

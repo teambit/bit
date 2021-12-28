@@ -139,8 +139,15 @@ export class ScopeJson {
     }
   }
 
-  static loadFromJson(json: string): ScopeJson {
-    return new ScopeJson(JSON.parse(json));
+  static loadFromJson(json: string, scopeJsonPath: string): ScopeJson {
+    let jsonParsed: ScopeJsonProps;
+    try {
+      jsonParsed = JSON.parse(json);
+    } catch (err) {
+      throw new GeneralError(`unable to parse the scope.json file located at "${scopeJsonPath}".
+edit the file to fix the error, or delete it and run "bit init" to recreate it`);
+    }
+    return new ScopeJson(jsonParsed);
   }
 
   static async loadFromFile(scopeJsonPath: string): Promise<ScopeJson> {
@@ -151,7 +158,7 @@ export class ScopeJson {
       if (err.code === 'ENOENT') throw new ScopeJsonNotFound(scopeJsonPath);
       throw err;
     }
-    return ScopeJson.loadFromJson(rawScopeJson.toString());
+    return ScopeJson.loadFromJson(rawScopeJson.toString(), scopeJsonPath);
   }
 
   getPopulatedLicense(): Promise<string | null | undefined> {

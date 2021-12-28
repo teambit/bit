@@ -75,16 +75,16 @@ export class UIServer {
   /**
    * get the webpack configuration of the UI server.
    */
-  async getDevConfig(): Promise<any> {
+  async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
-    const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 
-    return devConfig(
-      this.uiRoot.path,
-      [await this.ui.generateRoot(aspects, this.uiRootExtension)],
-      this.uiRoot.name,
-      aspectsPaths
-    );
+    return devConfig(this.uiRoot.path, [await this.ui.generateRoot(aspects, this.uiRootExtension)], this.uiRoot.name);
+  }
+
+  private setReady: () => void;
+  private startPromise = new Promise<void>((resolve) => (this.setReady = resolve));
+  get whenReady() {
+    return Promise.all([this.startPromise, ...this.plugins.map((x) => x?.whenReady)]);
   }
 
   /**
@@ -117,12 +117,12 @@ export class UIServer {
     // important: we use the string of the following message for the http.e2e.ts. if you change the message,
     // please make sure you change the `HTTP_SERVER_READY_MSG` const.
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
+
+    this.setReady();
   }
 
   getPluginsComponents() {
-    return this.plugins.map((plugin) => {
-      return plugin.render();
-    });
+    return this.plugins.map((plugin) => plugin.render);
   }
 
   private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
@@ -170,15 +170,18 @@ export class UIServer {
    * start a UI dev server.
    */
   async dev({ portRange }: StartOptions = {}) {
-    const selectedPort = await this.selectPort(portRange);
+    const devServerPort = await this.selectPort(portRange);
     await this.start({ portRange: [4100, 4200] });
+    const expressAppPort = this._port;
+
     const config = await this.getDevConfig();
     const compiler = webpack(config);
-    const devServerConfig = await this.getDevServerConfig(this._port, config.devServer);
+    const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
-    const devServer = new WebpackDevServer(compiler, devServerConfig);
-    devServer.listen(selectedPort);
-    this._port = selectedPort;
+    const devServer = new WebpackDevServer(devServerConfig, compiler);
+
+    await devServer.start();
+    this._port = devServerPort;
     return devServer;
   }
 
@@ -213,9 +216,13 @@ export class UIServer {
     return gqlProxies.concat(proxyEntries);
   }
 
-  private async getDevServerConfig(port: number, config?: WdsConfiguration): Promise<WdsConfiguration> {
-    const proxy = await this.getProxy(port);
-    const devServerConf = { ...config, proxy };
+  private async getDevServerConfig(
+    appPort: number,
+    gqlPort: number,
+    config?: WdsConfiguration
+  ): Promise<WdsConfiguration> {
+    const proxy = await this.getProxy(gqlPort);
+    const devServerConf = { ...config, proxy, port: appPort };
 
     return devServerConf;
   }

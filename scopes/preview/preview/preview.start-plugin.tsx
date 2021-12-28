@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { flatten } from 'lodash';
 import { PreviewServerStatus } from '@teambit/preview.cli.preview-server-status';
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
-import { Workspace } from '@teambit/workspace';
+import { Workspace, CheckTypes } from '@teambit/workspace';
 import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
+import { CompilationInitiator } from '@teambit/compiler';
+import { Logger } from '@teambit/logger';
 
 type CompilationServers = Record<string, CompilationResult>;
+type ServersSetter = Dispatch<SetStateAction<CompilationServers>>;
 
 export class PreviewStartPlugin implements StartPlugin {
   constructor(
     private workspace: Workspace,
     private bundler: BundlerMain,
     private ui: UiMain,
-    private pubsub: PubsubMain
+    private pubsub: PubsubMain,
+    private logger: Logger
   ) {}
 
   previewServers: ComponentServer[] = [];
@@ -28,18 +32,27 @@ export class PreviewStartPlugin implements StartPlugin {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     previewServers.forEach((server) => server.listen());
     // DON'T add wait! this promise never resolve so it's stop all the start process!
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.workspace.watcher.watchAll({
-      msgs: {
-        onAll: () => {},
-        onStart: () => {},
-        onReady: () => {},
-        onChange: () => {},
-        onAdd: () => {},
-        onError: () => {},
-        onUnlink: () => {},
-      },
-    });
+    this.workspace.watcher
+      .watchAll({
+        spawnTSServer: true,
+        checkTypes: CheckTypes.None,
+        preCompile: false,
+        msgs: {
+          onAll: () => {},
+          onStart: () => {},
+          onReady: () => {},
+          onChange: () => {},
+          onAdd: () => {},
+          onError: () => {},
+          onUnlink: () => {},
+        },
+        initiator: CompilationInitiator.Start,
+      })
+      .catch((err) => {
+        const msg = `watcher found an error`;
+        this.logger.error(msg, err);
+        this.logger.console(`${msg}, ${err.message}`);
+      });
     this.previewServers = this.previewServers.concat(previewServers);
   }
 
@@ -80,22 +93,29 @@ export class PreviewStartPlugin implements StartPlugin {
     });
   }
 
+  private setReady: () => void;
+  private readyPromise = new Promise<void>((resolve) => (this.setReady = resolve));
+  get whenReady(): Promise<void> {
+    return this.readyPromise;
+  }
+
   private initialState: CompilationServers = {};
   // implements react-like setter (value or updater)
-  private updateServers: React.Dispatch<React.SetStateAction<CompilationServers>> = (servers) => {
+  private updateServers: ServersSetter = (servers) => {
     this.initialState = typeof servers === 'function' ? servers(this.initialState) : servers;
     return servers;
   };
 
-  render() {
-    const PreviewPlugin = () => {
-      const [servers, setServers] = useState<CompilationServers>(this.initialState);
-      this.updateServers = setServers;
-      this.initialState = {};
+  render = () => {
+    const [servers, setServers] = useState<CompilationServers>(this.initialState);
+    this.updateServers = setServers;
+    this.initialState = {};
 
-      return <PreviewServerStatus previewServers={this.previewServers} serverStats={servers} />;
-    };
+    useEffect(() => {
+      const noneAreCompiling = Object.values(servers).every((x) => !x.compiling);
+      if (noneAreCompiling) this.setReady();
+    }, [servers]);
 
-    return PreviewPlugin;
-  }
+    return <PreviewServerStatus previewServers={this.previewServers} serverStats={servers} />;
+  };
 }

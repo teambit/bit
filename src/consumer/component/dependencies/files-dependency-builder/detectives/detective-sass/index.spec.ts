@@ -3,7 +3,7 @@ import assert from 'assert';
 import detective from './';
 
 describe('detective-sass', function () {
-  function test(src, deps, opts) {
+  function test(src, deps, opts?: any) {
     // @ts-ignore
     assert.deepEqual(detective(src, opts), deps);
   }
@@ -43,12 +43,41 @@ describe('detective-sass', function () {
 
   describe('sass', function () {
     it('returns the dependencies of the given .sass file content', function () {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       test('@import _foo', ['_foo']);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       test('@import        _foo', ['_foo']);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       test('@import reset', ['reset']);
+    });
+  });
+
+  describe('use keyword', function () {
+    it('returns the dependencies of the given .sass file content', function () {
+      test('@use _foo', ['_foo']);
+      test('@use        _foo', ['_foo']);
+      test('@use reset', ['reset']);
+    });
+  });
+
+  describe('use as syntax', function () {
+    it('returns the dependencies of the given .sass file content', function () {
+      test('@use "foo" as f', ['foo']);
+      test('@use "_foo" as *', ['_foo']);
+    });
+  });
+
+  describe('forward keyword', function () {
+    it('returns the dependencies of the given .sass file content', function () {
+      test('@forward _foo', ['_foo']);
+      test('@forward        _foo', ['_foo']);
+      test('@forward reset', ['reset']);
+    });
+  });
+
+  describe('use syntax with colon', function () {
+    it('should return only the package name (the part before the colon)', function () {
+      test('@use "pkg:math"', ['pkg']);
+    });
+    it('should return an empty array when it is a built-in module', function () {
+      test('@use "sass:math"', []);
     });
   });
 });

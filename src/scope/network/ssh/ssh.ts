@@ -2,7 +2,7 @@
 import merge from 'lodash.merge';
 import * as os from 'os';
 import R from 'ramda';
-import SSH2 from 'ssh2';
+import { Client as Ssh2Client } from 'ssh2';
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
@@ -64,7 +64,7 @@ export const DEFAULT_READ_STRATEGIES: SSHConnectionStrategyName[] = [
   'user-password',
 ];
 export default class SSH implements Network {
-  connection: SSH2 | null | undefined;
+  connection: Ssh2Client | null | undefined;
   path: string;
   username: string;
   port: number;
@@ -205,7 +205,7 @@ export default class SSH implements Network {
     authFailedMsg: string
   ): Promise<SSH> {
     const connectWithConfigP = () => {
-      const conn = new SSH2();
+      const conn = new Ssh2Client();
       return new Promise((resolve, reject) => {
         conn
           .on('error', (err) => {

@@ -1,23 +1,25 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Component } from '@teambit/component';
-import { BitId } from '@teambit/legacy-bit-id';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { BitId } from '@teambit/legacy-bit-id';
 
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import { CompilerService } from './compiler.service';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import UIAspect, { UiMain } from '@teambit/ui';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
+import { CompilerService } from './compiler.service';
 import { CompilerTask } from './compiler.task';
-import { Compiler } from './types';
-import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
+import { CompilationInitiator, Compiler } from './types';
+import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
+import { compilerTemplate } from './templates/compiler';
 
 export class CompilerMain {
   constructor(
@@ -27,9 +29,12 @@ export class CompilerMain {
     private builder: BuilderMain
   ) {}
 
+  /**
+   * Run compilation on `bit new` and when new components are imported
+   */
   compileOnWorkspace(
     componentsIds: string[] | BitId[] = [], // when empty, it compiles all
-    options: CompileOptions = {}
+    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
@@ -69,9 +74,10 @@ export class CompilerMain {
     AspectLoaderAspect,
     BuilderAspect,
     UIAspect,
+    GeneratorAspect,
   ];
 
-  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui]: [
+  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui, generator]: [
     CLIMain,
     Workspace,
     EnvsMain,
@@ -79,14 +85,15 @@ export class CompilerMain {
     PubsubMain,
     AspectLoaderMain,
     BuilderMain,
-    UiMain
+    UiMain,
+    GeneratorMain
   ]) {
-    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui);
+    const logger = loggerMain.createLogger(CompilerAspect.id);
+    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui, logger);
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder);
-    const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
-
+    generator.registerComponentTemplate([compilerTemplate]);
     ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
 
     return compilerMain;

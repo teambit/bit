@@ -3,9 +3,10 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace } from '@teambit/workspace';
+import { SerializableResults, Workspace, WatchOptions } from '@teambit/workspace';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
+import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -13,7 +14,6 @@ import { Dist, SourceFile } from '@teambit/legacy/dist/consumer/component/source
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
@@ -21,7 +21,7 @@ import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
-import { Compiler } from './types';
+import { Compiler, CompilationInitiator } from './types';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -34,6 +34,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
+  initiator: CompilationInitiator; // describes where the compilation is coming from
 };
 
 export type CompileError = { path: string; error: Error };
@@ -45,14 +46,16 @@ export class ComponentCompiler {
     private component: ConsumerComponent,
     private compilerInstance: Compiler,
     private compilerId: string,
+    private logger: Logger,
     private dists: Dist[] = [],
     private compileErrors: CompileError[] = []
   ) {}
 
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
+    const deleteDistDir = options.deleteDistDir ?? this.compilerInstance.deleteDistDir;
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
-    if (options.deleteDistDir) {
+    if (deleteDistDir) {
       dataToPersist = new DataToPersist();
       dataToPersist.removePath(new RemovePath(this.distDir));
       dataToPersist.addBasePath(this.workspace.path);
@@ -60,9 +63,11 @@ export class ComponentCompiler {
     }
 
     if (this.compilerInstance.transpileFile) {
-      await Promise.all(this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file)));
+      await Promise.all(
+        this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file, options.initiator))
+      );
     } else if (this.compilerInstance.transpileComponent) {
-      await this.compileAllFilesWithNewCompiler(this.component);
+      await this.compileAllFilesWithNewCompiler(this.component, options.initiator);
     } else {
       throw new Error(
         `compiler ${this.compilerId.toString()} doesn't implement either "transpileFile" or "transpileComponent" methods`
@@ -88,7 +93,7 @@ export class ComponentCompiler {
   private throwOnCompileErrors(noThrow = true) {
     if (this.compileErrors.length) {
       this.compileErrors.forEach((errorItem) => {
-        logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
+        this.logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
       });
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
       const err = new Error(`compilation failed. see the following errors from the compiler
@@ -100,7 +105,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         throw err;
       }
 
-      logger.console(err.message);
+      this.logger.console(err.message);
     }
   }
 
@@ -115,8 +120,8 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile): Promise<void> {
-    const options = { componentDir: this.componentDir, filePath: file.relative };
+  private async compileOneFileWithNewCompiler(file: SourceFile, initiator: CompilationInitiator): Promise<void> {
+    const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
     if (isFileSupported) {
@@ -145,7 +150,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFilesWithNewCompiler(component: ConsumerComponent): Promise<void> {
+  private async compileAllFilesWithNewCompiler(
+    component: ConsumerComponent,
+    initiator: CompilationInitiator
+  ): Promise<void> {
     const base = this.distDir;
     const filesToCompile: SourceFile[] = [];
     component.files.forEach((file: SourceFile) => {
@@ -170,6 +178,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
           component,
           componentDir: this.componentDir,
           outputDir: this.workspace.getComponentPackagePath(component),
+          initiator,
         });
       } catch (error: any) {
         this.compileErrors.push({ path: this.componentDir, error });
@@ -184,11 +193,13 @@ export class WorkspaceCompiler {
     private envs: EnvsMain,
     private pubsub: PubsubMain,
     private aspectLoader: AspectLoaderMain,
-    private ui: UiMain
+    private ui: UiMain,
+    private logger: Logger
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
@@ -200,25 +211,51 @@ export class WorkspaceCompiler {
     if (preStartOpts.skipCompilation) {
       return;
     }
-    await this.compileComponents([], { changed: true, verbose: false, deleteDistDir: false });
+    await this.compileComponents([], {
+      changed: true,
+      verbose: false,
+      deleteDistDir: false,
+      initiator: CompilationInitiator.PreStart,
+    });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
     if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
-      await this.compileComponents([id.toString()], {}, true);
+      await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
       return true;
     }
     return false;
   }
 
-  async onComponentChange(component: Component): Promise<SerializableResults> {
-    const buildResults = await this.compileComponents([component.id.toString()], {}, true);
+  async onComponentChange(
+    component: Component,
+    files: string[],
+    initiator?: CompilationInitiator
+  ): Promise<SerializableResults> {
+    const buildResults = await this.compileComponents(
+      [component.id.toString()],
+      { initiator: initiator || CompilationInitiator.ComponentChanged },
+      true
+    );
     return {
       results: buildResults,
       toString() {
         return `${buildResults[0]?.buildResults?.join('\n\t')}`;
       },
     };
+  }
+
+  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+    if (watchOpts.preCompile) {
+      const start = Date.now();
+      this.logger.console(`compiling ${components.length} components`);
+      await this.compileComponents(
+        components.map((c) => c.id._legacy),
+        { initiator: CompilationInitiator.PreWatch }
+      );
+      const end = Date.now() - start;
+      this.logger.consoleSuccess(`compiled ${components.length} components successfully (${end / 1000} sec)`);
+    }
   }
 
   async compileComponents(
@@ -240,7 +277,14 @@ export class WorkspaceCompiler {
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsAndNewCompilers.push(
-          new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
+          new ComponentCompiler(
+            this.pubsub,
+            this.workspace,
+            c.state._consumer,
+            compilerInstance,
+            compilerName,
+            this.logger
+          )
         );
       }
     });

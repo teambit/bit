@@ -12,15 +12,15 @@ export interface Application {
   /**
    * run the application.
    */
-  run(context: AppContext): Promise<number>;
+  run(context: AppContext): Promise<number | void>;
 
   /**
    * build the application.
    */
-  build(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
+  build?(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
 
   /**
    * application deployment. this is a build task.
    */
-  deploy?(context: BuildContext): Promise<void>;
+  deploy?(context: BuildContext, capsule: Capsule): Promise<void>;
 }

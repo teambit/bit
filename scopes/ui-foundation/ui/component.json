@@ -5,13 +5,6 @@
   },
   "propagate": true,
   "extensions": {
-    "teambit.pkg/pkg": {
-      "packageJson": {
-        "name": "@teambit/{name}",
-        "private": false
-      },
-      "packageManagerPublishArgs": ["--access public"]
-    },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
@@ -32,7 +25,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.153"
+          "@teambit/legacy": "1.0.195"
         }
       }
     }

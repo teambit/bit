@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 $animationTime: 300ms;
@@ -73,5 +75,5 @@ $bottom-margin: 8px;
 }
 
 :export {
-  animationTime: $animationTime / 1ms;
+  animationTime: math.div($animationTime, 1ms);
 }

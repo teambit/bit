@@ -18,5 +18,8 @@ export interface StartPlugin {
 
   getProxy?(): ProxyEntry[];
 
-  render(): ComponentType;
+  render: ComponentType;
+
+  /** promise that resolves when the plugin completed initiation */
+  readonly whenReady: Promise<void>;
 }

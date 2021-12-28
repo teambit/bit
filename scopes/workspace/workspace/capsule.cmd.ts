@@ -7,6 +7,7 @@ import { Workspace } from '.';
 
 type CreateOpts = {
   baseDir?: string;
+  rootBaseDir?: string;
   alwaysNew?: boolean;
   seedersOnly?: boolean;
   id: string;
@@ -19,7 +20,12 @@ export class CapsuleCreateCmd implements Command {
   group = 'capsules';
   alias = '';
   options = [
-    ['b', 'base-dir <name>', 'set base dir of all capsules'],
+    [
+      'b',
+      'base-dir <name>',
+      'set base dir of all capsules (hashed to create the base dir inside the root dir - host path by default)',
+    ],
+    ['r', 'root-base-dir <name>', 'set root base dir of all capsules (absolute path to use as root dir)'],
     ['a', 'always-new', 'create new environment for capsule'],
     ['s', 'seeders-only', 'create capsules for the seeders only (not for the entire graph)'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
@@ -32,12 +38,13 @@ export class CapsuleCreateCmd implements Command {
 
   async create(
     [componentIds = []]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
+    { baseDir, rootBaseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
     const capsuleOptions: IsolateComponentsOptions = {
       baseDir,
+      rootBaseDir,
       installOptions: { installPackages },
       alwaysNew,
       seedersOnly,
@@ -108,9 +115,39 @@ use --json to get the list of all workspace capsules`);
   }
 }
 
+export class CapsuleDeleteCmd implements Command {
+  name = 'delete';
+  description = `delete capsules. with no args, only workspace's capsules are deleted`;
+  shortDescription = `delete capsules`;
+  group = 'capsules';
+  alias = '';
+  options = [
+    ['', 'scope-aspects', 'delete scope-aspects capsules'],
+    ['a', 'all', 'delete all capsules for all workspaces and scopes'],
+  ] as CommandOptions;
+
+  constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
+
+  async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
+    const capsuleBaseDirToDelete = (): string | null => {
+      if (all) return null;
+      if (scopeAspects) return this.workspace.scope.getAspectCapsulePath();
+      return this.workspace.path;
+    };
+    const capsuleBaseDir = capsuleBaseDirToDelete();
+    const deletedDir = await this.isolator.deleteCapsules(capsuleBaseDir);
+    return chalk.green(`the following capsules dir has been deleted ${chalk.bold(deletedDir)}`);
+  }
+}
+
 export class CapsuleCmd implements Command {
   name = 'capsule <sub-command>';
-  description = 'manage capsules';
+  shortDescription = 'manage capsules';
+  description = `manage capsules.
+a capsule is a directory contains the component code, isolated from the workspace.
+normally, capsules are created during the build process, the component files are copied and the packages are installed
+via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
+other users after publishing/exporting them.`;
   alias = '';
   group = 'capsules';
   commands: Command[] = [];

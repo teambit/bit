@@ -3,10 +3,13 @@ import { FormatterContext } from './formatter-context';
 
 export type ComponentFormatResult = {
   /**
-   * id of the formatted component.
+   * the formatted component.
    */
   component: Component;
 
+  /**
+   * format results for each file of the component.
+   */
   results: FileFormatResult[];
 };
 

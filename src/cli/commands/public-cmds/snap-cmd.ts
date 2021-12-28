@@ -88,7 +88,7 @@ export default class Snap implements LegacyCommand {
 
   report(results: SnapResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    const { snappedComponents, autoSnappedResults, warnings, newComponents }: SnapResults = results;
+    const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName }: SnapResults = results;
     const changedComponents = snappedComponents.filter(
       (component) => !newComponents.searchWithoutVersion(component.id)
     );
@@ -96,7 +96,7 @@ export default class Snap implements LegacyCommand {
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
+    const tagExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit untag" to unstage versions)\n`;
 
     const outputComponents = (comps) => {
@@ -119,10 +119,11 @@ export default class Snap implements LegacyCommand {
       if (!components.length) return '';
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
+    const laneStr = laneName ? ` on "${laneName}" lane` : '';
 
     return (
       warningsOutput +
-      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped`) +
+      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
       tagExplanation +
       outputIfExists('new components', 'first version for components', addedComponents) +
       outputIfExists('changed components', 'components that got a version bump', changedComponents)

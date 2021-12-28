@@ -121,7 +121,7 @@ export default class ManyComponentsWriter {
   }
 
   static externalInstaller: ExternalPackageInstaller;
-  static externalCompiler: (ids: BitId[]) => Promise<any>;
+  static externalCompiler: (ids?: BitId[]) => Promise<any>;
   static registerExternalInstaller(installer: ExternalPackageInstaller) {
     this.externalInstaller = installer;
   }
@@ -138,7 +138,7 @@ export default class ManyComponentsWriter {
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
-    await this._populateComponentsDependenciesToWrite();
+    if (this.isLegacy) await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
@@ -404,7 +404,10 @@ to move all component files to a different directory, run bit remove and then bi
       });
     } else {
       await ManyComponentsWriter.externalInstaller?.install();
-      await ManyComponentsWriter.externalCompiler?.(this.componentsWithDependencies.map((c) => c.component.id));
+      // this compiles all components on the workspace, not only the imported ones.
+      // reason being is that the installed above deletes all dists dir of components that are somehow part of the
+      // dependency graph. not only the imported components.
+      await ManyComponentsWriter.externalCompiler?.();
     }
   }
   async _getAllLinks(): Promise<DataToPersist> {

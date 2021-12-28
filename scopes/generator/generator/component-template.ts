@@ -43,6 +43,8 @@ export interface ComponentContext {
   componentId: ComponentID;
 }
 
+export type ComponentConfig = { [aspectName: string]: any };
+
 export interface ComponentTemplate {
   /**
    * name of the component template. for example: `hook`, `react-component` or `module`.
@@ -63,4 +65,13 @@ export interface ComponentTemplate {
    * template function for generating the file of a certain component.,
    */
   generateFiles(context: ComponentContext): ComponentFile[];
+
+  /**
+   * component config. gets saved in the .bitmap file and it overrides the workspace.jsonc config.
+   * for example, you can set the env that will be used for this component as follows:
+   * "teambit.envs/envs": {
+   *    "env": "teambit.harmony/aspect"
+   * },
+   */
+  config?: ComponentConfig;
 }

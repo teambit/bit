@@ -154,6 +154,9 @@ export default class CommandHelper {
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
+  dependencies(values = '') {
+    return this.runCmd(`bit dependencies ${values}`);
+  }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
@@ -234,6 +237,11 @@ export default class CommandHelper {
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
+  showOneLaneParsed(name: string) {
+    const results = this.runCmd(`bit lane show ${name} --json`);
+    const parsed = JSON.parse(results);
+    return parsed;
+  }
   showLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
@@ -241,11 +249,6 @@ export default class CommandHelper {
   showRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
-  }
-  showOneLaneParsed(name: string) {
-    const results = this.runCmd(`bit lane show ${name} --json`);
-    const parsed = JSON.parse(results);
-    return parsed;
   }
   diffLane(args = '', onScope = false) {
     const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
@@ -272,8 +275,8 @@ export default class CommandHelper {
   untag(id: string, version = '') {
     return this.runCmd(`bit untag ${id} ${version}`);
   }
-  untagAll() {
-    return this.runCmd(`bit untag --all`);
+  untagAll(options = '') {
+    return this.runCmd(`bit untag ${options} --all`);
   }
   untagSoft(id: string) {
     return this.runCmd(`bit untag ${id} --soft`);
@@ -403,8 +406,12 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id} ${value}`, cwd);
   }
 
-  testComponent(id = '') {
-    return this.runCmd(`bit test ${id}`);
+  testComponent(id = '', flags = '') {
+    return this.runCmd(`bit test ${id} ${flags}`);
+  }
+
+  testAllWithJunit() {
+    return this.testComponent(undefined, '--junit junit.xml');
   }
 
   testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -458,9 +465,9 @@ export default class CommandHelper {
     return status.stagedComponents.includes(id);
   }
 
-  statusComponentIsModified(id: string): boolean {
+  statusComponentIsModified(fullId: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(id);
+    return status.modifiedComponent.includes(fullId);
   }
 
   showComponent(id = 'bar/foo') {
@@ -548,6 +555,12 @@ export default class CommandHelper {
   install(packages = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+  }
+  update(flags?: string) {
+    return this.runCmd(`bit update ${flags || ''}`);
+  }
+  uninstall(flags?: string) {
+    return this.runCmd(`bit uninstall ${flags || ''}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
