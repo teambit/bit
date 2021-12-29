@@ -12,5 +12,5 @@ export function NavLink({ href = '', ...rest }: NavLinkProps) {
   }
 
   // @ts-ignore (#4401)
-  return <ReactRouterNavLink {...rest} to={href} component={LinkAnchor} />;
+  return <ReactRouterNavLink component={LinkAnchor} {...rest} to={href} />;
 }
