@@ -521,8 +521,8 @@ jobs:
       - restore_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
-      - run: bvm install 0.0.428
-      # - run: bvm upgrade
+      # - run: bvm install 0.0.428
+      - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
@@ -530,6 +530,7 @@ jobs:
           paths:
             - /home/circleci/.bvm
       - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
+      - run: cd bit && ls node_modules/@teambit/react.instructions.react.adding-tests
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
 
