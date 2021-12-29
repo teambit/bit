@@ -12,5 +12,5 @@ export function Link({ href = '', ...rest }: LinkProps) {
   }
 
   // @ts-ignore (#4401)
-  return <ReactRouterLink {...rest} to={href} component={LinkAnchor} />;
+  return <ReactRouterLink component={LinkAnchor} {...rest} to={href} />;
 }
