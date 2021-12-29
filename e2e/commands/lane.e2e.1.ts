@@ -87,7 +87,7 @@ describe('bit lane command', function () {
       });
     });
     /** bit lane diff with args (toLane - default) */
-    describe.only('bit lane diff {toLane - default} on the workspace', () => {
+    describe('bit lane diff {toLane - default} on the workspace', () => {
       let diffOutput: string;
       before(() => {
         helper.command.switchLocalLane('main');
@@ -110,7 +110,7 @@ describe('bit lane command', function () {
       });
     });
     /** bit lane diff with args (toLane - non default) */
-    describe.only('bit lane diff {toLane - non default} on the workspace', () => {
+    describe('bit lane diff {toLane - non default} on the workspace', () => {
       let diffOutput: string;
       before(() => {
         helper.command.switchLocalLane('main');
