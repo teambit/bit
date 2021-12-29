@@ -580,7 +580,7 @@
       // Removing policies that should be defined only for aspects
       "teambit.dependencies/dependency-resolver": {}
     },
-    "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server": {
+    "scopes/harmony/bit-error, scopes/defender/tests-results, scopes/typescript/ts-server, scopes/component/component-issues, scopes/component/component-package-version, scopes/react/eslint-config-bit-react, scopes/toolbox/tables/cli-table": {
       "teambit.harmony/aspect": "-",
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
