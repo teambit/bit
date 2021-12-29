@@ -1,3 +1,4 @@
+import { ProvidePlugin } from 'webpack';
 import { generateStyleLoaders } from '@teambit/webpack.modules.fragments.style-preset';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { WebpackConfigWithDevServer } from '@teambit/webpack';
