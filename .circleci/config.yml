@@ -530,7 +530,6 @@ jobs:
           paths:
             - /home/circleci/.bvm
       - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
-      - run: cd bit && ls node_modules/@teambit/react.instructions.react.adding-tests
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
 
