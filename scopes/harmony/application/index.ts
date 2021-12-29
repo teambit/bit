@@ -5,3 +5,4 @@ export { AppContext } from './app-context';
 export { DeploymentProvider } from './deployment-provider';
 export { ApplicationType } from './application-type';
 export { DeployContext } from './deploy-context';
+export { AppBuildResult } from './app-build-result';

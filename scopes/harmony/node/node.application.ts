@@ -1,7 +1,6 @@
 import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
-import { Capsule } from '@teambit/isolator';
 import { ReactEnv } from '@teambit/react';
 import { Application } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
@@ -15,7 +14,7 @@ export class NodeApp implements Application {
     readonly portRange: number[],
     readonly nodeEnv: NodeEnv & ReactEnv,
     readonly logger: Logger,
-    readonly deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>
+    readonly deploy?: (context: DeployContext) => Promise<void>
   ) {}
 
   applicationType = 'node';

@@ -99,7 +99,7 @@ export class BuilderMain {
       const deployEnvsExecutionResults = isSnap
         ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
         : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
-      if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
+      if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
