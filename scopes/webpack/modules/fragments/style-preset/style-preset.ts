@@ -60,7 +60,7 @@ export type CssDialectOptions = {
 export type StyleLoadersOptions = CssOptions & CssDialectOptions;
 
 /** loaders for css, including dialects (sass and less), postcss, and css-modules */
-export const makeStyleLoaders = ({
+export const generateStyleLoaders = ({
   styleInjector = 'mini-css-extract-plugin',
   modules = true,
 
@@ -157,7 +157,7 @@ export const makeStyleLoaders = ({
 };
 
 /** loaders for pure css, including css-modules support and postcss but without and dialects (sass, less) */
-export const makeCssLoaders = ({
+export const generateCssLoaders = ({
   styleInjector = 'mini-css-extract-plugin',
   modules = true,
 

@@ -1,5 +1,5 @@
 import webpack, { Configuration } from 'webpack';
-import { makeStyleLoaders } from '@teambit/webpack.modules.fragments.style-preset';
+import { generateStyleLoaders } from '@teambit/webpack.modules.fragments.style-preset';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import path from 'path';
@@ -39,7 +39,7 @@ export default function createWebpackConfig(
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
 
-  const { styleLoaders, stylePlugins } = makeStyleLoaders({
+  const { styleLoaders, stylePlugins } = generateStyleLoaders({
     postcssOptions: postCssConfig,
     styleInjector: isEnvProduction ? undefined : 'style-loader',
   });
