@@ -7330,6 +7330,7 @@ __metadata:
     "@teambit/legacy": 1.0.196
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
+    "@teambit/react.instructions.react-native.adding-tests": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
     "@teambit/react.instructions.react.adding-tests": 0.0.6
     "@teambit/string.ellipsis": 0.0.7
@@ -7823,6 +7824,20 @@ __metadata:
     react: 16.13.1
     react-dom: 16.13.1
   checksum: d9b2008ddbe2eb2043b50b44c75ca70ca44c9e6583674925915edfc23087d0fbd9e8bb5bd8475c06345a0c3b5661265d8a12c5d893e930508c4b6b284addfef9
+  languageName: node
+  linkType: hard
+
+"@teambit/react.instructions.react-native.adding-tests@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@teambit/react.instructions.react-native.adding-tests@npm:0.0.1::__archiveUrl=https%3A%2F%2Fnode.bit.dev%2F%40teambit%2Freact.instructions.react-native.adding-tests%2F-%2F%40teambit-react.instructions.react-native.adding-tests-0.0.1.tgz"
+  dependencies:
+    "@mdx-js/react": 1.6.22
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 0bf766633cd224c4e04a520b878ad70591bb9d600bf9ac24ec2627843c1331afe7ab210d9e13fb59cc4b6f0f7e3bf67bbbce802013a1d48361a1b0ec0647ace7
   languageName: node
   linkType: hard
 
