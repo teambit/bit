@@ -209,4 +209,42 @@ describe('bit checkout command', function () {
       expect(content).to.equal('v1');
     });
   });
+  describe('when a file was deleted locally but not in the base and the new version', () => {
+    let scopeAfterFirstVersion: string;
+    let scopeBeforeCheckout: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/foo.ts');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      scopeAfterFirstVersion = helper.scopeHelper.cloneLocalScope();
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(scopeAfterFirstVersion);
+      helper.command.import();
+      helper.fs.deletePath('comp1/foo.ts');
+      scopeBeforeCheckout = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('bit checkout latest', () => {
+      before(() => {
+        helper.command.checkout('latest comp1 --skip-npm-install');
+      });
+      it('should leave the file deleted', () => {
+        const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
+        expect(deletedFile).to.not.be.a.path();
+      });
+    });
+    describe('bit checkout --reset', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
+        helper.command.checkout('comp1 --skip-npm-install --reset');
+      });
+      it('should re-create the file', () => {
+        const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
+        expect(deletedFile).to.be.a.path();
+      });
+    });
+  });
 });
