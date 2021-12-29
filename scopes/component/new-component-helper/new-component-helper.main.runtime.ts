@@ -51,7 +51,8 @@ export class NewComponentHelperMain {
     });
     await this.workspace.bitMap.write();
     this.workspace.clearCache();
-    // @todo: compile components.
+    // this takes care of compiling the component as well
+    await this.workspace.triggerOnComponentAdd(targetId);
   }
 
   async getConfigFromExistingToNewComponent(comp: Component) {
