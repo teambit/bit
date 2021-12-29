@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe.only('bit rename command', function () {
+describe('bit rename command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

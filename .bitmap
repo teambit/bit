@@ -650,13 +650,7 @@
         "version": "",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/new-component-helper",
-        "config": {
-            "teambit.harmony/aspect": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
-            }
-        }
+        "rootDir": "scopes/component/new-component-helper"
     },
     "node": {
         "scope": "teambit.harmony",
@@ -759,13 +753,7 @@
         "version": "",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/renaming",
-        "config": {
-            "teambit.harmony/aspect": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
-            }
-        }
+        "rootDir": "scopes/component/renaming"
     },
     "schema": {
         "scope": "teambit.semantics",
