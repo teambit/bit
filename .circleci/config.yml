@@ -1526,40 +1526,40 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
-      # - bundle_version_linux:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - bit_tag
-      # - bundle_version_windows:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - bit_tag
-      # - bundle_version_macos:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - bit_tag
-      # - harmony_publish_to_gcloud:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - bundle_version_linux
-      #       - bundle_version_windows
-      #       - bundle_version_macos
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
       - bit_export:
           <<: *master_only_filter
           requires:
             - bit_tag
-      # - symphony_docker_build:
-      #     requires:
-      #       - bit_tag
-      # - docker_build:
-      #     requires:
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build:
-      #     requires:
-      #       - harmony_publish_to_gcloud
-      # - server_docker_build:
-      #     requires:
-      #       - docker_build
+      - symphony_docker_build:
+          requires:
+            - bit_tag
+      - docker_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
 
   windows-nightly:
     triggers:
@@ -1634,49 +1634,49 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
-      # - bundle_version_linux:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - bit_tag
-      # - bundle_version_windows:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - bit_tag
-      # - bundle_version_macos:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - bit_tag
-      # - harmony_publish_to_gcloud:
-      #     <<: *master_only_filter
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - bundle_version_linux
-      #       - bundle_version_windows
-      #       - bundle_version_macos
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
       - bit_export:
           <<: *master_only_filter
           requires:
             - bit_tag
             - harmony_deploy_approval_job
-      # - symphony_docker_build:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - bit_tag
-      # - docker_build:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - harmony_publish_to_gcloud
-      # - server_docker_build:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - docker_build
+      - symphony_docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
   # bvm_bundle_debug:
   #   jobs:

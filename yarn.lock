@@ -6182,22 +6182,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/design.ui.tooltip@npm:0.0.352":
-  version: 0.0.352
-  resolution: "@teambit/design.ui.tooltip@npm:0.0.352::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.tooltip%2F-%2Fdesign.ui.tooltip-0.0.352.tgz"
-  dependencies:
-    "@teambit/base-ui.theme.dark-theme": 1.0.2
-    "@tippyjs/react": 4.2.0
-    classnames: 2.2.6
-    core-js: ^3.0.0
-    tippy.js: 6.2.7
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 043aeaf62a9525a35e5fde8af581a02dafe60d8f7a743ec3c6ba13471e76af71929906782b85f1aa765b7455a6857536aca52a35e5123a7eff946824c0d71941
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.code.react-playground@npm:4.0.1":
   version: 4.0.1
   resolution: "@teambit/documenter.code.react-playground@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.code.react-playground%2F-%2Fdocumenter.code.react-playground-4.0.1.tgz"
@@ -7425,9 +7409,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.195, @teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz":
-  version: 1.0.195
-  resolution: "@teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz"
+"@teambit/legacy@npm:1.0.196, @teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz":
+  version: 1.0.196
+  resolution: "@teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7550,7 +7534,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 952e8847ba4a48a0b9051ada02cc862f19bf3de35edb6b21184e8cdb051160737da7caf22930977ff5e48ea079eaa482ea351f51567f1db3d8fb3fda62372b67
+  checksum: 2de8757d7e86c43d8f036da8796713a9df121055367bd35efecb6e2cec767f74aeabe24e5c5fd1191237f7186ccd4e4216d3bed2158de9661978daf829df3e45
   languageName: node
   linkType: hard
 
@@ -7701,20 +7685,15 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.195
+    "@teambit/legacy": 1.0.196
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
     "@teambit/react.instructions.react.adding-tests": 0.0.6
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/toolbox.network.agent": 0.0.116
-    "@teambit/ui-foundation.ui.use-box.bit-info": 0.0.102
-    "@teambit/ui-foundation.ui.use-box.bottom-link": 0.0.102
-    "@teambit/ui-foundation.ui.use-box.dropdown": 0.0.105
-    "@teambit/ui-foundation.ui.use-box.menu": 0.0.104
-    "@teambit/ui-foundation.ui.use-box.tab": 0.0.102
-    "@teambit/ui-foundation.ui.use-box.tab-content": 0.0.102
     "@teambit/ui.composition-card": 0.0.259
+    "@teambit/ui.is-browser": 0.0.363
     "@teambit/ui.routing.provider": 0.0.364
     "@testing-library/jest-dom": 5.11.10
     "@testing-library/jest-native": 4.0.1
@@ -8124,7 +8103,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.195
+    "@teambit/legacy": 1.0.196
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -8269,200 +8248,6 @@ __metadata:
   peerDependencies:
     "@teambit/legacy": 1.0.108
   checksum: 92c3a62f45e3ae95b52f208b15db073cf241f3aeb8a0afdecfd1e56aebf39d2a9b09d7924b0d07cbe8a87632dc3578bd389e66b8321ce396568f5dcac3e3d762
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.back-button@npm:0.0.101":
-  version: 0.0.101
-  resolution: "@teambit/ui-foundation.ui.use-box.back-button@npm:0.0.101::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.back-button%2F-%2Fui-foundation.ui.use-box.back-button-0.0.101.tgz"
-  dependencies:
-    "@teambit/evangelist.elements.icon": 1.0.2
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 02cfa73d6732535be3f28b17a44cce985d6d16dbd3553d95ec2e926f68bbfa74912809d7f3d497e09715ef5450c802636fb5690dc83d2cb0ca06c7074ead0252
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.back-button@npm:0.0.102":
-  version: 0.0.102
-  resolution: "@teambit/ui-foundation.ui.use-box.back-button@npm:0.0.102::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.back-button%2F-%2Fui-foundation.ui.use-box.back-button-0.0.102.tgz"
-  dependencies:
-    "@teambit/evangelist.elements.icon": 1.0.2
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 77e3685fe30e2dbbc29151acc877a5f15ff873c7e7ade57271778a28481ad9592db21aa10f6555d246486b1064988f728378eee7b880afa885ae33ce646368f3
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.bit-info@npm:0.0.101":
-  version: 0.0.101
-  resolution: "@teambit/ui-foundation.ui.use-box.bit-info@npm:0.0.101::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.bit-info%2F-%2Fui-foundation.ui.use-box.bit-info-0.0.101.tgz"
-  dependencies:
-    "@teambit/base-ui.routing.link": 1.0.0
-    "@teambit/documenter.content.documentation-links": 4.0.1
-    "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/evangelist.elements.icon": 1.0.2
-    "@teambit/ui-foundation.ui.use-box.back-button": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.bottom-link": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.tab-content": 0.0.101
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 4d8e28806ce0ba7b67ea06dac9d411992368bd43b3a1edd41ffa23346dc992284f23906b1899a32593b14d84484ee60317d8511a5df41aac47f5ae66c3ee9e54
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.bit-info@npm:0.0.102":
-  version: 0.0.102
-  resolution: "@teambit/ui-foundation.ui.use-box.bit-info@npm:0.0.102::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.bit-info%2F-%2Fui-foundation.ui.use-box.bit-info-0.0.102.tgz"
-  dependencies:
-    "@teambit/base-ui.routing.link": 1.0.0
-    "@teambit/documenter.content.documentation-links": 4.0.1
-    "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/evangelist.elements.icon": 1.0.2
-    "@teambit/ui-foundation.ui.use-box.back-button": 0.0.102
-    "@teambit/ui-foundation.ui.use-box.bottom-link": 0.0.102
-    "@teambit/ui-foundation.ui.use-box.tab-content": 0.0.102
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: f827f2eebe8acdbb3af9598374362eab58ce1b275fb94fbbefd20e93feaa0d3834c9c48f5d15194c40e56f6cf624041cb9104abc14dfc3abbec2b921ddc32d85
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.bottom-link@npm:0.0.101":
-  version: 0.0.101
-  resolution: "@teambit/ui-foundation.ui.use-box.bottom-link@npm:0.0.101::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.bottom-link%2F-%2Fui-foundation.ui.use-box.bottom-link-0.0.101.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: b53d09513b8bacccda2aa759822ec8ee1165c6f9bc33ceee735fc1296f6eaa4f57169eebb86c3745e037d20e5a317b548be7a78c7912b61ce3ae59b4adffd963
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.bottom-link@npm:0.0.102":
-  version: 0.0.102
-  resolution: "@teambit/ui-foundation.ui.use-box.bottom-link@npm:0.0.102::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.bottom-link%2F-%2Fui-foundation.ui.use-box.bottom-link-0.0.102.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: db3aed9e8d76b994a0973381358dadb4d0c938c9cd60106eda3a7b6474b95bb488e1767c3505411362f4c370db7f58a949939a770c700951117abf2b38f459bd
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.dropdown@npm:0.0.105":
-  version: 0.0.105
-  resolution: "@teambit/ui-foundation.ui.use-box.dropdown@npm:0.0.105::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.dropdown%2F-%2Fui-foundation.ui.use-box.dropdown-0.0.105.tgz"
-  dependencies:
-    "@teambit/base-ui.layout.breakpoints": 1.0.0
-    "@teambit/evangelist.elements.icon": 1.0.2
-    "@teambit/evangelist.surfaces.dropdown": 1.0.2
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 417b516f7c72a0bfda2e3c7d312775cd3d434e94bf05fc3c1af4246e4405f681fa09259501b1fed0e02fff775a2f0d0690b8be30eb6d2ec21234cf36303fc321
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.menu@npm:0.0.104":
-  version: 0.0.104
-  resolution: "@teambit/ui-foundation.ui.use-box.menu@npm:0.0.104::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.menu%2F-%2Fui-foundation.ui.use-box.menu-0.0.104.tgz"
-  dependencies:
-    "@teambit/base-ui.routing.link": 1.0.0
-    "@teambit/design.ui.tooltip": 0.0.352
-    "@teambit/documenter.content.documentation-links": 4.0.1
-    "@teambit/documenter.ui.copy-box": 4.0.1
-    "@teambit/documenter.ui.highlighted-text": 4.1.1
-    "@teambit/evangelist.elements.icon": 1.0.2
-    "@teambit/ui-foundation.ui.use-box.back-button": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.bit-info": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.bottom-link": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.tab": 0.0.101
-    "@teambit/ui-foundation.ui.use-box.tab-content": 0.0.101
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 1775ac77d975298ed38626655b1f972e45db6c65511611dc0587613747b87e94d0a775142783f2844677c02c1ebf669b2a410ed3bbe34ff73f73adba46bc0be9
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.tab-content@npm:0.0.101":
-  version: 0.0.101
-  resolution: "@teambit/ui-foundation.ui.use-box.tab-content@npm:0.0.101::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.tab-content%2F-%2Fui-foundation.ui.use-box.tab-content-0.0.101.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 8b1fe49ba03cca6131d397ba7de61bf8dcbba1320c180079b110d8e46ec7c8db5418d8b0af073f14a7c58e9adc64e1cd662a2a80d265aec14427773b6c84d881
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.tab-content@npm:0.0.102":
-  version: 0.0.102
-  resolution: "@teambit/ui-foundation.ui.use-box.tab-content@npm:0.0.102::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.tab-content%2F-%2Fui-foundation.ui.use-box.tab-content-0.0.102.tgz"
-  dependencies:
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 18c9f09d3c7014de29e68425e71c02f54e091002b672722bc85a38d807a6710aea2adeaa7d5afed2dc2ca9c3a65ce62be643d6072f04f9fe5e172039bff1e511
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.tab@npm:0.0.101":
-  version: 0.0.101
-  resolution: "@teambit/ui-foundation.ui.use-box.tab@npm:0.0.101::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.tab%2F-%2Fui-foundation.ui.use-box.tab-0.0.101.tgz"
-  dependencies:
-    "@teambit/evangelist.elements.icon": 1.0.2
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.192
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 274b751adf7887bdb9530480d9c6b2d22e00755d26a2233dd639273e4292a1a95dd5998869509976e70effafced006c5b13bf3c745b42a9ff3a32cd507a21919
-  languageName: node
-  linkType: hard
-
-"@teambit/ui-foundation.ui.use-box.tab@npm:0.0.102":
-  version: 0.0.102
-  resolution: "@teambit/ui-foundation.ui.use-box.tab@npm:0.0.102::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui-foundation.ui.use-box.tab%2F-%2Fui-foundation.ui.use-box.tab-0.0.102.tgz"
-  dependencies:
-    "@teambit/evangelist.elements.icon": 1.0.2
-    classnames: 2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    "@teambit/legacy": 1.0.193
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 75bc71b2ee17ba7442b7625b3e0831949f7d43d999773dfc3b38209346282feb527425480c660d9a2fd250c72fcac70a49e92708b586f508c3e52284339ce04f
   languageName: node
   linkType: hard
 
