@@ -5952,21 +5952,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/design.ui.icon-button@npm:1.0.10":
-  version: 1.0.10
-  resolution: "@teambit/design.ui.icon-button@npm:1.0.10::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.icon-button%2F-%2Fdesign.ui.icon-button-1.0.10.tgz"
-  dependencies:
-    "@teambit/base-ui.elements.icon": 1.0.0
-    "@teambit/base-ui.input.button": 1.0.3
-    classnames: ^2.2.6
-    core-js: ^3.0.0
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0
-    react-dom: ^16.8.0 || ^17.0.0
-  checksum: 433aecb226aeb08f3da46fe8154ff7b4616b4b0d6c04f09928db718a1f7b8e6ab02230f2d12dd83859c6b735444de4aa76c95d0d4181817673c8ebdd81d12b7f
-  languageName: node
-  linkType: hard
-
 "@teambit/documenter.code.react-playground@npm:4.0.1":
   version: 4.0.1
   resolution: "@teambit/documenter.code.react-playground@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdocumenter.code.react-playground%2F-%2Fdocumenter.code.react-playground-4.0.1.tgz"
