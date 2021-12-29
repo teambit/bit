@@ -549,12 +549,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
-    "modules/generate-style-loaders": {
-        "scope": "teambit.webpack",
-        "version": "0.0.100",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/generate-style-loaders"
-    },
     "modules/match-pattern": {
         "scope": "teambit.workspace",
         "version": "0.0.485",
