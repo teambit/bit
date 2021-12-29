@@ -153,17 +153,18 @@ export class LaneDiffGenerator {
     return laneData;
   }
 
-  private async mapToLaneData({ name, components, remoteLaneId, isFullyMerged }: Lane): Promise<LaneData> {
+  private async mapToLaneData(lane: Lane): Promise<LaneData> {
+    const { name, components, remoteLaneId } = lane;
+    const isMerged = await lane.isFullyMerged(this.scope.legacyScope);
     return {
       name,
+      isMerged,
       components: components.map((lc) => ({
         id: lc.id,
         head: lc.head,
         version: lc.id.version?.toString(),
       })),
       remote: (!!remoteLaneId && remoteLaneId.toString()) || null,
-      isMerged: null,
-      //await isFullyMerged(this.scope.legacyScope),
     };
   }
 }
