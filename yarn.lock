@@ -7051,9 +7051,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.195":
-  version: 1.0.195
-  resolution: "@teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz"
+"@teambit/legacy@npm:1.0.196":
+  version: 1.0.196
+  resolution: "@teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
