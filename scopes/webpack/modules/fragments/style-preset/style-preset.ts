@@ -28,9 +28,9 @@ export type CssOptions = {
   /** use this explicit postcssLoader */
   postcssLoader?: WebpackLoader;
   /** use this explicit style-loader */
-  styleLoader: WebpackLoader;
+  styleLoader?: WebpackLoader;
   /** use this explicit miniCssExtractPlugin. It will be by default and when styleInjector is `mini-css-extract-plugin` */
-  MiniCssExtractPlugin: any;
+  MiniCssExtractPlugin?: any;
 
   /** options for MiniCssExtractPlugin */
   miniCssOptions?: PluginOptions;
