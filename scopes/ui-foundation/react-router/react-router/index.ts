@@ -8,7 +8,6 @@ export type { ReactRouterUI } from './react-router.ui.runtime';
 export { Link, LinkProps } from '@teambit/base-ui.routing.link';
 export { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 export { RoutingProvider, useRouting, useLocation } from '@teambit/base-ui.routing.routing-provider';
-export { LinkAnchor, LinkContextProvider, useLinkContext } from '@teambit/ui-foundation.ui.react-router.link-anchor';
 export * as ReactRouter from 'react-router';
 
 export { ReactRouterAspect };

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link as ReactRouterLink } from 'react-router-dom';
 import { NativeLink, LinkProps } from '@teambit/base-ui.routing.native-link';
-import { LinkAnchor } from '@teambit/ui-foundation.ui.react-router.link-anchor';
 
 export { LinkProps };
 
@@ -12,5 +11,5 @@ export function Link({ href = '', ...rest }: LinkProps) {
   }
 
   // @ts-ignore (#4401)
-  return <ReactRouterLink component={LinkAnchor} {...rest} to={href} />;
+  return <ReactRouterLink {...rest} to={href} />;
 }
