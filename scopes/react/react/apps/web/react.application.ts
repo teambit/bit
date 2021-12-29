@@ -2,7 +2,7 @@ import { join, basename } from 'path';
 import { Capsule } from '@teambit/isolator';
 import { Application, AppContext, AppBuildResult, DeployContext } from '@teambit/application';
 import { ArtifactDefinition, BuildContext } from '@teambit/builder';
-import { Bundler, BundlerResult, BundlerContext, DevServerContext } from '@teambit/bundler';
+import { Bundler, DevServer, BundlerResult, BundlerContext, DevServerContext } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
@@ -16,12 +16,19 @@ export class ReactApp implements Application {
     private reactEnv: ReactEnv,
     readonly prerenderRoutes?: string[],
     readonly bundler?: Bundler,
+    readonly devServer?: DevServer,
     readonly transformers?: WebpackConfigTransformer[],
     readonly deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>
   ) {}
 
   readonly applicationType = 'react-common-js';
   async run(context: AppContext): Promise<number> {
+    const [from, to] = this.portRange;
+    const port = await Port.getPort(from, to);
+    if (this.devServer) {
+      await this.devServer.listen(port);
+      return port;
+    }
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
@@ -38,8 +45,6 @@ export class ReactApp implements Application {
         return configMutator;
       },
     ]);
-    const [from, to] = this.portRange;
-    const port = await Port.getPort(from, to);
     await devServer.listen(port);
     return port;
   }

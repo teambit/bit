@@ -4,6 +4,8 @@ import { AppContext } from './app-context';
 import { DeployContext } from './deploy-context';
 import { AppBuildResult } from './app-build-result';
 
+export type DeployFn = (context: DeployContext, capsule: Capsule) => Promise<void>;
+
 export interface Application {
   /**
    * name of the application. e.g. ripple-ci.
@@ -23,5 +25,5 @@ export interface Application {
   /**
    * application deployment. this is a build task.
    */
-  deploy?(context: DeployContext, capsule: Capsule): Promise<void>;
+  deploy?: DeployFn;
 }

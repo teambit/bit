@@ -14,6 +14,7 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       this.reactEnv,
       options.prerender?.routes,
       options.bundler,
+      options.devServer,
       options.webpackTransformers,
       options.deploy
     );
