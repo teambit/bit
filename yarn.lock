@@ -7409,9 +7409,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.195, @teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz":
-  version: 1.0.195
-  resolution: "@teambit/legacy@npm:1.0.195::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.195.tgz"
+"@teambit/legacy@npm:1.0.196, @teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz":
+  version: 1.0.196
+  resolution: "@teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7534,7 +7534,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 952e8847ba4a48a0b9051ada02cc862f19bf3de35edb6b21184e8cdb051160737da7caf22930977ff5e48ea079eaa482ea351f51567f1db3d8fb3fda62372b67
+  checksum: 2de8757d7e86c43d8f036da8796713a9df121055367bd35efecb6e2cec767f74aeabe24e5c5fd1191237f7186ccd4e4216d3bed2158de9661978daf829df3e45
   languageName: node
   linkType: hard
 
@@ -7685,7 +7685,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.195
+    "@teambit/legacy": 1.0.196
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
@@ -7693,6 +7693,7 @@ __metadata:
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/toolbox.network.agent": 0.0.116
     "@teambit/ui.composition-card": 0.0.259
+    "@teambit/ui.is-browser": 0.0.363
     "@teambit/ui.routing.provider": 0.0.364
     "@testing-library/jest-dom": 5.11.10
     "@testing-library/jest-native": 4.0.1
@@ -8102,7 +8103,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.195
+    "@teambit/legacy": 1.0.196
     jest: 26.6.3
   bin:
     bit: bin/bit.js
