@@ -259,7 +259,7 @@ export class WorkspaceCompiler {
   }
 
   async compileComponents(
-    componentsIds: string[] | BitId[], // when empty, it compiles new+modified (unless options.all is set),
+    componentsIds: string[] | BitId[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
     noThrow?: boolean
   ): Promise<BuildResult[]> {
@@ -295,7 +295,10 @@ export class WorkspaceCompiler {
     return newCompilersResultOnWorkspace;
   }
 
-  private async getIdsToCompile(componentsIds: Array<string | BitId>, changed = false): Promise<ComponentID[]> {
+  private async getIdsToCompile(
+    componentsIds: Array<string | ComponentID | BitId>,
+    changed = false
+  ): Promise<ComponentID[]> {
     if (componentsIds.length) {
       return this.workspace.resolveMultipleComponentIds(componentsIds);
     }
