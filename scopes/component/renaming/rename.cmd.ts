@@ -14,7 +14,7 @@ export class RenameCmd implements Command {
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope', 'default scope for the newly created component'],
+    ['s', 'scope <string>', 'default scope for the newly created component'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
   ] as CommandOptions;
   loader = true;
