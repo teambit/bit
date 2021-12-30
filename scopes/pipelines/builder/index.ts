@@ -1,4 +1,4 @@
-export { BuildPipe } from './build-pipe';
+export { BuildPipe, TaskResults } from './build-pipe';
 export { ComponentResult, TaskMetadata } from './types';
 export { BuildContext, BuildTask, BuiltTaskResult, TaskLocation, BuildTaskHelper } from './build-task';
 export type { BuilderMain, BuilderData } from './builder.main.runtime';

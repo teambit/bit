@@ -1,10 +1,7 @@
 import { Bundler, DevServer } from '@teambit/bundler';
 import { DeployContext } from '@teambit/application';
 import { Capsule } from '@teambit/isolator';
-
-export interface ReactAppDeployContext extends DeployContext {
-  publicDir: string;
-}
+import { WebpackConfigTransformer } from '@teambit/webpack';
 
 export type ReactAppOptions = {
   /**
@@ -33,20 +30,22 @@ export type ReactAppOptions = {
   devServer?: DevServer;
 
   /**
-   * decide whether to prerender your app. accepts an array of routes. if none, prerender would not apply.
+   * set webpack transformers
    */
-  prerender?: string[];
+  webpackTransformers?: WebpackConfigTransformer[];
+
+  /**
+   * decide whether to prerender your app. accepts an array of routes. if none, prerender would not apply.
+   * e.g ['/plugins', '/learn', '/docs/quick-start]
+   */
+  prerender?: {
+    routes?: string[];
+  };
 
   /**
    * deploy function.
    */
-  deploy?: (context: ReactAppDeployContext, capsule: Capsule) => Promise<void>;
-
-  /**
-   * prerender routes of application (will create static file for the route)
-   * e.g ['/plugins', '/learn', '/docs/quick-start]
-   */
-  prerenderRoutes?: string[];
+  deploy?: (context: DeployContext, Capsule: Capsule) => Promise<void>;
 
   /**
    * ranges of ports to use to run the app server.
