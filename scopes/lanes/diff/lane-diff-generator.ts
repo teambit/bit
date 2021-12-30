@@ -168,7 +168,7 @@ export class LaneDiffGenerator {
         head: lc.head,
         version: lc.id.version?.toString(),
       })),
-      remote: remoteLaneId?.toString(),
+      remote: remoteLaneId?.toString() ?? null,
     };
   }
 }
