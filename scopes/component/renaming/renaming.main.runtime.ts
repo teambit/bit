@@ -18,9 +18,8 @@ export class RenamingMain {
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const sourceComp = await this.workspace.get(sourceId);
     const targetId = this.newComponentHelper.getNewComponentId(targetIdStr, undefined, options?.scope);
-    const targetPath = this.newComponentHelper.getNewComponentPath(targetId, options?.path);
     const config = await this.getConfig(sourceComp);
-    await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetPath, targetId, config);
+    await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
     await this.deprecation.deprecate(sourceId, targetId);
 
     return {
