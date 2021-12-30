@@ -401,12 +401,16 @@ export default class ScopeComponentsImporter {
    * get a single component from a remote without saving it locally
    */
   async getRemoteComponent(id: BitId): Promise<BitObjectList | null | undefined> {
+    if (!id.scope) {
+      throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+    }
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
       bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
     } catch (err: any) {
+      logger.error(`getRemoteComponent, failed to get ${id.toString()}`, err);
       return null; // probably doesn't exist
     }
 

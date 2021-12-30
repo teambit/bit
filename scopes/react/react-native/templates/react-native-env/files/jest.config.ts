@@ -8,12 +8,11 @@ export function jestConfigFile() {
   // const {
   //   generateNodeModulesPattern,
   // } = require('@teambit/dependencies.modules.packages-excluder');
-  // const packagesToExclude = ['@my-org', 'my-package-name'];
+  // const packagesToExclude = ['@react-native', 'react-native', 'react-native-button', '@my-org', 'my-package-name'];
 
   // module.exports = {
   //   ...reactNativeJestConfig,
   //   transformIgnorePatterns: [
-  //     ...reactNativeJestConfig.transformIgnorePatterns,
   //     '<rootDir>/' + generateNodeModulesPattern({packages: packagesToExclude}),
   //   ],
   // };
