@@ -52,7 +52,7 @@ export class LaneDiffGenerator {
       const fromLane = fromLaneId ? await legacyScope.lanes.loadLane(fromLaneId) : null;
       this.toLaneData = await this.mapToLaneData(toLane);
       this.fromLaneData = fromLane ? await this.mapToLaneData(fromLane) : null;
-    } else if (fromLaneId?.isDefault() && !!toLaneId) {
+    } else if (fromLaneId?.isDefault() && toLaneId) {
       const toLane = await legacyScope.lanes.loadLane(toLaneId);
       if (!toLane) throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
 
@@ -141,15 +141,19 @@ export class LaneDiffGenerator {
       components: [],
       isMerged: null,
     };
-    for await (const id of ids) {
-      const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-      const laneComponent = {
-        id,
-        head: modelComponent.head as Ref,
-        version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
-      };
-      laneData.components.push(laneComponent);
-    }
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+        const laneComponent = {
+          id,
+          head: modelComponent.head as Ref,
+          version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
+        };
+        laneData.components.push(laneComponent);
+      })
+    );
+
     return laneData;
   }
 
@@ -164,7 +168,7 @@ export class LaneDiffGenerator {
         head: lc.head,
         version: lc.id.version?.toString(),
       })),
-      remote: (!!remoteLaneId && remoteLaneId.toString()) || null,
+      remote: remoteLaneId?.toString(),
     };
   }
 }
