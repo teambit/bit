@@ -1,5 +1,4 @@
 import { PreviewPreview, PreviewRuntime, PreviewAspect } from '@teambit/preview';
-import { HighlighterProvider } from '@teambit/react.ui.highlighter-provider';
 import { ReactPreview, ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
 
@@ -18,8 +17,6 @@ export class ReactNativePreview {
 
   static async provider([reactPreview, preview]: [ReactPreview, PreviewPreview]) {
     const reactNativePreview = new ReactNativePreview(reactPreview, preview);
-
-    reactNativePreview.registerProvider([HighlighterProvider]);
 
     preview.registerRenderContext(() => {
       return reactNativePreview.getRenderingContext();
