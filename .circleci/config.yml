@@ -695,7 +695,7 @@ jobs:
     steps:
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -738,7 +738,7 @@ jobs:
       - run: yarn -v
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -779,7 +779,7 @@ jobs:
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
