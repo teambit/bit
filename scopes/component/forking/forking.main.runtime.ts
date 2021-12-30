@@ -4,10 +4,12 @@ import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
+import { forkingSchema } from './forking.graphql';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -101,17 +103,20 @@ please specify the target-id arg`);
     DependencyResolverAspect,
     ComponentAspect,
     NewComponentHelperAspect,
+    GraphqlAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper]: [
+  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper, graphql]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     ComponentMain,
-    NewComponentHelperMain
+    NewComponentHelperMain,
+    GraphqlMain
   ]) {
     const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper);
     cli.register(new ForkCmd(forkingMain));
+    graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
     return forkingMain;
   }

@@ -1,11 +1,13 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
+import { renamingSchema } from './renaming.graphql';
 
 export class RenamingMain {
   constructor(
@@ -48,17 +50,26 @@ export class RenamingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DeprecationAspect, NewComponentHelperAspect, ComponentAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    DeprecationAspect,
+    NewComponentHelperAspect,
+    ComponentAspect,
+    GraphqlAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, deprecation, newComponentHelper, componentMain]: [
+  static async provider([cli, workspace, deprecation, newComponentHelper, componentMain, graphql]: [
     CLIMain,
     Workspace,
     DeprecationMain,
     NewComponentHelperMain,
-    ComponentMain
+    ComponentMain,
+    GraphqlMain
   ]) {
     const renaming = new RenamingMain(workspace, newComponentHelper, deprecation);
     cli.register(new RenameCmd(renaming));
+    graphql.register(renamingSchema(renaming));
     componentMain.registerShowFragments([new RenamingFragment(renaming)]);
     return renaming;
   }
