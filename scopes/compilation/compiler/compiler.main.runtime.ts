@@ -1,7 +1,7 @@
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 
@@ -33,7 +33,7 @@ export class CompilerMain {
    * Run compilation on `bit new` and when new components are imported
    */
   compileOnWorkspace(
-    componentsIds: string[] | BitId[] = [], // when empty, it compiles all
+    componentsIds: string[] | BitId[] | ComponentID[] = [], // when empty, it compiles all
     options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);

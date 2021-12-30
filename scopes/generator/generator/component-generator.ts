@@ -10,7 +10,7 @@ import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
+import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
@@ -23,14 +23,15 @@ export class ComponentGenerator {
     private componentIds: ComponentID[],
     private options: CreateOptions,
     private template: ComponentTemplate,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private newComponentHelper: NewComponentHelperMain
   ) {}
 
   async generate(): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.getComponentPath(componentId);
+        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, this.options.path);
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
         }
@@ -144,10 +145,5 @@ export class ComponentGenerator {
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
     return results;
-  }
-
-  private getComponentPath(componentId: ComponentID) {
-    if (this.options.path) return this.options.path;
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }
