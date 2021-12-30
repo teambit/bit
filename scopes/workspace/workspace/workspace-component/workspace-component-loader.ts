@@ -110,6 +110,17 @@ export class WorkspaceComponentLoader {
     return component;
   }
 
+  async getIfExist(componentId: ComponentID) {
+    try {
+      return await this.get(componentId);
+    } catch (err: any) {
+      if (this.isComponentNotExistsError(err)) {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
   private addMultipleEnvsIssueIfNeeded(component: Component) {
     const envs = this.envs.getAllEnvsConfiguredOnComponent(component);
     if (envs.length < 2) {

@@ -7330,6 +7330,7 @@ __metadata:
     "@teambit/legacy": 1.0.196
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
+    "@teambit/react.instructions.react-native.adding-tests": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.6
     "@teambit/react.instructions.react.adding-tests": 0.0.6
     "@teambit/string.ellipsis": 0.0.7
@@ -7823,6 +7824,20 @@ __metadata:
     react: 16.13.1
     react-dom: 16.13.1
   checksum: d9b2008ddbe2eb2043b50b44c75ca70ca44c9e6583674925915edfc23087d0fbd9e8bb5bd8475c06345a0c3b5661265d8a12c5d893e930508c4b6b284addfef9
+  languageName: node
+  linkType: hard
+
+"@teambit/react.instructions.react-native.adding-tests@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@teambit/react.instructions.react-native.adding-tests@npm:0.0.1::__archiveUrl=https%3A%2F%2Fnode.bit.dev%2F%40teambit%2Freact.instructions.react-native.adding-tests%2F-%2F%40teambit-react.instructions.react-native.adding-tests-0.0.1.tgz"
+  dependencies:
+    "@mdx-js/react": 1.6.22
+    "@teambit/mdx.ui.mdx-scope-context": 0.0.368
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 0bf766633cd224c4e04a520b878ad70591bb9d600bf9ac24ec2627843c1331afe7ab210d9e13fb59cc4b6f0f7e3bf67bbbce802013a1d48361a1b0ec0647ace7
   languageName: node
   linkType: hard
 
@@ -18987,6 +19002,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"forking-bf6fdd@workspace:scopes/component/forking":
+  version: 0.0.0-use.local
+  resolution: "forking-bf6fdd@workspace:scopes/component/forking"
+  languageName: unknown
+  linkType: soft
+
 "form-data@npm:3.0.0":
   version: 3.0.0
   resolution: "form-data@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fform-data%2F-%2Fform-data-3.0.0.tgz"
@@ -25687,6 +25708,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"new-component-helper-8a261d@workspace:scopes/component/new-component-helper":
+  version: 0.0.0-use.local
+  resolution: "new-component-helper-8a261d@workspace:scopes/component/new-component-helper"
+  languageName: unknown
+  linkType: soft
+
 "new-url-loader@npm:0.1.1":
   version: 0.1.1
   resolution: "new-url-loader@npm:0.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fnew-url-loader%2F-%2Fnew-url-loader-0.1.1.tgz"
@@ -30304,6 +30331,12 @@ __metadata:
   checksum: 0637fbe782c2e04a21160d830263bf09068d9b09bc0c2b0b5b9d987917bf25e58ecf9bb04061c26570adbd25ba7ec6a48934464d1034ac753ef90ecd48410fda
   languageName: node
   linkType: hard
+
+"renaming-ad33b1@workspace:scopes/component/renaming":
+  version: 0.0.0-use.local
+  resolution: "renaming-ad33b1@workspace:scopes/component/renaming"
+  languageName: unknown
+  linkType: soft
 
 "render-template-68ac4a@workspace:scopes/html/modules/render-template":
   version: 0.0.0-use.local
