@@ -97,9 +97,9 @@ export class BuilderMain {
     pipeResults.push(envsExecutionResults);
     if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions)
-        : await this.runTagTasks(components, isolateOptions);
-      if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
+        ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
+        : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
+      if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
@@ -188,16 +188,30 @@ export class BuilderMain {
     return buildResult;
   }
 
-  async runTagTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async runTagTasks(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    previousTasksResults?: TaskResults[]
+  ): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.tagService, { seedersOnly: isolateOptions?.seedersOnly });
+    const buildResult = await envs.runOnce(this.tagService, {
+      seedersOnly: isolateOptions?.seedersOnly,
+      previousTasksResults,
+    });
 
     return buildResult;
   }
 
-  async runSnapTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async runSnapTasks(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    previousTasksResults?: TaskResults[]
+  ): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.snapService, { seedersOnly: isolateOptions?.seedersOnly });
+    const buildResult = await envs.runOnce(this.snapService, {
+      seedersOnly: isolateOptions?.seedersOnly,
+      previousTasksResults,
+    });
 
     return buildResult;
   }
