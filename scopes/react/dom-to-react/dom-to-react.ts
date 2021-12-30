@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 import { domToFiber, toRootFiber } from './dom-to-fiber';
-import { FiberNode } from './fiber-node';
+import { FiberNode, ForwardRefInstance } from './fiber-node';
+
+export type ReactComponent = ComponentType | ForwardRefInstance;
 
 /**
  * a function that returns the React component of a given
@@ -30,7 +32,7 @@ export function domToReact(element: HTMLElement | null) {
   return components.pop();
 }
 
-export function domToReacts(element: HTMLElement | null): ComponentType[] {
+export function domToReacts(element: HTMLElement | null): ReactComponent[] {
   if (element === null) return [];
 
   const fiberNode = domToFiber(element);
@@ -42,11 +44,11 @@ export function domToReacts(element: HTMLElement | null): ComponentType[] {
 /**
  * lists components that immediately rendered this element
  */
-function componentsOf(fiberNode: FiberNode | null): ComponentType[] {
-  const components: ComponentType[] = [];
+function componentsOf(fiberNode: FiberNode | null): ReactComponent[] {
+  const components: ReactComponent[] = [];
 
   let current = fiberNode;
-  while (current && typeof current.type === 'function') {
+  while (current && current.type !== null && typeof current.type !== 'string') {
     components.push(current.type);
     current = current.return;
   }
