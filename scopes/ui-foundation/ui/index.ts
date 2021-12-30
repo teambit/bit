@@ -10,7 +10,7 @@ export type { StartPlugin, StartPluginOptions } from './start-plugin';
 export type {
   BrowserData,
   RenderPlugins,
-  /** @deprecated - legacy name, use RenderHooks */
+  /** @deprecated - legacy name, use RenderPlugins */
   RenderPlugins as RenderLifecycle,
 } from './react-ssr';
 export type { UIRootUI, UIRootFactory } from './ui-root.ui';

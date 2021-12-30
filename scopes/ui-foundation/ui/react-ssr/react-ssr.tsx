@@ -12,7 +12,6 @@ import type { SsrContent } from './ssr-content';
 import type { RequestServer } from './request-server';
 import type { BrowserData } from './request-browser';
 
-// TODO - add id with breaking changes
 type RenderPluginsWithId = [key: string, hooks: RenderPlugins];
 
 export class ReactSSR {

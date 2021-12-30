@@ -6,14 +6,13 @@ import { BrowserData } from '../react-ssr';
  */
 
 export function extractBrowserData(req: Request, port: number) {
-  // apparently port is not readily available in request.
   const browser: BrowserData = {
     connection: {
       secure: req.secure,
       headers: req.headers,
       body: req.body,
     },
-    // trying to match to browser.location
+    // rebuild browser location from request, +port
     location: {
       host: `${req.hostname}:${port}`,
       hostname: req.hostname,
