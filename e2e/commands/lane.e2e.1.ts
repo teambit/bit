@@ -22,7 +22,7 @@ describe('bit lane command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('creating a new lane without any component', () => {
+  describe('creating a new lane without any component', () => {
     let output;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
