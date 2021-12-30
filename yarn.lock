@@ -19002,6 +19002,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"forking-bf6fdd@workspace:scopes/component/forking":
+  version: 0.0.0-use.local
+  resolution: "forking-bf6fdd@workspace:scopes/component/forking"
+  languageName: unknown
+  linkType: soft
+
 "form-data@npm:3.0.0":
   version: 3.0.0
   resolution: "form-data@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fform-data%2F-%2Fform-data-3.0.0.tgz"
@@ -25702,6 +25708,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"new-component-helper-8a261d@workspace:scopes/component/new-component-helper":
+  version: 0.0.0-use.local
+  resolution: "new-component-helper-8a261d@workspace:scopes/component/new-component-helper"
+  languageName: unknown
+  linkType: soft
+
 "new-url-loader@npm:0.1.1":
   version: 0.1.1
   resolution: "new-url-loader@npm:0.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fnew-url-loader%2F-%2Fnew-url-loader-0.1.1.tgz"
@@ -30319,6 +30331,12 @@ __metadata:
   checksum: 0637fbe782c2e04a21160d830263bf09068d9b09bc0c2b0b5b9d987917bf25e58ecf9bb04061c26570adbd25ba7ec6a48934464d1034ac753ef90ecd48410fda
   languageName: node
   linkType: hard
+
+"renaming-ad33b1@workspace:scopes/component/renaming":
+  version: 0.0.0-use.local
+  resolution: "renaming-ad33b1@workspace:scopes/component/renaming"
+  languageName: unknown
+  linkType: soft
 
 "render-template-68ac4a@workspace:scopes/html/modules/render-template":
   version: 0.0.0-use.local
