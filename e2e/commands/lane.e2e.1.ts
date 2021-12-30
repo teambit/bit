@@ -108,7 +108,6 @@ describe('bit lane command', function () {
         expect(diffOutput).to.not.have.string('+++ Id');
       });
     });
-    /** bit lane diff with args (toLane - non default) */
     describe('bit lane diff {toLane - non default} on the workspace', () => {
       let diffOutput: string;
       before(() => {
