@@ -11,6 +11,7 @@ import type { SsrContent } from './ssr-content';
 import type { RequestServer } from './request-server';
 import type { BrowserData } from './request-browser';
 
+// TODO - add id with breaking changes
 type RenderPluginsWithId = [key: string, hooks: RenderPlugins];
 
 export class ReactSSR {
@@ -131,6 +132,18 @@ export class ReactSSR {
     return renderContexts;
   }
 
+  private getReactContexts(renderContexts: any[]): Wrapper[] {
+    const { lifecycleHooks } = this;
+
+    return compact(
+      lifecycleHooks.map(([, hooks], idx) => {
+        const renderCtx = renderContexts[idx];
+        const props = { renderCtx };
+        return hooks.reactContext ? [hooks.reactContext, props] : undefined;
+      })
+    );
+  }
+
   private async deserialize() {
     const { lifecycleHooks } = this;
     const rawAssets = Html.popAssets();
@@ -149,18 +162,6 @@ export class ReactSSR {
     );
 
     return deserialized;
-  }
-
-  private getReactContexts(renderContexts: any[]): Wrapper[] {
-    const { lifecycleHooks } = this;
-
-    return compact(
-      lifecycleHooks.map(([, hooks], idx) => {
-        const renderCtx = renderContexts[idx];
-        const props = { renderCtx };
-        return hooks.reactContext ? [hooks.reactContext, props] : undefined;
-      })
-    );
   }
 
   private async serialize(renderContexts: any[], app: ReactNode): Promise<Assets> {
