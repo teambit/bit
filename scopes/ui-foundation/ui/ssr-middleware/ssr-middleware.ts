@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
 import type { Logger } from '@teambit/logger';
-import { browserDataFrom } from '../react-ssr';
 import type { SsrContent } from '../react-ssr';
+import { extractBrowserData } from './extract-browser-data';
 
 const denyList = /^\/favicon.ico$/;
 
@@ -30,7 +30,7 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
   return async function serverRenderMiddleware(req: Request, res: Response, next: NextFunction) {
     const { query, url } = req;
 
-    const browser = browserDataFrom(req, port);
+    const browser = extractBrowserData(req, port);
 
     if (denyList.test(url)) {
       logger.debug(`[ssr] skipping static denyList file ${url}`);

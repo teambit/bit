@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { merge } from 'webpack-merge';
 import compact from 'lodash.compact';
 import ReactDOM from 'react-dom';
 import ReactDOMServer from 'react-dom/server';
