@@ -682,6 +682,13 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * don't throw an error if the component was not found, simply return undefined.
+   */
+  async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
+    return this.componentLoader.getIfExist(componentId);
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
@@ -765,7 +772,7 @@ export class Workspace implements ComponentFactory {
   async write(rootPath: string, component: Component) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.path);
+        const pathToWrite = path.join(this.path, rootPath, file.relative);
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
