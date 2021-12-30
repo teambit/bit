@@ -1,0 +1,1 @@
+export { prerenderSPAPlugin } from './prerender';
