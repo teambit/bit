@@ -19,7 +19,7 @@ export class DeprecationFragment implements ShowFragment {
   async json(component: Component) {
     return {
       title: this.title,
-      json: this.deprecation.getDeprecationInfo(component),
+      json: await this.deprecation.getDeprecationInfo(component),
     };
   }
 

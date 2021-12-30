@@ -102,6 +102,7 @@ export default async function checkoutVersion(
       writeDists: !checkoutProps.ignoreDist,
       writeConfig: checkoutProps.writeConfig,
       writePackageJson: !checkoutProps.ignorePackageJson,
+      resetConfig: checkoutProps.reset,
     });
     await manyComponentsWriter.writeAll();
     await deleteFilesIfNeeded(componentsResults, consumer);
