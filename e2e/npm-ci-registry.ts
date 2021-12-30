@@ -1,9 +1,8 @@
 /* eslint no-console: 0 */
-import { REGISTRY_MOCK_PORT } from '@pnpm/registry-mock';
+import { addUser, REGISTRY_MOCK_PORT } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
 import fetch from 'cross-fetch';
 import execa from 'execa';
-import fs from 'fs-extra';
 import * as path from 'path';
 
 import Helper from '../src/e2e-helper/e2e-helper';
@@ -46,7 +45,7 @@ export default class NpmCiRegistry {
   }
   async init(scopes: string[] = [this.ciDefaultScope]) {
     await this._establishRegistry();
-    this._addDefaultUser();
+    await this._addDefaultUser();
     this._registerScopes(scopes);
   }
 
@@ -86,25 +85,15 @@ export default class NpmCiRegistry {
     });
   }
 
-  _addDefaultUser() {
-    const addUser = `expect <<EOD
-spawn npm adduser --registry ${this.ciRegistry} --scope=${this.ciDefaultScope}
-expect {
-"Username:" {send "ci\r"; exp_continue}
-"Password:" {send "secret\r"; exp_continue}
-"Email: (this IS public)" {send "ci@ci.com\r"; exp_continue}
-}
-EOD`;
-    fs.writeFileSync('adduser.sh', addUser);
-    const addUserResult = execa.sync('sh', ['adduser.sh']);
-    if (
-      !addUserResult.stdout.includes('Logged in as ci to scope @ci') && // npm<7
-      !addUserResult.stdout.includes(`Logged in as ci on ${this.ciRegistry}`) // npm>=7
-    ) {
-      throw new Error(`failed executing npm adduser ${addUserResult.stderr || addUserResult.stdout}`);
-    }
+  async _addDefaultUser() {
+    const { token } = await addUser({
+      username: 'ci',
+      password: 'secret',
+      email: 'ci@ci.com',
+    });
+    execa.sync('npm', ['config', 'set', `${this.ciDefaultScope}:registry=${this.ciRegistry}`]);
+    execa.sync('npm', ['config', 'set', `${this.ciRegistry.replace('http://', '//')}:_authToken=${token}`]);
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
-    fs.removeSync('adduser.sh');
   }
 
   // TODO: improve this to only write it to project level npmrc instead of global one

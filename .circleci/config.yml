@@ -521,15 +521,15 @@ jobs:
       - restore_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
-      - run: bvm install 0.0.428
-      # - run: bvm upgrade
+      # - run: bvm install 0.0.428
+      - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && bbit install
+      - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
 
@@ -619,7 +619,7 @@ jobs:
       - run: cd bit && bbit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
-      - run: cd bit && bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bbit checkout latest --all --ours --skip-npm-install
       # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout latest --all
@@ -637,8 +637,8 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --all --ignore-newest-version
           # command: cd bit && bit tag --scope 0.0.297
-          command: cd bit && bit tag --all --increment-by 3
-          # command: cd bit && bit tag --all
+          # command: cd bit && bit tag --all --increment-by 3
+          command: cd bit && bit tag --all
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
@@ -695,7 +695,7 @@ jobs:
     steps:
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -738,7 +738,7 @@ jobs:
       - run: yarn -v
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -779,7 +779,7 @@ jobs:
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
-          command: npm config set @bit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -906,9 +906,6 @@ jobs:
       #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
       - bit_config
-      - run:
-          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
-          command: 'sudo apt-get install expect'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
