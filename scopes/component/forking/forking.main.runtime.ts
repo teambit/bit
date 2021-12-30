@@ -4,10 +4,12 @@ import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
+import { forkingSchema } from './forking.graphql';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -46,16 +48,15 @@ export class ForkingMain {
 please specify the target-id arg`);
     }
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
-    const targetPath = this.newComponentHelper.getNewComponentPath(targetCompId, options?.path);
+
     const config = await this.getConfig(existing);
-    await this.newComponentHelper.writeAndAddNewComp(existing, targetPath, targetCompId, config);
+    await this.newComponentHelper.writeAndAddNewComp(existing, targetCompId, options, config);
 
     return targetCompId;
   }
   private async forkRemoteComponent(sourceId: ComponentID, targetId?: string, options?: ForkOptions) {
     const targetName = targetId || sourceId.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
-    const targetPath = this.newComponentHelper.getNewComponentPath(targetCompId, options?.path);
     const comp = await this.workspace.scope.getRemoteComponent(sourceId);
 
     const deps = await this.dependencyResolver.getDependencies(comp);
@@ -71,7 +72,7 @@ please specify the target-id arg`);
       }));
     this.dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
     const config = await this.getConfig(comp);
-    await this.newComponentHelper.writeAndAddNewComp(comp, targetPath, targetCompId, config);
+    await this.newComponentHelper.writeAndAddNewComp(comp, targetCompId, options, config);
     await this.dependencyResolver.persistConfig(this.workspace.path);
     await this.workspace.install(undefined, {
       dedupe: true,
@@ -101,17 +102,20 @@ please specify the target-id arg`);
     DependencyResolverAspect,
     ComponentAspect,
     NewComponentHelperAspect,
+    GraphqlAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper]: [
+  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper, graphql]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     ComponentMain,
-    NewComponentHelperMain
+    NewComponentHelperMain,
+    GraphqlMain
   ]) {
     const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper);
     cli.register(new ForkCmd(forkingMain));
+    graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
     return forkingMain;
   }
