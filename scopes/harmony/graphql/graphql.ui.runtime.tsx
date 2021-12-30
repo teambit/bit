@@ -11,7 +11,7 @@ import crossFetch from 'cross-fetch';
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphqlAspect } from './graphql.aspect';
-import { GraphqlRenderLifecycle } from './render-lifecycle';
+import { GraphqlRenderPlugins } from './render-lifecycle';
 import { logError } from './logging';
 
 /**
@@ -87,7 +87,7 @@ export class GraphqlUI {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 
-  renderHooks = new GraphqlRenderLifecycle(this);
+  renderPlugins = new GraphqlRenderPlugins(this);
 
   static runtime = UIRuntime;
   static dependencies = [];

@@ -58,7 +58,7 @@ export type BrowserData = {
 /**
  * extract relevant information from Express request.
  */
-export function requestToObj(req: Request, port: number) {
+export function browserDataFrom(req: Request, port: number) {
   // apparently port is not readily available in request.
 
   const browser: BrowserData = {

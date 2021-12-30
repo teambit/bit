@@ -4,7 +4,7 @@ import type { NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import type { BrowserData, RenderLifecycle } from '@teambit/ui';
+import type { BrowserData, RenderPlugins } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';
@@ -15,7 +15,7 @@ type RenderContext = {
 
 const ALLOWED_HEADERS = ['cookie'];
 
-export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { state?: NormalizedCacheObject }> {
+export class GraphqlRenderPlugins implements RenderPlugins<RenderContext, { state?: NormalizedCacheObject }> {
   constructor(private graphqlUI: GraphqlUI) {}
 
   serverInit = ({ browser, server }: { browser?: BrowserData; server?: { port: number } } = {}) => {

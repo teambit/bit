@@ -9,14 +9,12 @@ import React, { ReactNode, ComponentType } from 'react';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import type { SsrContent } from './ssr/ssr-content';
-import { RenderLifecycle } from './render-lifecycle';
-import { ReactSSR } from './react-ssr';
-
-export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
+import type { SsrContent } from './react-ssr/ssr-content';
+import { ContextProps, RenderPlugins } from './react-ssr/render-lifecycle';
+import { ReactSSR } from './react-ssr/react-ssr';
 
 type HudSlot = SlotRegistry<ReactNode>;
-type renderLifecycleSlot = SlotRegistry<RenderLifecycle>;
+type RenderPluginsSlot = SlotRegistry<RenderPlugins>;
 type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 /**
@@ -35,7 +33,7 @@ export class UiUI {
     /** slot for overlay ui elements */
     private hudSlot: HudSlot,
     /** hooks into the ssr render process */
-    private lifecycleSlot: renderLifecycleSlot
+    private renderPluginsSlot: RenderPluginsSlot
   ) {}
 
   /** render and rehydrate client-side */
@@ -46,7 +44,7 @@ export class UiUI {
     const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation });
     const hudItems = this.hudSlot.values();
-    const lifecycleHooks = this.lifecycleSlot.toArray();
+    const lifecycleHooks = this.renderPluginsSlot.toArray();
 
     const reactSsr = new ReactSSR(lifecycleHooks);
     await reactSsr.renderBrowser(
@@ -66,7 +64,7 @@ export class UiUI {
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: ssrContent?.browser?.location.url });
     const hudItems = this.hudSlot.values();
 
-    const lifecycleHooks = this.lifecycleSlot.toArray();
+    const lifecycleHooks = this.renderPluginsSlot.toArray();
 
     const reactSsr = new ReactSSR(lifecycleHooks);
     const fullHtml = await reactSsr.renderServer(
@@ -90,7 +88,7 @@ export class UiUI {
    * @deprecated replace with `.registerRenderHooks({ reactContext })`.
    */
   registerContext<T>(context: ComponentType<ContextProps<T>>) {
-    this.lifecycleSlot.register({
+    this.renderPluginsSlot.register({
       reactContext: context,
     });
   }
@@ -99,15 +97,15 @@ export class UiUI {
     return this.uiRootSlot.register(uiRoot);
   }
 
-  registerRenderHooks<T, Y>(hooks: RenderLifecycle<T, Y>) {
-    return this.lifecycleSlot.register(hooks);
+  registerRenderHooks<T, Y>(hooks: RenderPlugins<T, Y>) {
+    return this.renderPluginsSlot.register(hooks);
   }
 
   private getRoot(rootExtension: string) {
     return this.uiRootSlot.get(rootExtension);
   }
 
-  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderLifecycle>()];
+  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderPlugins>()];
 
   static dependencies = [GraphqlAspect, ReactRouterAspect];
 
@@ -116,11 +114,11 @@ export class UiUI {
   static async provider(
     [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],
     config,
-    [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
+    [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, RenderPluginsSlot]
   ) {
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
-    uiUi.registerRenderHooks(GraphqlUi.renderHooks);
+    uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
 
     return uiUi;
   }

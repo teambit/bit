@@ -6,17 +6,17 @@ import ReactDOMServer from 'react-dom/server';
 import { Html, MountPoint, mountPointId, ssrCleanup, Assets } from '@teambit/ui-foundation.ui.rendering.html';
 import { Composer, Wrapper } from '@teambit/base-ui.utils.composer';
 
-import type { RenderLifecycle } from './render-lifecycle';
-import type { SsrContent } from './ssr/ssr-content';
-import type { RequestServer } from './ssr/request-server';
-import type { BrowserData } from './ssr/request-browser';
+import type { RenderPlugins } from './render-lifecycle';
+import type { SsrContent } from './ssr-content';
+import type { RequestServer } from './request-server';
+import type { BrowserData } from './request-browser';
 
-type LifecycleHooksWithId = [key: string, hooks: RenderLifecycle];
+type RenderPluginsWithId = [key: string, hooks: RenderPlugins];
 
 export class ReactSSR {
   constructor(
     // create array once to keep consistent indexes
-    private lifecycleHooks: LifecycleHooksWithId[]
+    private lifecycleHooks: RenderPluginsWithId[]
   ) {}
 
   /** render and rehydrate client-side */
