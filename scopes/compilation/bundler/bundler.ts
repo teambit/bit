@@ -17,6 +17,11 @@ export type BundlerResult = {
    * timestamp in milliseconds when the task ended
    */
   endTime?: number;
+
+  /**
+   * out put path of the Bundler Result
+   */
+  outputPath?: string;
 };
 
 export interface Bundler {
