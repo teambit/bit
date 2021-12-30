@@ -86,7 +86,6 @@ describe('bit lane command', function () {
         expect(diffOutput).to.not.have.string('+++ Id');
       });
     });
-    /** bit lane diff with args (toLane - default) */
     describe('bit lane diff {toLane - default} on the workspace', () => {
       let diffOutput: string;
       before(() => {
@@ -120,6 +119,23 @@ describe('bit lane command', function () {
       it('should show the diff correctly', () => {
         expect(diffOutput).to.have.string('--- foo.js (int)');
         expect(diffOutput).to.have.string('+++ foo.js (stage)');
+
+        expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
+        expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+      });
+      it('should not show the id field as it is redundant', () => {
+        expect(diffOutput).to.not.have.string('--- Id');
+        expect(diffOutput).to.not.have.string('+++ Id');
+      });
+    });
+    describe('bit lane diff {fromLane} {toLane} on the workspace', () => {
+      let diffOutput: string;
+      before(() => {
+        diffOutput = helper.command.diffLane('main dev');
+      });
+      it('should show the diff correctly', () => {
+        expect(diffOutput).to.have.string('--- foo.js (main)');
+        expect(diffOutput).to.have.string('+++ foo.js (dev)');
 
         expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
         expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
