@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, T
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -123,10 +123,11 @@ export class WorkspaceComponentLoader {
 
   private addMultipleEnvsIssueIfNeeded(component: Component) {
     const envs = this.envs.getAllEnvsConfiguredOnComponent(component);
-    if (envs.length < 2) {
+    const envIds = uniq(envs.map((env) => env.id));
+    if (envIds.length < 2) {
       return;
     }
-    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envs.map((e) => e.id);
+    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envIds;
   }
 
   clearCache() {
