@@ -22,7 +22,7 @@ describe('bit lane command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('creating a new lane without any component', () => {
+  describe.only('creating a new lane without any component', () => {
     let output;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -31,6 +31,7 @@ describe('bit lane command', function () {
     });
     it('bit lane should show the active lane', () => {
       expect(output).to.have.string('current lane - dev');
+      expect(output).to.have.string('main');
     });
   });
   describe('create a snap on main then on a new lane', () => {
