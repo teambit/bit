@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit deprecate and undeprecate commands', function () {
@@ -18,12 +19,8 @@ describe('bit deprecate and undeprecate commands', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp2');
     });
-    const getDeprecationData = (compId: string) => {
-      const show = helper.command.showComponentParsedHarmony(compId);
-      return show.find((_) => _.title === 'configuration').json.find((_) => _.id === 'teambit.component/deprecation');
-    };
     it('bit show should show the component as deprecated', () => {
-      const deprecationData = getDeprecationData('comp2');
+      const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
       expect(deprecationData.config.deprecate).to.be.true;
     });
     it('bit status should show the component as modified', () => {
@@ -40,7 +37,7 @@ describe('bit deprecate and undeprecate commands', function () {
         expect(status.modifiedComponent).to.have.lengthOf(0);
       });
       it('bit show should show the component as deprecated', () => {
-        const deprecationData = getDeprecationData('comp2');
+        const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
       });
       it('.bitmap should not containing the config', () => {
@@ -68,7 +65,7 @@ describe('bit deprecate and undeprecate commands', function () {
           });
           // @todo: fix. currently it overrides the data unexpectedly.
           it.skip('should not delete the deprecation data from the config', () => {
-            const deprecationData = getDeprecationData('comp2');
+            const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
             expect(deprecationData.config.deprecate).to.be.true;
           });
         });
@@ -95,6 +92,23 @@ describe('bit deprecate and undeprecate commands', function () {
           });
         });
       });
+    });
+  });
+  describe('reverting the deprecation by "bit checkout --reset"', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp1');
+      // intermediate test
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.true;
+
+      helper.command.checkout('comp1 --reset');
+    });
+    it('should remove the deprecation config', () => {
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData).to.be.undefined;
     });
   });
 });
