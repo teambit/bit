@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PolicyConfigKeysNames } from '../policy';
 import {
@@ -11,7 +12,6 @@ import {
 } from './variant-policy';
 import { LIFECYCLE_TYPE_BY_KEY_NAME, DependencyLifecycleType } from '../../dependencies';
 import { DEV_DEP_LIFECYCLE_TYPE } from '../../dependencies/constants';
-import { compact } from 'lodash';
 
 export class VariantPolicyFactory {
   fromConfigObject(configObject, source?: DependencySource): VariantPolicy {

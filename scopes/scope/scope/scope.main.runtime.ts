@@ -280,7 +280,9 @@ export class ScopeMain implements ComponentFactory {
    *
    * @param {ComponentsIds} ids list of ids to fetch
    */
-  fetch(ids: ComponentsIds) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+  fetch(ids: ComponentID[], options) {
+    return this.import(ids, options);
+  }
 
   /**
    * This function will get a component and sealed it's current state into the scope

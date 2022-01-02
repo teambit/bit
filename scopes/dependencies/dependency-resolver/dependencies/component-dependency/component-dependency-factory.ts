@@ -110,6 +110,11 @@ export class ComponentDependencyFactory implements DependencyFactory {
   ): Promise<SerializedComponentDependency | undefined> {
     const host = this.componentAspect.getHost();
     const id = await host.resolveComponentId(entry.dependencyId);
+    const exist = await host.hasIdNested(id);
+    // This happen during load, so we need to make sure we have it now, otherwise the load will fail
+    if (!exist) {
+      await host.fetch([id], {});
+    }
     const extComponent = await host.get(id);
     let version: string | null | undefined = '0.0.1';
     if (!extComponent?.tags.isEmpty()) {

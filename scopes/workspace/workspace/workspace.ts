@@ -702,6 +702,16 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * Will fetch a list of components into the current scope.
+   * This will only fetch the object and won't write the files to the actual FS
+   *
+   * @param {ComponentsIds} ids list of ids to fetch
+   */
+  fetch(ids: ComponentID[], options) {
+    return this.scope.fetch(ids, options);
+  }
+
+  /**
    * @deprecated use this.track() instead
    * track a new component. (practically, add it to .bitmap).
    *
@@ -1592,8 +1602,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       installNpmPackages: false,
       importDependenciesDirectly: false,
       importDependents: false,
+      skipCoreEnvs: false,
     };
-    const importer = new Importer(this, this.dependencyResolver);
+    const importer = new Importer(this, this.dependencyResolver, this.aspectLoader);
     try {
       const res = await importer.import(importOptions, []);
       return res;
