@@ -972,12 +972,16 @@ export class Workspace implements ComponentFactory {
    * @param extensionList
    */
   private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+    const coreEnvsIds = this.aspectLoader.getCoreEnvsIds();
     const promises = extensionList.map(async (entry) => {
-      if (entry.extensionId) {
-        const id = await this.resolveComponentId(entry.extensionId);
+      let idToResolve: BitId | string | undefined = entry.extensionId;
+      if (!idToResolve && coreEnvsIds.includes(entry.stringId)) {
+        idToResolve = entry.stringId;
+      }
+      if (idToResolve) {
+        const id = await this.resolveComponentId(idToResolve);
         entry.extensionId = id._legacy;
       }
-
       return entry;
     });
     await Promise.all(promises);

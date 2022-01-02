@@ -825,6 +825,7 @@ export class DependencyResolverMain {
     let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
+    let extensionsPolicies: VariantPolicy = variantPolicyFactory.getEmpty();
     const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
@@ -855,7 +856,14 @@ export class DependencyResolverMain {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
 
-    const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
+    extensionsPolicies = variantPolicyFactory.fromExtensionDataList(configuredExtensions);
+
+    const result = VariantPolicy.mergePolices([
+      policiesFromEnv,
+      policiesFromSlots,
+      policiesFromConfig,
+      extensionsPolicies,
+    ]);
     return result;
   }
 
