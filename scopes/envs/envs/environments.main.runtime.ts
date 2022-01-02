@@ -74,6 +74,16 @@ export class EnvsMain {
     private componentMain: ComponentMain
   ) {}
 
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+    ];
+  }
+
   /**
    * creates a new runtime environments for a set of components.
    */

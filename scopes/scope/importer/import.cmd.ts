@@ -41,6 +41,7 @@ export default class ImportCmd implements Command {
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    ['', 'skip-core-envs', 'EXPERIMENTAL. do not import the core environments objects'],
     [
       '',
       'skip-lane',
@@ -71,6 +72,7 @@ export default class ImportCmd implements Command {
       conf,
       skipNpmInstall = false,
       merge,
+      skipCoreEnvs = false,
       skipLane = false,
       dependencies = false,
       dependents = false,
@@ -85,6 +87,7 @@ export default class ImportCmd implements Command {
       conf?: string;
       skipNpmInstall?: boolean;
       merge?: MergeStrategy;
+      skipCoreEnvs?: boolean;
       skipLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
@@ -117,6 +120,7 @@ export default class ImportCmd implements Command {
       writeConfig: Boolean(conf),
       installNpmPackages: !skipNpmInstall,
       skipLane,
+      skipCoreEnvs,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,

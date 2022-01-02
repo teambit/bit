@@ -49,6 +49,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
+  skipCoreEnvs?: boolean; // do not import core envs objects
   skipLane?: boolean; // save on main instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
   allHistory?: boolean;
@@ -75,15 +76,15 @@ export type ImportResult = {
 
 export default class ImportComponents {
   consumer: Consumer;
+  coreEnvsIds: string[];
   scope: Scope;
   options: ImportOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
   private laneObjects: Lane[] = [];
   private divergeData: Array<ModelComponent> = [];
-  // @ts-ignore
-  constructor(consumer: Consumer, options: ImportOptions) {
+  constructor(consumer: Consumer, coreEnvsIds: string[] = [], options: ImportOptions) {
     this.consumer = consumer;
+    this.coreEnvsIds = coreEnvsIds;
     this.scope = consumer.scope;
     this.options = options;
   }
@@ -252,9 +253,11 @@ export default class ImportComponents {
     // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
     const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
+    const coreEnvsIdsToImport = this.options.skipCoreEnvs ? [] : this.coreEnvsIds.map((id) => BitId.parse(id, true));
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,
+      ...coreEnvsIdsToImport,
       // ...idsOfDepsInstalledAsPackages,
     ]);
 

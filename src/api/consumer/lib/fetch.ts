@@ -31,7 +31,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
     installNpmPackages: false,
     fromOriginalScope,
   };
-  const importComponents = new ImportComponents(consumer, importOptions);
+  const importComponents = new ImportComponents(consumer, [], importOptions);
   if (lanes) {
     const laneIds = await getLaneIds();
     importOptions.lanes = { laneIds };

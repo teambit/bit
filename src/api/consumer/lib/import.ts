@@ -64,7 +64,7 @@ export default async function importAction(
   if (importOptions.writeConfig && consumer.config.isLegacy) {
     throw new FlagHarmonyOnly('--conf');
   }
-  const importComponents = new ImportComponents(consumer, importOptions);
+  const importComponents = new ImportComponents(consumer, [], importOptions);
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
 

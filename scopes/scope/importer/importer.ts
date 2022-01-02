@@ -8,15 +8,21 @@ import ImportComponents, {
 } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 
 export class Importer {
-  constructor(private workspace: Workspace, private depResolver: DependencyResolverMain) {}
+  constructor(
+    private workspace: Workspace,
+    private depResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
     this.populateLanesDataIfNeeded(importOptions);
-    const importComponents = new ImportComponents(consumer, importOptions);
+    const coreEnvsIds = this.aspectLoader.getCoreEnvsIds();
+    const importComponents = new ImportComponents(consumer, coreEnvsIds, importOptions);
     const { dependencies, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
     Analytics.setExtraData('num_components', bitIds.length);
