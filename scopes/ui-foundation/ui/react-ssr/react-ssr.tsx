@@ -25,16 +25,16 @@ export class ReactSSR {
     // (*) load state from the dom
     const deserializedState = await this.deserialize();
 
-    // (2) init setup client plugins
+    // (1) init setup client plugins
     let renderContexts = await this.triggerBrowserInit(deserializedState);
 
-    // (3) make react dom
+    // (2) make react dom
     const reactContexts = this.getReactContexts(renderContexts);
     const app = <Composer components={reactContexts}>{children}</Composer>;
 
     renderContexts = await this.triggerBeforeHydrateHook(renderContexts, app);
 
-    // (4) render / rehydrate
+    // (3) render / rehydrate
     const mountPoint = document.getElementById(mountPointId);
     // .render() already runs `.hydrate()` behind the scenes.
     // in the future, we may want to replace it with .hydrate()
@@ -42,7 +42,7 @@ export class ReactSSR {
 
     await this.triggerHydrateHook(renderContexts, mountPoint);
 
-    // (4.1) remove ssr only styles
+    // (3.1) remove ssr only styles
     ssrCleanup();
   }
 
