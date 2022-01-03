@@ -1,10 +1,10 @@
 import { loadScope, Scope } from '../../../scope';
-import ModelComponent from '../../../scope/models/model-component';
-import Symlink from '../../../scope/models/symlink';
+import { Lane, ModelComponent, ScopeMeta, Symlink, Version } from '../../../scope/models';
 import BitObject from '../../../scope/objects/object';
 
 export default async function catScope(path: string, full: boolean): Promise<BitObject[]> {
   const scope: Scope = await loadScope(path);
-  const bitObjects = await scope.objects.list();
-  return full ? bitObjects : bitObjects.filter((obj) => obj instanceof ModelComponent || obj instanceof Symlink);
+  return full
+    ? scope.objects.list([ModelComponent, Symlink, Lane, Version, ScopeMeta])
+    : scope.objects.list([ModelComponent, Symlink]);
 }
