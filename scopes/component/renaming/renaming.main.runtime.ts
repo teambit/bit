@@ -18,11 +18,17 @@ export class RenamingMain {
 
   async rename(sourceIdStr: string, targetIdStr: string, options: RenameOptions): Promise<RenameResult> {
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
+    const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
     const targetId = this.newComponentHelper.getNewComponentId(targetIdStr, undefined, options?.scope);
-    const config = await this.getConfig(sourceComp);
-    await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
-    await this.deprecation.deprecate(sourceId, targetId);
+    if (isTagged) {
+      const config = await this.getConfig(sourceComp);
+      await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
+      await this.deprecation.deprecate(sourceId, targetId);
+    } else {
+      this.workspace.bitMap.renameNewComponent(sourceId, targetId);
+      await this.workspace.bitMap.write();
+    }
 
     return {
       sourceId,
