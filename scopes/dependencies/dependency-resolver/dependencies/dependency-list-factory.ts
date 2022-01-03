@@ -7,6 +7,7 @@ import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';
 import { UnknownDepType } from './exceptions';
 import { DependencyResolverAspect } from '../dependency-resolver.aspect';
+import { VariantPolicy } from '..';
 
 export class DependencyListFactory {
   constructor(private factories: Record<string, DependencyFactory>) {}
@@ -24,10 +25,10 @@ export class DependencyListFactory {
     return new DependencyList(dependencies);
   }
 
-  async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
+  async fromLegacyComponentAndPolicy(legacyComponent: LegacyComponent, policy: VariantPolicy): Promise<DependencyList> {
     const lists = await mapSeries(Object.values(this.factories), async (factory) => {
-      if (factory.fromLegacyComponent && typeof factory.fromLegacyComponent === 'function') {
-        return factory.fromLegacyComponent(legacyComponent);
+      if (factory.fromLegacyComponentAndPolicy && typeof factory.fromLegacyComponentAndPolicy === 'function') {
+        return factory.fromLegacyComponentAndPolicy(legacyComponent, policy);
       }
       return new DependencyList([]);
     });

@@ -2,14 +2,17 @@ import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
+import { valid } from 'semver';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';
 import { DependencyList } from '../dependency-list';
+import { VariantPolicy } from '../..';
+import { VariantPolicyEntry } from '../../policy/variant-policy/variant-policy';
 
 // TODO: think about where is the right place to put this
 // export class ComponentDependencyFactory implements DependencyFactory<ComponentDependency, SerializedComponentDependency> {
@@ -40,7 +43,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
     }
 
-    return (new ComponentDependency(
+    return new ComponentDependency(
       id,
       serialized.isExtension,
       serialized.packageName,
@@ -48,19 +51,16 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
       serialized.source
-    ) as unknown) as ComponentDependency;
+    ) as unknown as ComponentDependency;
   }
-
-  async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
+  async fromLegacyComponentAndPolicy(legacyComponent: LegacyComponent, policy: VariantPolicy): Promise<DependencyList> {
     const runtimeDeps = await mapSeries(legacyComponent.dependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'runtime')
     );
     const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
     );
-    const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>
-      this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
-    );
+    const extensionDeps = await this.getExtensionsDepsFromPolicy(policy);
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);
     const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...filteredExtensionDeps];
     const componentDeps: ComponentDependency[] = await mapSeries(serializedComponentDeps, (dep) => this.parse(dep));
@@ -93,26 +93,51 @@ export class ComponentDependencyFactory implements DependencyFactory {
     };
   }
 
-  private async transformLegacyComponentExtensionToSerializedDependency(
-    extension: ExtensionDataEntry,
+  private async getExtensionsDepsFromPolicy(policy: VariantPolicy): Promise<Array<SerializedComponentDependency>> {
+    const results = await Promise.all(
+      policy.entries.map((entry) => {
+        if (entry.source === 'extensionEntry') {
+          return this.transformPolicyEntryExtensionToSerializedDependency(entry, 'dev');
+        }
+        return undefined;
+      })
+    );
+    return compact(results);
+  }
+
+  private async transformPolicyEntryExtensionToSerializedDependency(
+    entry: VariantPolicyEntry,
     lifecycle: DependencyLifecycleType
   ): Promise<SerializedComponentDependency | undefined> {
-    if (!extension.extensionId) {
-      return undefined;
-    }
     const host = this.componentAspect.getHost();
-    const id = await host.resolveComponentId(extension.extensionId);
-    const extComponent = await host.get(id);
+    const id = await host.resolveComponentId(entry.dependencyId);
+    const idNoRange = valid(id.version) ? id : id.changeVersion('latest');
+    const exist = await host.hasIdNested(idNoRange);
+    // This happen during load, so we need to make sure we have it now, otherwise the load will fail
+    if (!exist) {
+      await host.fetch([idNoRange], {});
+    }
+    const extComponent = await host.get(idNoRange);
+    let version: string | null | undefined = '0.0.1';
+    if (!extComponent?.tags.isEmpty()) {
+      const range = entry.value.version;
+      version = extComponent?.tags.maxSatisfying(range);
+      if (!version) {
+        throw new BitError(
+          `could not find matching version for extension with id: ${id.toString()} and version ${range}`
+        );
+      }
+    }
     let packageName = '';
     if (extComponent) {
       packageName = componentIdToPackageName(extComponent.state._consumer);
     }
     return {
-      id: extension.extensionId.toString(),
+      id: id.toString(),
       isExtension: true,
       packageName,
-      componentId: extension.extensionId.serialize(),
-      version: extension.extensionId.getVersion().toString(),
+      componentId: id,
+      version,
       __type: TYPE,
       lifecycle,
     };

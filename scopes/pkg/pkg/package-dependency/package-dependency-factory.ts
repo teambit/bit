@@ -3,6 +3,7 @@ import {
   SerializedDependency,
   DependencyFactory,
   DependencyList,
+  VariantPolicy,
 } from '@teambit/dependency-resolver';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { PackageDependency, SerializedPackageDependency } from './package-dependency';
@@ -21,15 +22,16 @@ export class PackageDependencyFactory implements DependencyFactory {
 
   async parse<PackageDependency, S extends SerializedDependency>(serialized: S): Promise<PackageDependency> {
     // return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType) as unknown as PackageDependency;
-    return (new PackageDependency(
+    return new PackageDependency(
       serialized.id,
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
       serialized.source
-    ) as unknown) as PackageDependency;
+    ) as unknown as PackageDependency;
   }
 
-  async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async fromLegacyComponentAndPolicy(legacyComponent: LegacyComponent, policy: VariantPolicy): Promise<DependencyList> {
     const runtimePackageDeps = transformLegacyComponentPackageDepsToSerializedDependency(
       legacyComponent.packageDependencies,
       'runtime'

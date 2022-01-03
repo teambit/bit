@@ -21,7 +21,7 @@ export type VariantPolicyEntryValue = {
   resolveFromEnv?: boolean;
 };
 
-export type DependencySource = 'auto' | 'env' | 'slots' | 'config';
+export type DependencySource = 'auto' | 'env' | 'slots' | 'config' | 'extensionEntry';
 
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;

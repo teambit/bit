@@ -325,6 +325,7 @@ export class DependencyResolverMain {
 
   /**
    * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
+   * and the component policy
    * and write them to the dependencyResolver data.
    * Do not use this function for other purpose.
    * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
@@ -332,11 +333,11 @@ export class DependencyResolverMain {
    * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
    * @param component
    */
-  async extractDepsFromLegacy(component: Component, policy?: VariantPolicy): Promise<SerializedDependency[]> {
+  async extractDepsFromLegacyAndPolicy(component: Component, policy?: VariantPolicy): Promise<SerializedDependency[]> {
     const componentPolicy = policy || (await this.getPolicy(component));
     const legacyComponent: LegacyComponent = component.state._consumer;
     const listFactory = this.getDependencyListFactory();
-    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    const dependencyList = await listFactory.fromLegacyComponentAndPolicy(legacyComponent, componentPolicy);
     dependencyList.forEach((dep) => {
       const found = componentPolicy.find(dep.id);
       // if no policy found, the dependency was auto-resolved from the source code
@@ -825,6 +826,7 @@ export class DependencyResolverMain {
     let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
+    let extensionsPolicies: VariantPolicy = variantPolicyFactory.getEmpty();
     const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
@@ -855,7 +857,14 @@ export class DependencyResolverMain {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
 
-    const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
+    extensionsPolicies = variantPolicyFactory.fromExtensionDataList(configuredExtensions);
+
+    const result = VariantPolicy.mergePolices([
+      policiesFromEnv,
+      policiesFromSlots,
+      policiesFromConfig,
+      extensionsPolicies,
+    ]);
     return result;
   }
 

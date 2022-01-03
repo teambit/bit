@@ -46,6 +46,7 @@ import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 import type { VariantsMain, Patterns } from '@teambit/variants';
 import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { valid, validRange } from 'semver';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -66,7 +67,7 @@ import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, differenceWith } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -617,18 +618,6 @@ export class Workspace implements ComponentFactory {
     };
   }
 
-  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
-    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
-      if (entry.id.scope !== this.scope.name) {
-        return entry;
-      }
-      const newId = await this.resolveComponentId(entry.id.fullName);
-      const newEntry = new AspectEntry(newId, entry.legacy);
-      return newEntry;
-    });
-    return resolvedList;
-  }
-
   /**
    * load components into the workspace through a variants pattern.
    * @param pattern variants.
@@ -706,6 +695,16 @@ export class Workspace implements ComponentFactory {
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  /**
+   * Will fetch a list of components into the current scope.
+   * This will only fetch the object and won't write the files to the actual FS
+   *
+   * @param {ComponentsIds} ids list of ids to fetch
+   */
+  fetch(ids: ComponentID[], options) {
+    return this.scope.fetch(ids, options);
   }
 
   /**
@@ -938,9 +937,6 @@ export class Workspace implements ComponentFactory {
       extensionsToMerge.push(wsDefaultExtensions);
     }
 
-    // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
-
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
     }
@@ -973,18 +969,34 @@ export class Workspace implements ComponentFactory {
     });
   }
 
+  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
+    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
+      if (entry.id.scope !== this.scope.name) {
+        return entry;
+      }
+      const newId = await this.resolveComponentId(entry.id.fullName);
+      const newEntry = new AspectEntry(newId, entry.legacy);
+      return newEntry;
+    });
+    return resolvedList;
+  }
+
   /**
    * This will mutate the entries with extensionId prop to have resolved legacy id
    * This should be worked on the extension data list not the new aspect list
    * @param extensionList
    */
   private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+    const coreEnvsIds = this.aspectLoader.getCoreEnvsIds();
     const promises = extensionList.map(async (entry) => {
-      if (entry.extensionId) {
-        const id = await this.resolveComponentId(entry.extensionId);
+      let idToResolve: BitId | string | undefined = entry.extensionId;
+      if (!idToResolve && coreEnvsIds.includes(entry.stringId)) {
+        idToResolve = entry.stringId;
+      }
+      if (idToResolve) {
+        const id = await this.resolveComponentId(idToResolve);
         entry.extensionId = id._legacy;
       }
-
       return entry;
     });
     await Promise.all(promises);
@@ -1035,6 +1047,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
+    // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
     //   acc = acc.concat(currIds);
@@ -1051,9 +1064,28 @@ export class Workspace implements ComponentFactory {
     // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     const ignoredIds = coreAspectsBitIds.concat([]);
     return this.buildOneGraphForComponents(ids, BitIds.fromArray(ignoredIds), isAspect);
+  }
+
+  /**
+   * Check for each one of the core envs if it exist in local scope.
+   * if not fetch their objects
+   */
+  private async importMissingCoreEnvsFromScope() {
+    const coreEnvsIds = this.aspectLoader.getCoreEnvsIds();
+    const coreEnvsComponentIds = await this.resolveMultipleComponentIds(coreEnvsIds);
+    const coreEnvsComponentIdsToImport = await Promise.all(
+      coreEnvsComponentIds.map(async (id) => {
+        const exist = await this.hasIdNested(id);
+        if (exist) {
+          return undefined;
+        }
+        return id;
+      })
+    );
+
+    await this.importAndGetAspects(compact(coreEnvsComponentIdsToImport));
   }
 
   /**
@@ -1062,14 +1094,22 @@ export class Workspace implements ComponentFactory {
    */
   async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
     this.logger.debug(`loading ${ids.length} aspects`);
+    const coreEnvsIds = this.aspectLoader.getCoreEnvsIds();
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
+    // We want to allow something like `core-env-id@version` but don't want the regular process of loading for this case
+    // we only want to import them in that case (handled below)
+    const idsWithoutCore: string[] = differenceWith(notLoadedIds, coreAspectsStringIds, (id, coreId) => {
+      const [idWithoutVersion] = id.split('@');
+      return idWithoutVersion === coreId;
+    });
+    await this.importMissingCoreEnvsFromScope();
+
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
 
-    const isAspect = async (bitId: BitId) => {
+    const isAspectAndNonCoreEnv = async (bitId: BitId) => {
       const id = await this.resolveComponentId(bitId);
       const component = await this.get(id);
       let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
@@ -1090,11 +1130,18 @@ export class Workspace implements ComponentFactory {
           throw err;
         }
       }
-      return data.type === 'aspect';
+      if (data.type !== 'aspect') {
+        return false;
+      }
+      if (coreEnvsIds.includes(id.toStringWithoutVersion())) {
+        return false;
+      }
+      return true;
     };
 
-    const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
+    const graph = await this.getAspectsGraphWithoutCore(components, isAspectAndNonCoreEnv);
     const idsStr = graph.nodes();
+
     const compIds = await this.resolveMultipleComponentIds(idsStr);
     const aspects = await this.getMany(compIds);
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
@@ -1112,7 +1159,6 @@ export class Workspace implements ComponentFactory {
     );
 
     const manifestsIds = workspaceManifests.map((m) => m.id);
-
     const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
 
     const allManifests = [...scopeManifests, ...workspaceManifests];
@@ -1595,8 +1641,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       installNpmPackages: false,
       importDependenciesDirectly: false,
       importDependents: false,
+      skipCoreEnvs: false,
     };
-    const importer = new Importer(this, this.dependencyResolver);
+    const importer = new Importer(this, this.dependencyResolver, this.aspectLoader);
     try {
       const res = await importer.import(importOptions, []);
       return res;
@@ -1738,25 +1785,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   /**
-   * This will mutate the original extensions list and resolve it's ids
-   *
-   * @param {ExtensionDataList} extensions
-   * @returns {Promise<void[]>}
-   * @memberof Workspace
+   * This function will resolve the provided ids, but in case the version is a semver range it will replaced it with latest
+   * This is used especially for importing the aspects ids during loading
+   * @param ids
    */
-  resolveExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
-    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
-      if (extensionEntry.extensionId) {
-        // const hasVersion = extensionEntry.extensionId.hasVersion();
-        // const useBitmapVersion = !hasVersion;
-        // const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, useBitmapVersion);
-
-        // Assuming extensionId always has scope - do not allow extension id without scope
-        const resolvedId = await this.resolveComponentId(extensionEntry.extensionId);
-        extensionEntry.extensionId = resolvedId._legacy;
-      }
+  private async resolveIdsRemoveRange(ids: string[]): Promise<ComponentID[]> {
+    const newIds = ids.map((id) => {
+      const [idWithoutVersion, version] = id.split('@');
+      if (!version) return id;
+      if (valid(version)) return id;
+      if (validRange(version)) return idWithoutVersion;
+      if (version === 'latest') return id;
+      return id;
     });
-    return Promise.all(resolveMergedExtensionsP);
+    return this.resolveMultipleComponentIds(newIds);
   }
 
   /**

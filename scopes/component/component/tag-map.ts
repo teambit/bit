@@ -1,5 +1,6 @@
+import { BitError } from '@teambit/bit-error';
 import { getLatestVersion } from '@teambit/legacy/dist/utils/semver-helper';
-import { SemVer, maxSatisfying } from 'semver';
+import { SemVer, maxSatisfying, validRange } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
 import { Hash } from './hash';
@@ -58,6 +59,15 @@ export class TagMap extends Map<SemVer, Tag> {
     const versions = this.toArray().map((tag) => tag.version.raw);
     if (this.isEmpty()) throw new CouldNotFindLatest(versions);
     return getLatestVersion(versions);
+  }
+
+  maxSatisfying(range: string): string | null {
+    if (!validRange(range)) {
+      throw new BitError(`The provided range ${range} is not a valid semver range`);
+    }
+    const versions = this.toArray().map((tag) => tag.version.raw);
+    const max = maxSatisfying(versions, '*', { includePrerelease: true });
+    return max;
   }
 
   isEmpty() {

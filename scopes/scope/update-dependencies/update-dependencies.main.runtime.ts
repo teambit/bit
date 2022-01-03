@@ -240,7 +240,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   }
 
   private async updateDependencyResolver(component: Component) {
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacyAndPolicy(component);
     const extId = DependencyResolverAspect.id;
     const data = { dependencies };
     const existingExtension = component.state._consumer.extensions.findExtension(extId);

@@ -12,7 +12,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten } from 'lodash';
+import { difference, compact, flatten, intersection } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -192,6 +192,15 @@ export class AspectLoaderMain {
   getCoreAspectIds() {
     const ids = this.coreAspects.map((aspect) => aspect.id);
     return ids.concat(this._reserved);
+  }
+
+  /**
+   * Get all the core envs ids which is still register in the bit manifest as core aspect
+   */
+  getCoreEnvsIds(): string[] {
+    const envsIds = this.envs.getCoreEnvsIds();
+    const allIds = this.getCoreAspectIds();
+    return intersection(allIds, envsIds);
   }
 
   private _reserved = ['teambit.harmony/bit', 'teambit.harmony/config'];
