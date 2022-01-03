@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { validRange, valid } from 'semver';
+import { valid } from 'semver';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
