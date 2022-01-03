@@ -76,6 +76,7 @@ export class EnvsMain {
 
   getCoreEnvsIds(): string[] {
     return [
+      'teambit.harmony/aspect',
       'teambit.react/react',
       'teambit.harmony/node',
       'teambit.react/react-native',
