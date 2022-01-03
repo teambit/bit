@@ -689,6 +689,13 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * whether a component exists in the workspace
+   */
+  exists(componentId: ComponentID): boolean {
+    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
