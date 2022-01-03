@@ -23,6 +23,8 @@ import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
+import { Types } from '../object-registrar';
+import { Lane, ModelComponent, Symlink } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -141,10 +143,26 @@ export default class Repository {
     return parsedObject;
   }
 
-  async list(): Promise<BitObject[]> {
+  /**
+   * this is restricted to provide objects according to the given types. Otherwise, big scopes (>1GB) could crush.
+   * example usage: `this.list([ModelComponent, Symlink, Lane])`
+   */
+  async list(types: Types): Promise<BitObject[]> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
-    return pMap(refs, (ref) => this.load(ref), { concurrency });
+    const objects: BitObject[] = [];
+    await pMap(
+      refs,
+      async (ref) => {
+        const object = await this.load(ref);
+        types.forEach((type) => {
+          if (object instanceof type) objects.push(object);
+        });
+      },
+      { concurrency }
+    );
+
+    return objects;
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -216,7 +234,7 @@ export default class Repository {
       return scopeIndex;
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        const bitObjects: BitObject[] = await this.list();
+        const bitObjects: BitObject[] = await this.list([ModelComponent, Symlink, Lane]);
         const scopeIndex = ScopeIndex.create(this.scopePath);
         const added = scopeIndex.addMany(bitObjects);
         if (added) await scopeIndex.write();

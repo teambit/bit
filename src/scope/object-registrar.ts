@@ -4,13 +4,13 @@ export default function types() {
   return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane];
 }
 
-function typesToObject(typesArr: Function[]) {
+export function typesToObject(typesArr: Function[]) {
   return typesArr.reduce((map, objectType) => {
     map[objectType.name] = objectType;
     return map;
   }, {});
 }
 
-const typesObj = typesToObject(types());
+export const typesObj = typesToObject(types());
 
-export { typesObj, typesToObject };
+export type Types = ReturnType<typeof types>;
