@@ -93,6 +93,7 @@ export type AddProps = {
   origin?: ComponentOrigin;
   defaultScope?: string;
   config?: Config;
+  shouldHandleOutOfSync?: boolean;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
 // In that case , give the value false to overridenConsumer .
@@ -125,6 +126,7 @@ export default class AddComponents {
   isLegacy: boolean;
   defaultScope?: string; // helpful for out-of-sync
   config?: Config;
+  shouldHandleOutOfSync?: boolean; // only bit-add (not bit-create/new) should handle out-of-sync scenario
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -147,6 +149,7 @@ export default class AddComponents {
     this.isLegacy = context.consumer.isLegacy;
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
+    this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -304,7 +307,7 @@ export default class AddComponents {
         }
         return null;
       }
-      if (!foundComponentFromBitMap && componentFromScope) {
+      if (!foundComponentFromBitMap && componentFromScope && this.shouldHandleOutOfSync) {
         const newId = componentFromScope.toBitIdWithLatestVersion();
         if (!this.defaultScope || this.defaultScope === newId.scope) {
           // otherwise, if defaultScope !== newId.scope, they're different components,
