@@ -48,7 +48,6 @@ export class ReactSSR {
 
   /** render dehydrated server-side */
   async renderServer(children: ReactNode, { assets, browser, server }: SsrContent = {}): Promise<string> {
-    // TODO - extract the logic from here down as reusable ssr machine
     // (1) init
     let renderContexts = await this.triggerServerInit(browser, server);
 
