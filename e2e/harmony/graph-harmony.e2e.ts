@@ -29,6 +29,7 @@ describe('graph aspect', function () {
       before(async () => {
         const harmony = await loadBit(helper.scopes.localPath);
         const scope = harmony.get<ScopeMain>(ScopeAspect.id);
+        // @ts-ignore
         const objectList = await scope.toObjectList([ModelComponent, Version]);
         graph = await objectListToGraph(objectList);
       });
