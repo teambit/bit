@@ -24,8 +24,9 @@ export class ForkingMain {
 
   async fork(sourceIdStr: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
-    const existingInWorkspace = await this.workspace.getIfExist(sourceId);
-    if (existingInWorkspace) {
+    const exists = this.workspace.exists(sourceId);
+    if (exists) {
+      const existingInWorkspace = await this.workspace.get(sourceId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
     }
     const sourceIdWithScope = sourceId._legacy.scope
