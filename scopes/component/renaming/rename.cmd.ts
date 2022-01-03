@@ -9,7 +9,8 @@ export type RenameOptions = {
 
 export class RenameCmd implements Command {
   name = 'rename <source-id> <target-id>';
-  description = 'EXPERIMENTAL. create a new target-component and deprecate the source-component';
+  description =
+    'EXPERIMENTAL. rename component. if tagged/exported, create a new component and deprecate the source-component';
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';
