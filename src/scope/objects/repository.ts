@@ -156,7 +156,11 @@ export default class Repository {
       async (ref) => {
         const object = await this.load(ref);
         types.forEach((type) => {
-          if (object instanceof type) objects.push(object);
+          if (
+            object instanceof type ||
+            type.name === object.constructor.name // needed when Harmony calls this function
+          )
+            objects.push(object);
         });
       },
       { concurrency }
