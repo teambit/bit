@@ -2,6 +2,7 @@ import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
+import { validRange, valid } from 'semver';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { BitError } from '@teambit/bit-error';
@@ -110,12 +111,13 @@ export class ComponentDependencyFactory implements DependencyFactory {
   ): Promise<SerializedComponentDependency | undefined> {
     const host = this.componentAspect.getHost();
     const id = await host.resolveComponentId(entry.dependencyId);
-    const exist = await host.hasIdNested(id);
+    const idNoRange = valid(id.version) ? id : id.changeVersion('latest');
+    const exist = await host.hasIdNested(idNoRange);
     // This happen during load, so we need to make sure we have it now, otherwise the load will fail
     if (!exist) {
-      await host.fetch([id], {});
+      await host.fetch([idNoRange], {});
     }
-    const extComponent = await host.get(id);
+    const extComponent = await host.get(idNoRange);
     let version: string | null | undefined = '0.0.1';
     if (!extComponent?.tags.isEmpty()) {
       const range = entry.value.version;
