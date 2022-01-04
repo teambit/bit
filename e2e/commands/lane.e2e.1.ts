@@ -358,16 +358,16 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe(`switching lanes with deleted files`, () => {
+  describe.only(`switching lanes with deleted files`, () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.outputFile('utils/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/', { i: 'utils/is-type' });
       helper.command.tagAllWithoutBuild();
       helper.command.createLane('migration');
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
+      helper.fs.outputFile('utils/is-type.js', fixtures.isType);
+      helper.fs.outputFile('utils/is-type.spec.js', fixtures.isTypeSpec(true));
       helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.addComponent('utils/', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
       helper.command.install();
