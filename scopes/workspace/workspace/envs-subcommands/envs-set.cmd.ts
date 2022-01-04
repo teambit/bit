@@ -1,5 +1,4 @@
 import { Command } from '@teambit/cli';
-import { EnvsMain } from '@teambit/envs';
 import chalk from 'chalk';
 import { Workspace } from '../workspace';
 

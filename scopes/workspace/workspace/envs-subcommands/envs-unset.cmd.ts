@@ -1,5 +1,4 @@
 import { Command } from '@teambit/cli';
-import { EnvsMain } from '@teambit/envs';
 import { Workspace } from '../workspace';
 
 export class EnvsUnsetCmd implements Command {
