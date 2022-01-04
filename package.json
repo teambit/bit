@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.197",
+  "version": "1.0.198",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -193,7 +193,7 @@
     "object-diff": "0.0.4",
     "object-hash": "2.1.1",
     "open": "7.4.2",
-    "ora": "4.1.1",
+    "ora": "5.4.1",
     "p-event": "4.2.0",
     "p-map": "4.0.0",
     "p-map-series": "2.1.0",

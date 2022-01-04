@@ -23,8 +23,7 @@ export default class OrphanSymlinkObjects extends Diagnosis {
 
   async _runExamine(): Promise<ExamineBareResult> {
     const consumer = await loadConsumer();
-    const bitObjects = await consumer.scope.objects.list();
-    const symlinks = bitObjects.filter((object) => object instanceof Symlink);
+    const symlinks = await consumer.scope.objects.list([Symlink]);
     const orphanSymlinks = new BitIds();
     const objectsToDelete = [];
     await Promise.all(
