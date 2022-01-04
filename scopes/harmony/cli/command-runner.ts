@@ -3,7 +3,7 @@ import { migrate } from '@teambit/legacy/dist/api/consumer';
 import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Command, Flags, RenderResult } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
-import loader from '@teambit/legacy/dist/cli/loader';
+import loader from '@teambit/harmony.modules.cli.loader';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';

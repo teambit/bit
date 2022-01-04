@@ -609,6 +609,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
+    "modules/cli/loader": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/cli/loader"
+    },
     "modules/style-regexps": {
         "scope": "teambit.webpack",
         "version": "0.0.131",
