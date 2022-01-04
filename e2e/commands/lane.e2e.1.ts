@@ -358,7 +358,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe.only(`switching lanes with deleted files`, () => {
+  describe(`switching lanes with deleted files`, () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
