@@ -358,6 +358,27 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe(`switching lanes with deleted files`, () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.command.addComponent('utils/', { i: 'utils/is-type' });
+      helper.command.tagAllWithoutBuild();
+      helper.command.createLane('migration');
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
+      helper.npm.installNpmPackage('chai', '4.1.2');
+      helper.command.addComponent('utils/', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
+      helper.command.install();
+      helper.command.compile();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.switchLocalLane('main');
+    });
+    it('should delete the utils/is-type.spec.js file', () => {
+      expect(path.join(helper.scopes.localPath, 'utils/is-type.spec.js')).to.not.be.a.path();
+    });
+  });
   describe('merging lanes', () => {
     let authorScope;
     let importedScope;
