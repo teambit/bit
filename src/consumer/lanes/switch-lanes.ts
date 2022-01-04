@@ -62,15 +62,17 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  componentsResults.forEach((cr) => {
-    const existingFilePathsFromModel = cr.applyVersionResult.filesStatus;
-    const filePathsFromFS = succeededComponents.flatMap((sc) => sc.componentFromFS?.files || []);
+  componentsResults.forEach((componentResult) => {
+    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
+    const filePathsFromFS = succeededComponents.flatMap(
+      (succeededComponent) => succeededComponent.componentFromFS?.files || []
+    );
 
-    filePathsFromFS.forEach((f) => {
-      const key = pathNormalizeToLinux(f.relative);
-      if (!existingFilePathsFromModel[key]) {
+    filePathsFromFS.forEach((file) => {
+      const filename = pathNormalizeToLinux(file.relative);
+      if (!existingFilePathsFromModel[filename]) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingFilePathsFromModel[key] = FileStatus.removed;
+        existingFilePathsFromModel[filename] = FileStatus.removed;
       }
     });
   });
