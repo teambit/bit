@@ -1787,6 +1787,40 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await this.dependencyResolver.persistConfig(this.path);
     return this._installModules({ dedupe: true });
   }
+
+  /**
+   * configure an environment to the given components in the .bitmap file, this configuration overrides other, such as
+   * overrides in workspace.jsonc.
+   */
+  async setEnvToComponents(envId: ComponentID, components: Component[]) {
+    const envIdStr = envId.toString();
+    components.forEach((component) => {
+      this.bitMap.addComponentConfig(component.id, envIdStr);
+      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStr });
+    });
+    await this.bitMap.write();
+  }
+
+  /**
+   * remove env configuration from the .bitmap file, so then other configuration, such as "variants" will take place
+   */
+  async unsetEnvFromComponents(components: Component[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
+    const changed: ComponentID[] = [];
+    const unchanged: ComponentID[] = [];
+    components.forEach((comp) => {
+      const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
+      const currentEnv = bitMapEntry.config?.[EnvsAspect.id]?.env;
+      if (!currentEnv) {
+        unchanged.push(comp.id);
+        return;
+      }
+      this.bitMap.removeComponentConfig(comp.id, currentEnv);
+      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id);
+      changed.push(comp.id);
+    });
+    await this.bitMap.write();
+    return { changed, unchanged };
+  }
 }
 
 /**
