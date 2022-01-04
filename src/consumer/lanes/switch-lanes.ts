@@ -11,10 +11,18 @@ import { LaneComponent } from '../../scope/models/lane';
 import { Tmp } from '../../scope/repositories';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
-import { applyVersion, CheckoutProps, ComponentStatus } from '../versions-ops/checkout-version';
+import {
+  applyVersion,
+  CheckoutProps,
+  ComponentStatus,
+  applyModifiedVersion,
+  deleteFilesIfNeeded,
+} from '../versions-ops/checkout-version';
 import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
+import { pathNormalizeToLinux } from '../../utils/path';
+import { FileStatus } from '../versions-ops/merge-version/merge-version';
 
 export type SwitchProps = {
   laneName: string;
@@ -53,6 +61,20 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
   const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
+
+  componentsResults.forEach((cr) => {
+    const existingFilePathsFromModel = cr.applyVersionResult.filesStatus;
+    const filePathsFromFS = succeededComponents.flatMap((sc) => sc.componentFromFS?.files || []);
+
+    filePathsFromFS.forEach((f) => {
+      const key = pathNormalizeToLinux(f.relative);
+      if (!existingFilePathsFromModel[key]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        existingFilePathsFromModel[key] = FileStatus.removed;
+      }
+    });
+  });
+
   await saveLanesData();
 
   const componentsWithDependencies = componentsResults
@@ -70,6 +92,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     writePackageJson: !checkoutProps.ignorePackageJson,
   });
   await manyComponentsWriter.writeAll();
+  await deleteFilesIfNeeded(componentsResults, consumer);
 
   const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
