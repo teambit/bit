@@ -3,6 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { objectListToGraph, IdGraph } from '@teambit/graph';
 import { loadBit } from '@teambit/bit';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { ModelComponent, Version } from '../../src/scope/models';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -28,7 +29,8 @@ describe('graph aspect', function () {
       before(async () => {
         const harmony = await loadBit(helper.scopes.localPath);
         const scope = harmony.get<ScopeMain>(ScopeAspect.id);
-        const objectList = await scope.toObjectList();
+        // @ts-ignore
+        const objectList = await scope.toObjectList([ModelComponent, Version]);
         graph = await objectListToGraph(objectList);
       });
       it('should include the dependencies correctly', () => {

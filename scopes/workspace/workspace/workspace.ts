@@ -682,6 +682,20 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * don't throw an error if the component was not found, simply return undefined.
+   */
+  async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
+    return this.componentLoader.getIfExist(componentId);
+  }
+
+  /**
+   * whether a component exists in the workspace
+   */
+  exists(componentId: ComponentID): boolean {
+    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
@@ -765,7 +779,7 @@ export class Workspace implements ComponentFactory {
   async write(rootPath: string, component: Component) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.path);
+        const pathToWrite = path.join(this.path, rootPath, file.relative);
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
@@ -1307,12 +1321,10 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (packages && packages.length) {
+      await this._addPackages(packages, options);
+    }
     if (options?.addMissingPeers) {
-      if (packages?.length) {
-        throw new BitError(
-          'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
-        );
-      }
       const compDirMap = await this.getComponentsDirectory([]);
       const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
       const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
@@ -1329,44 +1341,8 @@ export class Workspace implements ComponentFactory {
         compDirMap,
         pmInstallOptions
       );
-      packages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-    }
-    if (packages && packages.length) {
-      if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
-        throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
-      }
-      this.logger.debug(`installing the following packages: ${packages.join()}`);
-      const resolver = await this.dependencyResolver.getVersionResolver();
-      const resolvedPackagesP = packages.map((packageName) =>
-        resolver.resolveRemoteVersion(packageName, {
-          rootDir: this.path,
-        })
-      );
-      const resolvedPackages = await Promise.all(resolvedPackagesP);
-      const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
-      resolvedPackages.forEach((resolvedPackage) => {
-        if (resolvedPackage.version) {
-          const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
-            resolvedPackage.version,
-            options?.savePrefix
-          );
-          newWorkspacePolicyEntries.push({
-            dependencyId: resolvedPackage.packageName,
-            value: {
-              version: versionWithPrefix,
-            },
-            lifecycleType: options?.lifecycleType || 'runtime',
-          });
-        }
-      });
-      if (!options?.variants) {
-        this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
-          updateExisting: options?.updateExisting ?? false,
-        });
-      } else {
-        // TODO: implement
-      }
-      await this.dependencyResolver.persistConfig(this.path);
+      const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+      await this._addPackages(missingPeerPackages, options);
     }
     if (options?.import) {
       this.logger.setStatusLine('importing missing objects');
@@ -1374,6 +1350,44 @@ export class Workspace implements ComponentFactory {
       this.logger.consoleSuccess();
     }
     return this._installModules(options);
+  }
+
+  private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
+    if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
+      throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
+    }
+    this.logger.debug(`installing the following packages: ${packages.join()}`);
+    const resolver = await this.dependencyResolver.getVersionResolver();
+    const resolvedPackagesP = packages.map((packageName) =>
+      resolver.resolveRemoteVersion(packageName, {
+        rootDir: this.path,
+      })
+    );
+    const resolvedPackages = await Promise.all(resolvedPackagesP);
+    const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+    resolvedPackages.forEach((resolvedPackage) => {
+      if (resolvedPackage.version) {
+        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
+          resolvedPackage.version,
+          options?.savePrefix
+        );
+        newWorkspacePolicyEntries.push({
+          dependencyId: resolvedPackage.packageName,
+          value: {
+            version: versionWithPrefix,
+          },
+          lifecycleType: options?.lifecycleType || 'runtime',
+        });
+      }
+    });
+    if (!options?.variants) {
+      this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
+        updateExisting: options?.updateExisting ?? false,
+      });
+    } else {
+      // TODO: implement
+    }
+    await this.dependencyResolver.persistConfig(this.path);
   }
 
   private async _getComponentsWithDependencyPolicies() {

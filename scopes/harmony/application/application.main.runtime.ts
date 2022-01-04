@@ -12,13 +12,14 @@ import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppListCmdDeprecated } from './app-list.cmd';
-import { DeployTask } from './deploy.task';
+import { AppsBuildTask } from './build.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
 import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
+import { DeployTask } from './deploy.task';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -77,21 +78,6 @@ export class ApplicationMain {
   listAppsById(id?: ComponentID): Application[] | undefined {
     if (!id) return undefined;
     return this.appSlot.get(id.toString());
-  }
-
-  /**
-   * register new deployment provider like netlify, cloudflare pages or custom deployment.
-   */
-  registerDeploymentProvider(provider: DeploymentProvider) {
-    this.deploymentProviderSlot.register([provider]);
-    return this;
-  }
-
-  /**
-   * list all deployment providers
-   */
-  listProviders() {
-    return flatten(this.deploymentProviderSlot.values());
   }
 
   /**
@@ -214,7 +200,9 @@ export class ApplicationMain {
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
-    builder.registerTagTasks([new DeployTask(application)]);
+    builder.registerBuildTasks([new AppsBuildTask(application)]);
+    builder.registerSnapTasks([new DeployTask(application, builder)]);
+    builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
 

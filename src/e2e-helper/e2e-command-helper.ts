@@ -154,6 +154,12 @@ export default class CommandHelper {
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
+  fork(sourceId: string, values = '') {
+    return this.runCmd(`bit fork ${sourceId} ${values}`);
+  }
+  rename(sourceId: string, targetId: string, flags = '') {
+    return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
+  }
   dependencies(values = '') {
     return this.runCmd(`bit dependencies ${values}`);
   }
@@ -482,6 +488,11 @@ export default class CommandHelper {
   showComponentParsedHarmony(id = 'bar/foo') {
     const output = this.runCmd(`bit show ${id} --json`);
     return JSON.parse(output);
+  }
+
+  showAspectConfig(compId: string, aspectId: string) {
+    const show = this.showComponentParsedHarmony(compId);
+    return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
   getComponentFiles(id: string): string[] {

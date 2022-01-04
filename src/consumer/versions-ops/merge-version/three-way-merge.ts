@@ -19,6 +19,9 @@ export type MergeResultsThreeWay = {
   removeFiles: Array<{
     filePath: PathLinux;
   }>;
+  remainDeletedFiles: Array<{
+    filePath: PathLinux;
+  }>;
   modifiedFiles: Array<{
     filePath: PathLinux;
     fsFile: SourceFile;
@@ -114,6 +117,7 @@ export default async function threeWayMergeVersions({
   const results: MergeResultsThreeWay = {
     addFiles: [],
     removeFiles: [],
+    remainDeletedFiles: [],
     modifiedFiles: [],
     unModifiedFiles: [],
     overrideFiles: [],
@@ -173,6 +177,9 @@ export default async function threeWayMergeVersions({
       await getFileResult(fsFile, baseFile, currentFile);
     })
   );
+  const fsFilesPaths = fsFiles.map((fsFile) => pathNormalizeToLinux(fsFile.relative));
+  const deletedFromFs = currentFiles.filter((currentFile) => !fsFilesPaths.includes(currentFile.relativePath));
+  deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
   if (R.isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);

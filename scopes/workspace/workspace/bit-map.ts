@@ -14,7 +14,7 @@ export class BitMap {
   /**
    * adds component config to the .bitmap file.
    * later, upon `bit tag`, the data is saved in the scope.
-   * returns a boolean indicating whether a chance has been made.
+   * returns a boolean indicating whether a change has been made.
    */
   async addComponentConfig(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
@@ -40,10 +40,26 @@ export class BitMap {
     await this.consumer.writeBitMap();
   }
 
+  /**
+   * get the data saved in the .bitmap file for this component-id.
+   */
   getBitmapEntry(
     id: ComponentID,
     { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  }
+
+  /**
+   * components that were not tagged yet are safe to rename them from the .bitmap file.
+   */
+  renameNewComponent(sourceId: ComponentID, targetId: ComponentID) {
+    const bitMapEntry = this.getBitmapEntry(sourceId);
+    if (bitMapEntry.id.hasVersion()) {
+      throw new Error(`unable to rename tagged or exported component: ${bitMapEntry.id.toString()}`);
+    }
+    this.legacyBitMap.removeComponent(bitMapEntry.id);
+    bitMapEntry.id = targetId._legacy;
+    this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
   }
 }

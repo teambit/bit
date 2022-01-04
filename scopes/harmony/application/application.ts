@@ -2,6 +2,9 @@ import { BuildContext } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { AppContext } from './app-context';
 import { DeployContext } from './deploy-context';
+import { AppBuildResult } from './app-build-result';
+
+export type DeployFn = (context: DeployContext, capsule: Capsule) => Promise<void>;
 
 export interface Application {
   /**
@@ -17,10 +20,10 @@ export interface Application {
   /**
    * build the application.
    */
-  build?(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
+  build?(context: BuildContext, capsule: Capsule): Promise<AppBuildResult>;
 
   /**
    * application deployment. this is a build task.
    */
-  deploy?(context: BuildContext, capsule: Capsule): Promise<void>;
+  deploy?: DeployFn;
 }
