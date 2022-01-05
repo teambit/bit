@@ -1282,4 +1282,35 @@ describe('bit lane command', function () {
       expect(comp1.localVersion).to.equal(secondSnap);
     });
   });
+  describe('switch to main after importing a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild(); // main has 0.0.1
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.command.importComponent('comp1');
+      helper.command.switchRemoteLane('dev');
+      helper.command.switchLocalLane('main');
+    });
+    // a previous bug was saving the hash from the lane in the bitmap file
+    it('.bitmap should have the component with the main version', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+    it('should list the component as 0.0.1 and not with a hash', () => {
+      const list = helper.command.listParsed();
+      expect(list[0].localVersion).to.equal('0.0.1');
+      expect(list[0].currentVersion).to.equal('0.0.1');
+    });
+  });
 });
