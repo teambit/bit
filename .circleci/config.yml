@@ -779,7 +779,7 @@ jobs:
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
-          command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set `@teambit:registry https://node.bit.dev
       - run:
           name: npm config list
           command: npm config list
