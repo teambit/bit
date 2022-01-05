@@ -362,21 +362,18 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.fs.outputFile('utils/is-type.js', fixtures.isType);
-      helper.command.addComponent('utils/', { i: 'utils/is-type' });
+      helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.createLane('migration');
-      helper.fs.outputFile('utils/is-type.js', fixtures.isType);
-      helper.fs.outputFile('utils/is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.npm.installNpmPackage('chai', '4.1.2');
-      helper.command.addComponent('utils/', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
+      helper.fs.outputFile('comp1/comp1.spec.js');
+      helper.command.addComponent('comp1/', { t: 'comp1/comp1.spec.js' });
       helper.command.install();
       helper.command.compile();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.switchLocalLane('main');
     });
-    it('should delete the utils/is-type.spec.js file', () => {
-      expect(path.join(helper.scopes.localPath, 'utils/is-type.spec.js')).to.not.be.a.path();
+    it('should delete the comp1/comp1.spec.js file', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1/comp1.spec.js')).to.not.be.a.path();
     });
   });
   describe('merging lanes', () => {
