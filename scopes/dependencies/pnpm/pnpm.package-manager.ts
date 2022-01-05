@@ -105,7 +105,6 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { storeDir, cacheDir } = this._getGlobalPnpmDirs(installOptions?.cacheRootDir);
-    const { config } = await this.readConfig();
     await install(
       rootManifest,
       componentsManifests,
@@ -115,7 +114,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        nodeLinker: config.nodeLinker,
+        nodeLinker: installOptions.nodeLinker,
         overrides: installOptions.overrides,
       },
       this.logger

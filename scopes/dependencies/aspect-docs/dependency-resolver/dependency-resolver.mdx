@@ -81,6 +81,16 @@ To choose between 'Yarn' and 'pnpm', set the `packageManager` property to either
 }
 ```
 
+### Select the type of node_modules
+
+By default, pnpm creates a symlinked `node_modules` wherease Yarn creates a "classic" hoisted one.
+This may be changed by setting the `nodeLinker` configuration option (supported by pnpm only for now).
+
+Allowed values of `nodeLinker`:
+
+- `"hoisted"` - create a flat `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
+- `"isolated"` - create a `node_modules` directory with using symlinks. Similar to the one created by default by pnpm.
+
 ### Apply policies on all relevant components
 
 A dependency policy configured at the root level of the workspace configuration (JSON) will by default affect _all_ components that have that package as their dependency (i.e., components that have this module listed in their generated dependency graph).
