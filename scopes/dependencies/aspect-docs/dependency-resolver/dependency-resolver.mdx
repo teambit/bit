@@ -88,8 +88,8 @@ This may be changed by setting the `nodeLinker` configuration option.
 
 Allowed values of `nodeLinker`:
 
-- `"hoisted"` - create a flat `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
-- `"isolated"` - create a `node_modules` directory with using symlinks. Similar to the one created by default by pnpm.
+- `"hoisted"` - create a hoisted (aka flat) `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
+- `"isolated"` - create a `node_modules` directory using symlinks. All dependencies are symlinked from a flat storage at `node_modules/.pnpm` (when using pnpm) or `node_modules/.store` (when using Yarn).
 
 ### Apply policies on all relevant components
 
