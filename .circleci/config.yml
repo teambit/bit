@@ -1688,7 +1688,7 @@ workflows:
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
   bvm_bundle_debug:
-  #   jobs:
+    jobs:
   #     - bundle_version_linux:
   #         filters:
   #           branches:
