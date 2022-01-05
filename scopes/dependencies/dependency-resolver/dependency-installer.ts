@@ -54,7 +54,9 @@ export class DependencyInstaller {
 
     private preInstallSubscriberList?: PreInstallSubscriberList,
 
-    private postInstallSubscriberList?: PostInstallSubscriberList
+    private postInstallSubscriberList?: PostInstallSubscriberList,
+
+    private nodeLinker?: 'hoisted' | 'isolated'
   ) {}
 
   async install(
@@ -81,7 +83,7 @@ export class DependencyInstaller {
     const calculatedPmOpts = Object.assign(
       {},
       DEFAULT_PM_INSTALL_OPTIONS,
-      { cacheRootDir: this.cacheRootDir },
+      { cacheRootDir: this.cacheRootDir, nodeLinker: this.nodeLinker },
       packageManagerOptions
     );
     if (options.installTeambitBit) {
