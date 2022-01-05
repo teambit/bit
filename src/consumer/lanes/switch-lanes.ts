@@ -11,13 +11,7 @@ import { LaneComponent } from '../../scope/models/lane';
 import { Tmp } from '../../scope/repositories';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
-import {
-  applyVersion,
-  CheckoutProps,
-  ComponentStatus,
-  applyModifiedVersion,
-  deleteFilesIfNeeded,
-} from '../versions-ops/checkout-version';
+import { applyVersion, CheckoutProps, ComponentStatus, deleteFilesIfNeeded } from '../versions-ops/checkout-version';
 import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
