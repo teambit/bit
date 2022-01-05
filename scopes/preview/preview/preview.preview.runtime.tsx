@@ -91,24 +91,42 @@ export class PreviewPreview {
 
   async fetchComponentPreview(id: ComponentID, name: string) {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      const stringId = id.toString();
-      // const previewRoute = `~aspect/preview`;
-      const previewRoute = `~aspect/component-preview`;
-      const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`;
-      const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-      script.src = src; // generate path to remote scope. [scope url]/
-      script.onload = () => {
-        const componentPreview = window[id.toStringWithoutVersion()];
-        if (!componentPreview) return reject(new PreviewNotFound(name));
-        const targetPreview = componentPreview[name];
-        if (!targetPreview) return reject(new PreviewNotFound(name));
-
-        return resolve(targetPreview);
-      };
-
-      document.head.appendChild(script);
+      const componentScriptElement = this.getComponentScriptElement(id);
+      const previewScriptElement = this.getPreviewScriptElement(id, name, resolve, reject);
+      document.head.appendChild(componentScriptElement);
+      document.head.appendChild(previewScriptElement);
     });
+  }
+
+  private getComponentScriptElement(id: ComponentID) {
+    const script = document.createElement('script');
+    script.setAttribute('defer', 'defer');
+    const stringId = id.toString();
+    const previewRoute = `~aspect/component-preview`;
+    const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-component.js`;
+    const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
+    script.src = src; // generate path to remote scope. [scope url]/
+    return script;
+  }
+
+  private getPreviewScriptElement(id: ComponentID, name: string, resolve, reject) {
+    const script = document.createElement('script');
+    script.setAttribute('defer', 'defer');
+    const stringId = id.toString();
+    // const previewRoute = `~aspect/preview`;
+    const previewRoute = `~aspect/component-preview`;
+    const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`;
+    const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
+    script.src = src; // generate path to remote scope. [scope url]/
+    script.onload = () => {
+      const componentPreview = window[`${id.toStringWithoutVersion()}-preview`];
+      if (!componentPreview) return reject(new PreviewNotFound(name));
+      const targetPreview = componentPreview[name];
+      if (!targetPreview) return reject(new PreviewNotFound(name));
+
+      return resolve(targetPreview);
+    };
+    return script;
   }
 
   /**

@@ -15,6 +15,14 @@ import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
 
+export const PREVIEW_CHUNK_SUFFIX = 'preview';
+export const COMPONENT_CHUNK_SUFFIX = 'component';
+export const PREVIEW_CHUNK_FILENAME_SUFFIX = `${PREVIEW_CHUNK_SUFFIX}.js`;
+export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
+
+type ComponentPreviewMetaData = {
+  size?: Number;
+};
 /**
  * bundles all components in a given env into the same bundle.
  */
@@ -27,18 +35,30 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
 
-    const entriesArr = flatten(
-      await Promise.all(
-        context.capsuleNetwork.seedersCapsules.map((capsule) => {
-          return this.computeComponentEntry(previewDefs, capsule.component, context);
-        }, {})
-      )
+    // const entriesArr = flatten(
+    //   await Promise.all(
+    //     context.capsuleNetwork.seedersCapsules.map((capsule) => {
+    //       return this.computeComponentEntry(previewDefs, capsule.component, context);
+    //     }, {})
+    //   )
+    // );
+
+    const entriesArr = await Promise.all(
+      context.capsuleNetwork.seedersCapsules.map((capsule) => {
+        return this.computeComponentEntry(previewDefs, capsule.component, context);
+      }, {})
     );
 
     const entries = entriesArr.reduce((entriesMap, entry) => {
-      entriesMap[entry.library.name] = entry;
+      // entriesMap[entry.library.name] = entry;
+      Object.assign(entriesMap, entry);
       return entriesMap;
     }, {});
+    console.log('entries', JSON.stringify(entries, null, 2));
+    // const entries = entriesArr.reduce((entriesMap, entry) => {
+    //   entriesMap[entry.library.name] = entry;
+    //   return entriesMap;
+    // }, {});
 
     // const modules = await Promise.all(entriesArr.map(async (entry) => {
     //   const dependencies = await this.dependencyResolver.getDependencies(entry.component);
@@ -77,28 +97,36 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: BuildContext) {
     const path = await this.computePaths(previewDefs, context, component);
-    // const [componentPath] = this.getPaths(context, component, [component.mainFile]);
+    const [componentPath] = this.getPaths(context, component, [component.mainFile]);
+    const componentChunkId = component.id.toStringWithoutVersion();
+    const componentPreviewChunkId = `${component.id.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
 
-    return [
-      {
-        filename: `${component.id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`,
-        import: path,
-        // dependOn: component.id.toStringWithoutVersion(),
+    return {
+      [componentChunkId]: {
+        filename: `${component.id.toString({
+          fsCompatible: true,
+          ignoreVersion: true,
+        })}-${COMPONENT_CHUNK_FILENAME_SUFFIX}`,
+        import: componentPath,
         library: {
-          // name: this.pkg.getPackageName(component),
-          name: `${component.id.toStringWithoutVersion()}`,
+          name: componentChunkId,
           type: 'umd',
         },
       },
-      // {
-      //   filename: `${component.id.toString({ fsCompatible: true, ignoreVersion: true })}.js`,
-      //   import: componentPath,
-      //   library: {
-      //     name: component.id.toStringWithoutVersion(),
-      //     type: 'umd'
-      //   }
-      // }
-    ];
+      [componentPreviewChunkId]: {
+        filename: `${component.id.toString({
+          fsCompatible: true,
+          ignoreVersion: true,
+        })}-${PREVIEW_CHUNK_FILENAME_SUFFIX}`,
+        import: path,
+        dependOn: component.id.toStringWithoutVersion(),
+        library: {
+          // name: this.pkg.getPackageName(component),
+          name: componentPreviewChunkId,
+          type: 'umd',
+        },
+      },
+    };
   }
 
   private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
@@ -110,12 +138,9 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     context.components.forEach((component) => {
       const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
       if (!capsule) return;
-      if (!result.assets) return;
-      const files = result.assets.filter((asset) => {
-        const fsComp = component.id.toString({ ignoreVersion: true, fsCompatible: true });
-        const id = component.id.toStringWithoutVersion();
-        return asset.name.includes(fsComp) || asset.name.includes(id);
-      });
+      const files = this.findAssetsForComponent(component, result.assets);
+      if (!files) return;
+      console.log('copyAssetsToCapsules files', files);
 
       files.forEach((asset) => {
         const filePath = this.getAssetAbsolutePath(context, asset);
@@ -130,8 +155,35 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     });
   }
 
+  private findAssetsForComponent(component: Component, assets: Asset[]): Asset[] | undefined {
+    if (!assets) return undefined;
+    console.log('copyAssetsToCapsules assets', assets);
+
+    const files = assets.filter((asset) => {
+      const fsComp = component.id.toString({ ignoreVersion: true, fsCompatible: true });
+      const id = component.id.toStringWithoutVersion();
+      return asset.name.includes(fsComp) || asset.name.includes(id);
+    });
+    return files;
+  }
+
   private getArtifactDirectory() {
     return `preview`;
+  }
+
+  private computeComponentMetadata(
+    context: BundlerContext,
+    result: BundlerResult,
+    component: Component
+  ): ComponentPreviewMetaData {
+    const files = this.findAssetsForComponent(component, result.assets);
+    const componentFile = files?.find((file) => {
+      return file.name.endsWith(COMPONENT_CHUNK_FILENAME_SUFFIX);
+    });
+    if (!componentFile) return {};
+    return {
+      size: componentFile.size,
+    };
   }
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
@@ -140,8 +192,11 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     this.copyAssetsToCapsules(context, result);
 
     const componentsResults: ComponentResult[] = result.components.map((component) => {
+      const metadata = this.computeComponentMetadata(context, result, component);
+      console.log('metadata', component.id.toString(), metadata);
       return {
         component,
+        metadata,
         errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
         warning: result.warnings,
         startTime: result.startTime,
