@@ -358,6 +358,24 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe(`switching lanes with deleted files`, () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.createLane('migration');
+      helper.fs.outputFile('comp1/comp1.spec.js');
+      helper.command.addComponent('comp1/', { t: 'comp1/comp1.spec.js' });
+      helper.command.install();
+      helper.command.compile();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.switchLocalLane('main');
+    });
+    it('should delete the comp1/comp1.spec.js file', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1/comp1.spec.js')).to.not.be.a.path();
+    });
+  });
   describe('merging lanes', () => {
     let authorScope;
     let importedScope;
