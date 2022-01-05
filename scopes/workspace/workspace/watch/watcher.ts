@@ -7,7 +7,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.to-linux';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
