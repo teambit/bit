@@ -7135,9 +7135,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.197":
-  version: 1.0.197
-  resolution: "@teambit/legacy@npm:1.0.197::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.197.tgz"
+"@teambit/legacy@npm:1.0.198":
+  version: 1.0.198
+  resolution: "@teambit/legacy@npm:1.0.198::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.198.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7211,7 +7211,7 @@ __metadata:
     object-diff: 0.0.4
     object-hash: 2.1.1
     open: 7.4.2
-    ora: 4.1.1
+    ora: 5.4.1
     p-event: 4.2.0
     p-map: 4.0.0
     p-map-series: 2.1.0
@@ -7260,7 +7260,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 086c7f3502841f88eff9b95e74d6e6ca48056d29467505eef6647a91c4e9d32f36b0657e9d53b4b75edde3813802e4a6b608ef309206341df9bbda0a6ca4e938
+  checksum: 607d3fef7f2b2fb5d0f04cc297ca1b773f56a753822caeeab37e2d8785dbd2c135d4bd4cbccb9049e1b38fed9b7d324ba276ad432d47b0f923a9359574573be3
   languageName: node
   linkType: hard
 
@@ -7411,7 +7411,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.197
+    "@teambit/legacy": 1.0.198
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react-native.adding-tests": 0.0.1
@@ -7687,7 +7687,7 @@ __metadata:
     object-diff: 0.0.4
     object-hash: 2.1.1
     open: 7.4.2
-    ora: 4.1.1
+    ora: 5.4.1
     os-browserify: 0.3.0
     p-event: 4.2.0
     p-limit: 3.1.0
@@ -7831,7 +7831,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.197
+    "@teambit/legacy": 1.0.198
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -12770,7 +12770,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bl@npm:^4.0.3":
+"bl@npm:^4.0.3, bl@npm:^4.1.0":
   version: 4.1.0
   resolution: "bl@npm:4.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbl%2F-%2Fbl-4.1.0.tgz"
   dependencies:
@@ -14048,7 +14048,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-spinners@npm:^2.2.0, cli-spinners@npm:^2.3.0":
+"cli-spinners@npm:^2.3.0, cli-spinners@npm:^2.5.0":
   version: 2.6.1
   resolution: "cli-spinners@npm:2.6.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcli-spinners%2F-%2Fcli-spinners-2.6.1.tgz"
   checksum: 423409baaa7a58e5104b46ca1745fbfc5888bbd0b0c5a626e052ae1387060839c8efd512fb127e25769b3dc9562db1dc1b5add6e0b93b7ef64f477feb6416a45
@@ -22329,6 +22329,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-unicode-supported@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "is-unicode-supported@npm:0.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-unicode-supported%2F-%2Fis-unicode-supported-0.1.0.tgz"
+  checksum: a2aab86ee7712f5c2f999180daaba5f361bdad1efadc9610ff5b8ab5495b86e4f627839d085c6530363c6d6d4ecbde340fb8e54bdb83da4ba8e0865ed5513c52
+  languageName: node
+  linkType: hard
+
 "is-url@npm:1.2.4, is-url@npm:^1.1.0":
   version: 1.2.4
   resolution: "is-url@npm:1.2.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-url%2F-%2Fis-url-1.2.4.tgz"
@@ -24348,12 +24355,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"log-symbols@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "log-symbols@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flog-symbols%2F-%2Flog-symbols-3.0.0.tgz"
+"log-symbols@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "log-symbols@npm:4.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flog-symbols%2F-%2Flog-symbols-4.1.0.tgz"
   dependencies:
-    chalk: ^2.4.2
-  checksum: f2322e1452d819050b11aad247660e1494f8b2219d40a964af91d5f9af1a90636f1b3d93f2952090e42af07cc5550aecabf6c1d8ec1181207e95cb66ba112361
+    chalk: ^4.1.0
+    is-unicode-supported: ^0.1.0
+  checksum: fce1497b3135a0198803f9f07464165e9eb83ed02ceb2273930a6f8a508951178d8cf4f0378e9d28300a2ed2bc49050995d2bd5f53ab716bb15ac84d58c6ef74
   languageName: node
   linkType: hard
 
@@ -26637,19 +26645,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ora@npm:4.1.1":
-  version: 4.1.1
-  resolution: "ora@npm:4.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fora%2F-%2Fora-4.1.1.tgz"
+"ora@npm:5.4.1":
+  version: 5.4.1
+  resolution: "ora@npm:5.4.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fora%2F-%2Fora-5.4.1.tgz"
   dependencies:
-    chalk: ^3.0.0
+    bl: ^4.1.0
+    chalk: ^4.1.0
     cli-cursor: ^3.1.0
-    cli-spinners: ^2.2.0
+    cli-spinners: ^2.5.0
     is-interactive: ^1.0.0
-    log-symbols: ^3.0.0
-    mute-stream: 0.0.8
+    is-unicode-supported: ^0.1.0
+    log-symbols: ^4.1.0
     strip-ansi: ^6.0.0
     wcwidth: ^1.0.1
-  checksum: 5dcee3a2e143c7b578531ceda051e8c4b64655a019030fe3de4aef67ac28d08fca996aef71522d40b2316a272aa158d65028d7f43c126d318b70a49d9fa4f991
+  checksum: 28d476ee6c1049d68368c0dc922e7225e3b5600c3ede88fade8052837f9ed342625fdaa84a6209302587c8ddd9b664f71f0759833cbdb3a4cf81344057e63c63
   languageName: node
   linkType: hard
 

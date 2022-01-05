@@ -16,7 +16,7 @@ export class BitMap {
    * later, upon `bit tag`, the data is saved in the scope.
    * returns a boolean indicating whether a change has been made.
    */
-  async addComponentConfig(aspectId: string, id: ComponentID, config?: Record<string, any>): Promise<boolean> {
+  addComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
@@ -29,7 +29,20 @@ export class BitMap {
       bitMapEntry.config[aspectId] = config;
     }
     this.legacyBitMap.markAsChanged();
-    await this.write();
+
+    return true; // changes have been made
+  }
+
+  removeComponentConfig(id: ComponentID, aspectId: string): boolean {
+    if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    if (!currentConfig) {
+      return false; // no changes
+    }
+    delete bitMapEntry.config[aspectId];
+    this.legacyBitMap.markAsChanged();
+
     return true; // changes have been made
   }
 
