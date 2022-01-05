@@ -7051,9 +7051,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.196":
-  version: 1.0.196
-  resolution: "@teambit/legacy@npm:1.0.196::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.196.tgz"
+"@teambit/legacy@npm:1.0.197":
+  version: 1.0.197
+  resolution: "@teambit/legacy@npm:1.0.197::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.197.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7176,7 +7176,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 2de8757d7e86c43d8f036da8796713a9df121055367bd35efecb6e2cec767f74aeabe24e5c5fd1191237f7186ccd4e4216d3bed2158de9661978daf829df3e45
+  checksum: 086c7f3502841f88eff9b95e74d6e6ca48056d29467505eef6647a91c4e9d32f36b0657e9d53b4b75edde3813802e4a6b608ef309206341df9bbda0a6ca4e938
   languageName: node
   linkType: hard
 
@@ -7327,7 +7327,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.196
+    "@teambit/legacy": 1.0.197
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react-native.adding-tests": 0.0.1
@@ -7652,6 +7652,7 @@ __metadata:
     react-native-web: ^0.16.0
     react-popper: 2.2.4
     react-refresh: 0.10.0
+    react-router: 5.2.0
     react-router-dom: 5.2.0
     react-syntax-highlighter: 15.4.3
     react-tabs: 3.2.0
@@ -7746,7 +7747,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.196
+    "@teambit/legacy": 1.0.197
     jest: 26.6.3
   bin:
     bit: bin/bit.js
