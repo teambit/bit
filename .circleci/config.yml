@@ -781,6 +781,15 @@ jobs:
           name: set bit.dev registry
           command: npm config set @teambit:registry https://node.bit.dev
       - run:
+          name: npm config list
+          command: npm config list
+      - run:
+          name: yarn config list
+          command: yarn config list
+      - run:
+          name: testing bit registry
+          command: mkdir tmp && cd tmp && npm init -y && yarn add @teambit/react.instructions.react-native.adding-tests@0.0.1
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       # - run:
@@ -1678,16 +1687,16 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
+  bvm_bundle_debug:
   #   jobs:
   #     - bundle_version_linux:
   #         filters:
   #           branches:
   #             only: bvm-build-from-bit-dev-registry
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: bvm-build-from-bit-dev-registry1
   #     - bundle_version_macos:
   #         filters:
   #           branches:
