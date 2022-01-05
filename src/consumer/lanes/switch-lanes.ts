@@ -56,11 +56,17 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
+  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
+    const bitId = next.id.toString();
+    if (!accum[bitId]) accum[bitId] = next;
+    return accum;
+  }, {});
+
   componentsResults.forEach((componentResult) => {
     const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const filePathsFromFS = succeededComponents.flatMap(
-      (succeededComponent) => succeededComponent.componentFromFS?.files || []
-    );
+    const bitId = componentResult.applyVersionResult.id.toString();
+    const succeededComponent = succeededComponentsByBitId[bitId];
+    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
 
     filePathsFromFS.forEach((file) => {
       const filename = pathNormalizeToLinux(file.relative);
