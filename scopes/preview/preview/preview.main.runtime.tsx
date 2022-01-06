@@ -102,7 +102,7 @@ export class PreviewMain {
   writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
-    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    const targetPath = join(dirName, `${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
