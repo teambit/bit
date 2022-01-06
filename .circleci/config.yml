@@ -158,6 +158,9 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
+      - run:
+          name: set bit.dev registry
+          command: npm config set @teambit:registry https://node.bit.dev
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
