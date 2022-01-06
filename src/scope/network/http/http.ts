@@ -498,18 +498,25 @@ export class Http implements Network {
   // TODO: ran (TBD)
   async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
     const LIST_LANES = gql`
-    query listLanes() {
-      lanes {
-        list()
+      query Lanes {
+        lanes {
+          getLanes {
+            name
+            components {
+              id
+              head
+            }
+            isMerged
+          }
+        }
       }
-    }
     `;
 
     const res = await this.graphClientRequest(LIST_LANES, Verb.READ, {
       mergeData,
     });
 
-    return res.lanes.list;
+    return res.lanes.getLanes;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
