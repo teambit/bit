@@ -86,4 +86,27 @@ import { HttpHelper } from '../http-helper';
       });
     });
   });
+  describe('export lane', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+      helper.command.createLane();
+      helper.fixtures.populateComponents();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.exportLane();
+    });
+    it('lane list -r should show the remote lanes', () => {
+      const output = helper.command.showRemoteLanesParsed();
+      expect(output.lanes).to.have.lengthOf(1);
+      expect(output.lanes[0].name).to.have.string('dev');
+    });
+    after(() => {
+      httpHelper.killHttp();
+    });
+  });
 });

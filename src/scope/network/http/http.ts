@@ -495,7 +495,6 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  // TODO: ran (TBD)
   async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
     const LIST_LANES = gql`
       query Lanes {
