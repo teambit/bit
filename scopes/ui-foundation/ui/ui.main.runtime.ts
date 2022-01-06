@@ -13,6 +13,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { sha1 } from '@teambit/legacy/dist/utils';
+import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { join, resolve } from 'path';
@@ -176,6 +177,15 @@ export class UiMain {
 
     private startPluginSlot: StartPluginSlot
   ) {}
+
+  private rootOutputPath = join(CACHE_ROOT, UIAspect.id);
+  /** The UI aspect will output the root link file to this directory.
+   * Usually `node_modules/.cache/bit/teambit.ui-foundation/ui`
+   * @default `${CACHE_ROOT}/teambit.ui-foundation/ui`
+   */
+  setRootOutput(dirPath: string) {
+    this.rootOutputPath = dirPath;
+  }
 
   async publicDir(uiRoot: UIRoot) {
     const overwriteFn = this.getOverwritePublic();
@@ -421,10 +431,10 @@ export class UiMain {
       runtimeName,
       this.harmony.config.toObject()
     );
-    const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
-    if (fs.existsSync(filepath)) return filepath;
-    fs.outputFileSync(filepath, contents);
-    return filepath;
+    const rootPath = resolve(this.rootOutputPath, `${runtimeName}.root-${sha1(contents)}.js`);
+    if (fs.existsSync(rootPath)) return rootPath;
+    fs.outputFileSync(rootPath, contents);
+    return rootPath;
   }
 
   private async selectPort() {

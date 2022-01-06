@@ -10,7 +10,7 @@ import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { IsolatorMain } from '@teambit/isolator';
 import { LoggerMain } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
-import { UiMain } from '@teambit/ui';
+import { UIAspect, UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -186,6 +186,7 @@ export default async function provideWorkspace(
 
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
+  ui.setRootOutput(workspace.getTempDir(UIAspect.id));
   graphql.register(workspaceSchema);
   const capsuleCmd = new CapsuleCmd();
   capsuleCmd.commands = [
