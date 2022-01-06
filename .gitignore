@@ -91,7 +91,7 @@ bin/bit
 .scannerwork
 
 # package managers
-pnpm-lock.yaml
+yarn.lock
 package-lock.json
 build-harmony/yarn.lock
 
