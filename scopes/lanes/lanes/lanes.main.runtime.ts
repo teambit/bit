@@ -196,4 +196,6 @@ export class LanesMain {
   }
 }
 
+export default LanesMain;
+
 LanesAspect.addRuntime(LanesMain);

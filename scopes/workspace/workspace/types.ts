@@ -19,6 +19,11 @@ export interface WorkspaceExtConfig {
   defaultOwner: string;
 
   /**
+   * determine whether to use workspace cache or not.
+   */
+  cache: boolean;
+
+  /**
    * set the default scope when there is no matching for the component in the components array.
    */
   defaultScope: string;

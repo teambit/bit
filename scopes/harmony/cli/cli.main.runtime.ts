@@ -1,5 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from '@teambit/legacy/dist/cli';
+import buildRegistry from '@teambit/legacy/dist/cli/command-registry-builder';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
