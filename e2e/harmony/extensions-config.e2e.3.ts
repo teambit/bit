@@ -52,7 +52,7 @@ describe('harmony extension config', function () {
       let localBeforeTag;
 
       before(() => {
-        const EXTENSION_FOLDER = 'dummy-extension';
+        const EXTENSION_FOLDER = 'dummy-extension-without-logs';
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -60,7 +60,7 @@ describe('harmony extension config', function () {
         helper.bitJsonc.disablePreview();
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
-        helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+        helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
         helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.link();
         helper.command.compile();
@@ -69,7 +69,7 @@ describe('harmony extension config', function () {
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
           output = helper.general.runWithTryCatch('bit tag bar/foo');
-          expect(output).to.have.string('has a dependency "dummy-extension"');
+          expect(output).to.have.string('has a dependency "dummy-extension-without-logs"');
           expect(output).to.have.string('this dependency was not included in the tag command');
         });
 
@@ -78,14 +78,9 @@ describe('harmony extension config', function () {
           let dummyExtensionAfter;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            // NOTE: For some reason, after switching the package manager to pnpm in the bit repo,
-            // this "bit show" started to show the log from the dummy extension.
-            // So we remove it before parsing the output.
-            const componentShowBeforeRemove = JSON.parse(
-              helper.command.runCmd(`bit show bar/foo --json --legacy`).replace(/^dummy extension runs/, '')
-            );
+            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
-            helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/dummy-extension`, '-');
+            helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/dummy-extension-without-logs`, '-');
             const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionAfter = findDummyExtension(componentShowAfterRemove.extensions);
           });
@@ -119,10 +114,10 @@ describe('harmony extension config', function () {
           });
           it('should insert extensions flattened dependencies into the component flattened dependencies', () => {
             expect(componentModel.flattenedDependencies).to.be.of.length(1);
-            expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension');
+            expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension-without-logs');
           });
           it('should auto tag the component when tagging the extension again', () => {
-            output = helper.command.tagComponent('dummy-extension', 'message', '-f');
+            output = helper.command.tagComponent('dummy-extension-without-logs', 'message', '-f');
             expect(output).to.have.string('auto-tagged dependents');
             expect(output).to.have.string('bar/foo@0.0.2');
           });
@@ -131,7 +126,7 @@ describe('harmony extension config', function () {
           let componentModel;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            helper.command.tagComponent('dummy-extension');
+            helper.command.tagComponent('dummy-extension-without-logs');
             helper.command.tagComponent('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
@@ -158,7 +153,7 @@ describe('harmony extension config', function () {
           });
           it('should block exporting component without exporting the extension', () => {
             output = helper.general.runWithTryCatch(`bit export bar/foo`);
-            expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
+            expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension-without-logs@0.0.1" was not found`);
           });
           describe('exporting extension and component together', () => {
             before(() => {
@@ -175,7 +170,7 @@ describe('harmony extension config', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeExport);
               helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-              helper.command.export('dummy-extension');
+              helper.command.export('dummy-extension-without-logs');
               helper.command.export('bar/foo');
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
@@ -194,9 +189,9 @@ describe('harmony extension config', function () {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
-          helper.command.tagComponent('dummy-extension');
-          helper.command.export('dummy-extension');
-          helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.command.tagComponent('dummy-extension-without-logs');
+          helper.command.export('dummy-extension-without-logs');
+          helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
           helper.bitJsonc.disablePreview();
           helper.command.tagAllComponents();
           helper.command.export();
@@ -207,21 +202,20 @@ describe('harmony extension config', function () {
         it('should auto-import the extensions as well', () => {
           const scopeList = helper.command.listLocalScopeParsed('--scope');
           const ids = scopeList.map((entry) => entry.id);
-          expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
+          expect(ids).to.include(`${helper.scopes.remote}/dummy-extension-without-logs`);
         });
         describe('removing the extension with "-"', () => {
           let dummyExtensionBefore;
           let dummyExtensionAfter;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            // NOTE: For some reason, after switching the package manager to pnpm in the bit repo,
-            // this "bit show" started to show the log from the dummy extension.
-            // So we remove it before parsing the output.
-            const componentShowBeforeRemove = JSON.parse(
-              helper.command.runCmd(`bit show bar/foo --json --legacy`).replace(/^dummy extension runs/, '')
-            );
+            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
-            helper.extensions.addExtensionToVariant('{bar/foo}', `${helper.scopes.remote}/dummy-extension`, '-');
+            helper.extensions.addExtensionToVariant(
+              '{bar/foo}',
+              `${helper.scopes.remote}/dummy-extension-without-logs`,
+              '-'
+            );
             const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionAfter = findDummyExtension(componentShowAfterRemove.extensions);
           });
@@ -261,5 +255,5 @@ describe('harmony extension config', function () {
 });
 
 function findDummyExtension(extensions) {
-  return extensions.find((ext) => ext.extensionId && ext.extensionId.includes('dummy-extension'));
+  return extensions.find((ext) => ext.extensionId && ext.extensionId.includes('dummy-extension-without-logs'));
 }
