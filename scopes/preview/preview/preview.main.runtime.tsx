@@ -1,4 +1,4 @@
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { ArtifactFactory, BuilderAspect, BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
@@ -13,10 +13,11 @@ import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect, getAspectDir } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -28,7 +29,11 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
-import { EnvPreviewTemplateTask, GENERATE_ENV_TEMPLATE_TASK_NAME } from './env-preview-template.task';
+import {
+  EnvPreviewTemplateTask,
+  GENERATE_ENV_TEMPLATE_TASK_NAME,
+  getArtifactDef as getEnvTemplateArtifactDef,
+} from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 
@@ -121,11 +126,35 @@ export class PreviewMain {
   }
 
   /**
+   * This is a special method to get a core env template
+   * As the core envs doesn't exist in the scope we need to bring it from other place
+   * We will bring it from the core env package files
+   */
+  private async getCoreEnvTemplate(envId: string): Promise<PreviewArtifact | undefined> {
+    const coreEnvDir = getAspectDir(envId);
+    // const finalDir = join(coreEnvDir, getEnvTemplateArtifactDirectory());
+    const artifactDef = getEnvTemplateArtifactDef()[0];
+    const artifactFactory = new ArtifactFactory();
+
+    const paths = artifactFactory.resolvePaths(coreEnvDir, artifactDef);
+    if (!paths || !paths.length) {
+      return undefined;
+    }
+    const artifactFiles = new ArtifactFiles(paths);
+    artifactFiles.populateVinylsFromPaths(coreEnvDir);
+    return new PreviewArtifact(artifactFiles.vinyls);
+  }
+
+  /**
    * This will fetch the component env, then will take the env template from the component env
    * @param component
    */
   async getEnvTemplateFromComponentEnv(component: Component): Promise<PreviewArtifact | undefined> {
     const envId = this.envs.getEnv(component).id;
+    // Special treatment for core envs
+    if (this.aspectLoader.isCoreEnv(envId)) {
+      return this.getCoreEnvTemplate(envId);
+    }
     const host = this.componentAspect.getHost();
     const resolvedEnvId = await host.resolveComponentId(envId);
     const envComponent = await host.get(resolvedEnvId);

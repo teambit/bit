@@ -91,6 +91,17 @@ export class EnvsMain {
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.harmony/aspect',
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+    ];
+  }
+
   /**
    * compose a new environment from a list of environment transformers.
    */

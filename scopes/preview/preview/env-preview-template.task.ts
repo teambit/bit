@@ -130,7 +130,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       };
     });
 
-    const artifacts = this.getArtifactDef();
+    const artifacts = getArtifactDef();
 
     return {
       componentsResults,
@@ -157,25 +157,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
     return modules;
   }
 
-  private getArtifactDirectory() {
-    return join('artifacts', 'env-template');
-  }
-
   private computeOutputPath(context: BuildContext, component: Component) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
     if (!capsule) throw new Error('no capsule found');
-    return join(capsule.path, this.getArtifactDirectory());
-  }
-
-  private getArtifactDef() {
-    return [
-      {
-        name: 'env-template',
-        globPatterns: [`${this.getArtifactDirectory()}/**`],
-        // rootDir,
-        // context: env,
-      },
-    ];
+    return join(capsule.path, getArtifactDirectory());
   }
 
   // private async getPreviewModule(envComponent: Component): Promise<ModuleTarget> {
@@ -197,4 +182,19 @@ export class EnvPreviewTemplateTask implements BuildTask {
   //     exposes
   //   };
   // }
+}
+
+export function getArtifactDirectory() {
+  return join('artifacts', 'env-template');
+}
+
+export function getArtifactDef() {
+  return [
+    {
+      name: 'env-template',
+      globPatterns: [`${getArtifactDirectory()}/**`],
+      // rootDir,
+      // context: env,
+    },
+  ];
 }

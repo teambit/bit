@@ -15,7 +15,7 @@ export const DEFAULT_CONTEXT = 'component';
 export type ArtifactMap = ComponentMap<ArtifactList>;
 
 export class ArtifactFactory {
-  private resolvePaths(root: string, def: ArtifactDefinition): string[] {
+  resolvePaths(root: string, def: ArtifactDefinition): string[] {
     const patternsFlattened = flatten(def.globPatterns);
     const paths = globby.sync(patternsFlattened, { cwd: root });
     return paths;
