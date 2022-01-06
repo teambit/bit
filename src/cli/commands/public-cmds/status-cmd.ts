@@ -9,7 +9,7 @@ import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatIssues } from '../../templates/component-issues-template';
 import { ModelComponent } from '../../../scope/models';
-import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
+import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG, DEFAULT_LANE } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import { Group } from '../../command-groups';
 
@@ -223,7 +223,11 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
+    const onNonDefaultLane = laneName && laneName !== DEFAULT_LANE;
+
+    const stagedDesc = `\n(use "bit export${
+      onNonDefaultLane ? '' : ' <remote_scope>'
+    } to push these components to a remote scope")\n`;
     const stagedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       stagedComponents.map((c) => format(c, true)),
