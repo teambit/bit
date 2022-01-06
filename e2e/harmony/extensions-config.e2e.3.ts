@@ -78,7 +78,12 @@ describe('harmony extension config', function () {
           let dummyExtensionAfter;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
+            // NOTE: For some reason, after switching the package manager to pnpm in the bit repo,
+            // this "bit show" started to show the log from the dummy extension.
+            // So we remove it before parsing the output.
+            const componentShowBeforeRemove = JSON.parse(
+              helper.command.runCmd(`bit show bar/foo --json --legacy`).replace(/^dummy extension runs/, '')
+            );
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
             helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/dummy-extension`, '-');
             const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
@@ -209,7 +214,12 @@ describe('harmony extension config', function () {
           let dummyExtensionAfter;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
+            // NOTE: For some reason, after switching the package manager to pnpm in the bit repo,
+            // this "bit show" started to show the log from the dummy extension.
+            // So we remove it before parsing the output.
+            const componentShowBeforeRemove = JSON.parse(
+              helper.command.runCmd(`bit show bar/foo --json --legacy`).replace(/^dummy extension runs/, '')
+            );
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
             helper.extensions.addExtensionToVariant('{bar/foo}', `${helper.scopes.remote}/dummy-extension`, '-');
             const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
