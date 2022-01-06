@@ -1,5 +1,18 @@
 import type { ComponentModel } from '@teambit/component';
 import { affix } from '@teambit/base-ui.utils.string.affix';
+import { useHistory } from 'react-router-dom';
+
+/**
+ * a routing-aware generator for the full url to a preview (overview / docs etc).
+ * This will include basename and other routing configratuions
+ */
+export function usePreviewUrl(component: ComponentModel, previewName?: string, additionalParams?: string | string[]) {
+  const history = useHistory();
+  const pathname = toPreviewServer(component);
+  const hash = toPreviewHash(component, previewName, additionalParams);
+
+  return history.createHref({ pathname, hash });
+}
 
 /**
  * generates a full url to a preview (overview / docs etc)

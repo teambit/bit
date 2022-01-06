@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react';
+import urlJoin from 'url-join';
 import { UIRuntime } from '@teambit/ui';
+import type { Aspect } from '@teambit/harmony';
 
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
 import type { NormalizedCacheObject } from '@apollo/client';
@@ -13,6 +15,7 @@ import { GraphQLProvider } from './graphql-provider';
 import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderLifecycle } from './render-lifecycle';
 import { logError } from './logging';
+import { GqlConfig } from './gql-config';
 
 /**
  * Type of gql client.
@@ -57,6 +60,19 @@ export class GraphqlUI {
     return client;
   }
 
+  getConfig = (): GqlConfig => {
+    return {
+      endpoint: urlJoin(this.baseName, 'graphql'),
+      ssrEndpoint: urlJoin(this.baseName, 'graphql'),
+      subscriptionEndpoint: urlJoin(this.baseName, 'subscriptions'),
+    };
+  };
+
+  private baseName = '/';
+  setBasename(value: string) {
+    this.baseName = value;
+  }
+
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache();
 
@@ -90,7 +106,7 @@ export class GraphqlUI {
   renderHooks = new GraphqlRenderLifecycle(this);
 
   static runtime = UIRuntime;
-  static dependencies = [];
+  static dependencies: Aspect[] = [];
   static slots = [];
 
   static async provider() {

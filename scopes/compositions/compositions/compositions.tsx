@@ -10,7 +10,7 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
-import { toPreviewUrl } from '@teambit/preview.ui.component-preview';
+import { usePreviewUrl } from '@teambit/preview.ui.component-preview';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/compositions.ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -56,8 +56,8 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const compositionUrl = toPreviewUrl(component, 'compositions');
-  const currentCompositionUrl = toPreviewUrl(component, 'compositions', selected?.identifier);
+  const compositionUrl = usePreviewUrl(component, 'compositions');
+  const currentCompositionUrl = usePreviewUrl(component, 'compositions', selected?.identifier);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);

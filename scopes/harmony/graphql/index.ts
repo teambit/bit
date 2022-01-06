@@ -1,4 +1,5 @@
 export { GraphqlAspect, GraphqlAspect as default } from './graphql.aspect';
+export type { GqlConfig } from './gql-config';
 
 export type { Schema } from './schema';
 export type { GraphqlMain, SchemaSlot } from './graphql.main.runtime';

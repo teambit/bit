@@ -34,6 +34,11 @@ export type StartOptions = {
    * port range for the UI server to bind. default is a port range of 4000-4200.
    */
   portRange?: number[] | number;
+
+  /**
+   * pathname to start the web server at
+   */
+  urlBasename?: string;
 };
 
 export class UIServer {
@@ -91,11 +96,11 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ portRange }: StartOptions = {}) {
+  async start({ portRange, urlBasename }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     const publicDir = `/${this.publicDir}`;
     const root = join(this.uiRoot.path, publicDir);
-    const server = await this.graphql.createServer({ app });
+    const server = await this.graphql.createServer({ app, urlBasename });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
@@ -106,7 +111,7 @@ export class UIServer {
 
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
 
-    await this.setupServerSideRendering({ root, port, app });
+    await this.setupServerSideRendering({ root, port, app, urlBasename });
 
     // in any and all other cases, serve index.html.
     // No any other endpoints past this will execute
@@ -126,7 +131,17 @@ export class UIServer {
     return this.plugins.map((plugin) => plugin.render);
   }
 
-  private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {
+  private async setupServerSideRendering({
+    root,
+    port,
+    app,
+    urlBasename,
+  }: {
+    root: string;
+    port: number;
+    app: Express;
+    urlBasename?: string;
+  }) {
     if (!this.buildOptions?.ssr) return;
 
     const ssrMiddleware = await createSsrMiddleware({
@@ -134,6 +149,7 @@ export class UIServer {
       port,
       title: this.uiRoot.name,
       logger: this.logger,
+      urlBasename,
     });
 
     if (!ssrMiddleware) {

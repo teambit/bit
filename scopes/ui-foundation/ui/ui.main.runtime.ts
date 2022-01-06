@@ -30,6 +30,7 @@ import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
+import { UIConfig } from './ui-config';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -54,32 +55,6 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 export type PublicDirOverwriteSlot = SlotRegistry<PublicDirOverwrite>;
 
 export type BuildMethodOverwriteSlot = SlotRegistry<BuildMethodOverwrite>;
-
-export type UIConfig = {
-  /**
-   * port for the UI root to use.
-   */
-  port?: number;
-
-  /**
-   * port range for the UI root to use.
-   */
-  portRange: [number, number];
-
-  /**
-   * host for the UI root
-   */
-  host: string;
-
-  /**
-   * directory in workspace to use for public assets.
-   * always relative to the workspace root directory.
-   */
-  publicDir: string;
-
-  /** the url to display when server is listening. Note that bit does not provide proxying to this url */
-  publicUrl?: string;
-};
 
 export type RuntimeOptions = {
   /**
@@ -216,7 +191,13 @@ export class UiMain {
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
 
-    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const browserConfig = createWebpackConfig(
+      uiRoot.path,
+      [mainEntry],
+      uiRoot.name,
+      await this.publicDir(uiRoot),
+      this.config.urlBasename
+    );
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
@@ -275,10 +256,10 @@ export class UiMain {
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();
     if (dev) {
-      await uiServer.dev({ portRange: port || this.config.portRange });
+      await uiServer.dev({ portRange: port || this.config.portRange, urlBasename: this.config.urlBasename });
     } else {
       await this.buildUI(name, uiRoot, rebuild);
-      await uiServer.start({ portRange: port || this.config.portRange });
+      await uiServer.start({ portRange: port || this.config.portRange, urlBasename: this.config.urlBasename });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
@@ -490,7 +471,8 @@ export class UiMain {
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
-      await this.publicDir(uiRoot)
+      await this.publicDir(uiRoot),
+      this.config.urlBasename
     );
     if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
@@ -535,7 +517,7 @@ export class UiMain {
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
-    config,
+    config: UIConfig,
     [uiRootSlot, preStartSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
       PreStartSlot,

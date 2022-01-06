@@ -9,6 +9,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
+import { GqlConfig, GraphqlAspect } from '@teambit/graphql';
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
@@ -33,9 +34,9 @@ const defaultDocs = {
  * base template for react component documentation
  */
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
-  const { loading, error, data } = useFetchDocs(componentId);
-
   const rawProviders = renderingContext.get(ReactAspect.id);
+  const graphqlContext = renderingContext.get(GraphqlAspect.id) as GqlConfig | undefined;
+  const { loading, error, data } = useFetchDocs(componentId, graphqlContext?.endpoint);
   const reactContext = useMemo(() => flatten(Object.values(rawProviders || {})), [rawProviders]);
 
   if (!data || loading) return null;

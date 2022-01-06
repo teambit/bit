@@ -13,6 +13,7 @@ type RouterContextProps = {
   routing?: Routing;
   children: ReactNode;
   location?: string;
+  basename?: string;
 };
 
 type RootRouteProps = {
@@ -23,10 +24,16 @@ type RootRouteProps = {
 /**
  * Setup context needed for routing.
  */
-export function RouteContext({ reactRouterUi, routing = Routing.url, children, location }: RouterContextProps) {
+export function RouteContext({
+  reactRouterUi,
+  routing = Routing.url,
+  children,
+  location,
+  basename,
+}: RouterContextProps) {
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}
-    <Router type={routing} location={location}>
+    <Router type={routing} location={location} basename={basename}>
       {/* injects History object back to reactRouterUi */}
       <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
       {/* injects react-router Link into context  */}
@@ -43,10 +50,24 @@ export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
 }
 
 /** provides the router engine (browser, inMemory, etc) */
-function Router({ type, children, location }: { type: Routing; children: ReactNode; location?: string }) {
+function Router({
+  type,
+  children,
+  location,
+  basename,
+}: {
+  type: Routing;
+  children: ReactNode;
+  location?: string;
+  basename?: string;
+}) {
   switch (type) {
     case Routing.static:
-      return <StaticRouter location={location}>{children}</StaticRouter>;
+      return (
+        <StaticRouter basename={basename} location={location}>
+          {children}
+        </StaticRouter>
+      );
     case Routing.inMemory:
       return (
         <MemoryRouter initialEntries={[location || '/']} initialIndex={1}>
@@ -54,10 +75,10 @@ function Router({ type, children, location }: { type: Routing; children: ReactNo
         </MemoryRouter>
       );
     case Routing.hash:
-      return <HashRouter>{children}</HashRouter>;
+      return <HashRouter basename={basename}>{children}</HashRouter>;
     case Routing.url:
     default:
-      return <BrowserRouter>{children}</BrowserRouter>;
+      return <BrowserRouter basename={basename}>{children}</BrowserRouter>;
   }
 }
 

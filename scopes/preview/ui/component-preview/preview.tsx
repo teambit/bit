@@ -2,7 +2,7 @@ import React, { createRef, IframeHTMLAttributes } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
 
-import { toPreviewUrl } from './urls';
+import { usePreviewUrl } from './urls';
 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -38,7 +38,7 @@ export function ComponentPreview({ component, previewName, queryParams, hotReloa
   const ref = createRef<HTMLIFrameElement>();
   usePubSubIframe(ref);
 
-  const url = toPreviewUrl(component, previewName, queryParams);
+  const url = usePreviewUrl(component, previewName, queryParams);
 
   return <iframe {...rest} ref={ref} src={url} />;
 }
