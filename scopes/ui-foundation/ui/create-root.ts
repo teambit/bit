@@ -50,8 +50,9 @@ if (isBrowser) render();
 
 function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
+  const harmonyPath = require.resolve('@teambit/harmony');
 
-  return `import { Harmony } from '@teambit/harmony';
+  return `import { Harmony } from '${toWindowsCompatiblePath(harmonyPath)}';
 ${getImportStatements(aspectDefs, 'aspectPath', 'Aspect')}
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
