@@ -21,6 +21,8 @@ export type PackageManagerInstallOptions = {
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
+
+  nodeLinker?: 'hoisted' | 'isolated';
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

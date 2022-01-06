@@ -47,19 +47,21 @@ export class DeprecationMain {
    * @returns boolean whether or not the component has been deprecated
    */
   async deprecate(componentId: ComponentID, newId?: ComponentID): Promise<boolean> {
-    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
+    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: true,
       newId: newId?.toObject(),
     });
+    await this.workspace.bitMap.write();
 
     return results;
   }
 
   async unDeprecate(componentId: ComponentID) {
-    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
+    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: false,
       newId: '',
     });
+    await this.workspace.bitMap.write();
 
     return results;
   }
