@@ -119,7 +119,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
           ignoreVersion: true,
         })}-${PREVIEW_CHUNK_FILENAME_SUFFIX}`,
         import: path,
-        dependOn: component.id.toStringWithoutVersion(),
+        // dependOn: component.id.toStringWithoutVersion(),
         library: {
           // name: this.pkg.getPackageName(component),
           name: componentPreviewChunkId,

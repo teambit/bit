@@ -90,10 +90,10 @@ export class PreviewPreview {
   }
 
   async fetchComponentPreview(id: ComponentID, name: string) {
+    const componentScriptElement = this.getComponentScriptElement(id);
+    document.head.appendChild(componentScriptElement);
     return new Promise((resolve, reject) => {
-      const componentScriptElement = this.getComponentScriptElement(id);
       const previewScriptElement = this.getPreviewScriptElement(id, name, resolve, reject);
-      document.head.appendChild(componentScriptElement);
       document.head.appendChild(previewScriptElement);
     });
   }

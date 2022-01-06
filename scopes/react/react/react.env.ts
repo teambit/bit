@@ -242,7 +242,8 @@ export class ReactEnv
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
-    const peers = Object.keys(this.getDependencies().peerDependencies);
+    const hostDeps = this.getHostDependencies();
+    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
     console.log('get bundler', context.externalizePeer, peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
@@ -255,6 +256,10 @@ export class ReactEnv
     };
 
     return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
+  }
+
+  getHostDependencies(): string[] {
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
   /**

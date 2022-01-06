@@ -6,7 +6,7 @@ export function getExposedRules(peers: string[]) {
   const loaderPath = require.resolve('expose-loader');
   const depsEntries = peers.map((peer) => ({
     path: require.resolve(peer),
-    globalName: camelcase(peer, { pascalCase: true }),
+    globalName: camelcase(peer.replace('@', '').replace('/', '-'), { pascalCase: true }),
   }));
   return generateExposeLoaders(depsEntries, { loaderPath });
 }
