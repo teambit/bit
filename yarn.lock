@@ -956,7 +956,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-proposal-private-property-in-object@npm:^7.16.7":
+"@babel/plugin-proposal-private-property-in-object@npm:^7.16.0, @babel/plugin-proposal-private-property-in-object@npm:^7.16.7":
   version: 7.16.7
   resolution: "@babel/plugin-proposal-private-property-in-object@npm:7.16.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fplugin-proposal-private-property-in-object%2F-%2Fplugin-proposal-private-property-in-object-7.16.7.tgz"
   dependencies:
@@ -7147,9 +7147,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.198":
-  version: 1.0.198
-  resolution: "@teambit/legacy@npm:1.0.198::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.198.tgz"
+"@teambit/legacy@npm:1.0.200":
+  version: 1.0.200
+  resolution: "@teambit/legacy@npm:1.0.200::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.200.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -7272,7 +7272,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 607d3fef7f2b2fb5d0f04cc297ca1b773f56a753822caeeab37e2d8785dbd2c135d4bd4cbccb9049e1b38fed9b7d324ba276ad432d47b0f923a9359574573be3
+  checksum: e59fe3ca538ae4bff743b45404775a25e09ffe55d9dea47018dd62ef730f6bd164f3106f0e63af4e169a2f1311d8c0af7f642f9a1fcf4c314d2e6378afe073e1
   languageName: node
   linkType: hard
 
@@ -7423,7 +7423,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 1.0.2
     "@teambit/evangelist.surfaces.tooltip": 1.0.1
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.198
+    "@teambit/legacy": 1.0.200
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react-native.adding-tests": 0.0.1
@@ -7843,7 +7843,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.198
+    "@teambit/legacy": 1.0.200
     jest: 26.6.3
   bin:
     bit: bin/bit.js
@@ -10927,7 +10927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.2.4, acorn@npm:^8.4.1":
+"acorn@npm:^8.2.4, acorn@npm:^8.4.1, acorn@npm:^8.5.0":
   version: 8.7.0
   resolution: "acorn@npm:8.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Facorn%2F-%2Facorn-8.7.0.tgz"
   bin:
