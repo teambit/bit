@@ -69,7 +69,6 @@ import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-e
 import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
 import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
 import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
-import logger from '../logger/logger';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
@@ -607,6 +606,5 @@ export default (err: Error): { message: string; error: Error } => {
   };
   sendToAnalyticsAndSentry(err);
   const errorMessage = getErrMsg();
-  // logger.error(`user gets the following error: ${errorMessage}`);
   return { message: chalk.red(errorMessage), error: err };
 };
