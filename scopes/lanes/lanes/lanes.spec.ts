@@ -1,5 +1,5 @@
 import { Helper } from '@teambit/harmony.testing.helper';
-import { createAspect } from '@teambit/harmony.testing.create-aspect';
+import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
@@ -16,7 +16,7 @@ describe('LanesAspect', function () {
   });
   describe('getLanes()', () => {
     it('should list all lanes', async () => {
-      const lanes: LanesMain = await createAspect(LanesAspect, helper.workspacePath);
+      const lanes: LanesMain = await loadAspect(LanesAspect, helper.workspacePath);
       const currentLanes = await lanes.getLanes({});
       expect(currentLanes).toBeDefined();
       expect(currentLanes[0].name).toEqual('stage');

@@ -14,7 +14,7 @@ function getPackageName(aspect: any, id: ComponentID) {
   // return `@${owner}/${replaceAll(name, '/', '.')}`;
 }
 
-export async function createAspect<T>(targetAspect: Aspect, cwd = process.cwd(), runtime = 'main'): Promise<T> {
+export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), runtime = 'main'): Promise<T> {
   const config = await getConfig(cwd);
   const configMap = config.toObject();
   configMap['teambit.harmony/bit'] = {
