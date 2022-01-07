@@ -8,7 +8,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/pnpm",
-    "nodeLinker": "hoisted",
     "policy": {
       "dependencies": {
         "@babel/core": "7.11.6",
@@ -25,7 +24,7 @@
         "@pnpm/client": "6.1.0",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "13.9.0",
-        "@pnpm/core": "2.2.3",
+        "@pnpm/core": "2.2.4",
         "@pnpm/default-reporter": "8.4.2",
         "@pnpm/default-resolver": "14.0.9",
         "@pnpm/error": "2.0.0",
@@ -35,13 +34,13 @@
         "@pnpm/local-resolver": "7.0.5",
         "@pnpm/logger": "4.0.0",
         "@pnpm/npm-resolver": "12.1.5",
-        "@pnpm/package-store": "12.1.6",
+        "@pnpm/package-store": "12.1.7",
         "@pnpm/parse-overrides": "1.0.0",
         "@pnpm/pick-registry-for-package": "2.0.9",
         "@pnpm/registry-mock": "2.13.0",
         "@pnpm/resolver-base": "8.1.4",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/store-connection-manager": "3.2.1",
+        "@pnpm/store-connection-manager": "3.2.2",
         "@pnpm/tarball-fetcher": "9.3.14",
         "@pnpm/tarball-resolver": "5.0.9",
         "@pnpm/types": "7.8.0",
@@ -343,7 +342,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.200",
+        "@teambit/legacy": "1.0.201",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -352,6 +351,7 @@
         "react-dom": "17.0.2"
       }
     },
+    "nodeLinker": "hoisted",
     "packageManagerArgs": [],
     "devFilePatterns": [
       "**/*.spec.ts"
@@ -410,7 +410,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.200"
+            "@teambit/legacy": "1.0.201"
           }
         }
       },
@@ -650,7 +650,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.200"
+            "@teambit/legacy": "1.0.201"
           }
         }
       }
@@ -707,7 +707,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.200",
+            "@teambit/legacy": "1.0.201",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -815,7 +815,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.200"
+            "@teambit/legacy": "1.0.201"
           }
         }
       }

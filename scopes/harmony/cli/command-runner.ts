@@ -118,7 +118,7 @@ export class CommandRunner {
 
   private async writeAndExit(data: string, exitCode: number) {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName));
+    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
   }
 
   private async runMigrateIfNeeded(): Promise<any> {
