@@ -9,7 +9,7 @@ import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatIssues } from '../../templates/component-issues-template';
 import { ModelComponent } from '../../../scope/models';
-import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG, DEFAULT_LANE } from '../../../constants';
+import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import { Group } from '../../command-groups';
 
