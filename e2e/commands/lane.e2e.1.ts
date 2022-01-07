@@ -93,7 +93,6 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
         helper.command.createLane('stage');
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
         diffOutput = helper.command.diffLane('main');
       });
