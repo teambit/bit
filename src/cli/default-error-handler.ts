@@ -607,6 +607,6 @@ export default (err: Error): { message: string; error: Error } => {
   };
   sendToAnalyticsAndSentry(err);
   const errorMessage = getErrMsg();
-  logger.error(`user gets the following error: ${errorMessage}`);
+  // logger.error(`user gets the following error: ${errorMessage}`);
   return { message: chalk.red(errorMessage), error: err };
 };
