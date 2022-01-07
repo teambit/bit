@@ -84,7 +84,6 @@ export class WorkspaceUI {
   componentSearcher: ComponentSearcher;
 
   uiRoot(): UIRoot {
-    this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
@@ -168,6 +167,7 @@ export class WorkspaceUI {
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
+    sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
     graphUI.registerComponentWidget(new ComponentTreeWidget().widget);
 
     const workspaceUI = new WorkspaceUI(
