@@ -141,15 +141,18 @@ export class LaneDiffGenerator {
       components: [],
       isMerged: null,
     };
-    for await (const id of ids) {
-      const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-      const laneComponent = {
-        id,
-        head: modelComponent.head as Ref,
-        version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
-      };
-      laneData.components.push(laneComponent);
-    }
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+        const laneComponent = {
+          id,
+          head: modelComponent.head as Ref,
+          version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
+        };
+        laneData.components.push(laneComponent);
+      })
+    );
     return laneData;
   }
 
