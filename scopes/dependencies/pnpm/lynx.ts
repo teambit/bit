@@ -148,6 +148,7 @@ export async function install(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
   options?: {
+    nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -205,6 +206,7 @@ export async function install(
     registries: registriesMap,
     rawConfig: authConfig,
     overrides: options?.overrides,
+    nodeLinker: options?.nodeLinker,
   };
 
   const stopReporting = defaultReporter({

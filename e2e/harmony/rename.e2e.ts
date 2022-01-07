@@ -12,34 +12,71 @@ describe('bit rename command', function () {
     helper.scopeHelper.destroy();
   });
   describe('rename an exported component', () => {
+    let scopeAfterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
+      scopeAfterExport = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('rename with no flag', () => {
+      before(() => {
+        helper.command.rename('comp1', 'comp2');
+      });
+      it('should create a new component', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(1);
+      });
+      it('should deprecate the original component', () => {
+        const showDeprecation = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+        expect(showDeprecation.config.deprecate).to.be.true;
+        expect(showDeprecation.config).to.have.property('newId');
+        expect(showDeprecation.config.newId.name).to.equal('comp2');
+      });
+      it('should reference the original component in the new component', () => {
+        const showDeprecation = helper.command.showAspectConfig('comp2', Extensions.renaming);
+        expect(showDeprecation.config).to.have.property('renamedFrom');
+        expect(showDeprecation.config.renamedFrom.name).to.equal('comp1');
+      });
+      it('should list both components', () => {
+        const list = helper.command.listParsed();
+        const ids = list.map((_) => _.id);
+        expect(ids).to.include(`${helper.scopes.remote}/comp1`);
+        expect(ids).to.include('comp2');
+      });
+    });
+    describe('rename with --scope', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.command.rename('comp1', 'comp2', '--scope org.ui');
+      });
+      it('should save the entered scope as the defaultScope', () => {
+        const show = helper.command.showComponentParsedHarmony('comp2');
+        const scope = show.find((item) => item.title === 'id');
+        expect(scope.json).to.equal('org.ui/comp2');
+      });
+    });
+  });
+  describe('rename a new component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp2');
     });
-    it('should create a new component', () => {
-      const status = helper.command.statusJson();
-      expect(status.newComponents).to.have.lengthOf(1);
+    it('should remove the source component', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.not.have.property('comp1');
     });
-    it('should deprecate the original component', () => {
-      const showDeprecation = helper.command.showAspectConfig('comp1', Extensions.deprecation);
-      expect(showDeprecation.config.deprecate).to.be.true;
-      expect(showDeprecation.config).to.have.property('newId');
-      expect(showDeprecation.config.newId.name).to.equal('comp2');
+    it('should rename the source to the target id', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.have.property('comp2');
     });
-    it('should reference the original component in the new component', () => {
-      const showDeprecation = helper.command.showAspectConfig('comp2', Extensions.renaming);
-      expect(showDeprecation.config).to.have.property('renamedFrom');
-      expect(showDeprecation.config.renamedFrom.name).to.equal('comp1');
-    });
-    it('should list both components', () => {
+    it('workspace should have one component only', () => {
       const list = helper.command.listParsed();
-      const ids = list.map((_) => _.id);
-      expect(ids).to.include(`${helper.scopes.remote}/comp1`);
-      expect(ids).to.include('comp2');
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

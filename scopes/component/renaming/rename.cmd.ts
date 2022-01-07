@@ -9,12 +9,13 @@ export type RenameOptions = {
 
 export class RenameCmd implements Command {
   name = 'rename <source-id> <target-id>';
-  description = 'EXPERIMENTAL. create a new target-component and deprecate the source-component';
+  description =
+    'EXPERIMENTAL. rename component. if tagged/exported, create a new component and deprecate the source-component';
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope', 'default scope for the newly created component'],
+    ['s', 'scope <string>', 'default scope for the newly created component'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
   ] as CommandOptions;
   loader = true;

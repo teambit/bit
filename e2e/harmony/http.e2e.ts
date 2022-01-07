@@ -15,6 +15,28 @@ import { HttpHelper } from '../http-helper';
   });
 
   let httpHelper: HttpHelper;
+  describe('export lane', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.exportLane();
+    });
+    it('lane list -r should show the remote lanes', () => {
+      const output = helper.command.showRemoteLanesParsed();
+      expect(output.lanes).to.have.lengthOf(1);
+      expect(output.lanes[0].name).to.have.string('dev');
+    });
+    after(() => {
+      httpHelper.killHttp();
+    });
+  });
   describe('export', () => {
     let exportOutput: string;
     let scopeAfterExport: string;

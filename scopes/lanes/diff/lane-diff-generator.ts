@@ -52,7 +52,7 @@ export class LaneDiffGenerator {
       const fromLane = fromLaneId ? await legacyScope.lanes.loadLane(fromLaneId) : null;
       this.toLaneData = await this.mapToLaneData(toLane);
       this.fromLaneData = fromLane ? await this.mapToLaneData(fromLane) : null;
-    } else if (fromLaneId?.isDefault() && !!toLaneId) {
+    } else if (fromLaneId?.isDefault() && toLaneId) {
       const toLane = await legacyScope.lanes.loadLane(toLaneId);
       if (!toLane) throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
 
@@ -164,7 +164,7 @@ export class LaneDiffGenerator {
         head: lc.head,
         version: lc.id.version?.toString(),
       })),
-      remote: (!!remoteLaneId && remoteLaneId.toString()) || null,
+      remote: remoteLaneId?.toString() ?? null,
     };
   }
 }

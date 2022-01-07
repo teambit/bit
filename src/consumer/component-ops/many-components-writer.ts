@@ -49,6 +49,7 @@ export interface ManyComponentsWriterParams {
   saveOnLane?: boolean;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
+  resetConfig?: boolean;
 }
 
 /**
@@ -90,6 +91,7 @@ export default class ManyComponentsWriter {
   packageManager?: string;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
+  resetConfig?: boolean;
   // Apply config added by extensions
 
   constructor(params: ManyComponentsWriterParams) {
@@ -117,6 +119,7 @@ export default class ManyComponentsWriter {
     this.packageManager = params.packageManager;
     this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
+    this.resetConfig = params.resetConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
@@ -190,6 +193,11 @@ export default class ManyComponentsWriter {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
+    if (this.resetConfig) {
+      componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
+        delete componentWriter.existingComponentMap?.config;
+      });
+    }
     this.writtenComponents = await mapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
