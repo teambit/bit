@@ -342,7 +342,10 @@ export function applyModifiedVersion(
  * it's needed in case the checked out version removed files that exist on the current version.
  * without this function, these files would be left on the filesystem.
  */
-async function deleteFilesIfNeeded(componentsResults: ApplyVersionWithComps[], consumer: Consumer): Promise<void> {
+export async function deleteFilesIfNeeded(
+  componentsResults: ApplyVersionWithComps[],
+  consumer: Consumer
+): Promise<void> {
   const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
     return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
       if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {

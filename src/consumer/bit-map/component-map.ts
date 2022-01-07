@@ -79,7 +79,7 @@ export default class ComponentMap {
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   onLanesOnly? = false; // whether a component is available only on lanes and not on main
   lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
-  defaultVersion?: string | null;
+  defaultVersion?: string | null; // temporarily store the "main" version. so then, once the file is written, this value is saved as the version
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed

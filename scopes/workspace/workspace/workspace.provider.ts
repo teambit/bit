@@ -34,6 +34,8 @@ import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { Tag } from './tag-cmd';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
+import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
+import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -212,6 +214,11 @@ export default async function provideWorkspace(
   cli.registerOnStart(async () => {
     await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
   });
+
+  // add sub-commands "set" and "unset" to envs command.
+  const envsCommand = cli.getCommand('envs');
+  envsCommand?.commands?.push(new EnvsSetCmd(workspace)); // bit envs set
+  envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
 
   return workspace;
 }
