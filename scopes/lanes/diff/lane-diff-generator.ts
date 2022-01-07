@@ -153,6 +153,7 @@ export class LaneDiffGenerator {
         laneData.components.push(laneComponent);
       })
     );
+
     return laneData;
   }
 
