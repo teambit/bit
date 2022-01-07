@@ -807,6 +807,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester"
     },
+    "testing/create-aspect": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/testing/create-aspect"
+    },
+    "testing/helper": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/testing/helper"
+    },
     "tests-results": {
         "scope": "teambit.defender",
         "version": "0.0.95",
