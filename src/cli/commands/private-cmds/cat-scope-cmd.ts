@@ -11,7 +11,7 @@ export default class CatScope implements LegacyCommand {
   loader = false;
   alias = '';
   opts = [
-    ['f', 'full', 'show all of the objects in the scope'],
+    ['f', 'full', 'show all of the objects in the scope (except "Source")'],
     ['j', 'json', 'print the objects as a json format'],
     ['e', 'json-extra', 'add hash and object type to the json'],
   ] as CommandOptions;

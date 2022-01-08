@@ -33,6 +33,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { ConfigMain, ConfigAspect } from '@teambit/config';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
@@ -315,8 +316,8 @@ export class ScopeMain implements ComponentFactory {
     return result;
   }
 
-  async toObjectList(): Promise<ObjectList> {
-    const objects = await this.legacyScope.objects.list();
+  async toObjectList(types: Types): Promise<ObjectList> {
+    const objects = await this.legacyScope.objects.list(types);
     return ObjectList.fromBitObjects(objects);
   }
 

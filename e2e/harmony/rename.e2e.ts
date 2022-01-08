@@ -59,4 +59,24 @@ describe('bit rename command', function () {
       });
     });
   });
+  describe('rename a new component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.rename('comp1', 'comp2');
+    });
+    it('should remove the source component', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.not.have.property('comp1');
+    });
+    it('should rename the source to the target id', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap).to.have.property('comp2');
+    });
+    it('workspace should have one component only', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+    });
+  });
 });

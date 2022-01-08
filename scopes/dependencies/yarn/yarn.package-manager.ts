@@ -69,7 +69,7 @@ export class YarnPackageManager implements PackageManager {
 
     const rootDirPath = npath.toPortablePath(rootDir);
     const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
-    const config = await this.computeConfiguration(rootDirPath, cacheDir);
+    const config = await this.computeConfiguration(rootDirPath, cacheDir, installOptions.nodeLinker);
 
     const project = new Project(rootDirPath, { configuration: config });
 
@@ -298,7 +298,11 @@ export class YarnPackageManager implements PackageManager {
   }
 
   // TODO: implement this to automate configuration.
-  private async computeConfiguration(rootDirPath: PortablePath, cacheFolder: string): Promise<Configuration> {
+  private async computeConfiguration(
+    rootDirPath: PortablePath,
+    cacheFolder: string,
+    nodeLinker?: 'hoisted' | 'isolated'
+  ): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const pluginConfig = getPluginConfiguration();
@@ -308,7 +312,7 @@ export class YarnPackageManager implements PackageManager {
     const defaultAuthProp = this.getAuthProp(defaultRegistry);
 
     const data = {
-      nodeLinker: 'node-modules',
+      nodeLinker: nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
       pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
