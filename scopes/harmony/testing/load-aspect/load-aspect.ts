@@ -23,14 +23,14 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 
   const harmony = await Harmony.load([CLIAspect, targetAspect], runtime, configMap);
 
-  await harmony.run(async (aspect, runtime) => {
+  await harmony.run(async (aspect, runtimeDef) => {
     const id = ComponentID.fromString(aspect.id);
     const packageName = getPackageName(aspect, id);
     const mainFilePath = require.resolve(packageName);
     const packagePath = resolve(join(mainFilePath, '..'));
     const files = readdirSync(packagePath);
-    const runtimePath = files.find((path) => path.includes(`.${runtime.name}.runtime.js`));
-    if (!runtimePath) throw new Error(`could not find runtime '${runtime.name}' for aspect ID '${aspect.id}'`);
+    const runtimePath = files.find((path) => path.includes(`.${runtimeDef.name}.runtime.js`));
+    if (!runtimePath) throw new Error(`could not find runtime '${runtimeDef.name}' for aspect ID '${aspect.id}'`);
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const runtimeC = require(join(packagePath, runtimePath));
     if (aspect.id === targetAspect.id) {

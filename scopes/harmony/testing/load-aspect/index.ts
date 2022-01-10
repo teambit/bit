@@ -1,1 +1,1 @@
-export { loadAspect, getConfig } from './create-aspect';
+export { loadAspect, getConfig } from './load-aspect';
