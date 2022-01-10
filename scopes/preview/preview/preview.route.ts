@@ -22,19 +22,20 @@ export class PreviewRoute implements Route {
   middlewares = [
     async (req: Request<PreviewUrlParams>, res: Response, next: NextFunction) => {
       try {
-        let isLegacyPath = false;
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());
+        const isLegacyPath = await this.preview.isBundledWithEnv(component);
 
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          // Taking the env template by default
-          artifact = await this.preview.getEnvTemplateFromComponentEnv(component);
-          // If there is no env template artifact, consider it a legacy
-          if (!artifact) {
-            isLegacyPath = true;
+          // Taking the env template (in this case we will take the component only bundle throw component-preview route)
+          // We use this route for the env template for backward compatibility - new scopes which contain components tagged with old versions of bit
+          if (!isLegacyPath) {
+            artifact = await this.preview.getEnvTemplateFromComponentEnv(component);
+          } else {
+            // If it's legacy (bundled together with the env template) take the preview bundle from the component directly
             artifact = await this.preview.getPreview(component);
           }
         } catch (e: any) {

@@ -13,6 +13,7 @@ import { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
+import { CompilerAspect } from '@teambit/compiler';
 import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
 import { PreviewMain } from './preview.main.runtime';
 
@@ -29,6 +30,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
   name = GENERATE_ENV_TEMPLATE_TASK_NAME;
   location: TaskLocation = 'end';
+  readonly dependencies = [CompilerAspect.id];
 
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}
 

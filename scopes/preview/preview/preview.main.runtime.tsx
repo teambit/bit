@@ -3,7 +3,7 @@ import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
@@ -36,6 +36,7 @@ import {
 } from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
+import { COMPONENT_STRATEGY_ARTIFACT_NAME } from './strategies/component-strategy';
 
 const noopResult = {
   results: [],
@@ -47,7 +48,7 @@ const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export type PreviewConfig = {
-  bundlingStrategy: string;
+  bundlingStrategy?: string;
   disabled: boolean;
 };
 
@@ -103,6 +104,23 @@ export class PreviewMain {
     if (!artifacts || !artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
+  }
+
+  /**
+   * Check if the component preview bundle contain the env as part of the bundle or only the component code
+   * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
+   * @param component
+   * @returns
+   */
+  async isBundledWithEnv(component: Component): Promise<boolean> {
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+      component,
+      PreviewAspect.id,
+      COMPONENT_STRATEGY_ARTIFACT_NAME
+    );
+    if (!artifacts || !artifacts.length) return true;
+
+    return false;
   }
 
   /**
@@ -280,7 +298,7 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver)];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -319,9 +337,13 @@ export class PreviewMain {
   /**
    * return the configured bundling strategy.
    */
-  getBundlingStrategy(): BundlingStrategy {
+  getBundlingStrategy(env?: PreviewEnv): BundlingStrategy {
     const defaultStrategies = this.getDefaultStrategies();
-    const strategyName = this.config.bundlingStrategy;
+    const strategyFromEnv =
+      env?.getPreviewBundleStrategy && typeof env?.getPreviewBundleStrategy === 'function'
+        ? env?.getPreviewBundleStrategy()
+        : undefined;
+    const strategyName = this.config.bundlingStrategy || strategyFromEnv || 'component';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;
@@ -365,7 +387,6 @@ export class PreviewMain {
   ];
 
   static defaultConfig = {
-    bundlingStrategy: 'env',
     disabled: false,
   };
 

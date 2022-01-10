@@ -109,6 +109,11 @@ export interface PreviewEnv extends Environment {
    * Required for `bit build` & `bit start`
    */
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
+
+  /**
+   * Returns the strategy name to use when bundling the components for the preview
+   */
+  getPreviewBundleStrategy?: () => 'component' | 'env' | string;
 }
 
 export interface ElementsEnv extends Environment {
