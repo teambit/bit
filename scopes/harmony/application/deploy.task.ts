@@ -16,7 +16,6 @@ export class DeployTask implements BuildTask {
   constructor(private application: ApplicationMain, private builder: BuilderMain) {}
 
   async execute(context: BuildContext): Promise<any> {
-    debugger;
     const apps = this.application.listApps();
     const componentsResults = await mapSeries(apps, async (app): Promise<any> => {
       const aspectId = this.application.getAppAspect(app.name);
