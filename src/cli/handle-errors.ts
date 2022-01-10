@@ -1,6 +1,6 @@
 import { serializeError } from 'serialize-error';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { buildCommandMessage, isNumeric, packCommand } from '@teambit/legacy/dist/utils';
+import logger from '../logger/logger';
+import { buildCommandMessage, isNumeric, packCommand } from '../utils';
 import defaultHandleError from './default-error-handler';
 import loader from './loader';
 
