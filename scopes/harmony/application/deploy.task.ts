@@ -23,10 +23,11 @@ export class DeployTask implements BuildTask {
       const capsules = context.capsuleNetwork.seedersCapsules;
       const capsule = this.getCapsule(capsules, aspectId);
       if (!capsule?.component) return undefined;
-      const buildTask = this.getBuildTask(context.previousTasksResults);
+      const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
       if (!buildTask) return undefined;
       const componentArtifacts = buildTask.artifacts?.get(capsule.component);
       const artifactList = componentArtifacts?.[1];
+      if (!artifactList) return undefined;
       const deployContext: DeployContext = Object.assign(context, { artifactList });
       if (!capsule || !app.deploy) return undefined;
       await app.deploy(deployContext, capsule);
@@ -47,8 +48,10 @@ export class DeployTask implements BuildTask {
     };
   }
 
-  private getBuildTask(taskResults: TaskResults[]) {
-    return taskResults.find(({ task }) => task.aspectId === ApplicationAspect.id && task.name === BUILD_TASK);
+  private getBuildTask(taskResults: TaskResults[], runtime: string) {
+    return taskResults.find(
+      ({ task, env }) => task.aspectId === ApplicationAspect.id && task.name === BUILD_TASK && env.id === runtime
+    );
   }
 
   private getCapsule(capsules: Capsule[], aspectId: string) {
