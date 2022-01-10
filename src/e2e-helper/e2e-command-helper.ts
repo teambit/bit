@@ -142,6 +142,9 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
+  setEnv(compId: string, envId: string) {
+    return this.runCmd(`bit envs set ${compId} ${envId}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }

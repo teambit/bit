@@ -12,7 +12,7 @@ import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
-import { EnvsCmd } from './envs.cmd';
+import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 
@@ -543,7 +543,9 @@ export class EnvsMain {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
     component.registerShowFragments([new EnvFragment(envs)]);
-    cli.register(new EnvsCmd(envs, component));
+    const envsCmd = new EnvsCmd(envs, component);
+    envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
+    cli.register(envsCmd);
     graphql.register(environmentsSchema(envs));
     return envs;
   }
