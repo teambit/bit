@@ -60,6 +60,10 @@ describe('bit lane command', function () {
       expect(log).to.have.string(mainSnap);
       expect(log).to.have.string(devSnap);
     });
+    it('should not throw an error when installing components in a non exported lane', () => {
+      const output = helper.command.install();
+      expect(output).to.not.have.string('lane dev was not found');
+    });
     describe('bit lane with --details flag', () => {
       let output: string;
       before(() => {
