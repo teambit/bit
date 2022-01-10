@@ -49,10 +49,31 @@ chai.use(require('chai-fs'));
         helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
       ).not.to.have.property('foo');
     });
-    it('should throw an exception if new dependencies are added and missing dependencies are added', () => {
-      expect(() => helper.command.install('lodash --add-missing-peers')).throw(
-        /Adding new dependencies and adding missing peer dependencies at the same time is currently not supported/
-      );
+  });
+  describe('installing new packages and missing peer dependencies at the same time', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony({ registry: npmCiRegistry.ciRegistry });
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+      helper.command.install('abc --add-missing-peers');
+    });
+    it('should install the new package', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/abc')).to.be.a.path();
+    });
+    it('should install the peer dependencies of the installed package', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/peer-a')).to.be.a.path();
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/peer-b')).to.be.a.path();
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/peer-c')).to.be.a.path();
+    });
+    it('should add the missing peer dependencies to workspace.jsonc', () => {
+      expect(
+        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+      ).to.have.property('peer-a');
+      expect(
+        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+      ).to.have.property('peer-b');
+      expect(
+        helper.bitJsonc.read()['teambit.dependencies/dependency-resolver'].policy.peerDependencies
+      ).to.have.property('peer-c');
     });
   });
   describe(`using Yarn as a package manager`, () => {

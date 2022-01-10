@@ -66,7 +66,7 @@ import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, partition } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -682,6 +682,20 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * don't throw an error if the component was not found, simply return undefined.
+   */
+  async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
+    return this.componentLoader.getIfExist(componentId);
+  }
+
+  /**
+   * whether a component exists in the workspace
+   */
+  exists(componentId: ComponentID): boolean {
+    return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
@@ -765,7 +779,7 @@ export class Workspace implements ComponentFactory {
   async write(rootPath: string, component: Component) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.path);
+        const pathToWrite = path.join(this.path, rootPath, file.relative);
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
@@ -859,20 +873,16 @@ export class Workspace implements ComponentFactory {
 
   /**
    * Calculate the component config based on:
+   * the config property in the .bitmap file
    * the component.json file in the component folder
    * matching pattern in the variants config
    * defaults extensions from workspace config
-   *
-   * @param {ComponentID} componentId
-   * @param {Component} [componentFromScope]
-   * @returns {Promise<ExtensionDataList>}
-   * @memberof Workspace
    */
   async componentExtensions(componentId: ComponentID, componentFromScope?: Component): Promise<ExtensionDataList> {
     // TODO: consider caching this result
-    let configFileExtensions;
-    let variantsExtensions;
-    let wsDefaultExtensions;
+    let configFileExtensions: ExtensionDataList | undefined;
+    let variantsExtensions: ExtensionDataList | undefined;
+    let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
 
@@ -901,54 +911,84 @@ export class Workspace implements ComponentFactory {
     // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: ExtensionDataList[] = [];
+    let envWasFoundPreviously = false;
+
+    const addAndLoadExtensions = async (extensions: ExtensionDataList) => {
+      const extsWithoutRemoved = extensions.filterRemovedExtensions();
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
+        componentId._legacy.toStringWithoutScopeAndVersion(),
+        true,
+        true
+      );
+      const extsWithoutSelf = selfInMergedExtensions?.extensionId
+        ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
+        : extsWithoutRemoved;
+      await this.loadExtensions(extsWithoutSelf);
+      const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
+        extsWithoutSelf,
+        envWasFoundPreviously
+      );
+      if (envIsCurrentlySet) envWasFoundPreviously = true;
+
+      extensionsToMerge.push(extensionDataListFiltered);
+    };
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map(
         (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
       );
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
-      extensionsToMerge.push(extensionDataList);
+      await addAndLoadExtensions(extensionDataList);
     }
     if (configFileExtensions) {
-      extensionsToMerge.push(configFileExtensions);
+      await addAndLoadExtensions(configFileExtensions);
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
-      extensionsToMerge.push(variantsExtensions);
+      await addAndLoadExtensions(variantsExtensions);
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions.findExtension(componentId.toString(), true, true);
+    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
     if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
       // Put it in the start to make sure the config file is stronger
-      extensionsToMerge.push(wsDefaultExtensions);
+      await addAndLoadExtensions(wsDefaultExtensions);
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
-
     if (mergeFromScope && continuePropagating) {
-      extensionsToMerge.push(scopeExtensions);
+      await addAndLoadExtensions(scopeExtensions);
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
-    const promises = extensionsToMerge.map((list) => this.resolveExtensionListIds(list));
-    await Promise.all(promises);
+    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list)));
 
-    let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge).filterRemovedExtensions();
+    return ExtensionDataList.mergeConfigs(extensionsToMerge);
+  }
 
-    // remove self from merged extensions
-    const selfInMergedExtensions = mergedExtensions.findExtension(
-      componentId._legacy.toStringWithoutScopeAndVersion(),
-      true,
-      true
+  private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
+    const envFromEnvsAspect = envAspect?.config.env;
+    const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>
+      this.envs.isEnvRegistered(ext.stringId)
     );
-    if (selfInMergedExtensions && selfInMergedExtensions.extensionId) {
-      mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
+    const extensionDataListFiltered = new ExtensionDataList(...nonEnvs);
+    const envIsCurrentlySet = envFromEnvsAspect || envsNotFromEnvsAspect.length;
+    const shouldIgnoreCurrentEnv = envIsCurrentlySet && envWasFoundPreviously;
+    if (shouldIgnoreCurrentEnv) {
+      // still, aspect env may have other data other then config.env.
+      if (envAspect) {
+        delete envAspect.config.env;
+        extensionDataListFiltered.push(envAspect);
+      }
+    } else {
+      // add the envs
+      if (envAspect) extensionDataListFiltered.push(envAspect);
+      extensionDataListFiltered.push(...envsNotFromEnvsAspect);
     }
-
-    return mergedExtensions;
+    return { extensionDataListFiltered, envIsCurrentlySet };
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
@@ -1307,12 +1347,10 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (packages && packages.length) {
+      await this._addPackages(packages, options);
+    }
     if (options?.addMissingPeers) {
-      if (packages?.length) {
-        throw new BitError(
-          'Adding new dependencies and adding missing peer dependencies at the same time is currently not supported'
-        );
-      }
       const compDirMap = await this.getComponentsDirectory([]);
       const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
       const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
@@ -1329,44 +1367,8 @@ export class Workspace implements ComponentFactory {
         compDirMap,
         pmInstallOptions
       );
-      packages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-    }
-    if (packages && packages.length) {
-      if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
-        throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
-      }
-      this.logger.debug(`installing the following packages: ${packages.join()}`);
-      const resolver = await this.dependencyResolver.getVersionResolver();
-      const resolvedPackagesP = packages.map((packageName) =>
-        resolver.resolveRemoteVersion(packageName, {
-          rootDir: this.path,
-        })
-      );
-      const resolvedPackages = await Promise.all(resolvedPackagesP);
-      const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
-      resolvedPackages.forEach((resolvedPackage) => {
-        if (resolvedPackage.version) {
-          const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
-            resolvedPackage.version,
-            options?.savePrefix
-          );
-          newWorkspacePolicyEntries.push({
-            dependencyId: resolvedPackage.packageName,
-            value: {
-              version: versionWithPrefix,
-            },
-            lifecycleType: options?.lifecycleType || 'runtime',
-          });
-        }
-      });
-      if (!options?.variants) {
-        this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
-          updateExisting: options?.updateExisting ?? false,
-        });
-      } else {
-        // TODO: implement
-      }
-      await this.dependencyResolver.persistConfig(this.path);
+      const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+      await this._addPackages(missingPeerPackages, options);
     }
     if (options?.import) {
       this.logger.setStatusLine('importing missing objects');
@@ -1374,6 +1376,44 @@ export class Workspace implements ComponentFactory {
       this.logger.consoleSuccess();
     }
     return this._installModules(options);
+  }
+
+  private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
+    if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
+      throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
+    }
+    this.logger.debug(`installing the following packages: ${packages.join()}`);
+    const resolver = await this.dependencyResolver.getVersionResolver();
+    const resolvedPackagesP = packages.map((packageName) =>
+      resolver.resolveRemoteVersion(packageName, {
+        rootDir: this.path,
+      })
+    );
+    const resolvedPackages = await Promise.all(resolvedPackagesP);
+    const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+    resolvedPackages.forEach((resolvedPackage) => {
+      if (resolvedPackage.version) {
+        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
+          resolvedPackage.version,
+          options?.savePrefix
+        );
+        newWorkspacePolicyEntries.push({
+          dependencyId: resolvedPackage.packageName,
+          value: {
+            version: versionWithPrefix,
+          },
+          lifecycleType: options?.lifecycleType || 'runtime',
+        });
+      }
+    });
+    if (!options?.variants) {
+      this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
+        updateExisting: options?.updateExisting ?? false,
+      });
+    } else {
+      // TODO: implement
+    }
+    await this.dependencyResolver.persistConfig(this.path);
   }
 
   private async _getComponentsWithDependencyPolicies() {
@@ -1772,6 +1812,40 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     this.dependencyResolver.removeFromRootPolicy(packages);
     await this.dependencyResolver.persistConfig(this.path);
     return this._installModules({ dedupe: true });
+  }
+
+  /**
+   * configure an environment to the given components in the .bitmap file, this configuration overrides other, such as
+   * overrides in workspace.jsonc.
+   */
+  async setEnvToComponents(envId: ComponentID, components: Component[]) {
+    const envIdStr = envId.toString();
+    components.forEach((component) => {
+      this.bitMap.addComponentConfig(component.id, envIdStr);
+      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStr });
+    });
+    await this.bitMap.write();
+  }
+
+  /**
+   * remove env configuration from the .bitmap file, so then other configuration, such as "variants" will take place
+   */
+  async unsetEnvFromComponents(components: Component[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
+    const changed: ComponentID[] = [];
+    const unchanged: ComponentID[] = [];
+    components.forEach((comp) => {
+      const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
+      const currentEnv = bitMapEntry.config?.[EnvsAspect.id]?.env;
+      if (!currentEnv) {
+        unchanged.push(comp.id);
+        return;
+      }
+      this.bitMap.removeComponentConfig(comp.id, currentEnv);
+      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id);
+      changed.push(comp.id);
+    });
+    await this.bitMap.write();
+    return { changed, unchanged };
   }
 }
 

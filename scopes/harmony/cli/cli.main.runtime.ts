@@ -56,6 +56,13 @@ export class CLIMain {
   }
 
   /**
+   * get an instance of a registered command. (useful for aspects to modify and extend existing commands)
+   */
+  getCommand(name: string): Command | undefined {
+    return this.commands.find((command) => command.name === name);
+  }
+
+  /**
    * when running `bit help`, commands are grouped by categories.
    * this method helps registering a new group by providing its name and a description.
    * the name is what needs to be assigned to the `group` property of the Command interface.

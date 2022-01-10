@@ -223,7 +223,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
+    const stagedDesc = '\n(use "bit export to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       stagedComponents.map((c) => format(c, true)),

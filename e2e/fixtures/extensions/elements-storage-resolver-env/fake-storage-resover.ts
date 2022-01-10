@@ -1,5 +1,6 @@
 import { Component } from "@teambit/component";
 import { Artifact, ArtifactVinyl, FileStorageResolver } from "@teambit/builder";
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 
 export class FakeStorageResolver implements FileStorageResolver {
   name: 'fake-storage-resolver';
@@ -10,7 +11,7 @@ export class FakeStorageResolver implements FileStorageResolver {
     file: ArtifactVinyl
   ): Promise<string> {
 
-    const relativeFilePath = file.relative;
+    const relativeFilePath = pathNormalizeToLinux(file.relative);
     const url = `http://fake-url/${relativeFilePath}`;
 
     return url;

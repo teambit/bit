@@ -1,10 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentMain, ComponentAspect, Component } from '@teambit/component';
+import { ComponentMain, ComponentAspect, Component, ComponentID } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { deprecateMany, undeprecateMany } from '@teambit/legacy/dist/scope/component-ops/components-deprecation';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdObj } from '@teambit/component-id';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
 import { DeprecationFragment } from './deprecation.fragment';
@@ -18,7 +17,7 @@ export type DeprecationInfo = {
 
 export type DeprecationMetadata = {
   deprecate?: boolean;
-  newId?: string;
+  newId?: ComponentIdObj;
 };
 
 export class DeprecationMain {
@@ -32,42 +31,37 @@ export class DeprecationMain {
       | undefined;
     const deprecatedBackwardCompatibility = component.state._consumer.deprecated;
     const isDeprecate = Boolean(data?.deprecate || deprecatedBackwardCompatibility);
+    const newId = data?.newId ? ComponentID.fromObject(data?.newId).toString() : undefined;
     return {
       isDeprecate,
-      newId: data?.newId,
+      newId,
     };
   }
 
-  async deprecate(id: string, newId?: string) {
-    if (this.workspace.isLegacy) {
-      const bitId = this.workspace.consumer.getParsedId(id);
-      await deprecateMany(this.workspace.consumer.scope, new BitIds(bitId));
-      return {
-        deprecate: true,
-      };
-    }
-    const componentId = await this.workspace.resolveComponentId(id);
-    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
+  /**
+   * mark a component as deprecated. after this change, the component will be modified.
+   * tag and export the component to have it deprecated on the remote.
+   *
+   * @param componentId
+   * @param newId
+   * @returns boolean whether or not the component has been deprecated
+   */
+  async deprecate(componentId: ComponentID, newId?: ComponentID): Promise<boolean> {
+    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: true,
-      newId,
+      newId: newId?.toObject(),
     });
+    await this.workspace.bitMap.write();
 
     return results;
   }
 
-  async unDeprecate(id: string) {
-    if (this.workspace.isLegacy) {
-      const bitId = this.workspace.consumer.getParsedId(id);
-      await undeprecateMany(this.workspace.consumer.scope, new BitIds(bitId));
-      return {
-        deprecate: false,
-      };
-    }
-    const componentId = await this.workspace.resolveComponentId(id);
-    const results = await this.workspace.bitMap.addComponentConfig(DeprecationAspect.id, componentId, {
+  async unDeprecate(componentId: ComponentID) {
+    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: false,
       newId: '',
     });
+    await this.workspace.bitMap.write();
 
     return results;
   }
@@ -80,9 +74,11 @@ export class DeprecationMain {
     CLIMain
   ]) {
     const deprecation = new DeprecationMain(scope, workspace);
-    cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
+    cli.register(new DeprecateCmd(deprecation, workspace), new UndeprecateCmd(deprecation, workspace));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(deprecationSchema(deprecation));
+
+    return deprecation;
   }
 }
 

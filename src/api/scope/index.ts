@@ -12,7 +12,6 @@ import graph from './lib/graph';
 import latestVersions from './lib/latest-versions';
 import modifyCIProps from './lib/modify-ci-props';
 import put from './lib/put';
-import refreshScope from './lib/refresh-scope';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import scopeConfig from './lib/scope-config';
 import initScope from './lib/scope-init';
@@ -37,7 +36,6 @@ export {
   ciUpdateAction,
   scopeConfig,
   catScope,
-  refreshScope,
   remove,
   deprecate,
   undeprecate,

@@ -140,7 +140,7 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
@@ -484,6 +484,8 @@ export enum Extensions {
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
   deprecation = 'teambit.component/deprecation',
+  forking = 'teambit.component/forking',
+  renaming = 'teambit.component/renaming',
 }
 
 export enum BuildStatus {

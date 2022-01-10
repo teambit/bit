@@ -2,7 +2,8 @@ import React from 'react';
 import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
 import { TesterAspect, TesterUI } from '@teambit/tester';
-import { EmptyBox } from '@teambit/design.ui.empty-box';
+import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
+import { AddingTests } from '@teambit/react.instructions.react-native.adding-tests';
 import { ReactNativeAspect } from './react-native.aspect';
 
 export class ReactNativeEnvUI {
@@ -14,23 +15,11 @@ export class ReactNativeEnvUI {
     const reactNativeEnvUI = new ReactNativeEnvUI();
 
     testerUi.registerEmptyState(() => {
-      return (
-        <EmptyBox
-          title="This component doesn’t have any tests."
-          linkText="Learn how to add tests to your React Native components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
-        />
-      );
+      return <AddingTests />;
     });
 
     compositionsUI.registerEmptyState(() => {
-      return (
-        <EmptyBox
-          title="This component doesn’t have any compositions."
-          linkText="Learn how to add compositions to your React Native components"
-          link="https://harmony-docs.bit.dev/compositions/overview/"
-        />
-      );
+      return <AddingCompositions />;
     });
 
     return reactNativeEnvUI;

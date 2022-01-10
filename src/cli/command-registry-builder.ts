@@ -21,7 +21,6 @@ import CatScope from './commands/private-cmds/cat-scope-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
-import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
@@ -109,7 +108,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new DescribeScope(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CiUpdate(),
-      new RefreshScope(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatScope(),
       new ScopeConfig(),

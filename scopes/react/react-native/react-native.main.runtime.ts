@@ -10,7 +10,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-import { reactNativeTemplate } from './templates/react-native-env';
+import { componentTemplates, workspaceTemplates } from './react-native.templates';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 
 const jestConfig = require.resolve('./jest/jest.config');
@@ -121,7 +121,8 @@ export class ReactNativeMain {
       react.overrideDependencies(getReactNativeDeps()),
     ]);
     envs.registerEnv(reactNativeEnv);
-    generator.registerComponentTemplate([reactNativeTemplate]);
+    generator.registerComponentTemplate(componentTemplates);
+    generator.registerWorkspaceTemplate(workspaceTemplates);
     return new ReactNativeMain(react, reactNativeEnv, envs);
   }
 }
@@ -143,7 +144,6 @@ function getReactNativeDeps() {
       '@types/react': '^17.0.8',
       '@types/react-dom': '^17.0.5',
       '@types/react-native': '^0.64.1',
-      'babel-jest': '^25.1.0',
     },
     peerDependencies: {
       react: '^16.8.0 || ^17.0.0',
