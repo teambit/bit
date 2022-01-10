@@ -119,10 +119,6 @@ function linkBitLegacyInCapsule(capsule) {
     if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
       return pathOutsideNodeModules;
     }
-    if (__dirname.includes('build-harmony')) {
-      // for @teambit/legacy development, the cli extension is installed as a package in build-harmony directory
-      return path.join(__dirname.split('build-harmony')[0], 'dist');
-    }
     throw new Error('unable to link @teambit/legacy to the capsule, the location of @teambit/legacy is unknown');
   };
   const localBitLegacyPath = getLocalBitLegacyPath();
