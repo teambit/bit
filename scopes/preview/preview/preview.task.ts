@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { ExecutionContext } from '@teambit/envs';
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
@@ -62,7 +62,7 @@ export class PreviewTask implements BuildTask {
         previewDef.prefix,
         paths,
         previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
-        capsule.path
+        join(capsule.path, this.getLinkFileDirectory())
       );
 
       const files = flatten(paths.toArray().map(([, file]) => file)).concat([link]);
@@ -74,6 +74,10 @@ export class PreviewTask implements BuildTask {
     const moduleMaps = await Promise.all(moduleMapsPromise);
 
     return flatten(moduleMaps.concat([previewMain]));
+  }
+
+  getLinkFileDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, 'preview-links');
   }
 
   getPreviewDirectory(context: ExecutionContext) {

@@ -1,4 +1,11 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ComponentResult } from '@teambit/builder';
+import {
+  BuildContext,
+  BuiltTaskResult,
+  BuildTask,
+  TaskLocation,
+  ComponentResult,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
 import { Component, ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerResult, Target } from '@teambit/bundler';
@@ -185,15 +192,16 @@ export class EnvPreviewTemplateTask implements BuildTask {
 }
 
 export function getArtifactDirectory() {
-  return join('artifacts', 'env-template');
+  return join(CAPSULE_ARTIFACTS_DIR, 'env-template');
 }
 
 export function getArtifactDef() {
   return [
     {
       name: 'env-template',
-      globPatterns: [`${getArtifactDirectory()}/**`],
-      // rootDir,
+      // globPatterns: [`${getArtifactDirectory()}/**`],
+      globPatterns: ['**'],
+      rootDir: getArtifactDirectory(),
       // context: env,
     },
   ];

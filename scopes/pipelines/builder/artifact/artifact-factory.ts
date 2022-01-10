@@ -43,8 +43,9 @@ export class ArtifactFactory {
     task: BuildTask
   ): Artifact | undefined {
     const storageResolver = this.getStorageResolver(def);
-    const rootDir = this.getArtifactContextPath(context, component, def);
-    const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
+    const contextPath = this.getArtifactContextPath(context, component, def);
+    const rootDir = this.getRootDir(contextPath, def);
+    const paths = this.resolvePaths(rootDir, def);
     if (!paths || !paths.length) {
       return undefined;
     }

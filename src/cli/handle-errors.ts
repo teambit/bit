@@ -34,7 +34,7 @@ export async function handleUnhandledRejection(err: Error | null | undefined | {
 export async function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
   console.error(err); // eslint-disable-line
-  await logger.exitAfterFlush(1, commandName, err.toString());
+  await logger.exitAfterFlush(1, commandName);
 }
 
 function serializeErrAndExit(err, commandName: string) {

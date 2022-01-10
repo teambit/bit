@@ -13,6 +13,12 @@ export type TaskLocation = 'start' | 'end';
  */
 export const TaskIdDelimiter = ':';
 
+/**
+ * A folder to write artifacts generated during a build task
+ * This folder is used in the core envs and excluded by default from the package tar file (the core envs is writing this into the npmignore file)
+ */
+export const CAPSULE_ARTIFACTS_DIR = 'artifacts';
+
 export interface BuildContext extends ExecutionContext {
   /**
    * all components about to be built/tagged.

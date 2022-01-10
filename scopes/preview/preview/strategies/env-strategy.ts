@@ -6,7 +6,7 @@ import { flatten } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
-import { BuildContext, ComponentResult } from '@teambit/builder';
+import { BuildContext, CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import { PkgMain } from '@teambit/pkg';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BundlerResult, BundlerContext, Asset } from '@teambit/bundler';
@@ -145,8 +145,10 @@ export class EnvBundlingStrategy implements BundlingStrategy {
       files.forEach((asset) => {
         const filePath = this.getAssetAbsolutePath(context, asset);
         const contents = readFileSync(filePath);
-        const exists = capsule.fs.existsSync(this.getArtifactDirectory());
-        if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
+        // const exists = capsule.fs.existsSync(this.getArtifactDirectory());
+        // if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
+        // We don't use the mkdirSync as it uses the capsule fs which uses memfs, which doesn't know to handle nested none existing folders
+        mkdirpSync(join(capsule.path, this.getArtifactDirectory()));
         let filename = asset.name;
         if (filePath.endsWith('.css'))
           filename = `${capsule.component.id.toString({ ignoreVersion: true, fsCompatible: true })}.css`;
@@ -168,7 +170,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getArtifactDirectory() {
-    return `preview`;
+    return join(CAPSULE_ARTIFACTS_DIR, 'preview');
   }
 
   private computeComponentMetadata(
@@ -220,8 +222,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     return [
       {
         name: 'preview',
-        globPatterns: [`${this.getArtifactDirectory()}/**`],
-        // rootDir,
+        globPatterns: ['**'],
+        rootDir: this.getArtifactDirectory(),
         // context: env,
       },
     ];

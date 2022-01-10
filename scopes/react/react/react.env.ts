@@ -2,7 +2,7 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { BuildTask } from '@teambit/builder';
+import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
@@ -283,6 +283,13 @@ export class ReactEnv
    */
   getPackageJsonProps() {
     return this.tsAspect.getPackageJsonProps();
+  }
+
+  getNpmIgnore() {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
   /**

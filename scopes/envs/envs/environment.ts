@@ -10,6 +10,8 @@ import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { ElementsWrapperContext } from '@teambit/elements';
+import type { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
 
 export type EnvDescriptor = {
   type: string;
@@ -56,6 +58,10 @@ export interface DependenciesEnv extends Environment {
   getDependencies?: () => VariantPolicyConfigObject | Promise<VariantPolicyConfigObject>;
 }
 
+export type GetNpmIgnoreContext = {
+  capsule: Capsule;
+  component: Component;
+};
 export interface PackageEnv extends Environment {
   /**
    * define the package json properties to add to each component.
@@ -66,7 +72,7 @@ export interface PackageEnv extends Environment {
   /**
    * return `.npmignore` entries to be written before packing the component
    */
-  getNpmIgnore?: () => string[];
+  getNpmIgnore?: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
 }
 
 export interface LinterEnv extends Environment {
