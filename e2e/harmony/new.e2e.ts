@@ -78,16 +78,5 @@ describe('new command', function () {
     it('bit status should be clean', () => {
       helper.command.expectStatusToNotHaveIssues();
     });
-    describe('removing the env', () => {
-      before(() => {
-        helper.command.removeComponent('envs/my-react', '-d');
-      });
-      // before, it was throwing: "company.scope: access denied"
-      it('bit status should show a descriptive error', () => {
-        expect(() => helper.command.status()).to.throw(
-          'unable to import the following component(s): company.scope/envs/my-react'
-        );
-      });
-    });
   });
 });

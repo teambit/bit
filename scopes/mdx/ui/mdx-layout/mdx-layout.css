@@ -39,8 +39,9 @@
   border-left: 8px solid var(--bit-accent-primary-color, #6c5ce7);
 }
 
-.admonition h3 {
+.admonition h5 {
   color: var(--bit-accent-primary-color, #6c5ce7);
+  display: flex;
 }
 
 .admonition .admonition-icon svg {
@@ -53,7 +54,7 @@
   border-left: 8px solid #e67e22;
 }
 
-.admonition-caution h3 {
+.admonition-caution h5 {
   color: #e67e22;
 }
 
@@ -67,7 +68,7 @@
   border-left: 8px solid var(--bit-accent-success-color, #37b26c);
 }
 
-.admonition-tip h3 {
+.admonition-tip h5 {
   color: var(--bit-accent-success-color, #37b26c);
 }
 
@@ -81,7 +82,7 @@
   border-left: 8px solid var(--bit-accent-impulsive-color, #e62e5c);
 }
 
-.admonition-warning h3 {
+.admonition-warning h5 {
   color: var(--bit-accent-impulsive-color, #e62e5c);
 }
 
@@ -95,7 +96,7 @@
   border-left: 8px solid var(--bit-accent-process-color, #0984e3);
 }
 
-.admonition-important h3 {
+.admonition-important h5 {
   color: var(--bit-accent-process-color, #0984e3);
 }
 
@@ -109,7 +110,7 @@
   border-left: 8px solid var(--bit-accent-hunger-color, #ffc640);
 }
 
-.admonition-note h3 {
+.admonition-note h5 {
   color: var(--bit-accent-hunger-bg, #ffc640);
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
 import { Label, LabelContainer, Placement } from '../label';
 import { excludeHighlighterAtt } from '../ignore-highlighter';
@@ -12,19 +13,17 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
   placement?: Placement;
   /** customize styles */
   classes?: HighlightClasses;
+  /** continually update highlighter to match moving elements */
+  watchMotion?: boolean;
 }
 
 export { Placement };
 
 export type HighlightTarget = {
-  id?: string;
+  /** element to show the highlight at */
   element: HTMLElement;
-  /** e.g. 'https://bit.dev/teambit/base-ui/elements/dots-loader', */
-  link?: string;
-  /** e.g. 'https://bit.dev/teambit/base-ui' */
-  scopeLink?: string;
-  /** use full production url, or local workspace url */
-  local?: boolean;
+  /** components with metadata to show in the label */
+  components?: ComponentMetaHolder[];
 };
 
 export type HighlightClasses = {
@@ -36,23 +35,27 @@ export type HighlightClasses = {
 export function ElementHighlighter({
   target,
   placement = 'top',
+  watchMotion = true,
   className,
   classes,
   ...props
 }: ElementHighlighterProps) {
   return (
     <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, styles.container, className)}>
-      <Frame targetRef={target.element} className={classes?.frame} />
+      <Frame
+        targetRef={target.element}
+        className={classnames(styles.frame, classes?.frame)}
+        watchMotion={watchMotion}
+      />
 
-      {target.id && (
-        <LabelContainer className={styles.label} targetRef={target.element} placement={placement}>
-          <Label
-            componentId={target.id}
-            link={target.link}
-            scopeLink={target.scopeLink}
-            local={target.local}
-            className={classes?.label}
-          />
+      {target.components && (
+        <LabelContainer
+          className={styles.label}
+          targetRef={target.element}
+          placement={placement}
+          watchMotion={watchMotion}
+        >
+          <Label components={target.components} className={classes?.label} />
         </LabelContainer>
       )}
     </div>

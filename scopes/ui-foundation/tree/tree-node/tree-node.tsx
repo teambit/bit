@@ -23,11 +23,14 @@ export type TreeNodeComponentProps<Payload = any> = {
  * Renders a file node in the file tree
  */
 export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
-  const { node, isActive = false, icon, onClick, widgets, href } = props;
+  const { node, isActive, icon, onClick, widgets, href } = props;
+
+  const active = isActive !== undefined ? () => isActive : undefined;
+
   return (
     <NavLink
       href={href || node.id}
-      isActive={() => isActive}
+      isActive={active}
       exact
       strict
       className={classNames(indentClass, clickable, styles.fileNode)}

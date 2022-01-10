@@ -6,14 +6,29 @@
   "propagate": true,
   "extensions": {
     "teambit.pkg/pkg": {
+      "packageManagerPublishArgs": [
+        "--access public"
+      ],
       "packageJson": {
         "name": "@teambit/{scope}.{name}",
         "private": false,
-        "license": "Apache-2.0"
-      },
-      "packageManagerPublishArgs": [
-        "--access public"
-      ]
+        "license": "Apache-2.0",
+        "engines": {
+          "node": ">=12.22.0"
+        },
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/teambit/bit"
+        },
+        "keywords": [
+          "bit",
+          "components",
+          "collaboration",
+          "web",
+          "react",
+          "react-components"
+        ]
+      }
     },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
@@ -28,7 +43,7 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.175"
+          "@teambit/legacy": "1.0.202"
         }
       }
     }

@@ -9,8 +9,18 @@ export type Tests = {
 };
 
 export type ComponentsResults = {
+  /**
+   * component id.
+   */
   componentId: ComponentID;
+  /**
+   * test results for the component.
+   */
   results?: TestsResult;
+
+  /**
+   * loading.
+   */
   loading?: boolean;
 };
 

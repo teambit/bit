@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.175",
+  "version": "1.0.202",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -67,7 +67,7 @@
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
-    "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
+    "e2e-test": "registry-mock prepare && mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test:ssh": "npm run e2e-test --with-ssh",
     "e2e-test:ssh-debug": "npm run e2e-test --with-ssh --debug --keep-envs",
@@ -83,18 +83,11 @@
     "build": "npm run build:src",
     "build:types": "./scripts/build-types.bash",
     "build:types:windows": ".\\scripts\\build-types.bat",
-    "install-harmony": "cd build-harmony && yarn",
     "link-bit-legacy": "node ./scripts/link-bit-legacy.js",
-    "import-harmony": "build-harmony/node_modules/.bin/bbit import",
-    "status-harmony": "build-harmony/node_modules/.bin/bbit status",
-    "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
-    "build-harmony:windows": "build-harmony\\node_modules\\.bin\\bbit.cmd install && npm run link-bit-legacy && build-harmony\\node_modules\\.bin\\bbit.cmd compile",
-    "build-harmony-skip-import": "build-harmony/node_modules/.bin/bbit install --skip-import && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
-    "link-harmony": "build-harmony/node_modules/.bin/bbit link",
-    "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
-    "full-setup:windows": "npm run install-harmony && npm run build-harmony:windows && npm run build && npm run build:types:windows",
-    "full-setup:bbit": "rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
-    "full-setup:bit": "rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types",
+    "full-setup": "rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types",
+    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
+    "full-setup:windows": "bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types:windows",
+    "full-setup:windows:bbit": "bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types:windows",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -193,7 +186,7 @@
     "object-diff": "0.0.4",
     "object-hash": "2.1.1",
     "open": "7.4.2",
-    "ora": "4.1.1",
+    "ora": "5.4.1",
     "p-event": "4.2.0",
     "p-map": "4.0.0",
     "p-map-series": "2.1.0",
@@ -234,7 +227,6 @@
     "uniqid": "5.3.0",
     "user-home": "2.0.0",
     "uuid": "3.4.0",
-    "v8-compile-cache": "2.2.0",
     "validate-npm-package-name": "3.0.0",
     "vinyl": "2.2.1",
     "vinyl-file": "3.0.0",
@@ -306,7 +298,9 @@
     "sinon": "5.1.1",
     "tar": "6.1.11",
     "type-coverage": "2.15.1",
-    "typescript": "4.4.2",
-    "verdaccio": "4.11.0"
+    "typescript": "4.4.2"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": ["core-js"]
   }
 }

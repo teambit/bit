@@ -158,6 +158,9 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
+      - run:
+          name: set bit.dev registry
+          command: npm config set @teambit:registry https://node.bit.dev
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
@@ -521,28 +524,17 @@ jobs:
       - restore_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
-      - run: bvm install 0.0.428
-      # - run: bvm upgrade
+      # - run: bvm install 0.0.428
+      - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && bbit install
+      - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
-
-      # - run:
-      #     name: 'install harmony'
-      #     command: 'cd bit && npm run install-harmony'
-      # - run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
-      #     no_output_timeout: '20m'
-      # - run:
-      #     name: 'status harmony'
-      #     command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -615,30 +607,24 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
-      # - run: cd bit && build-harmony/node_modules/.bin/bbit status
       - run: cd bit && bbit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
-      - run: cd bit && bbit checkout latest --all --skip-npm-install
-      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bbit checkout latest --all --ours --skip-npm-install
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout latest --all
-      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       - run: cd bit && bbit install --skip-import
       - run: cd bit && bbit compile
       - run: cd bit && npm run link-bit-legacy
-      # - run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
           # command: cd bit && bit tag --all --ignore-newest-version
           # command: cd bit && bit tag --scope 0.0.297
-          # command: cd bit && bit tag --all --increment-by 2
-          command: cd bit && bit tag --all
+          command: cd bit && bit tag --all --increment-by 2
+          # command: cd bit && bit tag --all
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
@@ -694,6 +680,9 @@ jobs:
     <<: *defaults
     steps:
       - run:
+          name: set bit.dev registry
+          command: npm config set @teambit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -734,6 +723,9 @@ jobs:
       - run: yarn cache clean
       - run: yarn -v
       - run:
+          name: set bit.dev registry
+          command: npm config set @teambit:registry https://node.bit.dev
+      - run:
           name: print bit version
           command: npm view @teambit/bit version
       - run:
@@ -771,6 +763,9 @@ jobs:
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
+      - run:
+          name: set bit.dev registry
+          command: npm config set `@teambit:registry https://node.bit.dev
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -897,9 +892,6 @@ jobs:
       #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
       - bit_config
-      - run:
-          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
-          command: 'sudo apt-get install expect'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -1171,6 +1163,7 @@ jobs:
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
+      - run: 'cd bit\bit; npm run build:types:windows'
       - persist_to_workspace:
           root: .
           paths:
@@ -1670,3 +1663,19 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+  # uncomment and change the filter branch name to debug the bvm bundle jobs
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+      # - bundle_version_windows:
+      #     filters:
+      #       branches:
+      #         only: bvm-build-from-bit-dev-registry1
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: bvm-build-from-bit-dev-registry
+

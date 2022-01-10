@@ -275,7 +275,7 @@ export async function applyVersion({
   laneId: LaneId;
   localLane: Lane | null;
 }): Promise<ApplyVersionResult> {
-  const filesStatus = {};
+  let filesStatus = {};
   const unmergedComponent: UnmergedComponent = {
     // @ts-ignore
     id: { name: id.name, scope: id.scope },
@@ -325,16 +325,17 @@ export async function applyVersion({
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
-  let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    modifiedStatus = applyModifiedVersion(
+    const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
       files,
       mergeResults,
       mergeStrategy,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentWithDependencies.component.originallySharedDir
     );
+    componentWithDependencies.component.files = modifiedFiles;
+    filesStatus = { ...filesStatus, ...modifiedStatus };
   }
   const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
   componentWithDependencies.component.dependenciesSavedAsComponents =
@@ -371,7 +372,7 @@ export async function applyVersion({
     consumer.scope.objects.add(modelComponent);
   }
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  return { id, filesStatus };
 }
 
 async function snapResolvedComponents(

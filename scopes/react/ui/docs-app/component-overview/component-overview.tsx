@@ -6,6 +6,7 @@ import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
+import { isBrowser } from '@teambit/ui.is-browser';
 import styles from './component-overview.module.scss';
 
 export type ComponentOverviewProps = {
@@ -25,8 +26,11 @@ export function ComponentOverview({
   elementsUrl,
   ...rest
 }: ComponentOverviewProps) {
-  const origin = typeof window !== undefined ? window.location.origin : undefined;
-  const finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+  let finalElementsUrl = elementsUrl;
+  if (finalElementsUrl && !finalElementsUrl.startsWith('http')) {
+    const origin = isBrowser ? window.location.origin : undefined;
+    finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+  }
   return (
     <Section {...rest}>
       <div className={textColumn}>

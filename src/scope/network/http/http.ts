@@ -380,35 +380,43 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    const DEPRECATE_COMPONENTS = gql`
-      mutation deprecate($bitIds: [String!]!) {
-        deprecate(bitIds: $bitIds) {
-          bitIds
-          missingComponents
-        }
-      }
-    `;
-    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
-      bitIds: ids,
-    });
-    return res.deprecate;
+    throw new Error(
+      `deprecation of a remote component has been disabled. deprecate locally with an updated version of bit and then tag and export`
+    );
+    // const DEPRECATE_COMPONENTS = gql`
+    //   mutation deprecate($bitIds: [String!]!) {
+    //     deprecate(bitIds: $bitIds) {
+    //       bitIds
+    //       missingComponents
+    //     }
+    //   }
+    // `;
+    // const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
+    //   bitIds: ids,
+    // });
+    // return res.deprecate;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    const UNDEPRECATE_COMPONENTS = gql`
-      mutation deprecate($bitIds: [String!]!) {
-        undeprecate(bitIds: $bitIds) {
-          bitIds
-          missingComponents
-        }
-      }
-    `;
-    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
-      bitIds: ids,
-    });
+    throw new Error(
+      `un-deprecation of a remote component has been disabled. undeprecate locally with an updated version of bit and then tag and export`
+    );
+    // const UNDEPRECATE_COMPONENTS = gql`
+    //   mutation deprecate($bitIds: [String!]!) {
+    //     undeprecate(bitIds: $bitIds) {
+    //       bitIds
+    //       missingComponents
+    //     }
+    //   }
+    // `;
+    // const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
+    //   bitIds: ids,
+    // });
 
-    return res.undeprecate;
+    // return res.undeprecate;
   }
 
   async log(id: BitId): Promise<ComponentLog[]> {
@@ -487,21 +495,27 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  // TODO: ran (TBD)
   async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
     const LIST_LANES = gql`
-    query listLanes() {
-      lanes {
-        list()
+      query Lanes {
+        lanes {
+          getLanes {
+            name
+            components {
+              id
+              head
+            }
+            isMerged
+          }
+        }
       }
-    }
     `;
 
     const res = await this.graphClientRequest(LIST_LANES, Verb.READ, {
       mergeData,
     });
 
-    return res.lanes.list;
+    return res.lanes.getLanes;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

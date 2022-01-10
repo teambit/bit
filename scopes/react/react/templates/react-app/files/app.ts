@@ -2,7 +2,7 @@ import { ComponentContext } from '@teambit/generator';
 
 export function appFile({ namePascalCase: Name }: ComponentContext) {
   return `import React from 'react';
-import { BrowserRouter, Switch, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 export function ${Name}App() {
   return (
@@ -10,8 +10,8 @@ export function ${Name}App() {
 
        {/* header component */}
 
-        <Switch>
-          <Route path="/">
+        <Routes>
+          <Route path="/" element={<div>Hello World!!</div>}>
              {/* home page component */}
           </Route>
 
@@ -19,7 +19,7 @@ export function ${Name}App() {
              {/* about page component */}
           </Route>
 
-        </Switch>
+        </Routes>
 
         {/* footer component */}
 

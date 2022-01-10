@@ -2,6 +2,9 @@ import { BuildContext } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { AppContext } from './app-context';
 import { DeployContext } from './deploy-context';
+import { AppBuildResult } from './app-build-result';
+
+export type DeployFn = (context: DeployContext, capsule: Capsule) => Promise<void>;
 
 export interface Application {
   /**
@@ -12,21 +15,15 @@ export interface Application {
   /**
    * run the application.
    */
-  run(context: AppContext): Promise<number>;
+  run(context: AppContext): Promise<number | void>;
 
   /**
    * build the application.
    */
-  build(context: BuildContext, aspectId: string, capsule: Capsule): Promise<DeployContext>;
+  build?(context: BuildContext, capsule: Capsule): Promise<AppBuildResult>;
 
   /**
    * application deployment. this is a build task.
    */
-  deploy?(context: BuildContext): Promise<void>;
-
-  /**
-   * prerender routes of application (will create static file for the route)
-   * e.g ['/plugins', '/learn', '/docs/quick-start]
-   */
-  prerenderRoutes?: string[];
+  deploy?: DeployFn;
 }

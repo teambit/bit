@@ -109,12 +109,15 @@ describe('bit checkout command', function () {
   });
   describe('components with dependencies with multiple versions', () => {
     let outputV2: string;
+    let localScope: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       outputV2 = helper.fixtures.populateComponents(3, undefined, 'v2');
       helper.command.tagAllWithoutBuild();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     it('as an intermediate step, make sure all components have v2', () => {
       const result = helper.command.runCmd('node app.js');
@@ -154,6 +157,23 @@ describe('bit checkout command', function () {
         expect(path.join(helper.scopes.localPath, 'package-lock.json')).to.not.be.a.path();
       });
     });
+    describe('missing the latest Version object from the filesystem', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.command.export();
+        helper.command.checkout('0.0.1 --all');
+
+        // simulate the missing object by deliberately deleting the object from the filesystem
+        const head = helper.command.getHead('comp1');
+        const objectPath = helper.general.getHashPathOfObject(head);
+        helper.fs.deleteObject(objectPath);
+      });
+      // previously, it was throwing an error:
+      // error: version "0.0.2" of component tpkb99cd-remote/comp1 was not found on the filesystem.
+      it('should not throw an error', () => {
+        expect(() => helper.command.checkout('latest --all')).to.not.throw();
+      });
+    });
   });
   describe('when the current version has new files', () => {
     before(() => {
@@ -187,6 +207,44 @@ describe('bit checkout command', function () {
     it('should update the file according to the checked out version', () => {
       const content = helper.fs.readFile('bar/foo.txt');
       expect(content).to.equal('v1');
+    });
+  });
+  describe('when a file was deleted locally but not in the base and the new version', () => {
+    let scopeAfterFirstVersion: string;
+    let scopeBeforeCheckout: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/foo.ts');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      scopeAfterFirstVersion = helper.scopeHelper.cloneLocalScope();
+      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(scopeAfterFirstVersion);
+      helper.command.import();
+      helper.fs.deletePath('comp1/foo.ts');
+      scopeBeforeCheckout = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('bit checkout latest', () => {
+      before(() => {
+        helper.command.checkout('latest comp1 --skip-npm-install');
+      });
+      it('should leave the file deleted', () => {
+        const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
+        expect(deletedFile).to.not.be.a.path();
+      });
+    });
+    describe('bit checkout --reset', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
+        helper.command.checkout('comp1 --skip-npm-install --reset');
+      });
+      it('should re-create the file', () => {
+        const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
+        expect(deletedFile).to.be.a.path();
+      });
     });
   });
 });

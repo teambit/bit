@@ -3,15 +3,16 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import { Workspace } from '@teambit/workspace';
-import { EnvsMain } from '@teambit/envs';
+import EnvsAspect, { EnvDefinition, EnvsMain } from '@teambit/envs';
+import { Component } from '@teambit/component';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
+import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentTemplate, ComponentFile } from './component-template';
+import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
@@ -22,14 +23,15 @@ export class ComponentGenerator {
     private componentIds: ComponentID[],
     private options: CreateOptions,
     private template: ComponentTemplate,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private newComponentHelper: NewComponentHelperMain
   ) {}
 
   async generate(): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.getComponentPath(componentId);
+        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, this.options.path);
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
         }
@@ -46,7 +48,7 @@ export class ComponentGenerator {
       }
     });
 
-    await this.workspace.writeBitMap();
+    await this.workspace.bitMap.write();
 
     return generateResults;
   }
@@ -73,20 +75,53 @@ export class ComponentGenerator {
     const nameCamelCase = camelcase(name);
     const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
     const mainFile = files.find((file) => file.isMain);
+    const config = this.addEnvIfProvidedByUser(this.template.config);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
+      defaultScope: this.options.scope,
+      config,
     });
     const component = await this.workspace.get(componentId);
     const env = this.envs.getEnv(component);
+    await this.removeOtherEnvs(component, env, config);
     return {
       id: componentId,
       dir: componentPath,
       files: addResults.files,
       envId: env.id,
     };
+  }
+
+  private addEnvIfProvidedByUser(config?: ComponentConfig): ComponentConfig | undefined {
+    const userEnv = this.options.env; // env entered by the user when running `bit create --env`
+    const templateEnv = config?.[EnvsAspect.id]?.env;
+    if (!userEnv || userEnv === templateEnv) {
+      return config;
+    }
+    config = config || {};
+    if (templateEnv) {
+      // the component template has an env and the user wants a different env.
+      delete config[templateEnv];
+    }
+    config[userEnv] = {};
+    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
+    config[EnvsAspect.id].env = userEnv;
+    return config;
+  }
+
+  private async removeOtherEnvs(component: Component, env: EnvDefinition, config?: ComponentConfig) {
+    const envFromTemplate = config?.[EnvsAspect.id]?.env;
+    if (!envFromTemplate) {
+      return;
+    }
+    const envsNotFromConfig = this.envs.getEnvsNotFromEnvsConfig(component).map((envDef) => envDef.id);
+    const envsToRemove = envsNotFromConfig.filter((envId) => envId !== envFromTemplate);
+    envsToRemove.forEach((envId) => (config[envId] = '-'));
+    const bitMapRecord = this.workspace.bitMap.getBitmapEntry(component.id);
+    bitMapRecord.config = config;
   }
 
   /**
@@ -110,10 +145,5 @@ export class ComponentGenerator {
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
     return results;
-  }
-
-  private getComponentPath(componentId: ComponentID) {
-    if (this.options.path) return this.options.path;
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }

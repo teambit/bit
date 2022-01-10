@@ -67,6 +67,11 @@ export default class FsHelper {
     return fs.writeFileSync(filePath, `${data}${content}`);
   }
 
+  writeFile(filePathRelativeToLocalScope: string, content: string): void {
+    const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
+    return fs.writeFileSync(filePath, content);
+  }
+
   moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
     const src = path.join(this.scopes.localPath, srcPathRelativeToLocalScope);
     const dest = path.join(this.scopes.localPath, destPathRelativeToLocalScope);

@@ -12,12 +12,14 @@ import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppListCmdDeprecated } from './app-list.cmd';
-import { DeployTask } from './deploy.task';
+import { AppsBuildTask } from './build.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
 import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
+import { AppContext } from './app-context';
+import { DeployTask } from './deploy.task';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -64,25 +66,25 @@ export class ApplicationMain {
   }
 
   /**
-   * register new deployment provider like netlify, cloudflare pages or custom deployment.
+   * map all apps by component ID.
    */
-  registerDeploymentProvider(provider: DeploymentProvider) {
-    this.deploymentProviderSlot.register([provider]);
-    return this;
+  mapApps() {
+    return this.appSlot.toArray();
   }
 
   /**
-   * list all deployment providers
+   * list apps by a component id.
    */
-  listProviders() {
-    return flatten(this.deploymentProviderSlot.values());
+  listAppsById(id?: ComponentID): Application[] | undefined {
+    if (!id) return undefined;
+    return this.appSlot.get(id.toString());
   }
 
   /**
    * get an app.
    */
-  getApp(appName: string): Application | undefined {
-    const apps = this.listApps();
+  getApp(appName: string, id?: ComponentID): Application | undefined {
+    const apps = this.listAppsById(id) || this.listApps();
     return apps.find((app) => app.name === appName);
   }
 
@@ -145,16 +147,22 @@ export class ApplicationMain {
     return ComponentID.fromString(maybeApp[0]);
   }
 
-  private async createAppContext(appName: string) {
+  private async createAppContext(appName: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
     const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
+    // console.log(comp)
 
     const env = await this.envs.createEnvironment([component]);
     const res = await env.run(this.appService);
-    return res.results[0].data;
+    const context = res.results[0].data;
+    if (!context) throw new AppNotFound(appName);
+    return Object.assign({}, context, {
+      appName,
+      appComponent: component,
+    });
   }
 
   static runtime = MainRuntime;
@@ -192,7 +200,9 @@ export class ApplicationMain {
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
-    builder.registerTagTasks([new DeployTask(application)]);
+    builder.registerBuildTasks([new AppsBuildTask(application)]);
+    builder.registerSnapTasks([new DeployTask(application, builder)]);
+    builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
 

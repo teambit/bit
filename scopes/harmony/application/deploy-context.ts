@@ -1,11 +1,5 @@
-import { BuildContext } from '@teambit/builder';
+import { BuildContext, ArtifactList } from '@teambit/builder';
 
 export interface DeployContext extends BuildContext {
-  applicationType: string;
-
-  aspectId: string;
-
-  /* the build output */
-
-  publicDir: string | null;
+  artifactList?: ArtifactList;
 }

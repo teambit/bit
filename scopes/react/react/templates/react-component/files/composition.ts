@@ -8,9 +8,11 @@ export const compositionFile = (context: ComponentContext) => {
     content: `import React from 'react';
 import { ${Name} } from './${name}';
 
-export const Basic${Name} = () => (
-  <${Name} text="hello from ${Name}" />
-);
+export const Basic${Name} = () => {
+  return (
+    <${Name}>hello world!</${Name}>
+  );
+}
 `,
   };
 };

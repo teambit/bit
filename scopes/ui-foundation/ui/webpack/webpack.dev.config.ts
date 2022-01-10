@@ -18,6 +18,7 @@ import { html } from './html';
  * i.e. `bit start --dev`,
  */
 
+const matchNothingRegex = 'a^';
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
@@ -43,7 +44,7 @@ const moduleFileExtensions = [
   'jsx',
 ];
 
-export function devConfig(workspaceDir, entryFiles, title, aspectPaths): WebpackConfigWithDevServer {
+export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -201,22 +202,27 @@ export function devConfig(workspaceDir, entryFiles, title, aspectPaths): Webpack
           include: /node_modules/,
           // only apply to packages with componentId in their package.json (ie. bit components)
           descriptionData: { componentId: (value) => !!value },
-          use: [require.resolve('source-map-loader')],
+          use: [require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'), require.resolve('source-map-loader')],
         },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
           include: workspaceDir,
-          loader: require.resolve('babel-loader'),
-          options: {
-            configFile: false,
-            babelrc: false,
-            presets: [
-              // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app'),
-            ],
-            plugins: [require.resolve('react-refresh/babel')],
-          },
+          use: [
+            require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'),
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                configFile: false,
+                babelrc: false,
+                presets: [
+                  // Preset includes JSX, TypeScript, and some ESnext features
+                  require.resolve('babel-preset-react-app'),
+                ],
+                plugins: [require.resolve('react-refresh/babel')],
+              },
+            },
+          ],
         },
         {
           test: stylesRegexps.sassModuleRegex,
@@ -310,14 +316,10 @@ export function devConfig(workspaceDir, entryFiles, title, aspectPaths): Webpack
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        include: aspectPaths, // original default value was /\.([cm]js|[jt]sx?|flow)$/i
-        // replaces the default value of `/node_modules/`
-        exclude: [
-          /react-refresh-webpack-plugin/i,
-          // file type filtering was done by `include`, so need to negative-filter them out here
-          // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!\.jsx)(?<!\.js)(?<!\.tsx)(?<!\.ts)$/i,
-        ],
+        // we use '@pmmmwh/react-refresh-webpack-plugin/loader' directly where relevant.
+        // FYI, original defaults of the plugin are:
+        // include: /\.([cm]js|[jt]sx?|flow)$/i, exclude: /node_modules/,
+        include: matchNothingRegex,
       }),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the

@@ -2,7 +2,8 @@ import { BitError } from '@teambit/bit-error';
 
 export class ParentDirTracked extends BitError {
   constructor(parentDir: string, componentName: string, currentDir: string) {
-    super(`unable to add "${currentDir}", an existing component "${componentName}" already has its parent-dir "${parentDir}" as the root-dir.
-if you would like "${currentDir}" as a separate component, please extract it outside "${parentDir}"`);
+    // TODO @david: separate error outputs for `bit create` and `bit add`
+    super(`components can't be nested under other components. unable to create a component in directory "${currentDir}" which is nested to component "${componentName}".
+using 'bit create', choose a different path for with the '--path' or if using 'bit add' put the component in a different directory"`);
   }
 }

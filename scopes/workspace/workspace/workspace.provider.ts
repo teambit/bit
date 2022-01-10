@@ -22,6 +22,8 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
+import UninstallCmd from './uninstall.cmd';
+import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
@@ -31,7 +33,9 @@ import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { Tag } from './tag-cmd';
-import { CapsuleCmd, CapsuleCreateCmd, CapsuleListCmd } from './capsule.cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
+import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
+import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -184,8 +188,18 @@ export default async function provideWorkspace(
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
   const capsuleCmd = new CapsuleCmd();
-  capsuleCmd.commands = [new CapsuleListCmd(isolator, workspace), new CapsuleCreateCmd(workspace, isolator)];
-  const commands: CommandList = [new InstallCmd(workspace, logger), new EjectConfCmd(workspace), capsuleCmd];
+  capsuleCmd.commands = [
+    new CapsuleListCmd(isolator, workspace),
+    new CapsuleCreateCmd(workspace, isolator),
+    new CapsuleDeleteCmd(isolator, workspace),
+  ];
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new UpdateCmd(workspace),
+    new UninstallCmd(workspace),
+    new EjectConfCmd(workspace),
+    capsuleCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
@@ -200,6 +214,11 @@ export default async function provideWorkspace(
   cli.registerOnStart(async () => {
     await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
   });
+
+  // add sub-commands "set" and "unset" to envs command.
+  const envsCommand = cli.getCommand('envs');
+  envsCommand?.commands?.push(new EnvsSetCmd(workspace)); // bit envs set
+  envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
 
   return workspace;
 }

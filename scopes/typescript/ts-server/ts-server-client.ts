@@ -144,6 +144,23 @@ export class TsserverClient {
     });
   }
 
+  async getDefinition(file: string, position: Position) {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.openIfNeeded(absFile);
+    const response = await this.tsServer.request(CommandTypes.Definition, {
+      file: absFile,
+      line: position.line,
+      offset: position.character,
+    });
+
+    if (!response.success) {
+      // TODO: we need a function to handle responses properly here for all.
+      return response;
+    }
+
+    return response;
+  }
+
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
@@ -163,6 +180,7 @@ export class TsserverClient {
   async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     this.openIfNeeded(absFile);
+
     return this.tsServer.request(CommandTypes.SignatureHelp, {
       file: absFile,
       line: position.line,

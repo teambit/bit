@@ -1,6 +1,6 @@
 import { serializeError } from 'serialize-error';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { buildCommandMessage, isNumeric, packCommand } from '@teambit/legacy/dist/utils';
+import logger from '../logger/logger';
+import { buildCommandMessage, isNumeric, packCommand } from '../utils';
 import defaultHandleError from './default-error-handler';
 import loader from './loader';
 
@@ -34,7 +34,7 @@ export async function handleUnhandledRejection(err: Error | null | undefined | {
 export async function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
   console.error(err); // eslint-disable-line
-  await logger.exitAfterFlush(1, commandName);
+  await logger.exitAfterFlush(1, commandName, err.toString());
 }
 
 function serializeErrAndExit(err, commandName: string) {

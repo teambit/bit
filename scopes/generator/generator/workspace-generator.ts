@@ -166,7 +166,7 @@ export class WorkspaceGenerator {
         .filter((entry) => !currentPackages.includes(entry.dependencyId)); // remove components that are now imported
       dependencyResolver.addToRootPolicy(workspacePolicyEntries, { updateExisting: true });
     });
-    await this.workspace.writeBitMap();
+    await this.workspace.bitMap.write();
     await dependencyResolver.persistConfig(this.workspace.path);
     this.workspace.clearCache();
     await this.compileComponents();

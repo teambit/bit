@@ -69,9 +69,13 @@ export default class ScopeHelper {
     this.cleanLocalScope();
     this.initLocalScope();
   }
-  reInitLocalScopeHarmony() {
+  reInitLocalScopeHarmony(opts?: { registry: string }) {
     this.cleanLocalScope();
     this.initHarmonyWorkspace();
+    if (opts?.registry) {
+      this.fs.writeFile('.npmrc', `registry=${opts.registry}`);
+      this.fs.writeFile('.yarnrc.yml', 'unsafeHttpWhitelist: [localhost]');
+    }
   }
   newLocalScopeHarmony(templateName: string, flags?: string) {
     fs.removeSync(this.scopes.localPath);

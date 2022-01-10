@@ -142,6 +142,9 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
+  setEnv(compId: string, envId: string) {
+    return this.runCmd(`bit envs set ${compId} ${envId}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
@@ -153,6 +156,15 @@ export default class CommandHelper {
   }
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
+  }
+  fork(sourceId: string, values = '') {
+    return this.runCmd(`bit fork ${sourceId} ${values}`);
+  }
+  rename(sourceId: string, targetId: string, flags = '') {
+    return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
+  }
+  dependencies(values = '') {
+    return this.runCmd(`bit dependencies ${values}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
@@ -234,6 +246,11 @@ export default class CommandHelper {
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
+  showOneLaneParsed(name: string) {
+    const results = this.runCmd(`bit lane show ${name} --json`);
+    const parsed = JSON.parse(results);
+    return parsed;
+  }
   showLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
@@ -241,11 +258,6 @@ export default class CommandHelper {
   showRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
-  }
-  showOneLaneParsed(name: string) {
-    const results = this.runCmd(`bit lane show ${name} --json`);
-    const parsed = JSON.parse(results);
-    return parsed;
   }
   diffLane(args = '', onScope = false) {
     const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;
@@ -272,8 +284,8 @@ export default class CommandHelper {
   untag(id: string, version = '') {
     return this.runCmd(`bit untag ${id} ${version}`);
   }
-  untagAll() {
-    return this.runCmd(`bit untag --all`);
+  untagAll(options = '') {
+    return this.runCmd(`bit untag ${options} --all`);
   }
   untagSoft(id: string) {
     return this.runCmd(`bit untag ${id} --soft`);
@@ -462,9 +474,9 @@ export default class CommandHelper {
     return status.stagedComponents.includes(id);
   }
 
-  statusComponentIsModified(id: string): boolean {
+  statusComponentIsModified(fullId: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(id);
+    return status.modifiedComponent.includes(fullId);
   }
 
   showComponent(id = 'bar/foo') {
@@ -479,6 +491,11 @@ export default class CommandHelper {
   showComponentParsedHarmony(id = 'bar/foo') {
     const output = this.runCmd(`bit show ${id} --json`);
     return JSON.parse(output);
+  }
+
+  showAspectConfig(compId: string, aspectId: string) {
+    const show = this.showComponentParsedHarmony(compId);
+    return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
   getComponentFiles(id: string): string[] {
@@ -552,6 +569,12 @@ export default class CommandHelper {
   install(packages = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+  }
+  update(flags?: string) {
+    return this.runCmd(`bit update ${flags || ''}`);
+  }
+  uninstall(flags?: string) {
+    return this.runCmd(`bit uninstall ${flags || ''}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);

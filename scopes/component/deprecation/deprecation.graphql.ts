@@ -29,17 +29,17 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
       }
     `,
     resolvers: {
-      Mutation: {
-        deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
-          if (context.verb !== 'write') throw new Error('You are not authorized');
-          return deprecation.deprecate(bitIds);
-        },
+      // Mutation: {
+      //   deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
+      //     if (context.verb !== 'write') throw new Error('You are not authorized');
+      //     return deprecation.deprecate(bitIds);
+      //   },
 
-        undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
-          if (context.verb !== 'write') throw new Error('You are not authorized');
-          return deprecation.unDeprecate(bitIds);
-        },
-      },
+      //   undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
+      //     if (context.verb !== 'write') throw new Error('You are not authorized');
+      //     return deprecation.unDeprecate(bitIds);
+      //   },
+      // },
       Component: {
         deprecation: (component: Component) => {
           return deprecation.getDeprecationInfo(component);
