@@ -52,7 +52,7 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { GetBitMapComponentOptions, LANE_KEY } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
 import type {
   AddActionResults,
@@ -580,7 +580,8 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * if checked out to a lane, return the remote lane id (name+scope). otherwise, return null.
+   * if checked out to a lane and the lane exists in the remote,
+   * return the remote lane id (name+scope). otherwise, return null.
    */
   getCurrentRemoteLaneId(): RemoteLaneId | null {
     const currentLane = this.getCurrentLaneId();
@@ -588,10 +589,15 @@ export class Workspace implements ComponentFactory {
       return null;
     }
     const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
-    const remoteLaneName = trackData?.remoteLane;
-    if (!remoteLaneName) {
+
+    const remoteLane = this.consumer.bitMap.getContent()[LANE_KEY] as RemoteLaneId;
+
+    if (!trackData || !remoteLane) {
       return null;
     }
+
+    const remoteLaneName = remoteLane.name;
+
     return RemoteLaneId.from(remoteLaneName, trackData.remoteScope);
   }
 
