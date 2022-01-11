@@ -35,16 +35,22 @@ export class PreviewTask implements BuildTask {
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
 
     const targets: Target[] = await bundlingStrategy.computeTargets(context, defs, this);
+
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
-      externalizePeer: true,
+      externalizePeer: bundlingStrategy.name !== 'env',
       entry: [],
       publicPath: this.getPreviewDirectory(context),
       rootPath: url,
       development: context.dev,
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
+    const transformers =
+      bundlingStrategy.getBundlerTransformer && typeof bundlingStrategy.getBundlerTransformer === 'function'
+        ? bundlingStrategy.getBundlerTransformer(bundlerContext)
+        : [];
+
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, transformers);
     const bundlerResults = await bundler.run();
 
     const results = bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);

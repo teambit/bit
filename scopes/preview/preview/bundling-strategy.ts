@@ -1,5 +1,6 @@
 import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
+import { WebpackConfigTransformer } from '@teambit/webpack';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewTask } from './preview.task';
 
@@ -18,4 +19,6 @@ export interface BundlingStrategy {
    * compute the results of the bundler.
    */
   computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask): Promise<BuiltTaskResult>;
+
+  getBundlerTransformer?: (context: BundlerContext) => WebpackConfigTransformer[];
 }

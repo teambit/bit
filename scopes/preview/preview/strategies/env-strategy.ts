@@ -10,6 +10,8 @@ import { BundlerResult, BundlerContext } from '@teambit/bundler';
 import { BundlingStrategy } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
+import { WebpackConfigTransformer } from '@teambit/webpack';
+import { envStrategyTransformersArray, generateEnvStrategyHtmlPluginTransformer } from '../webpack';
 
 /**
  * bundles all components in a given env into the same bundle.
@@ -114,5 +116,13 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const moduleMaps = await Promise.all(moduleMapsPromise);
 
     return flatten(moduleMaps.concat([previewMain]));
+  }
+
+  getBundlerTransformer(context: BundlerContext) {
+    const htmlPluginsTransformer = generateEnvStrategyHtmlPluginTransformer({
+      dev: context.development,
+    });
+    const transformers = [...envStrategyTransformersArray, htmlPluginsTransformer];
+    return transformers;
   }
 }
