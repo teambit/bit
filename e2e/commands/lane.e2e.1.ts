@@ -34,6 +34,7 @@ describe('bit lane command', function () {
     });
   });
   describe('create a snap on main then on a new lane', () => {
+    let bitInstallOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -43,6 +44,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponents();
+      bitInstallOutput = helper.command.install();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
@@ -59,6 +61,9 @@ describe('bit lane command', function () {
       const devSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
       expect(log).to.have.string(mainSnap);
       expect(log).to.have.string(devSnap);
+    });
+    it('should not throw an error when installing components in a non exported lane', () => {
+      expect(bitInstallOutput).to.not.have.string('lane dev was not found');
     });
     describe('bit lane with --details flag', () => {
       let output: string;
