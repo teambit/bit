@@ -200,6 +200,7 @@ export async function install(
   const opts = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
+    extendNodePath: false,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
