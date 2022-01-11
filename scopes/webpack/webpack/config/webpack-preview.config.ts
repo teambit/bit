@@ -1,10 +1,8 @@
 import webpack, { Configuration } from 'webpack';
 import { Target, BundlerContext, ModuleTarget } from '@teambit/bundler';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
-import { html } from './html';
 
 const { ModuleFederationPlugin } = require('webpack').container;
 

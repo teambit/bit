@@ -16,7 +16,6 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import { CompilerAspect } from '@teambit/compiler';
 import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
 import { PreviewMain } from './preview.main.runtime';
-import { env } from 'process';
 
 export type ModuleExpose = {
   name: string;

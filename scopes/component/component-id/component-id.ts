@@ -1,5 +1,4 @@
 import { BitId } from '@teambit/legacy-bit-id';
-import { camelCase } from 'lodash';
 import { MissingScope } from './exceptions';
 
 /**
