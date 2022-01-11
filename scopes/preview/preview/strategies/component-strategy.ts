@@ -194,7 +194,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       const metadata = this.computeComponentMetadata(context, result, component);
-      console.log('metadata', component.id.toString(), metadata);
       return {
         component,
         metadata,
