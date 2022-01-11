@@ -154,12 +154,14 @@ export class PreviewMain {
     const artifactDef = getEnvTemplateArtifactDef()[0];
     const artifactFactory = new ArtifactFactory();
 
-    const paths = artifactFactory.resolvePaths(coreEnvDir, artifactDef);
+    const rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);
+    const paths = artifactFactory.resolvePaths(rootDir, artifactDef);
     if (!paths || !paths.length) {
       return undefined;
     }
     const artifactFiles = new ArtifactFiles(paths);
-    artifactFiles.populateVinylsFromPaths(coreEnvDir);
+
+    artifactFiles.populateVinylsFromPaths(rootDir);
     return new PreviewArtifact(artifactFiles.vinyls);
   }
 
@@ -453,7 +455,7 @@ export class PreviewMain {
     ]);
 
     if (!config.disabled)
-      builder.registerBuildTasks([new PreviewTask(bundler, preview), new EnvPreviewTemplateTask(preview, envs)]);
+      builder.registerBuildTasks([new EnvPreviewTemplateTask(preview, envs), new PreviewTask(bundler, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
