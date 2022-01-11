@@ -16,6 +16,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import { CompilerAspect } from '@teambit/compiler';
 import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
 import { PreviewMain } from './preview.main.runtime';
+import { env } from 'process';
 
 export type ModuleExpose = {
   name: string;
@@ -35,7 +36,16 @@ export class EnvPreviewTemplateTask implements BuildTask {
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const envComponents = context.components.filter((component) => this.envs.getEnvFromComponent(component));
+    const envComponents = context.components.filter((component) => {
+      const envDef = this.envs.getEnvFromComponent(component);
+      if (!envDef) return false;
+      const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
+      // In case the env is using the 'env' strategy there is no reason to bundle the env template (as it won't be used anyway)
+      if (bundlingStrategy.name === 'env') {
+        return false;
+      }
+      return true;
+    });
     if (!envComponents.length) return { componentsResults: [] };
     const targets: Target[] = await Promise.all(
       envComponents.map(async (envComponent) => {
@@ -117,7 +127,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
       { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry }
     );
 
-    console.log('entries', entries);
     return entries;
 
     // const mergedEntries = return entriesArr.reduce((entriesMap, entry) => {
