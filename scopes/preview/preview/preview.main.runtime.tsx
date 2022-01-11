@@ -170,7 +170,8 @@ export class PreviewMain {
    * @param component
    */
   async getEnvTemplateFromComponentEnv(component: Component): Promise<PreviewArtifact | undefined> {
-    const envId = this.envs.getEnv(component).id;
+    const envId = this.envs.getEnvId(component);
+
     // Special treatment for core envs
     if (this.aspectLoader.isCoreEnv(envId)) {
       return this.getCoreEnvTemplate(envId);
