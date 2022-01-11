@@ -3,7 +3,7 @@ import { uniq, compact, flatten, head } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
-import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -136,11 +136,11 @@ export class DependencyLinker {
       return result;
     }
     if (linkingOpts.legacyLink) {
-      const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
+      const bitIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy);
       // @todo, Gilad, it's better not to use the legacyLink here. it runs the consumer onDestroy
       // which writes to .bitmap during the process and it assumes the consumer is there, which
       // could be incorrect. instead, extract what you need from there to a new function and use it
-      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false, false);
+      const legacyResults = await legacyLink(linkingOpts.consumer, bitIds, linkingOpts.rewire ?? false);
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }

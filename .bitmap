@@ -819,6 +819,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/testing/load-aspect"
     },
+    "testing/mock-components": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/testing/mock-components"
+    },
+    "testing/mock-workspace": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/testing/mock-workspace"
+    },
     "tests-results": {
         "scope": "teambit.defender",
         "version": "0.0.95",

@@ -1,5 +1,7 @@
 import { Helper } from '@teambit/harmony.testing.helper';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
+import { mockWorkspace } from '@teambit/workspace.testing.mock-workspace';
+import { mockComponents } from '@teambit/component.testing.mock-components';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
@@ -8,8 +10,10 @@ describe('LanesAspect', function () {
   let lanes: LanesMain;
   beforeAll(async () => {
     helper = new Helper();
-    helper.setupWorkspace();
-    helper.populateComponents();
+    const workspacePath = await mockWorkspace();
+    await mockComponents(workspacePath);
+    // helper.setupWorkspace();
+    // helper.populateComponents();
     lanes = await loadAspect(LanesAspect, helper.workspacePath);
     await lanes.createLane('stage');
   });

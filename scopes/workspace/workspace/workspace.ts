@@ -125,7 +125,7 @@ export type WorkspaceInstallOptions = {
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
 
-export type WorkspaceLinkOptions = LinkingOptions;
+export type WorkspaceLinkOptions = LinkingOptions & { consumer: Consumer };
 
 export type TrackData = {
   rootDir: PathOsBasedRelative; // path relative to the workspace
@@ -734,7 +734,7 @@ export class Workspace implements ComponentFactory {
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.writeBitMap();"
+   * to write the .bitmap file once completed, run "await this.bitMap.write();"
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
@@ -1531,6 +1531,7 @@ export class Workspace implements ComponentFactory {
       legacyLink: true,
       linkCoreAspects: true,
       linkNestedDepsInNM: !this.isLegacy,
+      consumer: this.consumer,
     });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
