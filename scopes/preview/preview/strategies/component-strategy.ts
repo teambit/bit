@@ -56,7 +56,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       Object.assign(entriesMap, entry);
       return entriesMap;
     }, {});
-    console.log('entries', JSON.stringify(entries, null, 2));
     // const entries = entriesArr.reduce((entriesMap, entry) => {
     //   entriesMap[entry.library.name] = entry;
     //   return entriesMap;

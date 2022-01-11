@@ -19,8 +19,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
         rules: exposedRules,
       };
 
-  console.log('externals', externals);
-  console.log('module', module);
   return {
     module,
     externals,

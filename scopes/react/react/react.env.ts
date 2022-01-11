@@ -244,7 +244,6 @@ export class ReactEnv
     // const fileMapPath = this.writeFileMap(context.components);
     const hostDeps = this.getHostDependencies();
     const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
-    console.log('get bundler', context.externalizePeer, peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);

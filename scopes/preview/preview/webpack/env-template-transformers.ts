@@ -18,7 +18,6 @@ export function runtimeChunkTransformer(config: WebpackConfigMutator): WebpackCo
     // name: (entrypoint) => `runtime-${entrypoint.name}`,
     name: 'runtime',
   };
-  console.log('config.raw.optimization', config.raw.optimization);
   return config;
 }
 
@@ -30,10 +29,8 @@ export function generateHtmlPluginTransformer(
   const htmlPlugins = previewDefs.map((previewModule) =>
     generateHtmlPluginForModule(previewModule, previewRootChunkName, options)
   );
-  console.log('htmlPlugins', htmlPlugins);
   return (config: WebpackConfigMutator): WebpackConfigMutator => {
     config.addPlugins(htmlPlugins);
-    console.log('after plugins', config.raw.plugins);
     return config;
   };
 }

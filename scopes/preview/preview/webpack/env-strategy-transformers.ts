@@ -12,10 +12,8 @@ export function outputNamesTransformer(config: WebpackConfigMutator): WebpackCon
 
 export function generateHtmlPluginTransformer(options: { dev?: boolean }) {
   const htmlPlugin = generateHtmlPluginForModule(options);
-  console.log('htmlPlugin', htmlPlugin);
   return (config: WebpackConfigMutator): WebpackConfigMutator => {
     config.addPlugin(htmlPlugin);
-    console.log('after plugins', config.raw.plugins);
     return config;
   };
 }
