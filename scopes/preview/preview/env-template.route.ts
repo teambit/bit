@@ -27,7 +27,6 @@ export class EnvTemplateRoute implements Route {
   middlewares = [
     async (req: Request<UrlParams>, res: Response) => {
       try {
-        console.log('env template route');
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());

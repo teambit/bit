@@ -65,7 +65,7 @@ export class ArtifactFactory {
     });
   }
 
-  private getRootDir(rootDir: string, def: ArtifactDefinition) {
+  getRootDir(rootDir: string, def: ArtifactDefinition) {
     if (!def.rootDir) return rootDir;
     return join(rootDir, def.rootDir);
   }

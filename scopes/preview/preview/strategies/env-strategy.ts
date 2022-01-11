@@ -7,10 +7,10 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { BuildContext, ComponentResult } from '@teambit/builder';
 import { BundlerResult, BundlerContext } from '@teambit/bundler';
+import { WebpackConfigTransformer } from '@teambit/webpack';
 import { BundlingStrategy } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
-import { WebpackConfigTransformer } from '@teambit/webpack';
 import { envStrategyTransformersArray, generateEnvStrategyHtmlPluginTransformer } from '../webpack';
 
 /**
@@ -118,7 +118,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     return flatten(moduleMaps.concat([previewMain]));
   }
 
-  getBundlerTransformer(context: BundlerContext) {
+  getBundlerTransformer(context: BundlerContext): WebpackConfigTransformer[] {
     const htmlPluginsTransformer = generateEnvStrategyHtmlPluginTransformer({
       dev: context.development,
     });

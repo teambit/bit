@@ -52,7 +52,6 @@ function createModuleFederationPlugins(modules: ModuleTarget[]) {
   // });
 
   return modules.map((module) => {
-    console.log(module.shared);
     return new ModuleFederationPlugin({
       name: module.name,
       filename: `${module.name}.js`,
