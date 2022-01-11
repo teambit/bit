@@ -141,7 +141,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       if (!capsule) return;
       const files = this.findAssetsForComponent(component, result.assets);
       if (!files) return;
-      console.log('copyAssetsToCapsules files', files);
 
       files.forEach((asset) => {
         const filePath = this.getAssetAbsolutePath(context, asset);
@@ -160,7 +159,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   private findAssetsForComponent(component: Component, assets: Asset[]): Asset[] | undefined {
     if (!assets) return undefined;
-    console.log('copyAssetsToCapsules assets', assets);
 
     const files = assets.filter((asset) => {
       const fsComp = component.id.toString({ ignoreVersion: true, fsCompatible: true });
