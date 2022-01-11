@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { RenderingContext } from '@teambit/preview';
+// this is here in order to make sure it get's into the composition chunk bundle because it's configured as external dependency for the components
+import '@mdx-js/react';
+import '@teambit/mdx.ui.mdx-scope-context';
 
 import { CompositionsApp } from './compositions-app';
 
