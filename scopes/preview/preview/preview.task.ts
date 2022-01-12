@@ -60,32 +60,6 @@ export class PreviewTask implements BuildTask {
     return results;
   }
 
-  async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-    const previewMain = await this.preview.writePreviewRuntime(context);
-
-    const moduleMapsPromise = defs.map(async (previewDef) => {
-      const moduleMap = await previewDef.getModuleMap([capsule.component]);
-      const paths = this.getPathsFromMap(capsule, moduleMap, context);
-      const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
-
-      const link = this.preview.writeLink(
-        previewDef.prefix,
-        paths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
-        join(capsule.path, this.getLinkFileDirectory())
-      );
-
-      const files = flatten(paths.toArray().map(([, file]) => file)).concat([link]);
-
-      if (template) return files.concat([template]);
-      return files;
-    });
-
-    const moduleMaps = await Promise.all(moduleMapsPromise);
-
-    return flatten(moduleMaps.concat([previewMain]));
-  }
-
   getLinkFileDirectory() {
     return join(CAPSULE_ARTIFACTS_DIR, 'preview-links');
   }

@@ -77,9 +77,9 @@ export class PreviewPreview {
   async getPreviewModule(name: string, id: ComponentID): Promise<PreviewModule> {
     if (PREVIEW_MODULES[name].componentMap[id.fullName]) return PREVIEW_MODULES[name];
     // if (!window[name]) throw new PreviewNotFound(name);
-
+    const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
     // const component = window[id.toStringWithoutVersion()];
-    const component: any = await this.fetchComponentPreview(id, name);
+    const component: any = await this.fetchComponentPreview(id, name, isSplitComponentBundle);
 
     return {
       mainModule: PREVIEW_MODULES[name].mainModule,
@@ -89,9 +89,11 @@ export class PreviewPreview {
     };
   }
 
-  async fetchComponentPreview(id: ComponentID, name: string) {
-    const componentScriptElement = this.getComponentScriptElement(id);
-    document.head.appendChild(componentScriptElement);
+  async fetchComponentPreview(id: ComponentID, name: string, isSplitComponentBundle: boolean) {
+    if (isSplitComponentBundle){
+      const componentScriptElement = this.getComponentScriptElement(id);
+      document.head.appendChild(componentScriptElement);
+    }
     return new Promise((resolve, reject) => {
       const previewScriptElement = this.getPreviewScriptElement(id, name, resolve, reject);
       document.head.appendChild(previewScriptElement);
@@ -204,9 +206,15 @@ export class PreviewPreview {
   }
 }
 
-export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
+export function linkModules(
+  previewName: string,
+  defaultModule: any,
+  isSplitComponentBundle: boolean,
+  componentMap: { [key: string]: any }
+) {
   PREVIEW_MODULES[previewName] = {
     mainModule: defaultModule,
+    isSplitComponentBundle,
     componentMap,
   };
 }

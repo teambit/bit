@@ -22,6 +22,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -41,7 +42,6 @@ import {
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { previewSchema } from './preview.graphql';
 
 const noopResult = {
@@ -225,8 +225,14 @@ export class PreviewMain {
    * @param defaultModule
    * @param dirName
    */
-  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
-    const contents = generateLink(prefix, moduleMap, defaultModule);
+  writeLink(
+    prefix: string,
+    moduleMap: ComponentMap<string[]>,
+    defaultModule: string | undefined,
+    dirName: string,
+    isSplitComponentBundle: boolean
+  ) {
+    const contents = generateLink(prefix, moduleMap, defaultModule, isSplitComponentBundle);
     return this.writeLinkContents(contents, dirName, prefix);
   }
 
@@ -268,6 +274,7 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const environment = context.envRuntime.env;
+      const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
       const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
         const modulePath =
@@ -285,7 +292,7 @@ export class PreviewMain {
       const dirPath = join(this.tempFolder, context.id);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
+      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath, isSplitComponentBundle);
       return link;
     });
 
@@ -364,10 +371,7 @@ export class PreviewMain {
   };
 
   getEnvPreviewConfig(env?: PreviewEnv): EnvPreviewConfig {
-    const config =
-      env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function'
-        ? env?.getPreviewConfig()
-        : {};
+    const config = env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function' ? env?.getPreviewConfig() : {};
 
     return config;
   }
@@ -441,7 +445,7 @@ export class PreviewMain {
       aspectLoader,
       loggerMain,
       dependencyResolver,
-      graphql
+      graphql,
     ]: [
       BundlerMain,
       BuilderMain,

@@ -108,7 +108,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         previewDef.prefix,
         paths,
         previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
-        outputPath
+        outputPath,
+        false
       );
 
       const files = flatten(paths.toArray().map(([, file]) => file)).concat([link]);

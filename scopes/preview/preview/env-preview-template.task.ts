@@ -35,19 +35,18 @@ export class EnvPreviewTemplateTask implements BuildTask {
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const envComponents = context.components.filter((component) => {
-      const envDef = this.envs.getEnvFromComponent(component);
-      if (!envDef) return false;
-      const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
-      // In case the env is using the 'env' strategy there is no reason to bundle the env template (as it won't be used anyway)
-      if (bundlingStrategy.name === 'env') {
-        return false;
-      }
-      return true;
-    });
-    if (!envComponents.length) return { componentsResults: [] };
-    const targets: Target[] = await Promise.all(
-      envComponents.map(async (envComponent) => {
+    const targets: Target[] = compact(await Promise.all(
+      context.components.map(async (component) => {
+        const envDef = this.envs.getEnvFromComponent(component);
+        if (!envDef) return undefined;
+        const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
+        if (bundlingStrategy.name === 'env') {
+          return undefined;
+        }
+        const envComponent = component;
+        const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
+        const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
+
         // const module = await this.getPreviewModule(envComponent);
         // const entries = Object.keys(module).map((key) => module.exposes[key]);
         const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
@@ -59,7 +58,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
         // });
         const outputPath = this.computeOutputPath(context, envComponent);
         if (!existsSync(outputPath)) mkdirpSync(outputPath);
-        const entries = this.getEntries(previewModules, capsule, previewRoot);
+        const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle);
 
         // const entries = this.getEntries(
         //   previewModules.concat({
@@ -76,7 +75,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
           // modules: [module],
         };
       })
-    );
+    ));
+
+    if (!targets.length) return { componentsResults: [] };
 
     const bundlerContext: BundlerContext = Object.assign({}, context, {
       targets,
@@ -97,7 +98,12 @@ export class EnvPreviewTemplateTask implements BuildTask {
     return results;
   }
 
-  getEntries(previewModules: ModuleExpose[], capsule: Capsule, previewRoot: string): { [key: string]: Object } {
+  getEntries(
+    previewModules: ModuleExpose[],
+    capsule: Capsule,
+    previewRoot: string,
+    isSplitComponentBundle = false
+  ): { [key: string]: Object } {
     const previewRootEntry = {
       // filename: 'preview-root.[contenthash].js',
       // filename: 'preview-root.[chunkhash].js',
@@ -107,7 +113,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const entries = previewModules.reduce(
       (acc, module) => {
-        const linkFile = this.preview.writeLink(module.name, ComponentMap.create([]), module.path, capsule.path);
+        const linkFile = this.preview.writeLink(
+          module.name,
+          ComponentMap.create([]),
+          module.path,
+          capsule.path,
+          isSplitComponentBundle
+        );
         acc[module.name] = {
           // filename: `${module.name}.[contenthash].js`,
           filename: `${module.name}.[chunkhash].js`,
