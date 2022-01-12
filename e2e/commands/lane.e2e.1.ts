@@ -622,6 +622,27 @@ describe('bit lane command', function () {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
     });
   });
+  describe('exporting a lane to a different scope than the component scope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane('dev');
+      helper.command.trackLane('dev', scopeName);
+      helper.fs.outputFile('comp1/comp1.spec.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit import in a new workspace should not throw an error', () => {
+      expect(() => helper.command.importComponent('comp1')).not.to.throw();
+    });
+  });
   describe('importing a component when checked out to a lane', () => {
     let beforeImport;
     before(() => {
