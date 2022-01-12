@@ -1,24 +1,21 @@
-import { Helper } from '@teambit/harmony.testing.helper';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
-import { mockWorkspace } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
 describe('LanesAspect', function () {
-  let helper: Helper;
   let lanes: LanesMain;
+  let workspaceData: WorkspaceData;
   beforeAll(async () => {
-    helper = new Helper();
-    const workspacePath = await mockWorkspace();
+    workspaceData = mockWorkspace();
+    const { workspacePath } = workspaceData;
     await mockComponents(workspacePath);
-    // helper.setupWorkspace();
-    // helper.populateComponents();
-    lanes = await loadAspect(LanesAspect, helper.workspacePath);
+    lanes = await loadAspect(LanesAspect, workspacePath);
     await lanes.createLane('stage');
   });
-  afterAll(() => {
-    helper.destroy();
+  afterAll(async () => {
+    await destroyWorkspace(workspaceData);
   });
   describe('getLanes()', () => {
     it('should list all lanes', async () => {

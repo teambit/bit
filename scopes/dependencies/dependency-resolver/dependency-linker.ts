@@ -376,6 +376,7 @@ export class DependencyLinker {
     dir: string,
     componentIds: string[]
   ): Promise<CoreAspectLinkResult | undefined> {
+    if (!this.aspectLoader.mainAspect) return undefined;
     const mainAspectId = this.aspectLoader.mainAspect.id;
     const existing = componentIds.find((id) => {
       return id === mainAspectId;
@@ -421,7 +422,7 @@ export class DependencyLinker {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const filtered = coreAspectsIds.filter((aspectId) => {
       // Remove bit aspect
-      if (aspectId === this.aspectLoader.mainAspect.id) {
+      if (aspectId === this.aspectLoader.mainAspect?.id) {
         return false;
       }
       // TODO: use the aspect id once default scope is resolved and the component dir map has the id with scope
@@ -445,7 +446,7 @@ export class DependencyLinker {
 
   private isBitRepoWorkspace(dir: string) {
     // A special condition to not link core aspects in bit workspace itself
-    if (this.aspectLoader.mainAspect.path.startsWith(dir)) {
+    if (this.aspectLoader.mainAspect?.path.startsWith(dir)) {
       return true;
     }
     return false;
@@ -458,6 +459,7 @@ export class DependencyLinker {
     packageName: string,
     hasLocalInstallation = false
   ): CoreAspectLinkResult | undefined {
+    if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
@@ -524,6 +526,7 @@ export class DependencyLinker {
     packageName = `@teambit/${name}`,
     skipExisting = false
   ): LinkDetail | undefined {
+    if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
