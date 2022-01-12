@@ -285,6 +285,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-package-version"
     },
+    "component-sizer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-sizer",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "component-tree": {
         "scope": "teambit.component",
         "version": "0.0.403",

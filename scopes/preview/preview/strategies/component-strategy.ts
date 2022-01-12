@@ -24,6 +24,7 @@ type ComponentPreviewMetaData = {
   size?: Number;
 };
 
+export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
 export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
 /**
  * bundles all components in a given env into the same bundle.
@@ -183,7 +184,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     });
     if (!componentFile) return {};
     return {
-      size: componentFile.size,
+      [COMPONENT_STRATEGY_SIZE_KEY_NAME]: componentFile.size,
     };
   }
 
