@@ -43,7 +43,7 @@ type BvmDirOptions = {
 }
 export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): string {
   if (!_bvmConfig){
-    _bvmConfig = Config.load(false, ['env, file']);
+    _bvmConfig = Config.load(false, ['env', 'file']);
   }
   const bvmConfig = _bvmConfig;
   let version;
