@@ -5,11 +5,8 @@ export function getAspectDir(id: string): string {
   const aspectName = getCoreAspectName(id);
   const packageName = getCoreAspectPackageName(id);
   let dirPath: string;
-  // in case the aspect is running outside of bit-bin, it should find it in the cwd.
-  // otherwise, use the `__dirname` for the location of the core-aspects file.
-  const pathsToResolveAspects = [process.cwd(), __dirname];
   try {
-    const moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
+    const moduleDirectory = require.resolve(packageName);
     dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   } catch (err: any) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
