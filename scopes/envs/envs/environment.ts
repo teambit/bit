@@ -12,6 +12,7 @@ import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { ElementsWrapperContext } from '@teambit/elements';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
+import { EnvPreviewConfig } from '@teambit/preview';
 
 export type EnvDescriptor = {
   type: string;
@@ -111,9 +112,9 @@ export interface PreviewEnv extends Environment {
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 
   /**
-   * Returns the strategy name to use when bundling the components for the preview
+   * Returns preview config like the strategy name to use when bundling the components for the preview
    */
-  getPreviewBundleStrategy?: () => 'component' | 'env' | string;
+  getPreviewConfig?: () => EnvPreviewConfig;
 }
 
 export interface ElementsEnv extends Environment {

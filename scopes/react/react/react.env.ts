@@ -277,6 +277,13 @@ export class ReactEnv
     return require.resolve('./mount');
   }
 
+  getPreviewConfig(){
+    return {
+      // strategyName: 'component',
+      splitComponentBundle: true
+    }
+  }
+
   /**
    * define the package json properties to add to each component.
    */

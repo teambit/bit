@@ -5,10 +5,10 @@ import { ComponentMap } from '@teambit/component';
 import { Compiler } from '@teambit/compiler';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
-import { BuildContext, ComponentResult } from '@teambit/builder';
+import { ComponentResult } from '@teambit/builder';
 import { BundlerResult, BundlerContext } from '@teambit/bundler';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
-import type { BundlingStrategy } from '../bundling-strategy';
+import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
 import { envStrategyTransformersArray, generateEnvStrategyHtmlPluginTransformer } from '../webpack';
@@ -21,7 +21,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   constructor(private preview: PreviewMain) {}
 
-  async computeTargets(context: BuildContext, previewDefs: PreviewDefinition[]) {
+  async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
 
@@ -55,7 +55,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     };
   }
 
-  private getArtifactDef(context: BuildContext) {
+  private getArtifactDef(context: ComputeTargetsContext) {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     const env: 'env' = 'env';
     const rootDir = this.getDirName(context);
@@ -70,21 +70,25 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: BuildContext) {
+  getDirName(context: ComputeTargetsContext) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: BuildContext) {
+  private getOutputPath(context: ComputeTargetsContext) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 
-  private getPaths(context: BuildContext, files: AbstractVinyl[], capsule: Capsule) {
+  private getPaths(context: ComputeTargetsContext, files: AbstractVinyl[], capsule: Capsule) {
     const compiler: Compiler = context.env.getCompiler();
     return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
   }
 
-  private async computePaths(outputPath: string, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
+  private async computePaths(
+    outputPath: string,
+    defs: PreviewDefinition[],
+    context: ComputeTargetsContext
+  ): Promise<string[]> {
     const previewMain = await this.preview.writePreviewRuntime(context);
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap(context.components);

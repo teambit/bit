@@ -49,6 +49,13 @@ export class AspectEnv implements DependenciesEnv {
     return patterns;
   }
 
+  getPreviewConfig(){
+    return {
+      // strategyName: 'component',
+      splitComponentBundle: false
+    }
+  }
+
   async getDependencies() {
     return {
       dependencies: {

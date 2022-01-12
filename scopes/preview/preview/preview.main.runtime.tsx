@@ -58,6 +58,11 @@ export type PreviewConfig = {
   disabled: boolean;
 };
 
+export type EnvPreviewConfig = {
+  strategyName?: string;
+  splitComponentBundle?: boolean;
+};
+
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
 
 export type GenerateLinkFn = (prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string) => string;
@@ -358,16 +363,23 @@ export class PreviewMain {
     return this.handleComponentChange(component, (currentComponents) => currentComponents.remove(cId));
   };
 
+  getEnvPreviewConfig(env?: PreviewEnv): EnvPreviewConfig {
+    const config =
+      env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function'
+        ? env?.getPreviewConfig()
+        : {};
+
+    return config;
+  }
+
   /**
    * return the configured bundling strategy.
    */
   getBundlingStrategy(env?: PreviewEnv): BundlingStrategy {
     const defaultStrategies = this.getDefaultStrategies();
-    const strategyFromEnv =
-      env?.getPreviewBundleStrategy && typeof env?.getPreviewBundleStrategy === 'function'
-        ? env?.getPreviewBundleStrategy()
-        : undefined;
-    const strategyName = this.config.bundlingStrategy || strategyFromEnv || 'component';
+    const envPreviewConfig = this.getEnvPreviewConfig(env);
+    const strategyFromEnv = envPreviewConfig?.strategyName;
+    const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'component';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;

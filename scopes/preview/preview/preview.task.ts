@@ -33,8 +33,11 @@ export class PreviewTask implements BuildTask {
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
+    const envPreviewConfig = this.preview.getEnvPreviewConfig(context.env);
+    const splitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
+    const computeTargetsContext = Object.assign(context, {splitComponentBundle});
 
-    const targets: Target[] = await bundlingStrategy.computeTargets(context, defs, this);
+    const targets: Target[] = await bundlingStrategy.computeTargets(computeTargetsContext, defs, this);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,

@@ -6,11 +6,11 @@ import { flatten } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type { Capsule } from '@teambit/isolator';
-import { BuildContext, CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { BundlerResult, BundlerContext, Asset } from '@teambit/bundler';
-import { BundlingStrategy } from '../bundling-strategy';
+import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
@@ -34,7 +34,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
 
-  async computeTargets(context: BuildContext, previewDefs: PreviewDefinition[]) {
+  async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
 
@@ -97,24 +97,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: BuildContext) {
+  async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: ComputeTargetsContext) {
     const path = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
-    const componentChunkId = component.id.toStringWithoutVersion();
     const componentPreviewChunkId = `${component.id.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
 
-    return {
-      [componentChunkId]: {
-        filename: `${component.id.toString({
-          fsCompatible: true,
-          ignoreVersion: true,
-        })}-${COMPONENT_CHUNK_FILENAME_SUFFIX}`,
-        import: componentPath,
-        library: {
-          name: componentChunkId,
-          type: 'umd',
-        },
-      },
+    const entries = {
       [componentPreviewChunkId]: {
         filename: `${component.id.toString({
           fsCompatible: true,
@@ -129,6 +117,21 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         },
       },
     };
+    if (context.splitComponentBundle){
+      const componentChunkId = component.id.toStringWithoutVersion();
+      entries[componentChunkId] = {
+        filename: `${component.id.toString({
+          fsCompatible: true,
+          ignoreVersion: true,
+        })}-${COMPONENT_CHUNK_FILENAME_SUFFIX}`,
+        import: componentPath,
+        library: {
+          name: componentChunkId,
+          type: 'umd',
+        },
+      };
+    }
+    return entries;
   }
 
   private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
@@ -228,16 +231,16 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: BuildContext) {
+  getDirName(context: ComputeTargetsContext) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: BuildContext) {
+  private getOutputPath(context: ComputeTargetsContext) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 
-  private getPaths(context: BuildContext, component: Component, files: AbstractVinyl[]) {
+  private getPaths(context: ComputeTargetsContext, component: Component, files: AbstractVinyl[]) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
     if (!capsule) return [];
     const compiler: Compiler = context.env.getCompiler();
@@ -250,7 +253,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   private async computePaths(
     defs: PreviewDefinition[],
-    context: BuildContext,
+    context: ComputeTargetsContext,
     component: Component
   ): Promise<string | undefined> {
     // const previewMain = await this.preview.writePreviewRuntime(context);
