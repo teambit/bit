@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { Bundler, BundlerResult, Asset, Target } from '@teambit/bundler';
-import { Logger } from '@teambit/logger';
+import type { Bundler, BundlerResult, Asset, Target } from '@teambit/bundler';
+import type { Logger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
-import { Compiler, Configuration, StatsCompilation } from 'webpack';
+import type { Compiler, Configuration, StatsCompilation } from 'webpack';
 
 export class WebpackBundler implements Bundler {
   constructor(

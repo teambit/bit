@@ -9,13 +9,13 @@ import {
 import { Component, ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerResult, Target } from '@teambit/bundler';
-import { EnvsMain } from '@teambit/envs';
+import type { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { CompilerAspect } from '@teambit/compiler';
 import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
-import { PreviewMain } from './preview.main.runtime';
+import type { PreviewMain } from './preview.main.runtime';
 
 export type ModuleExpose = {
   name: string;

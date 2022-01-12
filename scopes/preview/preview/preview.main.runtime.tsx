@@ -1,28 +1,26 @@
-import { ArtifactFactory, BuilderAspect, BuilderMain } from '@teambit/builder';
+import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
+import type { BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
-import { get, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import {
-  AspectDefinition,
-  AspectLoaderMain,
-  AspectLoaderAspect,
-  getAspectDir,
-  getAspectDirFromBvm,
-} from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
+import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';

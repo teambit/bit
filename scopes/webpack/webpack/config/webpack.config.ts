@@ -1,5 +1,5 @@
 import webpack, { Configuration } from 'webpack';
-import { Target } from '@teambit/bundler';
+import type { Target } from '@teambit/bundler';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
@@ -12,6 +12,10 @@ export function configFactory(target: Target): Configuration {
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
     entry: target.entries.filter(Boolean),
+
+    infrastructureLogging: {
+      level: 'error',
+    },
 
     output: {
       // The build folder.

@@ -1,8 +1,8 @@
 import mime from 'mime';
-import { Request, Response } from '@teambit/express';
+import type { Request, Response } from '@teambit/express';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
-import { PreviewArtifact } from './preview-artifact';
+import type { PreviewArtifact } from './preview-artifact';
 
 export type PreviewUrlParams = {
   /**

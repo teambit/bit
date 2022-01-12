@@ -1,6 +1,6 @@
 import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
-import { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewTask } from './preview.task';
 

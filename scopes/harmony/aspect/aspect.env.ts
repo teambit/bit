@@ -1,10 +1,10 @@
 import { Compiler } from '@teambit/compiler';
-import { DependenciesEnv, GetNpmIgnoreContext } from '@teambit/envs';
+import type { DependenciesEnv, GetNpmIgnoreContext } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 
 const tsconfig = require('./typescript/tsconfig.json');
 

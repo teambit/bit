@@ -4,7 +4,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import ComponentAspect, { Component, ComponentMap } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { Environment } from '@teambit/envs';
+import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';

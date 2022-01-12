@@ -1,7 +1,7 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { WebpackConfigMutator } from '@teambit/webpack';
+import type { WebpackConfigMutator } from '@teambit/webpack';
 import { html } from './html';
-import { PreviewDefinition } from '../preview-definition';
+import type { PreviewDefinition } from '../preview-definition';
 
 export function splitChunksTransformer(config: WebpackConfigMutator): WebpackConfigMutator {
   config.raw.optimization = config.raw.optimization || {};

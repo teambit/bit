@@ -1,5 +1,5 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { WebpackConfigMutator } from '@teambit/webpack';
+import type { WebpackConfigMutator } from '@teambit/webpack';
 import { html } from './html';
 
 export function outputNamesTransformer(config: WebpackConfigMutator): WebpackConfigMutator {

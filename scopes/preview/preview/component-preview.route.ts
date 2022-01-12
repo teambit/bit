@@ -1,11 +1,12 @@
-import { NextFunction, Request, Response, Route } from '@teambit/express';
+import type { NextFunction, Request, Response, Route } from '@teambit/express';
 import type { Component } from '@teambit/component';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
 
 import { PreviewMain } from './preview.main.runtime';
-import { PreviewArtifact } from './preview-artifact';
-import { getArtifactFileMiddleware, PreviewUrlParams } from './artifact-file-middleware';
+import type { PreviewArtifact } from './preview-artifact';
+import type { PreviewUrlParams } from './artifact-file-middleware';
+import { getArtifactFileMiddleware } from './artifact-file-middleware';
 
 export class ComponentPreviewRoute implements Route {
   constructor(
