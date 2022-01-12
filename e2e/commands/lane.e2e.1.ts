@@ -496,6 +496,35 @@ describe('bit lane command', function () {
         });
       });
     });
+    describe('merging main into local lane', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1);
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
+      });
+    });
+    describe('merging main lane with no snapped components', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it('should not throw an error about missing objects', () => {
+        expect(mergeOutput).to.not.have.string(
+          'component comp1 is on the lane but its objects were not found, please re-import the lane'
+        );
+      });
+    });
   });
   describe('tagging on a lane', () => {
     let output;
