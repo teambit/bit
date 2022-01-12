@@ -6,6 +6,7 @@ import { Lane } from '../../scope/models';
 import { Tmp } from '../../scope/repositories';
 import { ApplyVersionResults, MergeStrategy } from '../versions-ops/merge-version';
 import { ComponentStatus, getComponentStatus, merge } from '../versions-ops/merge-version/merge-snaps';
+import { DEFAULT_LANE } from '../../constants';
 
 export async function mergeLanes({
   consumer,
@@ -37,7 +38,15 @@ export async function mergeLanes({
   let otherLane: Lane | null;
   let remoteLane;
   let otherLaneName: string;
-  if (remoteName) {
+  const isDefaultLane = laneName === DEFAULT_LANE;
+
+  if (isDefaultLane) {
+    const allBitIdsOnDefaultLaneWithVersion = consumer.bitMap
+      .getAuthoredAndImportedBitIdsOfDefaultLane()
+      .filter((id) => id.hasVersion());
+    bitIds = allBitIdsOnDefaultLaneWithVersion.map((id) => id.changeVersion(id.version));
+    otherLaneName = DEFAULT_LANE;
+  } else if (remoteName) {
     const remoteLaneId = RemoteLaneId.from(laneId.name, remoteName);
     remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(remoteLaneId);
     if (!remoteLane.length) {
