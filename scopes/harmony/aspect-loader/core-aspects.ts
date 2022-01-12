@@ -5,10 +5,16 @@ import {Config} from '@teambit/bvm.config';
 
 let _bvmConfig;
 
-function getAspectDirFromPath(id: string, pathsToResolveAspects: string[]): string {
+function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): string {
   const aspectName = getCoreAspectName(id);
   const packageName = getCoreAspectPackageName(id);
-  const moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
+
+  let moduleDirectory;
+  if (pathsToResolveAspects && pathsToResolveAspects.length){
+    moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
+  } else {
+    moduleDirectory = require.resolve(packageName);
+  }
   const dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   if (!existsSync(dirPath)) {
     throw new Error(`unable to find ${aspectName} in ${dirPath}`);
@@ -19,11 +25,9 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects: string[]): stri
 export function getAspectDir(id: string): string {
   const aspectName = getCoreAspectName(id);
   let dirPath;
-  // in case the aspect is running outside of bit-bin, it should find it in the cwd.
-  // otherwise, use the `__dirname` for the location of the core-aspects file.
-  const pathsToResolveAspects = [process.cwd(), __dirname];
+
   try {
-    dirPath = getAspectDirFromPath(id, pathsToResolveAspects);
+    dirPath = getAspectDirFromPath(id);
   } catch (err: any) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
