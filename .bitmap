@@ -1423,7 +1423,12 @@
         "scope": "teambit.design",
         "version": "0.0.352",
         "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/surfaces/menu/item"
+        "rootDir": "scopes/design/ui/surfaces/menu/item",
+        "config": {
+            "teambit.component/deprecation": {
+                "deprecate": true
+            }
+        }
     },
     "ui/surfaces/menu/link-item": {
         "scope": "teambit.design",
