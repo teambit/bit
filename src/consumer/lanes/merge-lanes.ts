@@ -41,10 +41,7 @@ export async function mergeLanes({
   const isDefaultLane = laneName === DEFAULT_LANE;
 
   if (isDefaultLane) {
-    const allBitIdsOnDefaultLaneWithVersion = consumer.bitMap
-      .getAuthoredAndImportedBitIdsOfDefaultLane()
-      .filter((id) => id.hasVersion());
-    bitIds = allBitIdsOnDefaultLaneWithVersion.map((id) => id.changeVersion(id.version));
+    bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane().filter((id) => id.hasVersion());
     otherLaneName = DEFAULT_LANE;
   } else if (remoteName) {
     const remoteLaneId = RemoteLaneId.from(laneId.name, remoteName);
