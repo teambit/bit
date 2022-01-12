@@ -125,7 +125,7 @@ export type WorkspaceInstallOptions = {
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
 
-export type WorkspaceLinkOptions = LinkingOptions & { consumer: Consumer };
+export type WorkspaceLinkOptions = LinkingOptions;
 
 export type TrackData = {
   rootDir: PathOsBasedRelative; // path relative to the workspace

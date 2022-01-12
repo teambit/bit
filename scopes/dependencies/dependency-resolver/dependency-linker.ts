@@ -13,6 +13,7 @@ import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/nod
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
@@ -25,7 +26,6 @@ import { WorkspacePolicy } from './policy';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 export type LinkingOptions = {
-  legacyLink?: boolean;
   rewire?: boolean;
   /**
    * Whether to create link to @teambit/bit in the root node modules
@@ -48,6 +48,16 @@ export type LinkingOptions = {
    * whether link should import objects before linking
    */
   fetchObject?: boolean;
+
+  /**
+   * make sure to provide the consumer
+   */
+  legacyLink?: boolean;
+
+  /**
+   * consumer is required for the legacyLink
+   */
+  consumer?: Consumer;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -137,9 +147,7 @@ export class DependencyLinker {
     }
     if (linkingOpts.legacyLink) {
       const bitIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy);
-      // @todo, Gilad, it's better not to use the legacyLink here. it runs the consumer onDestroy
-      // which writes to .bitmap during the process and it assumes the consumer is there, which
-      // could be incorrect. instead, extract what you need from there to a new function and use it
+      if (!linkingOpts.consumer) throw new Error(`the consumer is needed to legacy-link`);
       const legacyResults = await legacyLink(linkingOpts.consumer, bitIds, linkingOpts.rewire ?? false);
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
