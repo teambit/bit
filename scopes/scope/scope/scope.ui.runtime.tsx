@@ -186,6 +186,14 @@ export class ScopeUI {
   };
 
   /**
+   * register a sidebar Widget for the scope
+   */
+  registerSidebarWidget = (componentTreeNodes: ComponentTreeNode[]) => {
+    componentTreeNodes.map((componentTreeNode) => this.sidebarSlot.register(componentTreeNode));
+    return this;
+  };
+
+  /**
    * register a sidebar link to the section above the drawers
    */
   registerSidebarLink = (...links: SidebarItem[]) => {
