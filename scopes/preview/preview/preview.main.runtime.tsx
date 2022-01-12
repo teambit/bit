@@ -41,6 +41,8 @@ import {
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { previewSchema } from './preview.graphql';
 
 const noopResult = {
   results: [],
@@ -406,6 +408,7 @@ export class PreviewMain {
     AspectLoaderAspect,
     LoggerAspect,
     DependencyResolverAspect,
+    GraphqlAspect,
   ];
 
   static defaultConfig = {
@@ -426,6 +429,7 @@ export class PreviewMain {
       aspectLoader,
       loggerMain,
       dependencyResolver,
+      graphql
     ]: [
       BundlerMain,
       BuilderMain,
@@ -437,7 +441,8 @@ export class PreviewMain {
       PubsubMain,
       AspectLoaderMain,
       LoggerMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      GraphqlMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -486,6 +491,8 @@ export class PreviewMain {
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
+
+    graphql.register(previewSchema(preview));
 
     return preview;
   }
