@@ -6,8 +6,6 @@ import { Compiler, CompilerAspect } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { flatten } from 'lodash';
-import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 
 export const PREVIEW_TASK_NAME = 'GeneratePreview';

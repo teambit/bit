@@ -33,6 +33,8 @@ export class WebpackBundler implements Bundler {
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
           if (err) {
+            this.logger.error('get error from webpack compiler, full error:', err)
+
             return resolve({
               errors: [`${err.toString()}\n${err.stack}`],
               components,
