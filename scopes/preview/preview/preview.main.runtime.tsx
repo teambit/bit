@@ -13,7 +13,7 @@ import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect, getAspectDir } from '@teambit/aspect-loader';
+import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -154,7 +154,15 @@ export class PreviewMain {
     const artifactDef = getEnvTemplateArtifactDef()[0];
     const artifactFactory = new ArtifactFactory();
 
-    const rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);
+    let rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);
+    if (!existsSync(rootDir)){
+      // fallback to the bvm folder
+      const coreEnvDirFromBvm = getAspectDirFromBvm(envId);
+      rootDir = artifactFactory.getRootDir(coreEnvDirFromBvm, artifactDef);
+    }
+    if (!existsSync(rootDir)){
+      return undefined;
+    }
     const paths = artifactFactory.resolvePaths(rootDir, artifactDef);
     if (!paths || !paths.length) {
       return undefined;

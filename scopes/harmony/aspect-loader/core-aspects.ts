@@ -1,16 +1,29 @@
+import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
+import {Config} from '@teambit/bvm.config';
+
+let _bvmConfig;
+
+function getAspectDirFromPath(id: string, pathsToResolveAspects: string[]): string {
+  const aspectName = getCoreAspectName(id);
+  const packageName = getCoreAspectPackageName(id);
+  const moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
+  const dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+  if (!existsSync(dirPath)) {
+    throw new Error(`unable to find ${aspectName} in ${dirPath}`);
+  }
+  return dirPath;
+}
 
 export function getAspectDir(id: string): string {
   const aspectName = getCoreAspectName(id);
-  const packageName = getCoreAspectPackageName(id);
-  let dirPath: string;
+  let dirPath;
   // in case the aspect is running outside of bit-bin, it should find it in the cwd.
   // otherwise, use the `__dirname` for the location of the core-aspects file.
   const pathsToResolveAspects = [process.cwd(), __dirname];
   try {
-    const moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
-    dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+    dirPath = getAspectDirFromPath(id, pathsToResolveAspects);
   } catch (err: any) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
@@ -18,6 +31,38 @@ export function getAspectDir(id: string): string {
     throw new Error(`unable to find ${aspectName} in ${dirPath}`);
   }
   return dirPath;
+}
+
+type BvmDirOptions = {
+  version?: string,
+  linkName?: string
+}
+export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): string {
+  if (!_bvmConfig){
+    try {
+
+      _bvmConfig = Config.load(false, ['env, file']);
+    } catch (e){
+      console.log(e)
+    }
+  }
+  const bvmConfig = _bvmConfig;
+  let version;
+  if (bvmDirOptions?.version){
+    version = bvmDirOptions?.version
+  } else {
+    const link = bvmDirOptions?.linkName || bvmConfig.getDefaultLinkName();
+    const links = bvmConfig.getLinks();
+    version = links[link];
+    if (!version){
+      throw new BitError(`can't find link named ${bvmDirOptions?.linkName} in bvm config`);
+    }
+  }
+  const {versionDir, exists} = bvmConfig.getSpecificVersionDir(version, true);
+  if (!exists){
+    throw new BitError(`can't find version ${version} in bvm folder`);
+  }
+  return getAspectDirFromPath(id, [versionDir]);
 }
 
 export function getAspectDistDir(id: string) {
