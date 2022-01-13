@@ -8,7 +8,7 @@ import {
   NamespaceTreeNode,
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
-
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 import React, { useCallback, useContext } from 'react';
@@ -27,12 +27,15 @@ export class WorkspaceComponentsDrawer implements DrawerType {
   render = () => {
     const workspace = useContext(WorkspaceContext);
     const { treeNodeSlot } = this;
+    const location = useLocation();
+    console.log({ location });
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
+        console.log('pppriops', props);
         const children = props.node.children;
 
-        if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+        if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />; // non collapse
 
         if (props.node.payload instanceof ScopePayload) return <ScopeTreeNode {...props} />;
 
@@ -42,8 +45,12 @@ export class WorkspaceComponentsDrawer implements DrawerType {
     );
 
     if (!workspace) return <FullLoader />;
-    if (workspace.components.length === 0)
+    if (workspace.components.length === 0) {
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
-    return <ComponentTree components={workspace.components} TreeNode={TreeNodeRenderer} />;
+    }
+    // console.log("components", workspace.components)
+    return (
+      <ComponentTree components={workspace.components} activePath={location.pathname} TreeNode={TreeNodeRenderer} />
+    );
   };
 }
