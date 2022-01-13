@@ -29,13 +29,13 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
   const localLane = lanes.find((lane) => lane.name === switchProps.laneName);
 
   if (!localLane) {
-    const remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
-    await populatePropsAccordingToRemoteLane(remoteLaneId);
+    await populatePropsAccordingToRemoteLane();
   } else {
     populatePropsAccordingToLocalLane();
   }
 
-  async function populatePropsAccordingToRemoteLane(remoteLaneId: RemoteLaneId) {
+  async function populatePropsAccordingToRemoteLane() {
+    const remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
     switchProps.remoteLaneName = remoteLaneId.name;
     switchProps.laneName = remoteLaneId.name;
     switchProps.remoteLaneScope = remoteLaneId.scope;
