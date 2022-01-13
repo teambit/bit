@@ -1537,16 +1537,16 @@ export class Workspace implements ComponentFactory {
       legacyLink: true,
       linkCoreAspects: true,
       linkNestedDepsInNM: !this.isLegacy,
-      consumer: this.consumer,
     });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
   }
 
-  async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
-    if (options?.fetchObject) {
+  async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
+    if (options.fetchObject) {
       await this.importObjects();
     }
+    options.consumer = this.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
