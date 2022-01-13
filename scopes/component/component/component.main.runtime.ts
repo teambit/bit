@@ -66,7 +66,9 @@ export class ComponentMain {
       return new ComponentRoute(route, this);
     });
 
-    this.express.register(flatten(routeEntries));
+    const flattenRoutes = (flatten(routeEntries)) as any as Route[];
+
+    this.express.register(flattenRoutes);
     return this;
   }
 

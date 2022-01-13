@@ -33,5 +33,6 @@ export class ComponentRoute implements Route {
   }
 
   method = this.registerRoute.method;
+  // @ts-ignore
   middlewares = this.componentMiddlewares.concat(this.registerRoute.middlewares);
 }

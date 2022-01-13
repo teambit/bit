@@ -1,5 +1,4 @@
 import type { NextFunction, Request, Response } from '@teambit/express';
-import mime from 'mime';
 import type { ComponentUrlParams, RegisteredComponentRoute } from '@teambit/component';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';

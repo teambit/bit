@@ -43,7 +43,6 @@ import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
 import { previewSchema } from './preview.graphql';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
 
 const noopResult = {
   results: [],
@@ -495,6 +494,7 @@ export class PreviewMain {
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
       new ComponentPreviewRoute(preview, logger),
+      // @ts-ignore
       new EnvTemplateRoute(preview, logger)
     ]);
 
