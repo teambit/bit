@@ -807,12 +807,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester"
     },
-    "testing/helper": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/testing/helper"
-    },
     "testing/load-aspect": {
         "scope": "",
         "version": "",

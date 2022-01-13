@@ -5,6 +5,10 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 
+/**
+ * create dummy components, add, link and compile them.
+ * if `numOfComponents` is more than one, the components will depend on each other.
+ */
 export async function mockComponents(workspacePath: string, { numOfComponents = 1, additionalStr = '' } = {}) {
   const getImp = (index) => {
     if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
@@ -22,7 +26,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     await workspace.track({ rootDir: compDir });
   });
   await workspace.bitMap.write();
-  await workspace.link({ rewire: true, consumer: workspace.consumer });
+  await workspace.link({ rewire: true });
 
   const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
   await compiler.compileOnWorkspace();

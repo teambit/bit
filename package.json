@@ -301,6 +301,8 @@
     "typescript": "4.4.2"
   },
   "pnpm": {
-    "neverBuiltDependencies": ["core-js"]
+    "neverBuiltDependencies": [
+      "core-js"
+    ]
   }
 }
