@@ -47,6 +47,7 @@ export class LaneListCmd implements Command {
       remote,
       merged,
       notMerged,
+      showDefaultLane: true,
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
