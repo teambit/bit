@@ -84,7 +84,7 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneName();
   }
 
-  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions): Promise<TrackLane> {
+  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
@@ -197,3 +197,5 @@ export class LanesMain {
 }
 
 LanesAspect.addRuntime(LanesMain);
+
+export default LanesMain;

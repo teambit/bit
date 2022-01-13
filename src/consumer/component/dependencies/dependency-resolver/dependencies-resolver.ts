@@ -902,7 +902,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
+    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds?.();
     if (!coreAspects) {
       return;
     }
