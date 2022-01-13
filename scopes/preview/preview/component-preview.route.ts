@@ -17,7 +17,7 @@ export class ComponentPreviewRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/component-preview/:previewPath(*)`;
+  route = `/component-preview/:filePath(*)`;
   method = 'get';
 
   middlewares = [

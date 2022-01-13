@@ -43,6 +43,7 @@ import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
 import { previewSchema } from './preview.graphql';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 
 const noopResult = {
   results: [],
@@ -197,7 +198,14 @@ export class PreviewMain {
    */
   async getEnvTemplateFromComponentEnv(component: Component): Promise<PreviewArtifact | undefined> {
     const envId = this.envs.getEnvId(component);
+    return this.getEnvTemplateByEnvId(envId);
+  }
 
+  /**
+   * This will fetch the component env, then will take the env template from the component env
+   * @param component
+   */
+  async getEnvTemplateByEnvId(envId: string): Promise<PreviewArtifact | undefined> {
     // Special treatment for core envs
     if (this.aspectLoader.isCoreEnv(envId)) {
       return this.getCoreEnvTemplate(envId);
@@ -206,7 +214,7 @@ export class PreviewMain {
     const resolvedEnvId = await host.resolveComponentId(envId);
     const envComponent = await host.get(resolvedEnvId);
     if (!envComponent) {
-      throw new BitError(`can't load env for ${component.id.toString()}. env id is ${envId}`);
+      throw new BitError(`can't load env. env id is ${envId}`);
     }
     return this.getEnvTemplate(envComponent);
   }
@@ -424,7 +432,7 @@ export class PreviewMain {
     AspectLoaderAspect,
     LoggerAspect,
     DependencyResolverAspect,
-    GraphqlAspect,
+    GraphqlAspect
   ];
 
   static defaultConfig = {
@@ -487,8 +495,9 @@ export class PreviewMain {
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
       new ComponentPreviewRoute(preview, logger),
-      new EnvTemplateRoute(preview, logger),
+      new EnvTemplateRoute(preview, logger)
     ]);
+
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),

@@ -1,18 +1,18 @@
-import type { Request, Response, Route } from '@teambit/express';
+import type { NextFunction, Request, Response } from '@teambit/express';
 import mime from 'mime';
-import type { Component } from '@teambit/component';
+import type { ComponentUrlParams, RegisteredComponentRoute } from '@teambit/component';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
 
 import type { PreviewMain } from './preview.main.runtime';
 import type { PreviewArtifact } from './preview-artifact';
+import { getArtifactFileMiddleware } from './artifact-file-middleware';
 
-type UrlParams = {
-  /** `/preview/:filePath(*)` */
+type UrlParams = ComponentUrlParams & {
   filePath?: string;
 };
 
-export class EnvTemplateRoute implements Route {
+export class EnvTemplateRoute implements RegisteredComponentRoute {
   constructor(
     /**
      * preview extension.
@@ -21,39 +21,40 @@ export class EnvTemplateRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/env-template/:filePath(*)`;
+  route = `/env-template/:previewName/:filePath(*)`;
   method = 'get';
 
+  // Since we might give it a core env id
+  // Then in the component route when we do host.get(id) it will fail, as we don't have the core envs in the scope/workspace
+  resolveComponent = false;
+
+  // @ts-ignore
   middlewares = [
-    async (req: Request<UrlParams>, res: Response) => {
+    async (req: Request<UrlParams>, res: Response, next: NextFunction) => {
       try {
         // @ts-ignore TODO: @guy please fix.
-        const component = req.component as Component | undefined;
-        if (!component) return res.status(404).send(noPreview());
+        // const component = req.component as Component | undefined;
+        // if (!component) return res.status(404).send(noPreview());
 
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          artifact = await this.preview.getEnvTemplate(component);
+          const { componentId: envId} = req.params;
+          artifact = await this.preview.getEnvTemplateByEnvId(envId);
         } catch (e: any) {
           return res.status(404).send(noPreview());
         }
-        // TODO: please fix file path concatenation here.
-        const file =
-          artifact?.getFileEndsWith(`public/${req.params.filePath}`) ||
-          artifact?.getFileEndsWith(`${req.params.filePath}`) ||
-          artifact?.getFileEndsWith('index.html');
-        if (!file) return res.status(404).send(noPreview());
 
-        const contents = file.contents;
-        const str = `${file.cwd}/${file.path}`;
-        const contentType = mime.getType(str);
-        if (contentType) res.set('Content-Type', contentType);
-        return res.send(contents);
+        // @ts-ignore
+        req.artifact = artifact;
+        // @ts-ignore
+        req.isLegacyPath = false;
+        return next();
       } catch (e: any) {
         this.logger.error('failed getting preview', e);
         return res.status(500).send(serverError());
       }
     },
+    getArtifactFileMiddleware(this.logger),
   ];
 }
