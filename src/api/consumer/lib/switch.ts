@@ -28,10 +28,10 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
   const lanes = await consumer.scope.listLanes();
   const localLane = lanes.find((lane) => lane.name === switchProps.laneName);
 
-  if (!localLane) {
-    await populatePropsAccordingToRemoteLane();
-  } else {
+  if (localLane) {
     populatePropsAccordingToLocalLane();
+  } else {
+    await populatePropsAccordingToRemoteLane();
   }
 
   async function populatePropsAccordingToRemoteLane() {
@@ -55,7 +55,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     const laneExistsLocally = lanes.find((l) => l.name === switchProps.localLaneName);
     if (laneExistsLocally) {
       throw new GeneralError(`unable to checkout to a remote lane ${switchProps.remoteScope}/${switchProps.laneName}.
-    the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting --remote flag
+    the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
     then run "bit merge" to merge the remote lane into the local lane`);
     }
     switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
