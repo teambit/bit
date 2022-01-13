@@ -17,21 +17,26 @@ export type NamespaceTreeNodeProps = {
 } & TreeNodeProps<PayloadType>;
 
 export function NamespaceTreeNode({ node, depth, isActive }: NamespaceTreeNodeProps) {
-  const [collapsed, collapse] = useState(true);
   const { isCollapsed } = useTree();
+
+  const [collapsed, collapse] = useState(isCollapsed && !isActive);
   // const bla = useLocation()
   // const isActive = node.id.includes(bla.pathname)
   console.log('isActive namespace', isActive);
   useEffect(() => {
+    if (isActive) return collapse(false);
     collapse(isCollapsed);
   }, [isCollapsed]);
 
   const displayName = getName(node.id.replace(/\/$/, ''));
-
+  const highlighted = collapsed && isActive;
   return (
     <div>
       {node.id && (
-        <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
+        <div
+          className={classNames(indentClass, clickable, styles.namespace, highlighted && styles.highlighted)}
+          onClick={() => collapse(!collapsed)}
+        >
           <div className={styles.left}>
             <Icon className={classNames(styles.arrow, collapsed && styles.collapsed)} of="fat-arrow-down" />
             <span className={styles.name}>{displayName}</span>

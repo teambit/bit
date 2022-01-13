@@ -19,7 +19,7 @@ export function Tree({ TreeNode, tree, activePath, className }: TreeProps) {
   return (
     <TreeNodeContext.Provider
       value={(props) => {
-        console.log('props!!!', props);
+        console.log('props!!!', props, activePath);
         return <BaseTreeNode {...props} TreeNode={TreeNode} activePath={activePath} />;
       }}
     >
@@ -31,5 +31,5 @@ export function Tree({ TreeNode, tree, activePath, className }: TreeProps) {
 function BaseTreeNode({ TreeNode, activePath, ...rest }) {
   // console.log("tt", activePath, rest)
   const isOpen = activePath?.includes(rest.node.id);
-  return <TreeNode {...rest} active={isOpen} open={isOpen} />;
+  return <TreeNode {...rest} isActive={isOpen} isOpen={isOpen} />;
 }

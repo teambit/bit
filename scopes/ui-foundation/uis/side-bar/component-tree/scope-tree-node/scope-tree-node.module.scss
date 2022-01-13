@@ -27,6 +27,10 @@
   }
 }
 
+.highlighted {
+  color: var(--bit-accent-heavy, #5d4aec);
+}
+
 .left {
   display: flex;
   align-items: center;

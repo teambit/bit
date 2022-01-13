@@ -14,25 +14,33 @@ import styles from './scope-tree-node.module.scss';
 
 export type ScopeTreeNodeProps = {
   isActive?: boolean;
+  isOpen?: boolean;
 } & TreeNodeProps<PayloadType>;
 
-export function ScopeTreeNode({ node, depth, isActive }: ScopeTreeNodeProps) {
+export function ScopeTreeNode({ node, depth, isActive, isOpen }: ScopeTreeNodeProps) {
   const { isCollapsed } = useTree();
   // const bla = useLocation()
   // const isActive = node.id.includes(bla.pathname)
-  const [collapsed, collapse] = useState(isCollapsed);
+  // const initialState = isCollapsed ? !isActive : isCollapsed;
+  const [collapsed, collapse] = useState(isCollapsed && !isActive);
   const displayName = getName(node.id.replace(/\/$/, ''));
-  console.log('isActive scope', isActive);
+  // console.log('initial', initialState);
+  console.log('isActive scope', isCollapsed, isActive, isOpen);
   // console.log("scope", node.id, bla.pathname)
   useEffect(() => {
+    if (isActive) return collapse(false);
     collapse(isCollapsed);
   }, [isCollapsed]);
   // console.log("useLocation", bla)
   // console.log("node",  node)
+  const highlighted = collapsed && isActive;
   return (
     <div>
       {node.id && (
-        <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
+        <div
+          className={classNames(indentClass, clickable, styles.namespace, highlighted && styles.highlighted)}
+          onClick={() => collapse(!collapsed)}
+        >
           <div className={styles.left}>
             <Icon className={classNames(styles.arrow, collapsed && styles.collapsed)} of="fat-arrow-down" />
             <Icon className={styles.arrow} of="collection-full" />

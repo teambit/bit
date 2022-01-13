@@ -1,27 +1,38 @@
 import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { TreeNodeContext, TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
-import { Tree } from '@teambit/design.ui.tree';
+import { Tree, useTree } from '@teambit/design.ui.tree';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
-  activePath?: string;
+  // activePath?: string;
 };
 
-export function ComponentTree({ components, activePath, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
+export function ComponentTree({
+  components,
+  /* activePath, */ TreeNode = DefaultTreeNodeRenderer,
+}: ComponentTreeProps) {
+  const { pathname } = useLocation();
+  const { setActivePath, activePath } = useTree();
   const activeComponent = useMemo(() => {
     // not stable!! replace startsWith
-    return components
-      .find((x) => activePath && x.id.fullName.startsWith(activePath))
+    const activeComponent = components
+      .find((x) => {
+        console.log('x', x.id.fullName);
+        // return activePath && x.id.fullName.includes(activePath)})
+        return pathname && pathname.includes(x.id.fullName);
+      })
       ?.id.toString({ ignoreVersion: true });
-  }, [components]);
+    setActivePath(activeComponent);
+  }, [components, pathname]);
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -31,10 +42,10 @@ export function ComponentTree({ components, activePath, TreeNode = DefaultTreeNo
 
     return tree;
   }, [components]);
-  // console.log("rootNode", rootNode)
+  console.log('activeComponent', pathname, activeComponent);
   return (
     <div style={indentStyle(1)}>
-      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} />
+      <Tree TreeNode={TreeNode} activePath={activePath} tree={rootNode} />
     </div>
   );
 }

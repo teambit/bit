@@ -9,8 +9,8 @@ import {
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
-
+// import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { TreeNodeProps } from '@teambit/design.ui.tree';
 import React, { useCallback, useContext } from 'react';
 import classNames from 'classnames';
 import { ComponentTreeSlot } from '@teambit/component-tree';
@@ -27,8 +27,8 @@ export class WorkspaceComponentsDrawer implements DrawerType {
   render = () => {
     const workspace = useContext(WorkspaceContext);
     const { treeNodeSlot } = this;
-    const location = useLocation();
-    console.log({ location });
+    // const location = useLocation();
+    // console.log({ location });
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -50,7 +50,10 @@ export class WorkspaceComponentsDrawer implements DrawerType {
     }
     // console.log("components", workspace.components)
     return (
-      <ComponentTree components={workspace.components} activePath={location.pathname} TreeNode={TreeNodeRenderer} />
+      <ComponentTree
+        components={workspace.components}
+        /* activePath={location.pathname} */ TreeNode={TreeNodeRenderer}
+      />
     );
   };
 }

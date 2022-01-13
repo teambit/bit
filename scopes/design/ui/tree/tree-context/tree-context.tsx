@@ -9,9 +9,19 @@ export type TreeContextType = {
    * toggle sidebar
    */
   setIsCollapsed: (x: boolean) => void;
+  /**
+   * is sidebar open
+   */
+  activePath?: string | null;
+  /**
+   * toggle sidebar
+   */
+  setActivePath: (x?: string) => void;
 };
 
 export const TreeContext = createContext<TreeContextType>({
   isCollapsed: true,
   setIsCollapsed: () => undefined,
+  activePath: null,
+  setActivePath: () => undefined,
 });
