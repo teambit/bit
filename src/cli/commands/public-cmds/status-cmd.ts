@@ -154,8 +154,9 @@ export default class Status implements LegacyCommand {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
+    const mergeCommand = laneName ? 'bit merge <remote-name>/<lane-name> [component-id]' : 'bit merge <component-id>';
     const pendingMergeDesc = `(use "bit untag" to add local changes on top of the remote and discard local tags.
-alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
+alternatively, to keep local tags/snaps history, use "${mergeCommand}")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${

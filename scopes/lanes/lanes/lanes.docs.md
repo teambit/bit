@@ -13,7 +13,8 @@ The following describes the final implementation, which differs from the specifi
 - diff between lanes: `bit lane diff <values>`
 - track local lane to a remote lane: `bit switch --as`
 - remove a lane `bit lane remove <name>`.
-- fetch lane objects (without the components): `bit fetch --lanes`.
+- fetch remote lanes (only the refs, not the components, nor the lane objects): `bit fetch --lanes`.
+- fetch current lane (same as "bit fetch" but for the current lane only): `bit import`.
 - import a lane: `bit switch <name> --remote`.
 - export current lane: `bit export`.
 - (internal) cat lane object: `bit cat-lane <name>`.
