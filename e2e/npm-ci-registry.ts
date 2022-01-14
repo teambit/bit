@@ -79,6 +79,10 @@ export default class NpmCiRegistry {
       this.registryServer.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
       });
+      this.registryServer.on('error', (err) => {
+        if (this.helper.debugMode) console.log(`child process errored ${err.message}`);
+        reject(err);
+      });
       this.registryServer.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
       });
