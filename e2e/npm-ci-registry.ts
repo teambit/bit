@@ -67,11 +67,17 @@ export default class NpmCiRegistry {
           resolved = true;
           // eslint-disable-next-line
           await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
-          if ((await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`)).status !== 200) {
-            reject(new Error('Registry has not started'));
-          } else {
+          let fetchResults;
+          try {
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`);
+          } catch (err) {
+            reject(err);
+          }
+          if (fetchResults.status === 200) {
             if (this.helper.debugMode) console.log('Verdaccio server is up and running');
             resolve();
+          } else {
+            reject(new Error('Registry has not started'));
           }
         }
       });
