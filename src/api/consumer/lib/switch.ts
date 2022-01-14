@@ -38,7 +38,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
 
   async function populatePropsAccordingToRemoteLane() {
     const remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
-    if (remoteLaneId.name.includes(DEFAULT_LANE)) {
+    if (remoteLaneId.name === DEFAULT_LANE) {
       throw new GeneralError(`invalid remote lane id "${switchProps.laneName}". to switch to the main lane on remote, 
       run "bit switch main" and then "bit import".`);
     }
