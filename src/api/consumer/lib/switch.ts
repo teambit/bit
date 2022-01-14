@@ -26,15 +26,21 @@ export default async function switchAction(
 
 async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps) {
   const lanes = await consumer.scope.listLanes();
+  const isDefaultLane = switchProps.laneName === DEFAULT_LANE;
+
   const localLane = lanes.find((lane) => lane.name === switchProps.laneName);
 
-  if (localLane) {
+  if (isDefaultLane || localLane) {
     populatePropsAccordingToLocalLane();
   } else {
     await populatePropsAccordingToRemoteLane();
   }
 
   async function populatePropsAccordingToRemoteLane() {
+    if (switchProps.laneName.includes(DEFAULT_LANE)) {
+      throw new GeneralError(`invalid remote lane id "${switchProps.laneName}". to switch to the main lane on remote, 
+      run "bit switch main" and then "bit import".`);
+    }
     const remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
     switchProps.remoteLaneName = remoteLaneId.name;
     switchProps.laneName = remoteLaneId.name;
