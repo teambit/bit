@@ -3,7 +3,7 @@ import { uniq, compact, flatten, head } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
-import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -13,6 +13,7 @@ import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/nod
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
@@ -25,7 +26,6 @@ import { WorkspacePolicy } from './policy';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 export type LinkingOptions = {
-  legacyLink?: boolean;
   rewire?: boolean;
   /**
    * Whether to create link to @teambit/bit in the root node modules
@@ -48,6 +48,16 @@ export type LinkingOptions = {
    * whether link should import objects before linking
    */
   fetchObject?: boolean;
+
+  /**
+   * make sure to provide the consumer
+   */
+  legacyLink?: boolean;
+
+  /**
+   * consumer is required for the legacyLink
+   */
+  consumer?: Consumer;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -136,11 +146,9 @@ export class DependencyLinker {
       return result;
     }
     if (linkingOpts.legacyLink) {
-      const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
-      // @todo, Gilad, it's better not to use the legacyLink here. it runs the consumer onDestroy
-      // which writes to .bitmap during the process and it assumes the consumer is there, which
-      // could be incorrect. instead, extract what you need from there to a new function and use it
-      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false, false);
+      const bitIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy);
+      if (!linkingOpts.consumer) throw new Error(`the consumer is needed to legacy-link`);
+      const legacyResults = await legacyLink(linkingOpts.consumer, bitIds, linkingOpts.rewire ?? false);
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
@@ -376,6 +384,7 @@ export class DependencyLinker {
     dir: string,
     componentIds: string[]
   ): Promise<CoreAspectLinkResult | undefined> {
+    if (!this.aspectLoader.mainAspect) return undefined;
     const mainAspectId = this.aspectLoader.mainAspect.id;
     const existing = componentIds.find((id) => {
       return id === mainAspectId;
@@ -421,7 +430,7 @@ export class DependencyLinker {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const filtered = coreAspectsIds.filter((aspectId) => {
       // Remove bit aspect
-      if (aspectId === this.aspectLoader.mainAspect.id) {
+      if (aspectId === this.aspectLoader.mainAspect?.id) {
         return false;
       }
       // TODO: use the aspect id once default scope is resolved and the component dir map has the id with scope
@@ -445,7 +454,7 @@ export class DependencyLinker {
 
   private isBitRepoWorkspace(dir: string) {
     // A special condition to not link core aspects in bit workspace itself
-    if (this.aspectLoader.mainAspect.path.startsWith(dir)) {
+    if (this.aspectLoader.mainAspect?.path.startsWith(dir)) {
       return true;
     }
     return false;
@@ -458,6 +467,7 @@ export class DependencyLinker {
     packageName: string,
     hasLocalInstallation = false
   ): CoreAspectLinkResult | undefined {
+    if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
@@ -524,6 +534,7 @@ export class DependencyLinker {
     packageName = `@teambit/${name}`,
     skipExisting = false
   ): LinkDetail | undefined {
+    if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
