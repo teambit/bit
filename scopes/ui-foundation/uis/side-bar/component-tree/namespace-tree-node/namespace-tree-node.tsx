@@ -6,8 +6,8 @@ import AnimateHeight from 'react-animate-height';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
-import { TreeNodeProps, TreeLayer } from '@teambit/base-ui.graph.tree.recursive-tree';
-import { useTree } from '@teambit/design.ui.tree';
+// import { TreeNodeProps, TreeLayer } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { useTree, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './namespace-tree-node.module.scss';

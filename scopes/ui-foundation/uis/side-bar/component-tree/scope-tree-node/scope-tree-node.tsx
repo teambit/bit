@@ -5,8 +5,7 @@ import React, { useState, useEffect } from 'react';
 import AnimateHeight from 'react-animate-height';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 
-import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
-import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { indentClass, indentStyle, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
 import { useTree } from '@teambit/design.ui.tree';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';

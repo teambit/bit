@@ -1,12 +1,9 @@
 import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
-import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { TreeNodeContext, TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
-import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
-import { Tree, useTree } from '@teambit/design.ui.tree';
+import { Tree, useTree, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 

@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import {
-  TreeNodeContext /* , TreeNodeRenderer, TreeNode as TreeNodeType */,
-} from '@teambit/base-ui.graph.tree.recursive-tree';
-// import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
-// import { TreeNodeContext } from './recursive-tree';
+import { TreeNodeContext } from './recursive-tree';
 import type { TreeNode as TreeNodeType, TreeNodeRenderer } from './recursive-tree';
 import { RootNode } from './root-node';
 
