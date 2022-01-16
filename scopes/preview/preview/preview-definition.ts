@@ -28,4 +28,9 @@ export interface PreviewDefinition {
    * get all files to require in the preview runtime.
    */
   getModuleMap(components: Component[]): Promise<ComponentMap<AbstractVinyl[]>>;
+
+  /**
+   * Whether to include the peers chunk in the output html
+   */
+  includePeers?: boolean;
 }

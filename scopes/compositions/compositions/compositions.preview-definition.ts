@@ -7,6 +7,7 @@ import { CompositionsMain } from './compositions.main.runtime';
 
 export class CompositionPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'compositions';
+  readonly includePeers = true;
 
   constructor(private compositions: CompositionsMain) {}
 

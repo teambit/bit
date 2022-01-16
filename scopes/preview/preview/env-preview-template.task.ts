@@ -25,6 +25,7 @@ export type ModuleExpose = {
 
 export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
 export const PREVIEW_ROOT_CHUNK_NAME = 'previewRoot';
+export const PEERS_CHUNK_NAME = 'peers';
 
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
@@ -35,47 +36,53 @@ export class EnvPreviewTemplateTask implements BuildTask {
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const targets: Target[] = compact(await Promise.all(
-      context.components.map(async (component) => {
-        const envDef = this.envs.getEnvFromComponent(component);
-        if (!envDef) return undefined;
-        const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
-        if (bundlingStrategy.name === 'env') {
-          return undefined;
-        }
-        const envComponent = component;
-        const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
-        const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
+    const targets: Target[] = compact(
+      await Promise.all(
+        context.components.map(async (component) => {
+          const envDef = this.envs.getEnvFromComponent(component);
+          if (!envDef) return undefined;
+          const env = envDef.env;
+          const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
+          if (bundlingStrategy.name === 'env') {
+            return undefined;
+          }
+          const envComponent = component;
+          const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
+          const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
+          const envComponentPeers = Object.keys((await env.getDependencies()).peerDependencies) || [];
+          const envHostDeps = env.getHostDependencies() || [];
+          const peers = envComponentPeers.concat(envHostDeps);
 
-        // const module = await this.getPreviewModule(envComponent);
-        // const entries = Object.keys(module).map((key) => module.exposes[key]);
-        const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
-        if (!capsule) throw new Error('no capsule found');
-        const previewRoot = await this.preview.writePreviewRuntime(context);
-        const previewModules = await this.getPreviewModules(envComponent);
-        // const templatesFile = previewModules.map((template) => {
-        //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
-        // });
-        const outputPath = this.computeOutputPath(context, envComponent);
-        if (!existsSync(outputPath)) mkdirpSync(outputPath);
-        const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle);
+          // const module = await this.getPreviewModule(envComponent);
+          // const entries = Object.keys(module).map((key) => module.exposes[key]);
+          const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
+          if (!capsule) throw new Error('no capsule found');
+          const previewRoot = await this.preview.writePreviewRuntime(context);
+          const previewModules = await this.getPreviewModules(envComponent);
+          // const templatesFile = previewModules.map((template) => {
+          //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
+          // });
+          const outputPath = this.computeOutputPath(context, envComponent);
+          if (!existsSync(outputPath)) mkdirpSync(outputPath);
+          const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle, peers);
 
-        // const entries = this.getEntries(
-        //   previewModules.concat({
-        //     name: 'main',
-        //     path: previewRoot,
-        //   })
-        // );
+          // const entries = this.getEntries(
+          //   previewModules.concat({
+          //     name: 'main',
+          //     path: previewRoot,
+          //   })
+          // );
 
-        return {
-          // entries: templatesFile.concat(previewRoot),
-          entries,
-          components: [envComponent],
-          outputPath,
-          // modules: [module],
-        };
-      })
-    ));
+          return {
+            // entries: templatesFile.concat(previewRoot),
+            entries,
+            components: [envComponent],
+            outputPath,
+            // modules: [module],
+          };
+        })
+      )
+    );
 
     if (!targets.length) return { componentsResults: [] };
 
@@ -87,9 +94,14 @@ export class EnvPreviewTemplateTask implements BuildTask {
     });
 
     const previewDefs = this.preview.getDefs();
-    const htmlPluginsTransformer = generateHtmlPluginTransformer(previewDefs, PREVIEW_ROOT_CHUNK_NAME, {
-      dev: context.dev,
-    });
+    const htmlPluginsTransformer = generateHtmlPluginTransformer(
+      previewDefs,
+      PREVIEW_ROOT_CHUNK_NAME,
+      PEERS_CHUNK_NAME,
+      {
+        dev: context.dev,
+      }
+    );
     const transformers = [...envTemplateTransformersArray, htmlPluginsTransformer];
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, transformers);
@@ -102,13 +114,17 @@ export class EnvPreviewTemplateTask implements BuildTask {
     previewModules: ModuleExpose[],
     capsule: Capsule,
     previewRoot: string,
-    isSplitComponentBundle = false
+    isSplitComponentBundle = false,
+    peers: string[] = []
   ): { [key: string]: Object } {
     const previewRootEntry = {
-      // filename: 'preview-root.[contenthash].js',
-      // filename: 'preview-root.[chunkhash].js',
       filename: 'preview-root.[chunkhash].js',
       import: previewRoot,
+    };
+
+    const peersRootEntry = {
+      filename: 'peers.[chunkhash].js',
+      import: peers,
     };
 
     const entries = previewModules.reduce(
@@ -135,7 +151,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
         }
         return acc;
       },
-      { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry }
+      { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry, [PEERS_CHUNK_NAME]: peersRootEntry }
     );
 
     return entries;

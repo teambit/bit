@@ -24,10 +24,11 @@ export function runtimeChunkTransformer(config: WebpackConfigMutator): WebpackCo
 export function generateHtmlPluginTransformer(
   previewDefs: PreviewDefinition[],
   previewRootChunkName: string,
+  peersChunkName: string,
   options: { dev?: boolean }
 ) {
   const htmlPlugins = previewDefs.map((previewModule) =>
-    generateHtmlPluginForModule(previewModule, previewRootChunkName, options)
+    generateHtmlPluginForModule(previewModule, previewRootChunkName, peersChunkName, options)
   );
   return (config: WebpackConfigMutator): WebpackConfigMutator => {
     config.addPlugins(htmlPlugins);
@@ -38,13 +39,19 @@ export function generateHtmlPluginTransformer(
 function generateHtmlPluginForModule(
   previewDef: PreviewDefinition,
   previewRootChunkName: string,
+  peersChunkName: string,
   options: { dev?: boolean }
 ) {
   const previewDeps = previewDef.include || [];
+  const chunks = [...previewDeps, previewDef.prefix, previewRootChunkName];
+  if (previewDef.includePeers) {
+    chunks.unshift(peersChunkName);
+  }
+
   const baseConfig = {
     inject: true,
     cache: false,
-    chunks: [...previewDeps, previewDef.prefix, previewRootChunkName],
+    chunks,
     filename: `${previewDef.prefix}.html`,
     templateContent: html('Preview'),
     minify: options?.dev ?? true,
