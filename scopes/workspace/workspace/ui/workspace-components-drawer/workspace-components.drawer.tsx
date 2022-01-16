@@ -8,6 +8,7 @@ import {
   NamespaceTreeNode,
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
+import { useTree, TreeProvider } from '@teambit/design.ui.tree';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 // import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
@@ -24,11 +25,13 @@ export class WorkspaceComponentsDrawer implements DrawerType {
 
   name = 'COMPONENTS';
 
+  widget = (<Widget />);
+
+  Context = TreeProvider;
+
   render = () => {
     const workspace = useContext(WorkspaceContext);
     const { treeNodeSlot } = this;
-    // const location = useLocation();
-    // console.log({ location });
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -55,4 +58,12 @@ export class WorkspaceComponentsDrawer implements DrawerType {
       />
     );
   };
+}
+
+function Widget() {
+  const { isCollapsed, setIsCollapsed } = useTree();
+  const icon = isCollapsed
+    ? 'https://static.bit.dev/bit-icons/expand.svg'
+    : 'https://static.bit.dev/bit-icons/collapse.svg';
+  return <img src={icon} onClick={() => setIsCollapsed(!isCollapsed)} />;
 }
