@@ -49,7 +49,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
           const envComponent = component;
           const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
           const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-          const envComponentPeers = Object.keys((await env.getDependencies()).peerDependencies) || [];
+          const envGetDeps = (await env.getDependencies()) || {};
+          const envComponentPeers = Object.keys(envGetDeps.peerDependencies || {}) || [];
           const envHostDeps = env.getHostDependencies() || [];
           const peers = envComponentPeers.concat(envHostDeps);
 
