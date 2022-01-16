@@ -11,6 +11,9 @@ type UrlParams = ComponentUrlParams & {
   filePath?: string;
 };
 
+// Week for now
+const CACHE_MAX_AGE = 60 * 60 * 24 * 7;
+
 export class EnvTemplateRoute implements RegisteredComponentRoute {
   constructor(
     /**
@@ -38,7 +41,7 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          const { componentId: envId} = req.params;
+          const { componentId: envId } = req.params;
           artifact = await this.preview.getEnvTemplateByEnvId(envId);
         } catch (e: any) {
           return res.status(404).send(noPreview());
@@ -48,6 +51,9 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
         req.artifact = artifact;
         // @ts-ignore
         req.isLegacyPath = false;
+
+        res.set('Cache-control', `private, max-age=${CACHE_MAX_AGE}`);
+
         return next();
       } catch (e: any) {
         this.logger.error('failed getting preview', e);
