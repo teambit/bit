@@ -31,6 +31,7 @@ describe('bit lane command', function () {
     });
     it('bit lane should show the active lane', () => {
       expect(output).to.have.string('current lane - dev');
+      expect(output).to.have.string('main');
     });
   });
   describe('create a snap on main then on a new lane', () => {
@@ -496,6 +497,35 @@ describe('bit lane command', function () {
         });
       });
     });
+    describe('merging main into local lane', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1);
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
+      });
+    });
+    describe('merging main lane with no snapped components', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it('should not throw an error about missing objects', () => {
+        expect(mergeOutput).to.not.have.string(
+          'component comp1 is on the lane but its objects were not found, please re-import the lane'
+        );
+      });
+    });
   });
   describe('tagging on a lane', () => {
     let output;
@@ -620,6 +650,27 @@ describe('bit lane command', function () {
   describe('main => lane-a => labe-b, so laneB branched from laneA all exported', () => {
     describe('then cloned to another project and checked out to lane-a', () => {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
+    });
+  });
+  describe('exporting a lane to a different scope than the component scope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane('dev');
+      helper.command.trackLane('dev', scopeName);
+      helper.fs.outputFile('comp1/comp1.spec.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit import in a new workspace should not throw an error', () => {
+      expect(() => helper.command.importComponent('comp1')).not.to.throw();
     });
   });
   describe('importing a component when checked out to a lane', () => {

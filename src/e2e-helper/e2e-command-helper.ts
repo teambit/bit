@@ -523,9 +523,8 @@ export default class CommandHelper {
   }
   switchRemoteLane(lane: string, flags?: string, getAll = true) {
     const getAllFlag = getAll ? '--get-all' : '';
-    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
+    return this.runCmd(`bit switch ${this.scopes.remote}/${lane} ${getAllFlag} ${flags || ''}`);
   }
-
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }

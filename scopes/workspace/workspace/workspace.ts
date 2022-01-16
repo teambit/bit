@@ -740,7 +740,7 @@ export class Workspace implements ComponentFactory {
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.writeBitMap();"
+   * to write the .bitmap file once completed, run "await this.bitMap.write();"
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
@@ -1542,10 +1542,11 @@ export class Workspace implements ComponentFactory {
     return compDirMap;
   }
 
-  async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
-    if (options?.fetchObject) {
+  async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
+    if (options.fetchObject) {
       await this.importObjects();
     }
+    options.consumer = this.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
