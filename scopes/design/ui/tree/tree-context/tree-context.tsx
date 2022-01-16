@@ -4,11 +4,11 @@ export type TreeContextType = {
   /**
    * is sidebar open
    */
-  isCollapsed: boolean;
+  isCollapsed?: boolean;
   /**
    * toggle sidebar
    */
-  setIsCollapsed: (x: boolean) => void;
+  setIsCollapsed?: (x?: boolean) => void;
   /**
    * is sidebar open
    */
@@ -16,7 +16,7 @@ export type TreeContextType = {
   /**
    * toggle sidebar
    */
-  setActivePath: (x?: string) => void;
+  setActivePath?: (x?: string) => void;
 };
 
 export const TreeContext = createContext<TreeContextType>({

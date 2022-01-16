@@ -8,11 +8,8 @@ import {
   NamespaceTreeNode,
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
-import { useTree, TreeProvider } from '@teambit/design.ui.tree';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-// import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useState, createContext } from 'react';
 import classNames from 'classnames';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
@@ -20,6 +17,7 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import styles from './workspace-components-drawer.module.scss';
 
+const WorkspaceTreeContext = createContext({ collapsed: false, setCollapsed: (x: boolean) => {} });
 export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
@@ -27,10 +25,16 @@ export class WorkspaceComponentsDrawer implements DrawerType {
 
   widget = (<Widget />);
 
-  Context = TreeProvider;
+  Context = ({ children }) => {
+    const [collapsed, setCollapsed] = useState(true);
+    return (
+      <WorkspaceTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</WorkspaceTreeContext.Provider>
+    );
+  };
 
   render = () => {
     const workspace = useContext(WorkspaceContext);
+    const { collapsed } = useContext(WorkspaceTreeContext);
     const { treeNodeSlot } = this;
 
     const TreeNodeRenderer = useCallback(
@@ -50,20 +54,15 @@ export class WorkspaceComponentsDrawer implements DrawerType {
     if (workspace.components.length === 0) {
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
     }
-    // console.log("components", workspace.components)
-    return (
-      <ComponentTree
-        components={workspace.components}
-        /* activePath={location.pathname} */ TreeNode={TreeNodeRenderer}
-      />
-    );
+
+    return <ComponentTree components={workspace.components} isCollapsed={collapsed} TreeNode={TreeNodeRenderer} />;
   };
 }
 
 function Widget() {
-  const { isCollapsed, setIsCollapsed } = useTree();
-  const icon = isCollapsed
+  const { collapsed, setCollapsed } = useContext(WorkspaceTreeContext);
+  const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
-  return <img src={icon} onClick={() => setIsCollapsed(!isCollapsed)} />;
+  return <img src={icon} onClick={() => setCollapsed(!collapsed)} />;
 }

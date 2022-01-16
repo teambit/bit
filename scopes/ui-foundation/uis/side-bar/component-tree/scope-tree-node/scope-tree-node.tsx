@@ -3,7 +3,6 @@ import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickabl
 import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import AnimateHeight from 'react-animate-height';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 
 import { indentClass, indentStyle, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
 import { useTree } from '@teambit/design.ui.tree';
@@ -22,7 +21,7 @@ export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
 
   const initialOpen = isActive || !isCollapsed;
   // rename to open
-  const [collapsed, collapse] = useState(!initialOpen);
+  const [collapsed, collapse] = useState<boolean | void>(!initialOpen);
 
   const displayName = getName(node.id.replace(/\/$/, ''));
 

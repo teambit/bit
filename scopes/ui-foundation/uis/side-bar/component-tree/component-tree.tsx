@@ -10,15 +10,11 @@ import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 type ComponentTreeProps = {
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
-  // activePath?: string;
+  isCollapsed?: boolean;
 };
 
-export function ComponentTree({
-  components,
-  /* activePath, */ TreeNode = DefaultTreeNodeRenderer,
-}: ComponentTreeProps) {
+export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
-  const { setActivePath, activePath } = useTree();
   const activeComponent = useMemo(() => {
     // not stable!! replace startsWith
     return components
@@ -28,9 +24,6 @@ export function ComponentTree({
       ?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
 
-  useEffect(() => {
-    setActivePath(activeComponent);
-  }, [activeComponent]);
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -43,7 +36,7 @@ export function ComponentTree({
   console.log('activeComponent', pathname, activeComponent);
   return (
     <div style={indentStyle(1)}>
-      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} />
+      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
     </div>
   );
 }
