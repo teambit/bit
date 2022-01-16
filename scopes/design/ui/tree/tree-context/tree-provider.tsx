@@ -9,8 +9,8 @@ export type TreeProviderProps = {
 };
 
 export function TreeProvider({ children }: TreeProviderProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [activePath, setActivePath] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  const [activePath, setActivePath] = useState<string | undefined>(undefined);
   return (
     <TreeContext.Provider value={{ isCollapsed, setIsCollapsed, activePath, setActivePath }}>
       {children}

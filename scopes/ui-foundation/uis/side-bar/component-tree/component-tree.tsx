@@ -1,5 +1,5 @@
 import { ComponentModel } from '@teambit/component';
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
@@ -21,15 +21,16 @@ export function ComponentTree({
   const { setActivePath, activePath } = useTree();
   const activeComponent = useMemo(() => {
     // not stable!! replace startsWith
-    const activeComponent = components
+    return components
       .find((x) => {
-        console.log('x', x.id.fullName);
-        // return activePath && x.id.fullName.includes(activePath)})
         return pathname && pathname.includes(x.id.fullName);
       })
       ?.id.toString({ ignoreVersion: true });
-    setActivePath(activeComponent);
   }, [components, pathname]);
+
+  useEffect(() => {
+    setActivePath(activeComponent);
+  }, [activeComponent]);
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -42,7 +43,7 @@ export function ComponentTree({
   console.log('activeComponent', pathname, activeComponent);
   return (
     <div style={indentStyle(1)}>
-      <Tree TreeNode={TreeNode} activePath={activePath} tree={rootNode} />
+      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} />
     </div>
   );
 }

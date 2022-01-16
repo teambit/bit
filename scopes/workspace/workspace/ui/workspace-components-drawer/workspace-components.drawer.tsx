@@ -32,7 +32,6 @@ export class WorkspaceComponentsDrawer implements DrawerType {
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
-        console.log('pppriops', props);
         const children = props.node.children;
 
         if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />; // non collapse

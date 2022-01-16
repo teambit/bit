@@ -1,7 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AnimateHeight from 'react-animate-height';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 
@@ -16,23 +16,35 @@ export type ScopeTreeNodeProps = {
   isOpen?: boolean;
 } & TreeNodeProps<PayloadType>;
 
-export function ScopeTreeNode({ node, depth, isActive, isOpen }: ScopeTreeNodeProps) {
-  const { isCollapsed } = useTree();
-  // const bla = useLocation()
-  // const isActive = node.id.includes(bla.pathname)
-  // const initialState = isCollapsed ? !isActive : isCollapsed;
-  const [collapsed, collapse] = useState(isCollapsed && !isActive);
+export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
+  const { isCollapsed, activePath } = useTree();
+  const isActive = activePath?.startsWith(node.id);
+
+  const initialOpen = isActive || !isCollapsed;
+  // rename to open
+  const [collapsed, collapse] = useState(!initialOpen);
+
   const displayName = getName(node.id.replace(/\/$/, ''));
-  // console.log('initial', initialState);
-  console.log('isActive scope', isCollapsed, isActive, isOpen);
-  // console.log("scope", node.id, bla.pathname)
+
+  const firstRun = useRef(true);
   useEffect(() => {
-    if (isActive) return collapse(false);
+    const current = firstRun.current;
+    if (current) return;
+    if (isActive === true) return collapse(false);
+  }, [isActive]);
+
+  useEffect(() => {
+    const current = firstRun.current;
+    if (current) return;
     collapse(isCollapsed);
   }, [isCollapsed]);
-  // console.log("useLocation", bla)
-  // console.log("node",  node)
+
+  useEffect(() => {
+    firstRun.current = false;
+  }, []);
+
   const highlighted = collapsed && isActive;
+
   return (
     <div>
       {node.id && (
