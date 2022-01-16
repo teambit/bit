@@ -51,6 +51,7 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -231,19 +232,22 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
     const hostDeps = this.getHostDependencies();
     const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
@@ -254,7 +258,7 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createPreviewBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   getHostDependencies(): string[] {
@@ -277,11 +281,11 @@ export class ReactEnv
     return require.resolve('./mount');
   }
 
-  getPreviewConfig(){
+  getPreviewConfig() {
     return {
       // strategyName: 'component',
-      splitComponentBundle: true
-    }
+      splitComponentBundle: true,
+    };
   }
 
   /**
