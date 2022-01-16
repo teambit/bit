@@ -232,6 +232,7 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const hostDeps = this.getHostDependencies();
     const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
