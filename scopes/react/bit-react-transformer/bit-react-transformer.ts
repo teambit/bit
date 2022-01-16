@@ -100,6 +100,23 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
           addComponentId(path.parentPath, filename, id.name);
           break;
 
+        // handle forwardRef
+        case 'CallExpression':
+          // direct forwardRef, e.g `const Comp = forwardRef(() => <div>comp</div>);`
+          if (node.init.callee.type === 'Identifier' && node.init.callee.name === 'forwardRef')
+            addComponentId(path.parentPath, filename, id.name);
+
+          // react.forwardRef, e.g `const Comp = React.forwardRef(() => <div>comp</div>);`
+          if (
+            node.init.callee.type === 'MemberExpression' &&
+            node.init.callee.property.type === 'Identifier' &&
+            node.init.callee.property.name === 'forwardRef'
+          ) {
+            addComponentId(path.parentPath, filename, id.name);
+          }
+
+          break;
+
         default:
           break;
       }
