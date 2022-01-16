@@ -477,8 +477,9 @@
       "teambit.harmony/node": {}
     },
     "{cli/**}": {
+      "teambit.react/react": "-",
       "teambit.envs/envs": {
-        "env": "teambit.react/react"
+        "env": "teambit.react/node"
       }
     },
     "{babel/**}": {
