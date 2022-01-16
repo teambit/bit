@@ -479,7 +479,7 @@
     "{cli/**}": {
       "teambit.react/react": "-",
       "teambit.envs/envs": {
-        "env": "teambit.react/node"
+        "env": "teambit.harmony/node"
       }
     },
     "{babel/**}": {
