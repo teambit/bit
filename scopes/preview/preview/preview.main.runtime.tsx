@@ -390,7 +390,7 @@ export class PreviewMain {
     const defaultStrategies = this.getDefaultStrategies();
     const envPreviewConfig = this.getEnvPreviewConfig(env);
     const strategyFromEnv = envPreviewConfig?.strategyName;
-    const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'component';
+    const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'env';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;
@@ -431,7 +431,7 @@ export class PreviewMain {
     AspectLoaderAspect,
     LoggerAspect,
     DependencyResolverAspect,
-    GraphqlAspect
+    GraphqlAspect,
   ];
 
   static defaultConfig = {
@@ -495,7 +495,7 @@ export class PreviewMain {
       new PreviewRoute(preview, logger),
       new ComponentPreviewRoute(preview, logger),
       // @ts-ignore
-      new EnvTemplateRoute(preview, logger)
+      new EnvTemplateRoute(preview, logger),
     ]);
 
     bundler.registerTarget([
