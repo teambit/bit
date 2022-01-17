@@ -17,6 +17,7 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import styles from './components-drawer.module.scss';
 
+/* eslint-disable no-unused-vars */
 const ScopeTreeContext = createContext({ collapsed: true, setCollapsed: (x: boolean) => {} });
 
 export class ComponentsDrawer implements DrawerType {

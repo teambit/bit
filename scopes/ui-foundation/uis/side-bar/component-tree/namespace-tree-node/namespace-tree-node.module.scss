@@ -11,6 +11,7 @@
   font-size: inherit;
   padding-right: 8px;
   font-size: var(--bit-p-xs);
+  cursor: pointer;
   &:hover {
     background: var(--bit-bg-heavy, #f6f6f6);
   }

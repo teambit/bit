@@ -1,9 +1,9 @@
 import { ComponentModel } from '@teambit/component';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { Tree, useTree, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
@@ -28,12 +28,12 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
     const payloadMap = calcPayload(components);
-    // console.log("yaaa", payloadMap)
+
     attachPayload(tree, payloadMap);
 
     return tree;
   }, [components]);
-  console.log('activeComponent', pathname, activeComponent);
+
   return (
     <div style={indentStyle(1)}>
       <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />

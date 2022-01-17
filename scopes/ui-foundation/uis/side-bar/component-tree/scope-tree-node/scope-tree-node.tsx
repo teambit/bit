@@ -1,11 +1,9 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import AnimateHeight from 'react-animate-height';
 
-import { indentClass, indentStyle, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
-import { useTree } from '@teambit/design.ui.tree';
+import { indentClass, indentStyle, TreeNodeProps, TreeLayer, useTree } from '@teambit/design.ui.tree';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './scope-tree-node.module.scss';
@@ -48,7 +46,7 @@ export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
     <div>
       {node.id && (
         <div
-          className={classNames(indentClass, clickable, styles.namespace, highlighted && styles.highlighted)}
+          className={classNames(indentClass, styles.scope, highlighted && styles.highlighted)}
           onClick={() => collapse(!collapsed)}
         >
           <div className={styles.left}>

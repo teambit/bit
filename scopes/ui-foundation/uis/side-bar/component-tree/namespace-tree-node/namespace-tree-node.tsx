@@ -1,12 +1,8 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import AnimateHeight from 'react-animate-height';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
-// import { TreeNodeProps, TreeLayer } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { useTree, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
@@ -49,7 +45,7 @@ export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
     <div>
       {node.id && (
         <div
-          className={classNames(indentClass, clickable, styles.namespace, highlighted && styles.highlighted)}
+          className={classNames(indentClass, styles.namespace, highlighted && styles.highlighted)}
           onClick={() => collapse(!collapsed)}
         >
           <div className={styles.left}>

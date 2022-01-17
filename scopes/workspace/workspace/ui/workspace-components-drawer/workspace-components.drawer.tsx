@@ -17,6 +17,7 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import styles from './workspace-components-drawer.module.scss';
 
+/* eslint-disable no-unused-vars */
 const WorkspaceTreeContext = createContext({ collapsed: true, setCollapsed: (x: boolean) => {} });
 export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
