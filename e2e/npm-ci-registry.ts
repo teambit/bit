@@ -1,7 +1,7 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
-import fetch from 'cross-fetch';
+import fetch from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
@@ -65,13 +65,18 @@ export default class NpmCiRegistry {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
           resolved = true;
-          // eslint-disable-next-line
-          await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
           let fetchResults;
           try {
-            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`);
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`, {
+              retry: {
+                minTimeout: 1000,
+                maxTimeout: 10000,
+                retries: 3,
+              },
+            });
           } catch (err) {
             reject(err);
+            return;
           }
           if (fetchResults.status === 200) {
             if (this.helper.debugMode) console.log('Verdaccio server is up and running');
