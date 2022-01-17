@@ -17,7 +17,7 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import styles from './workspace-components-drawer.module.scss';
 
-const WorkspaceTreeContext = createContext({ collapsed: false, setCollapsed: (x: boolean) => {} });
+const WorkspaceTreeContext = createContext({ collapsed: true, setCollapsed: (x: boolean) => {} });
 export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
@@ -64,5 +64,5 @@ function Widget() {
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
-  return <img src={icon} onClick={() => setCollapsed(!collapsed)} />;
+  return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
 }
