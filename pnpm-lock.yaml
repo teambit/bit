@@ -41,7 +41,7 @@ importers:
       '@pnpm/package-store': 12.1.8
       '@pnpm/parse-overrides': 1.0.0
       '@pnpm/pick-registry-for-package': 2.0.10
-      '@pnpm/registry-mock': 2.12.1
+      '@pnpm/registry-mock': 2.14.0
       '@pnpm/resolver-base': 8.1.5
       '@pnpm/semver-diff': 1.1.0
       '@pnpm/store-connection-manager': 3.2.3
@@ -603,7 +603,7 @@ importers:
       '@pnpm/package-store': registry.npmjs.org/@pnpm/package-store/12.1.8_@pnpm+logger@4.0.0
       '@pnpm/parse-overrides': registry.npmjs.org/@pnpm/parse-overrides/1.0.0
       '@pnpm/pick-registry-for-package': registry.npmjs.org/@pnpm/pick-registry-for-package/2.0.10
-      '@pnpm/registry-mock': registry.npmjs.org/@pnpm/registry-mock/2.12.1_72ef9f06cb99540da679cbf1bf7a3256
+      '@pnpm/registry-mock': registry.npmjs.org/@pnpm/registry-mock/2.14.0_72ef9f06cb99540da679cbf1bf7a3256
       '@pnpm/resolver-base': registry.npmjs.org/@pnpm/resolver-base/8.1.5
       '@pnpm/semver-diff': registry.npmjs.org/@pnpm/semver-diff/1.1.0
       '@pnpm/store-connection-manager': registry.npmjs.org/@pnpm/store-connection-manager/3.2.3_@pnpm+logger@4.0.0
@@ -8374,6 +8374,29 @@ packages:
       - utf-8-validate
     dev: false
 
+  registry.npmjs.org/@pnpm/registry-mock/2.14.0_72ef9f06cb99540da679cbf1bf7a3256:
+    resolution: {integrity: sha512-I4P2IKxg7MDC4/Z09Ees3fhhPtdtOLdGT5xFfXvSdbcO+Q6ovTnJkpg+78rfY3hhaxHlwuQ9C2olt6rqBhokZg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/registry-mock/-/registry-mock-2.14.0.tgz}
+    id: registry.npmjs.org/@pnpm/registry-mock/2.14.0
+    name: '@pnpm/registry-mock'
+    version: 2.14.0
+    engines: {node: '>=10.13'}
+    hasBin: true
+    dependencies:
+      anonymous-npm-registry-client: registry.npmjs.org/anonymous-npm-registry-client/0.2.0
+      cpr: registry.npmjs.org/cpr/3.0.1
+      execa: registry.npmjs.org/execa/5.1.1
+      read-yaml-file: registry.npmjs.org/read-yaml-file/2.1.0
+      rimraf: registry.npmjs.org/rimraf/3.0.2
+      tempy: registry.npmjs.org/tempy/1.0.1
+      verdaccio: registry.npmjs.org/verdaccio/5.4.0_72ef9f06cb99540da679cbf1bf7a3256
+      write-yaml-file: registry.npmjs.org/write-yaml-file/4.2.0
+    transitivePeerDependencies:
+      - bufferutil
+      - canvas
+      - supports-color
+      - utf-8-validate
+    dev: false
+
   registry.npmjs.org/@pnpm/remove-bins/2.0.12_@pnpm+logger@4.0.0:
     resolution: {integrity: sha512-Tx5HE9bVLz53kxjP8pE5BD0hNhfg4rgUftamEe9dlEsm3gEnSAjozvN/xSiezEFVomzpoX4xoijDl4/0KjDGkw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/remove-bins/-/remove-bins-2.0.12.tgz}
     id: registry.npmjs.org/@pnpm/remove-bins/2.0.12
@@ -8636,7 +8659,7 @@ packages:
     version: 0.7.2
     engines: {node: '>=4.0.0'}
     dependencies:
-      express: registry.npmjs.org/express/4.17.1
+      express: registry.npmjs.org/express/4.17.2
       http-proxy-middleware: registry.npmjs.org/http-proxy-middleware/0.18.0_debug@4.3.2
       portfinder: registry.npmjs.org/portfinder/1.0.28
     transitivePeerDependencies:
@@ -15361,9 +15384,9 @@ packages:
       accepts: registry.npmjs.org/accepts/1.3.7
       apollo-server-core: registry.npmjs.org/apollo-server-core/2.25.3_2248b6b83270ef9e13aec9786fab8507
       apollo-server-types: registry.npmjs.org/apollo-server-types/0.9.0_graphql@14.7.0
-      body-parser: registry.npmjs.org/body-parser/1.19.0
+      body-parser: registry.npmjs.org/body-parser/1.19.1
       cors: registry.npmjs.org/cors/2.8.5
-      express: registry.npmjs.org/express/4.17.1
+      express: registry.npmjs.org/express/4.17.2
       graphql: registry.npmjs.org/graphql/14.7.0
       graphql-subscriptions: registry.npmjs.org/graphql-subscriptions/1.2.0_graphql@14.7.0
       graphql-tools: registry.npmjs.org/graphql-tools/4.0.8_graphql@14.7.0
@@ -25881,8 +25904,8 @@ packages:
       nwsapi: registry.npmjs.org/nwsapi/2.2.0
       parse5: registry.npmjs.org/parse5/5.1.0
       pn: registry.npmjs.org/pn/1.1.0
-      request: registry.npmjs.org/request/2.88.0
-      request-promise-native: registry.npmjs.org/request-promise-native/1.0.9_request@2.88.0
+      request: registry.npmjs.org/request/2.88.2
+      request-promise-native: registry.npmjs.org/request-promise-native/1.0.9_request@2.88.2
       saxes: registry.npmjs.org/saxes/3.1.11
       symbol-tree: registry.npmjs.org/symbol-tree/3.2.4
       tough-cookie: registry.npmjs.org/tough-cookie/3.0.1
@@ -29650,7 +29673,7 @@ packages:
     hasBin: true
     dependencies:
       fast-redact: registry.npmjs.org/fast-redact/3.0.2
-      fast-safe-stringify: registry.npmjs.org/fast-safe-stringify/2.0.8
+      fast-safe-stringify: registry.npmjs.org/fast-safe-stringify/2.1.1
       fastify-warning: registry.npmjs.org/fastify-warning/0.2.0
       flatstr: registry.npmjs.org/flatstr/1.0.12
       pino-std-serializers: registry.npmjs.org/pino-std-serializers/3.2.0
@@ -32435,19 +32458,6 @@ packages:
       request: registry.npmjs.org/request/2.88.0
     dev: false
 
-  registry.npmjs.org/request-promise-core/1.1.4_request@2.88.0:
-    resolution: {integrity: sha512-TTbAfBBRdWD7aNNOoVOBH4pN/KigV6LyapYNNlAPA8JwbovRti1E88m3sYAwsLi5ryhPKsE9APwnjFTgdUjTpw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/request-promise-core/-/request-promise-core-1.1.4.tgz}
-    id: registry.npmjs.org/request-promise-core/1.1.4
-    name: request-promise-core
-    version: 1.1.4
-    engines: {node: '>=0.10.0'}
-    peerDependencies:
-      request: ^2.34
-    dependencies:
-      lodash: registry.npmjs.org/lodash/4.17.21
-      request: registry.npmjs.org/request/2.88.0
-    dev: false
-
   registry.npmjs.org/request-promise-core/1.1.4_request@2.88.2:
     resolution: {integrity: sha512-TTbAfBBRdWD7aNNOoVOBH4pN/KigV6LyapYNNlAPA8JwbovRti1E88m3sYAwsLi5ryhPKsE9APwnjFTgdUjTpw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/request-promise-core/-/request-promise-core-1.1.4.tgz}
     id: registry.npmjs.org/request-promise-core/1.1.4
@@ -32459,22 +32469,6 @@ packages:
     dependencies:
       lodash: registry.npmjs.org/lodash/4.17.21
       request: registry.npmjs.org/request/2.88.2
-    dev: false
-
-  registry.npmjs.org/request-promise-native/1.0.9_request@2.88.0:
-    resolution: {integrity: sha512-wcW+sIUiWnKgNY0dqCpOZkUbF/I+YPi+f09JZIDa39Ec+q82CpSYniDp+ISgTTbKmnpJWASeJBPZmoxH84wt3g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/request-promise-native/-/request-promise-native-1.0.9.tgz}
-    id: registry.npmjs.org/request-promise-native/1.0.9
-    name: request-promise-native
-    version: 1.0.9
-    engines: {node: '>=0.12.0'}
-    deprecated: request-promise-native has been deprecated because it extends the now deprecated request package, see https://github.com/request/request/issues/3142
-    peerDependencies:
-      request: ^2.34
-    dependencies:
-      request: registry.npmjs.org/request/2.88.0
-      request-promise-core: registry.npmjs.org/request-promise-core/1.1.4_request@2.88.0
-      stealthy-require: registry.npmjs.org/stealthy-require/1.1.1
-      tough-cookie: registry.npmjs.org/tough-cookie/2.5.0
     dev: false
 
   registry.npmjs.org/request-promise-native/1.0.9_request@2.88.2:
@@ -37317,7 +37311,7 @@ packages:
     name: wide-align
     version: 1.1.5
     dependencies:
-      string-width: registry.npmjs.org/string-width/1.0.2
+      string-width: registry.npmjs.org/string-width/4.2.3
     dev: false
 
   registry.npmjs.org/widest-line/2.0.1:
