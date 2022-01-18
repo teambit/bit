@@ -1,4 +1,3 @@
-import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
