@@ -41,10 +41,10 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       bitInstallOutput = helper.command.install();
     });
     it('bit status should show the component only once as staged', () => {
@@ -62,6 +62,11 @@ describe('bit lane command', function () {
       const devSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
       expect(log).to.have.string(mainSnap);
       expect(log).to.have.string(devSnap);
+    });
+    it('bit log --parents should show the parents', () => {
+      const log = helper.command.log('bar/foo', '--parents');
+      const mainSnap = helper.command.getHeadShort('bar/foo');
+      expect(log).to.have.string(`Parent(s): ${mainSnap}`);
     });
     it('should not throw an error when installing components in a non exported lane', () => {
       expect(bitInstallOutput).to.not.have.string('lane dev was not found');
