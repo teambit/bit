@@ -1,6 +1,7 @@
 import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
+import { isUndefined, omitBy } from 'lodash';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
@@ -98,7 +99,8 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
     // @ts-ignore
     baseConfig.chunksSortMode = 'manual' as const;
   }
-  return new HtmlWebpackPlugin(baseConfig);
+  const filteredConfig = omitBy(baseConfig, isUndefined);
+  return new HtmlWebpackPlugin(filteredConfig);
 }
 
 export function getExternals(deps: string[]) {
