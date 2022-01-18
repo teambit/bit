@@ -23,7 +23,7 @@ import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import LaneId, { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
