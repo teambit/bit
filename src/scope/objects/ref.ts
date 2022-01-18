@@ -13,6 +13,10 @@ export default class Ref {
     return this.hash;
   }
 
+  toShortString() {
+    return this.hash.substring(0, 9);
+  }
+
   load(repository: Repository, throws = false): Promise<BitObject> {
     return repository.load(this, throws);
   }
