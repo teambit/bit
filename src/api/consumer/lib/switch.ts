@@ -1,3 +1,4 @@
+import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
@@ -37,7 +38,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
   }
 
   async function populatePropsAccordingToRemoteLane() {
-    let remoteLaneId;
+    let remoteLaneId: RemoteLaneId;
     try {
       remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
     } catch (e) {
@@ -79,6 +80,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
     switchProps.remoteLaneComponents = remoteLaneComponents;
     switchProps.localTrackedLane = localTrackedLane || undefined;
+    switchProps.localLaneName = remoteLaneId.name;
   }
 
   function populatePropsAccordingToLocalLane() {
@@ -92,7 +94,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     }
     if (!localLane) {
       throw new GeneralError(
-        `tldr;unable to find a local lane "${switchProps.laneName}", to create a new lane please run "bit lane create"`
+        `unable to find a local lane "${switchProps.laneName}", to create a new lane please run "bit lane create"`
       );
     }
     switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
