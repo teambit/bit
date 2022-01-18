@@ -25,7 +25,9 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     entry: truthyEntries,
 
     optimization: {
-      runtimeChunk: 'single',
+      runtimeChunk: {
+        name: 'runtime',
+      },
       splitChunks: {
         chunks: 'all',
         name: false,
@@ -76,6 +78,7 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
     title: config.title,
     templateContent: config.templateContent,
     minify: config.minify,
+    cache: false,
     chunksSortMode: 'auto' as const,
   };
   if (baseConfig.chunks && baseConfig.chunks.length) {
