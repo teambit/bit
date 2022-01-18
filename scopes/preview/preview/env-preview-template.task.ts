@@ -8,14 +8,15 @@ import {
 } from '@teambit/builder';
 import { Component, ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
-import { Bundler, BundlerContext, BundlerResult, Target } from '@teambit/bundler';
+import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { CompilerAspect } from '@teambit/compiler';
-import { envTemplateTransformersArray, generateHtmlPluginTransformer } from './webpack';
 import type { PreviewMain } from './preview.main.runtime';
+import { PreviewDefinition } from '.';
+import { html } from './webpack';
 
 export type ModuleExpose = {
   name: string;
@@ -36,6 +37,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
   constructor(private preview: PreviewMain, private envs: EnvsMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    const previewDefs = this.preview.getDefs();
+    const htmlConfig = this.generateHtmlConfig(previewDefs, PREVIEW_ROOT_CHUNK_NAME, PEERS_CHUNK_NAME, {
+      dev: context.dev,
+    });
     const targets: Target[] = compact(
       await Promise.all(
         context.components.map(async (component) => {
@@ -76,6 +81,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
           return {
             // entries: templatesFile.concat(previewRoot),
+            peers,
+            html: htmlConfig,
             entries,
             components: [envComponent],
             outputPath,
@@ -86,7 +93,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
     );
 
     if (!targets.length) return { componentsResults: [] };
-
     const bundlerContext: BundlerContext = Object.assign({}, context, {
       targets,
       entry: [],
@@ -94,21 +100,44 @@ export class EnvPreviewTemplateTask implements BuildTask {
       development: context.dev,
     });
 
-    const previewDefs = this.preview.getDefs();
-    const htmlPluginsTransformer = generateHtmlPluginTransformer(
-      previewDefs,
-      PREVIEW_ROOT_CHUNK_NAME,
-      PEERS_CHUNK_NAME,
-      {
-        dev: context.dev,
-      }
-    );
-    const transformers = [...envTemplateTransformersArray, htmlPluginsTransformer];
-
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, transformers);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
     const results = await this.computeResults(bundlerContext, bundlerResults);
     return results;
+  }
+
+  private generateHtmlConfig(
+    previewDefs: PreviewDefinition[],
+    previewRootChunkName: string,
+    peersChunkName: string,
+    options: { dev?: boolean }
+  ): BundlerHtmlConfig[] {
+    const htmlConfigs = previewDefs.map((previewModule) =>
+      this.generateHtmlConfigForPreviewDef(previewModule, previewRootChunkName, peersChunkName, options)
+    );
+    return htmlConfigs;
+  }
+
+  private generateHtmlConfigForPreviewDef(
+    previewDef: PreviewDefinition,
+    previewRootChunkName: string,
+    peersChunkName: string,
+    options: { dev?: boolean }
+  ): BundlerHtmlConfig {
+    const previewDeps = previewDef.include || [];
+    const chunks = [...previewDeps, previewDef.prefix, previewRootChunkName];
+    if (previewDef.includePeers) {
+      chunks.unshift(peersChunkName);
+    }
+
+    const config = {
+      title: 'Preview',
+      templateContent: html('Preview'),
+      minify: options?.dev ?? true,
+      chunks,
+      filename: `${previewDef.prefix}.html`,
+    };
+    return config;
   }
 
   getEntries(
@@ -117,7 +146,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     previewRoot: string,
     isSplitComponentBundle = false,
     peers: string[] = []
-  ): { [key: string]: Object } {
+  ): BundlerEntryMap {
     const previewRootEntry = {
       filename: 'preview-root.[chunkhash].js',
       import: previewRoot,

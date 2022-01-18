@@ -17,7 +17,6 @@ import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
-import { previewConfigFactory } from './config/webpack-preview.config';
 import { configFactory as baseConfigFactory } from './config/webpack.config';
 
 import { WebpackAspect } from './webpack.aspect';
@@ -98,13 +97,8 @@ export class WebpackMain {
     const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
     // eslint-disable-next-line max-len
     const configs =
-      initialConfigs || this.createEmptyConfigs(context.targets, transformers, transformerContext, context);
-    return new WebpackBundler(context.targets, configs, this.logger, webpack);
-  }
-
-  createPreviewBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
-    const configs = this.createPreviewConfig(context.targets, transformers, transformerContext, context);
+      initialConfigs ||
+      this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
     return new WebpackBundler(context.targets, configs, this.logger, webpack);
   }
 
@@ -122,24 +116,6 @@ export class WebpackMain {
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, context);
       return afterMutation.raw;
     });
-  }
-
-  private createEmptyConfigs(
-    targets: Target[],
-    transformers: WebpackConfigTransformer[] = [],
-    transformerContext: GlobalWebpackConfigTransformContext,
-    bundlerContext: BundlerContext
-  ) {
-    return this.createConfigs(targets, baseConfigFactory, transformers, transformerContext, bundlerContext);
-  }
-
-  private createPreviewConfig(
-    targets: Target[],
-    transformers: WebpackConfigTransformer[] = [],
-    transformerContext: GlobalWebpackConfigTransformContext,
-    bundlerContext: BundlerContext
-  ) {
-    return this.createConfigs(targets, previewConfigFactory, transformers, transformerContext, bundlerContext);
   }
 
   private createDevServerConfig(

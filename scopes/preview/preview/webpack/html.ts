@@ -1,6 +1,6 @@
 /** html template for Previews (docs, compositions, etc) */
 export function html(title: string) {
-  return () => `
+  return `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -17,6 +17,6 @@ export function html(title: string) {
     <body>
       <div id="root"></div>
     </body>
-  </html>  
+  </html>
   `;
 }

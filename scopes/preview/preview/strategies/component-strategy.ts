@@ -8,8 +8,9 @@ import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sour
 import type { Capsule } from '@teambit/isolator';
 import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
+import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { BundlerResult, BundlerContext, Asset } from '@teambit/bundler';
+import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap } from '@teambit/bundler';
 import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { PreviewMain } from '../preview.main.runtime';
@@ -52,7 +53,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       }, {})
     );
 
-    const entries = entriesArr.reduce((entriesMap, entry) => {
+    const entries: BundlerEntryMap = entriesArr.reduce((entriesMap, entry) => {
       // entriesMap[entry.library.name] = entry;
       Object.assign(entriesMap, entry);
       return entriesMap;
@@ -104,26 +105,31 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const entries = {
       [componentPreviewChunkId]: {
-        filename: `${component.id.toString({
-          fsCompatible: true,
-          ignoreVersion: true,
-        })}-${PREVIEW_CHUNK_FILENAME_SUFFIX}`,
+        filename: this.getComponentChunkFileName(
+          component.id.toString({
+            fsCompatible: true,
+            ignoreVersion: true,
+          }),
+          'preview'
+        ),
         import: path,
         // dependOn: component.id.toStringWithoutVersion(),
         library: {
-          // name: this.pkg.getPackageName(component),
           name: componentPreviewChunkId,
           type: 'umd',
         },
       },
     };
-    if (context.splitComponentBundle){
+    if (context.splitComponentBundle) {
       const componentChunkId = component.id.toStringWithoutVersion();
       entries[componentChunkId] = {
-        filename: `${component.id.toString({
-          fsCompatible: true,
-          ignoreVersion: true,
-        })}-${COMPONENT_CHUNK_FILENAME_SUFFIX}`,
+        filename: this.getComponentChunkFileName(
+          component.id.toString({
+            fsCompatible: true,
+            ignoreVersion: true,
+          }),
+          'component'
+        ),
         import: componentPath,
         library: {
           name: componentChunkId,
@@ -132,6 +138,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       };
     }
     return entries;
+  }
+
+  private getComponentChunkFileName(idstr: string, type: 'component' | 'preview') {
+    const suffix = type === 'component' ? COMPONENT_CHUNK_FILENAME_SUFFIX : PREVIEW_CHUNK_FILENAME_SUFFIX;
+    return `${idstr}-${suffix}`;
   }
 
   private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
@@ -167,7 +178,16 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const files = assets.filter((asset) => {
       const fsComp = component.id.toString({ ignoreVersion: true, fsCompatible: true });
       const id = component.id.toStringWithoutVersion();
-      return asset.name.includes(fsComp) || asset.name.includes(id);
+      const idCompFilename = this.getComponentChunkFileName(id, 'component');
+      const idPreviewFilename = this.getComponentChunkFileName(id, 'preview');
+      const fsCompCompFilename = this.getComponentChunkFileName(fsComp, 'component');
+      const fsCompPreviewFilename = this.getComponentChunkFileName(fsComp, 'preview');
+      return (
+        asset.name.includes(idCompFilename) ||
+        asset.name.includes(idPreviewFilename) ||
+        asset.name.includes(fsCompCompFilename) ||
+        asset.name.includes(fsCompPreviewFilename)
+      );
     });
     return files;
   }
@@ -255,10 +275,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     defs: PreviewDefinition[],
     context: ComputeTargetsContext,
     component: Component
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     // const previewMain = await this.preview.writePreviewRuntime(context);
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
-    if (!capsule) return undefined;
+    // if (!capsule) return undefined;
+    if (!capsule)
+      throw new BitError(
+        `could not find capsule for component ${component.id.toString()} during compute paths to bundle`
+      );
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([component]);
       const maybeFiles = moduleMap.get(component);

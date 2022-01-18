@@ -246,6 +246,7 @@ export class ReactEnv
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
     const peers = this.getAllHostDeps();
+
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
@@ -257,7 +258,7 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createPreviewBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+    return this.webpack.createBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   /**

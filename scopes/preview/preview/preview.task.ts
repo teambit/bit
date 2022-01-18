@@ -33,7 +33,7 @@ export class PreviewTask implements BuildTask {
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
     const envPreviewConfig = this.preview.getEnvPreviewConfig(context.env);
     const splitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-    const computeTargetsContext = Object.assign(context, {splitComponentBundle});
+    const computeTargetsContext = Object.assign(context, { splitComponentBundle });
 
     const targets: Target[] = await bundlingStrategy.computeTargets(computeTargetsContext, defs, this);
 
@@ -46,12 +46,7 @@ export class PreviewTask implements BuildTask {
       development: context.dev,
     });
 
-    const transformers =
-      bundlingStrategy.getBundlerTransformer && typeof bundlingStrategy.getBundlerTransformer === 'function'
-        ? bundlingStrategy.getBundlerTransformer(bundlerContext)
-        : [];
-
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, transformers);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
     const results = bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);

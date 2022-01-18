@@ -6,12 +6,11 @@ import { Compiler } from '@teambit/compiler';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { ComponentResult } from '@teambit/builder';
-import { BundlerResult, BundlerContext } from '@teambit/bundler';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
-import { envStrategyTransformersArray, generateEnvStrategyHtmlPluginTransformer } from '../webpack';
+import { html } from '../webpack';
 
 /**
  * bundles all components in a given env into the same bundle.
@@ -24,14 +23,26 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
+    const htmlConfig = this.generateHtmlConfig({ dev: context.dev });
 
     return [
       {
         entries: await this.computePaths(outputPath, previewDefs, context),
+        html: [htmlConfig],
         components: context.components,
         outputPath,
       },
     ];
+  }
+
+  private generateHtmlConfig(options: { dev?: boolean }): BundlerHtmlConfig {
+    const config = {
+      title: 'Preview',
+      templateContent: html('Preview'),
+      cache: false,
+      minify: options?.dev ?? true,
+    };
+    return config;
   }
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
@@ -121,13 +132,5 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const moduleMaps = await Promise.all(moduleMapsPromise);
 
     return flatten(moduleMaps.concat([previewMain]));
-  }
-
-  getBundlerTransformer(context: BundlerContext): WebpackConfigTransformer[] {
-    const htmlPluginsTransformer = generateEnvStrategyHtmlPluginTransformer({
-      dev: context.development,
-    });
-    const transformers = [...envStrategyTransformersArray, htmlPluginsTransformer];
-    return transformers;
   }
 }
