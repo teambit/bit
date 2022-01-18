@@ -1,4 +1,3 @@
-import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
@@ -70,8 +69,8 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     const laneExistsLocally = lanes.find((l) => l.name === switchProps.localLaneName);
     if (laneExistsLocally) {
       throw new GeneralError(`unable to checkout to a remote lane ${switchProps.remoteScope}/${switchProps.laneName}.
-        the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
-        then run "bit merge" to merge the remote lane into the local lane`);
+    the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
+    then run "bit merge" to merge the remote lane into the local lane`);
     }
     switchProps.remoteLaneName = remoteLaneId.name;
     switchProps.laneName = remoteLaneId.name;
