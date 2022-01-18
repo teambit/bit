@@ -1,3 +1,4 @@
+import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
@@ -54,7 +55,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
       remoteLaneId.name,
       remoteLaneId.scope as string
     );
-    switchProps.localLaneName = switchProps.newLaneName || localTrackedLane || switchProps.laneName;
+    switchProps.localLaneName = switchProps.newLaneName || localTrackedLane || remoteLaneId.name;
     if (consumer.getCurrentLaneId().name === switchProps.localLaneName) {
       throw new GeneralError(`already checked out to "${switchProps.localLaneName}"`);
     }
@@ -79,7 +80,6 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
     switchProps.remoteLaneComponents = remoteLaneComponents;
     switchProps.localTrackedLane = localTrackedLane || undefined;
-    switchProps.localLaneName = remoteLaneId.name;
   }
 
   function populatePropsAccordingToLocalLane() {
