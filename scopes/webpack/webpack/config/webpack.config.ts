@@ -25,9 +25,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     entry: truthyEntries,
 
     optimization: {
-      runtimeChunk: {
-        name: 'runtime',
-      },
       splitChunks: {
         chunks: 'all',
         name: false,
@@ -41,10 +38,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     output: {
       // The build folder.
       path: `${target.outputPath}/public`,
-
-      filename: target.filename || 'static/js/[name].[contenthash:8].js',
-      // There are also additional JS chunk files if you use code splitting.
-      chunkFilename: target.chunkFilename || 'static/js/[name].[contenthash:8].chunk.js',
     },
 
     resolve: {
@@ -55,6 +48,23 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
     plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig)],
   };
+
+  if (target.filename) {
+    config.output = config.output || {};
+    config.output.filename = target.filename;
+  }
+
+  if (target.chunkFilename) {
+    config.output = config.output || {};
+    config.output.chunkFilename = target.chunkFilename;
+  }
+
+  if (target.runtimeChunkName) {
+    config.optimization = config.optimization || {};
+    config.optimization.runtimeChunk = {
+      name: target.runtimeChunkName,
+    };
+  }
 
   if (htmlPlugins && htmlPlugins.length) {
     if (!config.plugins) {

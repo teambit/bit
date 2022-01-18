@@ -82,6 +82,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           return {
             // entries: templatesFile.concat(previewRoot),
             peers,
+            runtimeChunkName: 'runtime',
             html: htmlConfig,
             entries,
             components: [envComponent],

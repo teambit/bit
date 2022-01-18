@@ -79,6 +79,11 @@ export type Target = {
    * module targets to expose.
    */
   modules?: ModuleTarget[];
+
+  /**
+   * Name for the runtime chunk
+   */
+  runtimeChunkName?: string;
 };
 
 export type ModuleTarget = {
