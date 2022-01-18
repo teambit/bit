@@ -1276,10 +1276,13 @@ describe('bit lane command', function () {
         helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
+        // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
+        helper.command.switchRemoteLane('dev');
       });
-      // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
-      it('should not throw an error', () => {
-        expect(() => helper.command.switchRemoteLane('dev')).to.not.throw();
+      // previous error was trying to get the Ref of the remote-scope according to the component-scope
+      // resulting in zero data from the ref file and assuming all versions are staged
+      it('should not show the component as staged', () => {
+        helper.command.expectStatusToBeClean();
       });
     });
   });
