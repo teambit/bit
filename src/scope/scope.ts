@@ -562,10 +562,11 @@ export default class Scope {
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: BitId, shortHash = false): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const logs = await componentModel.collectLogs(this.objects);
+    const currentLane = this.lanes.getCurrentLaneId();
+    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash);
     return logs;
   }
 
