@@ -37,19 +37,22 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
   }
 
   async function populatePropsAccordingToRemoteLane() {
-    const remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
+    let remoteLaneId;
+    try {
+      remoteLaneId = RemoteLaneId.parse(switchProps.laneName);
+    } catch (e) {
+      throw new GeneralError(
+        `invalid lane id "${switchProps.laneName}", the lane ${switchProps.laneName} doesn't exist.`
+      );
+    }
     if (remoteLaneId.name === DEFAULT_LANE) {
       throw new GeneralError(`invalid remote lane id "${switchProps.laneName}". to switch to the main lane on remote, 
       run "bit switch main" and then "bit import".`);
     }
-    switchProps.remoteLaneName = remoteLaneId.name;
-    switchProps.laneName = remoteLaneId.name;
-    switchProps.remoteLaneScope = remoteLaneId.scope;
-    switchProps.remoteScope = remoteLaneId.scope;
     // fetch the remote to update all heads
     const localTrackedLane = consumer.scope.lanes.getLocalTrackedLaneByRemoteName(
-      switchProps.laneName,
-      switchProps.remoteScope as string
+      remoteLaneId.name,
+      remoteLaneId.scope as string
     );
     switchProps.localLaneName = switchProps.newLaneName || localTrackedLane || switchProps.laneName;
     if (consumer.getCurrentLaneId().name === switchProps.localLaneName) {
@@ -57,13 +60,22 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(consumer.scope);
     const remoteLaneObjects = await scopeComponentImporter.importFromLanes([remoteLaneId]);
+    if (remoteLaneObjects.length === 0) {
+      throw new GeneralError(
+        `invalid lane id "${switchProps.laneName}", the lane ${switchProps.laneName} doesn't exist.`
+      );
+    }
     const remoteLaneComponents = remoteLaneObjects[0].components;
     const laneExistsLocally = lanes.find((l) => l.name === switchProps.localLaneName);
     if (laneExistsLocally) {
       throw new GeneralError(`unable to checkout to a remote lane ${switchProps.remoteScope}/${switchProps.laneName}.
-    the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
-    then run "bit merge" to merge the remote lane into the local lane`);
+        the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
+        then run "bit merge" to merge the remote lane into the local lane`);
     }
+    switchProps.remoteLaneName = remoteLaneId.name;
+    switchProps.laneName = remoteLaneId.name;
+    switchProps.remoteLaneScope = remoteLaneId.scope;
+    switchProps.remoteScope = remoteLaneId.scope;
     switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
     switchProps.remoteLaneComponents = remoteLaneComponents;
     switchProps.localTrackedLane = localTrackedLane || undefined;
@@ -80,7 +92,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     }
     if (!localLane) {
       throw new GeneralError(
-        `unable to find a local lane "${switchProps.laneName}", to create a new lane please run "bit lane create"`
+        `tldr;unable to find a local lane "${switchProps.laneName}", to create a new lane please run "bit lane create"`
       );
     }
     switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
