@@ -23,7 +23,7 @@ import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import LaneId, { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
@@ -398,8 +398,9 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(repo: Repository): Promise<ComponentLog[]> {
+  async collectLogs(repo: Repository, currentLane: LocalLaneId, shortHash = false): Promise<ComponentLog[]> {
     const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false });
+    const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
@@ -408,7 +409,9 @@ export default class Component extends BitObject {
         // @ts-ignore
         email: log?.email || 'unknown',
         tag: versionInfo.tag,
-        hash: versionInfo.ref.toString(),
+        hash: getRef(versionInfo.ref),
+        parents: versionInfo.parents.map((parent) => getRef(parent)),
+        lane: versionInfo.onLane ? currentLane.name : DEFAULT_LANE,
       };
     });
   }
