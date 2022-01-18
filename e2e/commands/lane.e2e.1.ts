@@ -365,7 +365,7 @@ describe('bit lane command', function () {
       describe('switching to a local lane', () => {
         before(() => {
           helper.command.createLane('int');
-          helper.command.switchLocalLane('dev');
+          helper.command.switchLocalLane('main');
           helper.command.switchLocalLane('int');
         });
         it('should not save the local lane in bitmap', () => {
