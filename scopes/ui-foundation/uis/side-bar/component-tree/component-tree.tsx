@@ -16,9 +16,9 @@ type ComponentTreeProps = {
 export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
   const activeComponent = useMemo(() => {
-    // not stable!! replace startsWith
     return components
       .find((x) => {
+        // TODO - reuse logic from component.route.ts
         return pathname && pathname.includes(x.id.fullName);
       })
       ?.id.toString({ ignoreVersion: true });

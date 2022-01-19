@@ -2,11 +2,11 @@ import { createContext } from 'react';
 
 export type TreeContextType = {
   /**
-   * indicates all collapsable nodes across the tree should open / close
+   * indicates all collapsing nodes across the tree should open / close
    */
   isCollapsed?: boolean;
   /**
-   * open / close all collapsable nodes in the tree
+   * open / close all collapsing nodes in the tree
    */
   setIsCollapsed?: (x?: boolean) => void;
   /**

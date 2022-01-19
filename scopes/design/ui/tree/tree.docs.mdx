@@ -4,7 +4,7 @@ labels: ['react', 'ui', 'tree']
 ---
 
 import { useState } from 'react';
-import { CollapsableTreeNode } from '@teambit/base-ui.graph.tree.collapsable-tree-node';
+import { CollapsingNode } from './collapsing-node';
 import { Tree } from './tree';
 import { DefaultTreeNode } from './recursive-tree';
 
@@ -53,7 +53,7 @@ It also accepts a `TreeNode` component, which renders each node in the tree.
         {node.id}
       </div>
     );
-    return <CollapsableTreeNode title={Title} isOpen={open} node={node} depth={depth} />;
+    return <CollapsingNode title={Title} isOpen={open} node={node} depth={depth} />;
   };
 
   const TreeNode = (props) => {
