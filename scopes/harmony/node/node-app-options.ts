@@ -1,8 +1,7 @@
-import { DeployFn } from '@teambit/application';
-import { BuildContext } from '@teambit/builder';
+import { AppBuildResult, DeployFn } from '@teambit/application';
 
-export interface DeployContext extends BuildContext {
-  entry: string;
+export interface DeployContext extends AppBuildResult {
+  entry?: string;
 }
 
 export type NodeAppOptions = {
