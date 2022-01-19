@@ -365,6 +365,9 @@
     "savePrefix": "",
     "extraArgs": []
   },
+  "teambit.preview/preview": {
+    "bundlingStrategy": "component"
+  },
   "teambit.generator/generator": {
     "aspects": [
       "teambit.harmony/aspect"
