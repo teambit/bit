@@ -21,7 +21,7 @@ export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
   useEffect(() => {
     const current = firstRun.current;
     if (current) return;
-    if (isActive === true) return toggle(true);
+    if (isActive === true) toggle(true);
   }, [isActive]);
 
   useEffect(() => {

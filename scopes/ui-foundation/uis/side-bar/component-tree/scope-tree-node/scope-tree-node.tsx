@@ -24,7 +24,7 @@ export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
   useEffect(() => {
     const current = firstRun.current;
     if (current) return;
-    if (isActive === true) return toggle(true);
+    if (isActive === true) toggle(true);
   }, [isActive]);
 
   useEffect(() => {
