@@ -787,8 +787,8 @@ export class ScopeMain implements ComponentFactory {
     return this.componentLoader.getSnap(id, hash);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id._legacy);
+  async getLogs(id: ComponentID, shortHash = false): Promise<ComponentLog[]> {
+    return this.legacyScope.loadComponentLogs(id._legacy, shortHash);
   }
 
   /**

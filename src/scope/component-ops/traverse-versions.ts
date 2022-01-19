@@ -25,6 +25,8 @@ export type VersionInfo = {
    * merge. the component itself is merged, but the head wasn't changed.
    */
   isPartOfHistory?: boolean;
+  parents: Ref[];
+  onLane: boolean;
 };
 
 /**
@@ -56,16 +58,25 @@ export async function getAllVersionsInfo({
     if (typeof startFrom !== 'undefined') return startFrom;
     return modelComponent.laneHeadLocal || modelComponent.getHead();
   };
+
   const laneHead = getRefToStartFrom();
   let stopped = false;
+  const headOnMain = modelComponent.getHead()?.toString();
+  let foundOnMain = laneHead?.toString() === headOnMain;
   if (laneHead) {
-    const headInfo: VersionInfo = { ref: laneHead, tag: modelComponent.getTagOfRefIfExists(laneHead) };
+    const headInfo: VersionInfo = {
+      ref: laneHead,
+      tag: modelComponent.getTagOfRefIfExists(laneHead),
+      parents: [],
+      onLane: !foundOnMain,
+    };
     const head = await getVersionObj(laneHead);
     if (head) {
       if (stopAt && stopAt.isEqual(head.hash())) {
         return [];
       }
       headInfo.version = head;
+      headInfo.parents = head.parents;
     } else {
       headInfo.error = new HeadNotFound(modelComponent.id(), laneHead.toString());
       if (throws) throw headInfo.error;
@@ -79,10 +90,13 @@ export async function getAllVersionsInfo({
             return;
           }
           const parentVersion = await getVersionObj(parent);
+          if (!foundOnMain) foundOnMain = parentVersion?._hash === headOnMain;
           const versionInfo: VersionInfo = {
             ref: parent,
             tag: modelComponent.getTagOfRefIfExists(parent),
             isPartOfHistory: true,
+            parents: parentVersion?.parents || [],
+            onLane: !foundOnMain,
           };
           if (parentVersion) {
             versionInfo.version = parentVersion;
@@ -109,7 +123,7 @@ export async function getAllVersionsInfo({
       if (!results.find((r) => r.tag === version)) {
         const ref = modelComponent.versionsIncludeOrphaned[version];
         const versionObj = await getVersionObj(ref);
-        const versionInfo: VersionInfo = { ref, tag: version };
+        const versionInfo: VersionInfo = { ref, tag: version, parents: versionObj?.parents || [], onLane: false };
         if (versionObj) {
           versionInfo.version = versionObj;
           // legacy versions didn't have the "parents" concept and they're part of the history.

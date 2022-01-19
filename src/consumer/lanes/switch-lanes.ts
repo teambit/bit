@@ -138,12 +138,6 @@ async function saveCheckedOutLaneInfo(
     if (opts.remoteLaneScope) {
       consumer.bitMap.setRemoteLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
       // add versions to lane
-    } else {
-      const trackData = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
-      if (!trackData) {
-        return; // the lane was never exported
-      }
-      consumer.bitMap.setRemoteLane(RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope));
     }
   };
   const throwIfLaneExists = async () => {
@@ -153,6 +147,7 @@ async function saveCheckedOutLaneInfo(
 the lane already exists. please switch to the lane and merge`);
     }
   };
+
   if (opts.remoteLaneScope) {
     await throwIfLaneExists();
     await createNewLane(consumer, opts.localLaneName as string, opts.laneComponents);

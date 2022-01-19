@@ -52,12 +52,6 @@ describe('dynamic namespaces', function () {
         const showOutput = helper.command.showComponentParsed(componentName);
         expect(showOutput.name).to.equal(componentName);
       });
-      it('bit log should show the component log', () => {
-        const logOutput = helper.command.runCmd(`bit log ${componentName}`);
-        expect(logOutput).to.have.string('tag');
-        expect(logOutput).to.have.string('author');
-        expect(logOutput).to.have.string('date');
-      });
       describe('after import', () => {
         before(() => {
           helper.command.exportAllComponents();

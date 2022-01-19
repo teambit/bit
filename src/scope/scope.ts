@@ -30,7 +30,7 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId from '../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
@@ -311,7 +311,7 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
-    await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, laneId, lane)));
+    await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
 
@@ -325,7 +325,12 @@ export default class Scope {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    return this.lanes.loadLane(id);
+    const lane = await this.lanes.loadLane(id);
+    const remoteTrackedData = this.lanes.getRemoteTrackedDataByLocalLane(id.name);
+    if (lane && remoteTrackedData?.remoteLane && remoteTrackedData.remoteScope) {
+      lane.remoteLaneId = RemoteLaneId.from(remoteTrackedData?.remoteLane, remoteTrackedData.remoteScope);
+    }
+    return lane;
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
@@ -486,8 +491,7 @@ export default class Scope {
     if (modelComponent) {
       // @todo: what about other places the model-component is loaded
       const currentLane = await this.lanes.getCurrentLaneObject();
-      const laneId = this.lanes.getCurrentLaneId();
-      await modelComponent.populateLocalAndRemoteHeads(this.objects, laneId, currentLane);
+      await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
     }
     return modelComponent;
   }
@@ -562,10 +566,11 @@ export default class Scope {
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: BitId, shortHash = false): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const logs = await componentModel.collectLogs(this.objects);
+    const currentLane = this.lanes.getCurrentLaneId();
+    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash);
     return logs;
   }
 
