@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.206",
+  "version": "1.0.207",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -66,7 +66,7 @@
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
-    "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
+    "mocha-circleci": "registry-mock prepare && mocha --require ./babel-register --reporter mocha-circleci-reporter",
     "e2e-test": "registry-mock prepare && mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test:ssh": "npm run e2e-test --with-ssh",

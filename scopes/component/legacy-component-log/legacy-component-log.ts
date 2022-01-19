@@ -5,4 +5,6 @@ export type LegacyComponentLog = {
   date?: string;
   hash: string;
   tag?: string;
+  parents: string[];
+  lane: string;
 };
