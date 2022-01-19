@@ -4,6 +4,7 @@ import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import WebpackAssetsManifest from 'webpack-assets-manifest';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
@@ -41,7 +42,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       fallback: fallbacks,
     },
 
-    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig)],
+    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig), getAssetManifestPlugin()],
   };
 
   if (target.filename) {
@@ -79,6 +80,10 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     config.externals = externals;
   }
   return config;
+}
+
+function getAssetManifestPlugin() {
+  return new WebpackAssetsManifest({ entrypoints: true });
 }
 
 function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {

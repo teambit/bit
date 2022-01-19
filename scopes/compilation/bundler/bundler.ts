@@ -16,11 +16,20 @@ export type Asset = {
   size: number;
 };
 
+export type ChunksAssetsMap = {
+  [assetName: string]: string[];
+};
+
 export type BundlerResult = {
   /**
    * list of generated assets.
    */
   assets: Asset[];
+
+  /**
+   * A map of assets names for each chunk
+   */
+  assetsByChunkName?: ChunksAssetsMap;
 
   /**
    * errors thrown during the bundling process.

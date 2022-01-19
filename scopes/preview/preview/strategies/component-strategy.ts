@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import { flatten } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -10,7 +11,7 @@ import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap } from '@teambit/bundler';
+import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, ChunksAssetsMap } from '@teambit/bundler';
 import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { PreviewMain } from '../preview.main.runtime';
@@ -140,6 +141,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return entries;
   }
 
+  private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
+    const id =
+      type === 'component'
+        ? componentId.toStringWithoutVersion()
+        : `${componentId.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+    return id;
+  }
+
   private getComponentChunkFileName(idstr: string, type: 'component' | 'preview') {
     const suffix = type === 'component' ? COMPONENT_CHUNK_FILENAME_SUFFIX : PREVIEW_CHUNK_FILENAME_SUFFIX;
     return `${idstr}-${suffix}`;
@@ -154,7 +163,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     context.components.forEach((component) => {
       const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
       if (!capsule) return;
-      const files = this.findAssetsForComponent(component, result.assets);
+      const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
       if (!files) return;
 
       files.forEach((asset) => {
@@ -172,22 +181,21 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     });
   }
 
-  private findAssetsForComponent(component: Component, assets: Asset[]): Asset[] | undefined {
+  private findAssetsForComponent(
+    component: Component,
+    assets: Asset[],
+    chunksAssetsMap: ChunksAssetsMap
+  ): Asset[] | undefined {
     if (!assets) return undefined;
 
+    const componentChunkId = this.getComponentChunkId(component.id, 'component');
+    const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
+    const componentFiles = chunksAssetsMap[componentChunkId] || [];
+    const previewFiles = chunksAssetsMap[componentPreviewChunkId] || [];
+    const assetNameList = previewFiles.concat(componentFiles);
+
     const files = assets.filter((asset) => {
-      const fsComp = component.id.toString({ ignoreVersion: true, fsCompatible: true });
-      const id = component.id.toStringWithoutVersion();
-      const idCompFilename = this.getComponentChunkFileName(id, 'component');
-      const idPreviewFilename = this.getComponentChunkFileName(id, 'preview');
-      const fsCompCompFilename = this.getComponentChunkFileName(fsComp, 'component');
-      const fsCompPreviewFilename = this.getComponentChunkFileName(fsComp, 'preview');
-      return (
-        asset.name.includes(idCompFilename) ||
-        asset.name.includes(idPreviewFilename) ||
-        asset.name.includes(fsCompCompFilename) ||
-        asset.name.includes(fsCompPreviewFilename)
-      );
+      return assetNameList.includes(asset.name);
     });
     return files;
   }
@@ -201,7 +209,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     result: BundlerResult,
     component: Component
   ): ComponentPreviewMetaData {
-    const files = this.findAssetsForComponent(component, result.assets);
+    const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
     const componentFile = files?.find((file) => {
       return file.name.endsWith(COMPONENT_CHUNK_FILENAME_SUFFIX);
     });
