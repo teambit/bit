@@ -1775,16 +1775,25 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         // but not exported it yet
         // now i'm trying to load it with source id contain the default scope prefix
         // we want to get it from the local first before assuming it's something coming from outside
-        // if (!_bitMapId.scope) {
-        //     const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, {ignoreVersion: true});
-        //   if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
-        //     let _bitmapIdWithVersionForSource = _bitMapId;
-        //     if (version) {
-        //       _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
-        //     }
-        //     return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
-        //   }
-        // }
+        if (!_bitMapId.scope) {
+          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
+          const getFromBitmapAddDefaultScope = () => {
+            let _bitmapIdWithVersionForSource = _bitMapId;
+            if (version) {
+              _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
+            }
+            return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+          };
+          // a case when the given id contains the default scope
+          if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
+            return getFromBitmapAddDefaultScope();
+          }
+          // a case when the given id does not contain the default scope
+          const fromScope = await this.scope.resolveComponentId(idWithVersion);
+          if (!fromScope._legacy.hasScope()) {
+            return getFromBitmapAddDefaultScope();
+          }
+        }
 
         if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
           // The id in the bitmap doesn't have scope, the source id has scope
