@@ -58,6 +58,8 @@ import type {
   AddActionResults,
   Warnings,
 } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
@@ -148,6 +150,8 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+
   constructor(
     /**
      * private pubsub.
@@ -210,6 +214,8 @@ export class Workspace implements ComponentFactory {
 
     private graphql: GraphqlMain
   ) {
+    this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
@@ -480,7 +486,22 @@ export class Workspace implements ComponentFactory {
     storeInCache = true
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    return this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    // When loading a component if it's an aspect make sure to load it as aspect as well
+    // We only want to try load it as aspect if it's the first time we load the component
+    const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
+    if (
+      tryLoadAsAspect &&
+      this.envs.isUsingAspectEnv(component) &&
+      !this.aspectLoader.isAspectLoaded(component.id.toString())
+    ) {
+      this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
+
+      await this.loadAspects([component.id.toString()]);
+    }
+    this.componentLoadedSelfAsAspects.set(component.id.toString(), false);
+
+    return component;
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
@@ -1104,14 +1125,10 @@ export class Workspace implements ComponentFactory {
     const isAspect = async (bitId: BitId) => {
       const id = await this.resolveComponentId(bitId);
       const component = await this.get(id);
-      let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
-      if (!data) {
-        // TODO: remove this once we re-export old components used to store the data here
-        data = component.state.aspects.get('teambit.workspace/workspace');
-      }
+      const data = this.envs.getEnvData(component);
+      const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
 
-      if (!data) return false;
-      if (data.type !== 'aspect' && idsWithoutCore.includes(component.id.toString())) {
+      if (!isUsingAspectEnv && idsWithoutCore.includes(component.id.toString())) {
         const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
         if (data.id === DEFAULT_ENV) {
           // when cloning a project, or when the node-modules dir is deleted, nothing works and all
@@ -1122,7 +1139,7 @@ export class Workspace implements ComponentFactory {
           throw err;
         }
       }
-      return data.type === 'aspect';
+      return isUsingAspectEnv;
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);

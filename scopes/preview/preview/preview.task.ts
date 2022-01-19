@@ -25,7 +25,7 @@ export class PreviewTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
   name = PREVIEW_TASK_NAME;
   location: TaskLocation = 'end';
-  readonly dependencies = [CompilerAspect.id];
+  // readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const defs = this.preview.getDefs();

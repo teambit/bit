@@ -385,8 +385,7 @@ export class AspectLoaderMain {
   }
 
   isAspectComponent(component: Component): boolean {
-    const data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
-    return Boolean(data && data.type === 'aspect');
+    return this.envs.isUsingAspectEnv(component);
   }
 
   /**

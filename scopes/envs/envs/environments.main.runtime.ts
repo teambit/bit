@@ -458,6 +458,12 @@ export class EnvsMain {
     return Boolean(this.envSlot.get(id));
   }
 
+  isUsingAspectEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'aspect';
+  }
+
   /**
    * register a new environment service.
    */
