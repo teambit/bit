@@ -1749,6 +1749,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         // but not exported it yet
         // we want to get it from the local first before assuming it's something coming from outside
         if (!_bitMapId.scope) {
+          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
           const getFromBitmapAddDefaultScope = () => {
             let _bitmapIdWithVersionForSource = _bitMapId;
             if (version) {
@@ -1757,7 +1758,6 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
             return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
           };
           // a case when the given id contains the default scope
-          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
           if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
             return getFromBitmapAddDefaultScope();
           }
