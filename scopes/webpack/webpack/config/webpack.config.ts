@@ -15,6 +15,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const htmlPlugins = target.html ? generateHtmlPlugins(target.html) : undefined;
   const shouldExternalizePeers = target.externalizePeer && target.peers && target.peers.length;
   const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
+  const splitChunks = target.chunking?.splitChunks;
 
   const config: Configuration = {
     mode: dev ? 'development' : 'production',
@@ -24,13 +25,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     // This means they will be the "root" imports that are included in JS bundle.
     // @ts-ignore
     entry: truthyEntries,
-
-    optimization: {
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
-    },
 
     infrastructureLogging: {
       level: 'error',
@@ -64,6 +58,14 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     config.optimization = config.optimization || {};
     config.optimization.runtimeChunk = {
       name: target.runtimeChunkName,
+    };
+  }
+
+  if (splitChunks) {
+    config.optimization = config.optimization || {};
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      name: false,
     };
   }
 

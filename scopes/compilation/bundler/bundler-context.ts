@@ -84,6 +84,11 @@ export type Target = {
    * Name for the runtime chunk
    */
   runtimeChunkName?: string;
+
+  /**
+   * Different configuration related to chunking
+   */
+  chunking?: Chunking;
 };
 
 export type ModuleTarget = {
@@ -126,6 +131,13 @@ export type HtmlConfig = {
    */
   minify?: boolean;
   // TODO: consider add chunksSortMode if there are more needs
+};
+
+export type Chunking = {
+  /**
+   * include all types of chunks (async / non-async) in splitting
+   */
+  splitChunks: boolean;
 };
 export interface BundlerContext extends BuildContext {
   /**

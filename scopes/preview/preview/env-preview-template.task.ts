@@ -85,6 +85,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
             runtimeChunkName: 'runtime',
             html: htmlConfig,
             entries,
+            chunking: {
+              splitChunks: true,
+            },
             components: [envComponent],
             outputPath,
             // modules: [module],
