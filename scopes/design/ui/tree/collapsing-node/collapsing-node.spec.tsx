@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { BasicCollapsingNode } from './collapsing-node.examples';
 
 describe('should render Collapsing tree node', () => {
@@ -11,7 +11,7 @@ describe('should render Collapsing tree node', () => {
   });
   it('should render with childrens text', () => {
     const { getByText } = render(<BasicCollapsingNode />);
-    for (let index = 1; index <= 5; index++) {
+    for (let index = 1; index <= 5; index += 1) {
       const rendered = getByText(`Content ${1}`);
       expect(rendered).toBeTruthy();
     }

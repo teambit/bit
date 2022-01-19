@@ -10,7 +10,7 @@ export type CollapsingNodeProps = {
    */
   title: ReactNode;
 
-  /**Î
+  /**
    * If the content is open or not.
    */
   isOpen?: boolean;
