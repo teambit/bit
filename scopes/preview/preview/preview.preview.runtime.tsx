@@ -1,6 +1,7 @@
 import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
+import crossFetch from 'cross-fetch';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -77,9 +78,9 @@ export class PreviewPreview {
   async getPreviewModule(name: string, id: ComponentID): Promise<PreviewModule> {
     if (PREVIEW_MODULES[name].componentMap[id.fullName]) return PREVIEW_MODULES[name];
     // if (!window[name]) throw new PreviewNotFound(name);
-    const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
+    // const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
     // const component = window[id.toStringWithoutVersion()];
-    const component: any = await this.fetchComponentPreview(id, name, isSplitComponentBundle);
+    const component: any = await this.fetchComponentPreview(id, name);
 
     return {
       mainModule: PREVIEW_MODULES[name].mainModule,
@@ -89,35 +90,76 @@ export class PreviewPreview {
     };
   }
 
-  async fetchComponentPreview(id: ComponentID, name: string, isSplitComponentBundle: boolean) {
-    if (isSplitComponentBundle){
-      const componentScriptElement = this.getComponentScriptElement(id);
-      document.head.appendChild(componentScriptElement);
-    }
+  async fetchComponentPreview(id: ComponentID, name: string) {
+    let previewFile;
+    const allFiles = await this.fetchComponentPreviewFiles(id, name);
+    allFiles.forEach((file) => {
+      // We want to run the preview file always last
+      if (file.endsWith('-preview.js')) {
+        previewFile = file;
+      } else {
+        this.addComponentFileElement(id, file);
+      }
+    });
     return new Promise((resolve, reject) => {
-      const previewScriptElement = this.getPreviewScriptElement(id, name, resolve, reject);
+      const previewScriptElement = this.getPreviewScriptElement(id, name, previewFile, resolve, reject);
       document.head.appendChild(previewScriptElement);
     });
   }
 
-  private getComponentScriptElement(id: ComponentID) {
+  private addComponentFileElement(id: ComponentID, previewBundleFileName: string) {
+    if (previewBundleFileName.endsWith('.js')) {
+      return this.addComponentFileScriptElement(id, previewBundleFileName);
+    }
+    return this.addComponentFileLinkElement(id, previewBundleFileName);
+  }
+
+  private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[]> {
+    const previewAssetsRoute = `~aspect/preview-assets`;
+    const stringId = id.toString();
+    const url = `/api/${stringId}/${previewAssetsRoute}`;
+
+    const res = await crossFetch(url);
+    if (res.status >= 400) {
+      throw new PreviewNotFound(previewName);
+    }
+    const parsed = await res.json();
+    if (!parsed.files || !parsed.files.length) {
+      throw new PreviewNotFound(previewName);
+    }
+    return parsed.files;
+  }
+
+  private addComponentFileScriptElement(id: ComponentID, previewBundleFileName: string) {
     const script = document.createElement('script');
     script.setAttribute('defer', 'defer');
     const stringId = id.toString();
     const previewRoute = `~aspect/component-preview`;
-    const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-component.js`;
     const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    script.src = src; // generate path to remote scope. [scope url]/
+    script.src = src;
+    document.head.appendChild(script);
     return script;
   }
 
-  private getPreviewScriptElement(id: ComponentID, name: string, resolve, reject) {
+  private addComponentFileLinkElement(id: ComponentID, previewBundleFileName: string) {
+    const link = document.createElement('link');
+    const stringId = id.toString();
+    const previewRoute = `~aspect/component-preview`;
+    const href = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
+    link.setAttribute('href', href);
+    if (previewBundleFileName.endsWith('.css')) {
+      link.setAttribute('rel', 'stylesheet');
+    }
+    document.head.appendChild(link);
+    return link;
+  }
+
+  private getPreviewScriptElement(id: ComponentID, name: string, previewBundleFileName: string, resolve, reject) {
     const script = document.createElement('script');
     script.setAttribute('defer', 'defer');
     const stringId = id.toString();
     // const previewRoute = `~aspect/preview`;
     const previewRoute = `~aspect/component-preview`;
-    const previewBundleFileName = `${id.toString({ fsCompatible: true, ignoreVersion: true })}-preview.js`;
     const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
     script.src = src; // generate path to remote scope. [scope url]/
     script.onload = () => {
