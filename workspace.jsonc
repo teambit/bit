@@ -335,6 +335,7 @@
         "vscode-languageserver-types": "3.16.0",
         "vscode-ws-jsonrpc": "0.2.0",
         "webpack": "5.51.1",
+        "webpack-assets-manifest": "5.1.0",
         "webpack-dev-server": "4.1.0",
         "webpack-manifest-plugin": "4.0.2",
         "webpack-merge": "5.8.0",
