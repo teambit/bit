@@ -8,10 +8,7 @@ import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './scope-tree-node.module.scss';
 
-export type ScopeTreeNodeProps = {
-  isActive?: boolean;
-  isOpen?: boolean;
-} & TreeNodeProps<PayloadType>;
+export type ScopeTreeNodeProps = {} & TreeNodeProps<PayloadType>;
 
 export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
   const { isCollapsed, activePath } = useTree();

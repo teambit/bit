@@ -8,10 +8,20 @@ import { RootNode } from './root-node';
 export type TreeProps = {
   TreeNode: TreeNodeRenderer<any>;
   tree: TreeNodeType;
+  depth?: number;
 } & React.HTMLAttributes<HTMLDivElement> &
   TreeContextType;
 
-export function Tree({ TreeNode, tree, activePath, setActivePath, isCollapsed, setIsCollapsed, ...rest }: TreeProps) {
+export function Tree({
+  TreeNode,
+  tree,
+  activePath,
+  setActivePath,
+  isCollapsed,
+  setIsCollapsed,
+  depth = 1,
+  ...rest
+}: TreeProps) {
   return (
     <TreeProvider
       activePath={activePath}
@@ -20,7 +30,7 @@ export function Tree({ TreeNode, tree, activePath, setActivePath, isCollapsed, s
       setIsCollapsed={setIsCollapsed}
     >
       <TreeNodeContext.Provider value={TreeNode}>
-        <RootNode {...rest} node={tree} depth={1} />
+        <RootNode {...rest} node={tree} depth={depth} />
       </TreeNodeContext.Provider>
     </TreeProvider>
   );

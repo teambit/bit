@@ -18,7 +18,11 @@ type TreeNode<Payload = any> = {
 };
 ```
 
-It also accepts a `TreeNode` function which provides the nodes to be rendered for each layer of the tree.
+::: note
+If you need extra information about each node, and don't wish to pass it through context, you can attach a payload to each node. You can then use this information in the TreeNode renderer to add special behavior.
+:::
+
+It also accepts a `TreeNode` component, which renders each node in the tree.
 
 ```tsx live
 () => {

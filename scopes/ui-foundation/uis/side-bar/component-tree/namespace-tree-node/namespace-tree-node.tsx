@@ -8,9 +8,7 @@ import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './namespace-tree-node.module.scss';
 
-export type NamespaceTreeNodeProps = {
-  isActive?: boolean;
-} & TreeNodeProps<PayloadType>;
+export type NamespaceTreeNodeProps = {} & TreeNodeProps<PayloadType>;
 
 export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
   const { isCollapsed, activePath } = useTree();
@@ -27,8 +25,7 @@ export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
   }, [isActive]);
 
   useEffect(() => {
-    const current = firstRun.current;
-    if (current) return;
+    if (firstRun.current) return;
     toggle(!isCollapsed);
   }, [isCollapsed]);
 

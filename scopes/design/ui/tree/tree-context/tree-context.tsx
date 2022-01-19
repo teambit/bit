@@ -2,19 +2,19 @@ import { createContext } from 'react';
 
 export type TreeContextType = {
   /**
-   * is sidebar open
+   * indicates all collapsable nodes across the tree should open / close
    */
   isCollapsed?: boolean;
   /**
-   * toggle sidebar
+   * open / close all collapsable nodes in the tree
    */
   setIsCollapsed?: (x?: boolean) => void;
   /**
-   * is sidebar open
+   * active path - indicates the path to the currently active node
    */
   activePath?: string;
   /**
-   * toggle sidebar
+   * changes the currently active path
    */
   setActivePath?: (x?: string) => void;
 };
