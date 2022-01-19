@@ -1688,6 +1688,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     if (this.aspectLoader.isCoreAspect(id.toString())) {
       return ComponentID.fromString(id.toString());
     }
+    const getDefaultScope = async (bitId: BitId, bitMapOptions?: GetBitMapComponentOptions) => {
+      if (bitId.scope) {
+        return bitId.scope;
+      }
+      const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
+
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
+        relativeComponentDir,
+        bitId.toStringWithoutScopeAndVersion()
+      );
+      return defaultScope;
+    };
     let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
     if (!legacyId) {
       try {
@@ -1732,6 +1744,30 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
           return await this.scope.resolveComponentId(_bitMapIdWithVersion);
         }
+
+        // Handle case when I tagged the component locally with a default scope which is not the local scope
+        // but not exported it yet
+        // we want to get it from the local first before assuming it's something coming from outside
+        if (!_bitMapId.scope) {
+          const getFromBitmapAddDefaultScope = () => {
+            let _bitmapIdWithVersionForSource = _bitMapId;
+            if (version) {
+              _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
+            }
+            return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+          };
+          // a case when the given id contains the default scope
+          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
+          if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
+            return getFromBitmapAddDefaultScope();
+          }
+          // a case when the given id does not contain the default scope
+          const fromScope = await this.scope.resolveComponentId(idWithVersion);
+          if (!fromScope._legacy.hasScope()) {
+            return getFromBitmapAddDefaultScope();
+          }
+        }
+
         // The id in the bitmap doesn't have scope, the source id has scope
         // Handle use case 2 and use case 1
         if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
@@ -1751,17 +1787,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return ComponentID.fromLegacy(legacyId);
       }
     }
-    const getDefaultScope = async (bitId: BitId) => {
-      if (bitId.scope) {
-        return bitId.scope;
-      }
-      const relativeComponentDir = this.componentDirFromLegacyId(bitId, undefined, { relative: true });
-      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-        relativeComponentDir,
-        bitId.toStringWithoutScopeAndVersion()
-      );
-      return defaultScope;
-    };
+
     const defaultScope = await getDefaultScope(legacyId);
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
