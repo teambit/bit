@@ -493,6 +493,7 @@ export class Workspace implements ComponentFactory {
     if (
       tryLoadAsAspect &&
       this.envs.isUsingAspectEnv(component) &&
+      !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString())
     ) {
       this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
