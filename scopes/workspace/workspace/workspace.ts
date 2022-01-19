@@ -496,9 +496,18 @@ export class Workspace implements ComponentFactory {
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString())
     ) {
-      this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
-
-      await this.loadAspects([component.id.toString()]);
+      try {
+        this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
+        await this.loadAspects([component.id.toString()]);
+        // In most cases if the load self as aspect failed we don't care about it.
+        // we only need it in specific cases to work, but this workspace.get runs on different
+        // cases where it might fail (like when importing aspect, after the import objects
+        // when we write the package.json we run the applyTransformers which get to pkg which call
+        // host.get, but the component not written yet to the fs, so it fails.)
+      } catch (e) {
+        this.componentLoadedSelfAsAspects.delete(component.id.toString());
+        return component;
+      }
     }
     this.componentLoadedSelfAsAspects.set(component.id.toString(), false);
 
