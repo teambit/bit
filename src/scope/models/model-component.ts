@@ -23,7 +23,7 @@ import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import LaneId, { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
@@ -262,23 +262,15 @@ export default class Component extends BitObject {
     return this.divergeData;
   }
 
-  async populateLocalAndRemoteHeads(
-    repo: Repository,
-    laneId: LaneId,
-    lane: Lane | null,
-    remoteLaneId = laneId,
-    remoteScopeName = this.scope
-  ) {
-    // @todo: this doesn't take into account a case when local and remote have different names.
+  async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
-    if (remoteScopeName) {
+    if (this.scope) {
       // otherwise, it was never exported, so no remote head
-      this.laneHeadRemote = await repo.remoteLanes.getRef(
-        RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
-        this.toBitId()
-      );
+      if (lane?.remoteLaneId) {
+        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.remoteLaneId, this.toBitId());
+      }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
-      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
     }
   }
 
@@ -936,7 +928,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
-      await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
+      await this.populateLocalAndRemoteHeads(repo, lane);
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }
