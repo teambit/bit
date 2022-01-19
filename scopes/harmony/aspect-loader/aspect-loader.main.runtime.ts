@@ -339,6 +339,7 @@ export class AspectLoaderMain {
       this.logger.console(error);
       throw new CannotLoadExtension(idStr, error);
     }
+    this.logger.error(errorMsg, error);
     if (this.logger.isLoaderStarted) {
       this.logger.consoleFailure(errorMsg);
     } else {
