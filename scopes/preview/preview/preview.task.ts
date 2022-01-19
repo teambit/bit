@@ -2,7 +2,7 @@ import { resolve, join } from 'path';
 import { ExecutionContext } from '@teambit/envs';
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
-import { Compiler, CompilerAspect } from '@teambit/compiler';
+import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';

@@ -13,7 +13,6 @@ import type { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
-import { CompilerAspect } from '@teambit/compiler';
 import type { PreviewMain } from './preview.main.runtime';
 import { PreviewDefinition } from '.';
 import { html } from './webpack';
