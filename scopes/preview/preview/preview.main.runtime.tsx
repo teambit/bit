@@ -43,6 +43,7 @@ import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
 import { previewSchema } from './preview.graphql';
+import { PreviewAssetsRoute } from './preview-assets.route';
 
 const noopResult = {
   results: [],
@@ -52,6 +53,10 @@ const noopResult = {
 const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
+
+type PreviewFiles = {
+  files: string[];
+};
 
 export type PreviewConfig = {
   bundlingStrategy?: string;
@@ -120,8 +125,20 @@ export class PreviewMain {
       PREVIEW_TASK_NAME
     );
     if (!artifacts || !artifacts.length) return undefined;
-
     return new PreviewArtifact(artifacts);
+  }
+
+  /**
+   * Get a list of all the artifact files generated during the GeneratePreview task
+   * @param component
+   * @returns
+   */
+  async getPreviewFiles(component: Component): Promise<PreviewFiles | undefined> {
+    const artifacts = await this.getPreview(component);
+    if (!artifacts) return undefined;
+    return {
+      files: artifacts.getPaths(),
+    };
   }
 
   /**
@@ -496,6 +513,7 @@ export class PreviewMain {
       new ComponentPreviewRoute(preview, logger),
       // @ts-ignore
       new EnvTemplateRoute(preview, logger),
+      new PreviewAssetsRoute(preview, logger),
     ]);
 
     bundler.registerTarget([
