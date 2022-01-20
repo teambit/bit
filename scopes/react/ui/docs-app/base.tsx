@@ -8,9 +8,9 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
+import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { ReactAspect } from '@teambit/react';
 import styles from './base.module.scss';
-import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
@@ -50,15 +50,18 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
 
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
-      <ComponentOverview
-        displayName={Content.displayName || displayName}
-        version={version}
-        abstract={description || Content.abstract || abstract}
-        labels={component.labels || Content.labels || labels}
-        packageName={packageName}
-        elementsUrl={elementsUrl}
-      />
-
+      {component.preview?.includesEnvTemplate === false ? (
+        <></>
+      ) : (
+        <ComponentOverview
+          displayName={Content.displayName || displayName}
+          version={version}
+          abstract={description || Content.abstract || abstract}
+          labels={component.labels || Content.labels || labels}
+          packageName={packageName}
+          elementsUrl={elementsUrl}
+        />
+      )}
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Composer components={reactContext}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>

@@ -951,6 +951,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/component-highlighter"
     },
+    "ui/component-meta": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-meta"
+    },
     "ui/component-preview": {
         "scope": "teambit.preview",
         "version": "0.0.485",
