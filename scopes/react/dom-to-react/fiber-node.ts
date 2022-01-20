@@ -1,4 +1,8 @@
-import { ComponentType } from 'react';
+import { ComponentType, ForwardRefRenderFunction } from 'react';
+
+export interface ForwardRefInstance<ElementType = unknown, Props = {}> {
+  render: ForwardRefRenderFunction<ElementType, Props>;
+}
 
 /**
  * (internal) A node in React's virtual DOM tree.
@@ -15,7 +19,7 @@ export type FiberNode = {
   /** 'button', 'div', etc */
   elementType: string;
   /** The React prototype that made this node (Button(), "div", etc) */
-  type: ComponentType | string | null;
+  type: ComponentType | ForwardRefInstance<unknown> | string | null;
 
   key: string | null;
   memoizedProps: Record<any, any>;

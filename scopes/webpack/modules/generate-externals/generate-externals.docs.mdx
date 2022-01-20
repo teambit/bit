@@ -1,0 +1,49 @@
+---
+labels: ['typescript', 'utils', 'webpack']
+description: 'generate webpack externals configuration by a list.'
+---
+
+Get's a list of dependencies and create an externals object out of them
+
+API:
+
+```ts
+function generateExternals(dependencies: string[], options: GenerateExternalsOptions = {}): Object;
+```
+
+import JSONFormatter from 'json-formatter-js';
+import { generateExternals } from './generate-externals';
+
+```js live
+() => {
+  const externals = new generateExternals(['dep1', 'dep2']);
+
+  const dataContent = new JSONFormatter(externals, 2);
+  return (
+    <div>
+      <div
+        ref={(nodeElement) => {
+          nodeElement && nodeElement.replaceWith(dataContent.render());
+        }}
+      />
+    </div>
+  );
+};
+```
+
+```js live
+() => {
+  const externals = new generateExternals(['dep1', 'dep2'], { transformName: (depName) => depName.captialize() });
+
+  const dataContent = new JSONFormatter(externals, 2);
+  return (
+    <div>
+      <div
+        ref={(nodeElement) => {
+          nodeElement && nodeElement.replaceWith(dataContent.render());
+        }}
+      />
+    </div>
+  );
+};
+```

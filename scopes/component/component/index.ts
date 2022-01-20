@@ -24,6 +24,7 @@ export type { ComponentUI } from './component.ui.runtime';
 export { Section } from './section';
 export { ComponentContext } from './ui/context/component-context';
 export { ConsumePlugin } from './ui/menu';
+export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export type { ShowFragment, ShowRow } from './show';
 export { default as Config } from './config';

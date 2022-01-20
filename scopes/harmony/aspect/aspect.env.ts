@@ -1,8 +1,10 @@
 import { Compiler } from '@teambit/compiler';
-import { DependenciesEnv } from '@teambit/envs';
+import type { DependenciesEnv, GetNpmIgnoreContext } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -12,7 +14,7 @@ export const AspectEnvType = 'aspect';
  * a component environment built for [Aspects](https://reactjs.org) .
  */
 export class AspectEnv implements DependenciesEnv {
-  constructor(private reactEnv: ReactEnv) {}
+  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -31,11 +33,27 @@ export class AspectEnv implements DependenciesEnv {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
-  getNpmIgnore() {
+  getNpmIgnore(context: GetNpmIgnoreContext) {
     // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
     // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
     // d.ts files. (changing the "types" prop in the package.json file doesn't help).
-    return ['/*.ts'];
+    const patterns = ['/*.ts', `${CAPSULE_ARTIFACTS_DIR}/`];
+
+    // In order to load the env preview template from core aspects we need it to be in the package of the core envs
+    // This is because we don't have the core envs in the local scope so we load it from the package itself in the bvm installation
+    // as this will be excluded from the package tar by default (as it's under the CAPSULE_ARTIFACTS_DIR)
+    // we want to make sure to add it for the core envs
+    if (this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
+      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
+    }
+    return patterns;
+  }
+
+  getPreviewConfig() {
+    return {
+      // strategyName: 'component',
+      splitComponentBundle: false,
+    };
   }
 
   async getDependencies() {

@@ -7,6 +7,16 @@ export type DrawerType = {
   name: ReactNode; // TODO - make sure componentType makes sence here
 
   /**
+   * drawer right widget
+   */
+  widget?: ReactNode;
+
+  /**
+   * drawer context
+   */
+  Context?: ComponentType<any>;
+
+  /**
    * tooltip for the drawer.
    */
   tooltip?: string;

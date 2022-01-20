@@ -29,6 +29,12 @@ export function domToFiber(element: HTMLElement | null) {
 export function toRootFiber(fiberNode: FiberNode | null): FiberNode | null {
   for (let current = fiberNode; current !== null && current.type !== null; current = current.return) {
     if (typeof current.type === 'function') return current;
+    if (
+      // handle forwardRef()
+      typeof current.type === 'object' &&
+      typeof current.type.render === 'function'
+    )
+      return current;
   }
 
   return null;

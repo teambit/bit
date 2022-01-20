@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
+import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
@@ -46,7 +47,7 @@ export class LaneListCmd implements Command {
       remote,
       merged,
       notMerged,
-      showDefaultLane: true, // when displaying all lanes always show the default
+      showDefaultLane: true,
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
@@ -317,7 +318,7 @@ export class LaneRemoveCmd implements Command {
   ): Promise<string> {
     if (!silent) {
       const removePromptResult = await removePrompt();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
       }

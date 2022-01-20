@@ -28,6 +28,11 @@ export type ComponentModelProps = {
   labels?: string[];
   host?: string;
   latest?: string;
+  preview?: ComponentPreview;
+};
+
+export type ComponentPreview = {
+  includesEnvTemplate?: boolean;
 };
 
 export type ComponentServer = {
@@ -111,7 +116,9 @@ export class ComponentModel {
     /**
      * latest version of component
      */
-    readonly latest?: string
+    readonly latest?: string,
+
+    readonly preview?: ComponentPreview
   ) {}
 
   get version() {
@@ -139,6 +146,7 @@ export class ComponentModel {
     labels,
     host,
     latest,
+    preview,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -156,7 +164,8 @@ export class ComponentModel {
       description,
       labels,
       host,
-      latest
+      latest,
+      preview
     );
   }
 
