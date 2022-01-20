@@ -13,8 +13,10 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
   const dev = Boolean(context.development);
-  const htmlPlugins = target.html ? generateHtmlPlugins(target.html) : undefined;
-  const shouldExternalizePeers = target.externalizePeer && target.peers && target.peers.length;
+  const htmlConfig = target.html ?? context.html;
+  const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
+  const shouldExternalizePeers =
+    (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
   const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 

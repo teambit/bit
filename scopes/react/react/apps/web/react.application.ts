@@ -1,11 +1,10 @@
 import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import { Bundler, DevServer, BundlerContext, DevServerContext } from '@teambit/bundler';
+import { Bundler, DevServer, BundlerResult, BundlerContext, DevServerContext } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderSPAPlugin } from './plugins';
-import { ReactDeployContext } from './deploy-context';
 import { ReactAppBuildResult } from './react-build-result';
 
 export class ReactApp implements Application {
@@ -51,6 +50,15 @@ export class ReactApp implements Application {
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
+    const htmlConfig: BundlerHtmlConfig[] = [
+      {
+        title: 'App',
+        templateContent: html('App'),
+        minify: true,
+        // filename: ''.html`,
+      },
+    ];
+    Object.assign(context, { html: htmlConfig });
     const bundler = await this.getBundler(context);
     await bundler.run();
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
