@@ -387,7 +387,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe(`switching lanes with deleted files`, () => {
+  describe('switching lanes with deleted files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -403,6 +403,35 @@ describe('bit lane command', function () {
     });
     it('should delete the comp1/comp1.spec.js file', () => {
       expect(path.join(helper.scopes.localPath, 'comp1/comp1.spec.js')).to.not.be.a.path();
+    });
+  });
+  describe.only('switching lanes and importing in a new scope from remote scope', () => {
+    let newScope;
+    let laneScope;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      newScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('dev');
+      helper.fs.outputFile('comp1/comp.model.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      laneScope = helper.scopeHelper.cloneLocalScope();
+    });
+    it('should import the latest from main', () => {
+      helper.scopeHelper.getClonedLocalScope(newScope);
+      const result = helper.command.import(`${helper.scopes.remote}/*`);
+      expect(result).to.have.string('0.0.1');
+    });
+    it('should not import the latest from main', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScope);
+      const result = helper.command.import(`${helper.scopes.remote}/*`);
+      expect(result).to.not.have.string('0.0.1');
     });
   });
   describe('merging lanes', () => {
