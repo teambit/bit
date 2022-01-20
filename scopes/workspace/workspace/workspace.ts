@@ -490,12 +490,15 @@ export class Workspace implements ComponentFactory {
     // When loading a component if it's an aspect make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+
     if (
       tryLoadAsAspect &&
       this.envs.isUsingAspectEnv(component) &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
-      (await this.hasId(component.id))
+      (await this.hasId(component.id)) &&
+      !config.extension(component.id.toStringWithoutVersion(), true)
     ) {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
