@@ -11,6 +11,7 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { ArtifactList } from './artifact';
@@ -19,7 +20,7 @@ import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
-import { BuildTask } from './build-task';
+import { BuildTask, BuildTaskHelper } from './build-task';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -105,7 +106,24 @@ export class BuilderMain {
     }
     await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
+    this.validateBuilderDataMap(builderDataMap);
     return { builderDataMap, pipeResults };
+  }
+
+  private validateBuilderDataMap(builderDataMap: ComponentMap<BuilderData>) {
+    builderDataMap.forEach((buildData: BuilderData, component) => {
+      const taskSerializedIds = buildData.pipeline.map((t) =>
+        BuildTaskHelper.serializeId({ aspectId: t.taskId, name: t.taskName })
+      );
+      const duplications = findDuplications(taskSerializedIds);
+      if (duplications.length) {
+        throw new Error(
+          `build-task-results validation has failed. the following task(s) of "${component.id.toString()}" are duplicated: ${duplications.join(
+            ', '
+          )}`
+        );
+      }
+    });
   }
 
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
