@@ -291,6 +291,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-package-version"
     },
+    "component-sizer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-sizer",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "component-tree": {
         "scope": "teambit.component",
         "version": "0.0.415",
@@ -560,6 +572,18 @@
         "version": "0.0.95",
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
+    },
+    "modules/generate-expose-loaders": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-expose-loaders"
+    },
+    "modules/generate-externals": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/modules/generate-externals"
     },
     "modules/generate-style-loaders": {
         "scope": "teambit.webpack",

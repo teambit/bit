@@ -1,34 +1,314 @@
-import { BuildContext } from '@teambit/builder';
-import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
-import { BundlingStrategy } from '../bundling-strategy';
-import { PreviewDefinition } from '../preview-definition';
-import { PreviewTask } from '../preview.task';
+import { readFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { existsSync, mkdirpSync } from 'fs-extra';
+import { Component } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
+import { flatten } from 'lodash';
+import { Compiler } from '@teambit/compiler';
+import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import type { Capsule } from '@teambit/isolator';
+import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
+import type { PkgMain } from '@teambit/pkg';
+import { BitError } from '@teambit/bit-error';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, ChunksAssetsMap } from '@teambit/bundler';
+import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
+import type { PreviewDefinition } from '../preview-definition';
+import type { PreviewMain } from '../preview.main.runtime';
+import { generateComponentLink } from './generate-component-link';
 
+export const PREVIEW_CHUNK_SUFFIX = 'preview';
+export const COMPONENT_CHUNK_SUFFIX = 'component';
+export const PREVIEW_CHUNK_FILENAME_SUFFIX = `${PREVIEW_CHUNK_SUFFIX}.js`;
+export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
+
+type ComponentPreviewMetaData = {
+  size?: Number;
+};
+
+export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
+export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
+/**
+ * bundles all components in a given env into the same bundle.
+ */
 export class ComponentBundlingStrategy implements BundlingStrategy {
   name = 'component';
 
-  computeTargets(context: BuildContext, previewDefs: PreviewDefinition[], previewTask: PreviewTask): Promise<Target[]> {
-    return Promise.all(
-      context.capsuleNetwork.graphCapsules.map(async (capsule) => {
-        return {
-          entries: await previewTask.computePaths(capsule, previewDefs, context),
-          components: [capsule.component],
-          outputPath: capsule.path,
-        };
-      })
+  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
+
+  async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
+    const outputPath = this.getOutputPath(context);
+    if (!existsSync(outputPath)) mkdirpSync(outputPath);
+
+    // const entriesArr = flatten(
+    //   await Promise.all(
+    //     context.capsuleNetwork.seedersCapsules.map((capsule) => {
+    //       return this.computeComponentEntry(previewDefs, capsule.component, context);
+    //     }, {})
+    //   )
+    // );
+
+    const entriesArr = await Promise.all(
+      context.capsuleNetwork.seedersCapsules.map((capsule) => {
+        return this.computeComponentEntry(previewDefs, capsule.component, context);
+      }, {})
     );
+
+    const entries: BundlerEntryMap = entriesArr.reduce((entriesMap, entry) => {
+      // entriesMap[entry.library.name] = entry;
+      Object.assign(entriesMap, entry);
+      return entriesMap;
+    }, {});
+    // const entries = entriesArr.reduce((entriesMap, entry) => {
+    //   entriesMap[entry.library.name] = entry;
+    //   return entriesMap;
+    // }, {});
+
+    // const modules = await Promise.all(entriesArr.map(async (entry) => {
+    //   const dependencies = await this.dependencyResolver.getDependencies(entry.component);
+    //   const manifest = dependencies.toDependenciesManifest();
+    //   const peer = Object.entries(manifest.peerDependencies || {}).reduce((acc, [packageName, version]) => {
+    //     acc[packageName] = {
+    //       singleton: true,
+    //       requiredVersion: version
+    //     };
+
+    //     return acc;
+    //   }, {});
+    //   // console.log(entry);
+    //   return {
+    //     name: entry.library.name,
+    //     exposes: {
+    //       '.': entry.import || ''
+    //     },
+    //     shared: {
+    //       ...manifest.dependencies,
+    //       ...peer
+    //     },
+    //   };
+    // }));
+
+    return [
+      {
+        // entries: await this.computePaths(outputPath, previewDefs, context),
+        entries,
+        components: context.components,
+        outputPath,
+        // modules,
+      },
+    ];
   }
 
-  async computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask) {
-    return {
-      componentsResults: results.map((result) => {
-        return {
-          errors: result.errors,
-          component: result.components[0],
-          warning: result.warnings,
-        };
-      }),
-      artifacts: [{ name: 'preview', globPatterns: [previewTask.getPreviewDirectory(context)] }],
+  async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: ComputeTargetsContext) {
+    const path = await this.computePaths(previewDefs, context, component);
+    const [componentPath] = this.getPaths(context, component, [component.mainFile]);
+    const componentPreviewChunkId = `${component.id.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+
+    const entries = {
+      [componentPreviewChunkId]: {
+        filename: this.getComponentChunkFileName(
+          component.id.toString({
+            fsCompatible: true,
+            ignoreVersion: true,
+          }),
+          'preview'
+        ),
+        import: path,
+        // dependOn: component.id.toStringWithoutVersion(),
+        library: {
+          name: componentPreviewChunkId,
+          type: 'umd',
+        },
+      },
     };
+    if (context.splitComponentBundle) {
+      const componentChunkId = component.id.toStringWithoutVersion();
+      entries[componentChunkId] = {
+        filename: this.getComponentChunkFileName(
+          component.id.toString({
+            fsCompatible: true,
+            ignoreVersion: true,
+          }),
+          'component'
+        ),
+        import: componentPath,
+        library: {
+          name: componentChunkId,
+          type: 'umd',
+        },
+      };
+    }
+    return entries;
+  }
+
+  private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
+    const id =
+      type === 'component'
+        ? componentId.toStringWithoutVersion()
+        : `${componentId.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+    return id;
+  }
+
+  private getComponentChunkFileName(idstr: string, type: 'component' | 'preview') {
+    const suffix = type === 'component' ? COMPONENT_CHUNK_FILENAME_SUFFIX : PREVIEW_CHUNK_FILENAME_SUFFIX;
+    return `${idstr}-${suffix}`;
+  }
+
+  private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
+    const path = this.getOutputPath(context);
+    return join(path, 'public', asset.name);
+  }
+
+  copyAssetsToCapsules(context: BundlerContext, result: BundlerResult) {
+    context.components.forEach((component) => {
+      const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+      if (!capsule) return;
+      const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
+      if (!files) return;
+
+      files.forEach((asset) => {
+        const filePath = this.getAssetAbsolutePath(context, asset);
+        const contents = readFileSync(filePath);
+        // const exists = capsule.fs.existsSync(this.getArtifactDirectory());
+        // if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
+        // We don't use the mkdirSync as it uses the capsule fs which uses memfs, which doesn't know to handle nested none existing folders
+        mkdirpSync(join(capsule.path, this.getArtifactDirectory()));
+        let filename = asset.name;
+        if (filePath.endsWith('.css'))
+          filename = `${capsule.component.id.toString({ ignoreVersion: true, fsCompatible: true })}.css`;
+        capsule.fs.writeFileSync(join(this.getArtifactDirectory(), filename), contents);
+      });
+    });
+  }
+
+  private findAssetsForComponent(
+    component: Component,
+    assets: Asset[],
+    chunksAssetsMap: ChunksAssetsMap
+  ): Asset[] | undefined {
+    if (!assets) return undefined;
+
+    const componentChunkId = this.getComponentChunkId(component.id, 'component');
+    const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
+    const componentFiles = chunksAssetsMap[componentChunkId] || [];
+    const previewFiles = chunksAssetsMap[componentPreviewChunkId] || [];
+    const assetNameList = previewFiles.concat(componentFiles);
+
+    const files = assets.filter((asset) => {
+      return assetNameList.includes(asset.name);
+    });
+    return files;
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, 'preview');
+  }
+
+  private computeComponentMetadata(
+    context: BundlerContext,
+    result: BundlerResult,
+    component: Component
+  ): ComponentPreviewMetaData {
+    const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
+    const componentFile = files?.find((file) => {
+      return file.name.endsWith(COMPONENT_CHUNK_FILENAME_SUFFIX);
+    });
+    if (!componentFile) return {};
+    return {
+      [COMPONENT_STRATEGY_SIZE_KEY_NAME]: componentFile.size,
+    };
+  }
+
+  async computeResults(context: BundlerContext, results: BundlerResult[]) {
+    const result = results[0];
+
+    this.copyAssetsToCapsules(context, result);
+
+    const componentsResults: ComponentResult[] = result.components.map((component) => {
+      const metadata = this.computeComponentMetadata(context, result, component);
+      return {
+        component,
+        metadata,
+        errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
+        warning: result.warnings,
+        startTime: result.startTime,
+        endTime: result.endTime,
+      };
+    });
+
+    const artifacts = this.getArtifactDef();
+
+    return {
+      componentsResults,
+      artifacts,
+    };
+  }
+
+  private getArtifactDef() {
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
+    // const env: 'env' = 'env';
+    // const rootDir = this.getDirName(context);
+
+    return [
+      {
+        name: COMPONENT_STRATEGY_ARTIFACT_NAME,
+        globPatterns: ['**'],
+        rootDir: this.getArtifactDirectory(),
+        // context: env,
+      },
+    ];
+  }
+
+  getDirName(context: ComputeTargetsContext) {
+    const envName = context.id.replace('/', '__');
+    return `${envName}-preview`;
+  }
+
+  private getOutputPath(context: ComputeTargetsContext) {
+    return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
+  }
+
+  private getPaths(context: ComputeTargetsContext, component: Component, files: AbstractVinyl[]) {
+    const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+    if (!capsule) return [];
+    const compiler: Compiler = context.env.getCompiler();
+    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+  }
+
+  private getComponentOutputPath(capsule: Capsule) {
+    return resolve(`${capsule.path}`);
+  }
+
+  private async computePaths(
+    defs: PreviewDefinition[],
+    context: ComputeTargetsContext,
+    component: Component
+  ): Promise<string> {
+    // const previewMain = await this.preview.writePreviewRuntime(context);
+    const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+    // if (!capsule) return undefined;
+    if (!capsule)
+      throw new BitError(
+        `could not find capsule for component ${component.id.toString()} during compute paths to bundle`
+      );
+    const moduleMapsPromise = defs.map(async (previewDef) => {
+      const moduleMap = await previewDef.getModuleMap([component]);
+      const maybeFiles = moduleMap.get(component);
+      if (!maybeFiles || !capsule) return [];
+      const [, files] = maybeFiles;
+      const compiledPaths = this.getPaths(context, component, files);
+      // const files = flatten(paths.toArray().map(([, file]) => file));
+
+      return {
+        prefix: previewDef.prefix,
+        paths: compiledPaths,
+      };
+    });
+
+    const moduleMaps = flatten(await Promise.all(moduleMapsPromise));
+
+    const contents = generateComponentLink(moduleMaps);
+    return this.preview.writeLinkContents(contents, this.getComponentOutputPath(capsule), 'preview');
+    // return flatten(moduleMaps);
   }
 }

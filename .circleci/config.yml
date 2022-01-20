@@ -552,7 +552,7 @@ jobs:
           path: bit/yarn.lock
 
   bit_build:
-    resource_class: large
+    resource_class: xlarge
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -578,7 +578,9 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=8096
+            NODE_OPTIONS: --max_old_space_size=12000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   bit_tag:
     resource_class: large

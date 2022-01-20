@@ -5,7 +5,7 @@ export function compositionsFile({ namePascalCase: Name }: ComponentContext) {
 import { ${Name}App } from './app';
 
 export const ${Name}Basic = () => {
-  return <${Name}App></${Name}App>;
+  return <${Name}App />;
 };
 `;
 }
