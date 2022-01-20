@@ -1,12 +1,13 @@
 import { join, basename } from 'path';
-import { Capsule } from '@teambit/isolator';
-import { Application, AppContext, AppBuildResult, DeployContext } from '@teambit/application';
-import { ArtifactDefinition, BuildContext } from '@teambit/builder';
-import { Bundler, DevServer, BundlerResult, BundlerContext, DevServerContext } from '@teambit/bundler';
+import { Application, AppContext, AppBuildContext } from '@teambit/application';
+import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderSPAPlugin } from './plugins';
+import { ReactAppBuildResult } from './react-build-result';
+import { html } from '../../webpack';
+import { ReactDeployContext } from '.';
 
 export class ReactApp implements Application {
   constructor(
@@ -18,10 +19,11 @@ export class ReactApp implements Application {
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers?: WebpackConfigTransformer[],
-    readonly deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>
   ) {}
 
   readonly applicationType = 'react-common-js';
+  readonly dir = 'public';
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
@@ -49,36 +51,33 @@ export class ReactApp implements Application {
     return port;
   }
 
-  async build(context: BuildContext, capsule: Capsule): Promise<AppBuildResult> {
-    const bundler = await this.getBundler(context, capsule);
-    const bundlerResult = await bundler.run();
-    const artifacts: ArtifactDefinition[] = this.getBlobPatterns(bundlerResult);
-    const deployContext: AppBuildResult = Object.assign(context, { artifacts });
-    return deployContext;
+  async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
+    const htmlConfig: BundlerHtmlConfig[] = [
+      {
+        title: context.name,
+        templateContent: html(context.name),
+        minify: false,
+        // filename: ''.html`,
+      },
+    ];
+    Object.assign(context, { html: htmlConfig });
+    const bundler = await this.getBundler(context);
+    await bundler.run();
+    return { publicDir: `${this.getPublicDir()}/${this.dir}` };
   }
 
-  private getBlobPatterns(bundlerResults: BundlerResult[]) {
-    const _globs = bundlerResults.map((result) => {
-      if (!result.outputPath) return undefined;
-      return {
-        name: 'CommonJS',
-        globPatterns: [`${this.getPublicDir()}/**`],
-      };
-    });
-    return _globs.filter((glob) => !!glob) as ArtifactDefinition[];
-  }
-
-  private getBundler(context: BuildContext, capsule: Capsule) {
+  private getBundler(context: AppBuildContext) {
     if (this.bundler) return this.bundler;
-    return this.getDefaultBundler(context, capsule);
+    return this.getDefaultBundler(context);
   }
-  private async getDefaultBundler(context: BuildContext, capsule: Capsule) {
+  private async getDefaultBundler(context: AppBuildContext) {
+    const { capsule } = context;
     const reactEnv: ReactEnv = context.env;
     const publicDir = this.getPublicDir();
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
     const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
-    const staticDir = join(outputPath, 'public');
+    const staticDir = join(outputPath, this.dir);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [
@@ -92,14 +91,13 @@ export class ReactApp implements Application {
       rootPath: '/',
     });
 
-    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, [
-      (configMutator) => {
-        if (this.transformers?.length) configMutator.addPlugin(this.transformers);
-        configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
-        if (this.prerenderRoutes) configMutator.addPlugin(prerenderSPAPlugin(this.prerenderRoutes, staticDir));
-        return configMutator;
-      },
-    ]);
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
+      if (this.prerenderRoutes) config.addPlugin(prerenderSPAPlugin(this.prerenderRoutes, staticDir));
+      return config;
+    };
+    const transformers = [defaultTransformer, ...(this.transformers ?? [])];
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
     return bundler;
   }
 

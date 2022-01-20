@@ -91,6 +91,17 @@ export class EnvsMain {
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.harmony/aspect',
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+    ];
+  }
+
   /**
    * compose a new environment from a list of environment transformers.
    */
@@ -428,6 +439,11 @@ export class EnvsMain {
     return undefined;
   }
 
+  getEnvFromComponent(envComponent: Component) {
+    const env = this.getEnvDefinitionById(envComponent.id);
+    return env;
+  }
+
   private printWarningIfFirstTime(envId: string, message: string) {
     if (!this.alreadyShownWarning[envId]) {
       this.alreadyShownWarning[envId] = true;
@@ -440,6 +456,12 @@ export class EnvsMain {
    */
   isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
+  }
+
+  isUsingAspectEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'aspect';
   }
 
   /**

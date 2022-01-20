@@ -598,7 +598,14 @@ export default class BitMap {
         if (matches && matches.length === 1) {
           return matches[0].id;
         }
+        if (this.updatedIds[idWithoutScope]) {
+          return this.updatedIds[idWithoutScope].id;
+        }
       }
+    }
+
+    if (this.updatedIds[id]) {
+      return this.updatedIds[id].id;
     }
 
     if (shouldThrow) {

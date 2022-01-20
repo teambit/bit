@@ -1,12 +1,13 @@
 @import '~@teambit/base-ui.theme.colors/colors.module.scss';
 
-.namespace {
+.scope {
   position: relative;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   user-select: none;
+  cursor: pointer;
   font-weight: bold;
   font-size: inherit;
   padding-right: 8px;
@@ -25,6 +26,10 @@
       transform: rotate(-0.25turn);
     }
   }
+}
+
+.highlighted {
+  color: var(--bit-accent-heavy, #5d4aec);
 }
 
 .left {
