@@ -178,7 +178,11 @@ export default async function threeWayMergeVersions({
     })
   );
   const fsFilesPaths = fsFiles.map((fsFile) => pathNormalizeToLinux(fsFile.relative));
-  const deletedFromFs = currentFiles.filter((currentFile) => !fsFilesPaths.includes(currentFile.relativePath));
+  const baseFilesPaths = baseFiles.map((baseFile) => baseFile.relativePath);
+  const deletedFromFs = currentFiles.filter(
+    (currentFile) =>
+      !fsFilesPaths.includes(currentFile.relativePath) && baseFilesPaths.includes(currentFile.relativePath)
+  );
   deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
   if (R.isEmpty(results.modifiedFiles)) return results;
 

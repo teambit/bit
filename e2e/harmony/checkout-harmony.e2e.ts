@@ -247,4 +247,26 @@ describe('bit checkout command', function () {
       });
     });
   });
+  describe('when a file was added in the new version (and not exists locally)', () => {
+    let afterFirstExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      helper.fs.outputFile('comp1/foo.ts');
+      helper.command.compile();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+      helper.command.import();
+      helper.command.checkout('latest --all');
+    });
+    it('should write the new files', () => {
+      const newFilePath = path.join(helper.scopes.localPath, 'comp1/foo.ts');
+      expect(newFilePath).to.be.a.file();
+    });
+  });
 });
