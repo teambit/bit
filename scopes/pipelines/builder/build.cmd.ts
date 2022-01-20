@@ -7,6 +7,7 @@ import { BuilderMain } from './builder.main.runtime';
 
 type BuildOpts = {
   all: boolean;
+  dev: boolean;
   rebuild: boolean;
   install: boolean;
   cachePackagesOnCapsulesRoot: boolean;
@@ -22,6 +23,7 @@ export class BuilderCmd implements Command {
   group = 'development';
   options = [
     ['a', 'all', 'build all components, not only modified and new'],
+    ['d', 'dev', 'run the pipeline in dev mode'],
     ['', 'install', 'install core aspects in capsules'],
     ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],
     [
@@ -44,6 +46,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     [userPattern]: [string],
     {
       all = false,
+      dev = false,
       install = false,
       cachePackagesOnCapsulesRoot = false,
       reuseCapsules = false,
@@ -77,6 +80,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         cachePackagesOnCapsulesRoot,
       },
       {
+        dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
       }
     );

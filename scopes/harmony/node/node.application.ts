@@ -3,7 +3,6 @@ import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
 import { ReactEnv } from '@teambit/react';
 import { Application, DeployFn } from '@teambit/application';
-import { BuildContext } from '@teambit/builder';
 import { NodeEnv } from './node.env';
 import { DeployContext } from './node-app-options';
 
@@ -31,10 +30,10 @@ export class NodeApp implements Application {
     });
   }
 
-  async build(context: BuildContext): Promise<DeployContext> {
+  async build(): Promise<DeployContext> {
     const { base } = parse(this.entry);
     const { distDir } = this.nodeEnv.getCompiler();
     const entry = join(distDir, base);
-    return Object.assign(context, { entry });
+    return { entry };
   }
 }

@@ -1,5 +1,5 @@
-import { BuildContext, ArtifactDefinition } from '@teambit/builder';
+import { ArtifactDefinition } from '@teambit/builder';
 
-export interface AppBuildResult extends BuildContext {
+export interface AppBuildResult {
   artifacts?: ArtifactDefinition[];
 }

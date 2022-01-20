@@ -1,9 +1,9 @@
 import mapSeries from 'p-map-series';
-import { Capsule } from '@teambit/isolator';
 import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
+import { AppBuildContext } from './app-build-context';
 
 export const BUILD_TASK = 'build_application';
 
@@ -23,16 +23,26 @@ export class AppsBuildTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const apps = this.application.listApps();
+    const { capsuleNetwork } = context;
     const componentsResults = await mapSeries(apps, async (app): Promise<AppsResults | undefined> => {
       const aspectId = this.application.getAppAspect(app.name);
       if (!aspectId) return undefined;
-      const capsules = context.capsuleNetwork.seedersCapsules;
-      const capsule = this.getCapsule(capsules, aspectId);
+      const capsule = capsuleNetwork.seedersCapsules.getCapsuleIgnoreVersion(ComponentID.fromString(aspectId));
       if (!capsule || !app.build) return undefined;
-      const deployContext = await app.build(context, capsule);
+      const { component } = capsule;
+      const appDeployContext: AppBuildContext = Object.assign(context, { capsule, appComponent: component });
+      const deployContext = await app.build(appDeployContext);
+
       return {
         artifacts: deployContext.artifacts,
-        componentResult: { component: capsule.component },
+        /**
+         * @guysaar223
+         * @ram8
+         * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
+         * or create new deploy context on builder
+         */
+        // @ts-ignore
+        componentResult: { component: capsule.component, _metadata: { deployContext } },
       };
     });
 
@@ -50,10 +60,5 @@ export class AppsBuildTask implements BuildTask {
       artifacts,
       componentsResults: _componentsResults,
     };
-  }
-
-  private getCapsule(capsules: Capsule[], aspectId: string) {
-    const aspectCapsuleId = ComponentID.fromString(aspectId).toStringWithoutVersion();
-    return capsules.find((capsule) => capsule.component.id.toStringWithoutVersion() === aspectCapsuleId);
   }
 }

@@ -35,12 +35,15 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
       <MenuSection items={items} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
+        // consider passing collapse all as a prop so each drawer collapses itself
         return (
           <DrawerUI
             isOpen={openDrawerList.includes(id)}
             onToggle={() => handleDrawerToggle(id)}
             key={id}
             name={drawer.name}
+            Widget={drawer.widget}
+            Context={drawer.Context}
           >
             <drawer.render />
           </DrawerUI>

@@ -28,6 +28,7 @@ import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
+import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -86,6 +87,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
+  [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
