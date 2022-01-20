@@ -54,9 +54,9 @@ export class ReactApp implements Application {
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
     const htmlConfig: BundlerHtmlConfig[] = [
       {
-        title: 'App',
-        templateContent: html('App'),
-        minify: true,
+        title: context.name,
+        templateContent: html(context.name),
+        minify: false,
         // filename: ''.html`,
       },
     ];
