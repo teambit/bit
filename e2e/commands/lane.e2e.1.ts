@@ -421,12 +421,12 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
-    it('should import the latest from main', () => {
+    it('should import the latest from main when on main', () => {
       helper.scopeHelper.getClonedLocalScope(newScope);
       const result = helper.command.import(`${helper.scopes.remote}/*`);
       expect(result).to.have.string('0.0.1');
     });
-    it('should not import the latest from main', () => {
+    it('should not import the latest from main when on a lane', () => {
       helper.scopeHelper.getClonedLocalScope(laneScope);
       const result = helper.command.import(`${helper.scopes.remote}/*`);
       expect(result).to.not.have.string('comp1@0.0.1');
@@ -738,9 +738,9 @@ describe('bit lane command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
-      helper.command.trackLane('dev', helper.scopes.remote);
       beforeImport = helper.scopeHelper.cloneLocalScope();
       helper.fs.outputFile('bar/foo/model.js');
       helper.command.addComponent('bar/foo');

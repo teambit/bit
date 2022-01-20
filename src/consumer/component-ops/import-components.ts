@@ -214,15 +214,12 @@ export default class ImportComponents {
   private async populateBitIdsFromLanes(bitIds: BitId[], idsToFilter: BitId[]) {
     if (!this.options.lanes) return;
 
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
     try {
-      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
       const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
       this.laneObjects = lanes;
       lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
-      bitIds =
-        idsToFilter.length > 0
-          ? bitIds.filter((bitId) => idsToFilter.some((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
-          : bitIds;
+      bitIds = bitIds.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)));
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
         // the lane could be a local lane so no need to throw an error in such case
