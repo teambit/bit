@@ -741,11 +741,11 @@ describe('bit lane command', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
       helper.command.trackLane('dev', helper.scopes.remote);
+      beforeImport = helper.scopeHelper.cloneLocalScope();
       helper.fs.outputFile('bar/foo/model.js');
       helper.command.addComponent('bar/foo');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      beforeImport = helper.scopeHelper.cloneLocalScope();
     });
     describe('without --skip-lane flag', () => {
       before(() => {
