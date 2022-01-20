@@ -26,8 +26,15 @@ export class DeployTask implements BuildTask {
       const componentResults = buildTask.componentsResults.find((res) =>
         res.component.id.isEqual(capsule.component.id, { ignoreVersion: true })
       );
-      const metadata = componentResults?.metadata?.deployContext || {};
-      const appDeployContext: AppDeployContext = Object.assign(context, metadata, {
+      /**
+       * @guysaar223
+       * @ram8
+       * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
+       * or create new deploy context on builder
+       */
+      // @ts-ignore
+      const _metadata = componentResults?._metadata?.deployContext || {};
+      const appDeployContext: AppDeployContext = Object.assign(context, _metadata, {
         capsule,
         appComponent: capsule.component,
       });

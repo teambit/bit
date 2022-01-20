@@ -1,6 +1,9 @@
 import { AppBuildResult, DeployFn } from '@teambit/application';
 
 export interface DeployContext extends AppBuildResult {
+  /**
+   * the entry file of the app e.g: dist/app.js
+   */
   entry?: string;
 }
 
