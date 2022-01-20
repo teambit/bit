@@ -499,7 +499,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.info(`trying to load self as aspect with id ${component.id.toString()}`);
-        // await this.loadAspects([component.id.toString()]);
+        await this.loadAspects([component.id.toString()]);
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
