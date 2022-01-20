@@ -1,11 +1,13 @@
 import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import { Bundler, DevServer, BundlerResult, BundlerContext, DevServerContext } from '@teambit/bundler';
+import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderSPAPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
+import { html } from '../../webpack';
+import { ReactDeployContext } from '.';
 
 export class ReactApp implements Application {
   constructor(
