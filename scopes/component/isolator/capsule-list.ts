@@ -11,7 +11,7 @@ export default class CapsuleList extends Array<Capsule> {
     return this.find((capsule) => capsule.component.id._legacy.isEqual(id));
   }
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | undefined {
-    return this.find((capsule) => capsule.component.id._legacy.isEqualWithoutVersion(id._legacy));
+    return this.find((capsule) => capsule.component.id.isEqual(id, { ignoreVersion: true }));
   }
   getCapsuleIgnoreScopeAndVersion(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id._legacy.isEqualWithoutScopeAndVersion(id._legacy));

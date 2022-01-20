@@ -28,6 +28,9 @@ const SCOPE = gql`
         deprecation {
           isDeprecate
         }
+        preview {
+          includesEnvTemplate
+        }
       }
     }
   }

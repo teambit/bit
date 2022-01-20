@@ -2,12 +2,17 @@ import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compat
 import type { ComponentMap } from '@teambit/component';
 
 // :TODO refactor to building an AST and generate source code based on it.
-export function generateLink(prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string): string {
+export function generateLink(
+  prefix: string,
+  componentMap: ComponentMap<string[]>,
+  defaultModule?: string,
+  isSplitComponentBundle = false
+): string {
   return `
 import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
 import harmony from '${toWindowsCompatiblePath(require.resolve('@teambit/harmony'))}';
 ${defaultModule ? `const defaultModule = require('${toWindowsCompatiblePath(defaultModule)}'` : ''});
-linkModules('${prefix}', defaultModule, {
+linkModules('${prefix}', defaultModule, ${isSplitComponentBundle}, {
   ${componentMap
     .toArray()
     .map(([component, modulePaths]: any) => {
@@ -16,6 +21,6 @@ linkModules('${prefix}', defaultModule, {
         .join(', ')}]`;
     })
     .join(',\n')}
-});  
+});
 `;
 }

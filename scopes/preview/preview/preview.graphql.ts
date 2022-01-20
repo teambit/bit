@@ -7,7 +7,8 @@ export function previewSchema(previewExtension: PreviewMain) {
   return {
     typeDefs: gql`
       type Preview {
-        url: String!
+        # url: String!
+        includesEnvTemplate: Boolean
       }
 
       extend type Component {
@@ -17,9 +18,15 @@ export function previewSchema(previewExtension: PreviewMain) {
     resolvers: {
       Component: {
         preview: (component: Component) => {
-          return previewExtension.getPreview(component);
+          // return previewExtension.getPreview(component);
+          return {component};
         },
       },
+      Preview: {
+        includesEnvTemplate: ({component}) => {
+          return previewExtension.isBundledWithEnv(component);
+        }
+      }
     },
   };
 }
