@@ -167,6 +167,11 @@ export interface BundlerContext extends BuildContext {
   externalizePeer?: boolean;
 
   /**
+   * config for html generation for all targets
+   */
+  html?: HtmlConfig[];
+
+  /**
    * modules for bundle to expose. used by module federation at webpack, or with different methods applied by various bundlers.
    */
   modules?: {

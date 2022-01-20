@@ -1,12 +1,13 @@
 import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import { Bundler, DevServer, BundlerContext, DevServerContext } from '@teambit/bundler';
+import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderSPAPlugin } from './plugins';
-import { ReactDeployContext } from './deploy-context';
 import { ReactAppBuildResult } from './react-build-result';
+import { html } from '../../webpack';
+import { ReactDeployContext } from '.';
 
 export class ReactApp implements Application {
   constructor(
@@ -51,6 +52,15 @@ export class ReactApp implements Application {
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
+    const htmlConfig: BundlerHtmlConfig[] = [
+      {
+        title: context.name,
+        templateContent: html(context.name),
+        minify: false,
+        // filename: ''.html`,
+      },
+    ];
+    Object.assign(context, { html: htmlConfig });
     const bundler = await this.getBundler(context);
     await bundler.run();
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
