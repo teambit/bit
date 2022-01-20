@@ -52,7 +52,7 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions, LANE_KEY } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
 import type {
   AddActionResults,
@@ -590,15 +590,11 @@ export class Workspace implements ComponentFactory {
     }
     const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
 
-    const remoteLane = this.consumer.bitMap.getContent()[LANE_KEY] as RemoteLaneId;
-
-    if (!trackData || !remoteLane) {
+    if (!trackData) {
       return null;
     }
 
-    const remoteLaneName = remoteLane.name;
-
-    return RemoteLaneId.from(remoteLaneName, trackData.remoteScope);
+    return RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
   }
 
   getDefaultExtensions(): ExtensionDataList {

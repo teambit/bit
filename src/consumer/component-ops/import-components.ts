@@ -167,8 +167,23 @@ export default class ImportComponents {
 
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
-    if (this.options.lanes) {
-      await this.populateBitIdsFromLanes(bitIds);
+    if (this.options.lanes && !this.options.skipLane) {
+      const idsToFilter: BitId[] = [];
+      await Promise.all(
+        this.options.ids.map(async (idStr: string) => {
+          const ids: BitId[] = [];
+          if (hasWildcard(idStr)) {
+            const remoteIdsByWildcard = await getRemoteBitIdsByWildcards(idStr);
+            ids.push(...remoteIdsByWildcard);
+          } else {
+            ids.push(BitId.parse(idStr, true));
+          }
+          if (ids.some((id) => id.scope === this.options.lanes?.laneIds[0].scope)) {
+            idsToFilter.push(...ids);
+          }
+        })
+      );
+      await this.populateBitIdsFromLanes(bitIds, idsToFilter);
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -196,13 +211,18 @@ export default class ImportComponents {
     return BitIds.uniqFromArray(bitIds);
   }
 
-  private async populateBitIdsFromLanes(bitIds: BitId[]) {
+  private async populateBitIdsFromLanes(bitIds: BitId[], idsToFilter: BitId[]) {
     if (!this.options.lanes) return;
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+
     try {
+      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
       const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
       this.laneObjects = lanes;
       lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+      bitIds =
+        idsToFilter.length > 0
+          ? bitIds.filter((bitId) => idsToFilter.some((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
+          : bitIds;
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
         // the lane could be a local lane so no need to throw an error in such case
