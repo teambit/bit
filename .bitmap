@@ -1509,6 +1509,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/top-bar"
     },
+    "ui/tree": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/tree"
+    },
     "ui/tree/drawer": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.486",
