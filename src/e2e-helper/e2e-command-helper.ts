@@ -272,8 +272,8 @@ export default class CommandHelper {
     const comp = this.catComponent(id, cwd);
     return comp.head.substring(0, 9);
   }
-  getHeadOfLane(laneName: string, componentName: string) {
-    const lane = this.catLane(laneName);
+  getHeadOfLane(laneName: string, componentName: string, cwd = this.scopes.localPath) {
+    const lane = this.catLane(laneName, cwd);
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }

@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
@@ -111,6 +112,16 @@ export default class ImportComponents {
       ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
       : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
+    if (this.laneObjects && this.options.objectsOnly) {
+      // merge the lane objects
+      const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
+        this.scope.sources.mergeLane(laneObject, true)
+      );
+      // @todo: handle diverge cases and errors.
+      // const lanesErrors = mergeAllLanesResults.map((r) => r.mergeErrors).flat();
+      const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
+      await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
+    }
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
     this._throwForDivergedHistory();

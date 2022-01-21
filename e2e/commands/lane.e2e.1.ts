@@ -1413,4 +1413,38 @@ describe('bit lane command', function () {
       expect(list[0].currentVersion).to.equal('0.0.1');
     });
   });
+  describe('update components from remote lane', () => {
+    let afterFirstExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(3, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    describe('running "bit import" when the local is behind', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+        helper.command.import();
+      });
+      it('bit import should not only bring the components but also merge the lane object', () => {
+        const headOnLocalLane = helper.command.getHeadOfLane('dev', 'comp1');
+        const headOnRemoteLane = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+        expect(headOnLocalLane).to.equal(headOnRemoteLane);
+      });
+      it('bit status should show the components as pending-updates', () => {
+        const status = helper.command.statusJson();
+        expect(status.outdatedComponents).to.have.lengthOf(3);
+      });
+      it('bit checkout latest --all should update them all to the latest version', () => {
+        helper.command.checkout('latest --all');
+        helper.command.expectStatusToBeClean();
+      });
+    });
+  });
 });

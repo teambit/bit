@@ -360,7 +360,9 @@ export default class Component extends BitObject {
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.latest();
-    if (this.isEmpty()) return false; // in case a snap was created on another lane
+    if (this.isEmpty() && !this.laneHeadRemote) {
+      return false; // in case a snap was created on another lane
+    }
     if (isTag(latest) && isTag(version)) {
       return semver.gt(latest, version);
     }
