@@ -211,10 +211,12 @@ export default class ImportComponents {
     if (!this.options.lanes) return;
 
     this.laneObjects = this.options.lanes.lanes as Lane[];
-    const bitIdsFromLane = this.laneObjects
-      .flatMap((lane) => lane.toBitIds())
-      .filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)));
-    bitIds.push(...bitIdsFromLane);
+    const bitIdsFromLane = this.laneObjects.flatMap((lane) => lane.toBitIds());
+    const filteredIds =
+      idsToFilter.length > 0
+        ? bitIdsFromLane.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
+        : bitIdsFromLane;
+    bitIds.push(...filteredIds);
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
