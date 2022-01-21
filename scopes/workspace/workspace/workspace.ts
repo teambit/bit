@@ -916,6 +916,7 @@ export class Workspace implements ComponentFactory {
    * the component.json file in the component folder
    * matching pattern in the variants config
    * defaults extensions from workspace config
+   * extensions from the model.
    */
   async componentExtensions(componentId: ComponentID, componentFromScope?: Component): Promise<ExtensionDataList> {
     // TODO: consider caching this result
