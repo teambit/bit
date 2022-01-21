@@ -39,6 +39,8 @@ export class Importer {
   }
 
   private async populateLanesDataIfNeeded(importOptions: ImportOptions) {
-    importOptions.lanes = (await this.workspace.getCurrentRemoteLaneId()) || undefined;
+    const currentRemoteLane = await this.workspace.getCurrentRemoteLaneId();
+    if (!currentRemoteLane) return;
+    importOptions.lanes = { laneIds: [currentRemoteLane.laneId], lanes: [currentRemoteLane.lane] };
   }
 }

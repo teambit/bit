@@ -625,7 +625,7 @@ export class Workspace implements ComponentFactory {
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane id (name+scope). otherwise, return null.
    */
-  async getCurrentRemoteLaneId(): Promise<{ laneIds: RemoteLaneId[]; lanes?: Lane[] } | null> {
+  async getCurrentRemoteLaneId(): Promise<{ laneId: RemoteLaneId; lane: Lane } | null> {
     const currentLane = this.getCurrentLaneId();
     if (currentLane.isDefault()) {
       return null;
@@ -636,12 +636,11 @@ export class Workspace implements ComponentFactory {
     }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
     const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
-    const laneIds = [laneId];
     try {
-      const lanes = await scopeComponentImporter.importLanes(laneIds);
+      const lane = await scopeComponentImporter.importLanes([laneId])[0];
       return {
-        lanes,
-        laneIds,
+        laneId,
+        lane,
       };
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
