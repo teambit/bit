@@ -218,8 +218,10 @@ export default class ImportComponents {
     try {
       const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
       this.laneObjects = lanes;
-      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
-      bitIds = bitIds.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)));
+      const bitIdsFromLane = lanes
+        .flatMap((lane) => lane.toBitIds())
+        .filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)));
+      bitIds.push(...bitIdsFromLane);
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
         // the lane could be a local lane so no need to throw an error in such case

@@ -401,40 +401,52 @@ describe('bit lane command', function () {
     });
   });
   describe('switching lanes and importing in a new scope from remote scope', () => {
-    let newScope;
+    let mainScope;
     let laneScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      newScope = helper.scopeHelper.cloneLocalScope();
 
+      mainScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane('dev');
+      laneScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.switchLocalLane('main');
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp2/index.js');
       helper.command.addComponent('comp2/');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.command.createLane('dev');
-      laneScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('dev');
       helper.fs.outputFile('comp1/comp.model.js');
       helper.fs.outputFile('comp2/comp.model.js');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
     it('should import the latest from main when on main', () => {
-      helper.scopeHelper.getClonedLocalScope(newScope);
-      const result = helper.command.import(`${helper.scopes.remote}/*`);
-      expect(result).to.have.string('0.0.1');
+      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.command.import(`${helper.scopes.remote}/*`);
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(2);
+      expect(result[0].currentVersion).to.have.string('0.0.1');
+      expect(result[1].currentVersion).to.have.string('0.0.1');
     });
     it('should not import the latest from main when on a lane', () => {
       helper.scopeHelper.getClonedLocalScope(laneScope);
-      const result = helper.command.import(`${helper.scopes.remote}/*`);
-      expect(result).to.not.have.string('comp1@0.0.1');
+      helper.command.importComponent('comp2');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp2');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
     });
-    it('should only import comp1 from the lane', () => {
+    it('should only import comp1 from the lane when on a lane', () => {
       helper.scopeHelper.getClonedLocalScope(laneScope);
-      const result = helper.command.import(`${helper.scopes.remote}/comp1`);
-      expect(result).to.not.have.string('comp2@0.0.1');
+      helper.command.importComponent('comp1');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp1');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
     });
   });
   describe('merging lanes', () => {
