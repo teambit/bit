@@ -432,7 +432,7 @@ describe('bit lane command', function () {
       expect(result[0].currentVersion).to.have.string('0.0.1');
       expect(result[1].currentVersion).to.have.string('0.0.1');
     });
-    it('should not import the latest from main when on a lane', () => {
+    it('should only import comp2 from the lane when on a lane', () => {
       helper.scopeHelper.getClonedLocalScope(laneScope);
       helper.command.importComponent('comp2');
       const result = helper.command.listParsed();
