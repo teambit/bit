@@ -15,7 +15,7 @@ export class Importer {
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
-    this.populateLanesDataIfNeeded(importOptions);
+    await this.populateLanesDataIfNeeded(importOptions);
     const importComponents = new ImportComponents(consumer, importOptions);
     const { dependencies, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
@@ -38,11 +38,7 @@ export class Importer {
     return components.map((component) => componentIdToPackageName(component));
   }
 
-  private populateLanesDataIfNeeded(importOptions: ImportOptions) {
-    const remoteLaneId = this.workspace.getCurrentRemoteLaneId();
-    if (!remoteLaneId) {
-      return;
-    }
-    importOptions.lanes = { laneIds: [remoteLaneId] };
+  private async populateLanesDataIfNeeded(importOptions: ImportOptions) {
+    importOptions.lanes = (await this.workspace.getCurrentRemoteLaneId()) || undefined;
   }
 }

@@ -750,14 +750,9 @@ describe('bit lane command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
       beforeImport = helper.scopeHelper.cloneLocalScope();
-      helper.fs.outputFile('bar/foo/model.js');
-      helper.command.addComponent('bar/foo');
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
     });
     describe('without --skip-lane flag', () => {
       before(() => {

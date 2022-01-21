@@ -73,6 +73,9 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -99,6 +102,8 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
+import { ScopeNotFoundOrDenied } from '../../../src/remotes/exceptions/scope-not-found-or-denied';
+import { LaneNotFound } from '../../../src/api/scope/lib/exceptions/lane-not-found';
 
 export type EjectConfResult = {
   configPath: string;
@@ -620,18 +625,33 @@ export class Workspace implements ComponentFactory {
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane id (name+scope). otherwise, return null.
    */
-  getCurrentRemoteLaneId(): RemoteLaneId | null {
+  async getCurrentRemoteLaneId(): Promise<{ laneIds: RemoteLaneId[]; lanes?: Lane[] } | null> {
     const currentLane = this.getCurrentLaneId();
     if (currentLane.isDefault()) {
       return null;
     }
     const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
-
     if (!trackData) {
       return null;
     }
-
-    return RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+    const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
+    const laneIds = [laneId];
+    try {
+      const lanes = await scopeComponentImporter.importLanes(laneIds);
+      return {
+        lanes,
+        laneIds,
+      };
+    } catch (err) {
+      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
+        return null;
+      }
+      throw err;
+    }
   }
 
   getDefaultExtensions(): ExtensionDataList {
