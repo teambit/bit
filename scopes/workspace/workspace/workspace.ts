@@ -76,6 +76,8 @@ import { CompilationInitiator } from '@teambit/compiler';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -102,8 +104,7 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
-import { ScopeNotFoundOrDenied } from '../../../src/remotes/exceptions/scope-not-found-or-denied';
-import { LaneNotFound } from '../../../src/api/scope/lib/exceptions/lane-not-found';
+import GeneralError from '../../../src/error/general-error';
 
 export type EjectConfResult = {
   configPath: string;
@@ -637,10 +638,13 @@ export class Workspace implements ComponentFactory {
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
     const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
     try {
-      const lane = await scopeComponentImporter.importLanes([laneId])[0];
+      const lanes = await scopeComponentImporter.importLanes([laneId]);
+
+      if (!lanes || lanes.length === 0) return null;
+
       return {
         laneId,
-        lane,
+        lane: lanes[0],
       };
     } catch (err) {
       if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
