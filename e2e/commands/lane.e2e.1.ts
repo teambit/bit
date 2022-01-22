@@ -1444,7 +1444,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show the components as pending-updates', () => {
         const status = helper.command.statusJson();
-        expect(status.outdatedComponents).to.have.lengthOf(3);
+        expect(status.outdatedComponents).to.have.lengthOf(1);
       });
       it('bit checkout latest --all should update them all to the latest version', () => {
         helper.command.checkout('latest --all');
