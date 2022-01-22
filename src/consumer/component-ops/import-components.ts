@@ -117,8 +117,6 @@ export default class ImportComponents {
       const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
         this.scope.sources.mergeLane(laneObject, true)
       );
-      // @todo: handle diverge cases and errors.
-      // const lanesErrors = mergeAllLanesResults.map((r) => r.mergeErrors).flat();
       const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
       await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
     }
