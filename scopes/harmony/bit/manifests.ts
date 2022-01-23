@@ -28,6 +28,7 @@ import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
+import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -69,6 +70,7 @@ import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
+import { ComponentLogAspect } from '@teambit/component-log';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { BitAspect } from './bit.aspect';
 
@@ -85,6 +87,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
+  [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
@@ -144,6 +147,7 @@ export const manifestsMap = {
   [ForkingAspect.id]: ForkingAspect,
   [RenamingAspect.id]: RenamingAspect,
   [NewComponentHelperAspect.id]: NewComponentHelperAspect,
+  [ComponentLogAspect.id]: ComponentLogAspect,
 };
 
 export function isCoreAspect(id: string) {

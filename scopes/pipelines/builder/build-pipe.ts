@@ -55,8 +55,13 @@ export class BuildPipe {
     readonly tasksQueue: TasksQueue,
     readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
-    readonly artifactFactory: ArtifactFactory
+    readonly artifactFactory: ArtifactFactory,
+    private previousTaskResults?: TaskResults[]
   ) {}
+
+  get allTasksResults(): TaskResults[] {
+    return [...(this.previousTaskResults || []), ...(this.taskResults || [])];
+  }
 
   /**
    * execute a pipeline of build tasks.
@@ -149,7 +154,7 @@ export class BuildPipe {
   private getBuildContext(envId: string) {
     const buildContext = this.envsBuildContext[envId];
     if (!buildContext) throw new Error(`unable to find buildContext for ${envId}`);
-    buildContext.previousTasksResults = this.taskResults;
+    buildContext.previousTasksResults = this.allTasksResults;
     return buildContext;
   }
 
@@ -160,8 +165,9 @@ export class BuildPipe {
     tasksQueue: TasksQueue,
     envsBuildContext: EnvsBuildContext,
     logger: Logger,
-    artifactFactory: ArtifactFactory
+    artifactFactory: ArtifactFactory,
+    previousTaskResults?: TaskResults[]
   ) {
-    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory);
+    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory, previousTaskResults);
   }
 }

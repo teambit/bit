@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
-import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
@@ -15,7 +14,6 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
 import { ComponentWithDependencies, Scope } from '../../scope';
-import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import { Lane, ModelComponent, Version } from '../../scope/models';
 import { getScopeRemotes } from '../../scope/scope-remotes';
@@ -29,8 +27,6 @@ import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-
 import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import ManyComponentsWriter from './many-components-writer';
-import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
-import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -167,8 +163,23 @@ export default class ImportComponents {
 
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
-    if (this.options.lanes) {
-      await this.populateBitIdsFromLanes(bitIds);
+    if (this.options.lanes && !this.options.skipLane) {
+      const idsToFilter: BitId[] = [];
+      await Promise.all(
+        this.options.ids.map(async (idStr: string) => {
+          const ids: BitId[] = [];
+          if (hasWildcard(idStr)) {
+            const remoteIdsByWildcard = await getRemoteBitIdsByWildcards(idStr);
+            ids.push(...remoteIdsByWildcard);
+          } else {
+            ids.push(BitId.parse(idStr, true));
+          }
+          if (ids.some((id) => id.scope === this.options.lanes?.laneIds[0].scope)) {
+            idsToFilter.push(...ids);
+          }
+        })
+      );
+      await this.populateBitIdsFromLanes(bitIds, idsToFilter);
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -196,22 +207,16 @@ export default class ImportComponents {
     return BitIds.uniqFromArray(bitIds);
   }
 
-  private async populateBitIdsFromLanes(bitIds: BitId[]) {
+  private async populateBitIdsFromLanes(bitIds: BitId[], idsToFilter: BitId[]) {
     if (!this.options.lanes) return;
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-    try {
-      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
-      this.laneObjects = lanes;
-      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
-    } catch (err) {
-      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
-        // the lane could be a local lane so no need to throw an error in such case
-        loader.stop();
-        logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
-      } else {
-        throw err;
-      }
-    }
+
+    this.laneObjects = this.options.lanes.lanes as Lane[];
+    const bitIdsFromLane = this.laneObjects.flatMap((lane) => lane.toBitIds());
+    const filteredIds =
+      idsToFilter.length > 0
+        ? bitIdsFromLane.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
+        : bitIdsFromLane;
+    bitIds.push(...filteredIds);
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {

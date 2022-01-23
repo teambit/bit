@@ -142,6 +142,9 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
+  setEnv(compId: string, envId: string) {
+    return this.runCmd(`bit envs set ${compId} ${envId}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
@@ -264,6 +267,10 @@ export default class CommandHelper {
   getHead(id: string, cwd?: string) {
     const comp = this.catComponent(id, cwd);
     return comp.head;
+  }
+  getHeadShort(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
+    return comp.head.substring(0, 9);
   }
   getHeadOfLane(laneName: string, componentName: string) {
     const lane = this.catLane(laneName);
@@ -520,9 +527,8 @@ export default class CommandHelper {
   }
   switchRemoteLane(lane: string, flags?: string, getAll = true) {
     const getAllFlag = getAll ? '--get-all' : '';
-    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
+    return this.runCmd(`bit switch ${this.scopes.remote}/${lane} ${getAllFlag} ${flags || ''}`);
   }
-
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
@@ -542,8 +548,8 @@ export default class CommandHelper {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }
-  log(id: string) {
-    return this.runCmd(`bit log ${id}`);
+  log(id: string, flags = '') {
+    return this.runCmd(`bit log ${id} ${flags}`);
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);

@@ -38,15 +38,17 @@ export class NewComponentHelperMain {
 
   async writeAndAddNewComp(
     comp: Component,
-    targetPath: string,
     targetId: ComponentID,
+    options?: { path?: string; scope?: string },
     config?: { [aspectName: string]: any }
   ) {
+    const targetPath = this.getNewComponentPath(targetId, options?.path);
     await this.workspace.write(targetPath, comp);
     await this.workspace.track({
       rootDir: targetPath,
       componentName: targetId.fullName,
       mainFile: comp.state._consumer.mainFile,
+      defaultScope: options?.scope,
       config,
     });
     await this.workspace.bitMap.write();

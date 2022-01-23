@@ -102,9 +102,13 @@ ${WILDCARD_HELP('export remote-scope')}`;
     }
     const exportOutput = () => {
       if (isEmpty(componentsIds)) return '';
-      if (remote) return chalk.green(`exported ${componentsIds.length} components to scope ${chalk.bold(remote)}`);
+      const lanesOutput = exportedLanes.length ? ` from lane ${chalk.bold(exportedLanes[0].name)}` : '';
+      if (remote)
+        return chalk.green(`exported ${componentsIds.length} components${lanesOutput} to scope ${chalk.bold(remote)}`);
       return chalk.green(
-        `exported the following ${componentsIds.length} component(s):\n${chalk.bold(componentsIds.join('\n'))}`
+        `exported the following ${componentsIds.length} component(s)${lanesOutput}:\n${chalk.bold(
+          componentsIds.join('\n')
+        )}`
       );
     };
     const nonExistOnBitMapOutput = () => {
@@ -129,14 +133,7 @@ ${WILDCARD_HELP('export remote-scope')}`;
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
-    const lanesOutput = () => {
-      if (!exportedLanes.length) return '';
-      return chalk.green(
-        `exported the following ${exportedLanes.length} lane(s):
-${exportedLanes.map((l) => `${chalk.bold(l.name)} (${l.components.length} components)`).join('\n')}\n\n`
-      );
-    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
   }
 }

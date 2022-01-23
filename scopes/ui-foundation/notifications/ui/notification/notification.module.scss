@@ -8,7 +8,7 @@ $animationTime: 300ms;
 
 .notification {
   display: flex;
-  align-items: start; // align to top
+  align-items: flex-start; // align to top
   padding: 16px;
   max-width: 330px;
   min-width: 230px;
@@ -45,7 +45,7 @@ $animationTime: 300ms;
 }
 
 .icon {
-  justify-self: start;
+  justify-self: flex-start;
   margin-right: 16px;
   font-size: 24px;
   width: 24px;

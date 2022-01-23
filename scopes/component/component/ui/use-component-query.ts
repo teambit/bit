@@ -39,6 +39,9 @@ const componentFields = gql`
       id
       icon
     }
+    preview {
+      includesEnvTemplate
+    }
   }
   ${componentIdFields}
 `;

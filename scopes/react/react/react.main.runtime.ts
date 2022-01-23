@@ -30,10 +30,8 @@ import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/esli
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
-import { ReactAppType } from './react.app-type';
+import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { ReactAppOptions } from './react-app-options';
-import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
 
 type ReactDeps = [
@@ -187,17 +185,6 @@ export class ReactMain {
     //   getBuildPipe: () => this.reactEnv.getBuildPipe([transformer], tsModule),
     // });
     return this.useTypescript({ buildConfig: [transformer] }, tsModule);
-  }
-
-  /**
-   * register a new React application.
-   */
-  registerReactApp(options: ReactAppOptions) {
-    this.application.registerApp(
-      new ReactApp(options.name, options.entry, options.portRange || [3000, 4000], this.reactEnv, options.deploy)
-    );
-
-    return this;
   }
 
   /**

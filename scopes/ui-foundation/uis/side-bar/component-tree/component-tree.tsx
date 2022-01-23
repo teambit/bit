@@ -1,26 +1,29 @@
 import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
-import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { TreeNodeContext, TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
-import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
+import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {
-  onSelect?: (id: string, event?: React.MouseEvent) => void;
-  selected?: string;
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
+  isCollapsed?: boolean;
 };
 
-export function ComponentTree({
-  components,
-  onSelect,
-  selected,
-  TreeNode = DefaultTreeNodeRenderer,
-}: ComponentTreeProps) {
+export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
+  const { pathname } = useLocation();
+  const activeComponent = useMemo(() => {
+    return components
+      .find((x) => {
+        // TODO - reuse logic from component.route.ts
+        return pathname && pathname.includes(x.id.fullName);
+      })
+      ?.id.toString({ ignoreVersion: true });
+  }, [components, pathname]);
+
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -33,11 +36,7 @@ export function ComponentTree({
 
   return (
     <div style={indentStyle(1)}>
-      <TreeNodeContext.Provider value={TreeNode}>
-        <TreeContextProvider onSelect={onSelect} selected={selected}>
-          <RootNode node={rootNode} depth={1} />
-        </TreeContextProvider>
-      </TreeNodeContext.Provider>
+      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
     </div>
   );
 }

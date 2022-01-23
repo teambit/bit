@@ -19,7 +19,7 @@ export function ${Name}App() {
              {/* about page component */}
           </Route>
 
-        </Switch>
+        </Routes>
 
         {/* footer component */}
 

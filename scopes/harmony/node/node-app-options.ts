@@ -1,8 +1,10 @@
-import { Capsule } from '@teambit/isolator';
-import { BuildContext } from '@teambit/builder';
+import { AppBuildResult, DeployFn } from '@teambit/application';
 
-export interface DeployContext extends BuildContext {
-  entry: string;
+export interface DeployContext extends AppBuildResult {
+  /**
+   * the entry file of the app e.g: dist/app.js
+   */
+  entry?: string;
 }
 
 export type NodeAppOptions = {
@@ -25,5 +27,5 @@ export type NodeAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>;
+  deploy?: DeployFn;
 };

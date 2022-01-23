@@ -11,6 +11,7 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { ArtifactList } from './artifact';
@@ -19,7 +20,7 @@ import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
-import { BuildTask } from './build-task';
+import { BuildTask, BuildTaskHelper } from './build-task';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -97,15 +98,32 @@ export class BuilderMain {
     pipeResults.push(envsExecutionResults);
     if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions)
-        : await this.runTagTasks(components, isolateOptions);
-      if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
+        ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
+        : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
+      if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
     await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
+    this.validateBuilderDataMap(builderDataMap);
     return { builderDataMap, pipeResults };
+  }
+
+  private validateBuilderDataMap(builderDataMap: ComponentMap<BuilderData>) {
+    builderDataMap.forEach((buildData: BuilderData, component) => {
+      const taskSerializedIds = buildData.pipeline.map((t) =>
+        BuildTaskHelper.serializeId({ aspectId: t.taskId, name: t.taskName })
+      );
+      const duplications = findDuplications(taskSerializedIds);
+      if (duplications.length) {
+        throw new Error(
+          `build-task-results validation has failed. the following task(s) of "${component.id.toString()}" are duplicated: ${duplications.join(
+            ', '
+          )}`
+        );
+      }
+    });
   }
 
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
@@ -133,6 +151,20 @@ export class BuilderMain {
     return flatten(vinyls);
   }
 
+  async getArtifactsVinylByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
   getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
     const artifacts = this.getArtifacts(component);
     return artifacts?.filter((artifact) => artifact.name === name);
@@ -146,6 +178,15 @@ export class BuilderMain {
   getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
     const artifacts = this.getArtifacts(component);
     return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  }
+
+  getArtifactsByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
   }
 
   getDataByAspect(component: Component, aspectName: string): Serializable | undefined {
@@ -188,16 +229,30 @@ export class BuilderMain {
     return buildResult;
   }
 
-  async runTagTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async runTagTasks(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    previousTasksResults?: TaskResults[]
+  ): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.tagService, { seedersOnly: isolateOptions?.seedersOnly });
+    const buildResult = await envs.runOnce(this.tagService, {
+      seedersOnly: isolateOptions?.seedersOnly,
+      previousTasksResults,
+    });
 
     return buildResult;
   }
 
-  async runSnapTasks(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async runSnapTasks(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    previousTasksResults?: TaskResults[]
+  ): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.snapService, { seedersOnly: isolateOptions?.seedersOnly });
+    const buildResult = await envs.runOnce(this.snapService, {
+      seedersOnly: isolateOptions?.seedersOnly,
+      previousTasksResults,
+    });
 
     return buildResult;
   }

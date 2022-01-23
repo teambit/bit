@@ -598,7 +598,14 @@ export default class BitMap {
         if (matches && matches.length === 1) {
           return matches[0].id;
         }
+        if (this.updatedIds[idWithoutScope]) {
+          return this.updatedIds[idWithoutScope].id;
+        }
       }
+    }
+
+    if (this.updatedIds[id]) {
+      return this.updatedIds[id].id;
     }
 
     if (shouldThrow) {
@@ -659,13 +666,16 @@ export default class BitMap {
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
         componentMap.files = files;
-        componentMap.id = componentId;
         if (componentId.hasVersion() && this.workspaceLane) {
-          // happening during checkout for example
+          // happening during checkout for example or during switch to a remote lane
           // @todo: needs to decide, maybe the best place to sync the workspaceLane is before writing to the .bitmap
           // file. maybe in `toObject` method in this class.
           this.workspaceLane.addEntry(componentId);
+          // this is to make sure the version of the lane is not written to the .bitmap file.
+          // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
+          componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
         }
+        componentMap.id = componentId;
         return componentMap;
       }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {

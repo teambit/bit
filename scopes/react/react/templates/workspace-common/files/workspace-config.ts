@@ -54,7 +54,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
       /**
        * configures components with namespaces 'envs' and 'aspects' to use the default Aspect development environment.
       */
-      "{envs/**}, {aspects/**}": {
+      "{envs/**}, {aspects/**}, {apps/**}": {
         "teambit.harmony/aspect": {}
       }
     }`),

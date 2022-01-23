@@ -1,10 +1,8 @@
 import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
-import { Capsule } from '@teambit/isolator';
 import { ReactEnv } from '@teambit/react';
-import { Application } from '@teambit/application';
-import { BuildContext } from '@teambit/builder';
+import { Application, DeployFn } from '@teambit/application';
 import { NodeEnv } from './node.env';
 import { DeployContext } from './node-app-options';
 
@@ -15,7 +13,7 @@ export class NodeApp implements Application {
     readonly portRange: number[],
     readonly nodeEnv: NodeEnv & ReactEnv,
     readonly logger: Logger,
-    readonly deploy?: (context: DeployContext, capsule: Capsule) => Promise<void>
+    readonly deploy?: DeployFn
   ) {}
 
   applicationType = 'node';
@@ -32,10 +30,10 @@ export class NodeApp implements Application {
     });
   }
 
-  async build(context: BuildContext): Promise<DeployContext> {
+  async build(): Promise<DeployContext> {
     const { base } = parse(this.entry);
     const { distDir } = this.nodeEnv.getCompiler();
     const entry = join(distDir, base);
-    return Object.assign(context, { entry });
+    return { entry };
   }
 }
