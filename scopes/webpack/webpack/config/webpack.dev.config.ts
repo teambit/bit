@@ -69,7 +69,9 @@ export function configFactory(
       level: 'error',
     },
 
-    stats: 'errors-only',
+    stats: {
+      errorDetails: true,
+    },
 
     devServer: {
       allowedHosts: 'all',

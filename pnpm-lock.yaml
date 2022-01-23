@@ -58,6 +58,7 @@ importers:
       '@teambit/base-ui.css-components.pill': 1.0.0
       '@teambit/base-ui.css-components.roundness': 1.0.0
       '@teambit/base-ui.elements.dots-loader': 1.0.1
+      '@teambit/base-ui.elements.icon': 1.0.0
       '@teambit/base-ui.elements.image': 1.0.0
       '@teambit/base-ui.elements.label': 1.0.0
       '@teambit/base-ui.elements.separator': 1.0.0
@@ -623,6 +624,7 @@ importers:
       '@teambit/base-ui.css-components.pill': registry.npmjs.org/@teambit/base-ui.css-components.pill/1.0.0_react-dom@17.0.2+react@17.0.2
       '@teambit/base-ui.css-components.roundness': registry.npmjs.org/@teambit/base-ui.css-components.roundness/1.0.0_react-dom@17.0.2+react@17.0.2
       '@teambit/base-ui.elements.dots-loader': registry.npmjs.org/@teambit/base-ui.elements.dots-loader/1.0.1_react-dom@17.0.2+react@17.0.2
+      '@teambit/base-ui.elements.icon': registry.npmjs.org/@teambit/base-ui.elements.icon/1.0.0_react-dom@17.0.2+react@17.0.2
       '@teambit/base-ui.elements.image': registry.npmjs.org/@teambit/base-ui.elements.image/1.0.0_react-dom@17.0.2+react@17.0.2
       '@teambit/base-ui.elements.label': registry.npmjs.org/@teambit/base-ui.elements.label/1.0.0_react-dom@17.0.2+react@17.0.2
       '@teambit/base-ui.elements.separator': registry.npmjs.org/@teambit/base-ui.elements.separator/1.0.0_react-dom@17.0.2+react@17.0.2
@@ -1438,6 +1440,9 @@ importers:
   scopes/design/ui/tooltip:
     specifiers: {}
 
+  scopes/design/ui/tree:
+    specifiers: {}
+
   scopes/docs/docs:
     specifiers: {}
 
@@ -1445,6 +1450,9 @@ importers:
     specifiers: {}
 
   scopes/envs/aspect-docs/envs:
+    specifiers: {}
+
+  scopes/envs/env:
     specifiers: {}
 
   scopes/envs/envs:

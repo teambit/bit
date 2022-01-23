@@ -492,18 +492,21 @@ export class Workspace implements ComponentFactory {
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
-    // When loading a component if it's an aspect make sure to load it as aspect as well
+    // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
-    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    // const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
 
+    // We are loading the component as aspect if it's an env, in order to be able to run the env-preview-template task which run only on envs.
+    // Without this loading we will have a problem in case the env is the only component in the workspace. in that case we will load it as component
+    // then we don't run it's provider so it doesn't register to the env slot, so we don't know it's an env.
     if (
       tryLoadAsAspect &&
-      this.envs.isUsingAspectEnv(component) &&
+      this.envs.isUsingEnvEnv(component) &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
-      (await this.hasId(component.id)) &&
-      !config.extension(component.id.toStringWithoutVersion(), true)
+      (await this.hasId(component.id))
+      // !config.extension(component.id.toStringWithoutVersion(), true)
     ) {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);

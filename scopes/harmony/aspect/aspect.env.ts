@@ -11,7 +11,7 @@ const tsconfig = require('./typescript/tsconfig.json');
 export const AspectEnvType = 'aspect';
 
 /**
- * a component environment built for [Aspects](https://reactjs.org) .
+ * a component environment built for Aspects .
  */
 export class AspectEnv implements DependenciesEnv {
   constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
@@ -49,11 +49,11 @@ export class AspectEnv implements DependenciesEnv {
     return patterns;
   }
 
-  getPreviewConfig(){
+  getPreviewConfig() {
     return {
       // strategyName: 'component',
-      splitComponentBundle: false
-    }
+      splitComponentBundle: false,
+    };
   }
 
   async getDependencies() {
