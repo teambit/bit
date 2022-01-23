@@ -880,6 +880,7 @@ jobs:
 
   e2e_test:
     <<: *defaults
+    resource_class: large
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
