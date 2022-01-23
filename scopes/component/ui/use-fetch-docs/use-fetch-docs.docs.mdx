@@ -1,0 +1,23 @@
+---
+description: 'A React Hook that increments a count by 1 each time it is called.'
+labels: ['hook', 'counter']
+---
+
+import { useFetchDocs } from './use-fetch-docs';
+
+## A React Hook to increment a count
+
+Increments the state of `count` by 1 each time `increment` is called
+
+### Component usage
+
+In this example clicking the button calls `increment` which increments the `count` by 1
+
+```js
+import { useFetchDocs } from './use-fetch-docs';
+
+const { count, increment } = useFetchDocs();
+
+<h1>The count is {count}</h1>
+<button onClick={increment}>increment</button>
+```
