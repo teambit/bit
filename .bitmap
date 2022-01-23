@@ -369,6 +369,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/entities/semantic-schema"
     },
+    "env": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/env",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "envs": {
         "scope": "teambit.envs",
         "version": "0.0.627",

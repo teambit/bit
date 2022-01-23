@@ -474,6 +474,12 @@
       },
       "teambit.harmony/node": {}
     },
+    // Special rules for all core envs
+    // "scopes/react/react, scopes/react/react-native, scopes/harmony/aspect, scopes/harmony/node, scopes/html/html": {
+      // "teambit.harmony/aspect": "-",
+      // Set the env env for all core envs
+      // "teambit.envs/env": {}
+    // },
     "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"

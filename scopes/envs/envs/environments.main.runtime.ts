@@ -5,6 +5,8 @@ import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
+import { EnvEnvType } from '@teambit/env';
+import { AspectEnvType } from '@teambit/aspect';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -461,7 +463,13 @@ export class EnvsMain {
   isUsingAspectEnv(component: Component): boolean {
     const data = this.getEnvData(component);
     if (!data) return false;
-    return data.type === 'aspect';
+    return data.type === AspectEnvType;
+  }
+
+  isUsingEnvEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === EnvEnvType;
   }
 
   /**
