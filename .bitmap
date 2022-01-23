@@ -1174,6 +1174,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-data-query"
     },
+    "ui/hooks/use-fetch-docs": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/use-fetch-docs"
+    },
     "ui/hooks/use-in-out-transition": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.485",
