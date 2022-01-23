@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, basename } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
@@ -11,20 +11,16 @@ import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, ChunksAssetsMap } from '@teambit/bundler';
+import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap } from '@teambit/bundler';
 import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
-import type { PreviewMain } from '../preview.main.runtime';
+import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
 
 export const PREVIEW_CHUNK_SUFFIX = 'preview';
 export const COMPONENT_CHUNK_SUFFIX = 'component';
 export const PREVIEW_CHUNK_FILENAME_SUFFIX = `${PREVIEW_CHUNK_SUFFIX}.js`;
 export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
-
-type ComponentPreviewMetaData = {
-  size?: Number;
-};
 
 export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
 export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
@@ -102,7 +98,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: ComputeTargetsContext) {
     const path = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
-    const componentPreviewChunkId = `${component.id.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+    const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
 
     const entries = {
       [componentPreviewChunkId]: {
@@ -163,7 +159,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     context.components.forEach((component) => {
       const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
       if (!capsule) return;
-      const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
+      const files = this.findAssetsForComponent(component, result.assets, result.entriesAssetsMap || {});
       if (!files) return;
 
       files.forEach((asset) => {
@@ -173,30 +169,38 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         // if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
         // We don't use the mkdirSync as it uses the capsule fs which uses memfs, which doesn't know to handle nested none existing folders
         mkdirpSync(join(capsule.path, this.getArtifactDirectory()));
-        let filename = asset.name;
-        if (filePath.endsWith('.css'))
-          filename = `${capsule.component.id.toString({ ignoreVersion: true, fsCompatible: true })}.css`;
+        const filename = basename(asset.name);
+        // let filename = asset.name;
+        // if (filePath.endsWith('.css')){
+        //   filename = this.getCssFileName(capsule.component.id);
+        // }
         capsule.fs.writeFileSync(join(this.getArtifactDirectory(), filename), contents);
       });
     });
   }
 
+  // private getCssFileName(componentId: ComponentID): string {
+  //   return `${componentId.toString({ ignoreVersion: true, fsCompatible: true })}.css`;
+  // }
+
   private findAssetsForComponent(
     component: Component,
     assets: Asset[],
-    chunksAssetsMap: ChunksAssetsMap
+    entriesAssetsMap: EntriesAssetsMap
   ): Asset[] | undefined {
     if (!assets) return undefined;
 
-    const componentChunkId = this.getComponentChunkId(component.id, 'component');
-    const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
-    const componentFiles = chunksAssetsMap[componentChunkId] || [];
-    const previewFiles = chunksAssetsMap[componentPreviewChunkId] || [];
-    const assetNameList = previewFiles.concat(componentFiles);
+    const componentEntryId = component.id.toStringWithoutVersion();
+    const componentPreviewEntryId = this.getComponentChunkId(component.id, 'preview');
+    const componentFiles = entriesAssetsMap[componentEntryId]?.assets || [];
+    const componentAuxiliaryFiles = entriesAssetsMap[componentEntryId]?.auxiliaryAssets || [];
+    const componentPreviewFiles = entriesAssetsMap[componentPreviewEntryId]?.assets || [];
+    const componentPreviewAuxiliaryFiles = entriesAssetsMap[componentPreviewEntryId]?.auxiliaryAssets || [];
 
-    const files = assets.filter((asset) => {
-      return assetNameList.includes(asset.name);
-    });
+    const files = componentFiles
+      .concat(componentAuxiliaryFiles)
+      .concat(componentPreviewFiles)
+      .concat(componentPreviewAuxiliaryFiles);
     return files;
   }
 
@@ -209,14 +213,36 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     result: BundlerResult,
     component: Component
   ): ComponentPreviewMetaData {
-    const files = this.findAssetsForComponent(component, result.assets, result.assetsByChunkName || {});
-    const componentFile = files?.find((file) => {
-      return file.name.endsWith(COMPONENT_CHUNK_FILENAME_SUFFIX);
+    const componentEntryId = component.id.toStringWithoutVersion();
+    if (!result?.entriesAssetsMap || !result?.entriesAssetsMap[componentEntryId]) {
+      return {};
+    }
+    const files = (result.entriesAssetsMap[componentEntryId]?.assets || []).map((file) => {
+      return {
+        name: basename(file.name),
+        size: file.size,
+      };
     });
-    if (!componentFile) return {};
-    return {
-      [COMPONENT_STRATEGY_SIZE_KEY_NAME]: componentFile.size,
+    const filesTotalSize = result.entriesAssetsMap[componentEntryId]?.assetsSize || 0;
+    const assets = (result.entriesAssetsMap[componentEntryId]?.auxiliaryAssets || []).map((file) => {
+      return {
+        name: basename(file.name),
+        size: file.size,
+      };
+    });
+    const assetsTotalSize = result.entriesAssetsMap[componentEntryId]?.auxiliaryAssetsSize || 0;
+    const totalSize = filesTotalSize + assetsTotalSize;
+
+    const metadata = {
+      [COMPONENT_STRATEGY_SIZE_KEY_NAME]: {
+        files,
+        assets,
+        totalFiles: filesTotalSize,
+        totalAssets: assetsTotalSize,
+        total: totalSize,
+      },
     };
+    return metadata;
   }
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
