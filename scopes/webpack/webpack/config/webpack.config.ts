@@ -37,6 +37,9 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       // The build folder.
       path: `${target.outputPath}/public`,
     },
+    stats: {
+      errorDetails: true,
+    },
 
     resolve: {
       alias: fallbacksAliases,

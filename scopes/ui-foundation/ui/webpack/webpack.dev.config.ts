@@ -91,7 +91,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       level: 'error',
     },
 
-    stats: 'errors-only',
+    stats: {
+      errorDetails: true,
+    },
 
     devServer: {
       allowedHosts: 'all',
