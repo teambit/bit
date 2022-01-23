@@ -38,7 +38,6 @@ import Isolate from './commands/public-cmds/isolate-cmd';
 import Link from './commands/public-cmds/link-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
-import Log from './commands/public-cmds/log-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Merge from './commands/public-cmds/merge-cmd';
@@ -87,8 +86,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Dependencies(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Log(),
       new ScopeLog(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Test(),

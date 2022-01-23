@@ -30,7 +30,7 @@ import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/esli
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
-import { ReactAppType } from './apps/web/react.app-type';
+import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates, workspaceTemplates } from './react.templates';
 

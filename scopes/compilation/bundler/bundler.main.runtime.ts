@@ -7,7 +7,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
-import { BundlerContext } from './dev-server-context';
+import { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 

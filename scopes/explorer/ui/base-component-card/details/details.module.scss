@@ -28,6 +28,15 @@
     margin-right: 5px;
   }
 }
+.versionHolder {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  .img {
+    height: 14px;
+    margin-left: 5px;
+  }
+}
 .description {
   color: var(--bit-text-color-light, #6c707c);
   font-size: var(--bit-p-xs, 14px);
