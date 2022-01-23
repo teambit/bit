@@ -20,6 +20,17 @@ export type ChunksAssetsMap = {
   [assetName: string]: string[];
 };
 
+export type EntryAssets = {
+  assets: Asset[];
+  auxiliaryAssets: Asset[];
+  assetsSize: number;
+  auxiliaryAssetsSize: number;
+};
+
+export type EntriesAssetsMap = {
+  [entryId: string]: EntryAssets;
+};
+
 export type BundlerResult = {
   /**
    * list of generated assets.
@@ -30,6 +41,11 @@ export type BundlerResult = {
    * A map of assets names for each chunk
    */
   assetsByChunkName?: ChunksAssetsMap;
+
+  /**
+   * A map of assets for each entry point
+   */
+  entriesAssetsMap?: EntriesAssetsMap;
 
   /**
    * errors thrown during the bundling process.
