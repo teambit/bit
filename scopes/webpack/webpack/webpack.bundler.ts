@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { Bundler, BundlerResult, Target } from '@teambit/bundler';
-import { Logger } from '@teambit/logger';
+import type { Bundler, BundlerResult, Asset, Target } from '@teambit/bundler';
+import type { Logger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
-import { Compiler, Configuration } from 'webpack';
+import type { Compiler, Configuration, StatsCompilation } from 'webpack';
 
 export class WebpackBundler implements Bundler {
   constructor(
@@ -33,6 +33,8 @@ export class WebpackBundler implements Bundler {
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
           if (err) {
+            this.logger.error('get error from webpack compiler, full error:', err);
+
             return resolve({
               errors: [`${err.toString()}\n${err.stack}`],
               components,
@@ -40,7 +42,10 @@ export class WebpackBundler implements Bundler {
           }
           if (!stats) throw new BitError('unknown build error');
           const info = stats.toJson();
+
           return resolve({
+            assets: this.getAssets(info),
+            assetsByChunkName: info.assetsByChunkName,
             errors: info.errors,
             outputPath: stats.compilation.outputOptions.path,
             components,
@@ -53,6 +58,16 @@ export class WebpackBundler implements Bundler {
     });
     longProcessLogger.end();
     return componentOutput as BundlerResult[];
+  }
+
+  private getAssets(stats: StatsCompilation): Asset[] {
+    if (!stats.assets) return [];
+    return stats.assets.map((asset) => {
+      return {
+        name: asset.name,
+        size: asset.size,
+      };
+    });
   }
 
   private getComponents(outputPath: string) {

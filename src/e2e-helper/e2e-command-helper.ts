@@ -268,6 +268,10 @@ export default class CommandHelper {
     const comp = this.catComponent(id, cwd);
     return comp.head;
   }
+  getHeadShort(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
+    return comp.head.substring(0, 9);
+  }
   getHeadOfLane(laneName: string, componentName: string) {
     const lane = this.catLane(laneName);
     const component = lane.components.find((c) => c.id.name === componentName);
@@ -523,9 +527,8 @@ export default class CommandHelper {
   }
   switchRemoteLane(lane: string, flags?: string, getAll = true) {
     const getAllFlag = getAll ? '--get-all' : '';
-    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
+    return this.runCmd(`bit switch ${this.scopes.remote}/${lane} ${getAllFlag} ${flags || ''}`);
   }
-
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
@@ -545,8 +548,8 @@ export default class CommandHelper {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }
-  log(id: string) {
-    return this.runCmd(`bit log ${id}`);
+  log(id: string, flags = '') {
+    return this.runCmd(`bit log ${id} ${flags}`);
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);

@@ -552,7 +552,7 @@ jobs:
           path: bit/yarn.lock
 
   bit_build:
-    resource_class: large
+    resource_class: xlarge
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -578,10 +578,12 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=8096
+            NODE_OPTIONS: --max_old_space_size=12000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   bit_tag:
-    resource_class: large
+    resource_class: xlarge
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -628,7 +630,7 @@ jobs:
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max_old_space_size=8096
+            NODE_OPTIONS: --max_old_space_size=12000
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
@@ -1492,60 +1494,60 @@ workflows:
             - set_npm_registries
             - build
 
-  nightly:
-    triggers:
-      - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
-          cron: '0 3 * * *'
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - checkout_code
-      - set_ssh_key
-      - set_npm_registries
-      - setup_harmony:
-          requires:
-            - set_npm_registries
-            - checkout_code
-      - bit_tag:
-          <<: *master_only_filter
-          requires:
-            - setup_harmony
-      - bundle_version_linux:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-      - bundle_version_windows:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-      - bundle_version_macos:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-      - harmony_publish_to_gcloud:
-          <<: *master_only_filter
-          requires:
-            - bundle_version_linux
-            - bundle_version_windows
-            - bundle_version_macos
-      - bit_export:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-      - symphony_docker_build:
-          requires:
-            - bit_tag
-      - docker_build:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - docker_build
+  # nightly:
+  #   triggers:
+  #     - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
+  #         cron: '0 3 * * *'
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+  #   jobs:
+  #     - checkout_code
+  #     - set_ssh_key
+  #     - set_npm_registries
+  #     - setup_harmony:
+  #         requires:
+  #           - set_npm_registries
+  #           - checkout_code
+  #     - bit_tag:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - setup_harmony
+  #     - bundle_version_linux:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - bit_tag
+  #     - bundle_version_windows:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - bit_tag
+  #     - bundle_version_macos:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - bit_tag
+  #     - harmony_publish_to_gcloud:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - bundle_version_linux
+  #           - bundle_version_windows
+  #           - bundle_version_macos
+  #     - bit_export:
+  #         <<: *master_only_filter
+  #         requires:
+  #           - bit_tag
+  #     - symphony_docker_build:
+  #         requires:
+  #           - bit_tag
+  #     - docker_build:
+  #         requires:
+  #           - harmony_publish_to_gcloud
+  #     - docker_non_root_build:
+  #         requires:
+  #           - harmony_publish_to_gcloud
+  #     - server_docker_build:
+  #         requires:
+  #           - docker_build
 
   windows-nightly:
     triggers:

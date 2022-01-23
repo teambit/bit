@@ -1,3 +1,4 @@
+import flatten from 'lodash.flatten';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -21,6 +22,8 @@ import { ComponentsDrawer } from './ui/components-drawer';
 export type ScopeBadge = ComponentType;
 
 export type ScopeBadgeSlot = SlotRegistry<ScopeBadge[]>;
+
+export type ContextSlot = SlotRegistry<ScopeContextType[]>;
 
 export type ScopeContextType = ComponentType<{ scope: ScopeModel; children: ReactNode }>;
 
@@ -84,7 +87,12 @@ export class ScopeUI {
     /**
      * overview line slot to add new lines beneath the overview section
      */
-    private overviewSlot: OverviewLineSlot
+    private overviewSlot: OverviewLineSlot,
+
+    /**
+     * add a new context to ui
+     */
+    private contextSlot: ContextSlot
   ) {}
 
   private setSidebarToggle: (updated: CommandHandler) => void = () => {};
@@ -167,22 +175,29 @@ export class ScopeUI {
    */
   registerMetadata() {}
 
-  private _context: () => ScopeContextType;
-
   /**
    * add a new context to the scope.
    */
-  addContext(context: ScopeContextType) {
-    this._context = () => context;
+  addContext(...context: ScopeContextType[]) {
+    this.contextSlot.register(context);
+    return this;
   }
 
-  getContext() {
-    if (!this._context) return undefined;
-    return this._context();
+  private getContext() {
+    const contexts = this.contextSlot.values();
+    return flatten(contexts);
   }
 
   registerMenuItem = (menuItems: MenuItem[]) => {
     this.menuItemSlot.register(menuItems);
+  };
+
+  /**
+   * register a sidebar Widget for the scope
+   */
+  registerSidebarWidget = (componentTreeNodes: ComponentTreeNode[]) => {
+    componentTreeNodes.map((componentTreeNode) => this.sidebarSlot.register(componentTreeNode));
+    return this;
   };
 
   /**
@@ -259,6 +274,7 @@ export class ScopeUI {
     Slot.withType<CornerSlot>(),
     Slot.withType<OverviewLineSlot>(),
     Slot.withType<SidebarItemSlot>(),
+    Slot.withType<ContextSlot>(),
   ];
 
   static async provider(
@@ -280,6 +296,7 @@ export class ScopeUI {
       sidebarItemSlot,
       cornerSlot,
       overviewSlot,
+      contextSlot,
     ]: [
       RouteSlot,
       RouteSlot,
@@ -289,7 +306,8 @@ export class ScopeUI {
       MenuItemSlot,
       SidebarItemSlot,
       CornerSlot,
-      OverviewLineSlot
+      OverviewLineSlot,
+      ContextSlot
     ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
@@ -306,7 +324,8 @@ export class ScopeUI {
       sidebarItemSlot,
       menuItemSlot,
       cornerSlot,
-      overviewSlot
+      overviewSlot,
+      contextSlot
     );
     scopeUi.registerExplicitRoutes();
     scopeUi.registerMenuItem(scopeUi.menuItems);

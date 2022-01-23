@@ -9,6 +9,8 @@ export type PreviewModule<T = any> = {
   mainModule: {
     default: (...args: any[]) => void;
   };
+
+  isSplitComponentBundle?: boolean
 };
 
 /** single preview module, e.g. compositions file */

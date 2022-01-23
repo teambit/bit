@@ -24,6 +24,7 @@ import {
   FilesFragment,
   ExtensionsFragment,
 } from './show';
+import { RegisteredComponentRoute } from '.';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -60,12 +61,14 @@ export class ComponentMain {
     return new AspectList(entries);
   }
 
-  registerRoute(routes: Route[]) {
-    const routeEntries = routes.map((route: Route) => {
+  registerRoute(routes: RegisteredComponentRoute[]) {
+    const routeEntries = routes.map((route: RegisteredComponentRoute) => {
       return new ComponentRoute(route, this);
     });
 
-    this.express.register(flatten(routeEntries));
+    const flattenRoutes = (flatten(routeEntries)) as any as Route[];
+
+    this.express.register(flattenRoutes);
     return this;
   }
 

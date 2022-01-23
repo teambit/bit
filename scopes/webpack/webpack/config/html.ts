@@ -17,6 +17,6 @@ export function html(title: string) {
     <body>
       <div id="root"></div>
     </body>
-  </html>  
+  </html>
   `;
 }

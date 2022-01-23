@@ -58,6 +58,8 @@ import type {
   AddActionResults,
   Warnings,
 } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
@@ -71,6 +73,11 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -148,6 +155,8 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+
   constructor(
     /**
      * private pubsub.
@@ -210,6 +219,8 @@ export class Workspace implements ComponentFactory {
 
     private graphql: GraphqlMain
   ) {
+    this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
@@ -480,7 +491,38 @@ export class Workspace implements ComponentFactory {
     storeInCache = true
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    return this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    // When loading a component if it's an aspect make sure to load it as aspect as well
+    // We only want to try load it as aspect if it's the first time we load the component
+    const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+
+    if (
+      tryLoadAsAspect &&
+      this.envs.isUsingAspectEnv(component) &&
+      !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
+      !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
+      (await this.hasId(component.id)) &&
+      !config.extension(component.id.toStringWithoutVersion(), true)
+    ) {
+      try {
+        this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
+        this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
+        await this.loadAspects([component.id.toString()]);
+        // In most cases if the load self as aspect failed we don't care about it.
+        // we only need it in specific cases to work, but this workspace.get runs on different
+        // cases where it might fail (like when importing aspect, after the import objects
+        // when we write the package.json we run the applyTransformers which get to pkg which call
+        // host.get, but the component not written yet to the fs, so it fails.)
+      } catch (e) {
+        this.logger.debug(`fail to load self as aspect with id ${component.id.toString()}`);
+        this.componentLoadedSelfAsAspects.delete(component.id.toString());
+        return component;
+      }
+    }
+    this.componentLoadedSelfAsAspects.set(component.id.toString(), false);
+
+    return component;
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
@@ -580,19 +622,38 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * if checked out to a lane, return the remote lane id (name+scope). otherwise, return null.
+   * if checked out to a lane and the lane exists in the remote,
+   * return the remote lane id (name+scope). otherwise, return null.
    */
-  getCurrentRemoteLaneId(): RemoteLaneId | null {
+  async getCurrentRemoteLaneId(): Promise<{ laneId: RemoteLaneId; lane: Lane } | null> {
     const currentLane = this.getCurrentLaneId();
     if (currentLane.isDefault()) {
       return null;
     }
     const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
-    const remoteLaneName = trackData?.remoteLane;
-    if (!remoteLaneName) {
+    if (!trackData) {
       return null;
     }
-    return RemoteLaneId.from(remoteLaneName, trackData.remoteScope);
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+    const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
+    try {
+      const lanes = await scopeComponentImporter.importLanes([laneId]);
+
+      if (!lanes || lanes.length === 0) return null;
+
+      return {
+        laneId,
+        lane: lanes[0],
+      };
+    } catch (err) {
+      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
+        return null;
+      }
+      throw err;
+    }
   }
 
   getDefaultExtensions(): ExtensionDataList {
@@ -734,7 +795,7 @@ export class Workspace implements ComponentFactory {
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.writeBitMap();"
+   * to write the .bitmap file once completed, run "await this.bitMap.write();"
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
@@ -877,6 +938,7 @@ export class Workspace implements ComponentFactory {
    * the component.json file in the component folder
    * matching pattern in the variants config
    * defaults extensions from workspace config
+   * extensions from the model.
    */
   async componentExtensions(componentId: ComponentID, componentFromScope?: Component): Promise<ExtensionDataList> {
     // TODO: consider caching this result
@@ -1098,14 +1160,10 @@ export class Workspace implements ComponentFactory {
     const isAspect = async (bitId: BitId) => {
       const id = await this.resolveComponentId(bitId);
       const component = await this.get(id);
-      let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
-      if (!data) {
-        // TODO: remove this once we re-export old components used to store the data here
-        data = component.state.aspects.get('teambit.workspace/workspace');
-      }
+      const data = this.envs.getEnvData(component);
+      const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
 
-      if (!data) return false;
-      if (data.type !== 'aspect' && idsWithoutCore.includes(component.id.toString())) {
+      if (!isUsingAspectEnv && idsWithoutCore.includes(component.id.toString())) {
         const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
         if (data.id === DEFAULT_ENV) {
           // when cloning a project, or when the node-modules dir is deleted, nothing works and all
@@ -1116,7 +1174,7 @@ export class Workspace implements ComponentFactory {
           throw err;
         }
       }
-      return data.type === 'aspect';
+      return isUsingAspectEnv;
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
@@ -1536,10 +1594,11 @@ export class Workspace implements ComponentFactory {
     return compDirMap;
   }
 
-  async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
-    if (options?.fetchObject) {
+  async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
+    if (options.fetchObject) {
       await this.importObjects();
     }
+    options.consumer = this.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -1672,6 +1731,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    const getDefaultScope = async (bitId: BitId, bitMapOptions?: GetBitMapComponentOptions) => {
+      if (bitId.scope) {
+        return bitId.scope;
+      }
+      const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
+        relativeComponentDir,
+        bitId.toStringWithoutScopeAndVersion()
+      );
+      return defaultScope;
+    };
+
     // This is required in case where you have in your workspace a component with the same name as a core aspect
     // let's say you have component called react-native (which is eventually my-org.my-scope/react-native)
     // and you set teambit.react/react-native as your env
@@ -1725,9 +1796,33 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
           return await this.scope.resolveComponentId(_bitMapIdWithVersion);
         }
-        // The id in the bitmap doesn't have scope, the source id has scope
-        // Handle use case 2 and use case 1
+        // Handle case when I tagged the component locally with a default scope which is not the local scope
+        // but not exported it yet
+        // now i'm trying to load it with source id contain the default scope prefix
+        // we want to get it from the local first before assuming it's something coming from outside
+        if (!_bitMapId.scope) {
+          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
+          const getFromBitmapAddDefaultScope = () => {
+            let _bitmapIdWithVersionForSource = _bitMapId;
+            if (version) {
+              _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
+            }
+            return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+          };
+          // a case when the given id contains the default scope
+          if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
+            return getFromBitmapAddDefaultScope();
+          }
+          // a case when the given id does not contain the default scope
+          const fromScope = await this.scope.resolveComponentId(idWithVersion);
+          if (!fromScope._legacy.hasScope()) {
+            return getFromBitmapAddDefaultScope();
+          }
+        }
+
         if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
+          // The id in the bitmap doesn't have scope, the source id has scope
+          // Handle use case 2 and use case 1
           if (id.toString().startsWith(this.scope.name)) {
             // Handle use case 1 - the provided id has scope name same as the local scope name
             // we want to send it as it appear in the bitmap
@@ -1744,17 +1839,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return ComponentID.fromLegacy(legacyId);
       }
     }
-    const getDefaultScope = async (bitId: BitId) => {
-      if (bitId.scope) {
-        return bitId.scope;
-      }
-      const relativeComponentDir = this.componentDirFromLegacyId(bitId, undefined, { relative: true });
-      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-        relativeComponentDir,
-        bitId.toStringWithoutScopeAndVersion()
-      );
-      return defaultScope;
-    };
+
     const defaultScope = await getDefaultScope(legacyId);
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }

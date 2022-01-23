@@ -70,7 +70,10 @@ export class AspectMain {
       compiler.createTask('TypescriptCompiler', tsCompiler),
     ]);
 
-    const aspectEnv = react.compose([compilerOverride, compilerTasksOverride], new AspectEnv(react.reactEnv));
+    const aspectEnv = react.compose(
+      [compilerOverride, compilerTasksOverride],
+      new AspectEnv(react.reactEnv, aspectLoader)
+    );
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
