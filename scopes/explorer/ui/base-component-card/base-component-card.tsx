@@ -33,6 +33,10 @@ export type BaseComponentCardProps = {
    * true if the component is deprecated
    */
   isDeprecated?: boolean;
+  /**
+   * show verified badge if the component version is verified.
+   */
+  isVerified?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function BaseComponentCard({
@@ -42,6 +46,7 @@ export function BaseComponentCard({
   version,
   description,
   isDeprecated,
+  isVerified,
   children,
   contentClass,
 }: BaseComponentCardProps) {
@@ -49,7 +54,13 @@ export function BaseComponentCard({
     <Card className={className}>
       <DeprecationSticker isDeprecated={isDeprecated} />
       <PreviewContainer preview={preview} />
-      <ComponentDetails id={id} version={version} description={description} className={contentClass} />
+      <ComponentDetails
+        id={id}
+        version={version}
+        description={description}
+        isVerified={isVerified}
+        className={contentClass}
+      />
       {children}
     </Card>
   );

@@ -1,7 +1,7 @@
 /* eslint no-console: 0 */
-import { addUser, REGISTRY_MOCK_PORT } from '@pnpm/registry-mock';
+import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
-import fetch from 'cross-fetch';
+import fetch from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
@@ -58,26 +58,41 @@ export default class NpmCiRegistry {
 
   _establishRegistry(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.registryServer = execa('registry-mock', { detached: true });
+      this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stdout.on('data', async (data): void => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
           resolved = true;
-          // eslint-disable-next-line
-          await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
-          if ((await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`)).status !== 200) {
-            reject(new Error('Registry has not started'));
-          } else {
+          let fetchResults;
+          try {
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`, {
+              retry: {
+                minTimeout: 1000,
+                maxTimeout: 10000,
+                retries: 3,
+              },
+            });
+          } catch (err) {
+            reject(err);
+            return;
+          }
+          if (fetchResults.status === 200) {
             if (this.helper.debugMode) console.log('Verdaccio server is up and running');
             resolve();
+          } else {
+            reject(new Error('Registry has not started'));
           }
         }
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
+      });
+      this.registryServer.on('error', (err) => {
+        if (this.helper.debugMode) console.log(`child process errored ${err.message}`);
+        reject(err);
       });
       this.registryServer.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);

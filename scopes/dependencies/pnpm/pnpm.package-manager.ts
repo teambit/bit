@@ -114,6 +114,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
+        nodeLinker: installOptions.nodeLinker,
         overrides: installOptions.overrides,
       },
       this.logger

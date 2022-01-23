@@ -16,7 +16,7 @@ export class CLIParser {
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
-
+    logger.debug(`[+] CLI-INPUT: ${args.join(' ')}`);
     yargs(args);
     yargs.help(false);
     this.configureParser();

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { getDataFromTree } from '@apollo/client/react/ssr';
-import type { NormalizedCacheObject } from '@apollo/client';
+import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
@@ -63,15 +63,23 @@ export class GraphqlRenderPlugins implements RenderPlugins<RenderContext, { stat
     return { state };
   };
 
+  private _client: ApolloClient<NormalizedCacheObject> | undefined = undefined;
+
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
     const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
 
     const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl });
+    this._client = client;
 
     return { client };
   };
+
+  getClient() {
+    if (!this._client) return this.browserInit().client;
+    return this._client;
+  }
 
   private BrowserGqlProvider = ({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) => {
     if (!renderCtx?.client) throw new TypeError('GQL client is not initialized, make sure `.browserInit()` executes');

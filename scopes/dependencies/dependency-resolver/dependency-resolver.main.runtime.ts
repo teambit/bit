@@ -196,6 +196,12 @@ export interface DependencyResolverWorkspaceConfig {
    * or replace a dependency with a fork.
    */
   overrides?: Record<string, string>;
+
+  /*
+   * Defines what linker should be used for installing Node.js packages.
+   * Supported values are hoisted and isolated.
+   */
+  nodeLinker?: 'hoisted' | 'isolated';
 }
 
 export interface DependencyResolverVariantConfig {
@@ -476,7 +482,8 @@ export class DependencyResolverMain {
       options.rootDir,
       cacheRootDir,
       preInstallSubscribers,
-      postInstallSubscribers
+      postInstallSubscribers,
+      this.config.nodeLinker
     );
   }
 

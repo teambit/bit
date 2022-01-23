@@ -57,6 +57,8 @@ export default function (isEnvProduction = false): Configuration {
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   return {
+    // TODO: make the dev tool according to shouldUseSourceMap and isEnvProduction
+    // devtool: 'inline-source-map',
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support
@@ -72,12 +74,8 @@ export default function (isEnvProduction = false): Configuration {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
-        react: require.resolve('react'),
-        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
-        'react-dom/server': require.resolve('react-dom/server'),
-        'react-dom': require.resolve('react-dom'),
-        '@mdx-js/react': require.resolve('@mdx-js/react'),
 
+        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',

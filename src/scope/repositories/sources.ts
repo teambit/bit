@@ -413,6 +413,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     if (unmergedComponent) {
       version.addParent(unmergedComponent.head);
+      logger.debug(
+        `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
+      );
       version.log.message = version.log.message
         ? version.log.message
         : UnmergedComponents.buildSnapMessage(unmergedComponent);

@@ -87,7 +87,7 @@ export class GraphqlUI {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 
-  renderPlugins = new GraphqlRenderPlugins(this);
+  readonly renderPlugins = new GraphqlRenderPlugins(this);
 
   static runtime = UIRuntime;
   static dependencies = [];

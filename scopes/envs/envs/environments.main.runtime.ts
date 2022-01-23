@@ -12,7 +12,7 @@ import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
-import { EnvsCmd } from './envs.cmd';
+import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 
@@ -89,6 +89,17 @@ export class EnvsMain {
     if (!defaultEnv) throw new Error('default env must be set.');
 
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
+  }
+
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.harmony/aspect',
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+    ];
   }
 
   /**
@@ -428,6 +439,11 @@ export class EnvsMain {
     return undefined;
   }
 
+  getEnvFromComponent(envComponent: Component) {
+    const env = this.getEnvDefinitionById(envComponent.id);
+    return env;
+  }
+
   private printWarningIfFirstTime(envId: string, message: string) {
     if (!this.alreadyShownWarning[envId]) {
       this.alreadyShownWarning[envId] = true;
@@ -440,6 +456,12 @@ export class EnvsMain {
    */
   isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
+  }
+
+  isUsingAspectEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'aspect';
   }
 
   /**
@@ -527,7 +549,9 @@ export class EnvsMain {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
     component.registerShowFragments([new EnvFragment(envs)]);
-    cli.register(new EnvsCmd(envs, component));
+    const envsCmd = new EnvsCmd(envs, component);
+    envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
+    cli.register(envsCmd);
     graphql.register(environmentsSchema(envs));
     return envs;
   }

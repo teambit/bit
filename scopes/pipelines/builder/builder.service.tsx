@@ -25,6 +25,7 @@ export type BuilderServiceOptions = {
   tasks?: string[];
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
+  dev?: boolean;
 };
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
@@ -103,6 +104,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
           previousTasksResults: [],
+          dev: options.dev,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
