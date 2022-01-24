@@ -21,7 +21,7 @@ export class OverviewSection implements Section {
   route = {
     path: '',
     exact: true,
-    children: <Overview titleBadges={this.docs.listTitleBadges()} />,
+    children: <Overview titleBadges={this.docs.titleBadgeSlot} />,
   };
 
   order = 10;

@@ -3,6 +3,7 @@ import { ComponentContext } from '@teambit/component';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
+import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 
 export type OverviewProps = {
   titleBadges: TitleBadge[];
@@ -10,6 +11,8 @@ export type OverviewProps = {
 
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
+  const { data } = useFetchDocs(component.id.toString());
+  const fetchComponent = data?.component;
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
       <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
@@ -26,18 +29,19 @@ export function Overview({ titleBadges }: OverviewProps) {
     );
 
   if (component.preview?.includesEnvTemplate === false) {
+    const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
     return (
-      <>
+      <div style={{ overflow: 'auto' }}>
         <ComponentOverview
           displayName={component.displayName}
           version={component.version}
-          abstract={component.description}
-          labels={component.labels}
+          abstract={component.description || fetchComponent?.description}
+          labels={labels || []}
           packageName={component.packageName}
-          titleBadges={titleBadges}
+          titleBadges={titleBadges.values()}
         />
-        <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} previewName="overview" />;
-      </>
+        <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} previewName="overview" />
+      </div>
     );
   }
 

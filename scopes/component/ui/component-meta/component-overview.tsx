@@ -21,7 +21,7 @@ export type ComponentOverviewProps = {
   labels: string[];
   packageName: string;
   elementsUrl?: string;
-  titleBadges: TitleBadge[];
+  titleBadges?: TitleBadge[];
 };
 
 export function ComponentOverview({
@@ -41,8 +41,10 @@ export function ComponentOverview({
   return (
     <Section {...rest}>
       <div className={textColumn}>
-        <H1>{displayName}</H1>
-        {titleBadges.map((titleBadge) => titleBadge.component)}
+        <div className={styles.componentTitle}>
+          <H1>{displayName}</H1>
+          {titleBadges?.map((titleBadge) => titleBadge.component())}
+        </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
         <ConsumableLink title="Package name" link={packageName}></ConsumableLink>

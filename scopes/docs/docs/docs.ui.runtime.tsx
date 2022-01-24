@@ -9,7 +9,7 @@ import { OverviewSection } from './overview.section';
 export type TitleBadgeSlot = SlotRegistry<TitleBadge>;
 
 export class DocsUI {
-  constructor(private titleBadgeSlot: TitleBadgeSlot) {}
+  constructor(readonly titleBadgeSlot: TitleBadgeSlot) {}
 
   /**
    * register a new title badge into the overview section of a component.
@@ -23,7 +23,7 @@ export class DocsUI {
    * list all title badges registered.
    */
   listTitleBadges() {
-    return this.titleBadgeSlot.values();
+    return this.titleBadgeSlot;
   }
 
   static dependencies = [ComponentAspect];

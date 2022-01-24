@@ -14,7 +14,7 @@ import styles from './base.module.scss';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
-import { useFetchDocs } from './use-fetch-docs';
+import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 
 export type DocsSectionProps = {
   docs?: docsFile;
