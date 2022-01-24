@@ -58,6 +58,7 @@ export default function createWebpackConfig(
   return {
     stats: {
       children: true,
+      errorDetails: true,
     },
     mode: 'production',
     entry: {
@@ -90,9 +91,9 @@ export default function createWebpackConfig(
 
       alias: {
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
-        // react: require.resolve('react'),
-        // 'react-dom/server': require.resolve('react-dom/server'),
-        // 'react-dom': require.resolve('react-dom'),
+        react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
+        'react-dom': require.resolve('react-dom'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',

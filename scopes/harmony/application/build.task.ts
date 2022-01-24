@@ -30,7 +30,11 @@ export class AppsBuildTask implements BuildTask {
       const capsule = capsuleNetwork.seedersCapsules.getCapsuleIgnoreVersion(ComponentID.fromString(aspectId));
       if (!capsule || !app.build) return undefined;
       const { component } = capsule;
-      const appDeployContext: AppBuildContext = Object.assign(context, { capsule, appComponent: component });
+      const appDeployContext: AppBuildContext = Object.assign(context, {
+        capsule,
+        appComponent: component,
+        name: app.name,
+      });
       const deployContext = await app.build(appDeployContext);
 
       return {

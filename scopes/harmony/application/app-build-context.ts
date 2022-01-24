@@ -4,6 +4,10 @@ import { BuildContext } from '@teambit/builder';
 
 export interface AppBuildContext extends BuildContext {
   /**
+   * name of the type of the app. e.g. `react-app`
+   */
+  name: string;
+  /**
    * Application capsule
    */
   capsule: Capsule;

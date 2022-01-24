@@ -1,7 +1,7 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
@@ -20,8 +20,8 @@ export class AspectMain {
   /**
    * compose your own aspect environment.
    */
-  compose(transformers: EnvTransformer[] = []) {
-    return this.envs.compose(this.aspectEnv, transformers);
+  compose(transformers: EnvTransformer[] = [], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.aspectEnv), transformers);
   }
 
   static runtime = MainRuntime;

@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component } from '@teambit/component';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import PreviewAspect, { PreviewMain } from '@teambit/preview';
+import PreviewAspect, { ComponentPreviewSize, PreviewMain } from '@teambit/preview';
 import { ComponentSizerAspect } from './component-sizer.aspect';
 import { componentSizerSchema } from './component-sizer.graphql';
 
@@ -13,7 +13,7 @@ export class ComponentSizerMain {
     private preview: PreviewMain
   ) {}
 
-  getComponentSize(component: Component): number | undefined {
+  getComponentSize(component: Component): ComponentPreviewSize | undefined {
     return this.preview.getComponentBundleSize(component);
   }
 
