@@ -31,8 +31,9 @@ export function Overview({ titleBadges }: OverviewProps) {
   if (component.preview?.includesEnvTemplate === false) {
     const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
     return (
-      <div style={{ overflow: 'auto' }}>
+      <div className={styles.overviewWrapper}>
         <ComponentOverview
+          className={styles.overview}
           displayName={component.displayName}
           version={component.version}
           abstract={component.description || fetchComponent?.description}
