@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { LanesState } from '../../state/lanes.state';
+import { LanesState } from './lanes-state';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {

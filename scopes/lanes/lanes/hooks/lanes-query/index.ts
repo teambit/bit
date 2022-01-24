@@ -1,1 +1,1 @@
-export { getLanesQuery } from './lanes.query';
+export { getLanesQuery } from './lanes-query';
