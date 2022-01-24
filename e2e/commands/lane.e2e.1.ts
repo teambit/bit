@@ -35,7 +35,6 @@ describe('bit lane command', function () {
     });
   });
   describe('create a snap on main then on a new lane', () => {
-    let bitInstallOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -45,7 +44,6 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponentsWithoutBuild();
-      bitInstallOutput = helper.command.install();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
@@ -67,9 +65,6 @@ describe('bit lane command', function () {
       const log = helper.command.log('bar/foo', '--parents');
       const mainSnap = helper.command.getHeadShort('bar/foo');
       expect(log).to.have.string(`Parent(s): ${mainSnap}`);
-    });
-    it('should not throw an error when installing components in a non exported lane', () => {
-      expect(bitInstallOutput).to.not.have.string('lane dev was not found');
     });
     describe('bit lane with --details flag', () => {
       let output: string;
@@ -386,7 +381,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe(`switching lanes with deleted files`, () => {
+  describe('switching lanes with deleted files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -402,6 +397,55 @@ describe('bit lane command', function () {
     });
     it('should delete the comp1/comp1.spec.js file', () => {
       expect(path.join(helper.scopes.localPath, 'comp1/comp1.spec.js')).to.not.be.a.path();
+    });
+  });
+  describe('switching lanes and importing in a new scope from remote scope', () => {
+    let mainScope;
+    let laneScope;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+
+      mainScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane('dev');
+      laneScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp2/index.js');
+      helper.command.addComponent('comp2/');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('dev');
+      helper.fs.outputFile('comp1/comp.model.js');
+      helper.fs.outputFile('comp2/comp.model.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('should import the latest from main when on main', () => {
+      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.command.import(`${helper.scopes.remote}/*`);
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(2);
+      expect(result[0].currentVersion).to.have.string('0.0.1');
+      expect(result[1].currentVersion).to.have.string('0.0.1');
+    });
+    it('should only import comp2 from the lane when on a lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScope);
+      helper.command.importComponent('comp2');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp2');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
+    });
+    it('should only import comp1 from the lane when on a lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScope);
+      helper.command.importComponent('comp1');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp1');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
     });
   });
   describe('merging lanes', () => {

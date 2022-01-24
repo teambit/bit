@@ -52,7 +52,7 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions, LANE_KEY } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
 import type {
   AddActionResults,
@@ -73,6 +73,11 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -487,18 +492,21 @@ export class Workspace implements ComponentFactory {
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
-    // When loading a component if it's an aspect make sure to load it as aspect as well
+    // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
-    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    // const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
 
+    // We are loading the component as aspect if it's an env, in order to be able to run the env-preview-template task which run only on envs.
+    // Without this loading we will have a problem in case the env is the only component in the workspace. in that case we will load it as component
+    // then we don't run it's provider so it doesn't register to the env slot, so we don't know it's an env.
     if (
       tryLoadAsAspect &&
-      this.envs.isUsingAspectEnv(component) &&
+      this.envs.isUsingEnvEnv(component) &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
-      (await this.hasId(component.id)) &&
-      !config.extension(component.id.toStringWithoutVersion(), true)
+      (await this.hasId(component.id))
+      // !config.extension(component.id.toStringWithoutVersion(), true)
     ) {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
@@ -620,22 +628,35 @@ export class Workspace implements ComponentFactory {
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane id (name+scope). otherwise, return null.
    */
-  getCurrentRemoteLaneId(): RemoteLaneId | null {
+  async getCurrentRemoteLaneId(): Promise<{ laneId: RemoteLaneId; lane: Lane } | null> {
     const currentLane = this.getCurrentLaneId();
     if (currentLane.isDefault()) {
       return null;
     }
     const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
-
-    const remoteLane = this.consumer.bitMap.getContent()[LANE_KEY] as RemoteLaneId;
-
-    if (!trackData || !remoteLane) {
+    if (!trackData) {
       return null;
     }
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+    const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
+    try {
+      const lanes = await scopeComponentImporter.importLanes([laneId]);
 
-    const remoteLaneName = remoteLane.name;
+      if (!lanes || lanes.length === 0) return null;
 
-    return RemoteLaneId.from(remoteLaneName, trackData.remoteScope);
+      return {
+        laneId,
+        lane: lanes[0],
+      };
+    } catch (err) {
+      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
+        return null;
+      }
+      throw err;
+    }
   }
 
   getDefaultExtensions(): ExtensionDataList {
