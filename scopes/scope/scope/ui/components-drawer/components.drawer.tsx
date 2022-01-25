@@ -25,6 +25,8 @@ const ScopeTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: b
 export class ComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
+  id = 'components-drawer';
+
   name = 'COMPONENTS';
 
   widget = (<Widget />);

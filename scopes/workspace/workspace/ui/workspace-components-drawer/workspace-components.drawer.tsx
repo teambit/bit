@@ -25,6 +25,7 @@ const WorkspaceTreeContext = createContext<{ collapsed: boolean; setCollapsed: (
 export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
+  id = 'workspace-components';
   name = 'COMPONENTS';
 
   widget = (<Widget />);
