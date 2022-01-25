@@ -14,6 +14,7 @@ import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
@@ -207,8 +208,13 @@ export class ScopeUI {
     this.sidebarItemSlot.register(links);
   };
 
+  registerDrawer = (drawer: DrawerType) => {
+    this.sidebar.registerDrawer(drawer);
+    return this;
+  };
+
   uiRoot(): UIRoot {
-    this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
+    this.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({

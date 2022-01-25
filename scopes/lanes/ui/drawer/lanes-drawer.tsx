@@ -16,6 +16,7 @@ const LaneTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: bo
 
 export class LanesDrawer implements DrawerType {
   constructor(private showAllLanes: boolean = true) {}
+  id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);
   Context = ({ children }) => {

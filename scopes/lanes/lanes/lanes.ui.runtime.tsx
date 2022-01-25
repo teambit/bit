@@ -1,20 +1,20 @@
 import { UIRuntime } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import { LanesDrawer } from '@teambit/lanes.lanes.ui';
+import ScopeAspect, { ScopeUI } from '@teambit/scope';
 
 export class LanesUI {
-  static dependencies = [WorkspaceAspect, SidebarAspect];
+  static dependencies = [WorkspaceAspect, ScopeAspect];
 
   static runtime = UIRuntime;
 
-  constructor(private workspaceUI: WorkspaceUI, private sidebar: SidebarUI) {}
+  constructor(private workspaceUI: WorkspaceUI, private scopeUI: ScopeUI) {}
 
-  static async provider([workspaceUI, sidebar]: [WorkspaceUI, SidebarUI]) {
-    sidebar.registerDrawer(new LanesDrawer(true));
-    // workspaceUI.registerSidebarWidget(componentTreeNode);
-    const lanesUi = new LanesUI(workspaceUI, sidebar);
+  static async provider([workspaceUI, scopeUI]: [WorkspaceUI, ScopeUI]) {
+    workspaceUI.registerDrawer(new LanesDrawer(true));
+    // scopeUI.registerDrawer(new LanesDrawer(false));
+    const lanesUi = new LanesUI(workspaceUI, scopeUI);
     return lanesUi;
   }
 }
