@@ -31,9 +31,8 @@ export class LanesDrawer implements DrawerType {
       };
     }
     const { scope } = useScopeQuery();
-    console.log(scope);
     return {
-      lanes: scope?.name ? laneState?.lanesByScope?.get(`luvk.${scope?.name}` as string) || [] : [],
+      lanes: scope?.name ? laneState?.lanesByScope?.get(`${scope?.name}`) || [] : [],
       lanesByScope: laneState.lanesByScope || new Map<string, LaneViewModel[]>(),
     };
   };

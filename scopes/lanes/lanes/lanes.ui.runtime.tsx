@@ -1,4 +1,3 @@
-import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
