@@ -33,6 +33,11 @@ import { HttpHelper } from '../http-helper';
       expect(output.lanes).to.have.lengthOf(1);
       expect(output.lanes[0].name).to.have.string('dev');
     });
+    it('bit import on a local lane tracked to a valid remote scope should not throw an error', () => {
+      helper.command.createLane('test');
+      const cmd = () => helper.command.install();
+      expect(cmd).to.not.throw();
+    });
     after(() => {
       httpHelper.killHttp();
     });
