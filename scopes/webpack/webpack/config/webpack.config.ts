@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
@@ -10,8 +11,11 @@ import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 export function configFactory(target: Target, context: BundlerContext): Configuration {
-  const truthyEntries =
+  let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
+  if (Array.isArray(truthyEntries) && !truthyEntries.length) {
+    truthyEntries = {};
+  }
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;

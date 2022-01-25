@@ -99,6 +99,7 @@ export class EnvsMain {
       'teambit.react/react-native',
       'teambit.html/html',
       'teambit.mdx/mdx',
+      'teambit.envs/env',
     ];
   }
 
