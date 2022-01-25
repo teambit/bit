@@ -483,6 +483,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
+    "lanes/ui": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui"
+    },
     "legacy-bit-id": {
         "scope": "teambit.component",
         "version": "0.0.397",

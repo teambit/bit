@@ -655,7 +655,8 @@ export class Workspace implements ComponentFactory {
         this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
         return null;
       }
-      throw err;
+      // throw err;
+      return null;
     }
   }
 

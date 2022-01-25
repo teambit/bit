@@ -14,6 +14,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         name: String!
         components: [CompLaneData]
         isMerged: Boolean
+        remote: String
       }
 
       type FileDiff {
@@ -63,6 +64,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
             name: lane.name,
             components: lane.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
             isMerged: Boolean(lane.isMerged),
+            remote: lane.remote,
           }));
         },
         getLaneByName: async (lanes: LanesMain, { name }: { name: string }) => {

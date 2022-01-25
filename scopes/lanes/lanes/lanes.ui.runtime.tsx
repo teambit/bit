@@ -3,7 +3,8 @@ import { UIRuntime } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import { LanesDrawer } from './drawer/lanes-drawer';
+import { LanesDrawer } from '@teambit/lanes.lanes.ui';
+
 export class LanesUI {
   static dependencies = [WorkspaceAspect, SidebarAspect];
 
@@ -12,8 +13,7 @@ export class LanesUI {
   constructor(private workspaceUI: WorkspaceUI, private sidebar: SidebarUI) {}
 
   static async provider([workspaceUI, sidebar]: [WorkspaceUI, SidebarUI]) {
-    // eslint-disable-next-line react/display-name
-    sidebar.registerDrawer(new LanesDrawer());
+    sidebar.registerDrawer(new LanesDrawer(true));
     // workspaceUI.registerSidebarWidget(componentTreeNode);
     const lanesUi = new LanesUI(workspaceUI, sidebar);
     return lanesUi;

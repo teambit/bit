@@ -1,4 +1,5 @@
 import { ComponentModel } from '@teambit/component';
+import { LaneViewModel } from '@teambit/lanes.lanes.ui';
 
 export class ScopePayload {
   get isScope() {
@@ -6,4 +7,4 @@ export class ScopePayload {
   }
 }
 
-export type PayloadType = ComponentModel | ScopePayload | undefined;
+export type PayloadType = ComponentModel | ScopePayload | undefined | LaneViewModel;
