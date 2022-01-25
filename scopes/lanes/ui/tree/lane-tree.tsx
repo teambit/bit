@@ -4,8 +4,8 @@ import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
 import { LaneViewModel } from '@teambit/lanes.lanes.ui';
-import { LaneView } from './lane-view';
 import { flatMap } from 'lodash';
+import { LaneView } from './lane-view';
 
 type LaneTreeProps = {
   lanes: LaneViewModel[];
@@ -14,13 +14,7 @@ type LaneTreeProps = {
   showScope: boolean;
 };
 
-export type TreeNode<Payload = any> = {
-  id: string;
-  children?: TreeNode<Payload>[];
-  payload?: Payload;
-};
-
-export function LaneTree({ lanes, isCollapsed = false, lanesByScope, showScope }: LaneTreeProps) {
+export function LaneTree({ lanes, isCollapsed = true, lanesByScope, showScope }: LaneTreeProps) {
   const { pathname } = useLocation();
   const activeLane = useMemo(() => {
     return lanes.find((x) => {
@@ -43,7 +37,6 @@ export function LaneTree({ lanes, isCollapsed = false, lanesByScope, showScope }
         : flatMap([...lanesByScope.values()]).map((lane) => ({ id: lane.laneName, payload: lane })),
     };
   }, [lanes]);
-  console.log(tree);
   return (
     <div style={indentStyle(1)}>
       <Tree TreeNode={DefaultTreeNodeRenderer} activePath={activeLane} tree={tree} isCollapsed={isCollapsed} />
