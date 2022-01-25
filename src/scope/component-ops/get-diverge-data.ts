@@ -16,10 +16,11 @@ export async function getDivergeData(
   repo: Repository,
   modelComponent: ModelComponent,
   remoteHead: Ref | null,
+  checkedOutLocalHead?: Ref | null, // in case locally on the workspace it has a different version
   throws = true
 ): Promise<DivergeData> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
-  const localHead = isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead();
+  const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
   if (!remoteHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);

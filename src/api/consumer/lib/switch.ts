@@ -46,7 +46,7 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
       );
     }
     if (remoteLaneId.name === DEFAULT_LANE) {
-      throw new GeneralError(`invalid remote lane id "${switchProps.laneName}". to switch to the main lane on remote, 
+      throw new GeneralError(`invalid remote lane id "${switchProps.laneName}". to switch to the main lane on remote,
       run "bit switch main" and then "bit import".`);
     }
     // fetch the remote to update all heads
@@ -66,12 +66,6 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
       );
     }
     const remoteLaneComponents = remoteLaneObjects[0].components;
-    const laneExistsLocally = lanes.find((l) => l.name === switchProps.localLaneName);
-    if (laneExistsLocally) {
-      throw new GeneralError(`unable to checkout to a remote lane ${switchProps.remoteScope}/${switchProps.laneName}.
-    the local lane ${switchProps.localLaneName} already exists, please switch to the local lane first by omitting the <scope-name>
-    then run "bit merge" to merge the remote lane into the local lane`);
-    }
     switchProps.remoteLaneName = remoteLaneId.name;
     switchProps.laneName = remoteLaneId.name;
     switchProps.remoteLaneScope = remoteLaneId.scope;
@@ -79,6 +73,12 @@ async function populateSwitchProps(consumer: Consumer, switchProps: SwitchProps)
     switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
     switchProps.remoteLaneComponents = remoteLaneComponents;
     switchProps.localTrackedLane = localTrackedLane || undefined;
+    const laneExistsLocally = lanes.find((l) => l.name === switchProps.localLaneName);
+    if (laneExistsLocally) {
+      throw new GeneralError(`unable to checkout to a remote lane ${switchProps.remoteScope}/${switchProps.laneName}.
+the local lane "${switchProps.localLaneName}" already exists, please switch to the local lane first by running "bit switch ${switchProps.localLaneName}"
+then, to merge the remote lane into the local lane, run "bit lane merge ${switchProps.localLaneName} --remote ${switchProps.remoteScope}"`);
+    }
   }
 
   function populatePropsAccordingToLocalLane() {
