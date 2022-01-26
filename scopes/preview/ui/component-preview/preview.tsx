@@ -43,7 +43,6 @@ export function ComponentPreview({
   component,
   previewName,
   queryParams,
-  hotReload,
   fullContentHeight = false,
   ...rest
 }: ComponentPreviewProps) {
@@ -75,9 +74,11 @@ function useInterval(callback: CallbackFn, interval: number) {
       savedCallback.current();
     }
     if (interval !== null) {
-      let id = setInterval(tick, interval);
+      const id = setInterval(tick, interval);
       return () => clearInterval(id);
     }
+    // eslint-disable-next-line
+    return;
   }, [interval]);
 }
 
@@ -94,9 +95,12 @@ export default function useIframeContentHeight({
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
+      // eslint-disable-next-line
       const newHeight = iframe!.contentWindow!.document.body.scrollHeight;
       setIframeHeight(newHeight);
-    } catch (_) {}
+    } catch (_) {
+      // eslint-disable-next-line
+    }
   }, interval);
 
   return [iframeRef, iframeHeight];
