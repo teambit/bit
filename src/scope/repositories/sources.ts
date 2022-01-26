@@ -706,7 +706,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async mergeLane(
     lane: Lane,
-    local: boolean
+    isImport: boolean // otherwise, it's coming from export
   ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
     const repo = this.objects();
     const existingLane = await this.scope.loadLane(lane.toLaneId());
@@ -735,7 +735,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         await modelComponent.setDivergeData(repo);
         const divergeResults = modelComponent.getDivergeData();
         if (divergeResults.isDiverged()) {
-          if (local) {
+          if (isImport) {
             // do not update the local lane. later, suggest to snap-merge.
             mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
             return;
