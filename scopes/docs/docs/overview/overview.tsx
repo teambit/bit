@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import flatten from 'lodash.flatten';
 import { ComponentContext } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
@@ -6,7 +7,6 @@ import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-ca
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import styles from './overview.module.scss';
-import flatten from 'lodash.flatten';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
