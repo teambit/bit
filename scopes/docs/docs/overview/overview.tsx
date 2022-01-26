@@ -1,13 +1,17 @@
 import React, { useContext } from 'react';
 import { ComponentContext } from '@teambit/component';
+import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import styles from './overview.module.scss';
+import flatten from 'lodash.flatten';
+
+export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
-  titleBadges: TitleBadge[];
+  titleBadges: TitleBadgeSlot;
 };
 
 export function Overview({ titleBadges }: OverviewProps) {
@@ -31,6 +35,8 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   if (component.preview?.includesEnvTemplate === false) {
     const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
+    const badges = flatten(titleBadges.values());
+
     return (
       <div className={styles.overviewWrapper}>
         <ComponentOverview
@@ -40,9 +46,14 @@ export function Overview({ titleBadges }: OverviewProps) {
           abstract={component.description || fetchComponent?.description}
           labels={labels || []}
           packageName={component.packageName}
-          titleBadges={titleBadges.values()}
+          titleBadges={badges}
         />
-        <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} previewName="overview" />
+        <ComponentPreview
+          component={component}
+          style={{ width: '100%', height: '100%' }}
+          previewName="overview"
+          fullContentHeight
+        />
       </div>
     );
   }

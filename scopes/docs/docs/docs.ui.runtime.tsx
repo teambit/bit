@@ -1,12 +1,11 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { TitleBadge } from '@teambit/component.ui.component-meta';
 import { UIRuntime } from '@teambit/ui';
 
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
-
-export type TitleBadgeSlot = SlotRegistry<TitleBadge>;
+import { TitleBadgeSlot } from './overview';
 
 export class DocsUI {
   constructor(readonly titleBadgeSlot: TitleBadgeSlot) {}
@@ -14,7 +13,7 @@ export class DocsUI {
   /**
    * register a new title badge into the overview section of a component.
    */
-  registerTitleBadge(titleBadge: TitleBadge) {
+  registerTitleBadge(...titleBadge: TitleBadge[]) {
     this.titleBadgeSlot.register(titleBadge);
     return this;
   }

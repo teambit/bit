@@ -1,17 +1,16 @@
 import React, { ComponentType } from 'react';
-import type { ComponentModel } from '@teambit/component';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { LabelList } from '@teambit/documenter.ui.label-list';
-import { Section } from '@teambit/documenter.ui.section';
+import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui.is-browser';
 import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
-  component: ComponentType<{ component: ComponentModel }>;
+  component: ComponentType<any>;
 };
 
 export type ComponentOverviewProps = {
@@ -22,7 +21,7 @@ export type ComponentOverviewProps = {
   packageName: string;
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
-};
+} & SectionProps;
 
 export function ComponentOverview({
   displayName,
@@ -43,7 +42,9 @@ export function ComponentOverview({
       <div className={textColumn}>
         <div className={styles.componentTitle}>
           <H1>{displayName}</H1>
-          {titleBadges?.map((titleBadge) => titleBadge.component())}
+          {titleBadges?.map((titleBadge) => {
+            return <titleBadge.component />;
+          })}
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>

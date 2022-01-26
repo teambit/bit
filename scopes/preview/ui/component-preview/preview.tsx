@@ -27,6 +27,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * enable/disable hot reload for the composition preview.
    */
   hotReload?: boolean;
+
+  /**
+   * is preview being rendered in full height and should fit view height to content.
+   */
+  fullContentHeight?: boolean;
 }
 
 /**
@@ -34,12 +39,21 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
  */
 // TODO - Kutner fix unused var - 'hotReload' should be used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ComponentPreview({ component, previewName, queryParams, hotReload, ...rest }: ComponentPreviewProps) {
-  const [iframeRef, iframeHeight] = useIframeContentHeight();
+export function ComponentPreview({
+  component,
+  previewName,
+  queryParams,
+  hotReload,
+  fullContentHeight = false,
+  ...rest
+}: ComponentPreviewProps) {
+  const [iframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
   usePubSubIframe(iframeRef);
 
   const url = toPreviewUrl(component, previewName, queryParams);
-  return <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight }} src={url} />;
+  return (
+    <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
+  );
 }
 
 ComponentPreview.defaultProps = {
@@ -67,12 +81,16 @@ function useInterval(callback: CallbackFn, interval: number) {
   }, [interval]);
 }
 
-export default function useIframeContentHeight(
-  interval: number = 250
-): [React.MutableRefObject<HTMLIFrameElement | null>, number] {
+export default function useIframeContentHeight({
+  interval = 250,
+  skip,
+}: {
+  interval?: number;
+  skip?: boolean;
+}): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined] {
   const iframeRef: React.MutableRefObject<HTMLIFrameElement | null> = useRef(null);
   const [iframeHeight, setIframeHeight] = useState(0);
-
+  if (skip) return [iframeRef, undefined];
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
