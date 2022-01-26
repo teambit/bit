@@ -77,6 +77,7 @@ function useInterval(callback: CallbackFn, interval: number) {
       const id = setInterval(tick, interval);
       return () => clearInterval(id);
     }
+    // eslint-disable-next-line
     return;
   }, [interval]);
 }
@@ -94,11 +95,12 @@ export default function useIframeContentHeight({
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
-      // @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line
       const newHeight = iframe!.contentWindow!.document.body.scrollHeight;
       setIframeHeight(newHeight);
-      return;
-    } catch (_) {}
+    } catch (_) {
+      // eslint-disable-next-line
+    }
   }, interval);
 
   return [iframeRef, iframeHeight];
