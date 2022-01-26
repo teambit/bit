@@ -42,8 +42,8 @@ export function ComponentOverview({
       <div className={textColumn}>
         <div className={styles.componentTitle}>
           <H1>{displayName}</H1>
-          {titleBadges?.map((titleBadge) => {
-            return <titleBadge.component />;
+          {titleBadges?.map((titleBadge, index) => {
+            return <titleBadge.component key={index} />;
           })}
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}

@@ -10,11 +10,11 @@ import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { ReactAspect } from '@teambit/react';
+import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import styles from './base.module.scss';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
-import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 
 export type DocsSectionProps = {
   docs?: docsFile;
