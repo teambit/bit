@@ -166,7 +166,7 @@ export class PreviewPreview {
       const componentPreview = window[`${id.toStringWithoutVersion()}-preview`];
       if (!componentPreview) return reject(new PreviewNotFound(name));
       const targetPreview = componentPreview[name];
-      if (!targetPreview) return reject(new PreviewNotFound(name));
+      if (!targetPreview) return resolve(undefined);
 
       return resolve(targetPreview);
     };
