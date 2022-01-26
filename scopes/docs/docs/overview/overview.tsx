@@ -33,14 +33,14 @@ export function Overview({ titleBadges }: OverviewProps) {
       ></StatusMessageCard>
     );
 
-  if (component.preview?.includesEnvTemplate === false) {
+  if (component.preview?.includesEnvTemplate === true) {
     const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
     const badges = flatten(titleBadges.values());
 
     return (
       <div className={styles.overviewWrapper}>
         <ComponentOverview
-          className={styles.overview}
+          className={styles.componentOverviewBlock}
           displayName={component.displayName}
           version={component.version}
           abstract={component.description || fetchComponent?.description}

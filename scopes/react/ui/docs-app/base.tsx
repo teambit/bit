@@ -54,6 +54,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
         <></>
       ) : (
         <ComponentOverview
+          className={styles.componentOverviewBlock}
           displayName={Content.displayName || displayName}
           version={version}
           abstract={description || Content.abstract || abstract}
