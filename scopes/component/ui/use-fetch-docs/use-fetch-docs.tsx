@@ -21,6 +21,9 @@ const DOCS_QUERY = gql`
         compositions {
           identifier
         }
+        preview {
+          includesEnvTemplate
+        }
       }
       getDocs(id: $id) {
         abstract
