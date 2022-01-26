@@ -7,8 +7,8 @@ import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
 import { LaneViewModel } from '@teambit/lanes.lanes.ui';
-import styles from './lane-view.module.scss';
 import { Icon } from '@teambit/design.elements.icon';
+import styles from './lane-view.module.scss';
 
 export type LaneViewProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;
 

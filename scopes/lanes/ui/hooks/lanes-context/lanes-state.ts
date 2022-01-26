@@ -46,7 +46,7 @@ export function mapToLanesState(lanesData: LaneData[], currentLaneName: string):
   const currentLane = laneViewModels.find((lane) => lane.name === currentLaneName);
   const lanes = {
     byScope: lanesByScope,
-    list: flatten([...lanesByScope.values()]),
+    list: laneViewModels,
   };
   return {
     lanes,

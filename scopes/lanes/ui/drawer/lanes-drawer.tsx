@@ -5,8 +5,6 @@ import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { getAllLanesQuery, LaneViewModel, LaneTree } from '@teambit/lanes.lanes.ui';
-import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
-import { flatMap } from 'lodash';
 import styles from './lanes-drawer.module.scss';
 
 const LaneTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: boolean) => void }>({
