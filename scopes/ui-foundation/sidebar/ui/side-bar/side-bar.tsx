@@ -21,7 +21,7 @@ export type SideBarProps = {
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   const drawers = flatten(drawerSlot.values());
-  const [openDrawerList, onToggleDrawer] = useState([drawers[0].id]);
+  const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>([drawers[0]?.id]);
   const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {
@@ -36,23 +36,21 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   return (
     <div {...rest} className={styles.sidebar}>
       <MenuSection items={items} />
-      {drawerSlot.values().map((drawerArray) => {
-        return drawerArray.map((drawer) => {
-          if (!drawer || !drawer.name) return null;
-          // consider passing collapse all as a prop so each drawer collapses itself
-          return (
-            <DrawerUI
-              isOpen={openDrawerList.includes(drawer.id)}
-              onToggle={() => handleDrawerToggle(drawer.id)}
-              key={drawer.id}
-              name={drawer.name}
-              Widget={drawer.widget}
-              Context={drawer.Context}
-            >
-              <drawer.render />
-            </DrawerUI>
-          );
-        });
+      {drawers.map((drawer) => {
+        if (!drawer || !drawer.name) return null;
+        // consider passing collapse all as a prop so each drawer collapses itself
+        return (
+          <DrawerUI
+            isOpen={openDrawerList.includes(drawer.id)}
+            onToggle={() => handleDrawerToggle(drawer.id)}
+            key={drawer.id}
+            name={drawer.name}
+            Widget={drawer.widget}
+            Context={drawer.Context}
+          >
+            <drawer.render />
+          </DrawerUI>
+        );
       })}
     </div>
   );
