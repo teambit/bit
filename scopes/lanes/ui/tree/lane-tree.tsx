@@ -11,10 +11,10 @@ type LaneTreeProps = {
   lanes: LaneViewModel[];
   lanesByScope: Map<string, LaneViewModel[]>;
   isCollapsed?: boolean;
-  showScope: boolean;
+  // showScope: boolean;
 };
 
-export function LaneTree({ lanes, isCollapsed = true, lanesByScope, showScope }: LaneTreeProps) {
+export function LaneTree({ lanes, isCollapsed = true, lanesByScope }: LaneTreeProps) {
   const { pathname } = useLocation();
   const activeLane = useMemo(() => {
     return lanes.find((x) => {
@@ -26,15 +26,16 @@ export function LaneTree({ lanes, isCollapsed = true, lanesByScope, showScope }:
     const scopes = [...lanesByScope.keys()];
     return {
       id: '',
-      children: showScope
-        ? scopes.map((scope) => ({
-            id: scope,
-            children: (lanesByScope.get(scope) || []).map((lane) => ({
-              id: lane.name,
-              payload: lane,
-            })),
-          }))
-        : flatMap([...lanesByScope.values()]).map((lane) => ({ id: lane.laneName, payload: lane })),
+      children:
+        scopes.length > 0
+          ? scopes.map((scope) => ({
+              id: scope,
+              children: (lanesByScope.get(scope) || []).map((lane) => ({
+                id: lane.name,
+                payload: lane,
+              })),
+            }))
+          : flatMap([...lanesByScope.values()]).map((lane) => ({ id: lane.laneName, payload: lane })),
     };
   }, [lanes]);
   return (

@@ -1,10 +1,14 @@
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { flatten } from 'lodash';
 
 export const DEFAULT_LANE = 'main';
 
 export type LanesState = {
   currentLane?: LaneViewModel;
-  lanesByScope?: Map<string, LaneViewModel[]>;
+  lanes?: {
+    byScope: Map<string, LaneViewModel[]>;
+    list: LaneViewModel[];
+  };
 };
 
 export type LaneViewModel = {
@@ -17,7 +21,7 @@ export type LaneViewModel = {
 export function mapToLaneViewModel(laneData: LaneData): LaneViewModel {
   const { name, remote, isMerged } = laneData;
   const laneName = name;
-  const fullName = remote as string;
+  const fullName = remote || name;
   const scope = remote?.split('/')[0] || '';
 
   return { name: fullName, laneName, scope, isMerged };
@@ -38,8 +42,14 @@ export function groupByScope(lanes: LaneViewModel[]): Map<string, LaneViewModel[
 
 export function mapToLanesState(lanesData: LaneData[], currentLaneName: string): Partial<LanesState> {
   const laneViewModels = lanesData.filter((lane) => lane.name !== DEFAULT_LANE).map(mapToLaneViewModel);
+  const lanesByScope = groupByScope(laneViewModels);
+  const currentLane = laneViewModels.find((lane) => lane.name === currentLaneName);
+  const lanes = {
+    byScope: lanesByScope,
+    list: flatten([...lanesByScope.values()]),
+  };
   return {
-    lanesByScope: groupByScope(laneViewModels),
-    currentLane: laneViewModels.find((lane) => lane.name === currentLaneName),
+    lanes,
+    currentLane,
   };
 }

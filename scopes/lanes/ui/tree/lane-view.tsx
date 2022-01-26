@@ -8,6 +8,7 @@ import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
 import { LaneViewModel } from '@teambit/lanes.lanes.ui';
 import styles from './lane-view.module.scss';
+import { Icon } from '@teambit/design.elements.icon';
 
 export type LaneViewProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;
 
@@ -32,9 +33,9 @@ export function LaneView(props: LaneViewProps) {
       onClick={handleClick}
     >
       <div className={styles.left}>
+        <Icon of="right-arrow" />
         <span>{lane?.laneName}</span>
       </div>
-      <div className={styles.right}></div>
     </NavLink>
   );
 }

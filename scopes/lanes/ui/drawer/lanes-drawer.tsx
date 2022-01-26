@@ -15,7 +15,6 @@ const LaneTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: bo
 });
 
 export class LanesDrawer implements DrawerType {
-  constructor(private showAllLanes: boolean = true) {}
   id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);
@@ -24,18 +23,18 @@ export class LanesDrawer implements DrawerType {
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
   getLanes: () => { lanes: LaneViewModel[]; lanesByScope: Map<string, LaneViewModel[]> } = () => {
-    const laneState = getAllLanesQuery();
-    if (this.showAllLanes) {
-      return {
-        lanes: flatMap([...(laneState.lanesByScope?.values() || [])]),
-        lanesByScope: laneState.lanesByScope || new Map<string, LaneViewModel[]>(),
-      };
-    }
-    const { scope } = useScopeQuery();
+    const { lanes } = getAllLanesQuery();
+    // if (this.showAllLanes) {
     return {
-      lanes: scope?.name ? laneState?.lanesByScope?.get(`${scope?.name}`) || [] : [],
-      lanesByScope: laneState.lanesByScope || new Map<string, LaneViewModel[]>(),
+      lanes: lanes?.list || [],
+      lanesByScope: lanes?.byScope || new Map<string, LaneViewModel[]>(),
     };
+    // }
+    // const { scope } = useScopeQuery();
+    // return {
+    //   lanes: scope?.name ? laneState?.lanesByScope?.get(`${scope?.name}`) || [] : [],
+    //   lanesByScope: laneState.lanesByScope || new Map<string, LaneViewModel[]>(),
+    // };
   };
 
   render = () => {
@@ -48,7 +47,7 @@ export class LanesDrawer implements DrawerType {
         </span>
       );
 
-    return <LaneTree lanes={lanes} lanesByScope={lanesByScope} showScope={this.showAllLanes}></LaneTree>;
+    return <LaneTree lanes={lanes} lanesByScope={lanesByScope}></LaneTree>;
   };
 }
 
