@@ -208,13 +208,13 @@ export class ScopeUI {
     this.sidebarItemSlot.register(links);
   };
 
-  registerDrawer = (drawer: DrawerType) => {
-    this.sidebar.registerDrawer(drawer);
+  registerDrawers = (...drawer: DrawerType[]) => {
+    this.sidebar.registerDrawer(...drawer);
     return this;
   };
 
   uiRoot(): UIRoot {
-    this.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
+    this.registerDrawers(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({

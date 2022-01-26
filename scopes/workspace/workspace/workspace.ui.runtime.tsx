@@ -65,8 +65,8 @@ export class WorkspaceUI {
     return this;
   }
 
-  registerDrawer(drawers: DrawerType) {
-    this.sidebar.registerDrawer(drawers);
+  registerDrawers(...drawers: DrawerType[]) {
+    this.sidebar.registerDrawer(...drawers);
     return this;
   }
 
@@ -188,7 +188,7 @@ export class WorkspaceUI {
     );
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
-    workspaceUI.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
+    workspaceUI.registerDrawers(new WorkspaceComponentsDrawer(sidebarSlot));
 
     workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">

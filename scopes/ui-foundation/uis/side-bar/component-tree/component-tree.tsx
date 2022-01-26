@@ -26,6 +26,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
 
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
+
     const payloadMap = calcPayload(components);
 
     attachPayload(tree, payloadMap);

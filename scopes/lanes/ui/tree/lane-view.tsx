@@ -27,7 +27,7 @@ export function LaneView(props: LaneViewProps) {
 
   return (
     <NavLink
-      href={`/~lane/${lane?.name}`}
+      href={`/~lanes/${lane?.name}`}
       className={classNames(indentClass, clickable, styles.lane)}
       activeClassName={styles.active}
       onClick={handleClick}
