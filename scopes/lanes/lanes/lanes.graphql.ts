@@ -59,7 +59,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
     resolvers: {
       Lanes: {
         getLanes: async (lanes: LanesMain) => {
-          const lanesResults = await lanes.getLanes({ showDefaultLane: true });
+          const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
             components: lane.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),

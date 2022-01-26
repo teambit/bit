@@ -1,7 +1,5 @@
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 
-export const DEFAULT_LANE = 'main';
-
 export type LanesState = {
   currentLane?: LaneViewModel;
   lanes?: {
@@ -40,7 +38,7 @@ export function groupByScope(lanes: LaneViewModel[]): Map<string, LaneViewModel[
 }
 
 export function mapToLanesState(lanesData: LaneData[], currentLaneName: string): Partial<LanesState> {
-  const laneViewModels = lanesData.filter((lane) => lane.name !== DEFAULT_LANE).map(mapToLaneViewModel);
+  const laneViewModels = lanesData.map(mapToLaneViewModel);
   const lanesByScope = groupByScope(laneViewModels);
   const currentLane = laneViewModels.find((lane) => lane.name === currentLaneName);
   const lanes = {
