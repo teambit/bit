@@ -1,5 +1,4 @@
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
-import { flatten } from 'lodash';
 
 export const DEFAULT_LANE = 'main';
 

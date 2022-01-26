@@ -22,17 +22,10 @@ export class LanesDrawer implements DrawerType {
   };
   getLanes: () => { lanes: LaneViewModel[]; lanesByScope: Map<string, LaneViewModel[]> } = () => {
     const { lanes } = getAllLanesQuery();
-    // if (this.showAllLanes) {
     return {
       lanes: lanes?.list || [],
       lanesByScope: lanes?.byScope || new Map<string, LaneViewModel[]>(),
     };
-    // }
-    // const { scope } = useScopeQuery();
-    // return {
-    //   lanes: scope?.name ? laneState?.lanesByScope?.get(`${scope?.name}`) || [] : [],
-    //   lanesByScope: laneState.lanesByScope || new Map<string, LaneViewModel[]>(),
-    // };
   };
 
   render = () => {
