@@ -1,23 +1,24 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useContext } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneViewModel } from '@teambit/lanes.lanes.ui';
+import { LanesContext, LaneViewModel } from '@teambit/lanes.lanes.ui';
 import { flatMap } from 'lodash';
 import { LaneView } from './lane-view';
 
 type LaneTreeProps = {
-  lanes: LaneViewModel[];
-  lanesByScope: Map<string, LaneViewModel[]>;
   isCollapsed?: boolean;
-  // showScope: boolean;
 };
 
-export function LaneTree({ lanes, isCollapsed = true, lanesByScope }: LaneTreeProps) {
+export function LaneTree({ isCollapsed }: LaneTreeProps) {
+  const lanesState = useContext(LanesContext);
   const { pathname } = useLocation();
+  const lanes = lanesState?.lanes?.list || [];
+  const lanesByScope = lanesState?.lanes?.byScope || new Map<string, LaneViewModel[]>();
+
   const activeLane = useMemo(() => {
-    return lanes.find((x) => {
+    return lanes?.find((x) => {
       return pathname && pathname.includes(x.name);
     })?.name;
   }, [lanes, pathname]);
