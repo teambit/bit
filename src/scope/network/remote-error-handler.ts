@@ -5,7 +5,7 @@ import ClientIdInUse from '../exceptions/client-id-in-use';
 import ServerIsBusy from '../exceptions/server-is-busy';
 import { OldClientVersion, PermissionDenied, RemoteScopeNotFound, UnexpectedNetworkError } from './exceptions';
 import ExportAnotherOwnerPrivate from './exceptions/export-another-owner-private';
-
+import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 // eslint-disable-next-line complexity
 export function remoteErrorHandler(code: number, parsedError: Record<string, any>, remotePath: string, err) {
   switch (code) {
@@ -42,6 +42,9 @@ export function remoteErrorHandler(code: number, parsedError: Record<string, any
     }
     case 137: {
       return new ServerIsBusy(parsedError.queueSize, parsedError.currentExportId);
+    }
+    case 138: {
+      return new LaneNotFound(parsedError.scopeName, parsedError.laneName);
     }
   }
 }

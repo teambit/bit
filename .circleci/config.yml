@@ -532,7 +532,7 @@ jobs:
           key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - run: cd bit && YARN_CHECKSUM_BEHAVIOR=update bbit install
+      - run: cd bit && bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
       - run:
@@ -625,8 +625,8 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --all --ignore-newest-version
           # command: cd bit && bit tag --scope 0.0.297
-          command: cd bit && bit tag --all --increment-by 2
-          # command: cd bit && bit tag --all
+          # command: cd bit && bit tag --all --increment-by 2
+          command: cd bit && bit tag --all
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:

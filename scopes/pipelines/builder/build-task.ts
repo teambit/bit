@@ -112,13 +112,13 @@ export interface BuiltTaskResult {
 }
 
 export class BuildTaskHelper {
-  static serializeId({ aspectId, name }: BuildTask): string {
+  static serializeId({ aspectId, name }: { aspectId: string; name: string }): string {
     return aspectId + TaskIdDelimiter + name;
   }
-  static deserializeId(id: string): { aspectId: string; name?: string } {
+  static deserializeId(id: string): { aspectId: string; name: string } {
     const split = id.split(TaskIdDelimiter);
     if (split.length === 0) throw new Error(`deserializeId, ${id} is empty`);
-    if (split.length === 1) return { aspectId: split[0] };
+    if (split.length === 1) throw new Error(`deserializeId, ${id} has only aspect-id without name`);
     if (split.length === 2) return { aspectId: split[0], name: split[1] };
     throw new Error(`deserializeId, id ${id} has more than one ${TaskIdDelimiter}`);
   }

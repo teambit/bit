@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
@@ -10,11 +11,16 @@ import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 export function configFactory(target: Target, context: BundlerContext): Configuration {
-  const truthyEntries =
+  let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
+  if (Array.isArray(truthyEntries) && !truthyEntries.length) {
+    truthyEntries = {};
+  }
   const dev = Boolean(context.development);
-  const htmlPlugins = target.html ? generateHtmlPlugins(target.html) : undefined;
-  const shouldExternalizePeers = target.externalizePeer && target.peers && target.peers.length;
+  const htmlConfig = target.html ?? context.html;
+  const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
+  const shouldExternalizePeers =
+    (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
   const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 
@@ -34,6 +40,9 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     output: {
       // The build folder.
       path: `${target.outputPath}/public`,
+    },
+    stats: {
+      errorDetails: true,
     },
 
     resolve: {
