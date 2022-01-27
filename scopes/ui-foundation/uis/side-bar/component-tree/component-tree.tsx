@@ -15,13 +15,14 @@ type ComponentTreeProps = {
 
 export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
+
   const activeComponent = useMemo(() => {
-    return components
-      .find((x) => {
-        // TODO - reuse logic from component.route.ts
-        return pathname && pathname.includes(x.id.fullName);
-      })
-      ?.id.toString({ ignoreVersion: true });
+    const active = components.find((x) => {
+      const path = pathname.startsWith('/') ? pathname.substring(1) : pathname;
+      // TODO - reuse logic from component.route.ts
+      return path && path === x.id.fullName;
+    });
+    return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
 
   const rootNode = useMemo(() => {
