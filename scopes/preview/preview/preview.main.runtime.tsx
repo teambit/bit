@@ -337,12 +337,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime(context: { components: Component[] }) {
+  async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
+    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
   }
@@ -355,7 +355,11 @@ export class PreviewMain {
    * @param aspects
    * @param context
    */
-  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: { components: Component[] }) {
+  private filterAspectsByExecutionContext(
+    aspects: AspectDefinition[],
+    context: { components: Component[] },
+    aspectsIdsToNotFilterOut: string[] = []
+  ) {
     let allComponentContextAspects: string[] = [];
     allComponentContextAspects = context.components.reduce((acc, curr) => {
       return acc.concat(curr.state.aspects.ids);
@@ -366,8 +370,13 @@ export class PreviewMain {
       if (!aspect.getId) {
         return false;
       }
-      return this.aspectLoader.isCoreAspect(aspect.getId) || allAspectsToInclude.includes(aspect.getId);
+      return (
+        this.aspectLoader.isCoreAspect(aspect.getId) ||
+        allAspectsToInclude.includes(aspect.getId) ||
+        aspectsIdsToNotFilterOut.includes(aspect.getId)
+      );
     });
+
     return filtered;
   }
 

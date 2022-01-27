@@ -62,7 +62,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
           // const entries = Object.keys(module).map((key) => module.exposes[key]);
           const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
           if (!capsule) throw new Error('no capsule found');
-          const previewRoot = await this.preview.writePreviewRuntime(context);
+          // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
+          // that's needed to make sure the providers register there are running correctly
+          const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
           const previewModules = await this.getPreviewModules(envComponent);
           // const templatesFile = previewModules.map((template) => {
           //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
