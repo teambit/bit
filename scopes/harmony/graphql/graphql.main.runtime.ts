@@ -219,10 +219,8 @@ export class GraphqlMain {
   private proxySubscription(server: Server, port: number) {
     const proxServer = httpProxy.createProxyServer();
     const subscriptionsPath = this.config.subscriptionsPath;
-    const logger = this.logger;
     server.on('upgrade', function (req, socket, head) {
       if (req.url === subscriptionsPath) {
-        logger.debug(`proxy from ${req.url} to ${port}`);
         proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
       }
     });
