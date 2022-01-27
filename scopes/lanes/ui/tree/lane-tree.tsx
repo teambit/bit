@@ -2,9 +2,10 @@ import React, { useMemo, useContext } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
-import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { LanesContext, LaneViewModel } from '@teambit/lanes.lanes.ui';
-import { LaneView } from './lane-view';
+import { ComponentView, NamespaceTreeNode, PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
+import { LanesContext, LaneModel } from '@teambit/lanes.lanes.ui';
+import { ComponentModel } from '@teambit/component';
+import { LaneTreeNode } from './lane-tree-node';
 
 type LaneTreeProps = {
   isCollapsed?: boolean;
@@ -14,7 +15,7 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
   const lanesState = useContext(LanesContext);
   const { pathname } = useLocation();
   const lanes = lanesState?.lanes?.list || [];
-  const lanesByScope = lanesState?.lanes?.byScope || new Map<string, LaneViewModel[]>();
+  const lanesByScope = lanesState?.lanes?.byScope || new Map<string, LaneModel[]>();
 
   const activeLane = useMemo(() => {
     return lanes?.find((x) => {
@@ -22,7 +23,7 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
     })?.name;
   }, [lanes, pathname]);
 
-  const tree: TreeNode<LaneViewModel> = useMemo(() => {
+  const tree: TreeNode<PayloadType> = useMemo(() => {
     const scopes = [...lanesByScope.keys()];
     return {
       id: '',
@@ -31,13 +32,25 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
           ? scopes.map((scope) => ({
               id: scope,
               children: (lanesByScope.get(scope) || []).map((lane) => ({
-                id: lane.name,
+                id: lane.laneName,
                 payload: lane,
+                children: lane.components.map((laneComponent) => ({
+                  id: laneComponent.id.toString({ ignoreVersion: false }),
+                  payload: laneComponent,
+                })),
               })),
             }))
-          : lanes.map((lane) => ({ id: lane.laneName, payload: lane })),
+          : lanes.map((lane) => ({
+              id: lane.laneName,
+              payload: lane,
+              children: lane.components.map((laneComponent) => ({
+                id: laneComponent.id._legacy.toString(),
+                payload: laneComponent,
+              })),
+            })),
     };
   }, [lanes]);
+
   return (
     <div style={indentStyle(1)}>
       <Tree TreeNode={DefaultTreeNodeRenderer} activePath={activeLane} tree={tree} isCollapsed={isCollapsed} />
@@ -45,9 +58,10 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
   );
 }
 
-export function DefaultTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
-  const children = props.node.children;
-  if (!children) return <LaneView {...props} />;
-
-  return <ScopeTreeNode {...props} />;
+function DefaultTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
+  const payload = props.node.payload;
+  if (!payload) return <ScopeTreeNode {...props} />;
+  if (payload instanceof ComponentModel) return <ComponentView {...props} />;
+  if (props?.node?.children && props.node.children.length > 0) return <NamespaceTreeNode {...props} />;
+  return <LaneTreeNode {...props} />;
 }

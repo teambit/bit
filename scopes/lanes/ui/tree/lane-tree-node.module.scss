@@ -49,9 +49,11 @@
       padding: 0 8px;
     }
   }
-  .envIcon {
+  img {
     transition: filter 300ms ease-in-out;
     filter: grayscale(1);
+    height: 16px;
+    width: 16px;
   }
 
   .right {

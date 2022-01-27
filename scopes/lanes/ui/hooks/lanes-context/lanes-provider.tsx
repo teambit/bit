@@ -1,9 +1,9 @@
 import React, { ReactNode } from 'react';
-import { LanesState } from './lanes-state';
+import { LanesModel } from './lanes-model';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
-  lanesState: LanesState;
+  lanesState: LanesModel;
   children: ReactNode;
 };
 

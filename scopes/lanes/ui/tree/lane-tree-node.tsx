@@ -6,15 +6,14 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneViewModel } from '@teambit/lanes.lanes.ui';
-import { Icon } from '@teambit/design.elements.icon';
-import styles from './lane-view.module.scss';
+import { LaneModel } from '@teambit/lanes.lanes.ui';
+import styles from './lane-tree-node.module.scss';
 
-export type LaneViewProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;
+export type LaneTreeNodeProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;
 
-export function LaneView(props: LaneViewProps) {
+export function LaneTreeNode(props: LaneTreeNodeProps) {
   const { node } = props;
-  const lane = node.payload as LaneViewModel;
+  const lane = node.payload as LaneModel;
 
   const { onSelect } = useContext(TreeContext);
 
@@ -33,7 +32,7 @@ export function LaneView(props: LaneViewProps) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        <Icon of="right-arrow" />
+        <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={lane?.name} />
         <span>{lane?.laneName}</span>
       </div>
     </NavLink>

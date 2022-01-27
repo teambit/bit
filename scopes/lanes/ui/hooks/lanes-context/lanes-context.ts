@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
-import { LanesState } from './lanes-state';
+import { LanesModel } from './lanes-model';
 
-export const LanesContext: React.Context<LanesState> = createContext<LanesState>({});
+export const LanesContext: React.Context<LanesModel> = createContext<LanesModel>({});
 
 export const useLanesContext = () => useContext(LanesContext);

@@ -1,6 +1,6 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { LanesState, mapToLanesState } from '@teambit/lanes.lanes.ui';
+import { LanesModel, LanesQueryResult, mapToLanesState } from '@teambit/lanes.lanes.ui';
 
 const GET_LANES = gql`
   {
@@ -9,19 +9,21 @@ const GET_LANES = gql`
         name
         remote
         isMerged
+        components {
+          id
+          head
+        }
       }
       getCurrentLaneName
     }
   }
 `;
 
-export function getAllLanesQuery(): Partial<LanesState> {
-  const { data, loading } = useDataQuery(GET_LANES);
+export function getAllLanesQuery(): LanesModel {
+  const { data, loading } = useDataQuery<LanesQueryResult>(GET_LANES);
   if (!data || loading) {
     return {};
   }
 
-  const lanes = data?.lanes?.getLanes || [];
-  const selectedLaneName = data?.lanes?.getCurrentLaneName;
-  return mapToLanesState(lanes, selectedLaneName);
+  return mapToLanesState(data);
 }
