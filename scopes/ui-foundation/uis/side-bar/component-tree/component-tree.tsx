@@ -17,8 +17,8 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   const { pathname } = useLocation();
 
   const activeComponent = useMemo(() => {
+    const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
     const active = components.find((x) => {
-      const path = pathname.startsWith('/') ? pathname.substring(1) : pathname;
       // TODO - reuse logic from component.route.ts
       return path && path === x.id.fullName;
     });
