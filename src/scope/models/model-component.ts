@@ -252,7 +252,7 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
-      this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
+      this.divergeData = await getDivergeData(repo, this, remoteHead, undefined, throws);
     }
   }
 
@@ -360,7 +360,9 @@ export default class Component extends BitObject {
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.latest();
-    if (this.isEmpty()) return false; // in case a snap was created on another lane
+    if (this.isEmpty() && !this.laneHeadRemote) {
+      return false; // in case a snap was created on another lane
+    }
     if (isTag(latest) && isTag(version)) {
       return semver.gt(latest, version);
     }

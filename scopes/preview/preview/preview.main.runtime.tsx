@@ -1,6 +1,6 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
@@ -58,6 +58,20 @@ type PreviewFiles = {
   files: string[];
 };
 
+export type ComponentPreviewSizedFile = Asset;
+
+export type ComponentPreviewSize = {
+  files: ComponentPreviewSizedFile[];
+  assets: ComponentPreviewSizedFile[];
+  totalFiles: number;
+  totalAssets: number;
+  total: number;
+};
+
+export type ComponentPreviewMetaData = {
+  size?: ComponentPreviewSize;
+};
+
 export type PreviewConfig = {
   bundlingStrategy?: string;
   disabled: boolean;
@@ -111,7 +125,7 @@ export class PreviewMain {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
 
-  getComponentBundleSize(component: Component): number | undefined {
+  getComponentBundleSize(component: Component): ComponentPreviewSize | undefined {
     const data = this.builder.getDataByAspect(component, PreviewAspect.id);
 
     if (!data) return undefined;
@@ -323,12 +337,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime(context: { components: Component[] }) {
+  async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
+    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
   }
@@ -341,7 +355,11 @@ export class PreviewMain {
    * @param aspects
    * @param context
    */
-  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: { components: Component[] }) {
+  private filterAspectsByExecutionContext(
+    aspects: AspectDefinition[],
+    context: { components: Component[] },
+    aspectsIdsToNotFilterOut: string[] = []
+  ) {
     let allComponentContextAspects: string[] = [];
     allComponentContextAspects = context.components.reduce((acc, curr) => {
       return acc.concat(curr.state.aspects.ids);
@@ -352,8 +370,13 @@ export class PreviewMain {
       if (!aspect.getId) {
         return false;
       }
-      return this.aspectLoader.isCoreAspect(aspect.getId) || allAspectsToInclude.includes(aspect.getId);
+      return (
+        this.aspectLoader.isCoreAspect(aspect.getId) ||
+        allAspectsToInclude.includes(aspect.getId) ||
+        aspectsIdsToNotFilterOut.includes(aspect.getId)
+      );
     });
+
     return filtered;
   }
 

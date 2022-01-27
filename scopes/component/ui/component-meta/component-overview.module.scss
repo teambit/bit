@@ -1,0 +1,11 @@
+.componentTitle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  > h1 {
+    margin: 0;
+  }
+}
+.subTitle {
+  white-space: break-spaces;
+}

@@ -46,6 +46,7 @@ export class WebpackBundler implements Bundler {
           return resolve({
             assets: this.getAssets(info),
             assetsByChunkName: info.assetsByChunkName,
+            entriesAssetsMap: info.entrypoints,
             errors: info.errors,
             outputPath: stats.compilation.outputOptions.path,
             components,

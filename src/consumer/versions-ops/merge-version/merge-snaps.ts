@@ -209,16 +209,12 @@ export async function getComponentStatus(
     );
   }
   const repo = consumer.scope.objects;
-  if (localLane) {
-    modelComponent.setLaneHeadLocal(localLane);
-    if (modelComponent.laneHeadLocal && modelComponent.laneHeadLocal.toString() !== existingBitMapId.version) {
-      throw new GeneralError(
-        `unable to merge ${id.toStringWithoutVersion()}, the component is checkout to a different version than the lane head. please run "bit checkout your-lane --lane" first`
-      );
-    }
-  }
+  const laneHeadIsDifferentThanCheckedOut =
+    localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
+  const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
+
   const otherLaneHead = new Ref(version);
-  const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead);
+  const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
   if (!divergeData.isDiverged()) {
     if (divergeData.isLocalAhead()) {
       // do nothing!
