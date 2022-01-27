@@ -99,6 +99,7 @@ export class EnvsMain {
       'teambit.react/react-native',
       'teambit.html/html',
       'teambit.mdx/mdx',
+      'teambit.envs/env',
     ];
   }
 
@@ -462,6 +463,12 @@ export class EnvsMain {
     const data = this.getEnvData(component);
     if (!data) return false;
     return data.type === 'aspect';
+  }
+
+  isUsingEnvEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'env';
   }
 
   /**

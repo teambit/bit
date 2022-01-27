@@ -53,7 +53,7 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
-export const AspectEnvType = 'react';
+export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
@@ -358,7 +358,7 @@ export class ReactEnv
 
   async __getDescriptor() {
     return {
-      type: AspectEnvType,
+      type: ReactEnvType,
     };
   }
 }

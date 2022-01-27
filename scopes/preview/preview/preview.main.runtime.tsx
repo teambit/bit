@@ -1,6 +1,6 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
@@ -58,6 +58,20 @@ type PreviewFiles = {
   files: string[];
 };
 
+export type ComponentPreviewSizedFile = Asset;
+
+export type ComponentPreviewSize = {
+  files: ComponentPreviewSizedFile[];
+  assets: ComponentPreviewSizedFile[];
+  totalFiles: number;
+  totalAssets: number;
+  total: number;
+};
+
+export type ComponentPreviewMetaData = {
+  size?: ComponentPreviewSize;
+};
+
 export type PreviewConfig = {
   bundlingStrategy?: string;
   disabled: boolean;
@@ -111,7 +125,7 @@ export class PreviewMain {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
 
-  getComponentBundleSize(component: Component): number | undefined {
+  getComponentBundleSize(component: Component): ComponentPreviewSize | undefined {
     const data = this.builder.getDataByAspect(component, PreviewAspect.id);
 
     if (!data) return undefined;
