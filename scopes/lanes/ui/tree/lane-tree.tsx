@@ -35,7 +35,7 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
                 id: lane.laneName,
                 payload: lane,
                 children: lane.components.map((laneComponent) => ({
-                  id: laneComponent.id.toString({ ignoreVersion: false }),
+                  id: laneComponent.id.toString({ ignoreVersion: true }),
                   payload: laneComponent,
                 })),
               })),

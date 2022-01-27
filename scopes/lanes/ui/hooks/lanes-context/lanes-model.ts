@@ -30,10 +30,6 @@ export type LaneModel = {
   isMerged: boolean | null;
   components: ComponentModel[];
 };
-// export type LaneComponentModel = {
-//   id: string;
-//   version: string;
-// };
 
 export function mapToLaneModel(laneData: LaneQueryResult): LaneModel {
   const { name, remote, isMerged } = laneData;
