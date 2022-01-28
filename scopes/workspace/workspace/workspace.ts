@@ -956,7 +956,7 @@ export class Workspace implements ComponentFactory {
     componentFromScope?: Component
   ): Promise<{
     extensions: ExtensionDataList;
-    beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin }>; // useful for debugging
+    beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
   }> {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
@@ -989,10 +989,10 @@ export class Workspace implements ComponentFactory {
     }
     // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
-    const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList }> = [];
+    const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
 
-    const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin) => {
+    const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
       if (!extensions.length) {
         return;
       }
@@ -1012,7 +1012,7 @@ export class Workspace implements ComponentFactory {
       );
       if (envIsCurrentlySet) envWasFoundPreviously = true;
 
-      extensionsToMerge.push({ origin, extensions: extensionDataListFiltered });
+      extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
     };
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map(
@@ -1027,7 +1027,8 @@ export class Workspace implements ComponentFactory {
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
-      await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants');
+      const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
+      await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)

@@ -22,17 +22,20 @@ export type MatchedPattern = {
   // rootDir - utils/string/is-string
   // This match all sub patters, but the max is utils/string/is-string which is 3
   maxSpecificity: number;
+  pattern: string;
 };
 
 export type MatchedPatternWithConfig = {
   config: Record<string, any>;
   specificity: number;
+  pattern: string;
 };
 
 export type MatchedPatternItem = {
   // Boolean to indicate if it's matching or no
   match: boolean;
   specificity: number;
+  pattern: string;
 };
 
 export type MatchedPatternItemWithExclude = MatchedPatternItem & {
@@ -52,6 +55,7 @@ export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string
     match: false,
     excluded: false,
     specificity: -1,
+    pattern,
   };
 
   const maxMatch: MatchedPatternItemWithExclude = maxBy(matches, (match) => match.specificity) || defaultVal;
@@ -61,6 +65,7 @@ export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string
     match: maxMatch.match,
     maxSpecificity: maxMatch.specificity,
     excluded,
+    pattern,
   };
 }
 
@@ -77,6 +82,7 @@ export function isMatchPatternItem(
       match: true,
       specificity: 0,
       excluded: false,
+      pattern: patternItem,
     };
   }
   const { excluded, patternItemWithoutExcludeSign } = parseExclusion(patternItemTrimmed);
@@ -97,11 +103,13 @@ export function isMatchDirPatternItem(rootDir: PathLinuxRelative, patternItem: s
     return {
       match: true,
       specificity: patternItemStriped.split('/').length,
+      pattern: patternItem,
     };
   }
   return {
     match: false,
     specificity: -1,
+    pattern: patternItem,
   };
 }
 
@@ -119,6 +127,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
     return {
       match: false,
       specificity: -1,
+      pattern: patternItem,
     };
   }
 
@@ -138,6 +147,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   return {
     match: minimatchMatch,
     specificity,
+    pattern: patternItem,
   };
 }
 

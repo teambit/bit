@@ -109,9 +109,10 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
       });
 
     if (debug) {
-      const jsonObj = beforeMerge.map(({ origin, extensions }) => ({
+      const jsonObj = beforeMerge.map(({ origin, extensions, extraData }) => ({
         origin,
         extensions: extensionsDetailsToObjectsArray(extensions),
+        extraData,
       }));
 
       jsonObj.push({ origin: 'FinalAfterMerge', extensions: extensionsDetailsToObjectsArray(mergedExtensions) });
