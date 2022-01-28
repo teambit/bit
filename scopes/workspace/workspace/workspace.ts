@@ -142,6 +142,13 @@ export type TrackData = {
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
 };
 
+export type ExtensionsOrigin =
+  | '.bitmap file'
+  | 'model'
+  | 'workspace variants'
+  | 'component.json file'
+  | 'workspace default';
+
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -943,7 +950,13 @@ export class Workspace implements ComponentFactory {
    * defaults extensions from workspace config
    * extensions from the model.
    */
-  async componentExtensions(componentId: ComponentID, componentFromScope?: Component): Promise<ExtensionDataList> {
+  async componentExtensions(
+    componentId: ComponentID,
+    componentFromScope?: Component
+  ): Promise<{
+    extensions: ExtensionDataList;
+    beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin }>; // useful for debugging
+  }> {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
@@ -975,10 +988,13 @@ export class Workspace implements ComponentFactory {
     }
     // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
-    const extensionsToMerge: ExtensionDataList[] = [];
+    const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList }> = [];
     let envWasFoundPreviously = false;
 
-    const addAndLoadExtensions = async (extensions: ExtensionDataList) => {
+    const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin) => {
+      if (!extensions.length) {
+        return;
+      }
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
       const selfInMergedExtensions = extsWithoutRemoved.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
@@ -995,42 +1011,45 @@ export class Workspace implements ComponentFactory {
       );
       if (envIsCurrentlySet) envWasFoundPreviously = true;
 
-      extensionsToMerge.push(extensionDataListFiltered);
+      extensionsToMerge.push({ origin, extensions: extensionDataListFiltered });
     };
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map(
         (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
       );
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
-      await addAndLoadExtensions(extensionDataList);
+      await addAndLoadExtensions(extensionDataList, '.bitmap file');
     }
     if (configFileExtensions) {
-      await addAndLoadExtensions(configFileExtensions);
+      await addAndLoadExtensions(configFileExtensions, 'component.json file');
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
-      await addAndLoadExtensions(variantsExtensions);
+      await addAndLoadExtensions(variantsExtensions, 'workspace variants');
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
     if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
       // Put it in the start to make sure the config file is stronger
-      await addAndLoadExtensions(wsDefaultExtensions);
+      await addAndLoadExtensions(wsDefaultExtensions, 'workspace default');
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
     if (mergeFromScope && continuePropagating) {
-      await addAndLoadExtensions(scopeExtensions);
+      await addAndLoadExtensions(scopeExtensions, 'model');
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
-    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list)));
+    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
 
-    return ExtensionDataList.mergeConfigs(extensionsToMerge);
+    return {
+      extensions: ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions)),
+      beforeMerge: extensionsToMerge,
+    };
   }
 
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
