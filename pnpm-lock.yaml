@@ -158,6 +158,7 @@ importers:
       '@teambit/string.ellipsis': 0.0.7
       '@teambit/toolbox.network.agent': 0.0.116
       '@teambit/ui.composition-card': 0.0.259
+      '@teambit/ui.is-browser': 0.0.363
       '@teambit/ui.routing.provider': 0.0.364
       '@testing-library/jest-dom': 5.11.10
       '@testing-library/jest-native': 4.0.1
@@ -722,6 +723,7 @@ importers:
       '@teambit/string.ellipsis': registry.npmjs.org/@teambit/string.ellipsis/0.0.7_ebacc537a055f03499ca2a64ccf67542
       '@teambit/toolbox.network.agent': registry.npmjs.org/@teambit/toolbox.network.agent/0.0.116_@teambit+legacy@1.0.210
       '@teambit/ui.composition-card': registry.npmjs.org/@teambit/ui.composition-card/0.0.259_react-dom@17.0.2+react@17.0.2
+      '@teambit/ui.is-browser': registry.npmjs.org/@teambit/ui.is-browser/0.0.363_ebacc537a055f03499ca2a64ccf67542
       '@testing-library/jest-dom': registry.npmjs.org/@testing-library/jest-dom/5.11.10
       '@testing-library/jest-native': registry.npmjs.org/@testing-library/jest-native/4.0.1
       '@tippyjs/react': registry.npmjs.org/@tippyjs/react/4.2.0_react-dom@17.0.2+react@17.0.2
@@ -11985,10 +11987,9 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/legacy': registry.npmjs.org/@teambit/legacy/1.0.210_229bfa01fcda8d1c81fbe55b80eb053d
-      core-js: registry.npmjs.org/core-js/3.13.0
+      core-js: registry.npmjs.org/core-js/3.20.3
       react: registry.npmjs.org/react/17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: true
 
   registry.npmjs.org/@teambit/ui.routing.compare-url/0.0.363_ebacc537a055f03499ca2a64ccf67542:
     resolution: {integrity: sha512-df3BpVy1SwHLuCbQXR78czoxq+LCKdzPEHYS6MmLHG/JY0D1yXCISOjgcOtNESowQ2pDqBzsJkwakjeKg2EGYw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui.routing.compare-url/-/ui.routing.compare-url-0.0.363.tgz}
