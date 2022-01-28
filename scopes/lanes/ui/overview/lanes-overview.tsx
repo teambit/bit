@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';

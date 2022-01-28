@@ -15,6 +15,7 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { LanesOverview, lanesRouteUrl } from '@teambit/lanes.lanes.ui';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
@@ -123,11 +124,6 @@ export class ScopeUI {
   }
 
   private registerExplicitRoutes() {
-    this.routeSlot.register({
-      path: this.componentUi.routePath,
-      children: this.componentUi.getComponentUI(ScopeAspect.id),
-    });
-
     this.menuSlot.register([
       {
         path: this.componentUi.routePath,
@@ -137,6 +133,16 @@ export class ScopeUI {
         exact: true,
         path: '/',
         children: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
+      },
+    ]);
+    this.routeSlot.register([
+      {
+        path: this.componentUi.routePath,
+        children: this.componentUi.getComponentUI(ScopeAspect.id),
+      },
+      {
+        path: lanesRouteUrl,
+        children: <LanesOverview />,
       },
     ]);
   }

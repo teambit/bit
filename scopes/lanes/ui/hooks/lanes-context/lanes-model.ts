@@ -1,4 +1,7 @@
-import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentModel } from '@teambit/component';
+import { ScopeModel } from '@teambit/scope.models.scope-model';
+
+export const lanesRouteUrl = `/~lanes/:laneId([[\\w\\/\\.-]+[\\w\\/\\.-])`;
 
 export type LaneComponentQueryResult = {
   id: string;
@@ -31,28 +34,27 @@ export type LaneModel = {
   components: ComponentModel[];
 };
 
-export function mapToLaneModel(laneData: LaneQueryResult): LaneModel {
+export function mapToLaneModel(laneData: LaneQueryResult, scope: ScopeModel): LaneModel {
   const { name, remote, isMerged } = laneData;
   const laneName = name;
   const fullName = remote || name;
-  const scope = remote?.split('/')[0] || '';
-  const components = laneData.components.map((component) =>
-    ComponentModel.from({
-      id: ComponentID.fromObject(
-        {
-          name: component.id,
-          version: component.head,
-          scope,
-        },
-        scope
-      ),
+  const scopeName = remote?.split('/')[0] || scope.name;
+
+  const components = laneData.components.map((component) => {
+    const componentModel = ComponentModel.from({
+      id: {
+        name: component.id,
+        version: component.head,
+        scope: scopeName,
+      },
       displayName: component.id,
       compositions: [],
       packageName: '',
       description: '',
-    })
-  );
-  return { name: fullName, laneName, scope, isMerged, components };
+    });
+    return componentModel;
+  });
+  return { name: fullName, laneName, scope: scopeName, isMerged, components };
 }
 
 export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
@@ -68,10 +70,10 @@ export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
   }, new Map<string, LaneModel[]>());
 }
 
-export function mapToLanesState(lanesData: LanesQueryResult): LanesModel {
+export function mapToLanesState(lanesData: LanesQueryResult, scope: ScopeModel): LanesModel {
   const laneResult = lanesData.lanes?.getLanes || [];
   const currentLaneName = lanesData.lanes?.getCurrentLaneName;
-  const laneModel = laneResult.map(mapToLaneModel);
+  const laneModel = laneResult.map((result) => mapToLaneModel(result, scope));
   const lanesByScope = groupByScope(laneModel);
   const currentLane = laneModel.find((lane) => lane.name === currentLaneName);
   const lanes = {
