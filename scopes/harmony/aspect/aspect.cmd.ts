@@ -79,10 +79,11 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 
     if (debug) {
       const beforeMergeOutput = beforeMerge
-        .map(({ origin, extensions }) => {
+        .map(({ origin, extensions, extraData }) => {
           const title = chalk.green.bold(`Origin: ${origin}`);
           const details = extensionsDetailsToString(extensions);
-          return `${title}\n${details}`;
+          const moreData = extraData ? `\n${chalk.bold('Extra Data:')} ${JSON.stringify(extraData, undefined, 2)}` : '';
+          return `${title}\n${details}${moreData}`;
         })
         .join('\n\n');
 
@@ -98,28 +99,32 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
   async json([componentName]: [string], { debug }: { debug: boolean }) {
     const { extensions: mergedExtensions, beforeMerge } = await this.aspect.getAspectsOfComponent(componentName);
 
-    const extensionsDetailsToObjectsArray = (extensions: ExtensionDataList) =>
-      extensions.map((e) => {
-        const { name, data, config, extensionId } = e.toComponentObject();
-        return {
-          name: name || extensionId?.toString(),
+    const extensionsDetailsToObject = (extensions: ExtensionDataList) =>
+      extensions.reduce((acc, current) => {
+        const { name, data, config, extensionId } = current.toComponentObject();
+        const aspectName = name || extensionId?.toString() || '<no-name>';
+        acc[aspectName] = {
+          name: aspectName,
           config,
           data,
         };
-      });
+        return acc;
+      }, {});
 
     if (debug) {
-      const jsonObj = beforeMerge.map(({ origin, extensions, extraData }) => ({
-        origin,
-        extensions: extensionsDetailsToObjectsArray(extensions),
-        extraData,
-      }));
+      const jsonObj: Record<string, any> = {};
+      beforeMerge.forEach(({ origin, extensions, extraData }) => {
+        jsonObj[origin] = {
+          extensions: extensionsDetailsToObject(extensions),
+          extraData,
+        };
+      });
 
-      jsonObj.push({ origin: 'FinalAfterMerge', extensions: extensionsDetailsToObjectsArray(mergedExtensions) });
+      jsonObj.FinalAfterMerge = { extensions: extensionsDetailsToObject(mergedExtensions) };
       return jsonObj;
     }
 
-    return extensionsDetailsToObjectsArray(mergedExtensions);
+    return extensionsDetailsToObject(mergedExtensions);
   }
 }
 
