@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentID, ComponentModel } from '@teambit/component';
 
 export type LaneComponentQueryResult = {
   id: string;
@@ -38,11 +38,14 @@ export function mapToLaneModel(laneData: LaneQueryResult): LaneModel {
   const scope = remote?.split('/')[0] || '';
   const components = laneData.components.map((component) =>
     ComponentModel.from({
-      id: {
-        name: component.id,
-        version: component.head,
-        scope,
-      },
+      id: ComponentID.fromObject(
+        {
+          name: component.id,
+          version: component.head,
+          scope,
+        },
+        scope
+      ),
       displayName: component.id,
       compositions: [],
       packageName: '',

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { request, gql } from 'graphql-request';
 import { ComponentModel } from '@teambit/component';
+import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 
 const GQL_SERVER = '/graphql';
 const DOCS_QUERY = gql`
@@ -87,11 +88,13 @@ export function useFetchDocs(componentId: string) {
   const [data, setData] = useState<FetchDocsObj>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(undefined);
+  const query = useRouterQuery();
+  const version = query.get('version') || undefined;
+  const id = withVersion(componentId, version);
 
   useEffect(() => {
     setLoading(true);
-
-    const variables = { id: componentId };
+    const variables = { id };
     request(GQL_SERVER, DOCS_QUERY, variables)
       .then((result: QueryResults) => {
         setData({
@@ -104,7 +107,13 @@ export function useFetchDocs(componentId: string) {
         setError(e);
         setLoading(false);
       });
-  }, [componentId]);
+  }, [id]);
 
   return { data, loading, error };
+}
+
+function withVersion(id: string, version?: string) {
+  if (!version) return id;
+  if (id.includes('@')) return id;
+  return `${id}@${version}`;
 }

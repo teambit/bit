@@ -2,9 +2,8 @@ import React, { useMemo, useContext } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
-import { ComponentView, NamespaceTreeNode, PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
+import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
 import { LanesContext, LaneModel } from '@teambit/lanes.lanes.ui';
-import { ComponentModel } from '@teambit/component';
 import { LaneTreeNode } from './lane-tree-node';
 
 type LaneTreeProps = {
@@ -34,19 +33,19 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
               children: (lanesByScope.get(scope) || []).map((lane) => ({
                 id: lane.laneName,
                 payload: lane,
-                children: lane.components.map((laneComponent) => ({
-                  id: laneComponent.id.toString({ ignoreVersion: true }),
-                  payload: laneComponent,
-                })),
+                // children: lane.components.map((laneComponent) => ({
+                //   id: laneComponent.id.toString({ ignoreVersion: true }),
+                //   payload: laneComponent,
+                // })),
               })),
             }))
           : lanes.map((lane) => ({
               id: lane.laneName,
               payload: lane,
-              children: lane.components.map((laneComponent) => ({
-                id: laneComponent.id._legacy.toString(),
-                payload: laneComponent,
-              })),
+              // children: lane.components.map((laneComponent) => ({
+              //   id: laneComponent.id.toString({ ignoreVersion: true }),
+              //   payload: laneComponent,
+              // })),
             })),
     };
   }, [lanes]);
@@ -61,7 +60,7 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
 function DefaultTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
   const payload = props.node.payload;
   if (!payload) return <ScopeTreeNode {...props} />;
-  if (payload instanceof ComponentModel) return <ComponentView {...props} />;
-  if (props?.node?.children && props.node.children.length > 0) return <NamespaceTreeNode {...props} />;
+  // if (payload instanceof ComponentModel) return <ComponentView {...props} />;
+  // if (props?.node?.children && props.node.children.length > 0) return <NamespaceTreeNode {...props} />;
   return <LaneTreeNode {...props} />;
 }

@@ -1,5 +1,6 @@
 import { useQuery, gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
+import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 
 export const docsFields = gql`
   fragment docsFields on ReactDocs {
@@ -17,7 +18,7 @@ export const docsFields = gql`
 `;
 
 const getProperties = gql`
-  query($id: String!) {
+  query ($id: String!) {
     getHost {
       id # used for GQL caching
       getDocs(id: $id) {
@@ -53,8 +54,9 @@ export type DefaultValue = {
 };
 
 export function useDocs(componentId: ComponentID) {
-  const id = componentId._legacy.name;
-
+  const query = useRouterQuery();
+  const version = query.get('version') || undefined;
+  const id = withVersion(componentId.toStringWithoutVersion(), version);
   const { data } = useQuery<PropertiesResult>(getProperties, {
     variables: { id },
   });
@@ -62,4 +64,10 @@ export function useDocs(componentId: ComponentID) {
   const properties = data?.getHost?.getDocs?.properties;
 
   return properties;
+}
+
+function withVersion(id: string, version?: string) {
+  if (!version) return id;
+  if (id.includes('@')) return id;
+  return `${id}@${version}`;
 }

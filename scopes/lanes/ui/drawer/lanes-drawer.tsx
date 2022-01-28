@@ -4,11 +4,14 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { getAllLanesQuery, LaneTree } from '@teambit/lanes.lanes.ui';
-import styles from './lanes-drawer.module.scss';
-import { LanesProvider } from '../hooks/lanes-context/lanes-provider';
+import { getAllLanesQuery, LaneTree, LaneModel, LanesProvider } from '@teambit/lanes.lanes.ui';
 
-const LaneTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: boolean) => void }>({
+import styles from './lanes-drawer.module.scss';
+
+const LaneTreeContext = createContext<{
+  collapsed: boolean;
+  setCollapsed: (x: boolean) => void;
+}>({
   collapsed: true,
   setCollapsed: () => {},
 });
@@ -37,7 +40,7 @@ export class LanesDrawer implements DrawerType {
       );
 
     return (
-      <LanesProvider lanesState={lanesState}>
+      <LanesProvider lanesState={{ ...lanesState }}>
         <LaneTree isCollapsed={collapsed}></LaneTree>
       </LanesProvider>
     );
