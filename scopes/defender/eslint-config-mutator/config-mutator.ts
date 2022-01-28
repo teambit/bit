@@ -1,4 +1,4 @@
-import { clone, set, get, has } from 'lodash';
+import { cloneDeep, set, get, has } from 'lodash';
 import { Linter } from 'eslint';
 import { ESLintOptions } from '@teambit/eslint';
 
@@ -6,7 +6,7 @@ export class EslintConfigMutator {
   constructor(public raw: ESLintOptions) {}
 
   clone(): EslintConfigMutator {
-    return new EslintConfigMutator(clone(this.raw));
+    return new EslintConfigMutator(cloneDeep(this.raw));
   }
 
   addExtensionTypes(extensionsToAdd: string[]): EslintConfigMutator {
