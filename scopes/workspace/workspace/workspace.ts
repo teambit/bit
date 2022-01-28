@@ -143,11 +143,12 @@ export type TrackData = {
 };
 
 export type ExtensionsOrigin =
-  | '.bitmap file'
-  | 'model'
-  | 'workspace variants'
-  | 'component.json file'
-  | 'workspace default';
+  | 'BitmapFile'
+  | 'Model'
+  | 'WorkspaceVariants'
+  | 'ComponentJsonFile'
+  | 'WorkspaceDefault'
+  | 'FinalAfterMerge';
 
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
@@ -1018,28 +1019,28 @@ export class Workspace implements ComponentFactory {
         (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
       );
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
-      await addAndLoadExtensions(extensionDataList, '.bitmap file');
+      await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
     if (configFileExtensions) {
-      await addAndLoadExtensions(configFileExtensions, 'component.json file');
+      await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
-      await addAndLoadExtensions(variantsExtensions, 'workspace variants');
+      await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants');
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
     if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
       // Put it in the start to make sure the config file is stronger
-      await addAndLoadExtensions(wsDefaultExtensions, 'workspace default');
+      await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
     if (mergeFromScope && continuePropagating) {
-      await addAndLoadExtensions(scopeExtensions, 'model');
+      await addAndLoadExtensions(scopeExtensions, 'Model');
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions

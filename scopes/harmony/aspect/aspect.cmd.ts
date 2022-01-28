@@ -55,7 +55,10 @@ export class UnsetAspectCmd implements Command {
 export class GetAspectCmd implements Command {
   name = 'get <component-id>';
   description = "show aspects' data and configuration of the given component";
-  options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
+  options = [
+    ['d', 'debug', 'show the origins were the aspects were taken from'],
+    ['j', 'json', 'format as json'],
+  ] as CommandOptions;
   group = 'development';
 
   constructor(private aspect: AspectMain) {}
@@ -90,6 +93,32 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
     }
 
     return extensionsDetailsToString(mergedExtensions);
+  }
+
+  async json([componentName]: [string], { debug }: { debug: boolean }) {
+    const { extensions: mergedExtensions, beforeMerge } = await this.aspect.getAspectsOfComponent(componentName);
+
+    const extensionsDetailsToObjectsArray = (extensions: ExtensionDataList) =>
+      extensions.map((e) => {
+        const { name, data, config, extensionId } = e.toComponentObject();
+        return {
+          name: name || extensionId?.toString(),
+          config,
+          data,
+        };
+      });
+
+    if (debug) {
+      const jsonObj = beforeMerge.map(({ origin, extensions }) => ({
+        origin,
+        extensions: extensionsDetailsToObjectsArray(extensions),
+      }));
+
+      jsonObj.push({ origin: 'FinalAfterMerge', extensions: extensionsDetailsToObjectsArray(mergedExtensions) });
+      return jsonObj;
+    }
+
+    return extensionsDetailsToObjectsArray(mergedExtensions);
   }
 }
 
