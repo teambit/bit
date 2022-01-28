@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { LoadPreview } from '@teambit/workspace.ui.load-preview';
-import styles from './lanes-component-card.module.scss';
+import styles from './lane-component-card.module.scss';
 
 export type LaneComponentCardProps = {
   component: ComponentModel;
