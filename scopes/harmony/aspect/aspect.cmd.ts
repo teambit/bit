@@ -96,7 +96,7 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 export class AspectCmd implements Command {
   name = 'aspect <sub-command>';
   alias = '';
-  description = 'manage aspects';
+  description = 'EXPERIMENTAL. manage aspects';
   options = [];
   group = 'development';
   commands: Command[] = [];
