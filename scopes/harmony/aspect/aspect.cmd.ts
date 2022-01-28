@@ -66,8 +66,8 @@ export class GetAspectCmd implements Command {
     const extensionsDetailsToString = (extensions: ExtensionDataList) =>
       extensions
         .map((e) => {
-          const { name, data, config } = e.toComponentObject();
-          return `${chalk.bold('name:')}   ${name}
+          const { name, data, config, extensionId } = e.toComponentObject();
+          return `${chalk.bold('name:')}   ${name || extensionId?.toString()}
 ${chalk.bold('config:')} ${JSON.stringify(config, undefined, 2)}
 ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 `;
