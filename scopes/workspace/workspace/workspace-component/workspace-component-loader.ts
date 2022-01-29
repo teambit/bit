@@ -146,13 +146,12 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-
-    let extensionDataList = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions } = await this.workspace.componentExtensions(id, componentFromScope);
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    extensionDataList = ExtensionDataList.mergeConfigs([
+    const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConsumerComponent,
-      extensionDataList,
+      extensions,
     ]).filterRemovedExtensions();
 
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data

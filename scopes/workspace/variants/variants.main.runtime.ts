@@ -22,6 +22,7 @@ export type VariantsComponentConfig = {
   defaultScope?: string;
   extensions: ExtensionDataList;
   maxSpecificity: number;
+  sortedMatches: MatchedPatternWithConfig[];
 };
 
 const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
@@ -71,6 +72,7 @@ export class VariantsMain {
         matches.push({
           config: patternConfig,
           specificity: match.maxSpecificity,
+          pattern: match.pattern,
         });
       }
     });
@@ -96,6 +98,7 @@ export class VariantsMain {
       extensions: mergedExtensions,
       propagate,
       maxSpecificity: sortedMatches.length ? sortedMatches[0].specificity : -1,
+      sortedMatches,
     };
     return result;
   }
