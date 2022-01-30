@@ -135,7 +135,7 @@ export class BuildPipe {
   private updateFailedDependencyTask(task: BuildTask) {
     if (!this.failedDependencyTask && this.failedTasks.length && task.dependencies) {
       task.dependencies.forEach((dependency) => {
-        const { aspectId, name } = BuildTaskHelper.deserializeId(dependency);
+        const { aspectId, name } = BuildTaskHelper.safeDeserializeId(dependency);
         this.failedDependencyTask = this.failedTasks.find((failedTask) => {
           if (name && name !== failedTask.name) return false;
           return aspectId === failedTask.aspectId;

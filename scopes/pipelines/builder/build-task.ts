@@ -122,4 +122,16 @@ export class BuildTaskHelper {
     if (split.length === 2) return { aspectId: split[0], name: split[1] };
     throw new Error(`deserializeId, id ${id} has more than one ${TaskIdDelimiter}`);
   }
+  /**
+   * Deserialize the id, but without throw an error in case something is missing
+   * @param id
+   * @returns
+   */
+  static safeDeserializeId(id: string): { aspectId?: string; name?: string } {
+    const split = id.split(TaskIdDelimiter);
+    if (split.length === 0) return {};
+    if (split.length === 1) return { aspectId: split[0] };
+    if (split.length === 2) return { aspectId: split[0], name: split[1] };
+    throw new Error(`deserializeId, id ${id} has more than one ${TaskIdDelimiter}`);
+  }
 }
