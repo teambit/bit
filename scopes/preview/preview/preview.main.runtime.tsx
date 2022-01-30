@@ -56,6 +56,7 @@ export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 type PreviewFiles = {
   files: string[];
+  isBundledWithEnv: boolean;
 };
 
 export type ComponentPreviewSizedFile = Asset;
@@ -149,9 +150,11 @@ export class PreviewMain {
    */
   async getPreviewFiles(component: Component): Promise<PreviewFiles | undefined> {
     const artifacts = await this.getPreview(component);
+    const isBundledWithEnv = await this.isBundledWithEnv(component);
     if (!artifacts) return undefined;
     return {
       files: artifacts.getPaths(),
+      isBundledWithEnv,
     };
   }
 

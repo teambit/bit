@@ -93,6 +93,10 @@ export class PreviewPreview {
   async fetchComponentPreview(id: ComponentID, name: string) {
     let previewFile;
     const allFiles = await this.fetchComponentPreviewFiles(id, name);
+    // It's a component bundled with the env
+    if (allFiles === null) {
+      return Promise.resolve(undefined);
+    }
     allFiles.forEach((file) => {
       // We want to run the preview file always last
       if (file.endsWith('-preview.js')) {
@@ -114,7 +118,7 @@ export class PreviewPreview {
     return this.addComponentFileLinkElement(id, previewBundleFileName);
   }
 
-  private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[]> {
+  private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[] | null> {
     const previewAssetsRoute = `~aspect/preview-assets`;
     const stringId = id.toString();
     const url = `/api/${stringId}/${previewAssetsRoute}`;
@@ -124,6 +128,10 @@ export class PreviewPreview {
       throw new PreviewNotFound(previewName);
     }
     const parsed = await res.json();
+    // This is component bundled with the env, no reason to bring the files, as they will be the files of the env
+    if (parsed.isBundledWithEnv) {
+      return null;
+    }
     if (!parsed.files || !parsed.files.length) {
       throw new PreviewNotFound(previewName);
     }
