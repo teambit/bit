@@ -431,7 +431,7 @@ export class UiMain {
       runtimeName,
       this.harmony.config.toObject()
     );
-    const rootPath = resolve(this.rootOutputPath, `${runtimeName}.root-${sha1(contents)}.js`);
+    const rootPath = resolve(this.rootOutputPath, `${runtimeName}.root.${sha1(contents)}.js`);
     if (fs.existsSync(rootPath)) return rootPath;
     fs.outputFileSync(rootPath, contents);
     return rootPath;
