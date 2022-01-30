@@ -210,6 +210,8 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
+export const CFG_AUTH_HEADER = "custom_auth_header";
+
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
 
 export const CFG_SYMPHONY_URL_KEY = 'symphony_url';

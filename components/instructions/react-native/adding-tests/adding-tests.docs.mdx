@@ -1,0 +1,36 @@
+---
+description: 'MDX component with instructions for how to add tests'
+labels: ['docs', 'instructions', 'react-native']
+---
+
+## Adding Tests Instructions
+
+Renders an MDX page with instructions on how to add tests
+
+### Component usage
+
+```js
+import { AddingTests } from '@teambit/react/instructions/adding-tests';
+
+...
+<AddingTests />
+...
+```
+
+### Themed usage
+
+For styling and syntax highlighting this can be wrapped in the MDXLayout Component and Theme Provider.
+
+```js
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
+import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
+
+...
+<ThemeContext>
+  <MDXLayout>
+    <AddingTests />
+  </MDXLayout>
+</ThemeContext>
+...
+```

@@ -1,5 +1,6 @@
 interface GlobalFlags {
   _token?: string;
+  _header?: string;
 }
 
 class GlobalFlags implements GlobalFlags {
@@ -10,6 +11,15 @@ class GlobalFlags implements GlobalFlags {
   set token(token: string | undefined) {
     this._token = token;
   }
+
+  get authHeader(): string | undefined {
+    return this._header;
+  }
+
+  set authHeader(header: string | undefined) {
+    this._header = header;
+  }
+
 }
 
 const globalFlags = new GlobalFlags();

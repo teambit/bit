@@ -3,6 +3,7 @@ import R from 'ramda';
 import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import Config from '../../../global-config/config';
+import logger from '../../../logger/logger';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
