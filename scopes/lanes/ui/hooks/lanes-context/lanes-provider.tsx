@@ -3,13 +3,13 @@ import { LanesModel } from './lanes-model';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
-  lanesState: LanesModel;
+  lanesModel: LanesModel;
   children: ReactNode;
 };
 
 /**
  * context provider of the lanes
  */
-export function LanesProvider({ lanesState, children }: LanesProviderProps) {
-  return <LanesContext.Provider value={lanesState}>{children}</LanesContext.Provider>;
+export function LanesProvider({ lanesModel, children }: LanesProviderProps) {
+  return <LanesContext.Provider value={lanesModel}>{children}</LanesContext.Provider>;
 }

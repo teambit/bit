@@ -70,7 +70,7 @@ export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
   }, new Map<string, LaneModel[]>());
 }
 
-export function mapToLanesState(lanesData: LanesQueryResult, scope: ScopeModel): LanesModel {
+export function mapToLanesModel(lanesData: LanesQueryResult, scope: ScopeModel): LanesModel {
   const laneResult = lanesData.lanes?.getLanes || [];
   const currentLaneName = lanesData.lanes?.getCurrentLaneName;
   const laneModel = laneResult.map((result) => mapToLaneModel(result, scope));

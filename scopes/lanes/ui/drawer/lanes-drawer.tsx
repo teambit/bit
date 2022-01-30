@@ -4,7 +4,7 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { getAllLanesQuery, LaneTree, LanesProvider } from '@teambit/lanes.lanes.ui';
+import { useLanes, LaneTree, LanesProvider } from '@teambit/lanes.lanes.ui';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -26,10 +26,10 @@ export class LanesDrawer implements DrawerType {
   };
 
   render = () => {
-    const lanesState = getAllLanesQuery();
+    const lanesModel = useLanes();
     const { collapsed } = useContext(LaneTreeContext);
 
-    const { lanes } = lanesState;
+    const { lanes } = lanesModel;
 
     if (!lanes) return <FullLoader />;
     if (lanes.list.length === 0)
@@ -40,7 +40,7 @@ export class LanesDrawer implements DrawerType {
       );
 
     return (
-      <LanesProvider lanesState={{ ...lanesState }}>
+      <LanesProvider lanesModel={{ ...lanesModel }}>
         <LaneTree isCollapsed={collapsed}></LaneTree>
       </LanesProvider>
     );

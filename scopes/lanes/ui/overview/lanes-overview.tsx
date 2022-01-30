@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
-import { getAllLanesQuery, LaneComponentCard } from '@teambit/lanes.lanes.ui';
+import { useLanes, LaneComponentCard, useLaneComponents } from '@teambit/lanes.lanes.ui';
 import styles from './lanes-overview.module.scss';
 import { EmptyLane } from './empty-lane-overview';
 
@@ -13,7 +13,7 @@ function getSelectedLaneName() {
 }
 
 export function LanesOverview() {
-  const { lanes } = getAllLanesQuery();
+  const { lanes } = useLanes();
   const currentLaneName = getSelectedLaneName();
   const currentLane = lanes?.list.find((lane) => lane.name === currentLaneName);
 
