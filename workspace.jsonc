@@ -33,6 +33,7 @@
         "@pnpm/git-resolver": "5.1.16",
         "@pnpm/local-resolver": "7.0.6",
         "@pnpm/logger": "4.0.0",
+        "@pnpm/modules-yaml": "9.1.0",
         "@pnpm/npm-resolver": "12.1.6",
         "@pnpm/package-store": "12.1.8",
         "@pnpm/parse-overrides": "1.0.0",

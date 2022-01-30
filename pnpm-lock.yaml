@@ -37,6 +37,7 @@ importers:
       '@pnpm/git-resolver': 5.1.16
       '@pnpm/local-resolver': 7.0.6
       '@pnpm/logger': 4.0.0
+      '@pnpm/modules-yaml': 9.1.0
       '@pnpm/npm-resolver': 12.1.6
       '@pnpm/package-store': 12.1.8
       '@pnpm/parse-overrides': 1.0.0
@@ -603,6 +604,7 @@ importers:
       '@pnpm/git-resolver': registry.npmjs.org/@pnpm/git-resolver/5.1.16_@pnpm+logger@4.0.0
       '@pnpm/local-resolver': registry.npmjs.org/@pnpm/local-resolver/7.0.6
       '@pnpm/logger': registry.npmjs.org/@pnpm/logger/4.0.0
+      '@pnpm/modules-yaml': registry.npmjs.org/@pnpm/modules-yaml/9.1.0
       '@pnpm/npm-resolver': registry.npmjs.org/@pnpm/npm-resolver/12.1.6_@pnpm+logger@4.0.0
       '@pnpm/package-store': registry.npmjs.org/@pnpm/package-store/12.1.8_@pnpm+logger@4.0.0
       '@pnpm/parse-overrides': registry.npmjs.org/@pnpm/parse-overrides/1.0.0
