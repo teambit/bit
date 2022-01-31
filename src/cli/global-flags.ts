@@ -12,11 +12,11 @@ class GlobalFlags implements GlobalFlags {
     this._token = token;
   }
 
-  get authHeader(): string | undefined {
+  get header(): string | undefined {
     return this._header;
   }
 
-  set authHeader(header: string | undefined) {
+  set header(header: string | undefined) {
     this._header = header;
   }
 

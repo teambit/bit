@@ -47,7 +47,6 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import componentResolver from '../../../component-resolver';
 
 export enum Verb {
   WRITE = 'write',
@@ -94,7 +93,6 @@ export class Http implements Network {
     private agent?: Agent,
     private localScopeName?: string,
     private networkConfig?: NetworkConfig,
-    private _header?: string | undefined | null
   ) { }
 
   static getToken() {
@@ -106,7 +104,7 @@ export class Http implements Network {
   }
 
   static getAuthHeader() {
-    const processHeader = globalFlags.authHeader;
+    const processHeader = globalFlags.header;
     const authHeader = processHeader || getSync(CFG_AUTH_HEADER);
     if (!authHeader) return null;
 
