@@ -17,7 +17,7 @@ import init from './lib/init';
 import injectConf from './lib/inject-conf';
 import installAction from './lib/install';
 import isolate from './lib/isolate';
-import link from './lib/link';
+import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
 import merge from './lib/merge';
@@ -66,7 +66,7 @@ export {
   untrack,
   unTagAction,
   move,
-  link,
+  linkAction as link,
   checkout,
   merge,
   diff,
