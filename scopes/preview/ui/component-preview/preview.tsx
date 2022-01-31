@@ -51,7 +51,12 @@ export function ComponentPreview({
 
   const url = toPreviewUrl(component, previewName, queryParams);
   return (
-    <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
+    <iframe
+      {...rest}
+      ref={iframeRef}
+      style={{ ...rest.style, minHeight: iframeHeight || rest.style?.height }}
+      src={url}
+    />
   );
 }
 
@@ -63,10 +68,14 @@ type CallbackFn = () => void;
 
 function useInterval(callback: CallbackFn, interval: number) {
   const savedCallback = useRef<CallbackFn>(() => callback);
-
+  const [intervalId, setIntervalId] = useState<any>();
   useEffect(() => {
     savedCallback.current = callback;
   });
+
+  useEffect(() => {
+    setTimeout(() => clearInterval(intervalId), 1000);
+  }, [intervalId]);
 
   // Set up the interval.
   useEffect(() => {
@@ -75,6 +84,7 @@ function useInterval(callback: CallbackFn, interval: number) {
     }
     if (interval !== null) {
       const id = setInterval(tick, interval);
+      setIntervalId(id);
       return () => clearInterval(id);
     }
     // eslint-disable-next-line
