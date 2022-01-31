@@ -6,7 +6,7 @@ import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { ElementsMain } from './elements.main.runtime';
 import { computeTargets } from './compute-targets';
 import { computeResults } from './compute-results';
-import ElementsAspect from '.';
+import StaticElementsAspect from '.';
 
 export type ElementsWrapperContext = {
   mainFilePath: string;
@@ -21,9 +21,9 @@ export class ElementTask implements BuildTask {
      */
     private elements: ElementsMain,
     private storageResolver?: ArtifactStorageResolver
-  ) {}
+  ) { }
 
-  aspectId = ElementsAspect.id;
+  aspectId = StaticElementsAspect.id;
   name = 'GenerateElementBundle';
   location: TaskLocation = 'end';
   readonly dependencies = [CompilerAspect.id];
