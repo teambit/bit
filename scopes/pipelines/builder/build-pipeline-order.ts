@@ -1,7 +1,7 @@
 import { Graph } from 'cleargraph';
 import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
-import { BuildTask, BuildTaskHelper, TaskIdDelimiter } from './build-task';
+import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';
 
