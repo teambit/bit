@@ -359,6 +359,11 @@ export class EnvsMain {
     let envIdFromEnvsConfigWithoutVersion;
 
     if (envIdFromEnvsConfig) {
+      const envDefWithVersion = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
+      if (envDefWithVersion) {
+        return envDefWithVersion;
+      }
+
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
       const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
       if (envDef) {
