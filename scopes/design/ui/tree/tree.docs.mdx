@@ -1,0 +1,66 @@
+---
+description: 'A tree layout'
+labels: ['react', 'ui', 'tree']
+---
+
+import { useState } from 'react';
+import { CollapsingNode } from './collapsing-node';
+import { Tree } from './tree';
+import { DefaultTreeNode } from './recursive-tree';
+
+This component can be used for creating a tree layout. It accepts a `tree` object of type `TreeNode`.
+
+```js
+type TreeNode<Payload = any> = {
+  id: string,
+  children?: TreeNode<Payload>[],
+  payload?: Payload,
+};
+```
+
+::: note
+If you need extra information about each node, and don't wish to pass it through context, you can attach a payload to each node. You can then use this information in the TreeNode renderer to add special behavior.
+:::
+
+It also accepts a `TreeNode` component, which renders each node in the tree.
+
+```tsx live
+() => {
+  const basicTreeMock = {
+    id: 'basic tree layout',
+    children: [
+      {
+        id: 'level1',
+        children: [
+          {
+            id: 'level2',
+            children: [
+              {
+                id: 'level3',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const Folder = ({ node, depth }) => {
+    const [open, setOpen] = useState(true);
+
+    const Title = () => (
+      <div style={{ backgroundColor: 'blue' }} onClick={() => setOpen(!open)}>
+        {node.id}
+      </div>
+    );
+    return <CollapsingNode title={Title} isOpen={open} node={node} depth={depth} />;
+  };
+
+  const TreeNode = (props) => {
+    if (!props.node.children) return <div style={{ backgroundColor: 'red' }}>{props.node.id}</div>;
+    return <Folder {...props} />;
+  };
+
+  return <Tree tree={basicTreeMock} TreeNode={TreeNode} />;
+};
+```

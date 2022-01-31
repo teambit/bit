@@ -12,6 +12,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
+import { EnvAspect } from '@teambit/env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -28,6 +29,7 @@ import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
+import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -86,6 +88,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
+  [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
@@ -96,6 +99,7 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
+  [EnvAspect.id]: EnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,

@@ -1,31 +1,49 @@
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
+import type { BuilderMain } from '@teambit/builder';
+import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
+import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
-import { PreviewTask } from './preview.task';
+import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
+import {
+  EnvPreviewTemplateTask,
+  GENERATE_ENV_TEMPLATE_TASK_NAME,
+  getArtifactDef as getEnvTemplateArtifactDef,
+} from './env-preview-template.task';
+import { EnvTemplateRoute } from './env-template.route';
+import { ComponentPreviewRoute } from './component-preview.route';
+import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
+import { previewSchema } from './preview.graphql';
+import { PreviewAssetsRoute } from './preview-assets.route';
 
 const noopResult = {
   results: [],
@@ -36,12 +54,38 @@ const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
+type PreviewFiles = {
+  files: string[];
+  isBundledWithEnv: boolean;
+};
+
+export type ComponentPreviewSizedFile = Asset;
+
+export type ComponentPreviewSize = {
+  files: ComponentPreviewSizedFile[];
+  assets: ComponentPreviewSizedFile[];
+  totalFiles: number;
+  totalAssets: number;
+  total: number;
+};
+
+export type ComponentPreviewMetaData = {
+  size?: ComponentPreviewSize;
+};
+
 export type PreviewConfig = {
-  bundlingStrategy: string;
+  bundlingStrategy?: string;
   disabled: boolean;
 };
 
+export type EnvPreviewConfig = {
+  strategyName?: string;
+  splitComponentBundle?: boolean;
+};
+
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
+
+export type GenerateLinkFn = (prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string) => string;
 
 export class PreviewMain {
   constructor(
@@ -59,6 +103,8 @@ export class PreviewMain {
 
     private envs: EnvsMain,
 
+    private componentAspect: ComponentMain,
+
     private pkg: PkgMain,
 
     private aspectLoader: AspectLoaderMain,
@@ -71,18 +117,139 @@ export class PreviewMain {
 
     private workspace: Workspace | undefined,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   get tempFolder(): string {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
 
+  getComponentBundleSize(component: Component): ComponentPreviewSize | undefined {
+    const data = this.builder.getDataByAspect(component, PreviewAspect.id);
+
+    if (!data) return undefined;
+    return data[COMPONENT_STRATEGY_SIZE_KEY_NAME];
+  }
+
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
-    if (!artifacts.length) return undefined;
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+      component,
+      PreviewAspect.id,
+      PREVIEW_TASK_NAME
+    );
+    if (!artifacts || !artifacts.length) return undefined;
+    return new PreviewArtifact(artifacts);
+  }
+
+  /**
+   * Get a list of all the artifact files generated during the GeneratePreview task
+   * @param component
+   * @returns
+   */
+  async getPreviewFiles(component: Component): Promise<PreviewFiles | undefined> {
+    const artifacts = await this.getPreview(component);
+    const isBundledWithEnv = await this.isBundledWithEnv(component);
+    if (!artifacts) return undefined;
+    return {
+      files: artifacts.getPaths(),
+      isBundledWithEnv,
+    };
+  }
+
+  /**
+   * Check if the component preview bundle contain the env as part of the bundle or only the component code
+   * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
+   * @param component
+   * @returns
+   */
+  async isBundledWithEnv(component: Component): Promise<boolean> {
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+      component,
+      PreviewAspect.id,
+      COMPONENT_STRATEGY_ARTIFACT_NAME
+    );
+    if (!artifacts || !artifacts.length) return true;
+
+    return false;
+  }
+
+  /**
+   * Getting the env template artifact
+   * This should be called with the env itself or it will return undefined
+   * If you want to get the env template from the env of the component,
+   * use: getEnvTemplateFromComponentEnv below
+   *
+   * @param component
+   * @returns
+   */
+  async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+      component,
+      PreviewAspect.id,
+      GENERATE_ENV_TEMPLATE_TASK_NAME
+    );
+    if (!artifacts || !artifacts.length) return undefined;
 
     return new PreviewArtifact(artifacts);
+  }
+
+  /**
+   * This is a special method to get a core env template
+   * As the core envs doesn't exist in the scope we need to bring it from other place
+   * We will bring it from the core env package files
+   */
+  private async getCoreEnvTemplate(envId: string): Promise<PreviewArtifact | undefined> {
+    const coreEnvDir = getAspectDir(envId);
+    // const finalDir = join(coreEnvDir, getEnvTemplateArtifactDirectory());
+    const artifactDef = getEnvTemplateArtifactDef()[0];
+    const artifactFactory = new ArtifactFactory();
+
+    let rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);
+    if (!existsSync(rootDir)) {
+      // fallback to the bvm folder
+      const coreEnvDirFromBvm = getAspectDirFromBvm(envId);
+      rootDir = artifactFactory.getRootDir(coreEnvDirFromBvm, artifactDef);
+    }
+    if (!existsSync(rootDir)) {
+      return undefined;
+    }
+    const paths = artifactFactory.resolvePaths(rootDir, artifactDef);
+    if (!paths || !paths.length) {
+      return undefined;
+    }
+    const artifactFiles = new ArtifactFiles(paths);
+
+    artifactFiles.populateVinylsFromPaths(rootDir);
+    return new PreviewArtifact(artifactFiles.vinyls);
+  }
+
+  /**
+   * This will fetch the component env, then will take the env template from the component env
+   * @param component
+   */
+  async getEnvTemplateFromComponentEnv(component: Component): Promise<PreviewArtifact | undefined> {
+    const envId = this.envs.getEnvId(component);
+    return this.getEnvTemplateByEnvId(envId);
+  }
+
+  /**
+   * This will fetch the component env, then will take the env template from the component env
+   * @param component
+   */
+  async getEnvTemplateByEnvId(envId: string): Promise<PreviewArtifact | undefined> {
+    // Special treatment for core envs
+    if (this.aspectLoader.isCoreEnv(envId)) {
+      return this.getCoreEnvTemplate(envId);
+    }
+    const host = this.componentAspect.getHost();
+    const resolvedEnvId = await host.resolveComponentId(envId);
+    const envComponent = await host.get(resolvedEnvId);
+    if (!envComponent) {
+      throw new BitError(`can't load env. env id is ${envId}`);
+    }
+    return this.getEnvTemplate(envComponent);
   }
 
   getDefs(): PreviewDefinition[] {
@@ -99,10 +266,20 @@ export class PreviewMain {
    * @param defaultModule
    * @param dirName
    */
-  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
-    const contents = generateLink(prefix, moduleMap, defaultModule);
+  writeLink(
+    prefix: string,
+    moduleMap: ComponentMap<string[]>,
+    defaultModule: string | undefined,
+    dirName: string,
+    isSplitComponentBundle: boolean
+  ) {
+    const contents = generateLink(prefix, moduleMap, defaultModule, isSplitComponentBundle);
+    return this.writeLinkContents(contents, dirName, prefix);
+  }
+
+  writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
-    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    const targetPath = join(targetDir, `__${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -138,6 +315,7 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const environment = context.envRuntime.env;
+      const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
       const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
         const modulePath =
@@ -155,19 +333,19 @@ export class PreviewMain {
       const dirPath = join(this.tempFolder, context.id);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
+      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath, isSplitComponentBundle);
       return link;
     });
 
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime(context: { components: Component[] }) {
+  async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
     const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
+    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
   }
@@ -180,7 +358,11 @@ export class PreviewMain {
    * @param aspects
    * @param context
    */
-  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: { components: Component[] }) {
+  private filterAspectsByExecutionContext(
+    aspects: AspectDefinition[],
+    context: { components: Component[] },
+    aspectsIdsToNotFilterOut: string[] = []
+  ) {
     let allComponentContextAspects: string[] = [];
     allComponentContextAspects = context.components.reduce((acc, curr) => {
       return acc.concat(curr.state.aspects.ids);
@@ -191,13 +373,18 @@ export class PreviewMain {
       if (!aspect.getId) {
         return false;
       }
-      return this.aspectLoader.isCoreAspect(aspect.getId) || allAspectsToInclude.includes(aspect.getId);
+      return (
+        this.aspectLoader.isCoreAspect(aspect.getId) ||
+        allAspectsToInclude.includes(aspect.getId) ||
+        aspectsIdsToNotFilterOut.includes(aspect.getId)
+      );
     });
+
     return filtered;
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
+    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver)];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -233,12 +420,20 @@ export class PreviewMain {
     return this.handleComponentChange(component, (currentComponents) => currentComponents.remove(cId));
   };
 
+  getEnvPreviewConfig(env?: PreviewEnv): EnvPreviewConfig {
+    const config = env?.getPreviewConfig && typeof env?.getPreviewConfig === 'function' ? env?.getPreviewConfig() : {};
+
+    return config;
+  }
+
   /**
    * return the configured bundling strategy.
    */
-  getBundlingStrategy(): BundlingStrategy {
+  getBundlingStrategy(env?: PreviewEnv): BundlingStrategy {
     const defaultStrategies = this.getDefaultStrategies();
-    const strategyName = this.config.bundlingStrategy;
+    const envPreviewConfig = this.getEnvPreviewConfig(env);
+    const strategyFromEnv = envPreviewConfig?.strategyName;
+    const strategyName = strategyFromEnv || this.config.bundlingStrategy || 'env';
     const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
     const selected = strategies.find((strategy) => {
       return strategy.name === strategyName;
@@ -278,15 +473,30 @@ export class PreviewMain {
     PubsubAspect,
     AspectLoaderAspect,
     LoggerAspect,
+    DependencyResolverAspect,
+    GraphqlAspect,
   ];
 
   static defaultConfig = {
-    bundlingStrategy: 'env',
     disabled: false,
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pkg, pubsub, aspectLoader, loggerMain]: [
+    // eslint-disable-next-line max-len
+    [
+      bundler,
+      builder,
+      componentExtension,
+      uiMain,
+      envs,
+      workspace,
+      pkg,
+      pubsub,
+      aspectLoader,
+      loggerMain,
+      dependencyResolver,
+      graphql,
+    ]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
@@ -296,38 +506,50 @@ export class PreviewMain {
       PkgMain,
       PubsubMain,
       AspectLoaderMain,
-      LoggerMain
+      LoggerMain,
+      DependencyResolverMain,
+      GraphqlMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
     harmony: Harmony
   ) {
     const logger = loggerMain.createLogger(PreviewAspect.id);
-
+    // app.registerApp(new PreviewApp());
     const preview = new PreviewMain(
       harmony,
       previewSlot,
       uiMain,
       envs,
+      componentExtension,
       pkg,
       aspectLoader,
       config,
       bundlingStrategySlot,
       builder,
       workspace,
-      logger
+      logger,
+      dependencyResolver
     );
 
     if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
 
-    componentExtension.registerRoute([new PreviewRoute(preview, logger)]);
+    componentExtension.registerRoute([
+      new PreviewRoute(preview, logger),
+      new ComponentPreviewRoute(preview, logger),
+      // @ts-ignore
+      new EnvTemplateRoute(preview, logger),
+      new PreviewAssetsRoute(preview, logger),
+    ]);
+
     bundler.registerTarget([
       {
         entry: preview.getPreviewTarget.bind(preview),
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+    if (!config.disabled)
+      builder.registerBuildTasks([new EnvPreviewTemplateTask(preview, envs), new PreviewTask(bundler, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
@@ -338,6 +560,8 @@ export class PreviewMain {
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
+
+    graphql.register(previewSchema(preview));
 
     return preview;
   }

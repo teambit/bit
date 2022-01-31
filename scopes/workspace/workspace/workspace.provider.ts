@@ -153,7 +153,7 @@ export default async function provideWorkspace(
     // which in turn run this event, which will make an infinite loop
     // This component from scope here are only used for merging the extensions with the workspace components
     const componentFromScope = await workspace.scope.get(componentId);
-    const extensions = await workspace.componentExtensions(componentId, componentFromScope);
+    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
     await workspace.loadExtensions(extensions);

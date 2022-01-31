@@ -1,27 +1,72 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
+import { ComponentID } from '@teambit/component-id';
+import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
+import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd } from './aspect.cmd';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
 export class AspectMain {
-  constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain) {}
+  constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain, private workspace: Workspace) {}
 
   /**
    * compose your own aspect environment.
    */
-  compose(transformers: EnvTransformer[] = []) {
-    return this.envs.compose(this.aspectEnv, transformers);
+  compose(transformers: EnvTransformer[] = [], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.aspectEnv), transformers);
+  }
+
+  async listAspectsOfComponent(id: string | ComponentID): Promise<string[]> {
+    if (typeof id === 'string') {
+      id = await this.workspace.resolveComponentId(id);
+    }
+    const component = await this.workspace.get(id);
+    return component.state.aspects.ids;
+  }
+
+  async setAspectsToComponents(
+    pattern: string,
+    aspectId: string,
+    config: Record<string, any> = {}
+  ): Promise<ComponentID[]> {
+    const components = await this.workspace.byPattern(pattern);
+    const componentIds = components.map((comp) => comp.id);
+    componentIds.forEach((componentId) => {
+      this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
+    });
+    await this.workspace.bitMap.write();
+
+    return componentIds;
+  }
+
+  async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
+    const components = await this.workspace.byPattern(pattern);
+    const componentIds = components.map((comp) => comp.id);
+    componentIds.forEach((componentId) => {
+      this.workspace.bitMap.removeComponentConfig(componentId, aspectId);
+    });
+    await this.workspace.bitMap.write();
+
+    return componentIds;
+  }
+
+  async getAspectsOfComponent(id: string | ComponentID) {
+    if (typeof id === 'string') {
+      id = await this.workspace.resolveComponentId(id);
+    }
+    const componentFromScope = await this.workspace.scope.get(id);
+    return this.workspace.componentExtensions(id, componentFromScope);
   }
 
   static runtime = MainRuntime;
@@ -33,16 +78,20 @@ export class AspectMain {
     CompilerAspect,
     BabelAspect,
     GeneratorAspect,
+    WorkspaceAspect,
+    CLIAspect,
   ];
 
-  static async provider([react, envs, builder, aspectLoader, compiler, babel, generator]: [
+  static async provider([react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli]: [
     ReactMain,
     EnvsMain,
     BuilderMain,
     AspectLoaderMain,
     CompilerMain,
     BabelMain,
-    GeneratorMain
+    GeneratorMain,
+    Workspace,
+    CLIMain
   ]) {
     const babelCompiler = babel.createCompiler({
       babelTransformOptions: babelConfig,
@@ -70,7 +119,10 @@ export class AspectMain {
       compiler.createTask('TypescriptCompiler', tsCompiler),
     ]);
 
-    const aspectEnv = react.compose([compilerOverride, compilerTasksOverride], new AspectEnv(react.reactEnv));
+    const aspectEnv = react.compose(
+      [compilerOverride, compilerTasksOverride],
+      new AspectEnv(react.reactEnv, aspectLoader)
+    );
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
@@ -79,7 +131,17 @@ export class AspectMain {
 
     envs.registerEnv(aspectEnv);
     generator.registerComponentTemplate([aspectTemplate]);
-    return new AspectMain(aspectEnv as AspectEnv, envs);
+    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
+    const aspectCmd = new AspectCmd();
+    aspectCmd.commands = [
+      new ListAspectCmd(aspectMain),
+      new GetAspectCmd(aspectMain),
+      new SetAspectCmd(aspectMain),
+      new UnsetAspectCmd(aspectMain),
+    ];
+    cli.register(aspectCmd);
+
+    return aspectMain;
   }
 }
 

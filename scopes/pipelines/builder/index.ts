@@ -1,6 +1,13 @@
 export { BuildPipe, TaskResults } from './build-pipe';
 export { ComponentResult, TaskMetadata } from './types';
-export { BuildContext, BuildTask, BuiltTaskResult, TaskLocation, BuildTaskHelper } from './build-task';
+export {
+  BuildContext,
+  BuildTask,
+  BuiltTaskResult,
+  TaskLocation,
+  BuildTaskHelper,
+  CAPSULE_ARTIFACTS_DIR,
+} from './build-task';
 export type { BuilderMain, BuilderData } from './builder.main.runtime';
 export type { PipelineReport } from './build-pipeline-result-list';
 export { BuilderAspect } from './builder.aspect';

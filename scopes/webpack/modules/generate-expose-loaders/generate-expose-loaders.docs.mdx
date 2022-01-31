@@ -1,0 +1,48 @@
+---
+labels: ['typescript', 'utils', 'webpack']
+description: 'Generate a list of exposed entries rules.'
+---
+
+Generate a list of exposed entries rules
+
+API:
+
+```ts
+function generateExposeLoaders(
+  exposedEntries: ExposedEntries,
+  options: GenerateExposeLoadersOptions = {}
+): Array<Object>;
+```
+
+import JSONFormatter from 'json-formatter-js';
+import { generateExposeLoaders } from './generate-expose-loaders';
+
+```js live
+() => {
+  const entries = [
+    {
+      path: 'path-to/react',
+      globalName: 'React',
+    },
+    {
+      path: 'path-to/react-dom',
+      globalName: 'ReactDOM',
+    },
+  ];
+  const options = {
+    loaderPath: 'path-to/expose-loader',
+  };
+  const rules = new generateExposeLoaders(entries, options);
+
+  const dataContent = new JSONFormatter(rules, 2);
+  return (
+    <div>
+      <div
+        ref={(nodeElement) => {
+          nodeElement && nodeElement.replaceWith(dataContent.render());
+        }}
+      />
+    </div>
+  );
+};
+```

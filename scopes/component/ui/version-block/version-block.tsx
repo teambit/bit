@@ -31,10 +31,10 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={false} />
-        <NavLink className={styles.link} href={`~tests?v=${version}`}>
+        <NavLink className={styles.link} href={`~tests?version=${version}`}>
           Tests
         </NavLink>
-        <NavLink className={styles.link} href={`~compositions?v=${version}`}>
+        <NavLink className={styles.link} href={`~compositions?version=${version}`}>
           Compositions
         </NavLink>
         <div className={styles.placeholder} />

@@ -2,7 +2,7 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { BuildTask } from '@teambit/builder';
+import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
@@ -51,8 +51,9 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
-export const AspectEnvType = 'react';
+export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
@@ -231,19 +232,24 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const peers = this.getAllHostDeps();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
-    const baseConfig = basePreviewConfigFactory(true);
-    const baseProdConfig = basePreviewProdConfigFactory();
+    const peers = this.getAllHostDeps();
+
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
@@ -252,7 +258,20 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+  }
+
+  /**
+   * Get the peers configured by the env on the components + the host deps configured by the env
+   */
+  private getAllHostDeps() {
+    const hostDeps = this.getHostDependencies();
+    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+    return peers;
+  }
+
+  getHostDependencies(): string[] {
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
   /**
@@ -271,11 +290,25 @@ export class ReactEnv
     return require.resolve('./mount');
   }
 
+  getPreviewConfig() {
+    return {
+      // strategyName: 'component',
+      splitComponentBundle: true,
+    };
+  }
+
   /**
    * define the package json properties to add to each component.
    */
   getPackageJsonProps() {
     return this.tsAspect.getPackageJsonProps();
+  }
+
+  getNpmIgnore() {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
   /**
@@ -325,7 +358,7 @@ export class ReactEnv
 
   async __getDescriptor() {
     return {
-      type: AspectEnvType,
+      type: ReactEnvType,
     };
   }
 }

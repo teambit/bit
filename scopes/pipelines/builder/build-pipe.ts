@@ -47,7 +47,7 @@ export class BuildPipe {
   private failedTasks: BuildTask[] = [];
   private failedDependencyTask: BuildTask | undefined;
   private longProcessLogger: LongProcessLogger;
-  private taskResults: TaskResults[];
+  private taskResults: TaskResults[] = [];
   constructor(
     /**
      * array of services to apply on the components.
@@ -56,9 +56,11 @@ export class BuildPipe {
     readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
     readonly artifactFactory: ArtifactFactory,
-    previousTaskResults?: TaskResults[]
-  ) {
-    this.taskResults = previousTaskResults || [];
+    private previousTaskResults?: TaskResults[]
+  ) {}
+
+  get allTasksResults(): TaskResults[] {
+    return [...(this.previousTaskResults || []), ...(this.taskResults || [])];
   }
 
   /**
@@ -133,7 +135,7 @@ export class BuildPipe {
   private updateFailedDependencyTask(task: BuildTask) {
     if (!this.failedDependencyTask && this.failedTasks.length && task.dependencies) {
       task.dependencies.forEach((dependency) => {
-        const { aspectId, name } = BuildTaskHelper.deserializeId(dependency);
+        const { aspectId, name } = BuildTaskHelper.safeDeserializeId(dependency);
         this.failedDependencyTask = this.failedTasks.find((failedTask) => {
           if (name && name !== failedTask.name) return false;
           return aspectId === failedTask.aspectId;
@@ -152,7 +154,7 @@ export class BuildPipe {
   private getBuildContext(envId: string) {
     const buildContext = this.envsBuildContext[envId];
     if (!buildContext) throw new Error(`unable to find buildContext for ${envId}`);
-    buildContext.previousTasksResults = this.taskResults;
+    buildContext.previousTasksResults = this.allTasksResults;
     return buildContext;
   }
 

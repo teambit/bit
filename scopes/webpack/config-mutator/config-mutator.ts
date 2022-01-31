@@ -123,6 +123,20 @@ export class WebpackConfigMutator {
   }
 
   /**
+   * Add many new plugins
+   * @param plugin
+   * @param opts
+   * @returns
+   */
+  addPlugins(plugins: Array<any>, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+    this.raw.plugins = addManyToArray(this.raw.plugins, plugins, opts);
+    return this;
+  }
+
+  /**
    * Add aliases
    * @param aliases
    * @returns
@@ -248,6 +262,18 @@ function addToArray(array: Array<any>, val: any, opts: AddToArrayOpts = {}): Arr
     array?.unshift(val);
   } else {
     array?.push(val);
+  }
+  return array;
+}
+
+function addManyToArray(array: Array<any>, vals: Array<any>, opts: AddToArrayOpts = {}): Array<any> {
+  const concreteOpts = Object.assign({}, defaultAddToArrayOpts, opts);
+  if (concreteOpts.position === 'prepend') {
+    // array = array?.concat(vals);
+    array?.unshift(...vals);
+  } else {
+    // array = vals?.concat(array);
+    array?.push(...vals);
   }
   return array;
 }
