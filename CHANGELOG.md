@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Features
+- add the ability to have a custom auth header so that you can connect to a local scope via something like Cloudflare Access
+
 ## [14.8.9-dev.1] - 2020-07-30
 
 - first version for harmony beta
