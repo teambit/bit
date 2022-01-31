@@ -107,9 +107,7 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
   if (!task.dependencies || !task.dependencies.length) return;
   const taskId = BuildTaskHelper.serializeId(task);
   task.dependencies.forEach((dependency) => {
-    const { aspectId, name } = dependency.includes(TaskIdDelimiter)
-      ? BuildTaskHelper.deserializeId(dependency)
-      : { aspectId: dependency, name: undefined };
+    const { aspectId, name } = BuildTaskHelper.deserializeIdAllowEmptyName(dependency);
     const dependencyTasks = pipeline.filter((pipelineTask) => {
       if (pipelineTask.aspectId !== aspectId) return false;
       return name ? name === pipelineTask.name : true;

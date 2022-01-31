@@ -123,15 +123,10 @@ export class BuildTaskHelper {
     throw new Error(`deserializeId, id ${id} has more than one ${TaskIdDelimiter}`);
   }
   /**
-   * Deserialize the id, but without throw an error in case something is missing
-   * @param id
-   * @returns
+   * don't throw an error when the id includes only the aspect-id without the task name.
+   * useful for task dependencies, when it's allowed to specify the aspect-id only.
    */
-  static safeDeserializeId(id: string): { aspectId?: string; name?: string } {
-    const split = id.split(TaskIdDelimiter);
-    if (split.length === 0) return {};
-    if (split.length === 1) return { aspectId: split[0] };
-    if (split.length === 2) return { aspectId: split[0], name: split[1] };
-    throw new Error(`deserializeId, id ${id} has more than one ${TaskIdDelimiter}`);
+  static deserializeIdAllowEmptyName(id: string): { aspectId: string; name?: string } {
+    return id.includes(TaskIdDelimiter) ? BuildTaskHelper.deserializeId(id) : { aspectId: id, name: undefined };
   }
 }
