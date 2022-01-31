@@ -75,6 +75,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
+import { EnvPolicyFactory } from './policy/env-policy';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -836,7 +837,8 @@ export class DependencyResolverMain {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig, 'env');
+        const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(policiesFromEnvConfig);
+        policiesFromEnv = allPoliciesFromEnv.variantPolicy;
       }
     }
     const configuredIds = configuredExtensions.ids;
