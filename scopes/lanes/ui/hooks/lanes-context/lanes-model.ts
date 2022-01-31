@@ -89,7 +89,9 @@ export function mapToLanesModel(lanesData: LanesQueryResult, scope: ScopeModel):
 }
 
 function getLaneComponentName(laneComponent: LaneComponentQueryResult, host: 'workspace' | 'scope') {
-  return host === 'workspace'
+  if (host === 'scope') return laneComponent.id.replace('.', '/');
+  const hasIdBeenExported = laneComponent.id.split('/').length > 1;
+  return hasIdBeenExported
     ? laneComponent.id.split('/').reduce((accum, next, index) => {
         if (index === 1) {
           return `${next}`;
@@ -99,5 +101,5 @@ function getLaneComponentName(laneComponent: LaneComponentQueryResult, host: 'wo
         }
         return accum;
       }, '')
-    : laneComponent.id.replace('.', '/');
+    : laneComponent.id;
 }
