@@ -1929,9 +1929,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    */
   async setEnvToComponents(envId: ComponentID, components: Component[]) {
     const envIdStr = envId.toString();
+    const existsOnWorkspace = await this.hasId(envId);
+    const envIdStrNoVersion = envId.toStringWithoutVersion();
     components.forEach((component) => {
-      this.bitMap.addComponentConfig(component.id, envIdStr);
-      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStr });
+      this.bitMap.addComponentConfig(component.id, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStrNoVersion });
     });
     await this.bitMap.write();
   }
