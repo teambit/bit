@@ -24,28 +24,21 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
 
   const tree: TreeNode<PayloadType> = useMemo(() => {
     const scopes = [...lanesByScope.keys()];
+    const { host } = lanesState;
     return {
       id: '',
       children:
-        scopes.length > 0
+        host === 'workspace'
           ? scopes.map((scope) => ({
               id: scope,
               children: (lanesByScope.get(scope) || []).map((lane) => ({
                 id: lane.laneName,
                 payload: lane,
-                // children: lane.components.map((laneComponent) => ({
-                //   id: laneComponent.id.toString({ ignoreVersion: true }),
-                //   payload: laneComponent,
-                // })),
               })),
             }))
           : lanes.map((lane) => ({
               id: lane.laneName,
               payload: lane,
-              // children: lane.components.map((laneComponent) => ({
-              //   id: laneComponent.id.toString({ ignoreVersion: true }),
-              //   payload: laneComponent,
-              // })),
             })),
     };
   }, [lanes]);
@@ -60,7 +53,5 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
 function DefaultTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
   const payload = props.node.payload;
   if (!payload) return <ScopeTreeNode {...props} />;
-  // if (payload instanceof ComponentModel) return <ComponentView {...props} />;
-  // if (props?.node?.children && props.node.children.length > 0) return <NamespaceTreeNode {...props} />;
   return <LaneTreeNode {...props} />;
 }
