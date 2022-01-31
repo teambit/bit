@@ -51,12 +51,7 @@ export function ComponentPreview({
 
   const url = toPreviewUrl(component, previewName, queryParams);
   return (
-    <iframe
-      {...rest}
-      ref={iframeRef}
-      style={{ ...rest.style, minHeight: iframeHeight || rest.style?.height }}
-      src={url}
-    />
+    <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
   );
 }
 
@@ -75,6 +70,7 @@ function useInterval(callback: CallbackFn, interval: number) {
 
   useEffect(() => {
     setTimeout(() => clearInterval(intervalId), 1000);
+    return () => clearTimeout();
   }, [intervalId]);
 
   // Set up the interval.
@@ -88,7 +84,7 @@ function useInterval(callback: CallbackFn, interval: number) {
       return () => clearInterval(id);
     }
     // eslint-disable-next-line
-    return;
+    return () => clearInterval();
   }, [interval]);
 }
 
