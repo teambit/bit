@@ -252,14 +252,17 @@ describe('sortMatchesBySpecificity', () => {
       const match1 = {
         specificity: 5,
         config: {},
+        pattern: '',
       };
       const match2 = {
         specificity: 3,
         config: {},
+        pattern: '',
       };
       const match3 = {
         specificity: 7,
         config: {},
+        pattern: '',
       };
       const matches = [match1, match2, match3];
       const res = sortMatchesBySpecificity(matches);
