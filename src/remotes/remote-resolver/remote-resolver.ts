@@ -36,7 +36,6 @@ const SCOPE_GET = gql`
 // comment this out once on production
 async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
-  console.log(symphonyUrl);
   const token = getSync(CFG_USER_TOKEN_KEY);
   const authHeader = getSync(CFG_AUTH_HEADER);
   const headers = token ? getAuthHeader(token, authHeader) : {};
