@@ -7,6 +7,7 @@ import {
   CFG_USER_TOKEN_KEY,
   SYMPHONY_URL,
   CFG_SYMPHONY_URL_KEY,
+  CFG_AUTH_HEADER,
 } from '../../constants';
 
 import Scope from '../../scope/scope';
@@ -36,7 +37,8 @@ const SCOPE_GET = gql`
 async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
   const token = getSync(CFG_USER_TOKEN_KEY);
-  const headers = token ? getAuthHeader(token) : {};
+  const authHeader = getSync(CFG_AUTH_HEADER);
+  const headers = token ? getAuthHeader(token, authHeader) : {};
   const graphQlUrl = `https://${symphonyUrl}/graphql`;
   const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
   const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });

@@ -35,6 +35,7 @@ import {
   CFG_LOCAL_ADDRESS,
   CFG_MAX_SOCKETS,
   CFG_NETWORK_CONCURRENCY,
+  CFG_AUTH_HEADER
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -91,8 +92,8 @@ export class Http implements Network {
     private proxyConfig?: ProxyConfig,
     private agent?: Agent,
     private localScopeName?: string,
-    private networkConfig?: NetworkConfig
-  ) {}
+    private networkConfig?: NetworkConfig,
+  ) { }
 
   static getToken() {
     const processToken = globalFlags.token;
@@ -100,6 +101,14 @@ export class Http implements Network {
     if (!token) return null;
 
     return token;
+  }
+
+  static getAuthHeader() {
+    const processHeader = globalFlags.header;
+    const authHeader = processHeader || getSync(CFG_AUTH_HEADER);
+    if (!authHeader) return null;
+
+    return authHeader;
   }
 
   static async getProxyConfig(checkProxyUriDefined = true): Promise<ProxyConfig> {
@@ -148,7 +157,11 @@ export class Http implements Network {
     return Http.getToken();
   }
 
-  close(): void {}
+  get authHeader() {
+    return Http.getAuthHeader();
+  }
+
+  close(): void { }
 
   async describeScope(): Promise<ScopeDescriptor> {
     const SCOPE_QUERY = gql`
@@ -308,6 +321,12 @@ export class Http implements Network {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       this.graphClient.setHeader('x-verb', verb);
+      const token = this.token;
+      const authHeader = this.authHeader;
+
+      if (authHeader && token) this.graphClient.setHeader(authHeader, token);
+
+
       return await this.graphClient.request(query, variables);
     } catch (err: any) {
       if (err instanceof ClientError) {
@@ -519,7 +538,7 @@ export class Http implements Network {
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
-    const authHeader = this.token ? getAuthHeader(this.token) : {};
+    const authHeader = this.token ? getAuthHeader(this.token, this.authHeader) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
     return Object.assign(
       headers,
@@ -541,7 +560,8 @@ export class Http implements Network {
 
   static async connect(host: string, scopeName: string, localScopeName?: string) {
     const token = Http.getToken();
-    const headers = token ? getAuthHeader(token) : {};
+    const authHeader = Http.getAuthHeader()
+    const headers = token ? getAuthHeader(token, authHeader) : {};
     const proxyConfig = await Http.getProxyConfig();
     const networkConfig = await Http.getNetworkConfig();
     const agent = await Http.getAgent(host, {
@@ -556,8 +576,10 @@ export class Http implements Network {
   }
 }
 
-export function getAuthHeader(token: string) {
-  return {
+export function getAuthHeader(token: string, authHeader?: string | null) {
+  return authHeader ? {
+    [authHeader]: `${token}`
+  } : {
     Authorization: `${DEFAULT_AUTH_TYPE} ${token}`,
   };
 }
