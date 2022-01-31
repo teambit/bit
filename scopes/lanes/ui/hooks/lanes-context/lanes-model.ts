@@ -38,14 +38,16 @@ export function mapToLaneModel(laneData: LaneQueryResult, scope: ScopeModel): La
   const { name, remote, isMerged } = laneData;
   const laneName = name;
   const fullName = remote || name;
-  const scopeName = remote?.split('/')[0] || scope.name;
+  const laneScope = remote?.split('/')[0];
 
   const components = laneData.components.map((component) => {
+    const componentName = getLaneComponentName(component, laneScope ? 'workspace' : 'scope');
+    const componentScope = component.id.split('/')[0] || laneScope || scope.name;
     const componentModel = ComponentModel.from({
       id: {
-        name: component.id,
+        name: componentName,
         version: component.head,
-        scope: scopeName,
+        scope: componentScope,
       },
       displayName: component.id,
       compositions: [],
@@ -54,7 +56,7 @@ export function mapToLaneModel(laneData: LaneQueryResult, scope: ScopeModel): La
     });
     return componentModel;
   });
-  return { name: fullName, laneName, scope: scopeName, isMerged, components };
+  return { name: fullName, laneName, scope: laneScope || scope.name, isMerged, components };
 }
 
 export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
@@ -84,4 +86,18 @@ export function mapToLanesModel(lanesData: LanesQueryResult, scope: ScopeModel):
     lanes,
     currentLane,
   };
+}
+
+function getLaneComponentName(laneComponent: LaneComponentQueryResult, host: 'workspace' | 'scope') {
+  return host === 'workspace'
+    ? laneComponent.id.split('/').reduce((accum, next, index) => {
+        if (index === 1) {
+          return `${next}`;
+        }
+        if (index > 1) {
+          return `${accum}/${next}`;
+        }
+        return accum;
+      }, '')
+    : laneComponent.id.replace('.', '/');
 }

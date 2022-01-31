@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
-import { useLanes, LaneComponentCard, useLaneComponents } from '@teambit/lanes.lanes.ui';
+import { useLanes, LaneComponentCard, LaneDetails } from '@teambit/lanes.lanes.ui';
 import styles from './lanes-overview.module.scss';
 import { EmptyLane } from './empty-lane-overview';
 
@@ -19,9 +19,13 @@ export function LanesOverview() {
 
   if (!currentLaneName || !currentLane) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.laneName} />;
-
   return (
     <div className={styles.container}>
+      <LaneDetails
+        laneName={currentLane.name}
+        description={''}
+        componentCount={currentLane.components.length}
+      ></LaneDetails>
       <ComponentGrid>
         {currentLane.components.map((component, index) => {
           return <LaneComponentCard key={index} component={component} />;
