@@ -63,15 +63,10 @@ type CallbackFn = () => void;
 
 function useInterval(callback: CallbackFn, interval: number) {
   const savedCallback = useRef<CallbackFn>(() => callback);
-  const [intervalId, setIntervalId] = useState<any>();
+
   useEffect(() => {
     savedCallback.current = callback;
   });
-
-  useEffect(() => {
-    setTimeout(() => clearInterval(intervalId), 1000);
-    return () => clearTimeout();
-  }, [intervalId]);
 
   // Set up the interval.
   useEffect(() => {
@@ -80,7 +75,6 @@ function useInterval(callback: CallbackFn, interval: number) {
     }
     if (interval !== null) {
       const id = setInterval(tick, interval);
-      setIntervalId(id);
       return () => clearInterval(id);
     }
     // eslint-disable-next-line
