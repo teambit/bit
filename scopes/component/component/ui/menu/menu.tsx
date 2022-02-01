@@ -48,7 +48,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
         <div className={styles.widgets}>
           <MenuNav navigationSlot={widgetSlot} />
         </div>
-        <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} />
+        <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
         <MainDropdown menuItems={mainMenuItems} />
       </div>
     </div>
@@ -58,9 +58,11 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
 function VersionRelatedDropdowns({
   component,
   consumeMethods,
+  host,
 }: {
   component: ComponentModel;
   consumeMethods: ConsumeMethodSlot;
+  host: string;
 }) {
   const versionList =
     useMemo(
@@ -73,6 +75,12 @@ function VersionRelatedDropdowns({
       [component.tags]
     ) || [];
 
+  let isWorkspace = false;
+  if (host === 'teambit.workspace/workspace' && versionList.length && versionList[0] !== 'workspace') {
+    versionList.unshift('workspace');
+    isWorkspace = true;
+  }
+
   const methods = useConsumeMethods(consumeMethods, component);
   return (
     <>
@@ -83,7 +91,12 @@ function VersionRelatedDropdowns({
           Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
-      <VersionDropdown versions={versionList} currentVersion={component.version} />
+      <VersionDropdown
+        versions={versionList}
+        currentVersion={component.version}
+        latestVersion={component.latest}
+        isWorkspace={isWorkspace}
+      />
     </>
   );
 }
