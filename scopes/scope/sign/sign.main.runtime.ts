@@ -39,7 +39,7 @@ export class SignMain {
   async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean): Promise<SignResult | null> {
     if (isMultiple) await this.scope.import(ids);
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
-    if (componentsToSkip.length) {
+    if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
       console.log(`the following component(s) were already signed successfully:
 ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
@@ -133,6 +133,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     componentsToSkip: ComponentID[];
     componentsToSign: ComponentID[];
   }> {
+    if (!ids.length) {
+      ids = await this.scope.listIds();
+    }
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
     const components = await this.scope.loadMany(ids);

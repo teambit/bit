@@ -12,7 +12,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { MutatedProject, mutateModules, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import { MutatedProject, mutateModules, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
@@ -150,7 +150,7 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  },
+  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -197,7 +197,7 @@ export async function install(
     proxyConfig,
     networkConfig
   );
-  const opts = {
+  const opts: InstallOptions = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
     extendNodePath: false,
@@ -206,8 +206,7 @@ export async function install(
     preferFrozenLockfile: true,
     registries: registriesMap,
     rawConfig: authConfig,
-    overrides: options?.overrides,
-    nodeLinker: options?.nodeLinker,
+    ...options,
   };
 
   const stopReporting = defaultReporter({
