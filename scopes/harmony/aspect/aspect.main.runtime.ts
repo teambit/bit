@@ -54,7 +54,7 @@ export class AspectMain {
     const components = await this.workspace.byPattern(pattern);
     const componentIds = components.map((comp) => comp.id);
     componentIds.forEach((componentId) => {
-      this.workspace.bitMap.removeComponentConfig(componentId, aspectId);
+      this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
     });
     await this.workspace.bitMap.write();
 

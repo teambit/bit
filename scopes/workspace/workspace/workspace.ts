@@ -21,6 +21,7 @@ import {
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
 import { BitError } from '@teambit/bit-error';
+import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
@@ -991,11 +992,13 @@ export class Workspace implements ComponentFactory {
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
+    const removedExtensionIds: string[] = [];
 
     const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
       if (!extensions.length) {
         return;
       }
+      removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
       const selfInMergedExtensions = extsWithoutRemoved.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
@@ -1047,9 +1050,11 @@ export class Workspace implements ComponentFactory {
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
     await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
-
+    const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
+    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
-      extensions: ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions)),
+      extensions,
       beforeMerge: extensionsToMerge,
     };
   }
@@ -1946,13 +1951,14 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const unchanged: ComponentID[] = [];
     components.forEach((comp) => {
       const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
-      const currentEnv = bitMapEntry.config?.[EnvsAspect.id]?.env;
+      const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
+      const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
       if (!currentEnv) {
         unchanged.push(comp.id);
         return;
       }
-      this.bitMap.removeComponentConfig(comp.id, currentEnv);
-      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id);
+      this.bitMap.removeComponentConfig(comp.id, currentEnv, false);
+      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id, false);
       changed.push(comp.id);
     });
     await this.bitMap.write();
