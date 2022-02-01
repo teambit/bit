@@ -109,6 +109,7 @@ export type EjectConfResult = {
   configPath: string;
 };
 
+export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
 export const ComponentRemoved = 'componentRemoved';
@@ -144,7 +145,8 @@ export type TrackData = {
 
 export type ExtensionsOrigin =
   | 'BitmapFile'
-  | 'Model'
+  | 'ModelSpecific'
+  | 'ModelNonSpecific'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -964,6 +966,9 @@ export class Workspace implements ComponentFactory {
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
+    const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
@@ -1014,16 +1019,22 @@ export class Workspace implements ComponentFactory {
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
     };
+    const setDataListAsSpecific = (extensions: ExtensionDataList) => {
+      extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
+    };
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map(
         (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
       );
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
     if (configFileExtensions) {
+      setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
+    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
@@ -1041,7 +1052,7 @@ export class Workspace implements ComponentFactory {
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
     if (mergeFromScope && continuePropagating) {
-      await addAndLoadExtensions(scopeExtensions, 'Model');
+      await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
