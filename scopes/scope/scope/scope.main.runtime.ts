@@ -70,7 +70,9 @@ type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
+export type AspectResolver = (runtime: string) => AspectDefinition[];
 
+export type AspectResolverSlot = SlotRegistry<AspectResolver>;
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
@@ -125,7 +127,9 @@ export class ScopeMain implements ComponentFactory {
 
     private logger: Logger,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private aspectResolverSlot: AspectResolverSlot
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -830,6 +834,14 @@ export class ScopeMain implements ComponentFactory {
     return components;
   }
 
+  /**
+   * register a new aspect resolver for the scope.
+   */
+  registerAspectResolver(resolver: AspectResolver) {
+    this.aspectResolverSlot.register(resolver);
+    return this;
+  }
+
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
@@ -881,6 +893,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
+    Slot.withType<AspectResolver>(),
   ];
   static runtime = MainRuntime;
 
@@ -915,13 +928,15 @@ export class ScopeMain implements ComponentFactory {
       ConfigMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
+    // eslint-disable-next-line max-len
+    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot, aspectResolverSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostDeleteSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
-      OnPreFetchObjectsSlot
+      OnPreFetchObjectsSlot,
+      AspectResolverSlot
     ],
     harmony: Harmony
   ) {
@@ -946,7 +961,8 @@ export class ScopeMain implements ComponentFactory {
       isolator,
       aspectLoader,
       logger,
-      envs
+      envs,
+      aspectResolverSlot
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
