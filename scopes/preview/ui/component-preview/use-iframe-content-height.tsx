@@ -43,6 +43,6 @@ export function useInterval(callback: CallbackFn, interval: number) {
       return () => clearInterval(id);
     }
     // eslint-disable-next-line
-    return () => clearInterval();
+    return () => {};
   }, [interval]);
 }
