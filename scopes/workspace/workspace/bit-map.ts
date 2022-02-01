@@ -4,6 +4,7 @@ import LegacyBitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -33,14 +34,19 @@ export class BitMap {
     return true; // changes have been made
   }
 
-  removeComponentConfig(id: ComponentID, aspectId: string): boolean {
+  removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
-    if (!currentConfig) {
-      return false; // no changes
+    if (currentConfig) {
+      delete bitMapEntry.config[aspectId];
+    } else {
+      if (!markWithMinusIfNotExist) {
+        return false; // no changes
+      }
+      bitMapEntry.config[aspectId] = REMOVE_EXTENSION_SPECIAL_SIGN;
     }
-    delete bitMapEntry.config[aspectId];
+
     this.legacyBitMap.markAsChanged();
 
     return true; // changes have been made
