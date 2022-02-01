@@ -20,7 +20,7 @@ import OutsideRootDir from './exceptions/outside-root-dir';
 // TODO: should be better defined
 export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
 
-export type Config = { [aspectId: string]: Record<string, any> };
+export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
 export type ComponentMapFile = {
   name: string;
@@ -86,7 +86,7 @@ export default class ComponentMap {
   scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
   version?: string; // Harmony only. empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
-  config?: { [aspectId: string]: Record<string, any> };
+  config?: { [aspectId: string]: Record<string, any> | '-' };
   constructor({
     id,
     files,
