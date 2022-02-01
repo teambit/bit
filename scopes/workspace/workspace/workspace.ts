@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
+import multimatch from 'multimatch';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -719,6 +720,16 @@ export class Workspace implements ComponentFactory {
 
     const components = await this.getMany(targetIds);
     return components;
+  }
+
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it supports negate (!) character to exclude ids.
+   */
+  async idsByPattern(pattern: string): Promise<ComponentID[]> {
+    const ids = await this.listIds();
+    const patterns = pattern.split(',').map((p) => p.trim());
+    return ids.filter((id) => multimatch(id.toStringWithoutVersion(), patterns).length);
   }
 
   /**
@@ -1943,13 +1954,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * configure an environment to the given components in the .bitmap file, this configuration overrides other, such as
    * overrides in workspace.jsonc.
    */
-  async setEnvToComponents(envId: ComponentID, components: Component[]) {
+  async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
     const envIdStr = envId.toString();
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
-    components.forEach((component) => {
-      this.bitMap.addComponentConfig(component.id, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
-      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStrNoVersion });
+    componentIds.forEach((componentId) => {
+      this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+      this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
     });
     await this.bitMap.write();
   }
@@ -1957,20 +1968,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   /**
    * remove env configuration from the .bitmap file, so then other configuration, such as "variants" will take place
    */
-  async unsetEnvFromComponents(components: Component[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
+  async unsetEnvFromComponents(ids: ComponentID[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
     const changed: ComponentID[] = [];
     const unchanged: ComponentID[] = [];
-    components.forEach((comp) => {
-      const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
+    ids.forEach((id) => {
+      const bitMapEntry = this.bitMap.getBitmapEntry(id);
       const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
       const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
       if (!currentEnv) {
-        unchanged.push(comp.id);
+        unchanged.push(id);
         return;
       }
-      this.bitMap.removeComponentConfig(comp.id, currentEnv, false);
-      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id, false);
-      changed.push(comp.id);
+      this.bitMap.removeComponentConfig(id, currentEnv, false);
+      this.bitMap.removeComponentConfig(id, EnvsAspect.id, false);
+      changed.push(id);
     });
     await this.bitMap.write();
     return { changed, unchanged };

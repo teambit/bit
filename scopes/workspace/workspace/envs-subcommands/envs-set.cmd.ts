@@ -12,9 +12,9 @@ export class EnvsSetCmd implements Command {
 
   async report([pattern, env]: [string, string]) {
     const envId = await this.workspace.resolveComponentId(env);
-    const components = await this.workspace.byPattern(pattern);
-    await this.workspace.setEnvToComponents(envId, components);
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    await this.workspace.setEnvToComponents(envId, componentIds);
     return `added ${chalk.bold(envId.toString())} env to the following component(s):
-${components.map((comp) => comp.id.toString()).join('\n')}`;
+${componentIds.map((compId) => compId.toString()).join('\n')}`;
   }
 }
