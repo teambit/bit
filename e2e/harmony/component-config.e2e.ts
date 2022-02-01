@@ -130,6 +130,16 @@ describe('component config', function () {
   describe('creating a capsule', () => {
     // Make sure the component.json is written into capsule
   });
+  const getExtensions = (extensions) => {
+    return extensions
+      .filter((extEntry) => {
+        return !isEmpty(extEntry.config);
+      })
+      .map((extEntry) => {
+        delete extEntry.config.__specific;
+        return extEntry;
+      });
+  };
   describe('propagation', () => {
     let output;
     let configuredExtensions;
@@ -156,9 +166,7 @@ describe('component config', function () {
       before(() => {
         helper.componentJson.setPropagate(false);
         output = helper.command.showComponentParsed('bar/foo');
-        configuredExtensions = output.extensions.filter((extEntry) => {
-          return !isEmpty(extEntry.config);
-        });
+        configuredExtensions = getExtensions(output.extensions);
       });
       it('should only has extensions defined in component.json', () => {
         expect(configuredExtensions).to.be.length(2);
@@ -171,9 +179,7 @@ describe('component config', function () {
         helper.componentJson.setPropagate(true);
         helper.bitJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
-        configuredExtensions = output.extensions.filter((extEntry) => {
-          return !isEmpty(extEntry.config);
-        });
+        configuredExtensions = getExtensions(output.extensions);
       });
       it('should not contain extension from workspace defaults', () => {
         expect(configuredExtensions).to.be.length(4);
@@ -192,9 +198,7 @@ describe('component config', function () {
         helper.componentJson.setPropagate(true);
         helper.bitJsonc.addToVariant('bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
-        configuredExtensions = output.extensions.filter((extEntry) => {
-          return !isEmpty(extEntry.config);
-        });
+        configuredExtensions = getExtensions(output.extensions);
       });
       it('should contain extension from all sources', () => {
         expect(configuredExtensions).to.be.length(5);
