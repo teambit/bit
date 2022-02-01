@@ -1,20 +1,34 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
+import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
-  name = 'list <component-id>';
-  description = 'list all aspect names configured on a component';
-  options = [];
+  name = 'list [pattern]';
+  description = 'list all aspects configured on component(s)';
+  options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
   group = 'development';
 
   constructor(private aspect: AspectMain) {}
 
-  async report([name]: [string]) {
-    const aspectIds = await this.aspect.listAspectsOfComponent(name);
-    return aspectIds.join('\n');
+  async report([name]: [string], { debug }: { debug: boolean }) {
+    const listAspectsResults = await this.aspect.listAspectsOfComponent(name);
+    const rows = Object.keys(listAspectsResults).map((componentId) => {
+      const longestAspectName = Math.max(...listAspectsResults[componentId].map((_) => _.aspectName.length));
+      const aspects = listAspectsResults[componentId]
+        .map((aspectSource) => {
+          const origin = debug ? ` (origin: ${aspectSource.source})` : '';
+          const aspectName = aspectSource.aspectName.padEnd(longestAspectName);
+          return `${aspectName} (level: ${aspectSource.level})${origin}`;
+        })
+        .join('\n');
+
+      return [componentId, aspects];
+    });
+    const table = new CLITable([], rows);
+    return table.render();
   }
 }
 
