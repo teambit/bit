@@ -28,7 +28,8 @@ export class ScopeComponentLoader {
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     // import if missing
-    if (!modelComponent && importIfMissing && id._legacy.hasScope() && !this.importedComponentsCache.get(id.toString())) {
+    if (!modelComponent && importIfMissing && id._legacy.hasScope()
+    && !this.importedComponentsCache.get(id.toString())) {
       await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
