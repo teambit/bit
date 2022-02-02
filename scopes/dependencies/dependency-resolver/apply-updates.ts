@@ -1,5 +1,5 @@
 import { OutdatedPkg } from './get-all-policy-pkgs';
-import { WorkspacePolicyEntry } from './policy';
+import { VariantPolicyConfigObject, WorkspacePolicyEntry } from './policy';
 
 /**
  * Applies updates to policies.
@@ -10,7 +10,7 @@ export function applyUpdates(
     variantPoliciesByPatterns,
     componentPoliciesById,
   }: {
-    variantPoliciesByPatterns: Record<string, any>;
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
   }
 ): {
@@ -35,16 +35,25 @@ export function applyUpdates(
         break;
       case 'variants':
         if (outdatedPkg.variantPattern) {
+          const { variantPattern, targetField, name } = outdatedPkg
           updatedVariants.add(outdatedPkg.variantPattern);
-          variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name] =
-            outdatedPkg.latestRange;
+          if (variantPoliciesByPatterns[variantPattern]?.[targetField]?.[name]?.['version']) { // eslint-disable-line
+            variantPoliciesByPatterns[variantPattern][targetField]![name]['version'] = outdatedPkg.latestRange // eslint-disable-line
+          } else {
+            variantPoliciesByPatterns[variantPattern][targetField]![name] = outdatedPkg.latestRange; // eslint-disable-line
+          }
         }
         break;
       case 'component':
         if (outdatedPkg.componentId) {
           updatedComponents.add(outdatedPkg.componentId);
-          componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
-            outdatedPkg.latestRange;
+          if (componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version) {
+            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version =
+              outdatedPkg.latestRange;
+          } else {
+            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
+              outdatedPkg.latestRange;
+          }
         }
         break;
       default:
