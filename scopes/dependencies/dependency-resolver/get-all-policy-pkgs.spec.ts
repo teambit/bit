@@ -10,7 +10,7 @@ describe('getAllPolicyPkgs()', () => {
           dependencies: {
             foo: {
               version: '1',
-              preserve: true,
+              resolveFromEnv: true,
             },
           },
           devDependencies: {},
