@@ -21,6 +21,7 @@ import {
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
 import { BitError } from '@teambit/bit-error';
+import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import {
   WorkspaceDependencyLifecycleType,
@@ -109,6 +110,7 @@ export type EjectConfResult = {
   configPath: string;
 };
 
+export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
 export const ComponentRemoved = 'componentRemoved';
@@ -144,7 +146,8 @@ export type TrackData = {
 
 export type ExtensionsOrigin =
   | 'BitmapFile'
-  | 'Model'
+  | 'ModelSpecific'
+  | 'ModelNonSpecific'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -964,6 +967,9 @@ export class Workspace implements ComponentFactory {
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
+    const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
@@ -991,11 +997,13 @@ export class Workspace implements ComponentFactory {
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
+    const removedExtensionIds: string[] = [];
 
     const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
       if (!extensions.length) {
         return;
       }
+      removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
       const selfInMergedExtensions = extsWithoutRemoved.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
@@ -1014,16 +1022,22 @@ export class Workspace implements ComponentFactory {
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
     };
+    const setDataListAsSpecific = (extensions: ExtensionDataList) => {
+      extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
+    };
     if (bitMapExtensions) {
       const extensionsDataEntries = Object.keys(bitMapExtensions).map(
         (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
       );
       const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
     if (configFileExtensions) {
+      setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
+    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
@@ -1041,15 +1055,17 @@ export class Workspace implements ComponentFactory {
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
     if (mergeFromScope && continuePropagating) {
-      await addAndLoadExtensions(scopeExtensions, 'Model');
+      await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
     await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
-
+    const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
+    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
-      extensions: ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions)),
+      extensions,
       beforeMerge: extensionsToMerge,
     };
   }
@@ -1929,9 +1945,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    */
   async setEnvToComponents(envId: ComponentID, components: Component[]) {
     const envIdStr = envId.toString();
+    const existsOnWorkspace = await this.hasId(envId);
+    const envIdStrNoVersion = envId.toStringWithoutVersion();
     components.forEach((component) => {
-      this.bitMap.addComponentConfig(component.id, envIdStr);
-      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStr });
+      this.bitMap.addComponentConfig(component.id, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStrNoVersion });
     });
     await this.bitMap.write();
   }
@@ -1944,13 +1962,14 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const unchanged: ComponentID[] = [];
     components.forEach((comp) => {
       const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
-      const currentEnv = bitMapEntry.config?.[EnvsAspect.id]?.env;
+      const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
+      const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
       if (!currentEnv) {
         unchanged.push(comp.id);
         return;
       }
-      this.bitMap.removeComponentConfig(comp.id, currentEnv);
-      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id);
+      this.bitMap.removeComponentConfig(comp.id, currentEnv, false);
+      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id, false);
       changed.push(comp.id);
     });
     await this.bitMap.write();

@@ -23,8 +23,8 @@
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.1",
         "@pnpm/client": "6.1.1",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.11.0",
-        "@pnpm/core": "2.4.0",
+        "@pnpm/config": "13.13.0",
+        "@pnpm/core": "2.5.4",
         "@pnpm/default-reporter": "8.4.2",
         "@pnpm/default-resolver": "14.0.10",
         "@pnpm/error": "2.0.0",
@@ -33,6 +33,7 @@
         "@pnpm/git-resolver": "5.1.16",
         "@pnpm/local-resolver": "7.0.6",
         "@pnpm/logger": "4.0.0",
+        "@pnpm/modules-yaml": "9.1.0",
         "@pnpm/npm-resolver": "12.1.6",
         "@pnpm/package-store": "12.1.8",
         "@pnpm/parse-overrides": "1.0.0",
@@ -40,7 +41,7 @@
         "@pnpm/registry-mock": "2.14.0",
         "@pnpm/resolver-base": "8.1.5",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/store-connection-manager": "3.2.4",
+        "@pnpm/store-connection-manager": "3.2.6",
         "@pnpm/tarball-fetcher": "9.3.15",
         "@pnpm/tarball-resolver": "5.0.10",
         "@pnpm/types": "7.9.0",
@@ -345,7 +346,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.210",
+        "@teambit/legacy": "1.0.212",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -416,7 +417,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.210"
+            "@teambit/legacy": "1.0.212"
           }
         }
       },
@@ -663,7 +664,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.210"
+            "@teambit/legacy": "1.0.212"
           }
         }
       }
@@ -720,7 +721,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.210",
+            "@teambit/legacy": "1.0.212",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -828,7 +829,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.210"
+            "@teambit/legacy": "1.0.212"
           }
         }
       }
