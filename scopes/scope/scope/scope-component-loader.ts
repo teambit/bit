@@ -4,6 +4,7 @@ import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
@@ -11,11 +12,13 @@ import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
+  private importedComponentsCache: InMemoryCache<boolean>;
   constructor(private scope: ScopeMain, private logger: Logger) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
 
-  async get(id: ComponentID): Promise<Component | undefined> {
+  async get(id: ComponentID, importIfMissing = true): Promise<Component | undefined> {
     const fromCache = this.getFromCache(id);
     if (fromCache) {
       return fromCache;
@@ -29,7 +32,14 @@ export class ScopeComponentLoader {
       id = id.changeScope(this.scope.name);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     }
-    if (!modelComponent) return undefined;
+    if (!modelComponent) {
+      if (importIfMissing && id._legacy.hasScope() && !this.importedComponentsCache.get(id.toString())) {
+        await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
+        this.importedComponentsCache.set(id.toString(), true);
+        modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+      }
+      if (!modelComponent) return undefined;
+    }
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
     const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
