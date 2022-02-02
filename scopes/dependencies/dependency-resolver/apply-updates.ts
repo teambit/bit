@@ -36,15 +36,24 @@ export function applyUpdates(
       case 'variants':
         if (outdatedPkg.variantPattern) {
           updatedVariants.add(outdatedPkg.variantPattern);
-          variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name] =
-            outdatedPkg.latestRange;
+          if (variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name].version) {
+            variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name].version = outdatedPkg.latestRange
+          } else {
+            variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name] =
+              outdatedPkg.latestRange;
+          }
         }
         break;
       case 'component':
         if (outdatedPkg.componentId) {
           updatedComponents.add(outdatedPkg.componentId);
-          componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
-            outdatedPkg.latestRange;
+          if (componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version) {
+            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version =
+              outdatedPkg.latestRange;
+          } else {
+            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
+              outdatedPkg.latestRange;
+          }
         }
         break;
       default:
