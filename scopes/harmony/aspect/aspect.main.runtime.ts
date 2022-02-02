@@ -32,8 +32,7 @@ export class AspectMain {
   async listAspectsOfComponent(pattern?: string): Promise<{ [component: string]: AspectSource[] }> {
     const getIds = async () => {
       if (!pattern) return this.workspace.listIds();
-      const comps = await this.workspace.byPattern(pattern);
-      return comps.map((comp) => comp.id);
+      return this.workspace.idsByPattern(pattern);
     };
     const componentIds = await getIds();
     const results = {};
@@ -77,8 +76,7 @@ export class AspectMain {
     aspectId: string,
     config: Record<string, any> = {}
   ): Promise<ComponentID[]> {
-    const components = await this.workspace.byPattern(pattern);
-    const componentIds = components.map((comp) => comp.id);
+    const componentIds = await this.workspace.idsByPattern(pattern);
     componentIds.forEach((componentId) => {
       this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
     });
@@ -88,8 +86,7 @@ export class AspectMain {
   }
 
   async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
-    const components = await this.workspace.byPattern(pattern);
-    const componentIds = components.map((comp) => comp.id);
+    const componentIds = await this.workspace.idsByPattern(pattern);
     componentIds.forEach((componentId) => {
       this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
     });

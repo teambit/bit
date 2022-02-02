@@ -6,7 +6,7 @@ import { VersionDropdown } from './version-dropdown';
 
 const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
 
-export const VersionDropdownWithOneVerion = () => {
+export const VersionDropdownWithOneVersion = () => {
   return (
     <ThemeCompositions style={style}>
       <VersionDropdown versions={['0.1']} currentVersion="0.1" />
@@ -14,7 +14,7 @@ export const VersionDropdownWithOneVerion = () => {
   );
 };
 
-export const VersionDropdownWithMultipleVerions = () => {
+export const VersionDropdownWithMultipleVersions = () => {
   const history = createBrowserHistory();
   const versions = ['0.3', '0.2', '0.1'];
   return (

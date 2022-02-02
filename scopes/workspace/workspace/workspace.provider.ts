@@ -36,6 +36,7 @@ import { Tag } from './tag-cmd';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
+import { PatternCommand } from './pattern.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -208,6 +209,7 @@ export default async function provideWorkspace(
     commands.push(new LinkCommand(workspace, logger));
   }
   commands.push(new Tag());
+  commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
 
