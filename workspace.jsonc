@@ -274,6 +274,7 @@
         "mini-css-extract-plugin": "2.2.2",
         "minimatch": "3.0.4",
         "mousetrap": "1.6.5",
+        "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
         "p-limit": "3.1.0",
