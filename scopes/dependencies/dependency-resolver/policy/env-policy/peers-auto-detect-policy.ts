@@ -48,6 +48,13 @@ export class PeersAutoDetectPolicy {
     }
     return entry.supportedRange;
   }
+
+  toNameSupportedRangeMap(): { [name: string]: string } {
+    return this.entries.reduce((acc, entry) => {
+      acc[entry.name] = entry.supportedRange;
+      return acc;
+    }, {});
+  }
 }
 
 function uniqEntries(entries: Array<PeersAutoDetectPolicyEntry>): Array<PeersAutoDetectPolicyEntry> {

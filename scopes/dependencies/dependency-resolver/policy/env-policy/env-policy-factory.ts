@@ -12,4 +12,9 @@ export class EnvPolicyFactory {
     const peersAutoDetectPolicy = new PeersAutoDetectPolicy(peersAutoDetectEntries);
     return new EnvPolicy(variantPolicy, peersAutoDetectPolicy);
   }
+
+  getEmpty(): EnvPolicy {
+    const variantPolicyFactory = new VariantPolicyFactory();
+    return new EnvPolicy(variantPolicyFactory.getEmpty(), new PeersAutoDetectPolicy([]));
+  }
 }
