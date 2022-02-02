@@ -853,7 +853,7 @@ describe('workspace config', function () {
             };
             helper.packageJson.write(packageJson);
             try {
-              helper.command.importComponent('bar/foo --skip-npm-install');
+              helper.command.importComponent('bar/foo --skip-dependency-installation');
             } catch (err: any) {
               // ignore. it shows an error because chai is missing, which is missing by purpose
             }

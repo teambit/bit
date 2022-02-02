@@ -29,11 +29,8 @@ export default class ImportCmd implements Command {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
-    [
-      '',
-      'skip-npm-install',
-      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)',
-    ],
+    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       'm',
       'merge [strategy]',
@@ -70,6 +67,7 @@ export default class ImportCmd implements Command {
       json = false,
       conf,
       skipNpmInstall = false,
+      skipDependencyInstallation = false,
       merge,
       skipLane = false,
       dependencies = false,
@@ -84,6 +82,7 @@ export default class ImportCmd implements Command {
       json?: boolean;
       conf?: string;
       skipNpmInstall?: boolean;
+      skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
       skipLane?: boolean;
       dependencies?: boolean;
@@ -96,6 +95,13 @@ export default class ImportCmd implements Command {
     }
     if (override && merge) {
       throw new GeneralError('you cant use --override and --merge flags combined');
+    }
+    if (skipNpmInstall) {
+      // eslint-disable-next-line no-console
+      console.log(
+        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
+      );
+      skipDependencyInstallation = true;
     }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
@@ -115,7 +121,7 @@ export default class ImportCmd implements Command {
       objectsOnly: objects,
       override,
       writeConfig: Boolean(conf),
-      installNpmPackages: !skipNpmInstall,
+      installNpmPackages: !skipDependencyInstallation,
       skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
