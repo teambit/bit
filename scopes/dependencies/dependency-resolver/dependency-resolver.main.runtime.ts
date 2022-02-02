@@ -999,7 +999,7 @@ export class DependencyResolverMain {
     componentPoliciesById,
   }: {
     rootDir: string;
-    variantPoliciesByPatterns: Record<string, any>;
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
   }): Promise<OutdatedPkg[]> {
     const allPkgs = getAllPolicyPkgs({

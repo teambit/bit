@@ -30,6 +30,7 @@ import {
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
+  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -1586,8 +1587,8 @@ export class Workspace implements ComponentFactory {
     return this._installModules({ dedupe: true });
   }
 
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns) {
-    const variantPoliciesByPatterns = {};
+  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
     for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
       if (extensions[DependencyResolverAspect.id]?.policy) {
         variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
