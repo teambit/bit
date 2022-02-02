@@ -763,12 +763,12 @@ describe('bit import', function () {
       });
     });
 
-    describe('with --skip-dependency-installation flag', () => {
+    describe('with --skip-npm-install flag', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        output = helper.command.importComponentWithOptions('comp/with-deps', { '-skip-dependency-installation': '' });
+        output = helper.command.importComponentWithOptions('comp/with-deps', { '-skip-npm-install': '' });
       });
       it('should print warning for missing package dependencies', () => {
         expect(output).to.have.string(
