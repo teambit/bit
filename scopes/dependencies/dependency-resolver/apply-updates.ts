@@ -1,5 +1,5 @@
 import { OutdatedPkg } from './get-all-policy-pkgs';
-import { WorkspacePolicyEntry } from './policy';
+import { VariantPolicyConfigObject, WorkspacePolicyEntry } from './policy';
 
 /**
  * Applies updates to policies.
@@ -10,7 +10,7 @@ export function applyUpdates(
     variantPoliciesByPatterns,
     componentPoliciesById,
   }: {
-    variantPoliciesByPatterns: Record<string, any>;
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
   }
 ): {
@@ -35,12 +35,12 @@ export function applyUpdates(
         break;
       case 'variants':
         if (outdatedPkg.variantPattern) {
+          const { variantPattern, targetField, name } = outdatedPkg
           updatedVariants.add(outdatedPkg.variantPattern);
-          if (variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name].version) {
-            variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name].version = outdatedPkg.latestRange
+          if (variantPoliciesByPatterns[variantPattern]?.[targetField]?.[name]?.['version']) {
+            variantPoliciesByPatterns[variantPattern][targetField]![name]['version'] = outdatedPkg.latestRange
           } else {
-            variantPoliciesByPatterns[outdatedPkg.variantPattern][outdatedPkg.targetField][outdatedPkg.name] =
-              outdatedPkg.latestRange;
+            variantPoliciesByPatterns[variantPattern][targetField]![name] = outdatedPkg.latestRange;
           }
         }
         break;
