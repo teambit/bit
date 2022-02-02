@@ -729,7 +729,9 @@ export class Workspace implements ComponentFactory {
   async idsByPattern(pattern: string): Promise<ComponentID[]> {
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
-    return ids.filter((id) => multimatch(id.toStringWithoutVersion(), patterns).length);
+    // check also as legacyId.toString, as it doesn't have the defaultScope
+    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
+    return ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
   }
 
   /**
