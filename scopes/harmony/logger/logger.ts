@@ -1,4 +1,4 @@
-import loader from '@teambit/legacy/dist/cli/loader';
+import loader from '@teambit/harmony.modules.cli.loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 import stc from 'string-to-color';

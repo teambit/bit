@@ -3,7 +3,7 @@ import { dirname, sep } from 'path';
 import { difference } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import loader from '@teambit/legacy/dist/cli/loader';
+import loader from '@teambit/harmony.modules.cli.loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
