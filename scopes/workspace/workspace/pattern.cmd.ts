@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Workspace } from '../workspace/workspace';
+import { Workspace } from './workspace';
 
 export class PatternCommand implements Command {
   name = 'pattern <pattern>';
