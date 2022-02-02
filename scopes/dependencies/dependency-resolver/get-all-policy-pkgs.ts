@@ -1,6 +1,5 @@
 import { ManifestDependenciesKeysNames } from './manifest';
-import { WorkspacePolicy } from './policy';
-import { WorkspacePolicyLifecycleConfigObject } from './policy/workspace-policy/workspace-policy'
+import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
 
 type CurrentPkg = {
   name: string;
@@ -15,8 +14,6 @@ export type OutdatedPkg = CurrentPkg & {
   latestRange: string;
 };
 
-export type DepVersionPolicies = Record<ManifestDependenciesKeysNames, WorkspacePolicyLifecycleConfigObject>
-
 /**
  * Get packages from root policy, variants, and component config files (component.json files).
  */
@@ -26,8 +23,8 @@ export function getAllPolicyPkgs({
   componentPoliciesById,
 }: {
   rootPolicy: WorkspacePolicy;
-  variantPoliciesByPatterns: Record<string, DepVersionPolicies>;
-  componentPoliciesById: Record<string, DepVersionPolicies>;
+  variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+  componentPoliciesById: Record<string, VariantPolicyConfigObject>;
 }): Array<Omit<OutdatedPkg, 'latestRange'>> {
   return [
     ...getPkgsFromRootPolicy(rootPolicy),
@@ -46,7 +43,7 @@ function getPkgsFromRootPolicy(rootPolicy: WorkspacePolicy): CurrentPkg[] {
   }));
 }
 
-function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, DepVersionPolicies>): CurrentPkg[] {
+function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>): CurrentPkg[] {
   return Object.entries(variantPoliciesByPatterns)
     .filter(([, variant]) => variant != null)
     .map(([variantPattern, variant]) => {
@@ -55,7 +52,7 @@ function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, DepVersio
     .flat();
 }
 
-function getPkgsFromComponents(componentPoliciesById: Record<string, DepVersionPolicies>): CurrentPkg[] {
+function getPkgsFromComponents(componentPoliciesById: Record<string, VariantPolicyConfigObject>): CurrentPkg[] {
   return Object.entries(componentPoliciesById)
     .map(([componentId, policy]) => {
       return readAllDependenciesFromPolicyObject({ source: 'component', componentId }, policy);
@@ -65,7 +62,7 @@ function getPkgsFromComponents(componentPoliciesById: Record<string, DepVersionP
 
 function readAllDependenciesFromPolicyObject(
   context: Pick<CurrentPkg, 'source' | 'componentId' | 'variantPattern'>,
-  policy: DepVersionPolicies
+  policy: VariantPolicyConfigObject
 ): CurrentPkg[] {
   const pkgs: CurrentPkg[] = [];
   for (const targetField of [
