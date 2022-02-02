@@ -1,5 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -54,7 +55,7 @@ export function VersionDropdown({ versions, currentVersion, latestVersion, isWor
 
               return (
                 <NavLink
-                  to={to}
+                  href={to}
                   key={index}
                   className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
                 >
