@@ -4,7 +4,7 @@ import { VariantPolicy, VariantPolicyConfigObject } from '..';
 export type EnvAutoDetectPeersPolicyConfigEntryValue = PeersAutoDetectPolicyEntry;
 
 export type EnvAutoDetectPeersPolicy = {
-  peers: EnvAutoDetectPeersPolicyConfigEntryValue[];
+  peers?: EnvAutoDetectPeersPolicyConfigEntryValue[];
 };
 export type EnvPolicyConfigObject = EnvAutoDetectPeersPolicy & VariantPolicyConfigObject;
 
