@@ -27,19 +27,18 @@ export class ScopeComponentLoader {
     this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+    // import if missing
+    if (!modelComponent && importIfMissing && id._legacy.hasScope() && !this.importedComponentsCache.get(id.toString())) {
+      await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
+      this.importedComponentsCache.set(id.toString(), true);
+      modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+    }
     // Search with scope name for bare scopes
     if (!modelComponent && !legacyId.scope) {
       id = id.changeScope(this.scope.name);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     }
-    if (!modelComponent) {
-      if (importIfMissing && id._legacy.hasScope() && !this.importedComponentsCache.get(id.toString())) {
-        await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
-        this.importedComponentsCache.set(id.toString(), true);
-        modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
-      }
-      if (!modelComponent) return undefined;
-    }
+    if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
     const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
