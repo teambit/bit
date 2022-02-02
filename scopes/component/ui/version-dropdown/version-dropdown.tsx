@@ -1,6 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -9,26 +8,21 @@ import React from 'react';
 
 import styles from './version-dropdown.module.scss';
 
+const LOCAL_VERSION = 'workspace';
+
 type VersionDropdownProps = {
   versions: string[];
   currentVersion?: string;
   latestVersion?: string;
-  isWorkspace: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function VersionDropdown({ versions, currentVersion, latestVersion, isWorkspace }: VersionDropdownProps) {
-  const location = useLocation();
+export function VersionDropdown({ versions, currentVersion, latestVersion }: VersionDropdownProps) {
   if (versions.length < 2) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
       </div>
     );
-  }
-  let currentVersionWithWs = currentVersion;
-
-  if (isWorkspace && !location.search.includes('version')) {
-    currentVersionWithWs = 'workspace';
   }
 
   return (
@@ -39,23 +33,18 @@ export function VersionDropdown({ versions, currentVersion, latestVersion, isWor
         placeholder=""
         clickOutside
         PlaceholderComponent={() => (
-          <VersionPlaceholder currentVersion={currentVersionWithWs} className={styles.withVersions} />
+          <VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />
         )}
       >
         <div>
           <div className={styles.title}>Select version to view</div>
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
-              const isCurrent = version === currentVersionWithWs;
-              let to = `?version=${version}`;
-
-              if (version === 'workspace') {
-                to = location.pathname;
-              }
+              const isCurrent = version === currentVersion;
 
               return (
                 <NavLink
-                  href={to}
+                  href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
                   key={index}
                   className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
                 >

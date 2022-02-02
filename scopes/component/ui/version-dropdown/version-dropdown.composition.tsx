@@ -9,15 +9,7 @@ const style = { display: 'flex', justifyContent: 'center', alignContent: 'center
 export const VersionDropdownWithOneVersion = () => {
   return (
     <ThemeCompositions style={style}>
-      <VersionDropdown versions={['0.1']} currentVersion="0.1" isWorkspace={false} />
-    </ThemeCompositions>
-  );
-};
-
-export const VersionDropdownWithOneVersionAndWorkspaceEntry = () => {
-  return (
-    <ThemeCompositions style={style}>
-      <VersionDropdown versions={['0.1']} currentVersion="0.1" isWorkspace={true} />
+      <VersionDropdown versions={['0.1']} currentVersion="0.1" />
     </ThemeCompositions>
   );
 };
@@ -28,7 +20,7 @@ export const VersionDropdownWithMultipleVersions = () => {
   return (
     <ThemeCompositions style={style}>
       <Router history={history}>
-        <VersionDropdown versions={versions} currentVersion={versions[0]} isWorkspace={false} />
+        <VersionDropdown versions={versions} currentVersion={versions[0]} />
       </Router>
     </ThemeCompositions>
   );
