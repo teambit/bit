@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
+  ReactFlowProvider,
   Controls,
   Background,
   MiniMap,
@@ -74,25 +75,27 @@ export function DependenciesGraph({
 
   return (
     <ComponentGraphContext.Provider value={context}>
-      <ReactFlow
-        draggable={false}
-        nodesDraggable={true}
-        selectNodesOnDrag={false}
-        nodesConnectable={false}
-        zoomOnDoubleClick={false}
-        elementsSelectable={false}
-        maxZoom={1}
-        {...rest}
-        className={classnames(styles.graph, className)}
-        elements={elements}
-        nodeTypes={NodeTypes}
-        onLoad={handleLoad}
-      >
-        <Background />
-        <Controls className={styles.controls} />
-        <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
-        {children}
-      </ReactFlow>
+      <ReactFlowProvider>
+        <ReactFlow
+          draggable={false}
+          nodesDraggable={true}
+          selectNodesOnDrag={false}
+          nodesConnectable={false}
+          zoomOnDoubleClick={false}
+          elementsSelectable={false}
+          maxZoom={1}
+          {...rest}
+          className={classnames(styles.graph, className)}
+          elements={elements}
+          nodeTypes={NodeTypes}
+          onLoad={handleLoad}
+        >
+          <Background />
+          <Controls className={styles.controls} />
+          <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
+          {children}
+        </ReactFlow>
+      </ReactFlowProvider>
     </ComponentGraphContext.Provider>
   );
 }
