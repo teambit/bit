@@ -2,7 +2,8 @@ import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropd
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
-import { flatten, groupBy } from 'lodash';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { compact, flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
@@ -48,7 +49,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
         <div className={styles.widgets}>
           <MenuNav navigationSlot={widgetSlot} />
         </div>
-        <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} />
+        <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
         <MainDropdown menuItems={mainMenuItems} />
       </div>
     </div>
@@ -58,20 +59,29 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
 function VersionRelatedDropdowns({
   component,
   consumeMethods,
+  host,
 }: {
   component: ComponentModel;
   consumeMethods: ConsumeMethodSlot;
+  host: string;
 }) {
-  const versionList =
-    useMemo(
-      () =>
-        component.tags
-          ?.toArray()
-          .map((tag) => tag?.version?.version)
-          .filter((x) => x !== undefined)
-          .reverse(),
-      [component.tags]
-    ) || [];
+  const location = useLocation();
+  const isNew = component.tags.isEmpty();
+
+  const isWorkspace = host === 'teambit.workspace/workspace';
+  const versionList = useMemo(() => {
+    const tagsArray = component.tags
+      ?.toArray()
+      .map((tag) => tag?.version?.version)
+      .filter((x) => x !== undefined)
+      .reverse();
+    const wsLink = [isWorkspace && !isNew ? 'workspace' : undefined];
+
+    return compact([...wsLink, ...tagsArray]);
+  }, [component.tags, isWorkspace, isNew]);
+
+  const currentVersion =
+    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
 
   const methods = useConsumeMethods(consumeMethods, component);
   return (
@@ -83,7 +93,7 @@ function VersionRelatedDropdowns({
           Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
-      <VersionDropdown versions={versionList} currentVersion={component.version} />
+      <VersionDropdown versions={versionList} currentVersion={currentVersion} latestVersion={component.latest} />
     </>
   );
 }
