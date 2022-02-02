@@ -40,6 +40,7 @@ export class PreviewRoute implements Route {
             artifact = await this.preview.getPreview(component);
           }
         } catch (e: any) {
+          this.logger.error(`getEnvTemplateFromComponentEnv or getPreview has failed`, e);
           return res.status(404).send(noPreview());
         }
         // @ts-ignore
