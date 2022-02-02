@@ -1039,10 +1039,7 @@ export class Workspace implements ComponentFactory {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
     if (bitMapExtensions) {
-      const extensionsDataEntries = Object.keys(bitMapExtensions).map(
-        (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
-      );
-      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
