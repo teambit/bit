@@ -79,7 +79,7 @@ describe('dependency-resolver extension', function () {
           expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
         });
       });
-      describe.only('policies added by custom env', function () {
+      describe('policies added by custom env', function () {
         let utilsIsTypeOutput;
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
