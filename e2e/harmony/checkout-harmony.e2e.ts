@@ -298,8 +298,8 @@ describe('bit checkout command', function () {
       });
       it('should label the conflicts segments according to the versions', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
-        expect(fileContent).to.have.string('<<<<<<< 0.0.1');
-        expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
+        expect(fileContent).to.have.string('<<<<<<< 0.0.2 modified');
+        expect(fileContent).to.have.string('>>>>>>> 0.0.1');
       });
       it('should not strip the last line', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
