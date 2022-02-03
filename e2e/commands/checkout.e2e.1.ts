@@ -320,7 +320,7 @@ describe('bit checkout command', function () {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--skip-npm-install');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--skip-dependency-installation');
         });
         it('should not show npm messages', () => {
           expect(output).to.not.have.string('npm');
