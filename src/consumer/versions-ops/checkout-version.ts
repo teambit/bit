@@ -90,6 +90,8 @@ export default async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
+  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
+
   const componentsWithDependencies = componentsResults
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
@@ -183,48 +185,25 @@ async function getComponentStatus(
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
-  // get the original version before the "current" and the "other" were split
-  const getBaseVersion = async (): Promise<string> => {
-    // on legacy, there is no history. no "parents" are saved on the Version object.
-    if (consumer.isLegacy) return currentlyUsedVersion;
-    // currently used version is always before or equal the latest version, so it's safe to use it as the base.
-    if (latestVersion) return currentlyUsedVersion;
-    // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
-    // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
-    // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
-    // 0.0.2+modification. in other words, it won't make any change.
-    // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
-    // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
-    // to be added to 0.0.1
-    if (isModified) return currentlyUsedVersion;
-    // the "other" (the version we want to checkout to) can be before or after the currently used version.
-    // here are a few scenarios, assuming the user tagged by the order, 0.0.1 first, then 0.0.2, 0.0.3 etc.
-    // (we can't go by the semver though, only by the history defined by the "parents" prop)
-    // there is no case of "diverge" here. the version the user wants to checkout to is always part of the history of
-    // this component. otherwise, it'd run some lane commands, which ends up in "switch-lanes" or "merge-snaps" files.
-    const currentlyUsedHash = componentModel.getRef(currentlyUsedVersion) as Ref;
-    // when !latestVersion then version is defined
-    const otherHash = componentModel.getRef(version as string) as Ref;
-    // maybe for some reason, the user used the hash of the currently used version in the checkout command
-    if (currentlyUsedHash.isEqual(otherHash)) return currentlyUsedVersion;
-    const allVersions = await getAllVersionsInfo({ modelComponent: componentModel, repo, stopAt: currentlyUsedHash });
-    // we traverse from the head to the currently-used. if the other hash was found in between, it must be newer.
-    const isOtherHashNewerThanCurrentlyUsed = allVersions.find((v) => v.ref.isEqual(otherHash));
-    // return the older version. this is the base.
-    return isOtherHashNewerThanCurrentlyUsed ? currentlyUsedVersion : (version as string);
-  };
-  const baseVersion = await getBaseVersion();
+  // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
+  // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
+  // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
+  // 0.0.2+modification. in other words, it won't make any change.
+  // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
+  // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
+  // to be added to 0.0.1
+  // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
+  const baseVersion = currentlyUsedVersion;
   const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  if (version) {
-    const currentLabel = isModified ? `${currentlyUsedVersion} modified` : currentlyUsedVersion;
+  if (version && isModified) {
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent,
       otherLabel: newVersion,
       currentComponent: component,
-      currentLabel,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
   }
@@ -373,6 +352,32 @@ export function applyModifiedVersion(
   });
 
   return { filesStatus, modifiedFiles };
+}
+
+export function markFilesToBeRemovedIfNeeded(
+  succeededComponents: ComponentStatus[],
+  componentsResults: ApplyVersionWithComps[]
+) {
+  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
+    const bitId = next.id.toString();
+    if (!accum[bitId]) accum[bitId] = next;
+    return accum;
+  }, {});
+
+  componentsResults.forEach((componentResult) => {
+    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
+    const bitId = componentResult.applyVersionResult.id.toString();
+    const succeededComponent = succeededComponentsByBitId[bitId];
+    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
+
+    filePathsFromFS.forEach((file) => {
+      const filename = pathNormalizeToLinux(file.relative);
+      if (!existingFilePathsFromModel[filename]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        existingFilePathsFromModel[filename] = FileStatus.removed;
+      }
+    });
+  });
 }
 
 /**

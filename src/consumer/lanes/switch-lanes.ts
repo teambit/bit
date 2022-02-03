@@ -11,7 +11,13 @@ import { LaneComponent } from '../../scope/models/lane';
 import { Tmp } from '../../scope/repositories';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
-import { applyVersion, CheckoutProps, ComponentStatus, deleteFilesIfNeeded } from '../versions-ops/checkout-version';
+import {
+  applyVersion,
+  CheckoutProps,
+  ComponentStatus,
+  deleteFilesIfNeeded,
+  markFilesToBeRemovedIfNeeded,
+} from '../versions-ops/checkout-version';
 import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
@@ -56,26 +62,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
-    const bitId = next.id.toString();
-    if (!accum[bitId]) accum[bitId] = next;
-    return accum;
-  }, {});
-
-  componentsResults.forEach((componentResult) => {
-    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const bitId = componentResult.applyVersionResult.id.toString();
-    const succeededComponent = succeededComponentsByBitId[bitId];
-    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
-
-    filePathsFromFS.forEach((file) => {
-      const filename = pathNormalizeToLinux(file.relative);
-      if (!existingFilePathsFromModel[filename]) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingFilePathsFromModel[filename] = FileStatus.removed;
-      }
-    });
-  });
+  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
   await saveLanesData();
 

@@ -60,7 +60,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.command.tagAllComponents('', '0.0.10');
+            helper.command.tagAllWithoutBuild('0.0.10');
             output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
@@ -183,7 +183,6 @@ describe('bit checkout command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
       helper.fs.outputFile('bar/foo2.js');
-      helper.command.addComponent('bar', { i: 'bar/foo' });
       helper.command.tagAllWithoutBuild();
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');
