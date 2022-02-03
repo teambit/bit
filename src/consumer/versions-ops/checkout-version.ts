@@ -7,7 +7,9 @@ import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
+import { getAllVersionsInfo } from '../../scope/component-ops/traverse-versions';
 import Version from '../../scope/models/version';
+import { Ref } from '../../scope/objects';
 import { Tmp } from '../../scope/repositories';
 import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
 import ConsumerComponent from '../component';
@@ -132,6 +134,7 @@ async function getComponentStatus(
   checkoutProps: CheckoutProps
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
+  const repo = consumer.scope.objects;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
   const returnFailure = (msg: string, unchangedLegitimately = false) => {
@@ -142,7 +145,7 @@ async function getComponentStatus(
   if (!componentModel) {
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  const unmerged = repo.unmergedComponents.getEntry(component.name);
   if (!reset && unmerged && unmerged.resolved === false) {
     return returnFailure(
       `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
@@ -151,18 +154,20 @@ async function getComponentStatus(
   const getNewVersion = (): string => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
-    // $FlowFixMe if !reset the version is defined
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore if !reset the version is defined
     return latestVersion ? componentModel.latest() : version;
   };
   const newVersion = getNewVersion();
   if (version && !latestVersion) {
-    const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+    const hasVersion = await componentModel.hasVersion(version, repo);
     if (!hasVersion)
       return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
+  if (!currentlyUsedVersion) {
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} is new`);
+  }
   if (version && currentlyUsedVersion === version) {
     // it won't be relevant for 'reset' as it doesn't have a version
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
@@ -173,21 +178,53 @@ async function getComponentStatus(
       true
     );
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
+  const isModified = await consumer.isComponentModified(currentVersionObject, component);
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
+  // get the original version before the "current" and the "other" were split
+  const getBaseVersion = async (): Promise<string> => {
+    // on legacy, there is no history. no "parents" are saved on the Version object.
+    if (consumer.isLegacy) return currentlyUsedVersion;
+    // currently used version is always before or equal the latest version, so it's safe to use it as the base.
+    if (latestVersion) return currentlyUsedVersion;
+    // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
+    // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
+    // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
+    // 0.0.2+modification. in other words, it won't make any change.
+    // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
+    // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
+    // to be added to 0.0.1
+    if (isModified) return currentlyUsedVersion;
+    // the "other" (the version we want to checkout to) can be before or after the currently used version.
+    // here are a few scenarios, assuming the user tagged by the order, 0.0.1 first, then 0.0.2, 0.0.3 etc.
+    // (we can't go by the semver though, only by the history defined by the "parents" prop)
+    // there is no case of "diverge" here. the version the user wants to checkout to is always part of the history of
+    // this component. otherwise, it'd run some lane commands, which ends up in "switch-lanes" or "merge-snaps" files.
+    const currentlyUsedHash = componentModel.getRef(currentlyUsedVersion) as Ref;
+    // when !latestVersion then version is defined
+    const otherHash = componentModel.getRef(version as string) as Ref;
+    // maybe for some reason, the user used the hash of the currently used version in the checkout command
+    if (currentlyUsedHash.isEqual(otherHash)) return currentlyUsedVersion;
+    const allVersions = await getAllVersionsInfo({ modelComponent: componentModel, repo, stopAt: currentlyUsedHash });
+    // we traverse from the head to the currently-used. if the other hash was found in between, it must be newer.
+    const isOtherHashNewerThanCurrentlyUsed = allVersions.find((v) => v.ref.isEqual(otherHash));
+    // return the older version. this is the base.
+    return isOtherHashNewerThanCurrentlyUsed ? currentlyUsedVersion : (version as string);
+  };
+  const baseVersion = await getBaseVersion();
+  const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
   let mergeResults: MergeResultsThreeWay | null | undefined;
   if (version) {
-    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
+    const currentLabel = isModified ? `${currentlyUsedVersion} modified` : currentlyUsedVersion;
+    const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     mergeResults = await threeWayMerge({
       consumer,
-      otherComponent: component,
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      currentLabel: newVersion,
+      otherComponent,
+      otherLabel: newVersion,
+      currentComponent: component,
+      currentLabel,
       baseComponent,
     });
   }

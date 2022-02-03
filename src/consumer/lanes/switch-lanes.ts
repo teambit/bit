@@ -221,16 +221,16 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
       );
     }
 
-    const currentComponent: Version = await modelComponent.loadVersion(
+    const otherComponent: Version = await modelComponent.loadVersion(
       existingBitMapId.version as string, // we are here because the head is same as main. so, existingBitMapId.version must be set
       consumer.scope.objects
     );
     mergeResults = await threeWayMerge({
       consumer,
-      otherComponent: component,
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      currentLabel: version,
+      otherComponent,
+      otherLabel: version,
+      currentComponent: component,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
   }
