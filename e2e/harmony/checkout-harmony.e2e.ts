@@ -4,12 +4,13 @@ import * as path from 'path';
 
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
+const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const successOutput = 'successfully switched';
 
 describe('bit checkout command', function () {
@@ -267,6 +268,53 @@ describe('bit checkout command', function () {
     it('should write the new files', () => {
       const newFilePath = path.join(helper.scopes.localPath, 'comp1/foo.ts');
       expect(newFilePath).to.be.a.file();
+    });
+  });
+  describe('modified component with conflicts', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
+      helper.fixtures.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(`${barFooV3}\n`);
+    });
+    describe('using manual strategy', () => {
+      let output;
+      before(() => {
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
+      });
+      it('should indicate that the file has conflicts', () => {
+        expect(output).to.have.string(successOutput);
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string(FileStatusWithoutChalk.manual);
+      });
+      it('should rewrite the file with the conflict with the conflicts segments', () => {
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
+        expect(fileContent).to.have.string('<<<<<<<');
+        expect(fileContent).to.have.string('>>>>>>>');
+        expect(fileContent).to.have.string('=======');
+      });
+      it('should label the conflicts segments according to the versions', () => {
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
+        expect(fileContent).to.have.string('<<<<<<< 0.0.1');
+        expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
+      });
+      it('should not strip the last line', () => {
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
+        expect(fileContent.endsWith('\n')).to.be.true;
+      });
+      it('should update bitmap with the specified version', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('bar/foo');
+        expect(bitMap['bar/foo'].version).to.equal('0.0.1');
+      });
+      it('should show the component as modified', () => {
+        const statusOutput = helper.command.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
     });
   });
 });

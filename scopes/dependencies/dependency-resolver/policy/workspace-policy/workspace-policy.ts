@@ -14,7 +14,7 @@ export type WorkspacePolicyManifest = Partial<
   Record<WorkspacePolicyConfigKeysNames, WorkspacePolicyLifecycleManifestObject>
 >;
 
-type WorkspacePolicyLifecycleConfigObject = {
+export type WorkspacePolicyLifecycleConfigObject = {
   [dependencyId: string]: WorkspacePolicyConfigEntryValue;
 };
 

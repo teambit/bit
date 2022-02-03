@@ -1,5 +1,5 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten } from 'lodash';
+import { flatten, cloneDeep } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
@@ -159,7 +159,7 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    return Object.assign({}, context, {
+    return Object.assign(cloneDeep(context), {
       appName,
       appComponent: component,
     });

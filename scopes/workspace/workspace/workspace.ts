@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
+import multimatch from 'multimatch';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -29,6 +30,7 @@ import {
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
+  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -719,6 +721,18 @@ export class Workspace implements ComponentFactory {
 
     const components = await this.getMany(targetIds);
     return components;
+  }
+
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it supports negate (!) character to exclude ids.
+   */
+  async idsByPattern(pattern: string): Promise<ComponentID[]> {
+    const ids = await this.listIds();
+    const patterns = pattern.split(',').map((p) => p.trim());
+    // check also as legacyId.toString, as it doesn't have the defaultScope
+    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
+    return ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
   }
 
   /**
@@ -1433,7 +1447,7 @@ export class Workspace implements ComponentFactory {
     return resolved;
   }
 
-  private async getComponentsDirectory(ids: ComponentID[]) {
+  private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
     const components = ids.length ? await this.getMany(ids) : await this.list();
     return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
   }
@@ -1444,7 +1458,7 @@ export class Workspace implements ComponentFactory {
    * @returns
    * @memberof Workspace
    */
-  async install(packages?: string[], options?: WorkspaceInstallOptions) {
+  async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
@@ -1465,8 +1479,12 @@ export class Workspace implements ComponentFactory {
         compDirMap,
         pmInstallOptions
       );
-      const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-      await this._addPackages(missingPeerPackages, options);
+      if (missingPeers) {
+        const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+        await this._addPackages(missingPeerPackages, options);
+      } else {
+        this.logger.console('No missing peer dependencies found.');
+      }
     }
     if (options?.import) {
       this.logger.setStatusLine('importing missing objects');
@@ -1569,8 +1587,8 @@ export class Workspace implements ComponentFactory {
     return this._installModules({ dedupe: true });
   }
 
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns) {
-    const variantPoliciesByPatterns = {};
+  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
     for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
       if (extensions[DependencyResolverAspect.id]?.policy) {
         variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
@@ -1600,7 +1618,7 @@ export class Workspace implements ComponentFactory {
     );
   }
 
-  private async _installModules(options?: ModulesInstallOptions) {
+  private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
     this.logger.console(
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
@@ -1943,13 +1961,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * configure an environment to the given components in the .bitmap file, this configuration overrides other, such as
    * overrides in workspace.jsonc.
    */
-  async setEnvToComponents(envId: ComponentID, components: Component[]) {
+  async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
     const envIdStr = envId.toString();
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
-    components.forEach((component) => {
-      this.bitMap.addComponentConfig(component.id, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
-      this.bitMap.addComponentConfig(component.id, EnvsAspect.id, { env: envIdStrNoVersion });
+    componentIds.forEach((componentId) => {
+      this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+      this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
     });
     await this.bitMap.write();
   }
@@ -1957,20 +1975,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   /**
    * remove env configuration from the .bitmap file, so then other configuration, such as "variants" will take place
    */
-  async unsetEnvFromComponents(components: Component[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
+  async unsetEnvFromComponents(ids: ComponentID[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
     const changed: ComponentID[] = [];
     const unchanged: ComponentID[] = [];
-    components.forEach((comp) => {
-      const bitMapEntry = this.bitMap.getBitmapEntry(comp.id);
+    ids.forEach((id) => {
+      const bitMapEntry = this.bitMap.getBitmapEntry(id);
       const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
       const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
       if (!currentEnv) {
-        unchanged.push(comp.id);
+        unchanged.push(id);
         return;
       }
-      this.bitMap.removeComponentConfig(comp.id, currentEnv, false);
-      this.bitMap.removeComponentConfig(comp.id, EnvsAspect.id, false);
-      changed.push(comp.id);
+      this.bitMap.removeComponentConfig(id, currentEnv, false);
+      this.bitMap.removeComponentConfig(id, EnvsAspect.id, false);
+      changed.push(id);
     });
     await this.bitMap.write();
     return { changed, unchanged };

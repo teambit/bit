@@ -69,7 +69,7 @@ export default class FixtureHelper {
   }
 
   tagComponentBarFoo() {
-    return this.command.tagComponent('bar/foo');
+    return this.command.tagWithoutBuild('bar/foo');
   }
   getFixturesDir() {
     return path.join(__dirname, '../../e2e/fixtures');
