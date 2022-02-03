@@ -42,6 +42,7 @@ $animationTime: 300ms;
 
 .message {
   margin-bottom: 8px;
+  word-break: break-word; // handle long space-less words
 }
 
 .icon {
