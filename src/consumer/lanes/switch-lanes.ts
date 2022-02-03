@@ -21,8 +21,6 @@ import {
 import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
-import { pathNormalizeToLinux } from '../../utils/path';
-import { FileStatus } from '../versions-ops/merge-version/merge-version';
 
 export type SwitchProps = {
   laneName: string;
