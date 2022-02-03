@@ -44,19 +44,23 @@ export default async function mergeFiles({
   const mergeResult: MergeFileResult = { filePath, output: null, conflict: null };
   const gitExecutablePath = getGitExecutablePath();
   try {
-    const result = await execa('git', [
-      'merge-file',
-      '-L',
-      currentFile.label,
-      '-L',
-      'Base File',
-      '-L',
-      otherFile.label,
-      currentFile.path,
-      baseFile.path,
-      otherFile.path,
-      '-p',
-    ]);
+    const result = await execa(
+      'git',
+      [
+        'merge-file',
+        '-L',
+        currentFile.label,
+        '-L',
+        'Base File',
+        '-L',
+        otherFile.label,
+        currentFile.path,
+        baseFile.path,
+        otherFile.path,
+        '-p',
+      ],
+      { stripFinalNewline: false }
+    );
     mergeResult.output = result.stdout;
     return mergeResult;
   } catch (err: any) {
