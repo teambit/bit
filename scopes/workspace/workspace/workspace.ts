@@ -66,7 +66,7 @@ import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -1040,10 +1040,7 @@ export class Workspace implements ComponentFactory {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
     if (bitMapExtensions) {
-      const extensionsDataEntries = Object.keys(bitMapExtensions).map(
-        (aspectId) => new ExtensionDataEntry(aspectId, undefined, aspectId, bitMapExtensions[aspectId])
-      );
-      const extensionDataList = new ExtensionDataList(...extensionsDataEntries);
+      const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
