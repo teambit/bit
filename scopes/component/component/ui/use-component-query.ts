@@ -21,6 +21,8 @@ const componentFields = gql`
     }
     packageName
     elementsUrl
+    description
+    labels
     displayName
     latest
     server {
