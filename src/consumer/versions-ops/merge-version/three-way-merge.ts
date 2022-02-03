@@ -222,17 +222,16 @@ async function getMergeResults(
     const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {
-        // @ts-ignore
-        label: modifiedFile.currentFile.label,
-        path: currentFilePath,
+        label: modifiedFile.fsFile.label,
+        path: fsFilePath,
       },
       baseFile: {
         path: baseFilePath,
       },
       otherFile: {
         // @ts-ignore
-        label: modifiedFile.fsFile.label,
-        path: fsFilePath,
+        label: modifiedFile.currentFile.label,
+        path: currentFilePath,
       },
     };
     return mergeFiles(mergeFilesParams);
