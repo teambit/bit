@@ -274,6 +274,7 @@
         "mini-css-extract-plugin": "2.2.2",
         "minimatch": "3.0.4",
         "mousetrap": "1.6.5",
+        "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
         "p-limit": "3.1.0",
@@ -346,7 +347,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.212",
+        "@teambit/legacy": "1.0.213",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -417,7 +418,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.212"
+            "@teambit/legacy": "1.0.213"
           }
         }
       },
@@ -664,7 +665,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.212"
+            "@teambit/legacy": "1.0.213"
           }
         }
       }
@@ -721,7 +722,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.212",
+            "@teambit/legacy": "1.0.213",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -829,7 +830,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.212"
+            "@teambit/legacy": "1.0.213"
           }
         }
       }

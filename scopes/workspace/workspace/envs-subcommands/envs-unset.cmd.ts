@@ -10,8 +10,8 @@ export class EnvsUnsetCmd implements Command {
   constructor(private workspace: Workspace) {}
 
   async report([pattern]: [string]) {
-    const components = await this.workspace.byPattern(pattern);
-    const { changed } = await this.workspace.unsetEnvFromComponents(components);
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const { changed } = await this.workspace.unsetEnvFromComponents(componentIds);
     return `successfully removed env from the following component(s):
 ${changed.map((id) => id.toString()).join('\n')}`;
   }
