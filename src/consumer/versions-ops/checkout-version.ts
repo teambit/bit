@@ -194,6 +194,8 @@ async function getComponentStatus(
   const baseVersion = currentlyUsedVersion;
   const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
   let mergeResults: MergeResultsThreeWay | null | undefined;
+  // if the component is not modified, no need to try merge the files, they will be written later on according to the
+  // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
   if (version && isModified) {
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     mergeResults = await threeWayMerge({
@@ -352,6 +354,10 @@ export function applyModifiedVersion(
   return { filesStatus, modifiedFiles };
 }
 
+/**
+ * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
+ * this function only mark them as such. later `deleteFilesIfNeeded()` will delete them
+ */
 export function markFilesToBeRemovedIfNeeded(
   succeededComponents: ComponentStatus[],
   componentsResults: ApplyVersionWithComps[]
