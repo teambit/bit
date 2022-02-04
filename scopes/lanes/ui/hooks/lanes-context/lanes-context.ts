@@ -9,7 +9,7 @@ export type LanesContextType = {
   updateLanes: (lanes: LaneModel[]) => void;
   updateLane: (lane: LaneModel) => void;
   getLaneUrl: (laneId: string) => string;
-  getLaneComponentUrl: (laneId: string, componentId: ComponentID) => string;
+  getLaneComponentUrl: (componentId: ComponentID, laneId?: string) => string;
 };
 const defaultLanesContext: LanesContextType = {
   updateCurrentLane: () => {},

@@ -117,8 +117,8 @@ export class ScopeUI {
   /**
    * register a route to the scope.
    */
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoutes(routes: RouteProps[]) {
+    this.routeSlot.register(routes);
     return this;
   }
 

@@ -14,18 +14,12 @@ type LaneTreeProps = {
 export function LaneTree({ isCollapsed }: LaneTreeProps) {
   const { model, updateCurrentLane } = useContext(LanesContext);
   const host = model?.host;
-  const { pathname } = useLocation();
   const lanes = model?.lanes?.list || [];
   const lanesByScope = model?.lanes?.byScope || new Map<string, LaneModel[]>();
   const onSelect = (id: string) => {
     updateCurrentLane(lanes?.find((lane) => lane.id === id));
   };
-  const activeLaneName = useMemo(() => {
-    const matchingLane = lanes?.find((lane) => {
-      return pathname && pathname.includes(`~lanes/${lane.id}`);
-    });
-    return matchingLane?.id;
-  }, [lanes, pathname]);
+  const activeLaneName = model?.currentLane?.name;
 
   const tree: TreeNode<PayloadType> = useMemo(() => {
     const scopes = [...lanesByScope.keys()];

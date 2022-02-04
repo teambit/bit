@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useContext, useEffect } from 'react';
+import React, { ReactNode, useState, useContext, useMemo } from 'react';
 import { useLanes, LanesHost } from '@teambit/lanes.lanes.ui';
 import { ReactRouterUI, useLocation } from '@teambit/react-router';
 import { LanesContext, LanesContextType } from './lanes-context';
@@ -19,12 +19,12 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
 
   let currentLaneFromURL: LaneModel | undefined;
 
-  useEffect(() => {
+  useMemo(() => {
     currentLaneFromURL = model?.lanes?.list.find((lane) => {
       return pathname && pathname.includes(lane.url);
     });
-    // redirect to the lane view
-    if (!currentLaneFromURL && !!model?.currentLane) {
+    // redirect to the lane view only on a workspace when spinning up for the first time
+    if (pathname === '/' && !currentLaneFromURL && !!model?.currentLane) {
       reactRouter.navigateTo(model?.currentLane.url);
     }
   }, [pathname, model]);
@@ -33,7 +33,13 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
     ...defaultContext,
     model: {
       ...model,
-      currentLane: !currentLaneFromURL ? model?.currentLane : model.currentLane,
+      currentLane: currentLaneFromURL || model?.currentLane,
+    },
+    getLaneComponentUrl: (componentId, laneId) => {
+      if (laneId) return defaultContext.getLaneComponentUrl(componentId, laneId);
+      return componentId.version && context.model?.lanes?.byComponentHash
+        ? defaultContext.getLaneComponentUrl(componentId, context.model?.lanes?.byComponentHash[componentId.version])
+        : '';
     },
     updateCurrentLane: (currentLane) => {
       setModel({ ...model, currentLane });

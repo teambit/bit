@@ -8,8 +8,8 @@ export const laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 export const laneRouteUrlRegex = `${baseLaneRoute}/:orgId([\\w-]+)/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
 export const getLaneUrl = (laneId: string) => `${baseLaneRoute}/${laneId.replace('.', '/')}`;
 export const laneComponentUrlRegex = `${laneRouteUrlRegex}/:compId(${laneComponentIdUrlRegex})`;
-export const getLaneComponentUrl = (laneId: string, componentId: ComponentID) =>
-  `${getLaneUrl(laneId)}/${componentId.toStringWithoutVersion().replace('.', '/')}?version=${componentId.version}`;
+export const getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
+  laneId ? `${getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';
 
 export type LaneComponentQueryResult = {
   id: string;
@@ -67,7 +67,7 @@ export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeMod
       packageName: '',
       description: '',
     });
-    return { model: componentModel, url: getLaneComponentUrl(fullName, componentModel.id) };
+    return { model: componentModel, url: getLaneComponentUrl(componentModel.id, fullName) };
   });
 
   return {

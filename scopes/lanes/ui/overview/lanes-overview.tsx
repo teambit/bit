@@ -27,7 +27,7 @@ export function LanesOverview({ routeSlot }: LanesOverviewProps) {
       ></LaneDetails>
       <ComponentGrid>
         {currentLane.components.map((component, index) => {
-          return <LaneComponentCard key={index} component={component.model} />;
+          return <LaneComponentCard key={index} component={component} />;
         })}
       </ComponentGrid>
       {routeSlot && <SlotSubRouter slot={routeSlot} />}

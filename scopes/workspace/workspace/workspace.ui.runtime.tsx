@@ -60,8 +60,8 @@ export class WorkspaceUI {
   /**
    * register a route to the workspace.
    */
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoutes(routes: RouteProps[]) {
+    this.routeSlot.register(routes);
     return this;
   }
 
