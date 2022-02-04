@@ -42,6 +42,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
@@ -179,8 +180,6 @@ function getMainAspect() {
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
   const safeModeCommands = [
-    'cc',
-    'clear-cache',
     'init',
     'cat-scope',
     'cat-object',
@@ -275,4 +274,5 @@ function clearGlobalsIfNeeded() {
   WorkspaceConfig.workspaceConfigIsExistRegistry = undefined;
   // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
+  ExternalActions.externalActions = [];
 }

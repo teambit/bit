@@ -11,6 +11,11 @@ import ActionNotFound from '../../../scope/exceptions/action-not-found';
 import { AuthData } from '../../../scope/network/http/http';
 
 type ActionClassesList = new () => Action<any, any>;
+type ExternalAction = { name: string; execute: Function };
+
+export class ExternalActions {
+  static externalActions: ExternalAction[] = [];
+}
 
 export async function action(
   scopePath: string,
@@ -18,6 +23,10 @@ export async function action(
   options: Record<string, any>,
   authData?: AuthData
 ): Promise<any> {
+  const externalAction = ExternalActions.externalActions.find((extAction) => extAction.name === name);
+  if (externalAction) {
+    return externalAction.execute(options);
+  }
   const scope: Scope = await loadScope(scopePath);
   const actionList: ActionClassesList[] = [ExportValidate, ExportPersist, RemovePendingDir, FetchMissingDeps, PostSign];
   const ActionClass = actionList.find((a) => a.name === name);

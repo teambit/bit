@@ -201,6 +201,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/changelog"
     },
+    "clear-cache": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/clear-cache"
+    },
     "cli": {
         "scope": "teambit.harmony",
         "version": "0.0.437",
