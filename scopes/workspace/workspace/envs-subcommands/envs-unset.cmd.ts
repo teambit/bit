@@ -1,11 +1,13 @@
 import { Command } from '@teambit/cli';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
 export class EnvsUnsetCmd implements Command {
-  name = 'unset <pattern>';
+  name = 'unset <component>';
   description = 'unset an environment from component(s)';
   options = [];
   group = 'development';
+  extendedDescription = `${PATTERN_HELP('env unset')}`;
 
   constructor(private workspace: Workspace) {}
 
