@@ -1,12 +1,14 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
 export class EnvsSetCmd implements Command {
   name = 'set <pattern> <env>';
-  description = 'set an environment to component(s)';
+  description = 'set an environment for component(s)';
   options = [];
   group = 'development';
+  extendedDescription = `${PATTERN_HELP('env set')}`;
 
   constructor(private workspace: Workspace) {}
 
