@@ -1,30 +1,21 @@
-import React from 'react';
-import { useRouteMatch } from 'react-router-dom';
-import { useLanes, LaneDetails, useLaneComponents, LaneComponentCard } from '@teambit/lanes.lanes.ui';
+import React, { useContext } from 'react';
+import { LaneDetails, LaneComponentCard, LanesContext } from '@teambit/lanes.lanes.ui';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { EmptyLane } from './empty-lane-overview';
 import styles from './lanes-overview.module.scss';
 
-function getSelectedLaneName() {
-  const {
-    params: { laneId },
-  } = useRouteMatch<{ laneId?: string }>();
-  return laneId;
-}
 export type LanesOverviewProps = {
   routeSlot: RouteSlot;
 };
 export function LanesOverview({ routeSlot }: LanesOverviewProps) {
-  const { lanes } = useLanes('workspace');
-  const currentLaneName = getSelectedLaneName();
-  const currentLane = lanes?.list.find((lane) => lane.id === currentLaneName);
-  const laneComponents = currentLane?.components;
-  const laneComponentIds = laneComponents?.map((lc) => lc.id.toString()) || [];
+  const { model } = useContext(LanesContext);
 
-  useLaneComponents(laneComponentIds);
+  const currentLane = model?.currentLane;
+  // const laneComponents = currentLane?.components;
+  // const laneComponentIds = laneComponents?.map((lc) => lc.id.toString()) || [];
 
-  if (!currentLaneName || !currentLane) return null;
+  if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return (
@@ -36,7 +27,7 @@ export function LanesOverview({ routeSlot }: LanesOverviewProps) {
       ></LaneDetails>
       <ComponentGrid>
         {currentLane.components.map((component, index) => {
-          return <LaneComponentCard key={index} component={component} />;
+          return <LaneComponentCard key={index} component={component.model} />;
         })}
       </ComponentGrid>
       {routeSlot && <SlotSubRouter slot={routeSlot} />}

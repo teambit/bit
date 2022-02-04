@@ -2,7 +2,7 @@ import React, { ReactNode, useState, useContext, useEffect } from 'react';
 import { useLanes, LanesHost } from '@teambit/lanes.lanes.ui';
 import { ReactRouterUI, useLocation } from '@teambit/react-router';
 import { LanesContext, LanesContextType } from './lanes-context';
-import { groupByScope, LanesModel, groupByComponentHash } from './lanes-model';
+import { groupByScope, LanesModel, groupByComponentHash, LaneModel } from './lanes-model';
 
 export type LanesProviderProps = {
   host: LanesHost;
@@ -10,46 +10,33 @@ export type LanesProviderProps = {
   children: ReactNode;
 };
 
-/**
- * context provider of the lanes
- */
 export function LanesProvider({ host, children, reactRouter }: LanesProviderProps) {
-  const defaultContext = useContext(LanesContext);
   const [model, setModel] = useState<LanesModel>({});
-  const lanesModel = useLanes(host);
+  const defaultContext = useContext(LanesContext);
+  const initialLaneState = useLanes(host);
+  if (!!initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
   const { pathname } = useLocation();
 
-  let currentLaneFromURL;
-  useEffect(() => {
-    currentLaneFromURL = lanesModel?.lanes?.list.find((lane) => {
-      return pathname && pathname.includes(defaultContext.getLaneUrl(lane));
-    });
+  let currentLaneFromURL: LaneModel | undefined;
 
-    if (!currentLaneFromURL && !!lanesModel.currentLane) {
-      reactRouter.navigateTo(defaultContext.getLaneUrl(lanesModel.currentLane));
+  useEffect(() => {
+    currentLaneFromURL = model?.lanes?.list.find((lane) => {
+      return pathname && pathname.includes(lane.url);
+    });
+    // redirect to the lane view
+    if (!currentLaneFromURL && !!model?.currentLane) {
+      reactRouter.navigateTo(model?.currentLane.url);
     }
-  }, [lanesModel, pathname]);
+  }, [pathname, model]);
 
   const context: LanesContextType = {
     ...defaultContext,
-    model: { ...lanesModel, currentLane: currentLaneFromURL },
-    updateCurrentLane: (currentLane) => {
-      const updatedModel = {
-        ...(model || {}),
-        currentLane,
-      };
-      setModel(updatedModel);
+    model: {
+      ...model,
+      currentLane: !currentLaneFromURL ? model?.currentLane : model.currentLane,
     },
-    updateLanes: (lanes) => {
-      const updatedModel = {
-        ...(model || {}),
-        lanes: {
-          list: lanes,
-          byScope: groupByScope(lanes),
-          byComponentHash: groupByComponentHash(lanes),
-        },
-      };
-      setModel(updatedModel);
+    updateCurrentLane: (currentLane) => {
+      setModel({ ...model, currentLane });
     },
     updateLane: (lane) => {
       const updatedLanes = (model?.lanes?.list || []).map((existingLane) => {
@@ -68,6 +55,10 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
       };
       setModel(updatedModel);
     },
+    updateLanes: (lanes) => {
+      lanes.forEach((lane) => context.updateLane(lane));
+    },
   };
+
   return <LanesContext.Provider value={context}>{children}</LanesContext.Provider>;
 }

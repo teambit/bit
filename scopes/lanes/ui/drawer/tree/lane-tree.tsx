@@ -36,12 +36,12 @@ export function LaneTree({ isCollapsed }: LaneTreeProps) {
           ? scopes.map((scope) => ({
               id: scope,
               children: (lanesByScope.get(scope) || []).map((lane) => ({
-                id: lane.name,
+                id: lane.id,
                 payload: lane,
               })),
             }))
           : lanes.map((lane) => ({
-              id: lane.name,
+              id: lane.id,
               payload: lane,
             })),
     };

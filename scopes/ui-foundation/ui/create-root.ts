@@ -24,9 +24,7 @@ ${createImports(aspectDefs)}
 const isBrowser = typeof window !== "undefined";
 const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 ${idSetters.join('\n')}
-
 export function render(...props){
-  console.log("ids", ${identifiers.join(', ')});
   return Harmony.load([${identifiers.reverse().join(', ')}], '${runtime}', config)
     .then((harmony) => {
       return harmony

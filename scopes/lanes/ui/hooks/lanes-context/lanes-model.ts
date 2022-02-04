@@ -1,9 +1,16 @@
 import { ComponentModel } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { ComponentID } from '@teambit/component-id';
 
-export const baseLaneRoute = `/~lane`;
-export const laneRouteUrl = `${baseLaneRoute}/:laneId([[\\w\\/\\.-]+[\\w\\/\\.-])`;
-export const laneComponentUrl = `${laneRouteUrl}/:compId([[\\w\\/-]+[\\w\\/-])`;
+export const baseLaneRoute = '/~lane';
+export const laneIdUrlRegex = '[\\w-]*\\/[\\w-]*\\/[\\w-]';
+export const laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
+export const laneRouteUrlRegex = `${baseLaneRoute}/:orgId([\\w-]+)/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
+export const getLaneUrl = (laneId: string) => `${baseLaneRoute}/${laneId.replace('.', '/')}`;
+export const laneComponentUrlRegex = `${laneRouteUrlRegex}/:compId(${laneComponentIdUrlRegex})`;
+export const getLaneComponentUrl = (laneId: string, componentId: ComponentID) =>
+  `${getLaneUrl(laneId)}/${componentId.toStringWithoutVersion().replace('.', '/')}?version=${componentId.version}`;
+
 export type LaneComponentQueryResult = {
   id: string;
   head: string;
@@ -27,15 +34,17 @@ export type LanesModel = {
   lanes?: {
     byScope: Map<string, LaneModel[]>;
     list: LaneModel[];
-    byComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
+    byComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
   };
 };
+export type LaneComponentModel = { model: ComponentModel; url: string };
 export type LaneModel = {
   id: string;
   scope: string;
+  url: string;
   name: string;
   isMerged: boolean | null;
-  components: ComponentModel[];
+  components: LaneComponentModel[];
 };
 
 export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeModel, host: LanesHost): LaneModel {
@@ -43,6 +52,7 @@ export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeMod
   const laneName = name;
   const fullName = remote || name;
   const laneScope = remote?.split('/')[0];
+
   const components = laneData.components.map((component) => {
     const componentName = getLaneComponentName(component, host);
     const componentScope = laneScope || currentScope.name;
@@ -57,9 +67,17 @@ export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeMod
       packageName: '',
       description: '',
     });
-    return componentModel;
+    return { model: componentModel, url: getLaneComponentUrl(fullName, componentModel.id) };
   });
-  return { id: fullName, name: laneName, scope: laneScope || currentScope.name, isMerged, components };
+
+  return {
+    id: fullName,
+    name: laneName,
+    scope: laneScope || currentScope.name,
+    isMerged,
+    url: getLaneUrl(fullName),
+    components,
+  };
 }
 
 export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
@@ -75,14 +93,16 @@ export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
   }, new Map<string, LaneModel[]>());
 }
 
-export function groupByComponentHash(lanes: LaneModel[]): Map<string, { lane: LaneModel; component: ComponentModel }> {
+export function groupByComponentHash(
+  lanes: LaneModel[]
+): Map<string, { lane: LaneModel; component: LaneComponentModel }> {
   return lanes.reduce((accum, lane) => {
     const { components } = lane;
     components.forEach((component) => {
-      accum.set(component.id.version as string, { lane, component });
+      accum.set(component.model.id.version as string, { lane, component });
     });
     return accum;
-  }, new Map<string, { lane: LaneModel; component: ComponentModel }>());
+  }, new Map<string, { lane: LaneModel; component: LaneComponentModel }>());
 }
 
 export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: ScopeModel, host: LanesHost): LanesModel {

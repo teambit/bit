@@ -6,7 +6,7 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneModel, LanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneModel } from '@teambit/lanes.lanes.ui';
 import styles from './lane-tree-node.module.scss';
 
 export type LaneTreeNodeProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;
@@ -16,7 +16,6 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
   const lane = node.payload as LaneModel;
 
   const { onSelect } = useContext(TreeContext);
-  const { getLaneUrl } = useContext(LanesContext);
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       onSelect && onSelect(node.id, event);
@@ -26,7 +25,7 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
 
   return (
     <NavLink
-      href={getLaneUrl(lane)}
+      href={lane.url}
       className={classNames(indentClass, clickable, styles.lane)}
       activeClassName={styles.active}
       onClick={handleClick}

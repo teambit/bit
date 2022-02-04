@@ -15,7 +15,6 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { LanesOverview, laneRouteUrl } from '@teambit/lanes.lanes.ui';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';

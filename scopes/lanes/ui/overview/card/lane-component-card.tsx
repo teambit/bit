@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { LoadPreview } from '@teambit/workspace.ui.load-preview';
+import { LanesContext } from '@teambit/lanes.lanes.ui';
 import styles from './lane-component-card.module.scss';
 
 export type LaneComponentCardProps = {
@@ -11,6 +12,7 @@ export type LaneComponentCardProps = {
 
 export function LaneComponentCard({ component, ...rest }: LaneComponentCardProps) {
   const [shouldShowPreview, togglePreview] = useState(false);
+  const { getLaneComponentUrl, model } = useContext(LanesContext);
   const showPreview = () => {
     if (!shouldShowPreview) {
       togglePreview(true);
@@ -23,7 +25,7 @@ export function LaneComponentCard({ component, ...rest }: LaneComponentCardProps
     <div {...rest} className={styles.wrapper}>
       <ComponentCard
         id={component.id.fullName}
-        overrideInternalLink={`/${component.id.fullName}?version=${component.id.version}`}
+        overrideInternalLink={''}
         envIcon={component.environment?.icon}
         description={component.description}
         version={componentVersion}

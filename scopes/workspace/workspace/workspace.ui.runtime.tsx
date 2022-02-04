@@ -1,6 +1,5 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
-import { LanesOverview, laneRouteUrl } from '@teambit/lanes.lanes.ui';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -209,10 +208,6 @@ export class WorkspaceUI {
     ]);
 
     workspaceUI.routeSlot.register([
-      // {
-      //   path: lanesRouteUrl,
-      //   children: <LanesOverview />,
-      // },
       {
         path: workspaceUI.componentUi.routePath,
         children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),

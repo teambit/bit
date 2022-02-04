@@ -5,11 +5,12 @@ import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { LanesDrawer, LanesHost, LanesOverview, LanesProvider, laneRouteUrl } from '@teambit/lanes.lanes.ui';
+import { LanesDrawer, LanesHost, LanesOverview, LanesProvider, laneRouteUrlRegex } from '@teambit/lanes.lanes.ui';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+
 export class LanesUI {
   static dependencies = [UIAspect, ReactRouterAspect];
   static runtime = UIRuntime;
@@ -33,15 +34,16 @@ export class LanesUI {
   }
 
   registerExplicitRoutes() {
+    console.log(laneRouteUrlRegex);
     if (this.workspace) {
       this.workspace.registerRoute({
-        path: laneRouteUrl,
+        path: laneRouteUrlRegex,
         children: <LanesOverview routeSlot={this.routeSlot} />,
       });
     }
     if (this.scope) {
       this.scope.registerRoute({
-        path: laneRouteUrl,
+        path: laneRouteUrlRegex,
         children: <LanesOverview routeSlot={this.routeSlot} />,
       });
     }
