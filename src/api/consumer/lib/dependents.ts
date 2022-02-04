@@ -14,7 +14,7 @@ export async function dependents(id: string): Promise<DependentsResults> {
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new ConsumerNotFound(); // @todo: supports this on bare-scope.
   throwForNewComponent(id, consumer);
-  const bitId = BitId.parse(id, true);
+  const bitId = consumer.getParsedId(id);
   const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
   const scopeDependencyGraph = new DependencyGraph(scopeGraph);
   const scopeDependents = scopeDependencyGraph.getDependentsInfo(bitId);
