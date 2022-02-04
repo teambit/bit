@@ -260,10 +260,12 @@ export class IsolatorMain {
     // that was written before, didn't have these dependencies in order for the package-manager to
     // be able to install them without crushing when the versions don't exist yet
     capsulesWithPackagesData.forEach((capsuleWithPackageData) => {
-      capsuleWithPackageData.capsule.fs.writeFileSync(
-        PACKAGE_JSON,
-        JSON.stringify(capsuleWithPackageData.currentPackageJson, null, 2)
-      );
+      const { currentPackageJson, capsule } = capsuleWithPackageData;
+      if (!currentPackageJson)
+        throw new Error(
+          `isolator.createCapsules, unable to find currentPackageJson for ${capsule.component.id.toString()}`
+        );
+      capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
 
     return capsuleList;
@@ -465,9 +467,13 @@ export class IsolatorMain {
   ) {
     const updateP = capsules.map(async (capsule) => {
       const packageJson = await this.getCurrentPackageJson(capsule, capsules);
-      const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
-      if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
-      found.currentPackageJson = packageJson.packageJsonObject;
+      const found = capsulesWithPackagesData.filter((c) => c.capsule.component.id.isEqual(capsule.component.id));
+      if (!found.length) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
+      if (found.length > 1)
+        throw new Error(
+          `updateWithCurrentPackageJsonData found duplicate capsules: ${capsule.component.id.toString()}""`
+        );
+      found[0].currentPackageJson = packageJson.packageJsonObject;
     });
     return Promise.all(updateP);
   }
