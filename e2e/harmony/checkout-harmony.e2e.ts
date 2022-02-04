@@ -60,7 +60,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.command.tagAllComponents('', '0.0.10');
+            helper.command.tagAllWithoutBuild('0.0.10');
             output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
@@ -183,7 +183,6 @@ describe('bit checkout command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
       helper.fs.outputFile('bar/foo2.js');
-      helper.command.addComponent('bar', { i: 'bar/foo' });
       helper.command.tagAllWithoutBuild();
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');
@@ -271,6 +270,7 @@ describe('bit checkout command', function () {
     });
   });
   describe('modified component with conflicts', () => {
+    let localScope;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
@@ -279,6 +279,7 @@ describe('bit checkout command', function () {
       helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV3}\n`);
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('using manual strategy', () => {
       let output;
@@ -299,8 +300,8 @@ describe('bit checkout command', function () {
       });
       it('should label the conflicts segments according to the versions', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
-        expect(fileContent).to.have.string('<<<<<<< 0.0.1');
-        expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
+        expect(fileContent).to.have.string('<<<<<<< 0.0.2 modified');
+        expect(fileContent).to.have.string('>>>>>>> 0.0.1');
       });
       it('should not strip the last line', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
@@ -314,6 +315,109 @@ describe('bit checkout command', function () {
       it('should show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
+      });
+    });
+    describe('using theirs strategy', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
+      });
+      it('should indicate that the file has updated', () => {
+        expect(output).to.have.string(successOutput);
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string(FileStatusWithoutChalk.updated);
+      });
+      it('should rewrite the file according to the used version', () => {
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
+        expect(fileContent).to.be.equal(`${barFooV1}\n`);
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('bar/foo');
+        expect(bitMap['bar/foo'].version).to.equal('0.0.1');
+      });
+      it('should not show the component as modified', () => {
+        const statusOutput = helper.command.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified components');
+      });
+    });
+    describe('using ours strategy', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--ours');
+      });
+      it('should indicate that the version was switched', () => {
+        expect(output).to.have.string(successOutput);
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should indicate that the file was not changed', () => {
+        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+      });
+      it('should leave the file intact', () => {
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
+        expect(fileContent).to.be.equal(`${barFooV3}\n`);
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('bar/foo');
+        expect(bitMap['bar/foo'].version).to.equal('0.0.1');
+      });
+      it('should show the component as modified', () => {
+        const statusOutput = helper.command.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
+    });
+    describe('when new files are added', () => {
+      let scopeWithAddedFile;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.fs.outputFile('bar/foo2.js');
+        scopeWithAddedFile = helper.scopeHelper.cloneLocalScope();
+      });
+      describe('using manual strategy', () => {
+        let output;
+        before(() => {
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--manual');
+        });
+        it('should indicate that a new file was added', () => {
+          expect(output).to.have.string(FileStatusWithoutChalk.added);
+          expect(output).to.have.string('foo2.js');
+        });
+        it('should not delete the file', () => {
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
+        });
+      });
+      describe('using theirs strategy', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
+        });
+        it('should indicate that the new file was removed', () => {
+          expect(output).to.have.string(FileStatusWithoutChalk.removed);
+          expect(output).to.have.string('foo2.js');
+        });
+        it('should delete the file', () => {
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.not.be.a.path();
+        });
+      });
+      describe('using ours strategy', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--ours');
+        });
+        it('should indicate that the new file was not changed', () => {
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+          expect(output).to.have.string('foo2.js');
+        });
+        it('should not delete the file', () => {
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
+        });
       });
     });
   });
