@@ -29,6 +29,12 @@ export interface Command {
   description?: string;
 
   /**
+   * The extended description of the command. Will be seen in bit command help, just after the description
+   * `bit add --help`
+   */
+  extendedDescription?: string;
+
+  /**
    * allow grouping of commands to hint summery renderer
    * Places in default automatic help
    */
