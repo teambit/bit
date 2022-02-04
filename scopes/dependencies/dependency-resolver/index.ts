@@ -49,6 +49,7 @@ export {
   VariantPolicy,
   VariantPolicyFactory,
   SerializedVariantPolicy,
+  EnvPolicyConfigObject,
 } from './policy';
 export {
   CoreAspectLinkResult,

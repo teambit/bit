@@ -1,4 +1,4 @@
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
@@ -95,7 +95,7 @@ export class ReactNativeMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies?.()),
     });
