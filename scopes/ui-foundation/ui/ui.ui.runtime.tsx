@@ -101,7 +101,7 @@ export class UiUI {
     return this.renderPluginsSlot.register(hooks);
   }
 
-  private getRoot(rootExtension: string) {
+  getRoot(rootExtension: string) {
     return this.uiRootSlot.get(rootExtension);
   }
 

@@ -1,8 +1,9 @@
 import { ComponentModel } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 
-export const lanesRouteUrl = `/~lanes/:laneId([[\\w\\/\\.-]+[\\w\\/\\.-])`;
-
+export const baseLaneRoute = `/~lane`;
+export const laneRouteUrl = `${baseLaneRoute}/:laneId([[\\w\\/\\.-]+[\\w\\/\\.-])`;
+export const laneComponentUrl = `${laneRouteUrl}/:compId([[\\w\\/-]+[\\w\\/-])`;
 export type LaneComponentQueryResult = {
   id: string;
   head: string;
@@ -26,12 +27,13 @@ export type LanesModel = {
   lanes?: {
     byScope: Map<string, LaneModel[]>;
     list: LaneModel[];
+    byComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
   };
 };
 export type LaneModel = {
-  name: string;
+  id: string;
   scope: string;
-  laneName: string;
+  name: string;
   isMerged: boolean | null;
   components: ComponentModel[];
 };
@@ -57,7 +59,7 @@ export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeMod
     });
     return componentModel;
   });
-  return { name: fullName, laneName, scope: laneScope || currentScope.name, isMerged, components };
+  return { id: fullName, name: laneName, scope: laneScope || currentScope.name, isMerged, components };
 }
 
 export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
@@ -73,16 +75,27 @@ export function groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
   }, new Map<string, LaneModel[]>());
 }
 
-export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: ScopeModel): LanesModel {
+export function groupByComponentHash(lanes: LaneModel[]): Map<string, { lane: LaneModel; component: ComponentModel }> {
+  return lanes.reduce((accum, lane) => {
+    const { components } = lane;
+    components.forEach((component) => {
+      accum.set(component.id.version as string, { lane, component });
+    });
+    return accum;
+  }, new Map<string, { lane: LaneModel; component: ComponentModel }>());
+}
+
+export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: ScopeModel, host: LanesHost): LanesModel {
   const lanesResult = lanesData.lanes?.getLanes || [];
   const currentLaneName = lanesData.lanes?.getCurrentLaneName;
-  const host = lanesResult.some((result) => result.remote) ? 'workspace' : 'scope';
   const laneModel = lanesResult.map((result) => mapToLaneModel(result, currentScope, host));
   const lanesByScope = groupByScope(laneModel);
+  const lanesByComponentHash = groupByComponentHash(laneModel);
   const currentLane = laneModel.find((lane) => lane.name === currentLaneName);
   const lanes = {
     byScope: lanesByScope,
     list: laneModel,
+    byComponentHash: lanesByComponentHash,
   };
   return {
     lanes,
@@ -91,7 +104,7 @@ export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: Scope
   };
 }
 
-function getLaneComponentName(laneComponent: LaneComponentQueryResult, host: LanesHost) {
+function getLaneComponentName(laneComponent: LaneComponentQueryResult, host?: LanesHost) {
   if (host === 'scope') return laneComponent.id.replace('.', '/');
   const hasIdBeenExported = laneComponent.id.includes('.');
   return hasIdBeenExported

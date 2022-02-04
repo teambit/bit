@@ -15,7 +15,7 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { LanesOverview, lanesRouteUrl } from '@teambit/lanes.lanes.ui';
+import { LanesOverview, laneRouteUrl } from '@teambit/lanes.lanes.ui';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
@@ -140,10 +140,10 @@ export class ScopeUI {
         path: this.componentUi.routePath,
         children: this.componentUi.getComponentUI(ScopeAspect.id),
       },
-      {
-        path: lanesRouteUrl,
-        children: <LanesOverview />,
-      },
+      // {
+      //   path: lanesRouteUrl,
+      //   children: <LanesOverview />,
+      // },
     ]);
   }
 

@@ -1,28 +1,83 @@
-import { UIRuntime } from '@teambit/ui';
-import { LanesAspect } from '@teambit/lanes';
-import { LanesDrawer } from '@teambit/lanes.lanes.ui';
-import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
-import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import { Slot } from '@teambit/harmony';
+import { Slot, Harmony } from '@teambit/harmony';
+import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
+import { LanesAspect } from '@teambit/lanes';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-
+import { LanesDrawer, LanesHost, LanesOverview, LanesProvider, laneRouteUrl } from '@teambit/lanes.lanes.ui';
+import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import ScopeAspect, { ScopeUI } from '@teambit/scope';
+import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 export class LanesUI {
-  static dependencies = [SidebarAspect];
+  static dependencies = [UIAspect, ReactRouterAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<RouteProps>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<MenuItemSlot>()];
 
-  constructor(private sidebarUI: SidebarUI, private routeSlot: RouteSlot, private drawer: DrawerType) {
-    this.registerDrawer(drawer);
+  constructor(
+    private uiUi: UiUI,
+    private routeSlot: RouteSlot,
+    private reactRouter: ReactRouterUI,
+    private workspace?: WorkspaceUI,
+    private scope?: ScopeUI
+  ) {
+    this.lanesHost = workspace ? 'workspace' : 'scope';
   }
 
-  registerDrawer(drawers: DrawerType) {
-    this.sidebarUI.registerDrawer(drawers);
+  readonly lanesHost: LanesHost;
+
+  registerRoute(route: RouteProps) {
+    this.routeSlot.register(route);
     return this;
   }
 
-  static async provider([sidebarUI]: [SidebarUI], config, [routeSlot]: [RouteSlot]) {
-    const lanesUi = new LanesUI(sidebarUI, routeSlot, new LanesDrawer());
+  registerExplicitRoutes() {
+    if (this.workspace) {
+      this.workspace.registerRoute({
+        path: laneRouteUrl,
+        children: <LanesOverview routeSlot={this.routeSlot} />,
+      });
+    }
+    if (this.scope) {
+      this.scope.registerRoute({
+        path: laneRouteUrl,
+        children: <LanesOverview routeSlot={this.routeSlot} />,
+      });
+    }
+  }
+
+  registerDrawers(...drawers: DrawerType[]) {
+    if (this.workspace) {
+      this.workspace.registerDrawers(...drawers);
+    }
+    if (this.scope) {
+      this.scope.registerDrawers(...drawers);
+    }
+    return this;
+  }
+
+  private renderContext = ({ children }: { children: ReactNode }) => {
+    return LanesProvider({ host: this.lanesHost, reactRouter: this.reactRouter, children });
+  };
+
+  static async provider([uiUi, reactRouter]: [UiUI, ReactRouterUI], _, [routeSlot]: [RouteSlot], harmony: Harmony) {
+    const { config } = harmony;
+    const host = String(config.get('teambit.harmony/bit'));
+    let workspace: WorkspaceUI | undefined;
+    let scope: ScopeUI | undefined;
+    if (host === WorkspaceAspect.id) {
+      workspace = harmony.get<WorkspaceUI>(WorkspaceAspect.id);
+    }
+    if (host === ScopeAspect.id) {
+      scope = harmony.get<ScopeUI>(ScopeAspect.id);
+    }
+    const lanesUi = new LanesUI(uiUi, routeSlot, reactRouter, workspace, scope);
+    uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
+    const drawer = new LanesDrawer(lanesUi.lanesHost);
+    lanesUi.registerDrawers(drawer);
+    lanesUi.registerExplicitRoutes();
+
     return lanesUi;
   }
 }

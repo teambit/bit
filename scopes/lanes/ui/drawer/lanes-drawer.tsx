@@ -4,7 +4,7 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { useLanes, LaneTree, LanesProvider } from '@teambit/lanes.lanes.ui';
+import { LaneTree, LanesHost, LanesContext } from '@teambit/lanes.lanes.ui';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -17,21 +17,24 @@ const LaneTreeContext = createContext<{
 });
 
 export class LanesDrawer implements DrawerType {
+  constructor(private host: LanesHost) {}
   id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);
+
   Context = ({ children }) => {
-    const [collapsed, setCollapsed] = useState(true);
+    const { model } = useContext(LanesContext);
+    const isCollapsed = !model?.currentLane;
+    const [collapsed, setCollapsed] = useState(isCollapsed);
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
-
   render = () => {
-    const lanesModel = useLanes();
+    const { model } = useContext(LanesContext);
     const { collapsed } = useContext(LaneTreeContext);
 
-    const { lanes } = lanesModel;
+    if (!model || !model.lanes) return <FullLoader />;
+    const { lanes } = model;
 
-    if (!lanes) return <FullLoader />;
     if (lanes.list.length === 0)
       return (
         <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>
@@ -39,11 +42,7 @@ export class LanesDrawer implements DrawerType {
         </span>
       );
 
-    return (
-      <LanesProvider lanesModel={{ ...lanesModel }}>
-        <LaneTree isCollapsed={collapsed}></LaneTree>
-      </LanesProvider>
-    );
+    return <LaneTree isCollapsed={collapsed}></LaneTree>;
   };
 }
 

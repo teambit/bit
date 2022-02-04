@@ -79,7 +79,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.command.exportLane();
       });
-      it('should export components on that lane', () => {
+      it.only('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
@@ -183,6 +183,22 @@ describe('bit lane command', function () {
         expect(diffOutput).to.not.have.string('--- Id');
         expect(diffOutput).to.not.have.string('+++ Id');
       });
+    });
+  });
+  describe.only('create a snap on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bitmap should have the version from main and not latest', () => {
+      const bitMap = helper.bitMap.readComponentsMapOnly();
+      expect(bitMap).to.not.be.string('latest');
     });
   });
   describe('importing lanes', () => {
