@@ -21,7 +21,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
@@ -307,7 +307,7 @@ export class ReactMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.reactEnv.getDependencies();

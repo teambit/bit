@@ -65,17 +65,50 @@ describe('dependency-resolver extension', function () {
     // and maybe to also apply custom compiler which add deps
     describe('policies added by an env', function () {
       let barFooOutput;
-      before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
-        // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
-        barFooOutput = helper.command.showComponentParsed('bar/foo');
+      describe('policies added core env', function () {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.fixtures.createComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
+          // TODO: use custom env with versions provided from outside in the config by the user
+          helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
+          barFooOutput = helper.command.showComponentParsed('bar/foo');
+        });
+        it('should have the updated dependencies for bar/foo from the env', function () {
+          expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
+          expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
+        });
       });
-      it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
+      describe('policies added by custom env', function () {
+        let utilsIsTypeOutput;
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.fixtures.createComponentBarFoo('import "lodash.zip"');
+          helper.fixtures.addComponentBarFooAsDir();
+          helper.fixtures.createComponentUtilsIsType();
+          helper.fs.outputFile('utils/is-type.js', fixtures.isType);
+          helper.command.addComponent('utils', { i: 'utils/is-type' });
+          // important! don't disable the preview.
+          helper.bitJsonc.addDefaultScope();
+          const envName = helper.env.setCustomEnv('env-add-dependencies');
+          const envId = `${helper.scopes.remote}/${envName}`;
+          helper.extensions.addExtensionToVariant('*', envId);
+          helper.command.install('lodash.zip lodash.get');
+          helper.command.compile();
+          barFooOutput = helper.command.showComponentParsed('bar/foo');
+          utilsIsTypeOutput = helper.command.showComponentParsed('utils/is-type');
+        });
+        it('should have the updated dependencies for bar/foo from the env', function () {
+          expect(barFooOutput.devPackageDependencies).to.have.property('lodash.get', '4.4.2');
+        });
+        describe('auto detect peers policy', function () {
+          it('should resolve version for auto detected peers when used by the component from the env', () => {
+            expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.zip', '^4.0.0');
+          });
+          it('should not add peers when component is not using them', () => {
+            expect(utilsIsTypeOutput.peerPackageDependencies).to.not.have.property('lodash.zip');
+          });
+        });
       });
     });
     describe('policies added by extension', function () {
