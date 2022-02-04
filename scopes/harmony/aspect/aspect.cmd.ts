@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
@@ -10,6 +11,7 @@ export class ListAspectCmd implements Command {
   description = 'list all aspects configured on component(s)';
   options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
   group = 'development';
+  extendedDescription = `${PATTERN_HELP('aspect list')}`;
 
   constructor(private aspect: AspectMain) {}
 
@@ -34,10 +36,10 @@ export class ListAspectCmd implements Command {
 
 export class SetAspectCmd implements Command {
   name = 'set <pattern> <aspect-id> [config]';
-  description = `set an aspect to component(s) with optional config.
-enter the config as stringified JSON (e.g. '{"foo":"bar"}' ).
-if no config entered, the aspect will be set with empty config ({}).`;
-  shortDescription = 'set an aspect to component(s) with optional config';
+  description = 'set an aspect to component(s) with optional config.';
+  extendedDescription = `enter the config as stringified JSON (e.g. '{"foo":"bar"}' ).
+if no config entered, the aspect will be set with empty config ({}).
+${PATTERN_HELP('aspect set')}`;
   options = [];
   group = 'development';
 
@@ -54,6 +56,7 @@ if no config entered, the aspect will be set with empty config ({}).`;
 export class UnsetAspectCmd implements Command {
   name = 'unset <pattern> <aspect-id>';
   description = `unset an aspect from component(s).`;
+  extendedDescription = `${PATTERN_HELP('aspect unset')}`;
   options = [];
   group = 'development';
 
