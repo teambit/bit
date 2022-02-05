@@ -468,19 +468,17 @@ export default class ImportComponents {
     const currentlyUsedVersion = existingBitMapBitId.version;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const currentComponent: Version = await componentModel.loadVersion(
+    const otherComponent: Version = await componentModel.loadVersion(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.id.version,
       this.consumer.scope.objects
     );
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
-      otherComponent: fsComponent,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      currentLabel: component.id.version,
+      otherComponent,
+      otherLabel: component.id.version as string,
+      currentComponent: fsComponent,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
     mergeStatus.mergeResults = mergeResults;

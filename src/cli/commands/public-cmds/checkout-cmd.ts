@@ -30,7 +30,8 @@ export default class Checkout implements LegacyCommand {
     ['r', 'reset', 'remove local changes'],
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'skip-npm-install', 'do not install packages of the imported components'],
+    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       '',
       'ignore-package-json',
@@ -56,6 +57,7 @@ export default class Checkout implements LegacyCommand {
       all = false,
       verbose = false,
       skipNpmInstall = false,
+      skipDependencyInstallation = false,
       ignorePackageJson = false,
       conf,
       ignoreDist = false,
@@ -68,11 +70,19 @@ export default class Checkout implements LegacyCommand {
       all?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
+      skipDependencyInstallation?: boolean;
       ignorePackageJson?: boolean;
       conf?: string;
       ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
+    if (skipNpmInstall) {
+      // eslint-disable-next-line no-console
+      console.log(
+        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
+      );
+      skipDependencyInstallation = true;
+    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
@@ -80,7 +90,7 @@ export default class Checkout implements LegacyCommand {
       all,
       verbose,
       isLane: false,
-      skipNpmInstall,
+      skipNpmInstall: skipDependencyInstallation,
       ignoreDist,
       ignorePackageJson,
       writeConfig: !!conf,

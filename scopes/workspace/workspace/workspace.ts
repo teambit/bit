@@ -30,6 +30,7 @@ import {
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
+  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -65,7 +66,7 @@ import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -1443,7 +1444,7 @@ export class Workspace implements ComponentFactory {
     return resolved;
   }
 
-  private async getComponentsDirectory(ids: ComponentID[]) {
+  private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
     const components = ids.length ? await this.getMany(ids) : await this.list();
     return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
   }
@@ -1454,7 +1455,7 @@ export class Workspace implements ComponentFactory {
    * @returns
    * @memberof Workspace
    */
-  async install(packages?: string[], options?: WorkspaceInstallOptions) {
+  async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
@@ -1475,8 +1476,12 @@ export class Workspace implements ComponentFactory {
         compDirMap,
         pmInstallOptions
       );
-      const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-      await this._addPackages(missingPeerPackages, options);
+      if (missingPeers) {
+        const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+        await this._addPackages(missingPeerPackages, options);
+      } else {
+        this.logger.console('No missing peer dependencies found.');
+      }
     }
     if (options?.import) {
       this.logger.setStatusLine('importing missing objects');
@@ -1579,8 +1584,8 @@ export class Workspace implements ComponentFactory {
     return this._installModules({ dedupe: true });
   }
 
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns) {
-    const variantPoliciesByPatterns = {};
+  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
     for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
       if (extensions[DependencyResolverAspect.id]?.policy) {
         variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
@@ -1610,7 +1615,7 @@ export class Workspace implements ComponentFactory {
     );
   }
 
-  private async _installModules(options?: ModulesInstallOptions) {
+  private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
     this.logger.console(
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );

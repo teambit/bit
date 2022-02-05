@@ -2,6 +2,7 @@ import didYouMean from 'didyoumean';
 import yargs, { CommandModule } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { compact } from 'lodash';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -51,7 +52,7 @@ export class CLIParser {
       if (argv.help) {
         loader.off(); // stop the "loading bit..." before showing help if needed
         // this is a command help page
-        yargs.showHelp(logCommandHelp);
+        yargs.showHelp(this.logCommandHelp.bind(this));
         if (!logger.isDaemon) process.exit(0);
       }
     }, true);
@@ -63,7 +64,7 @@ export class CLIParser {
       if (err) {
         throw err;
       }
-      yargs.showHelp(logCommandHelp);
+      yargs.showHelp(this.logCommandHelp.bind(this));
       // eslint-disable-next-line no-console
       console.log(`\n${chalk.yellow(msg)}`);
       if (!logger.isDaemon) process.exit(1);
@@ -167,25 +168,90 @@ export class CLIParser {
       throw new CommandNotFound(commandName, suggestion as string);
     }
   }
-}
 
-/**
- * color the flags with green.
- * there is no API to get the options, so it is done by regex.
- * see https://github.com/yargs/yargs/issues/1956
- */
-function logCommandHelp(help: string) {
-  const replacer = (_, p1, p2) => `${p1}${chalk.green(p2)}`;
-  const lines = help.split('\n');
-  let passedOptions = false;
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.startsWith(STANDARD_GROUP)) {
-      passedOptions = true;
-    } else if (passedOptions) {
-      lines[i] = line.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer);
+  /**
+   * manipulate the command help output. there is no API from Yarn to do any of this, so it needs to be done manually.
+   * see https://github.com/yargs/yargs/issues/1956
+   */
+  private logCommandHelp(help: string) {
+    const command = this.findCommandByArgv();
+
+    const replacer = (_, p1, p2) => `${p1}${chalk.green(p2)}`;
+    const lines = help.split('\n');
+    const linesWithoutEmpty = compact(lines);
+    const cmdLine = linesWithoutEmpty[0];
+    const description: string[] = [];
+    const options: string[] = [];
+    const globalOptions: string[] = [];
+    const subCommands: string[] = [];
+
+    let optionsStarted = false;
+    let globalStarted = false;
+    let subCommandsStarted = false;
+    for (let i = 1; i < linesWithoutEmpty.length; i += 1) {
+      const currentLine = linesWithoutEmpty[i];
+      if (currentLine === STANDARD_GROUP) {
+        optionsStarted = true;
+      } else if (currentLine === GLOBAL_GROUP) {
+        globalStarted = true;
+      } else if (currentLine === 'Commands:') {
+        subCommandsStarted = true;
+      } else if (globalStarted) {
+        globalOptions.push(currentLine);
+      } else if (optionsStarted) {
+        options.push(currentLine);
+      } else if (subCommandsStarted) {
+        subCommands.push(currentLine);
+      } else {
+        description.push(currentLine);
+      }
     }
+
+    // show the flags in green
+    const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
+    const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
+    const subCommandsStr = subCommands.length ? `\n${'Commands:'}\n${subCommands.join('\n')}\n` : '';
+    // show the description in yellow
+    const descriptionColored = description.map((desc) => chalk.yellow(desc));
+    if (command?.extendedDescription) {
+      descriptionColored.push(command?.extendedDescription);
+    }
+    const descriptionStr = descriptionColored.join('\n');
+    const globalOptionsStr = globalOptions.join('\n');
+
+    const finalOutput = `${cmdLine}
+
+${descriptionStr}
+${subCommandsStr}${optionsStr}
+${GLOBAL_GROUP}
+${globalOptionsStr}`;
+
+    // eslint-disable-next-line no-console
+    console.log(finalOutput);
   }
-  // eslint-disable-next-line no-console
-  console.log(lines.join('\n'));
+
+  private findCommandByArgv(): Command | undefined {
+    const args = process.argv.slice(2);
+    const enteredCommand = args[0];
+    const enteredSubCommand = args[1];
+    if (!enteredCommand) {
+      return undefined;
+    }
+    const isCommandMatch = (cmd: Command, str: string) => {
+      return (
+        cmd.name.startsWith(`${str} `) || // e.g. "tag <id>".startsWith("tag ")
+        cmd.name === str || // e.g. "globals" === "globals"
+        cmd.alias === str
+      ); // e.g. "t" === "t"
+    };
+    const command = this.commands.find((cmd) => isCommandMatch(cmd, enteredCommand));
+    if (!command) {
+      return undefined;
+    }
+    if (!command.commands || !enteredSubCommand) {
+      return command; // no sub-commands.
+    }
+    const subCommand = command.commands.find((cmd) => isCommandMatch(cmd, enteredSubCommand));
+    return subCommand || command;
+  }
 }

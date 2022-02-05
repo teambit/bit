@@ -47,7 +47,7 @@ describe('applyUpdates()', () => {
     const variantPoliciesByPatterns = {
       variant1: {
         dependencies: {
-          'variant1-runtime-dep1': '1.0.0',
+          'variant1-runtime-dep1': { version: '1.0.0', resolveFromEnv: true },
           'variant1-runtime-dep2': '1.0.0',
         },
         devDependencies: {
@@ -120,7 +120,7 @@ describe('applyUpdates()', () => {
     // @ts-ignore
     expect(variantPoliciesByPatterns.variant1).toStrictEqual({
       dependencies: {
-        'variant1-runtime-dep1': '2.0.0',
+        'variant1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
         'variant1-runtime-dep2': '1.0.0',
       },
       devDependencies: {
@@ -167,7 +167,7 @@ describe('applyUpdates()', () => {
     const componentPoliciesById = {
       component1: {
         dependencies: {
-          'component1-runtime-dep1': '1.0.0',
+          'component1-runtime-dep1': { version: '1.0.0', resolveFromEnv: true },
           'component1-runtime-dep2': '1.0.0',
         },
         devDependencies: {
@@ -213,7 +213,7 @@ describe('applyUpdates()', () => {
     expect(componentPoliciesById).toStrictEqual({
       component1: {
         dependencies: {
-          'component1-runtime-dep1': '2.0.0',
+          'component1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
           'component1-runtime-dep2': '1.0.0',
         },
         devDependencies: {
