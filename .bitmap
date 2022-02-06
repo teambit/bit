@@ -1553,7 +1553,7 @@
     },
     "ui/tree": {
         "scope": "teambit.design",
-        "version": "0.0.2",
+        "version": "0.0.4",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/tree"
     },
