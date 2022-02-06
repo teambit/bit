@@ -75,6 +75,7 @@
 
 .componentEnvTooltip {
   font-size: var(--bit-p-xs);
+  max-width: unset !important;
   .componentEnvTitle {
     font-size: var(--bit-p-xxs, 12px);
     color: #c9c3f6;
