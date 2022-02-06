@@ -17,10 +17,11 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   const { pathname } = useLocation();
 
   const activeComponent = useMemo(() => {
+    const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
     const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
+    const matcher = path.match(componentIdUrlRegex); // returns just tha part that matches the componentId section without /~compositions etc.
     const active = components.find((x) => {
-      // TODO - reuse logic from component.route.ts
-      return path && path === x.id.fullName;
+      return matcher && matcher[0] === x.id.fullName;
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
