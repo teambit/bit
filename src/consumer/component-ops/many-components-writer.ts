@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -411,7 +412,14 @@ to move all component files to a different directory, run bit remove and then bi
         installProdPackagesOnly: this.installProdPackagesOnly,
       });
     } else {
-      await ManyComponentsWriter.externalInstaller?.install();
+      try {
+        await ManyComponentsWriter.externalInstaller?.install();
+      } catch (err: any) {
+        logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
+        throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
+error from the package-manager: ${err.message}.
+please use the '--log=error' flag for the full error.`);
+      }
       // this compiles all components on the workspace, not only the imported ones.
       // reason being is that the installed above deletes all dists dir of components that are somehow part of the
       // dependency graph. not only the imported components.

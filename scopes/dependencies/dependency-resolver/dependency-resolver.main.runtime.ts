@@ -75,6 +75,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
+import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -820,6 +821,18 @@ export class DependencyResolverMain {
     return this.rootPolicyRegistry.register(policy);
   }
 
+  async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
+    if (env.getDependencies && typeof env.getDependencies === 'function') {
+      const policiesFromEnvConfig = await env.getDependencies();
+      if (policiesFromEnvConfig) {
+        const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(policiesFromEnvConfig);
+        return allPoliciesFromEnv;
+      }
+    }
+    return new EnvPolicyFactory().getEmpty();
+  }
+
   /**
    * Merge the dependencies provided by:
    * 1. envs configured in the component - via dependencies method
@@ -829,16 +842,10 @@ export class DependencyResolverMain {
    */
   async mergeVariantPolicies(configuredExtensions: ExtensionDataList): Promise<VariantPolicy> {
     const variantPolicyFactory = new VariantPolicyFactory();
-    let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
-    if (env.getDependencies && typeof env.getDependencies === 'function') {
-      const policiesFromEnvConfig = await env.getDependencies();
-      if (policiesFromEnvConfig) {
-        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig, 'env');
-      }
-    }
+    const policiesFromEnv: VariantPolicy = (await this.getComponentEnvPolicyFromExtension(configuredExtensions))
+      ?.variantPolicy;
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
@@ -1163,6 +1170,10 @@ export class DependencyResolverMain {
     DependencyResolver.registerWorkspacePolicyGetter(() => {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
+    });
+    DependencyResolver.registerHarmonyEnvPeersPolicyGetter(async (configuredExtensions: ExtensionDataList) => {
+      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
+      return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));

@@ -165,7 +165,7 @@ class BitLogger implements IBitLogger {
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
-      this.logger[level](`[+] CLI-OUTPUT: ${cliOutput}`);
+      this.logger.info(`[+] CLI-OUTPUT: ${cliOutput}`);
     }
     const msg = isSuccess
       ? `[*] the command "${commandName}" has been completed successfully`

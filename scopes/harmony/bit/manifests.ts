@@ -72,6 +72,7 @@ import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
 import { ComponentLogAspect } from '@teambit/component-log';
+import { ClearCacheAspect } from '@teambit/clear-cache';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { BitAspect } from './bit.aspect';
 
@@ -150,6 +151,7 @@ export const manifestsMap = {
   [RenamingAspect.id]: RenamingAspect,
   [NewComponentHelperAspect.id]: NewComponentHelperAspect,
   [ComponentLogAspect.id]: ComponentLogAspect,
+  [ClearCacheAspect.id]: ClearCacheAspect,
 };
 
 export function isCoreAspect(id: string) {
