@@ -14,6 +14,11 @@ export type Asset = {
    * size of the asset in bytes.
    */
   size: number;
+
+  /**
+   * size of the compressed asset in bytes.
+   */
+  compressedSize?: number;
 };
 
 export type ChunksAssetsMap = {
@@ -24,7 +29,9 @@ export type EntryAssets = {
   assets: Asset[];
   auxiliaryAssets: Asset[];
   assetsSize: number;
+  compressedAssetsSize?: number;
   auxiliaryAssetsSize: number;
+  compressedAuxiliaryAssetsSize: number;
 };
 
 export type EntriesAssetsMap = {
