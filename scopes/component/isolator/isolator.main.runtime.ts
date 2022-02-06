@@ -14,6 +14,8 @@ import {
   DependencyList,
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
+  EnvPolicy,
+  PeersAutoDetectPolicy,
 } from '@teambit/dependency-resolver';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -58,6 +60,7 @@ export type IsolateComponentsInstallOptions = {
   dedupe?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
+  installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
 };
 
@@ -140,6 +143,7 @@ type CapsulePackageJsonData = {
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   installPackages: true,
   dedupe: true,
+  installPeersFromEnvs: true,
   copyPeerToRuntimeOnComponents: false,
   copyPeerToRuntimeOnRoot: true,
 };
@@ -284,14 +288,16 @@ export class IsolatorMain {
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
 
-    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
     };
+
     const packageManagerInstallOptions = {
       dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
     };
     await installer.install(
       capsulesDir,
@@ -312,7 +318,7 @@ export class IsolatorMain {
       rootDir: capsulesDir,
       linkingOptions,
     });
-    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
@@ -354,7 +360,7 @@ export class IsolatorMain {
     );
   }
 
-  private getPeersOnlyPolicy(): WorkspacePolicy {
+  private getWorkspacePeersOnlyPolicy(): WorkspacePolicy {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
     return peerOnlyPolicy;

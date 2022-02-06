@@ -4,7 +4,7 @@ import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambi
 import type { ConfigMain } from '@teambit/config';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -76,6 +76,7 @@ import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
+import Environment from '../../../src/environment';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -823,6 +824,15 @@ export class DependencyResolverMain {
 
   async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
     const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
+    const env = this.envs.getEnv(component).env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  private async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
