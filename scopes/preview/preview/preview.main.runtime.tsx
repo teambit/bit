@@ -65,8 +65,11 @@ export type ComponentPreviewSize = {
   files: ComponentPreviewSizedFile[];
   assets: ComponentPreviewSizedFile[];
   totalFiles: number;
+  compressedTotalFiles?: number;
   totalAssets: number;
+  compressedTotalAssets?: number;
   total: number;
+  compressedTotal?: number;
 };
 
 export type ComponentPreviewMetaData = {
