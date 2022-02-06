@@ -146,7 +146,6 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
-        "@testing-library/jest-dom": "5.11.10",
         "@testing-library/jest-native": "4.0.1",
         "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",
@@ -347,6 +346,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
+        "@testing-library/jest-dom": "5.11.10",
         "@apollo/client": "^3.0.0",
         "@teambit/legacy": "1.0.216",
         "browserslist": "4.16.3",
