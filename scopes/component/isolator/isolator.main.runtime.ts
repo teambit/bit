@@ -14,8 +14,6 @@ import {
   DependencyList,
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
-  EnvPolicy,
-  PeersAutoDetectPolicy,
 } from '@teambit/dependency-resolver';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';

@@ -76,7 +76,6 @@ import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
-import Environment from '../../../src/environment';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
