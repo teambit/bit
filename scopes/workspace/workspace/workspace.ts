@@ -1635,14 +1635,7 @@ export class Workspace implements ComponentFactory {
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
     };
-    await installer.install(
-      this.path,
-      mergedRootPolicy,
-      undefined,
-      compDirMap,
-      { installTeambitBit: false },
-      pmInstallOptions
-    );
+    await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
