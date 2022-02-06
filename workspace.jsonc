@@ -146,7 +146,6 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
-        "@testing-library/jest-dom": "5.11.10",
         "@testing-library/jest-native": "4.0.1",
         "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",
@@ -213,6 +212,7 @@
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "command-exists": "1.2.9",
+        "compression-webpack-plugin": "9.2.0",
         "copy-to-clipboard": "3.3.1",
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
@@ -346,8 +346,9 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
+        "@testing-library/jest-dom": "5.11.10",
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.215",
+        "@teambit/legacy": "1.0.216",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -418,7 +419,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.215"
+            "@teambit/legacy": "1.0.216"
           }
         }
       },
@@ -665,7 +666,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.215"
+            "@teambit/legacy": "1.0.216"
           }
         }
       }
@@ -722,7 +723,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.215",
+            "@teambit/legacy": "1.0.216",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -830,7 +831,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.215"
+            "@teambit/legacy": "1.0.216"
           }
         }
       }

@@ -55,6 +55,23 @@ export class PeersAutoDetectPolicy {
       return acc;
     }, {});
   }
+
+  toVersionManifest(): { [name: string]: string } {
+    return this.entries.reduce((acc, entry) => {
+      acc[entry.name] = entry.version;
+      return acc;
+    }, {});
+  }
+
+  static mergePolices(policies: PeersAutoDetectPolicy[]): PeersAutoDetectPolicy {
+    let allEntries: PeersAutoDetectPolicyEntry[] = [];
+    allEntries = policies.reduce((acc, curr) => {
+      return acc.concat(curr.entries);
+    }, allEntries);
+    // We reverse it to make sure the latest policy will be stronger in case of conflict
+    allEntries = allEntries.reverse();
+    return new PeersAutoDetectPolicy(allEntries);
+  }
 }
 
 function uniqEntries(entries: Array<PeersAutoDetectPolicyEntry>): Array<PeersAutoDetectPolicyEntry> {

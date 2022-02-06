@@ -2,7 +2,7 @@ import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy } from '../policy';
+import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
 
 import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import { ComponentsManifestsMap } from '../types';
@@ -57,6 +57,7 @@ export class WorkspaceManifestFactory {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();
       dedupedDependencies.componentDependenciesMap = componentDependenciesMap;
     }
+    const envPeers = await this.getEnvsPeersPolicy(components);
     const componentsManifestsMap = getComponentsManifests(
       dedupedDependencies,
       components,
@@ -66,10 +67,22 @@ export class WorkspaceManifestFactory {
       name,
       version,
       dedupedDependencies.rootDependencies,
+      envPeers,
       rootDir,
       componentsManifestsMap
     );
     return workspaceManifest;
+  }
+
+  private async getEnvsPeersPolicy(components: Component[]) {
+    const foundEnvs: EnvPolicy[] = await Promise.all(
+      components.map((component) => this.dependencyResolver.getComponentEnvPolicy(component))
+    );
+    const peersPolicies = foundEnvs.map((policy) => policy.peersAutoDetectPolicy);
+    // TODO: At the moment we are just merge everything, so in case of conflicts one will be taken
+    // TODO: once we have root for each env, we should know to handle it differently
+    const mergedPolicies = PeersAutoDetectPolicy.mergePolices(peersPolicies);
+    return mergedPolicies;
   }
 
   /**

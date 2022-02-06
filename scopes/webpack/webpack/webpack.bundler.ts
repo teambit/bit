@@ -1,9 +1,11 @@
 import { BitError } from '@teambit/bit-error';
-import type { Bundler, BundlerResult, Asset, Target } from '@teambit/bundler';
+import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap } from '@teambit/bundler';
 import type { Logger } from '@teambit/logger';
+import { isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation } from 'webpack';
 
+type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
   constructor(
     /**
@@ -32,6 +34,8 @@ export class WebpackBundler implements Bundler {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
+          // console.log('err webpack', err);
+
           if (err) {
             this.logger.error('get error from webpack compiler, full error:', err);
 
@@ -43,10 +47,15 @@ export class WebpackBundler implements Bundler {
           if (!stats) throw new BitError('unknown build error');
           const info = stats.toJson();
 
+          // console.log(JSON.stringify(info, null, 2));
+
+          const assetsMap = this.getAssets(info);
+          const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
+
           return resolve({
-            assets: this.getAssets(info),
+            assets: Object.values(assetsMap),
             assetsByChunkName: info.assetsByChunkName,
-            entriesAssetsMap: info.entrypoints,
+            entriesAssetsMap,
             errors: info.errors,
             outputPath: stats.compilation.outputOptions.path,
             components,
@@ -61,14 +70,53 @@ export class WebpackBundler implements Bundler {
     return componentOutput as BundlerResult[];
   }
 
-  private getAssets(stats: StatsCompilation): Asset[] {
-    if (!stats.assets) return [];
-    return stats.assets.map((asset) => {
-      return {
+  private getAssets(stats: StatsCompilation): AssetsMap {
+    if (!stats.assets) return {};
+    return stats.assets.reduce((acc, asset) => {
+      acc[asset.name] = {
         name: asset.name,
         size: asset.size,
+        compressedSize: this.getCompressedSize(asset),
       };
+      return acc;
+    }, {});
+  }
+
+  private getEntriesAssetsMap(stats: StatsCompilation, assetsMap: AssetsMap): EntriesAssetsMap {
+    const entriesMap = stats.entrypoints;
+    if (!entriesMap) return {};
+    Object.entries(entriesMap).forEach(([, entryVal]) => {
+      let compressedAssetsSize = 0;
+      let compressedAuxiliaryAssetsSize = 0;
+      entryVal.assets?.forEach((asset) => {
+        const compressedSize = assetsMap[asset.name].compressedSize;
+        if (compressedSize) {
+          // @ts-ignore
+          asset.compressedSize = compressedSize;
+          compressedAssetsSize += compressedSize;
+        }
+      });
+      entryVal.auxiliaryAssets?.forEach((asset) => {
+        const compressedSize = assetsMap[asset.name].compressedSize;
+        if (compressedSize) {
+          // @ts-ignore
+          asset.compressedSize = compressedSize;
+          compressedAuxiliaryAssetsSize += compressedSize;
+        }
+      });
+      entryVal.compressedAssetsSize = compressedAssetsSize;
+      entryVal.compressedAuxiliaryAssetsSize = compressedAuxiliaryAssetsSize;
     });
+    return entriesMap as any as EntriesAssetsMap;
+  }
+
+  private getCompressedSize(asset): number | undefined {
+    if (!asset.related || isEmpty(asset.related)) return undefined;
+    const gzipped = asset.related.find((relatedAsset) => {
+      return relatedAsset.type === 'gzipped';
+    });
+    if (!gzipped) return undefined;
+    return gzipped.size;
   }
 
   private getComponents(outputPath: string) {
