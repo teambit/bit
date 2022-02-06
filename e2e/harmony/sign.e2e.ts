@@ -71,6 +71,21 @@ describe('sign command', function () {
       expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
     });
   });
+  describe('without specifying the ids', () => {
+    let signOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // console.log('sign-command', `bit sign ${ids.join(' ')}`);
+      signOutput = helper.command.sign([], '', helper.scopes.remotePath);
+    });
+    it('should sign successfully', () => {
+      expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
+    });
+  });
   describe('failure case', () => {
     let signOutput: string;
     before(() => {

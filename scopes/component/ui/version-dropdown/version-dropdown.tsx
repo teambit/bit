@@ -1,5 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -8,12 +8,15 @@ import React from 'react';
 
 import styles from './version-dropdown.module.scss';
 
+const LOCAL_VERSION = 'workspace';
+
 type VersionDropdownProps = {
   versions: string[];
   currentVersion?: string;
+  latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function VersionDropdown({ versions, currentVersion }: VersionDropdownProps) {
+export function VersionDropdown({ versions, currentVersion, latestVersion }: VersionDropdownProps) {
   if (versions.length < 2) {
     return (
       <div className={styles.noVersions}>
@@ -21,6 +24,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
       </div>
     );
   }
+
   return (
     <div className={styles.versionDropdown}>
       <Dropdown
@@ -37,14 +41,15 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
               const isCurrent = version === currentVersion;
+
               return (
                 <NavLink
-                  to={`?version=${version}`}
+                  href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
                   key={index}
                   className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
                 >
                   <span className={styles.version}>{version}</span>
-                  {index === 0 && <VersionLabel className={styles.label} status="latest" />}
+                  {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
                   {/* {version === currentVersion && <VersionLabel className={styles.label} status="checked-out" />} */}
                 </NavLink>
               );

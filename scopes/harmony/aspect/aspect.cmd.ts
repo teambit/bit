@@ -1,29 +1,45 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
-  name = 'list <component-id>';
-  description = 'list all aspect names configured on a component';
-  options = [];
+  name = 'list [pattern]';
+  description = 'list all aspects configured on component(s)';
+  options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
   group = 'development';
+  extendedDescription = `${PATTERN_HELP('aspect list')}`;
 
   constructor(private aspect: AspectMain) {}
 
-  async report([name]: [string]) {
-    const aspectIds = await this.aspect.listAspectsOfComponent(name);
-    return aspectIds.join('\n');
+  async report([name]: [string], { debug }: { debug: boolean }) {
+    const listAspectsResults = await this.aspect.listAspectsOfComponent(name);
+    const rows = Object.keys(listAspectsResults).map((componentId) => {
+      const longestAspectName = Math.max(...listAspectsResults[componentId].map((_) => _.aspectName.length));
+      const aspects = listAspectsResults[componentId]
+        .map((aspectSource) => {
+          const origin = debug ? ` (origin: ${aspectSource.source})` : '';
+          const aspectName = aspectSource.aspectName.padEnd(longestAspectName);
+          return `${aspectName} (level: ${aspectSource.level})${origin}`;
+        })
+        .join('\n');
+
+      return [componentId, aspects];
+    });
+    const table = new CLITable([], rows);
+    return table.render();
   }
 }
 
 export class SetAspectCmd implements Command {
   name = 'set <pattern> <aspect-id> [config]';
-  description = `set an aspect to component(s) with optional config.
-enter the config as stringified JSON (e.g. '{"foo":"bar"}' ).
-if no config entered, the aspect will be set with empty config ({}).`;
-  shortDescription = 'set an aspect to component(s) with optional config';
+  description = 'set an aspect to component(s) with optional config.';
+  extendedDescription = `enter the config as stringified JSON (e.g. '{"foo":"bar"}' ).
+if no config entered, the aspect will be set with empty config ({}).
+${PATTERN_HELP('aspect set')}`;
   options = [];
   group = 'development';
 
@@ -40,6 +56,7 @@ if no config entered, the aspect will be set with empty config ({}).`;
 export class UnsetAspectCmd implements Command {
   name = 'unset <pattern> <aspect-id>';
   description = `unset an aspect from component(s).`;
+  extendedDescription = `${PATTERN_HELP('aspect unset')}`;
   options = [];
   group = 'development';
 

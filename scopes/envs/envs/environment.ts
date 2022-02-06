@@ -8,7 +8,7 @@ import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
-import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { ElementsWrapperContext } from '@teambit/elements';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
@@ -56,7 +56,7 @@ export interface DependenciesEnv extends Environment {
    * Returns the list of dependencies
    * Required for any task
    */
-  getDependencies?: () => VariantPolicyConfigObject | Promise<VariantPolicyConfigObject>;
+  getDependencies?: () => EnvPolicyConfigObject | Promise<EnvPolicyConfigObject>;
 }
 
 export type GetNpmIgnoreContext = {

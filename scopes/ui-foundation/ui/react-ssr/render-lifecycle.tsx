@@ -1,9 +1,11 @@
 import { ReactNode, ComponentType } from 'react';
-import { BrowserData } from './ssr/request-browser';
-import { RequestServer } from './ssr/request-server';
-import { ContextProps } from './ui.ui.runtime';
+import { BrowserData } from './request-browser';
+import { RequestServer } from './request-server';
 
-export type RenderLifecycle<RenderCtx = any, Serialized = any> = {
+export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
+
+/** Plugins for each step of the SSR and regular rendering lifecycle */
+export type RenderPlugins<RenderCtx = any, Serialized = any> = {
   /**
    * Initialize a context state for this specific rendering.
    * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.

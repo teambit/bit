@@ -11,7 +11,7 @@ import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvsMain } from '@teambit/envs';
 import { join } from 'path';
-import { compact } from 'lodash';
+import { cloneDeep, compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { PreviewDefinition } from '.';
@@ -98,7 +98,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     );
 
     if (!targets.length) return { componentsResults: [] };
-    const bundlerContext: BundlerContext = Object.assign({}, context, {
+    const bundlerContext: BundlerContext = Object.assign(cloneDeep(context), {
       targets,
       entry: [],
       externalizePeer: false,

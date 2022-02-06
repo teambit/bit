@@ -10,7 +10,7 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
-import { createSsrMiddleware } from './ssr/render-middleware';
+import { createSsrMiddleware } from './ssr-middleware';
 import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';

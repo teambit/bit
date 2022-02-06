@@ -6,7 +6,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
@@ -14,6 +14,8 @@ import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
 import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd } from './aspect.cmd';
+
+export type AspectSource = { aspectName: string; source: string; level: string };
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -27,12 +29,46 @@ export class AspectMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.aspectEnv), transformers);
   }
 
-  async listAspectsOfComponent(id: string | ComponentID): Promise<string[]> {
-    if (typeof id === 'string') {
-      id = await this.workspace.resolveComponentId(id);
+  async listAspectsOfComponent(pattern?: string): Promise<{ [component: string]: AspectSource[] }> {
+    const getIds = async () => {
+      if (!pattern) return this.workspace.listIds();
+      return this.workspace.idsByPattern(pattern);
+    };
+    const componentIds = await getIds();
+    const results = {};
+    await Promise.all(
+      componentIds.map(async (id) => {
+        const aspectSources = await this.getAspectNamesForComponent(id);
+        results[id.toString()] = aspectSources;
+      })
+    );
+    return results;
+  }
+
+  private async getAspectNamesForComponent(id: ComponentID): Promise<AspectSource[]> {
+    const componentFromScope = await this.workspace.scope.get(id);
+    const { beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
+    const aspectSources: AspectSource[] = [];
+    beforeMerge.forEach((source) => {
+      source.extensions.forEach((ext) => {
+        const aspectName = ext.name || ext.extensionId?.toString() || '<no-name>';
+        const alreadySaved = aspectSources.find((_) => _.aspectName === aspectName);
+        if (alreadySaved) return;
+        aspectSources.push({ aspectName, source: source.origin, level: this.getLevelBySourceOrigin(source.origin) });
+      });
+    });
+    return aspectSources;
+  }
+
+  private getLevelBySourceOrigin(origin: ExtensionsOrigin) {
+    switch (origin) {
+      case 'BitmapFile':
+      case 'ComponentJsonFile':
+      case 'ModelSpecific':
+        return 'component';
+      default:
+        return 'workspace';
     }
-    const component = await this.workspace.get(id);
-    return component.state.aspects.ids;
   }
 
   async setAspectsToComponents(
@@ -40,8 +76,7 @@ export class AspectMain {
     aspectId: string,
     config: Record<string, any> = {}
   ): Promise<ComponentID[]> {
-    const components = await this.workspace.byPattern(pattern);
-    const componentIds = components.map((comp) => comp.id);
+    const componentIds = await this.workspace.idsByPattern(pattern);
     componentIds.forEach((componentId) => {
       this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
     });
@@ -51,10 +86,9 @@ export class AspectMain {
   }
 
   async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
-    const components = await this.workspace.byPattern(pattern);
-    const componentIds = components.map((comp) => comp.id);
+    const componentIds = await this.workspace.idsByPattern(pattern);
     componentIds.forEach((componentId) => {
-      this.workspace.bitMap.removeComponentConfig(componentId, aspectId);
+      this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
     });
     await this.workspace.bitMap.write();
 

@@ -1,4 +1,4 @@
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
@@ -113,7 +113,7 @@ export class NodeMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.nodeEnv.getDependencies()),
     });

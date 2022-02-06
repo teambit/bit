@@ -234,17 +234,14 @@ export async function getComponentStatus(
   }
   const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
   const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
-  const currentComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
-  // threeWayMerge expects `otherComponent` to be Component and `currentComponent` to be Version
-  // since it doesn't matter whether we take the changes from base to current or the changes from
-  // base to other, here we replace the two. the result is going to be the same.
+  const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
   const mergeResults = await threeWayMerge({
     consumer,
-    otherComponent: component, // this is actually the current
+    otherComponent,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    otherLabel: `${currentlyUsedVersion} (local)`,
-    currentComponent, // this is actually the other
-    currentLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
+    otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
+    currentComponent: component,
+    currentLabel: `${currentlyUsedVersion} (local)`,
     baseComponent,
   });
   return { componentFromFS: component, id, mergeResults };

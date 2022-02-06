@@ -34,6 +34,7 @@ export class ComponentPreviewRoute implements Route {
           isLegacyPath = true;
           artifact = await this.preview.getPreview(component);
         } catch (e: any) {
+          this.logger.error(`preview.getPreview has failed`, e);
           return res.status(404).send(noPreview());
         }
         // @ts-ignore
