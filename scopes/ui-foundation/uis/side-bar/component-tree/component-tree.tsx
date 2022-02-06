@@ -7,6 +7,8 @@ import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
+const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
+
 type ComponentTreeProps = {
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
@@ -17,11 +19,11 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   const { pathname } = useLocation();
 
   const activeComponent = useMemo(() => {
-    const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
+    const componentUrlRegex = new RegExp(componentIdUrlRegex);
     const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
-    const matcher = path.match(componentIdUrlRegex); // returns just tha part that matches the componentId section without /~compositions etc.
+    const matcher = path.match(componentUrlRegex)?.[0]; // returns just the part that matches the componentId section without /~compositions etc.
     const active = components.find((x) => {
-      return matcher && matcher[0] === x.id.fullName;
+      return matcher && matcher === x.id.fullName;
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
