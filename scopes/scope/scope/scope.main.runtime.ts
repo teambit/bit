@@ -577,7 +577,7 @@ export class ScopeMain implements ComponentFactory {
         // for some reason this needs to be false, otherwise tagging components in some workspaces
         // result in error during Preview task:
         // "No matching version found for <some-component-on-the-workspace>"
-        seedersOnly: false,
+        seedersOnly: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
         host: this,
@@ -615,7 +615,6 @@ export class ScopeMain implements ComponentFactory {
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
-
     return defs;
   }
 
