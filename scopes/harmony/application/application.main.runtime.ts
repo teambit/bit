@@ -129,32 +129,22 @@ export class ApplicationMain {
     };
   }
 
-  async runApp(appName: string, options: Partial<ServeAppOptions> = {}) {
+  async runApp(appName: string, options: Partial<ServeAppOptions> & { skipWatch?: boolean } = {}) {
     const app = this.getAppOrThrow(appName);
     this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
     const port = await app.run(context);
-    this.workspace.watcher
-      .watchAll({
-        spawnTSServer: true,
-        checkTypes: undefined,
-        preCompile: false,
-        msgs: {
-          onAll: () => {},
-          onStart: () => {},
-          onReady: () => {},
-          onChange: () => {},
-          onAdd: () => {},
-          onError: () => {},
-          onUnlink: () => {},
-        },
-        // initiator: CompilationInitiator.Start,
-      })
-      .catch((err) => {
-        // don't throw an error, we don't want to break the "run" process
-        this.logger.error(`compilation failed`, err);
-      });
+    if (!options.skipWatch) {
+      this.workspace.watcher
+        .watchAll({
+          preCompile: false,
+        })
+        .catch((err) => {
+          // don't throw an error, we don't want to break the "run" process
+          this.logger.error(`compilation failed`, err);
+        });
+    }
     return { app, port };
   }
 
