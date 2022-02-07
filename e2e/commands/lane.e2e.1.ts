@@ -718,6 +718,20 @@ describe('bit lane command', function () {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
     });
   });
+  describe('main => lane => main => lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.switchLocalLane('main');
+    });
+    // previously it errored with "error: version "latest" of component comp1 was not found."
+    it('should be able to switch back to the lane with no error', () => {
+      expect(() => helper.command.switchLocalLane('dev')).to.not.throw();
+    });
+  });
   describe('exporting a lane to a different scope than the component scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
