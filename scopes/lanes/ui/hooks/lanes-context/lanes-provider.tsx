@@ -2,7 +2,7 @@ import React, { ReactNode, useState, useContext, useMemo } from 'react';
 import { useLanes, LanesHost } from '@teambit/lanes.lanes.ui';
 import { ReactRouterUI, useLocation } from '@teambit/react-router';
 import { LanesContext, LanesContextType } from './lanes-context';
-import { groupByScope, LanesModel, groupByComponentHash, LaneModel } from './lanes-model';
+import { groupByScope, LanesModel, groupByComponentHash, LaneModel, baseLaneRoute } from './lanes-model';
 
 export type LanesProviderProps = {
   host: LanesHost;
@@ -20,9 +20,12 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
   let currentLaneFromURL: LaneModel | undefined;
 
   useMemo(() => {
-    currentLaneFromURL = model?.lanes?.list.find((lane) => {
-      return pathname && pathname.includes(lane.url);
-    });
+    currentLaneFromURL =
+      !!pathname && pathname.includes(baseLaneRoute)
+        ? model?.lanes?.list.find((lane) => {
+            return pathname.split(baseLaneRoute)[1] === lane.id;
+          })
+        : undefined;
     // redirect to the lane view only on a workspace when spinning up for the first time
     if (pathname === '/' && !currentLaneFromURL && !!model?.currentLane) {
       reactRouter.navigateTo(model?.currentLane.url);
