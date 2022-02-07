@@ -23,8 +23,18 @@ import { CheckTypes } from './check-types';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
+export type EventMessages = {
+  onAll: Function;
+  onStart: Function;
+  onReady: Function;
+  onChange: Function;
+  onAdd: Function;
+  onUnlink: Function;
+  onError: Function;
+};
+
 export type WatchOptions = {
-  msgs?: any;
+  msgs?: EventMessages;
   initiator?: CompilationInitiator;
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
@@ -59,6 +69,7 @@ export class Watcher {
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
+        // @ts-ignore
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
       watcher.on('ready', () => {
