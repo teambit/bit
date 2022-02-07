@@ -185,22 +185,6 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe('create a snap on a lane', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.setupDefault();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
-      helper.command.export();
-      helper.command.createLane();
-      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponentsWithoutBuild();
-    });
-    it('bitmap should have the version from main and not latest', () => {
-      const bitMap = helper.bitMap.readComponentsMapOnly();
-      expect(bitMap).to.not.be.string('latest');
-    });
-  });
   describe('importing lanes', () => {
     let appOutput: string;
     before(() => {
