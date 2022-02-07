@@ -1,5 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import { compact } from 'lodash';
 import R from 'ramda';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
@@ -136,26 +137,30 @@ export default class ImportCmd implements Command {
     let dependenciesOutput;
 
     if (importResults.dependencies && !R.isEmpty(importResults.dependencies)) {
-      const components = importResults.dependencies.map(R.prop('component'));
+      const components = importResults.dependencies.map((d) => d.component);
       const peerDependencies = R.flatten(
         importResults.dependencies.map(R.prop('dependencies')),
         importResults.dependencies.map(R.prop('devDependencies'))
       );
 
-      const title =
+      const titlePrefix =
         components.length === 1
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
+
+      let upToDateCount = 0;
       const componentDependencies = components.map((component) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        if (details.status === 'up to date') {
+          upToDateCount += 1;
+          return null;
+        }
         return formatPlainComponentItemWithVersions(component, details);
       });
-      const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
-
+      const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
+      const title = `${titlePrefix}${upToDateStr}`;
+      const componentDependenciesOutput = [chalk.green(title), ...compact(componentDependencies)].join('\n');
       const peerDependenciesOutput =
         peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies
           ? immutableUnshift(
