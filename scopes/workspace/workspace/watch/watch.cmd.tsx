@@ -20,7 +20,7 @@ export type WatchCmdOpts = {
 
 export class WatchCommand implements Command {
   msgs = {
-    onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
+    onAll: (event: string, path: string) => this.logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
       clearOutdatedData();
