@@ -179,8 +179,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
     }
-    // @ts-ignore
-    return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+  }
+  if (!existingBitMapId.hasVersion()) {
+    // happens when switching from main to a lane and a component was snapped on the lane.
+    // in the .bitmap file, the version is "latest" or empty. so we just need to write the component according to the
+    // model. we don't care about the componentFromFS
+    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
