@@ -3,7 +3,7 @@ import { flatten, cloneDeep } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
 import { ApplicationType } from './application-type';
@@ -20,6 +20,7 @@ import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
+import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -47,7 +48,9 @@ export class ApplicationMain {
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
     private appService: AppService,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private workspace: Workspace,
+    private logger: Logger
   ) {}
 
   /**
@@ -132,6 +135,26 @@ export class ApplicationMain {
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
     const port = await app.run(context);
+    this.workspace.watcher
+      .watchAll({
+        spawnTSServer: true,
+        checkTypes: undefined,
+        preCompile: false,
+        msgs: {
+          onAll: () => {},
+          onStart: () => {},
+          onReady: () => {},
+          onChange: () => {},
+          onAdd: () => {},
+          onError: () => {},
+          onUnlink: () => {},
+        },
+        // initiator: CompilationInitiator.Start,
+      })
+      .catch((err) => {
+        // don't throw an error, we don't want to break the "run" process
+        this.logger.error(`compilation failed`, err);
+      });
     return { app, port };
   }
 
@@ -166,7 +189,15 @@ export class ApplicationMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect, AspectLoaderAspect];
+  static dependencies = [
+    CLIAspect,
+    LoggerAspect,
+    BuilderAspect,
+    EnvsAspect,
+    ComponentAspect,
+    AspectLoaderAspect,
+    WorkspaceAspect,
+  ];
 
   static slots = [
     Slot.withType<ApplicationType<unknown>[]>(),
@@ -175,13 +206,14 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
       EnvsMain,
       ComponentMain,
-      AspectLoaderMain
+      AspectLoaderMain,
+      Workspace
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
@@ -195,7 +227,9 @@ export class ApplicationMain {
       envs,
       component,
       appService,
-      aspectLoader
+      aspectLoader,
+      workspace,
+      logger
     );
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];

@@ -23,19 +23,19 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report(
-    [appName]: [string],
-    { dev }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
-  ): Promise<string> {
-    this.logger.off();
+  // async report(
+  //   [appName]: [string],
+  //   { dev }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+  // ): Promise<string> {
+  //   this.logger.off();
 
-    const { port } = await this.application.runApp(appName, {
-      dev,
-    });
+  //   const { port } = await this.application.runApp(appName, {
+  //     dev,
+  //   });
 
-    if (port) return `${appName} app is running on http://localhost:${port}`;
-    return `${appName} app is running`;
-  }
+  //   if (port) return `${appName} app is running on http://localhost:${port}`;
+  //   return `${appName} app is running`;
+  // }
 
   async render(
     [appName]: [string],
