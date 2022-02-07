@@ -7,6 +7,7 @@ import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-ca
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
@@ -48,6 +49,7 @@ export function Overview({ titleBadges }: OverviewProps) {
             <span>{laneId}</span>
           </div>
         ) : null}
+        <Separator isPresentational />
         <ComponentOverview
           className={styles.componentOverviewBlock}
           displayName={component.displayName}
@@ -76,6 +78,7 @@ export function Overview({ titleBadges }: OverviewProps) {
             <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={laneId} />
             <span>{laneId}</span>
           </div>
+          <Separator isPresentational />
           <ComponentPreview
             component={component}
             style={{ width: '100%', height: '100%' }}
