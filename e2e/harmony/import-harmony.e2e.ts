@@ -149,8 +149,8 @@ describe('import functionality on Harmony', function () {
     });
     it('should not fetch existing versions, only the missing', () => {
       const importOutput = helper.command.import();
-      expect(importOutput).to.not.include('new versions: 0.0.1, 0.0.2, 0.0.3');
-      expect(importOutput).to.include('new versions: 0.0.3');
+      expect(importOutput).to.not.include('3 new version');
+      expect(importOutput).to.include('1 new version(s) available, latest 0.0.3');
     });
   });
   describe('multiple components some are directory of others', () => {

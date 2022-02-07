@@ -59,6 +59,7 @@ export type ImportStatus = 'added' | 'updated' | 'up to date';
 export type ImportDetails = {
   id: string;
   versions: string[];
+  latestVersion: string | null;
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
@@ -387,7 +388,7 @@ export default class ImportComponents {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new ShowDoctorError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
-      const versionDifference = R.difference(afterImportVersions, beforeImportVersions);
+      const versionDifference: string[] = R.difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
         if (!versionDifference.length) return 'up to date';
         if (!beforeImportVersions.length) return 'added';
@@ -395,9 +396,11 @@ export default class ImportComponents {
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
       const deprecated = await modelComponent.isDeprecated(this.scope.objects);
+      const latestVersion = modelComponent.latest();
       return {
         id: idStr,
         versions: versionDifference,
+        latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
         status: getStatus(),
         filesStatus,
         missingDeps: component.missingDependencies,
