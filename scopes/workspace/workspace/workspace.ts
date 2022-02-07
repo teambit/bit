@@ -728,6 +728,11 @@ export class Workspace implements ComponentFactory {
    * it supports negate (!) character to exclude ids.
    */
   async idsByPattern(pattern: string): Promise<ComponentID[]> {
+    if (!pattern.includes('*') && !pattern.includes(',')) {
+      // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
+      const id = await this.resolveComponentId(pattern);
+      return [id];
+    }
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
