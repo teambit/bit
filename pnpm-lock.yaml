@@ -108,7 +108,6 @@ importers:
       '@teambit/component.instructions.exporting-components': 0.0.6
       '@teambit/design.elements.icon': 1.0.5
       '@teambit/design.ui.icon-button': 1.0.10
-      '@teambit/design.ui.tree': 0.0.2
       '@teambit/documenter.code.react-playground': 4.0.1
       '@teambit/documenter.content.documentation-links': 4.0.1
       '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.3
@@ -679,7 +678,6 @@ importers:
       '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6_14a580466f3140800b5fb35bf889806e
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_react-dom@17.0.2+react@17.0.2
       '@teambit/design.ui.icon-button': registry.npmjs.org/@teambit/design.ui.icon-button/1.0.10_react-dom@17.0.2+react@17.0.2
-      '@teambit/design.ui.tree': registry.npmjs.org/@teambit/design.ui.tree/0.0.2_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.code.react-playground': registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_3696fb116d118c41d411583145c73552
       '@teambit/documenter.content.documentation-links': registry.npmjs.org/@teambit/documenter.content.documentation-links/4.0.1_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.markdown.hybrid-live-code-snippet': registry.npmjs.org/@teambit/documenter.markdown.hybrid-live-code-snippet/0.1.3_3696fb116d118c41d411583145c73552
@@ -10391,23 +10389,6 @@ packages:
       classnames: registry.npmjs.org/classnames/2.2.6
       core-js: registry.npmjs.org/core-js/3.13.0
       react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  registry.npmjs.org/@teambit/design.ui.tree/0.0.2_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-ZXU8AzF26d/dj36iR8eF57b8UL8A+NioK66PjGT+R3p4pMHvvbzsri2yb6O2gCsVVeqLBw9J86PkaOtG9L7flw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.tree/-/design.ui.tree-0.0.2.tgz}
-    id: registry.npmjs.org/@teambit/design.ui.tree/0.0.2
-    name: '@teambit/design.ui.tree'
-    version: 0.0.2
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.elements.icon': registry.npmjs.org/@teambit/base-ui.elements.icon/1.0.0_react-dom@17.0.2+react@17.0.2
-      core-js: registry.npmjs.org/core-js/3.20.3
-      react: registry.npmjs.org/react/17.0.2
-      react-animate-height: registry.npmjs.org/react-animate-height/2.0.23_react-dom@17.0.2+react@17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
