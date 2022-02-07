@@ -21,7 +21,7 @@ export type SideBarProps = {
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   const drawers = flatten(drawerSlot.values());
-  const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>([drawers[0]?.id]);
+  const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
   const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {

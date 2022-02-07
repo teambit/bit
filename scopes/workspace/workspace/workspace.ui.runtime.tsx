@@ -212,12 +212,10 @@ export class WorkspaceUI {
       },
     ]);
 
-    workspaceUI.routeSlot.register([
-      {
-        path: workspaceUI.componentUi.routePath,
-        children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
-      },
-    ]);
+    workspaceUI.routeSlot.register({
+      path: workspaceUI.componentUi.routePath,
+      children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
+    });
     return workspaceUI;
   }
 }

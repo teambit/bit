@@ -51,18 +51,6 @@ export class LanesUI {
   private readonly hostAspect?: WorkspaceUI | ScopeUI;
   private readonly host: string;
 
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
-    return this;
-  }
-
-  registerNavigation(nav: NavLinkProps, order?: number) {
-    this.navSlot.register({
-      props: nav,
-      order,
-    });
-  }
-
   private registerExplicitHostRoutes() {
     if (this.hostAspect) {
       this.hostAspect.registerRoutes([
@@ -104,16 +92,28 @@ export class LanesUI {
     this.registerExplicitLanesRoutes();
   }
 
+  private renderContext = ({ children }: { children: ReactNode }) => {
+    return LanesProvider({ host: this.lanesHost, reactRouter: this.reactRouter, children });
+  };
+
+  registerRoute(route: RouteProps) {
+    this.routeSlot.register(route);
+    return this;
+  }
+
+  registerNavigation(nav: NavLinkProps, order?: number) {
+    this.navSlot.register({
+      props: nav,
+      order,
+    });
+  }
+
   registerDrawers(...drawers: DrawerType[]) {
     if (this.hostAspect) {
       this.hostAspect.registerDrawers(...drawers);
     }
     return this;
   }
-
-  private renderContext = ({ children }: { children: ReactNode }) => {
-    return LanesProvider({ host: this.lanesHost, reactRouter: this.reactRouter, children });
-  };
 
   static async provider(
     [uiUi, reactRouter, componentUi]: [UiUI, ReactRouterUI, ComponentUI],
