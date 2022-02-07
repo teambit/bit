@@ -1,9 +1,11 @@
 import { ComponentModel } from '@teambit/component';
-import React, { useMemo } from 'react';
+import React, { useMemo, useContext } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
@@ -17,6 +19,7 @@ type ComponentTreeProps = {
 
 export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
+  const { updateCurrentLane } = useContext(LanesContext);
 
   const activeComponent = useMemo(() => {
     const componentUrlRegex = new RegExp(componentIdUrlRegex);
@@ -27,7 +30,9 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
-
+  const onSelect = () => {
+    updateCurrentLane(undefined);
+  };
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -39,9 +44,11 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   }, [components]);
 
   return (
-    <div style={indentStyle(1)}>
-      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
-    </div>
+    <TreeContextProvider onSelect={onSelect}>
+      <div style={indentStyle(1)}>
+        <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
+      </div>
+    </TreeContextProvider>
   );
 }
 

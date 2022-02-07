@@ -28,6 +28,7 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
         : undefined;
     // when on a workspace, the home page (root route) defauts to the current lane view
     if (pathname === '/' && !currentLaneFromURL && !!model?.currentLane) {
+      currentLaneFromURL = model.currentLane;
       reactRouter.navigateTo(model?.currentLane.url);
     }
   }, [pathname, model]);
@@ -36,7 +37,7 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
     ...defaultContext,
     model: {
       ...model,
-      currentLane: currentLaneFromURL || model?.currentLane,
+      currentLane: pathname === '/' || pathname.includes(baseLaneRoute) ? model.currentLane : currentLaneFromURL,
     },
     getLaneComponentUrl: (componentId, laneId) => {
       if (laneId) return defaultContext.getLaneComponentUrl(componentId, laneId);
