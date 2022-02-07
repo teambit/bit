@@ -3,11 +3,16 @@ import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
-import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import {
+  ImportOptions,
+  ImportDetails,
+  ImportStatus,
+} from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
+import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
@@ -154,7 +159,6 @@ export default class ImportCmd implements Command {
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
         if (details.status === 'up to date') {
           upToDateCount += 1;
-          return null;
         }
         return formatPlainComponentItemWithVersions(component, details);
       });
@@ -179,4 +183,39 @@ export default class ImportCmd implements Command {
 
     return getImportOutput();
   }
+}
+
+function formatPlainComponentItemWithVersions(component: ConsumerComponent, importDetails: ImportDetails) {
+  const status: ImportStatus = importDetails.status;
+  const id = component.id.toStringWithoutVersion();
+  const getVersionsOutput = () => {
+    if (!importDetails.versions.length) return '';
+    if (importDetails.latestVersion) {
+      return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
+    }
+    return `new versions: ${importDetails.versions.join(', ')}`;
+  };
+  const versions = getVersionsOutput();
+  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const getConflictMessage = () => {
+    if (!importDetails.filesStatus) return '';
+    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
+    if (!conflictedFiles.length) return '';
+    return `(the following files were saved with conflicts ${conflictedFiles
+      .map((file) => chalk.bold(file))
+      .join(', ')}) `;
+  };
+  const conflictMessage = getConflictMessage();
+  const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const missingDeps = importDetails.missingDeps.length
+    ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
+    : '';
+  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage) {
+    return undefined;
+  }
+  return `- ${chalk.green(status)} ${chalk.cyan(
+    id
+  )} ${versions}${usedVersion} ${conflictMessage}${deprecated} ${missingDeps}`;
 }

@@ -25,13 +25,7 @@ export const formatPlainComponentItem = ({ scope, name, version, deprecated }: a
 export const formatPlainComponentItemWithVersions = (component: Component, importDetails: ImportDetails) => {
   const status: ImportStatus = importDetails.status;
   const id = component.id.toStringWithoutVersion();
-  const getVersionsOutput = () => {
-    if (!importDetails.versions.length) return '';
-    if (importDetails.latestVersion)
-      return `${importDetails.versions.length} new versions available, latest ${importDetails.latestVersion}`;
-    return `new versions: ${importDetails.versions.join(', ')}`;
-  };
-  const versions = getVersionsOutput();
+  const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
   // $FlowFixMe component.version should be set here
   const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
   const getConflictMessage = () => {
