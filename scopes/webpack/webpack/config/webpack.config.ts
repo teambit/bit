@@ -3,6 +3,7 @@ import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
+import CompressionPlugin from 'compression-webpack-plugin';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WebpackAssetsManifest from 'webpack-assets-manifest';
@@ -18,6 +19,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   }
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;
+  const compress = target.compress ?? context.compress;
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
   const shouldExternalizePeers =
     (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
@@ -84,6 +86,12 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       config.plugins = [];
     }
     config.plugins = config.plugins.concat(htmlPlugins);
+  }
+  if (compress) {
+    if (!config.plugins) {
+      config.plugins = [];
+    }
+    config.plugins = config.plugins.concat(new CompressionPlugin());
   }
   if (externals) {
     config.externals = externals;

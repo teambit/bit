@@ -221,17 +221,22 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       return {
         name: basename(file.name),
         size: file.size,
+        compressedSize: file.compressedSize,
       };
     });
     const filesTotalSize = result.entriesAssetsMap[componentEntryId]?.assetsSize || 0;
+    const compressedTotalFiles = result.entriesAssetsMap[componentEntryId]?.compressedAssetsSize || 0;
     const assets = (result.entriesAssetsMap[componentEntryId]?.auxiliaryAssets || []).map((file) => {
       return {
         name: basename(file.name),
         size: file.size,
+        compressedSize: file.compressedSize,
       };
     });
     const assetsTotalSize = result.entriesAssetsMap[componentEntryId]?.auxiliaryAssetsSize || 0;
+    const compressedTotalAssets = result.entriesAssetsMap[componentEntryId]?.compressedAuxiliaryAssetsSize || 0;
     const totalSize = filesTotalSize + assetsTotalSize;
+    const compressedTotal = compressedTotalFiles + compressedTotalAssets;
 
     const metadata = {
       [COMPONENT_STRATEGY_SIZE_KEY_NAME]: {
@@ -240,8 +245,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         totalFiles: filesTotalSize,
         totalAssets: assetsTotalSize,
         total: totalSize,
+        compressedTotalFiles,
+        compressedTotalAssets,
+        compressedTotal,
       },
     };
+
     return metadata;
   }
 

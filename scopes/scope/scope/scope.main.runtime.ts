@@ -224,6 +224,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   clearCache() {
+    this.logger.debug('clearing the components and the legacy cache');
     this.componentLoader.clearCache();
     this.legacyScope.objects.clearCache();
   }

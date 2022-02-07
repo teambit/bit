@@ -58,6 +58,9 @@ type QueryResults = {
       compositions: {
         identifier: string;
       }[];
+      preview: {
+        includesEnvTemplate: boolean;
+      };
     };
     getDocs: DocsItem;
   };
