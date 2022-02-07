@@ -26,7 +26,7 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
             return pathname.split(baseLaneRoute)[1] === lane.id;
           })
         : undefined;
-    // redirect to the lane view only on a workspace when spinning up for the first time
+    // when on a workspace, the home page (root route) defauts to the current lane view
     if (pathname === '/' && !currentLaneFromURL && !!model?.currentLane) {
       reactRouter.navigateTo(model?.currentLane.url);
     }
