@@ -3,11 +3,10 @@ import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID } from '@teambit/component-id';
 
 export const baseLaneRoute = '/~lane';
-export const laneIdUrlRegex = '[\\w-]*\\/[\\w-]*\\/[\\w-]';
 export const laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 export const laneRouteUrlRegex = `${baseLaneRoute}/:orgId([\\w-]+)/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
 export const getLaneUrl = (laneId: string) => `${baseLaneRoute}/${laneId.replace('.', '/')}`;
-export const laneComponentUrlRegex = `${laneRouteUrlRegex}/:compId(${laneComponentIdUrlRegex})`;
+export const laneComponentUrlRegex = `${laneRouteUrlRegex}/:componentId(${laneComponentIdUrlRegex})`;
 export const getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
   laneId ? `${getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';
 

@@ -116,9 +116,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         # load a component.
         get(id: String!, withState: Boolean): Component
 
-        # load a list of components
-        getMany(ids: [String]!): [Component]
-
         # list components
         list(offset: Int, limit: Int): [Component]!
 
@@ -168,15 +165,6 @@ export function componentSchema(componentExtension: ComponentMain) {
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
             return component;
-          } catch (error: any) {
-            return null;
-          }
-        },
-        getMany: async (host: ComponentFactory, { ids }: { ids: string[] }) => {
-          try {
-            const componentIds = await host.resolveMultipleComponentIds(ids);
-            const components = await host.getMany(componentIds);
-            return components;
           } catch (error: any) {
             return null;
           }

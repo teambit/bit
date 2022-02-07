@@ -41,7 +41,6 @@ export class LanesDrawer implements DrawerType {
           There are no lanes in your current workspace
         </span>
       );
-    console.log('Lanes Model\n', model);
     return <LaneTree isCollapsed={collapsed}></LaneTree>;
   };
 }

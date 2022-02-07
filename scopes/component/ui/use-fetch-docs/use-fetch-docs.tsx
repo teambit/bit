@@ -90,6 +90,7 @@ export function useFetchDocs(componentId: string) {
 
   useEffect(() => {
     setLoading(true);
+
     const variables = { id: componentId };
     request(GQL_SERVER, DOCS_QUERY, variables)
       .then((result: QueryResults) => {

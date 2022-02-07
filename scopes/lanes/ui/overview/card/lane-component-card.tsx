@@ -19,7 +19,6 @@ export function LaneComponentCard({ component, ...rest }: LaneComponentCardProps
   const componentModel = component.model;
   const shouldPreviewButton = !shouldShowPreview && componentModel.compositions.length > 0;
   const componentVersion = componentModel.version === 'new' ? undefined : componentModel.version;
-  console.log(component.url);
   return (
     <div {...rest} className={styles.wrapper}>
       <ComponentCard

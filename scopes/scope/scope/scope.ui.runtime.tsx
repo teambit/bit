@@ -122,8 +122,13 @@ export class ScopeUI {
     return this;
   }
 
+  registerMenuRoutes = (routes: RouteProps[]) => {
+    this.menuSlot.register(routes);
+    return this;
+  };
+
   private registerExplicitRoutes() {
-    this.menuSlot.register([
+    this.registerMenuRoutes([
       {
         path: this.componentUi.routePath,
         children: this.componentUi.getMenu(ScopeAspect.id),
@@ -134,15 +139,11 @@ export class ScopeUI {
         children: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
       },
     ]);
-    this.routeSlot.register([
+    this.registerRoutes([
       {
         path: this.componentUi.routePath,
         children: this.componentUi.getComponentUI(ScopeAspect.id),
       },
-      // {
-      //   path: lanesRouteUrl,
-      //   children: <LanesOverview />,
-      // },
     ]);
   }
 

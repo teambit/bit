@@ -79,7 +79,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.command.exportLane();
       });
-      it.only('should export components on that lane', () => {
+      it('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
@@ -185,7 +185,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe.only('create a snap on a lane', () => {
+  describe('create a snap on a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();

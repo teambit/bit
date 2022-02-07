@@ -14,11 +14,16 @@ export function LaneComponent({ routeSlot }: LaneComponentProps) {
   const query = useRouterQuery();
   const version = query.get('version');
   const compHashLookup = lanes?.byComponentHash;
-  const component = version ? compHashLookup?.[version] : null;
+  const currentLaneAndComponent = version ? compHashLookup?.get(version) : null;
+  if (!currentLaneAndComponent) return null;
+  const { lane, component } = currentLaneAndComponent;
 
   return (
     <>
-      <h1>HI I am Lane a Component</h1>
+      <h1>Hi, I am Lane a Component</h1>
+      <div>{lane.name}</div>
+      <div>{component.model.id.fullName}</div>
+      <div>{component.model.id.version}</div>
       <div className={styles.container}>{routeSlot && <SlotSubRouter slot={routeSlot} />}</div>
     </>
   );

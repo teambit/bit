@@ -79,6 +79,11 @@ export class WorkspaceUI {
     this.menuItemSlot.register(menuItems);
   };
 
+  registerMenuRoutes = (routes: RouteProps[]) => {
+    this.menuSlot.register(routes);
+    return this;
+  };
+
   setComponents = (components: ComponentModel[]) => {
     this.componentSearcher.update(components);
   };
@@ -195,7 +200,7 @@ export class WorkspaceUI {
       </MenuLinkItem>
     ));
 
-    workspaceUI.menuSlot.register([
+    workspaceUI.registerMenuRoutes([
       {
         exact: true,
         path: '/',

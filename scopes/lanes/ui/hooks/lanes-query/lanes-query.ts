@@ -20,33 +20,6 @@ const GET_LANES = gql`
   }
 `;
 
-const GET_LANE_COMPONENTS = gql`
-  query LaneComponents($ids: [String]!) {
-    getHost {
-      id # used for GQL caching
-      name
-      getMany(ids: $ids) {
-        id {
-          name
-          version
-          scope
-        }
-        compositions {
-          identifier
-        }
-        description
-        deprecation {
-          isDeprecate
-        }
-        env {
-          id
-          icon
-        }
-      }
-    }
-  }
-`;
-
 export function useLanes(host: LanesHost): LanesModel {
   const { data: laneData, loading } = useDataQuery<LanesQueryResult>(GET_LANES);
   const { scope } = useScopeQuery();
@@ -56,19 +29,5 @@ export function useLanes(host: LanesHost): LanesModel {
   }
 
   const lanesModels = mapToLanesModel(laneData, scope, host);
-  // console.dir(lanesModels);
   return lanesModels;
 }
-
-// export function useLaneComponents(componentIdsByLaneName: Map<string, string[]>) {
-//   const ids = flatMap([...componentIdsByLaneName.values()]);
-//   console.log(ids);
-//   const { data } = useDataQuery(GET_LANE_COMPONENTS, { variables: { ids } });
-//   console.dir(data);
-// }
-
-// export function useLaneComponents(ids: string[]) {
-//   // console.log(ids);
-//   const { data } = useDataQuery(GET_LANE_COMPONENTS, { variables: { ids } });
-//   // console.dir(data);
-// }

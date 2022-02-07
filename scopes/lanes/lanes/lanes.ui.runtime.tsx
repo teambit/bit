@@ -4,78 +4,109 @@ import { Slot, Harmony } from '@teambit/harmony';
 import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import {
   LanesDrawer,
   LanesHost,
   LanesOverview,
   LanesProvider,
   laneRouteUrlRegex,
-  LaneComponent,
   laneComponentUrlRegex,
+  LanesOverviewMenu,
+  OrderedNavigationSlot,
 } from '@teambit/lanes.lanes.ui';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+import ReactRouterAspect, { NavLinkProps, ReactRouterUI } from '@teambit/react-router';
+import ComponentAspect, { ComponentUI } from '@teambit/component';
 
 export class LanesUI {
-  static dependencies = [UIAspect, ReactRouterAspect];
+  static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<MenuItemSlot>(), Slot.withType<RouteProps>()];
+  static slots = [
+    Slot.withType<RouteProps>(),
+    Slot.withType<MenuItemSlot>(),
+    Slot.withType<RouteProps>(),
+    Slot.withType<NavigationSlot>(),
+  ];
 
   constructor(
     private uiUi: UiUI,
+    private componentUi: ComponentUI,
     private routeSlot: RouteSlot,
     private menuRouteSlot: RouteSlot,
+    private navSlot: OrderedNavigationSlot,
     private menuItemSlot: MenuItemSlot,
     private reactRouter: ReactRouterUI,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
   ) {
+    this.hostAspect = workspace || scope;
     this.lanesHost = workspace ? 'workspace' : 'scope';
+    this.host = workspace ? WorkspaceAspect.id : ScopeAspect.id;
   }
 
-  readonly lanesHost: LanesHost;
+  private readonly lanesHost: LanesHost;
+  private readonly hostAspect?: WorkspaceUI | ScopeUI;
+  private readonly host: string;
 
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
     return this;
   }
 
-  registerExplicitRoutes() {
-    if (this.workspace) {
-      this.workspace.registerRoutes([
+  registerNavigation(nav: NavLinkProps, order?: number) {
+    this.navSlot.register({
+      props: nav,
+      order,
+    });
+  }
+
+  private registerExplicitHostRoutes() {
+    if (this.hostAspect) {
+      this.hostAspect.registerRoutes([
         {
           path: laneComponentUrlRegex,
-          children: <LaneComponent routeSlot={this.routeSlot} />,
+          children: this.componentUi.getComponentUI(this.host),
         },
         {
           path: laneRouteUrlRegex,
           children: <LanesOverview routeSlot={this.routeSlot} />,
         },
       ]);
-    }
-    if (this.scope) {
-      this.scope.registerRoutes([
+      this.hostAspect.registerMenuRoutes([
         {
           path: laneComponentUrlRegex,
-          children: <LaneComponent routeSlot={this.routeSlot} />,
+          children: this.componentUi.getMenu(this.host),
         },
         {
           path: laneRouteUrlRegex,
-          children: <LanesOverview routeSlot={this.routeSlot} />,
+          children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
         },
       ]);
     }
   }
 
+  private registerExplicitLanesRoutes() {
+    this.registerNavigation({
+      href: '~gallery',
+      children: 'Gallery',
+    });
+    this.registerNavigation({
+      href: '',
+      children: 'Gallery',
+    });
+  }
+
+  private registerExplicitRoutes() {
+    this.registerExplicitHostRoutes();
+    this.registerExplicitLanesRoutes();
+  }
+
   registerDrawers(...drawers: DrawerType[]) {
-    if (this.workspace) {
-      this.workspace.registerDrawers(...drawers);
-    }
-    if (this.scope) {
-      this.scope.registerDrawers(...drawers);
+    if (this.hostAspect) {
+      this.hostAspect.registerDrawers(...drawers);
     }
     return this;
   }
@@ -85,9 +116,9 @@ export class LanesUI {
   };
 
   static async provider(
-    [uiUi, reactRouter]: [UiUI, ReactRouterUI],
+    [uiUi, reactRouter, componentUi]: [UiUI, ReactRouterUI, ComponentUI],
     _,
-    [routeSlot, menuItemSlot, menuRouteSlot]: [RouteSlot, MenuItemSlot, RouteSlot],
+    [routeSlot, menuItemSlot, menuRouteSlot, navSlot]: [RouteSlot, MenuItemSlot, RouteSlot, OrderedNavigationSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
@@ -100,7 +131,17 @@ export class LanesUI {
     if (host === ScopeAspect.id) {
       scope = harmony.get<ScopeUI>(ScopeAspect.id);
     }
-    const lanesUi = new LanesUI(uiUi, routeSlot, menuRouteSlot, menuItemSlot, reactRouter, workspace, scope);
+    const lanesUi = new LanesUI(
+      uiUi,
+      componentUi,
+      routeSlot,
+      menuRouteSlot,
+      navSlot,
+      menuItemSlot,
+      reactRouter,
+      workspace,
+      scope
+    );
     uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     const drawer = new LanesDrawer(lanesUi.lanesHost);
     lanesUi.registerDrawers(drawer);
