@@ -50,6 +50,8 @@ export {
   VariantPolicyFactory,
   SerializedVariantPolicy,
   EnvPolicyConfigObject,
+  EnvPolicy,
+  PeersAutoDetectPolicy,
 } from './policy';
 export {
   CoreAspectLinkResult,

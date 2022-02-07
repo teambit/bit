@@ -10,6 +10,7 @@ export function componentSizerSchema(componentSizerMain: ComponentSizerMain): Sc
       type ComponentSizedFile {
         name: String
         size: Int
+        compressedSize: Int
       }
 
       type ComponentSize {
@@ -23,6 +24,10 @@ export function componentSizerSchema(componentSizerMain: ComponentSizerMain): Sc
         totalAssets: Int
         # total size of the component files and assets
         total: Int
+
+        compressedTotalFiles: Int
+        compressedTotalAssets: Int
+        compressedTotal: Int
       }
 
       extend type Component {

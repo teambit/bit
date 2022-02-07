@@ -13,4 +13,4 @@ export {
   SerializedVariantPolicy,
 } from './variant-policy';
 
-export { EnvPolicyConfigObject } from './env-policy';
+export { EnvPolicyConfigObject, EnvPolicy, PeersAutoDetectPolicy } from './env-policy';

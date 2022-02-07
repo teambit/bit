@@ -24,7 +24,6 @@ import Migrate from './commands/private-cmds/migrate-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
-import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
@@ -74,7 +73,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new List(),
       new Config(),
-      new ClearCache(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remote(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
