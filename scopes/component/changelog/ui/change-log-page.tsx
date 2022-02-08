@@ -8,13 +8,21 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-
+import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
-  const component = useContext(ComponentContext);
+  let component = useContext(ComponentContext);
+  const query = useQuery();
+  const version = query.get('version') || undefined;
+  const lane = useContext(LanesContext);
+  if (lane.model?.currentLane && version) {
+    const componentAndLane = lane.model.lanes?.byComponentHash.get(version);
+    component = componentAndLane?.component.model || component;
+  }
   const { snaps, loading } = useSnaps(component.id);
 
   if (!snaps) return null;
