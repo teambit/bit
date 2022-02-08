@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Analytics } from '../../../analytics/analytics';
@@ -66,7 +66,12 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
       result.laneIds.push(...remoteLaneIds);
       result.lanes.push(...remoteLanes);
     } catch (err) {
-      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+      if (
+        err instanceof InvalidScopeName ||
+        err instanceof ScopeNotFoundOrDenied ||
+        err instanceof LaneNotFound ||
+        err instanceof InvalidScopeNameFromRemote
+      ) {
         // the lane could be a local lane so no need to throw an error in such case
         loader.stop();
         logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
