@@ -1,5 +1,5 @@
 import { GraphQLClient, gql } from 'graphql-request';
-import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
 import {
   CFG_HUB_DOMAIN_KEY,
@@ -56,6 +56,9 @@ async function getScope(name: string) {
       throw new ScopeNotFoundOrDenied(name);
     }
     if (errorCode === 'InvalidScopeID') {
+      if (isValidScopeName(name)) {
+        throw new InvalidScopeNameFromRemote(name);
+      }
       throw new InvalidScopeName(name);
     }
     throw new Error(`${name}: ${msg}`);
