@@ -30,18 +30,6 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report([appName]: [string], { dev, skipWatch }: RunOptions): Promise<string> {
-    this.logger.off();
-
-    const { port } = await this.application.runApp(appName, {
-      dev,
-      skipWatch,
-    });
-
-    if (port) return `${appName} app is running on http://localhost:${port}`;
-    return `${appName} app is running`;
-  }
-
   async render([appName]: [string], { dev, skipWatch }: RunOptions): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     const { port } = await this.application.runApp(appName, {
