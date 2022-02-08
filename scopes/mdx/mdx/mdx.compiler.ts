@@ -30,6 +30,7 @@ export class MDXCompiler implements Compiler {
       filepath: options.filePath,
       // this compiler is not indented to compile according to the bit flavour.
       bitFlavour: false,
+      addMetadataAsProperties: true,
     });
     const filePathAfterMdxCompile = this.replaceFileExtToJs(options.filePath);
     const afterBabelCompile = babelTranspileFileContent(

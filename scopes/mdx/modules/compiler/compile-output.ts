@@ -1,11 +1,16 @@
 import { VFile } from 'vfile';
+import { MDXCompileOptions } from './mdx-compiler';
 import { ImportSpecifier } from './import-specifier';
 
 /**
  * compilation output of bit-mdx format.
  */
 export class CompileOutput {
-  constructor(readonly file: VFile, private _renderer: string) {}
+  constructor(
+    readonly file: VFile, 
+    private _renderer: string,
+    private config?: Partial<MDXCompileOptions>,
+  ) {}
 
   get renderer() {
     return this._renderer;
@@ -35,6 +40,11 @@ export class CompileOutput {
    * get the mdx file contents. including the renderer.
    */
   get contents() {
-    return `${this.renderer}\n${this.file.contents}`;
+    const metadata = this.getMetadata();
+    const properties = metadata && this.config?.addMetadataAsProperties
+      ? Object.keys(metadata).map((key) => `MDXContent.${key} = '${metadata[key]}';\n`).join('')
+      : '';
+      
+    return `${this.renderer}\n${this.file.contents}\n${properties}`;
   }
 }

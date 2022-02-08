@@ -13,6 +13,7 @@ export async function mdxLoader(content: string) {
   const options = Object.assign({}, getOptions(this), {
     // @ts-ignore
     filepath: this.resourcePath,
+    addMetadataAsProperties: true
   });
 
   try {

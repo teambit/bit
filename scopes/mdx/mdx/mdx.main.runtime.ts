@@ -61,7 +61,7 @@ export class MDXMain {
       MultiCompilerMain,
       BabelMain,
       CompilerMain,
-      GeneratorMain
+      GeneratorMain,
     ],
     config: MDXConfig
   ) {

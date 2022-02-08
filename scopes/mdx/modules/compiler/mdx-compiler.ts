@@ -15,7 +15,8 @@ export type MDXCompileOptions = {
   compilers: any[];
   filepath?: string;
   renderer: string;
-  bitFlavour: boolean;
+  bitFlavour?: boolean;
+  addMetadataAsProperties?: boolean;
 };
 
 export const DEFAULT_RENDERER = `
@@ -56,7 +57,7 @@ export function compile(content: string, options: Partial<MDXCompileOptions> = {
 
     mdxCompiler.process(contentFile, (err: Error | undefined, file: any) => {
       if (err) return reject(err);
-      const output = new CompileOutput(file, DEFAULT_RENDERER);
+      const output = new CompileOutput(file, DEFAULT_RENDERER, options);
       return resolve(output);
     });
   });
@@ -102,11 +103,12 @@ export function compileSync(mdxContent: string, options: Partial<MDXCompileOptio
   const mdxCompiler = createCompiler(opts);
 
   const file = mdxCompiler.processSync(contentFile);
-  return new CompileOutput(file, DEFAULT_RENDERER);
+
+  return new CompileOutput(file, DEFAULT_RENDERER, options);
 }
 
 function createCompiler(options: Partial<MDXCompileOptions>) {
-  const mustPlugins = options.bitFlavour
+  const mustPlugins = options.bitFlavour || options.addMetadataAsProperties
     ? [[detectFrontmatter, ['yaml']], extractMetadata, extractImports]
     : [extractImports];
   const mustRehypePlugins = options.bitFlavour ? [wrapWithScopeContext] : [];
