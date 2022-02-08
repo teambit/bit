@@ -31,7 +31,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (!snaps) return null;
 
-  snaps = currentLane ? snaps.filter((snap) => snap.lane === currentLane?.name) : snaps;
+  snaps = currentLane
+    ? snaps.filter((snap) => snap.lane === currentLane?.name)
+    : snaps.filter((snap) => snap.lane === 'main');
 
   if (snaps.length === 0 && !loading) {
     return (
