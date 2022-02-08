@@ -54,7 +54,7 @@ export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeMod
 
   const components = laneData.components.map((component) => {
     const componentName = getLaneComponentName(component, host);
-    const componentScope = laneScope || currentScope.name;
+    const componentScope = getLaneComponentScope(component) || laneScope || currentScope.name;
     const componentModel = ComponentModel.from({
       id: {
         name: componentName,
@@ -137,4 +137,10 @@ function getLaneComponentName(laneComponent: LaneComponentQueryResult, host?: La
         return accum;
       }, '')
     : laneComponent.id;
+}
+
+function getLaneComponentScope(laneComponent: LaneComponentQueryResult) {
+  const hasIdBeenExported = laneComponent.id.includes('.');
+  if (hasIdBeenExported) return laneComponent.id.split('/')[0];
+  return undefined;
 }
