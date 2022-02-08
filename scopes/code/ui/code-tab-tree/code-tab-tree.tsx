@@ -12,6 +12,7 @@ import type { DependencyType } from '@teambit/code.ui.queries.get-component-code
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
+import { LanesContext } from '@teambit/lanes.lanes.ui';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
@@ -47,8 +48,10 @@ export function CodeTabTree({
       const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
+      const lanes = useContext(LanesContext);
+      const currentLaneUrl = lanes?.model?.currentLane?.url || '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
-      const href = `/${urlParams.componentId}/~code/${props.node.id}${version}`;
+      const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
