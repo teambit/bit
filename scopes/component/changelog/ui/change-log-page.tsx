@@ -23,7 +23,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     const componentAndLane = lane.model.lanes?.byComponentHash.get(version);
     component = componentAndLane?.component.model || component;
   }
-  const { snaps, loading } = useSnaps(component.id);
+  const snapResult = useSnaps(component.id);
+  const { loading } = snapResult;
+  let { snaps } = snapResult;
 
   if (!snaps) return null;
 
@@ -45,6 +47,8 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       </div>
     );
   }
+
+  snaps = lane.model?.currentLane ? snaps.filter((snap) => snap.lane === lane.model?.currentLane?.name) : snaps;
 
   const latestVersion = snaps[0]?.tag || snaps[0]?.hash;
 
