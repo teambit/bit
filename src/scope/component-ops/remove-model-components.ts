@@ -7,6 +7,7 @@ import { COMPONENT_ORIGINS, LATEST_BIT_VERSION } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import Consumer from '../../consumer/consumer';
 import logger from '../../logger/logger';
+import DependencyGraph from '../graph/scope-graph';
 import { Lane, ModelComponent, Symlink } from '../models';
 import { Ref } from '../objects';
 import RemovedObjects from '../removed-components';
@@ -19,6 +20,7 @@ export default class RemoveModelComponents {
   removeSameOrigin = false;
   consumer: Consumer | null | undefined;
   currentLane: Lane | null = null;
+  private dependencyGraph: DependencyGraph;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;
@@ -34,7 +36,7 @@ export default class RemoveModelComponents {
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
     await this.setCurrentLane();
-    const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
+    const dependentBits = await this.getDependentsIds(foundComponents);
     if (R.isEmpty(dependentBits) || this.force) {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
@@ -62,30 +64,45 @@ export default class RemoveModelComponents {
     return new RemovedObjects({ missingComponents, dependentBits });
   }
 
+  private async getDependentsIds(ids: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+    const dependencyGraph = await this.getDependencyGraph();
+    return this.scope.getDependentsBitIds(ids, dependencyGraph, returnResultsWithVersion);
+  }
+
+  private async getDependencyGraph() {
+    if (!this.dependencyGraph) {
+      const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this.scope);
+      this.dependencyGraph = new DependencyGraph(idsGraph);
+    }
+    return this.dependencyGraph;
+  }
+
   /**
    * removeSingle - remove single component
    * @param {BitId} bitId - list of remote component ids to delete
    * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
-  async getRemoveSingleData(bitId: BitId): Promise<{ compId: BitId; depIds: BitIds; refsToRemove: Ref[] }> {
+  private async getRemoveSingleData(bitId: BitId): Promise<{ compId: BitId; depIds: BitIds; refsToRemove: Ref[] }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
+    // const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     const componentList = await this.scope.listIncludesSymlinks();
 
-    const dependentBits = await this.scope.getDependentsBitIds(
-      consumerComponentToRemove.flattenedDependencies,
-      bitId.version !== LATEST_BIT_VERSION
-    );
+    // const dependentBits = await this.getDependentsIds(
+    //   consumerComponentToRemove.flattenedDependencies,
+    //   bitId.version !== LATEST_BIT_VERSION
+    // );
 
-    const { ids: depIds, refs: depsRefs } = await this.getDataForDependenciesRemoval(
-      dependentBits,
-      componentList,
-      consumerComponentToRemove,
-      bitId
-    );
+    // const { ids: depIds, refs: depsRefs } = await this.getDataForDependenciesRemoval(
+    //   dependentBits,
+    //   componentList,
+    //   consumerComponentToRemove,
+    //   bitId
+    // );
+    const depIds = new BitIds();
+    const depsRefs = [];
 
     const componentsRefs = await this.getDataForRemovingComponent(bitId, componentList);
     const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
@@ -106,26 +123,23 @@ export default class RemoveModelComponents {
     const refsToRemove: Ref[] = [];
     const depsToRemoveP = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
       const dependentsIds: BitId[] = dependentBits[dependencyId.toStringWithoutVersion()];
-      const relevantDependents = R.reject(
-        (dependent) => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
-        dependentsIds
+      const relevantDependents = dependentsIds.filter(
+        (dependent) => !dependent.isEqual(bitId) && dependent.scope === dependencyId.scope
       );
-      let isNested = true;
+      let isPartOfWorkspace = false;
       if (this.consumer) {
         const componentMapIgnoreVersion = this.consumer.bitMap.getComponentIfExist(dependencyId, {
           ignoreVersion: true,
         });
         const componentMapExact = this.consumer.bitMap.getComponentIfExist(dependencyId);
         const componentMap = componentMapExact || componentMapIgnoreVersion;
-        if (componentMap) {
-          isNested = componentMap.origin === COMPONENT_ORIGINS.NESTED;
-        }
+        isPartOfWorkspace = Boolean(componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED);
       }
       if (
         R.isEmpty(relevantDependents) &&
         !this.bitIds.searchWithoutVersion(dependencyId) && // don't delete dependency if it is already deleted as an individual
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
-        isNested
+        !isPartOfWorkspace
       ) {
         const refs = await this.getDataForRemovingComponent(dependencyId, componentList);
         refsToRemove.push(...refs);

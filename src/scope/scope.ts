@@ -518,11 +518,17 @@ export default class Scope {
   /**
    * for each one of the given components, find its dependents
    */
-  async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
-    const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
-    const dependencyGraph = new DependencyGraph(idsGraph);
+  async getDependentsBitIds(
+    bitIds: BitIds,
+    dependencyGraph?: DependencyGraph,
+    returnResultsWithVersion = false
+  ): Promise<{ [key: string]: BitId[] }> {
+    if (!dependencyGraph) {
+      const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
+      dependencyGraph = new DependencyGraph(idsGraph);
+    }
     const dependentsGraph = bitIds.reduce((acc, current) => {
-      const dependents = dependencyGraph.getDependentsForAllVersions(current);
+      const dependents = (dependencyGraph as DependencyGraph).getDependentsForAllVersions(current);
       if (dependents.length) {
         const dependentsIds = dependents.map((id) => (returnResultsWithVersion ? id : id.changeVersion(undefined)));
         acc[current.toStringWithoutVersion()] = BitIds.uniqFromArray(dependentsIds);
