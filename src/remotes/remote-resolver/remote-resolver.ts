@@ -1,5 +1,5 @@
 import { GraphQLClient, gql } from 'graphql-request';
-import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
 import {
   CFG_HUB_DOMAIN_KEY,
@@ -13,6 +13,7 @@ import Scope from '../../scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
 import logger from '../../logger/logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
+import { BitError } from '@teambit/bit-error';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
@@ -56,6 +57,11 @@ async function getScope(name: string) {
       throw new ScopeNotFoundOrDenied(name);
     }
     if (errorCode === 'InvalidScopeID') {
+      if (isValidScopeName(name)) {
+        throw new BitError(`cannot find scope '${name}'.
+if you are targeting a self-hosted scope, please ensure the scope is configured in your remotes (via "bit remote" command) and that the scope name is correct.
+if this is a scope on bit.dev please add the organization name before the scope (yourOrg.some-scope-name)`);
+      }
       throw new InvalidScopeName(name);
     }
     throw new Error(`${name}: ${msg}`);
