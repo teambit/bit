@@ -8,7 +8,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneModel, LanesContext } from '@teambit/lanes.lanes.ui';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import styles from './change-log-page.module.scss';
 
@@ -19,8 +19,10 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const query = useQuery();
   const version = query.get('version') || undefined;
   const lane = useContext(LanesContext);
-  if (lane.model?.currentLane && version) {
-    const componentAndLane = lane.model.lanes?.byComponentHash.get(version);
+  let currentLane: LaneModel | undefined;
+  if (version) {
+    const componentAndLane = lane?.model?.lanes?.byComponentHash.get(version);
+    if (componentAndLane) currentLane = lane.model?.currentLane;
     component = componentAndLane?.component.model || component;
   }
   const snapResult = useSnaps(component.id);
@@ -29,9 +31,13 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (!snaps) return null;
 
+  snaps = currentLane ? snaps.filter((snap) => snap.lane === currentLane?.name) : snaps;
+
   if (snaps.length === 0 && !loading) {
     return (
       <div className={classNames(styles.changeLogPage, className)}>
+        {currentLane ? <H1 className={styles.title}></H1> : null}
+
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separatorNoChangeLog} />
         <AlertCard
@@ -48,18 +54,27 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  snaps = lane.model?.currentLane ? snaps.filter((snap) => snap.lane === lane.model?.currentLane?.name) : snaps;
-
   const latestVersion = snaps[0]?.tag || snaps[0]?.hash;
 
   return (
-    <div className={classNames(styles.changeLogPage, className)}>
-      <H1 className={styles.title}>History</H1>
-      <Separator isPresentational className={styles.separator} />
-      {snaps.map((snap, index) => {
-        const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
-        return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
-      })}
-    </div>
+    <>
+      {currentLane ? (
+        <>
+          <div className={styles.lane}>
+            <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={currentLane.id} />
+            <span>{currentLane.id}</span>
+          </div>
+          <Separator isPresentational className={styles.separator} />
+        </>
+      ) : null}
+      <div className={classNames(styles.changeLogPage, className)}>
+        <H1 className={styles.title}>History</H1>
+        <Separator isPresentational className={styles.separator} />
+        {snaps.map((snap, index) => {
+          const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
+          return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
+        })}
+      </div>
+    </>
   );
 }

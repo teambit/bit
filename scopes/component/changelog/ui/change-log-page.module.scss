@@ -22,3 +22,22 @@
 .changeLogCard {
   margin-bottom: 8px;
 }
+
+.lane {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 24px 0px 16px 32px;
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: large;
+    padding: 0px 8px;
+  }
+  img {
+    transition: filter 300ms ease-in-out;
+    height: 24px;
+    width: 24px;
+  }
+}

@@ -20,11 +20,10 @@
       font-size: large;
       padding: 0px 8px;
     }
-  }
-  img {
-    transition: filter 300ms ease-in-out;
-    filter: grayscale(1);
-    height: 24px;
-    width: 24px;
+    img {
+      transition: filter 300ms ease-in-out;
+      height: 24px;
+      width: 24px;
+    }
   }
 }
