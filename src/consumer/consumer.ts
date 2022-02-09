@@ -978,12 +978,10 @@ export default class Consumer {
   /**
    * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
-   * @param {BitIds} removedDependencies - delete component that are used by other components.
    */
-  async cleanFromBitMap(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+  async cleanFromBitMap(componentsToRemoveFromFs: BitIds) {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
-    this.bitMap.removeComponents(removedDependencies);
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

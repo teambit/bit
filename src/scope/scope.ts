@@ -500,18 +500,13 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(
-    bitIds: BitIds,
-    force: boolean,
-    removeSameOrigin = false,
-    consumer?: Consumer
-  ): Promise<RemovedObjects> {
+  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin, consumer);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer);
     return removeComponents.remove();
   }
 
