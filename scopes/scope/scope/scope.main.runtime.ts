@@ -694,7 +694,6 @@ export class ScopeMain implements ComponentFactory {
     includeFromLanes = false
   ): Promise<Component[]> {
     const componentsIds = await this.listIds(includeCache, includeFromLanes);
-    console.log('scope.main.list', componentsIds.length);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
