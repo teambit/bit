@@ -252,7 +252,7 @@ please use bit remove command to remove them.`,
     // gets the dependencies as npm packages so we don't need to worry much about have extra
     // dependencies on the filesystem
     await deleteComponentsFiles(this.consumer, this.idsToEject, true);
-    await this.consumer.cleanFromBitMap(this.idsToEject, new BitIds());
+    await this.consumer.cleanFromBitMap(this.idsToEject);
   }
 
   throwEjectError(message: string, originalError: Error) {

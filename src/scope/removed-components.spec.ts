@@ -7,7 +7,6 @@ describe('RemovedComponents', () => {
   const payload = {
     removedComponentIds: [],
     missingComponents: [],
-    removedDependencies: [],
     dependentBits: {},
     removedLanes: [],
   };
