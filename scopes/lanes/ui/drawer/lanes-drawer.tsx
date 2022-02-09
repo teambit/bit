@@ -4,7 +4,7 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { LaneTree, LanesHost, LanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneTree, LanesContext } from '@teambit/lanes.lanes.ui';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -17,7 +17,7 @@ const LaneTreeContext = createContext<{
 });
 
 export class LanesDrawer implements DrawerType {
-  constructor(private host: LanesHost) {}
+  constructor(private showScope: boolean) {}
   id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);
@@ -41,7 +41,7 @@ export class LanesDrawer implements DrawerType {
           There are no lanes in your current workspace
         </span>
       );
-    return <LaneTree isCollapsed={collapsed}></LaneTree>;
+    return <LaneTree showScope={showScope} isCollapsed={collapsed}></LaneTree>;
   };
 }
 

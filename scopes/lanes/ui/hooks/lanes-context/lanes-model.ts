@@ -28,7 +28,6 @@ export type LanesQueryResult = {
 };
 export type LanesHost = 'workspace' | 'scope';
 export type LanesModel = {
-  host?: LanesHost;
   currentLane?: LaneModel;
   lanes?: {
     byScope: Map<string, LaneModel[]>;
@@ -46,14 +45,14 @@ export type LaneModel = {
   components: LaneComponentModel[];
 };
 
-export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeModel, host: LanesHost): LaneModel {
+export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeModel): LaneModel {
   const { name, remote, isMerged } = laneData;
   const laneName = name;
   const fullName = remote || name;
   const laneScope = remote?.split('/')[0];
 
   const components = laneData.components.map((component) => {
-    const componentName = getLaneComponentName(component, host);
+    const componentName = getLaneComponentName(component);
     const componentScope = getLaneComponentScope(component) || laneScope || currentScope.name;
     const componentModel = ComponentModel.from({
       id: {
@@ -104,10 +103,10 @@ export function groupByComponentHash(
   }, new Map<string, { lane: LaneModel; component: LaneComponentModel }>());
 }
 
-export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: ScopeModel, host: LanesHost): LanesModel {
+export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: ScopeModel): LanesModel {
   const lanesResult = lanesData.lanes?.getLanes || [];
   const currentLaneName = lanesData.lanes?.getCurrentLaneName;
-  const laneModel = lanesResult.map((result) => mapToLaneModel(result, currentScope, host));
+  const laneModel = lanesResult.map((result) => mapToLaneModel(result, currentScope));
   const lanesByScope = groupByScope(laneModel);
   const lanesByComponentHash = groupByComponentHash(laneModel);
   const currentLane = laneModel.find((lane) => lane.name === currentLaneName);
@@ -119,24 +118,11 @@ export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: Scope
   return {
     lanes,
     currentLane,
-    host,
   };
 }
 
-function getLaneComponentName(laneComponent: LaneComponentQueryResult, host?: LanesHost) {
-  if (host === 'scope') return laneComponent.id.replace('.', '/');
-  const hasIdBeenExported = laneComponent.id.includes('.');
-  return hasIdBeenExported
-    ? laneComponent.id.split('/').reduce((accum, next, index) => {
-        if (index === 1) {
-          return `${next}`;
-        }
-        if (index > 1) {
-          return `${accum}/${next}`;
-        }
-        return accum;
-      }, '')
-    : laneComponent.id;
+function getLaneComponentName(laneComponent: LaneComponentQueryResult) {
+  return laneComponent.id.split('/').slice(1).join('/');
 }
 
 function getLaneComponentScope(laneComponent: LaneComponentQueryResult) {

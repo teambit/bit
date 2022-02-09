@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { Install } from '@teambit/ui-foundation.ui.use-box.menu';
 import ComponentAspect, { ComponentUI, ConsumePlugin } from '@teambit/component';
