@@ -15,7 +15,9 @@ export class YarnUI {
     return yarn;
   }
 
-  private consumeMethod: ConsumePlugin = (comp) => {
+  private consumeMethod: ConsumePlugin = (comp, currentLane) => {
+    if (currentLane) return undefined;
+
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {

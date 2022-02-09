@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { Install } from '@teambit/ui-foundation.ui.use-box.menu';
 import ComponentAspect, { ComponentUI, ConsumePlugin } from '@teambit/component';
@@ -15,7 +15,9 @@ export class PnpmUI {
     return pnpm;
   }
 
-  private consumeMethod: ConsumePlugin = (comp) => {
+  private consumeMethod: ConsumePlugin = (comp, currentLane) => {
+    if (currentLane) return undefined;
+
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {

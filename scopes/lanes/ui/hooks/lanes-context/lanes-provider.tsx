@@ -14,7 +14,7 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
   const [model, setModel] = useState<LanesModel>({});
   const defaultContext = useContext(LanesContext);
   const initialLaneState = useLanes(host);
-  if (!!initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
+  if (initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
   const { pathname } = useLocation();
 
   let currentLaneFromURL: LaneModel | undefined;
