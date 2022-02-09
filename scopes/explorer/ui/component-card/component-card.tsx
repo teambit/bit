@@ -51,7 +51,6 @@ export type ComponentCardProps = {
    * explicit link, to use instead of the component id. Using this opens the link in a new tab, as an external link.
    */
   href?: string;
-  external?: boolean;
   overrideInternalLink?: string;
 } & BaseComponentCardProps;
 
