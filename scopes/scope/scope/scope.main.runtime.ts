@@ -688,8 +688,13 @@ export class ScopeMain implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
-    const componentsIds = await this.listIds(includeCache);
+  async list(
+    filter?: { offset: number; limit: number },
+    includeCache = false,
+    includeFromLanes = false
+  ): Promise<Component[]> {
+    const componentsIds = await this.listIds(includeCache, includeFromLanes);
+    console.log('scope.main.list', componentsIds.length);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
@@ -709,12 +714,14 @@ export class ScopeMain implements ComponentFactory {
    * get ids of all scope components.
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
-  async listIds(includeCache = false): Promise<ComponentID[]> {
+  async listIds(includeCache = false, includeFromLanes = false): Promise<ComponentID[]> {
     const allModelComponents = await this.legacyScope.list();
-    const modelComponentsToList = includeCache
-      ? allModelComponents
-      : allModelComponents.filter((modelComponent) => this.exists(modelComponent));
-
+    const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
+      const cacheFilter = includeCache ? true : this.exists(modelComponent);
+      const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
+      return cacheFilter && lanesFilter;
+    };
+    const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
     const ids = modelComponentsToList.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );
