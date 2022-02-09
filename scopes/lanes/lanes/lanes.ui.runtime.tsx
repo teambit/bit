@@ -14,6 +14,7 @@ import {
   laneComponentUrlRegex,
   LanesOverviewMenu,
   OrderedNavigationSlot,
+  LanesPage,
 } from '@teambit/lanes.lanes.ui';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
@@ -93,7 +94,12 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return LanesProvider({ host: this.lanesHost, reactRouter: this.reactRouter, children });
+    return (
+      <LanesProvider host={this.lanesHost}>
+        <LanesPage></LanesPage>
+        {children}
+      </LanesProvider>
+    );
   };
 
   registerRoute(route: RouteProps) {

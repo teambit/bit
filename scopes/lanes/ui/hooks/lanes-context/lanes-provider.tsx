@@ -1,48 +1,34 @@
-import React, { ReactNode, useState, useContext, useMemo } from 'react';
-import { useLanes, LanesHost } from '@teambit/lanes.lanes.ui';
-import { ReactRouterUI, useLocation } from '@teambit/react-router';
+import React, { ReactNode, useState, useEffect } from 'react';
+import {
+  useLanes,
+  groupByScope,
+  LanesModel,
+  groupByComponentHash,
+  getLaneComponentUrl,
+  getLaneUrl,
+  LanesHost,
+} from '@teambit/lanes.lanes.ui';
 import { LanesContext, LanesContextType } from './lanes-context';
-import { groupByScope, LanesModel, groupByComponentHash, LaneModel, baseLaneRoute } from './lanes-model';
 
 export type LanesProviderProps = {
-  host: LanesHost;
-  reactRouter: ReactRouterUI;
   children: ReactNode;
+  host: LanesHost;
 };
 
-export function LanesProvider({ host, children, reactRouter }: LanesProviderProps) {
-  const [model, setModel] = useState<LanesModel>({});
-  const defaultContext = useContext(LanesContext);
+export function LanesProvider({ children, host }: LanesProviderProps) {
   const initialLaneState = useLanes(host);
-  if (initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
-  const { pathname } = useLocation();
-
-  let currentLaneFromURL: LaneModel | undefined;
-
-  useMemo(() => {
-    currentLaneFromURL =
-      !!pathname && pathname.includes(baseLaneRoute)
-        ? model?.lanes?.list.find((lane) => {
-            return pathname.split(baseLaneRoute)[1] === lane.id;
-          })
-        : undefined;
-    // when on a workspace, the home page (root route) defauts to the current lane view
-    if (pathname === '/' && !currentLaneFromURL && !!model?.currentLane) {
-      currentLaneFromURL = model.currentLane;
-      reactRouter.navigateTo(model?.currentLane.url);
-    }
-  }, [pathname, model]);
+  const [model, setModel] = useState<LanesModel>(initialLaneState);
+  useEffect(() => {
+    if (!!initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
+  }, [initialLaneState, model]);
 
   const context: LanesContextType = {
-    ...defaultContext,
-    model: {
-      ...model,
-      currentLane: pathname === '/' || pathname.includes(baseLaneRoute) ? model.currentLane : currentLaneFromURL,
-    },
+    model,
+    getLaneUrl,
     getLaneComponentUrl: (componentId, laneId) => {
-      if (laneId) return defaultContext.getLaneComponentUrl(componentId, laneId);
+      if (laneId) return getLaneComponentUrl(componentId, laneId);
       return componentId.version && context.model?.lanes?.byComponentHash
-        ? defaultContext.getLaneComponentUrl(componentId, context.model?.lanes?.byComponentHash[componentId.version])
+        ? getLaneComponentUrl(componentId, context.model?.lanes?.byComponentHash[componentId.version])
         : '';
     },
     updateCurrentLane: (currentLane) => {
@@ -66,7 +52,7 @@ export function LanesProvider({ host, children, reactRouter }: LanesProviderProp
       setModel(updatedModel);
     },
     updateLanes: (lanes) => {
-      lanes.forEach((lane) => context.updateLane(lane));
+      setModel(lanes);
     },
   };
 
