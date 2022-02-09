@@ -1,3 +1,4 @@
+import { DocumentNode } from 'graphql';
 import { useMemo, useEffect, useRef } from 'react';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
@@ -45,6 +46,7 @@ const componentFields = gql`
       includesEnvTemplate
     }
   }
+  ${sizer}
   ${componentIdFields}
 `;
 
@@ -54,6 +56,7 @@ const GET_COMPONENT = gql`
       id # used for GQL caching
       get(id: $id) {
         ...componentFields
+        ...sizeFields
       }
     }
   }
@@ -94,7 +97,7 @@ const SUB_COMPONENT_REMOVED = gql`
 `;
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(componentId: string, host: string) {
+export function useComponentQuery(componentId: string, host: string, _componentFields?: DocumentNode[]) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {

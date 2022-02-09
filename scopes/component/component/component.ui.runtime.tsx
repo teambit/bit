@@ -1,7 +1,8 @@
+import { DocumentNode } from 'graphql';
 import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
 import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
-import { Slot } from '@teambit/harmony';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
@@ -16,6 +17,8 @@ import { Component, ComponentPageElement, ComponentPageSlot } from './ui/compone
 import { Menu, NavPlugin, OrderedNavigationSlot, ConsumeMethodSlot, ConsumePlugin } from './ui/menu';
 import { AspectSection } from './aspect.section';
 import { ComponentModel } from './ui';
+
+export type DocumentNodeSlot = SlotRegistry<DocumentNode>;
 
 export type Server = {
   env: string;
@@ -51,6 +54,11 @@ export class ComponentUI {
     private menuItemSlot: MenuItemSlot,
 
     private pageItemSlot: ComponentPageSlot,
+
+    /**
+     * slot for registering a new component fields
+     */
+    private documentNodeSlot: DocumentNodeSlot,
 
     private commandBarUI: CommandBarUI
   ) {
@@ -152,12 +160,18 @@ export class ComponentUI {
     this.activeComponent = activeComponent;
   };
 
+  getComponentField() {
+    const docs = this.documentNodeSlot.values();
+    return docs;
+  }
+
   getComponentUI(host: string) {
     return (
       <Component
         routeSlot={this.routeSlot}
         containerSlot={this.pageItemSlot}
         onComponentChange={this.handleComponentChange}
+        field={this.getComponentField()}
         host={host}
       />
     );
@@ -203,6 +217,10 @@ export class ComponentUI {
     this.pageItemSlot.register(items);
   };
 
+  registerComponentField = (documentNode: DocumentNode) => {
+    this.documentNodeSlot.register(documentNode);
+  };
+
   static dependencies = [PubsubAspect, CommandBarAspect];
 
   static runtime = UIRuntime;
@@ -214,18 +232,20 @@ export class ComponentUI {
     Slot.withType<ConsumeMethodSlot>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<ComponentPageSlot>(),
+    Slot.withType<DocumentNodeSlot>(),
   ];
 
   static async provider(
     [pubsub, commandBarUI]: [PubsubUI, CommandBarUI],
     config,
-    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot]: [
+    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot, documentNodeSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
       ConsumeMethodSlot,
       OrderedNavigationSlot,
       MenuItemSlot,
-      ComponentPageSlot
+      ComponentPageSlot,
+      DocumentNodeSlot
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
@@ -238,6 +258,7 @@ export class ComponentUI {
       widgetSlot,
       menuItemSlot,
       pageSlot,
+      documentNodeSlot,
       commandBarUI
     );
     const section = new AspectSection();

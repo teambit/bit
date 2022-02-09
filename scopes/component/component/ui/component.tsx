@@ -1,3 +1,4 @@
+import { DocumentNode } from 'graphql';
 import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -17,6 +18,7 @@ export type ComponentPageElement = {
 export type ComponentProps = {
   containerSlot?: ComponentPageSlot;
   routeSlot: RouteSlot;
+  fields: DocumentNode[];
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
 };
@@ -24,8 +26,8 @@ export type ComponentProps = {
 /**
  * main UI component of the Component extension.
  */
-export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
-  const { component, error } = useComponent(host);
+export function Component({ routeSlot, containerSlot, host, onComponentChange, fields }: ComponentProps) {
+  const { component, error } = useComponent(host, fields);
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component

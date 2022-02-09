@@ -1,3 +1,4 @@
+import { DocumentNode } from 'graphql';
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
@@ -14,7 +15,7 @@ type ComponentRoute = {
   componentId?: string;
 };
 
-export function useComponent(host: string, id?: ComponentID): Component {
+export function useComponent(host: string, id?: ComponentID, componentFields?: DocumentNode[]): Component {
   const {
     params: { componentId },
   } = useRouteMatch<ComponentRoute>();
@@ -23,8 +24,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
 
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
   if (!targetId) throw new TypeError('useComponent received no component id');
-
-  return useComponentQuery(withVersion(targetId, version), host);
+  return useComponentQuery(withVersion(targetId, version), host, componentFields);
 }
 
 function withVersion(id: string, version?: string) {
