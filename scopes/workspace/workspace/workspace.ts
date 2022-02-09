@@ -1972,6 +1972,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const envIdStr = envId.toString();
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
+    await this.unsetEnvFromComponents(componentIds);
     componentIds.forEach((componentId) => {
       this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
       this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });

@@ -7,11 +7,10 @@ export default class RemovedLocalObjects extends RemovedObjects {
     removedComponentIds?: BitIds,
     missingComponents?: BitIds,
     modifiedComponents?: BitIds,
-    removedDependencies?: BitIds,
     dependentBits?: Record<string, any>,
     removedFromLane?: boolean
   ) {
-    super({ removedComponentIds, missingComponents, removedDependencies, dependentBits, removedFromLane });
+    super({ removedComponentIds, missingComponents, dependentBits, removedFromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.modifiedComponents = modifiedComponents;
   }
