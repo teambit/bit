@@ -6,21 +6,19 @@ import {
   groupByComponentHash,
   getLaneComponentUrl,
   getLaneUrl,
-  LanesHost,
 } from '@teambit/lanes.lanes.ui';
 import { LanesContext, LanesContextType } from './lanes-context';
 
 export type LanesProviderProps = {
   children: ReactNode;
-  host: LanesHost;
 };
 
-export function LanesProvider({ children, host }: LanesProviderProps) {
-  const initialLaneState = useLanes(host);
+export function LanesProvider({ children }: LanesProviderProps) {
+  const initialLaneState = useLanes();
   const [model, setModel] = useState<LanesModel>(initialLaneState);
   useEffect(() => {
-    if (!!initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
-  }, [initialLaneState, model]);
+    if (initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
+  }, [initialLaneState.lanes, model.lanes]);
 
   const context: LanesContextType = {
     model,

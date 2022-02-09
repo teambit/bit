@@ -1,1 +1,1 @@
-export * from './lanes-query';
+export { useLanes } from './lanes-query';
