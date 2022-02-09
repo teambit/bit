@@ -3,7 +3,7 @@ import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap } from '@t
 import type { Logger } from '@teambit/logger';
 import { isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
-import type { Compiler, Configuration, StatsCompilation } from 'webpack';
+import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
 
 type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
@@ -84,12 +84,12 @@ export class WebpackBundler implements Bundler {
 
   private getEntriesAssetsMap(stats: StatsCompilation, assetsMap: AssetsMap): EntriesAssetsMap {
     const entriesMap = stats.entrypoints;
-    if (!entriesMap) return {};
+    if (!entriesMap || !Object.keys(assetsMap).length) return {};
     Object.entries(entriesMap).forEach(([, entryVal]) => {
       let compressedAssetsSize = 0;
       let compressedAuxiliaryAssetsSize = 0;
       entryVal.assets?.forEach((asset) => {
-        const compressedSize = assetsMap[asset.name].compressedSize;
+        const compressedSize = assetsMap[asset.name]?.compressedSize;
         if (compressedSize) {
           // @ts-ignore
           asset.compressedSize = compressedSize;
@@ -97,7 +97,7 @@ export class WebpackBundler implements Bundler {
         }
       });
       entryVal.auxiliaryAssets?.forEach((asset) => {
-        const compressedSize = assetsMap[asset.name].compressedSize;
+        const compressedSize = assetsMap[asset.name]?.compressedSize;
         if (compressedSize) {
           // @ts-ignore
           asset.compressedSize = compressedSize;
@@ -110,7 +110,7 @@ export class WebpackBundler implements Bundler {
     return entriesMap as any as EntriesAssetsMap;
   }
 
-  private getCompressedSize(asset): number | undefined {
+  private getCompressedSize(asset: StatsAsset): number | undefined {
     if (!asset.related || isEmpty(asset.related)) return undefined;
     const gzipped = asset.related.find((relatedAsset) => {
       return relatedAsset.type === 'gzipped';
