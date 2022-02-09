@@ -49,6 +49,7 @@ export function CodeTabTree({
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
       const lanes = useContext(LanesContext);
+
       const currentLaneUrl = lanes?.model?.currentLane?.url || '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
       const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
