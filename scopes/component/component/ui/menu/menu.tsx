@@ -1,4 +1,5 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import { DocumentNode } from 'graphql';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -31,13 +32,23 @@ export type MenuProps = {
   menuItemSlot: MenuItemSlot;
 
   consumeMethodSlot: ConsumeMethodSlot;
+  fields?: DocumentNode[];
 };
 
 /**
  * top bar menu.
  */
-export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot, consumeMethodSlot }: MenuProps) {
-  const { component } = useComponent(host);
+export function Menu({
+  navigationSlot,
+  widgetSlot,
+  className,
+  host,
+  menuItemSlot,
+  consumeMethodSlot,
+  fields,
+}: MenuProps) {
+  console.log('menu fields', fields);
+  const { component } = useComponent(host, undefined, []);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (

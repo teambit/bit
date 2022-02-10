@@ -16,12 +16,13 @@ type ComponentRoute = {
 };
 
 export function useComponent(host: string, id?: ComponentID, componentFields?: DocumentNode[]): Component {
+  console.log('componentFields', componentFields);
   const {
     params: { componentId },
   } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
   const version = query.get('version') || undefined;
-
+  // debugger
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
   if (!targetId) throw new TypeError('useComponent received no component id');
   return useComponentQuery(withVersion(targetId, version), host, componentFields);

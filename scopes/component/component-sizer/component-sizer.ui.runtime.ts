@@ -1,4 +1,6 @@
 // import React from 'react';
+import { DocumentNode } from 'graphql';
+import { gql } from '@apollo/client';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { DocsAspect, DocsUI } from '@teambit/docs';
