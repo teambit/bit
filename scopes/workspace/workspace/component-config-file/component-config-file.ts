@@ -1,6 +1,6 @@
 import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, configEntryToDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
@@ -87,7 +87,7 @@ export class ComponentConfigFile {
     if (existing) {
       existing.config = config;
     } else {
-      const aspectEntry = await AspectEntry.fromConfigObject(aspectId, config, resolveComponentId);
+      const aspectEntry = await this.aspectEntryFromConfigObject(aspectId, config, resolveComponentId);
       this.aspects.entries.push(aspectEntry);
     }
   }
@@ -100,6 +100,12 @@ export class ComponentConfigFile {
     } else if (markWithMinusIfNotExist) {
       await this.addAspect(aspectId, REMOVE_EXTENSION_SPECIAL_SIGN, resolveComponentId);
     }
+  }
+
+  private async aspectEntryFromConfigObject(id: string, config: any, resolveComponentId: ResolveComponentIdFunc) {
+    const aspectId = await resolveComponentId(id);
+    const legacyEntry = configEntryToDataEntry(id, config);
+    return new AspectEntry(aspectId, legacyEntry);
   }
 
   toJson(): ComponentConfigFileJson {

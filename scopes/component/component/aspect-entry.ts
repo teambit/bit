@@ -1,4 +1,8 @@
-import { configEntryToDataEntry, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+/**
+ * avoid importing any (non-type) legacy code here. otherwise, PreviewTask will throw cryptic errors
+ */
+
+import type { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {
@@ -64,15 +68,5 @@ export class AspectEntry {
       data: this.data,
       icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
     };
-  }
-
-  static async fromConfigObject(
-    id: string,
-    config: any,
-    resolveComponentId: ResolveComponentIdFunc
-  ): Promise<AspectEntry> {
-    const aspectId = await resolveComponentId(id);
-    const legacyEntry = configEntryToDataEntry(id, config);
-    return new AspectEntry(aspectId, legacyEntry);
   }
 }
