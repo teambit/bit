@@ -6,6 +6,7 @@ import { mergeTypeDefs } from '@graphql-tools/merge';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { ComponentDescriptorProps, ComponentDescriptor } from '@teambit/component-descriptor';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
@@ -23,6 +24,10 @@ const componentFields = gql`
   fragment componentFields on Component {
     id {
       ...componentIdFields
+    }
+    aspects {
+      id
+      data
     }
     packageName
     elementsUrl
@@ -234,9 +239,9 @@ export function useComponentQuery(componentId: string, host: string, _componentF
   }, []);
 
   const rawComponent = data?.getHost?.get;
-
   return useMemo(() => {
     return {
+      componentDescriptor: rawComponent ? ComponentDescriptor.fromObject(rawComponent.id) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error

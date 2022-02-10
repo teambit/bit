@@ -5,7 +5,11 @@ export type ComponentDescriptorProps = {
   /**
    * serialized component ID.
    */
-  id: string;
+  id: {
+    name: string;
+    scope: string;
+    version?: string;
+  };
   /**
    * aspects map data
    */
@@ -38,7 +42,7 @@ export class ComponentDescriptor {
 
   toObject(): ComponentDescriptorProps {
     return {
-      id: this.id.toString(),
+      id: this.id.toObject(),
       aspectMap: this.aspectMap.toObject(),
     };
   }
@@ -52,7 +56,7 @@ export class ComponentDescriptor {
   }
 
   static fromObject({ id, aspectMap }: ComponentDescriptorProps) {
-    return new ComponentDescriptor(ComponentID.fromString(id), AspectMap.fromObject(aspectMap));
+    return new ComponentDescriptor(ComponentID.fromObject(id), AspectMap.fromObject(aspectMap));
   }
 
   static fromArray(componentsDescriptorProps: ComponentDescriptorProps[]) {
