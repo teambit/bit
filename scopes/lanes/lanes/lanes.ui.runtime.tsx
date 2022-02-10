@@ -96,7 +96,7 @@ export class LanesUI {
   private renderContext = ({ children }: { children: ReactNode }) => {
     return (
       <LanesProvider>
-        <LanesPage></LanesPage>
+        <LanesPage />
         {children}
       </LanesProvider>
     );

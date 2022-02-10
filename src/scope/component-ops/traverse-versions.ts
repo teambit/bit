@@ -63,6 +63,7 @@ export async function getAllVersionsInfo({
   let stopped = false;
   const headOnMain = modelComponent.getHead()?.toString();
   let foundOnMain = laneHead?.toString() === headOnMain;
+
   if (laneHead) {
     const headInfo: VersionInfo = {
       ref: laneHead,

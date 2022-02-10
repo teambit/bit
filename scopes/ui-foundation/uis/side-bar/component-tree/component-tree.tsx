@@ -31,7 +31,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
   const onSelect = () => {
-    updateCurrentLane(undefined);
+    updateCurrentLane?.(undefined);
   };
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
