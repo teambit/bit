@@ -174,7 +174,7 @@ your package.json (if existed) has been restored, however, some bit generated da
 
   private async untrackComponents() {
     this.logger.debug('eject: removing the components from the .bitmap');
-    await this.consumer.cleanFromBitMap(this.idsToEject, new BitIds());
+    await this.consumer.cleanFromBitMap(this.idsToEject);
   }
 
   throwEjectError(message: string, originalError: Error) {
