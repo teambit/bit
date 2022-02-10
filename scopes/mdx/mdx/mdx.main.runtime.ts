@@ -7,7 +7,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import DocsAspect, { DocsMain } from '@teambit/docs';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
-import ReactAspect, { ReactMain } from '@teambit/react';
+import ReactAspect, { ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
@@ -34,6 +34,14 @@ export class MDXMain {
   createCompiler(opts: MDXCompilerOpts = {}) {
     const mdxCompiler = new MDXCompiler(MDXAspect.id, opts);
     return mdxCompiler;
+  }
+
+  _mdxEnv: ReactEnv;
+  get mdxEnv() {
+    return this._mdxEnv;
+  }
+  private set mdxEnv(value: ReactEnv) {
+    this._mdxEnv = value;
   }
 
   static runtime = MainRuntime;
@@ -97,6 +105,7 @@ export class MDXMain {
     docs.registerDocReader(new MDXDocReader(config.extensions));
     generator.registerComponentTemplate(componentTemplates);
 
+    mdx.mdxEnv = mdxEnv as ReactEnv;
     return mdx;
   }
 }
