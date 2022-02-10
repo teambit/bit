@@ -1,4 +1,4 @@
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { configEntryToDataEntry, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {
@@ -13,6 +13,7 @@ export type AspectData = {
   [key: string]: any;
 };
 
+export type ResolveComponentIdFunc = (id: string) => Promise<ComponentID>;
 export class AspectEntry {
   constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
 
@@ -63,5 +64,15 @@ export class AspectEntry {
       data: this.data,
       icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
     };
+  }
+
+  static async fromConfigObject(
+    id: string,
+    config: any,
+    resolveComponentId: ResolveComponentIdFunc
+  ): Promise<AspectEntry> {
+    const aspectId = await resolveComponentId(id);
+    const legacyEntry = configEntryToDataEntry(id, config);
+    return new AspectEntry(aspectId, legacyEntry);
   }
 }

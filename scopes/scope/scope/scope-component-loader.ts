@@ -28,8 +28,12 @@ export class ScopeComponentLoader {
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     // import if missing
-    if (!modelComponent && importIfMissing && id._legacy.hasScope()
-    && !this.importedComponentsCache.get(id.toString())) {
+    if (
+      !modelComponent &&
+      importIfMissing &&
+      id._legacy.hasScope() &&
+      !this.importedComponentsCache.get(id.toString())
+    ) {
       await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
@@ -154,6 +158,9 @@ export class ScopeComponentLoader {
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
       new Config(version.mainFile, consumerComponent.extensions),
+      // @todo: Ran/Gilad - "this.scope.name" later in AspectList becomes the ComponentID.scope
+      // if an aspect is tagged but not exported, it'll possibly get an incorrect scope-name (?)
+      // an alternative would be passing "scope.resolveComponentId" as a function
       this.scope.componentExtension.createAspectList(consumerComponent.extensions, this.scope.name),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,

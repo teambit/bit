@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -42,6 +43,40 @@ describe('env', function () {
     it('should replace the env with the last one and remove the first one', () => {
       const show = helper.command.showComponent('comp1');
       expect(show).to.not.have.string('teambit.harmony/aspect');
+    });
+  });
+  describe('run bit env set when there is a component.json', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.ejectConf('comp1');
+      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+    });
+    it('should write the env into the component.json file', () => {
+      const compJson = helper.componentJson.read('comp1');
+      expect(compJson.extensions).to.have.property(Extensions.envs);
+    });
+    it('should not add "config" to the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1).to.not.have.property('config');
+    });
+    it('should set the new env correctly', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.equal('teambit.harmony/aspect');
+    });
+    describe('run bit env unset', () => {
+      before(() => {
+        helper.command.unsetEnv('comp1');
+      });
+      it('should unset the env correctly', () => {
+        const env = helper.env.getComponentEnv('comp1');
+        expect(env).to.not.equal('teambit.harmony/aspect');
+      });
+      it('should remove the env from the component.json file', () => {
+        const compJson = helper.componentJson.read('comp1');
+        expect(compJson.extensions).to.not.have.property(Extensions.envs);
+      });
     });
   });
 });
