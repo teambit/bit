@@ -224,7 +224,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return ExtensionDataList.fromArray(arr);
   }
 
-  static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
+  static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
     const arr = Object.keys(obj).map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
     return this.fromArray(arr);
   }
