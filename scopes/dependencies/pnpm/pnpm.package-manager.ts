@@ -119,7 +119,7 @@ export class PnpmPackageManager implements PackageManager {
         nodeLinker: installOptions.nodeLinker,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: config.publicHoistPattern,
+        publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
       },
       this.logger
     );
