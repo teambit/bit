@@ -1734,9 +1734,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
     const hasRootComponents = Boolean(this.dependencyResolver.config.rootComponents);
-    if (hasRootComponents && this.dependencyResolver.config.packageManager !== 'teambit.dependencies/pnpm') {
-      throw new BitError('rootComponents are only supported by the pnpm package manager');
-    }
     const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,

@@ -1244,10 +1244,10 @@ export class DependencyResolverMain {
    * @param rootDir - The root directory of the workspace
    * @param compDir - Relative path to the component's directory
    */
-  async getInjectedDirs(rootDir: string, componentDir: string): Promise<string[]> {
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     if (typeof packageManager?.getInjectedDirs === 'function') {
-      return packageManager.getInjectedDirs(rootDir, componentDir);
+      return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
     }
     return [];
   }

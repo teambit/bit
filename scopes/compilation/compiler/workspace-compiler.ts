@@ -126,15 +126,15 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   private async distDirs(): Promise<PathOsBasedRelative[]> {
     const packageName = componentIdToPackageName(this.component.state._consumer);
     const packageDir = path.join('node_modules', packageName);
-    const injectedDirs = await this.getInjectedDirs();
+    const injectedDirs = await this.getInjectedDirs(packageName);
     return [packageDir, ...injectedDirs].map((dist) => path.join(dist, DEFAULT_DIST_DIRNAME));
   }
 
-  private async getInjectedDirs(): Promise<PathOsBasedRelative[]> {
+  private async getInjectedDirs(packageName: string): Promise<PathOsBasedRelative[]> {
     const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
       relative: true,
     });
-    return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir);
+    return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir, packageName);
   }
 
   private get componentDir(): PathOsBasedAbsolute {
