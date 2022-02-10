@@ -41,7 +41,7 @@ export class LanesDrawer implements DrawerType {
           There are no lanes in your current workspace
         </span>
       );
-    return <LaneTree showScope={showScope} isCollapsed={collapsed}></LaneTree>;
+    return <LaneTree showScope={this.showScope} isCollapsed={collapsed}></LaneTree>;
   };
 }
 

@@ -1,6 +1,6 @@
 import { ComponentModel } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 export const baseLaneRoute = '/~lane';
 export const laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
@@ -11,7 +11,7 @@ export const getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =
   laneId ? `${getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';
 
 export type LaneComponentQueryResult = {
-  id: string;
+  id: ComponentIdObj;
   head: string;
 };
 export type LaneQueryResult = {
@@ -48,32 +48,26 @@ export type LaneModel = {
 export function mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeModel): LaneModel {
   const { name, remote, isMerged } = laneData;
   const laneName = name;
-  const fullName = remote || name;
-  const laneScope = remote?.split('/')[0];
+  const laneId = remote || name;
+  const laneScope = remote?.split('/')[0] || currentScope.name;
 
   const components = laneData.components.map((component) => {
-    const componentName = getLaneComponentName(component);
-    const componentScope = getLaneComponentScope(component) || laneScope || currentScope.name;
     const componentModel = ComponentModel.from({
-      id: {
-        name: componentName,
-        version: component.head,
-        scope: componentScope,
-      },
-      displayName: component.id,
+      id: { ...component.id, version: component.head, scope: component.id.scope || laneScope },
+      displayName: component.id.name,
       compositions: [],
       packageName: '',
       description: '',
     });
-    return { model: componentModel, url: getLaneComponentUrl(componentModel.id, fullName) };
+    return { model: componentModel, url: getLaneComponentUrl(componentModel.id, laneId) };
   });
 
   return {
-    id: fullName,
+    id: laneId,
     name: laneName,
     scope: laneScope || currentScope.name,
     isMerged,
-    url: getLaneUrl(fullName),
+    url: getLaneUrl(laneId),
     components,
   };
 }
@@ -119,14 +113,4 @@ export function mapToLanesModel(lanesData: LanesQueryResult, currentScope: Scope
     lanes,
     currentLane,
   };
-}
-
-function getLaneComponentName(laneComponent: LaneComponentQueryResult) {
-  return laneComponent.id.split('/').slice(1).join('/');
-}
-
-function getLaneComponentScope(laneComponent: LaneComponentQueryResult) {
-  const hasIdBeenExported = laneComponent.id.includes('.');
-  if (hasIdBeenExported) return laneComponent.id.split('/')[0];
-  return undefined;
 }

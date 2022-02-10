@@ -5,8 +5,14 @@ import { LanesMain } from './lanes.main.runtime';
 export function lanesSchema(lanesMain: LanesMain): Schema {
   return {
     typeDefs: gql`
+      type ComponentID {
+        name: String!
+        version: String
+        scope: String
+      }
+
       type CompLaneData {
-        id: String!
+        id: ComponentID!
         head: String!
       }
 
@@ -62,7 +68,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
-            components: lane.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
+            components: lane.components,
             isMerged: Boolean(lane.isMerged),
             remote: lane.remote,
           }));
@@ -72,7 +78,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const laneResult = lanesResults[0];
           return {
             name: laneResult.name,
-            components: laneResult.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
+            components: laneResult.components,
             isMerged: Boolean(laneResult.isMerged),
           };
         },

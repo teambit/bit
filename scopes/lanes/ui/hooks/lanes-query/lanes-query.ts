@@ -11,7 +11,10 @@ const GET_LANES = gql`
         remote
         isMerged
         components {
-          id
+          id {
+            name
+            scope
+          }
           head
         }
       }
