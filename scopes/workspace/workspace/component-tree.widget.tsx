@@ -2,7 +2,7 @@ import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tr
 import { ComponentStatusResolver } from '@teambit/component.ui.component-status-resolver';
 import React, { useContext } from 'react';
 
-import { useLanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export class ComponentTreeWidget implements ComponentTreeNode {

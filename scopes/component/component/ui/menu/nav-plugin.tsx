@@ -2,7 +2,7 @@
 import { SlotRegistry } from '@teambit/harmony';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel } from '@teambit/lanes.lanes.ui';
+import { LaneModel } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from '../../ui';
 
 export type NavPlugin = {

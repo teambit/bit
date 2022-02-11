@@ -6,7 +6,7 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneModel } from '@teambit/lanes.lanes.ui';
+import { LaneModel } from '@teambit/lanes.ui.lanes';
 import styles from './lane-tree-node.module.scss';
 
 export type LaneTreeNodeProps<Payload = PayloadType> = {} & TreeNodeProps<Payload>;

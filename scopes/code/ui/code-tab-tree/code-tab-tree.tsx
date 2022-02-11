@@ -10,7 +10,7 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
-import { useLanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './code-tab-tree.module.scss';
 

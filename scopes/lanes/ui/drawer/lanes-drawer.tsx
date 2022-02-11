@@ -4,7 +4,7 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { LaneTree, useLanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneTree, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './lanes-drawer.module.scss';
 

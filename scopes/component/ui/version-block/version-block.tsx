@@ -5,7 +5,7 @@ import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useMemo } from 'react';
-import { useLanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './version-block.module.scss';
 

@@ -489,12 +489,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
-    "lanes/ui": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui"
-    },
     "legacy-bit-id": {
         "scope": "teambit.component",
         "version": "0.0.398",
@@ -1250,6 +1244,12 @@
         "version": "0.0.348",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
+    },
+    "ui/lanes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui"
     },
     "ui/load-preview": {
         "scope": "teambit.workspace",

@@ -14,7 +14,7 @@ import {
   LanesPage,
   LanesModel,
   LanesOverviewMenu,
-} from '@teambit/lanes.lanes.ui';
+} from '@teambit/lanes.ui.lanes';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';

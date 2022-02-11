@@ -8,7 +8,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { useLanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;

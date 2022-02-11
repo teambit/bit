@@ -1,5 +1,5 @@
 import React, { ReactNode, useReducer, useEffect } from 'react';
-import { useLanes, LanesModel, LaneModel } from '@teambit/lanes.lanes.ui';
+import { useLanes, LanesModel, LaneModel } from '@teambit/lanes.ui.lanes';
 import { LanesContext } from './lanes-context';
 
 export enum LanesActionTypes {

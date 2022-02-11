@@ -4,7 +4,7 @@ import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
-import { useLanesContext, LanesActionTypes } from '@teambit/lanes.lanes.ui';
+import { useLanesContext, LanesActionTypes } from '@teambit/lanes.ui.lanes';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';

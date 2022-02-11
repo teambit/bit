@@ -8,7 +8,7 @@ import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel, useLanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';

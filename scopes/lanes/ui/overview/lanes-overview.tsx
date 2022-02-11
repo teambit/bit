@@ -1,5 +1,5 @@
 import React from 'react';
-import { LaneDetails, useLanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneDetails, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';

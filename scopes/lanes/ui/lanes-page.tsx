@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { LanesActionTypes, LanesUpdateCurrentLaneAction, useLanesContext } from '@teambit/lanes.lanes.ui';
+import { LanesActionTypes, LanesUpdateCurrentLaneAction, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { useLocation } from '@teambit/react-router';
 
 export function LanesPage() {
