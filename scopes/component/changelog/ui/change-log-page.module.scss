@@ -28,7 +28,7 @@
   align-items: center;
   min-width: 0;
   padding: 24px 0px 16px 32px;
-  > span {
+  .laneName {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

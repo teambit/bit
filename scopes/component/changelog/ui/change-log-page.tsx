@@ -56,7 +56,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         <>
           <div className={styles.lane}>
             <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={currentLane.id} />
-            <span>{currentLane.id}</span>
+            <span className={styles.laneName}>{currentLane.id}</span>
           </div>
           <Separator isPresentational className={styles.separator} />
         </>

@@ -24,8 +24,6 @@ export {
   LanesOverview,
   LaneDetails,
   LaneDetailsProps,
-  LaneComponentCard,
-  LaneComponentCardProps,
   LanesOverviewMenu,
   LanesOverviewMenuProps,
   LanesOrderedNavigationSlot,
