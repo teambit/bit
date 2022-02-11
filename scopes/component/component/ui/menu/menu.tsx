@@ -5,10 +5,10 @@ import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { compact, flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel, LanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneModel, useLanesContext } from '@teambit/lanes.lanes.ui';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
@@ -68,8 +68,8 @@ function VersionRelatedDropdowns({
 }) {
   const location = useLocation();
   const isNew = component.tags.isEmpty();
-  const lane = useContext(LanesContext);
-  const currentLane = lane.model?.currentLane;
+  const { model } = useLanesContext();
+  const currentLane = model.currentLane;
 
   const isWorkspace = host === 'teambit.workspace/workspace';
   const versionList = useMemo(() => {

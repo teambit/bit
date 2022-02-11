@@ -1,2 +1,2 @@
-export * from './lane-tree';
-export * from './lane-tree-node';
+export { LaneTree, LaneTreeProps } from './lane-tree';
+export { LaneTreeNode, LaneTreeNodeProps } from './lane-tree-node';

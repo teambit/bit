@@ -1,58 +1,59 @@
-import React, { ReactNode, useState, useEffect } from 'react';
-import {
-  useLanes,
-  groupByScope,
-  LanesModel,
-  groupByComponentHash,
-  getLaneComponentUrl,
-  getLaneUrl,
-} from '@teambit/lanes.lanes.ui';
-import { LanesContext, LanesContextType } from './lanes-context';
+import React, { ReactNode, useReducer, useEffect } from 'react';
+import { useLanes, LanesModel, LaneModel } from '@teambit/lanes.lanes.ui';
+import { LanesContext } from './lanes-context';
+
+export enum LanesActionTypes {
+  UPDATE_LANES = 'UPDATE_LANES',
+  UPDATE_CURRENT_LANE = 'UPDATE_CURRENT_LANE',
+  UPDATE_LANE = 'UPDATE_LANE',
+}
+export type LanesUpdateLanesAction = {
+  type: LanesActionTypes.UPDATE_LANES;
+  payload: LanesModel;
+};
+export type LanesUpdateLaneAction = {
+  type: LanesActionTypes.UPDATE_LANE;
+  payload: LaneModel;
+};
+export type LanesUpdateCurrentLaneAction = {
+  type: LanesActionTypes.UPDATE_CURRENT_LANE;
+  payload?: LaneModel;
+};
+export type LanesActions = LanesUpdateLanesAction | LanesUpdateLaneAction | LanesUpdateCurrentLaneAction;
 
 export type LanesProviderProps = {
   children: ReactNode;
 };
 
-export function LanesProvider({ children }: LanesProviderProps) {
-  const initialLaneState = useLanes();
-  const [model, setModel] = useState<LanesModel>(initialLaneState);
-  useEffect(() => {
-    if (initialLaneState.lanes && !model.lanes) setModel(initialLaneState);
-  }, [initialLaneState.lanes, model.lanes]);
-
-  const context: LanesContextType = {
-    model,
-    getLaneUrl,
-    getLaneComponentUrl: (componentId, laneId) => {
-      if (laneId) return getLaneComponentUrl(componentId, laneId);
-      return componentId.version && context.model?.lanes?.byComponentHash
-        ? getLaneComponentUrl(componentId, context.model?.lanes?.byComponentHash[componentId.version])
-        : '';
-    },
-    updateCurrentLane: (currentLane) => {
-      setModel({ ...model, currentLane });
-    },
-    updateLane: (lane) => {
-      const updatedLanes = (model?.lanes?.list || []).map((existingLane) => {
-        if (existingLane.id === lane.id) {
-          return lane;
+const lanesReducer = (state: LanesModel, action: LanesActions) => {
+  switch (action.type) {
+    case LanesActionTypes.UPDATE_LANES: {
+      return action.payload;
+    }
+    case LanesActionTypes.UPDATE_LANE: {
+      const updatedLanes = state.lanes.map((existingLane) => {
+        if (existingLane.id === action.payload.id) {
+          return action.payload;
         }
-        return lane;
+        return existingLane;
       });
-      const updatedModel = {
-        ...(model || {}),
-        lanes: {
-          list: updatedLanes,
-          byScope: groupByScope(updatedLanes),
-          byComponentHash: groupByComponentHash(updatedLanes),
-        },
-      };
-      setModel(updatedModel);
-    },
-    updateLanes: (lanes) => {
-      setModel(lanes);
-    },
-  };
+      return new LanesModel({ lanes: updatedLanes, currentLane: state.currentLane });
+    }
+    case LanesActionTypes.UPDATE_CURRENT_LANE: {
+      return new LanesModel({ lanes: state.lanes, currentLane: action.payload });
+    }
+    default:
+      return state;
+  }
+};
 
-  return <LanesContext.Provider value={context}>{children}</LanesContext.Provider>;
+export function LanesProvider({ children }: LanesProviderProps) {
+  const { lanesModel, loading } = useLanes();
+  const [state, dispatch] = useReducer<typeof lanesReducer>(lanesReducer, lanesModel);
+  useEffect(() => {
+    if (!loading) {
+      dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanesModel });
+    }
+  }, [loading]);
+  return <LanesContext.Provider value={{ model: state, dispatch }}>{children}</LanesContext.Provider>;
 }

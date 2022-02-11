@@ -5,7 +5,7 @@ import React from 'react';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import styles from './lane-details.module.scss';
 
-type LaneDetailsProps = {
+export type LaneDetailsProps = {
   laneName: string;
   icon?: string;
   description?: string;

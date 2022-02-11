@@ -10,11 +10,10 @@ import {
   LanesHost,
   LanesOverview,
   LanesProvider,
-  laneRouteUrlRegex,
-  laneComponentUrlRegex,
-  LanesOverviewMenu,
-  OrderedNavigationSlot,
+  LanesOrderedNavigationSlot,
   LanesPage,
+  LanesModel,
+  LanesOverviewMenu,
 } from '@teambit/lanes.lanes.ui';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
@@ -37,7 +36,7 @@ export class LanesUI {
     private componentUi: ComponentUI,
     private routeSlot: RouteSlot,
     private menuRouteSlot: RouteSlot,
-    private navSlot: OrderedNavigationSlot,
+    private navSlot: LanesOrderedNavigationSlot,
     private menuItemSlot: MenuItemSlot,
     private reactRouter: ReactRouterUI,
     private workspace?: WorkspaceUI,
@@ -56,21 +55,21 @@ export class LanesUI {
     if (this.hostAspect) {
       this.hostAspect.registerRoutes([
         {
-          path: laneComponentUrlRegex,
+          path: LanesModel.laneComponentUrlRegex,
           children: this.componentUi.getComponentUI(this.host),
         },
         {
-          path: laneRouteUrlRegex,
+          path: LanesModel.laneRouteUrlRegex,
           children: <LanesOverview routeSlot={this.routeSlot} />,
         },
       ]);
       this.hostAspect.registerMenuRoutes([
         {
-          path: laneComponentUrlRegex,
+          path: LanesModel.laneComponentUrlRegex,
           children: this.componentUi.getMenu(this.host),
         },
         {
-          path: laneRouteUrlRegex,
+          path: LanesModel.laneRouteUrlRegex,
           children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
         },
       ]);
@@ -124,7 +123,7 @@ export class LanesUI {
   static async provider(
     [uiUi, reactRouter, componentUi]: [UiUI, ReactRouterUI, ComponentUI],
     _,
-    [routeSlot, menuItemSlot, menuRouteSlot, navSlot]: [RouteSlot, MenuItemSlot, RouteSlot, OrderedNavigationSlot],
+    [routeSlot, menuItemSlot, menuRouteSlot, navSlot]: [RouteSlot, MenuItemSlot, RouteSlot, LanesOrderedNavigationSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;

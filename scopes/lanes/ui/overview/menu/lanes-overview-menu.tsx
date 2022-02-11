@@ -11,18 +11,18 @@ export type NavPlugin = {
   props: NavLinkProps;
   order?: number;
 };
-export type OrderedNavigationSlot = SlotRegistry<NavPlugin>;
+export type LanesOrderedNavigationSlot = SlotRegistry<NavPlugin>;
 
 export type LanesOverviewMenuProps = {
   className?: string;
   /**
    * slot for top bar menu nav items
    */
-  navigationSlot: OrderedNavigationSlot;
+  navigationSlot: LanesOrderedNavigationSlot;
   /**
    * right side menu item slot
    */
-  widgetSlot?: OrderedNavigationSlot;
+  widgetSlot?: LanesOrderedNavigationSlot;
   host: string;
   /**
    * main dropdown item slot
@@ -49,7 +49,7 @@ export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMe
   );
 }
 
-function MenuNav({ navigationSlot }: { navigationSlot: OrderedNavigationSlot }) {
+function MenuNav({ navigationSlot }: { navigationSlot: LanesOrderedNavigationSlot }) {
   const plugins = navigationSlot.toArray().sort(sortFn);
 
   return (

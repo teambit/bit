@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { LaneDetails, LaneComponentCard, LanesContext } from '@teambit/lanes.lanes.ui';
+import React from 'react';
+import { LaneDetails, LaneComponentCard, useLanesContext } from '@teambit/lanes.lanes.ui';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { EmptyLane } from './empty-lane-overview';
@@ -9,7 +9,7 @@ export type LanesOverviewProps = {
   routeSlot: RouteSlot;
 };
 export function LanesOverview({ routeSlot }: LanesOverviewProps) {
-  const { model } = useContext(LanesContext);
+  const { model } = useLanesContext();
 
   const currentLane = model?.currentLane;
   // const laneComponents = currentLane?.components;

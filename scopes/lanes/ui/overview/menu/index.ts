@@ -1,1 +1,1 @@
-export * from './lanes-overview-menu';
+export { LanesOverviewMenu, LanesOverviewMenuProps, LanesOrderedNavigationSlot } from './lanes-overview-menu';

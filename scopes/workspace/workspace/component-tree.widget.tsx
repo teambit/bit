@@ -2,17 +2,17 @@ import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tr
 import { ComponentStatusResolver } from '@teambit/component.ui.component-status-resolver';
 import React, { useContext } from 'react';
 
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.lanes.ui';
 import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export class ComponentTreeWidget implements ComponentTreeNode {
   widget = ({ component }: ComponentTreeNodeProps) => {
     const workspace = useContext(WorkspaceContext);
     const workspaceComponent = workspace.getComponent(component.id);
-    const lanes = useContext(LanesContext);
+    const lanes = useLanesContext();
     if (!workspaceComponent) return null;
 
-    const isInCurrentLane = lanes.model?.currentLane?.components.some(
+    const isInCurrentLane = lanes.model.currentLane?.components.some(
       (comp) => comp.model.id.name === workspaceComponent.id.name
     );
 

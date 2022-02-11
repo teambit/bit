@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.lanes.ui';
 import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
 
@@ -22,8 +22,8 @@ export type ImportProps = {
 } & ExpandableTabContentProps;
 
 export function Import({ componentId, packageName, componentName, ...rest }: ImportProps) {
-  const lanes = useContext(LanesContext);
-  const currentLane = lanes?.model?.currentLane;
+  const lanes = useLanesContext();
+  const currentLane = lanes.model.currentLane;
   return (
     <ExpandableTabContent
       {...rest}

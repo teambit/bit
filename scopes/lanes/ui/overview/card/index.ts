@@ -1,1 +1,1 @@
-export * from './lane-component-card';
+export { LaneComponentCard, LaneComponentCardProps } from './lane-component-card';

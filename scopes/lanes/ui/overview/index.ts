@@ -1,4 +1,4 @@
-export * from './lanes-overview';
-export * from './lane-details';
-export * from './card';
-export * from './menu';
+export { LanesOverviewProps, LanesOverview } from './lanes-overview';
+export { LaneDetails, LaneDetailsProps } from './lane-details';
+export { LaneComponentCard, LaneComponentCardProps } from './card';
+export { LanesOverviewMenu, LanesOverviewMenuProps, LanesOrderedNavigationSlot } from './menu';

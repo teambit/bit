@@ -8,24 +8,24 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.lanes.ui';
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
-  const lane = useContext(LanesContext);
-  const currentLane = lane.model?.currentLane;
+  const { model } = useLanesContext();
+  const { currentLane } = model;
   const snapResult = useSnaps(component.id);
   const { loading } = snapResult;
-  let { snaps } = snapResult;
+  const { snaps } = snapResult;
 
   if (!snaps) return null;
 
-  snaps = currentLane
-    ? snaps.filter((snap) => snap.lane === currentLane?.name)
-    : snaps.filter((snap) => snap.lane === 'main');
+  // snaps = currentLane
+  //   ? snaps.filter((snap) => snap.lane === currentLane?.name)
+  //   : snaps.filter((snap) => snap.lane === 'main');
 
   if (snaps.length === 0 && !loading) {
     return (

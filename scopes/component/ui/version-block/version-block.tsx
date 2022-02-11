@@ -4,8 +4,8 @@ import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import React, { HTMLAttributes, useMemo, useContext } from 'react';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import React, { HTMLAttributes, useMemo } from 'react';
+import { useLanesContext } from '@teambit/lanes.lanes.ui';
 
 import styles from './version-block.module.scss';
 
@@ -20,8 +20,8 @@ export type VersionBlockProps = {
  */
 export function VersionBlock({ isLatest, className, snap, componentId, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
-  const lanes = useContext(LanesContext);
-  const currentLaneUrl = lanes?.model?.currentLane?.url || '';
+  const lanes = useLanesContext();
+  const currentLaneUrl = lanes.model.currentLane?.url || '';
   const version = tag || hash;
   const author = useMemo(() => {
     return {

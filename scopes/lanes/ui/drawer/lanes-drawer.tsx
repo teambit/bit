@@ -4,7 +4,7 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { LaneTree, LanesContext } from '@teambit/lanes.lanes.ui';
+import { LaneTree, useLanesContext } from '@teambit/lanes.lanes.ui';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -23,19 +23,19 @@ export class LanesDrawer implements DrawerType {
   widget = (<Widget />);
 
   Context = ({ children }) => {
-    const { model } = useContext(LanesContext);
-    const isCollapsed = !model?.currentLane;
+    const { model } = useLanesContext();
+    const isCollapsed = !model.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
   render = () => {
-    const { model } = useContext(LanesContext);
+    const { model } = useLanesContext();
     const { collapsed } = useContext(LaneTreeContext);
 
     if (!model || !model.lanes) return <FullLoader />;
     const { lanes } = model;
 
-    if (lanes.list.length === 0)
+    if (lanes.length === 0)
       return (
         <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>
           There are no lanes in your current workspace

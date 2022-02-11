@@ -1,24 +1,27 @@
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo } from 'react';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { LanesContext, LaneModel } from '@teambit/lanes.lanes.ui';
+import { LanesActionTypes, useLanesContext, LanesUpdateCurrentLaneAction } from '@teambit/lanes.lanes.ui';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LaneTreeNode } from './lane-tree-node';
 
-type LaneTreeProps = {
+export type LaneTreeProps = {
   isCollapsed?: boolean;
   showScope: boolean;
 };
 
 export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
-  const { model, updateCurrentLane } = useContext(LanesContext);
-  const lanes = model?.lanes?.list || [];
-  const lanesByScope = model?.lanes?.byScope || new Map<string, LaneModel[]>();
+  const { model, dispatch } = useLanesContext();
+  const { lanes, lanesByScope } = model;
   const onSelect = (id: string) => {
-    updateCurrentLane?.(lanes?.find((lane) => lane.id === id));
+    const action: LanesUpdateCurrentLaneAction = {
+      type: LanesActionTypes.UPDATE_CURRENT_LANE,
+      payload: lanes.find((lane) => lane.id === id),
+    };
+    dispatch(action);
   };
-  const activeLaneName = model?.currentLane?.name;
+  const activeLaneName = model.currentLane?.name;
 
   const tree: TreeNode<PayloadType> = useMemo(() => {
     const scopes = [...lanesByScope.keys()];

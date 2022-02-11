@@ -6,7 +6,7 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext } from '@teambit/lanes.lanes.ui';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
 
@@ -18,8 +18,8 @@ export type OverviewProps = {
 
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
-  const lanesModel = useContext(LanesContext);
-  const laneId = lanesModel?.model?.currentLane?.id;
+  const lanesModel = useLanesContext();
+  const laneId = lanesModel.model.currentLane?.id;
   const { data } = useFetchDocs(component.id.toString());
   const fetchComponent = data?.component;
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')

@@ -1,10 +1,10 @@
 import { ComponentModel } from '@teambit/component';
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
-import { LanesContext } from '@teambit/lanes.lanes.ui';
+import { useLanesContext, LanesActionTypes } from '@teambit/lanes.lanes.ui';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
@@ -19,7 +19,7 @@ type ComponentTreeProps = {
 
 export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
-  const { updateCurrentLane } = useContext(LanesContext);
+  const { dispatch } = useLanesContext();
 
   const activeComponent = useMemo(() => {
     const componentUrlRegex = new RegExp(componentIdUrlRegex);
@@ -31,7 +31,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
   const onSelect = () => {
-    updateCurrentLane?.(undefined);
+    dispatch({ type: LanesActionTypes.UPDATE_CURRENT_LANE });
   };
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
