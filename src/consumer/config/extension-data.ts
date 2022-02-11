@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import R from 'ramda';
-import { compact } from 'lodash';
-
+import { compact, isEmpty, cloneDeep } from 'lodash';
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
@@ -11,20 +10,23 @@ import {
 } from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
+type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
   id: string;
-  config: Record<string, any> | RemoveExtensionSpecialSign;
+  config: ExtensionConfig;
 };
 
 export const REMOVE_EXTENSION_SPECIAL_SIGN = '-';
 type RemoveExtensionSpecialSign = '-';
+
+export const INTERNAL_CONFIG_FIELDS = ['__specific'];
 
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public rawConfig: { [key: string]: any } | RemoveExtensionSpecialSign = {},
+    public rawConfig: ExtensionConfig = {},
     public data: { [key: string]: any } = {},
     public newExtensionId: any = undefined
   ) {}
@@ -186,8 +188,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigObject() {
     const res = {};
     this.forEach((entry) => {
-      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
-        res[entry.stringId] = entry.rawConfig;
+      if (entry.rawConfig && !isEmpty(entry.rawConfig)) {
+        res[entry.stringId] = removeInternalConfigFields(entry.rawConfig);
+        if (isEmpty(res[entry.stringId])) delete res[entry.stringId];
       }
     });
     return res;
@@ -278,4 +281,11 @@ export function configEntryToDataEntry(extensionId: string, config: any): Extens
     return new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
   }
   return new ExtensionDataEntry(undefined, undefined, extensionId, config, undefined);
+}
+
+export function removeInternalConfigFields(config?: ExtensionConfig): ExtensionConfig | undefined {
+  if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return config;
+  const clonedConfig = cloneDeep(config);
+  INTERNAL_CONFIG_FIELDS.forEach((field) => delete clonedConfig[field]);
+  return clonedConfig;
 }

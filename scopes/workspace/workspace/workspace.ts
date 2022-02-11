@@ -71,7 +71,7 @@ import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick, partition } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -251,9 +251,13 @@ export class Workspace implements ComponentFactory {
   }
 
   private validateConfig() {
-    const defaultScope = this.config.defaultScope;
     if (this.consumer.isLegacy) return;
-    if (!defaultScope) throw new Error('defaultScope is missing');
+    if (isEmpty(this.config))
+      throw new BitError(
+        `fatal: workspace config is empty. probably one of bit files is missing. consider running "bit init"`
+      );
+    const defaultScope = this.config.defaultScope;
+    if (!defaultScope) throw new BitError('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
