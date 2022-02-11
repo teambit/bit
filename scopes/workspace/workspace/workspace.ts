@@ -1152,7 +1152,7 @@ export class Workspace implements ComponentFactory {
     if (componentConfigFile) {
       return componentConfigFile.aspects.get(aspectId)?.config;
     }
-    return this.bitMap.getBitmapEntry(id).config;
+    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
   }
 
   /**

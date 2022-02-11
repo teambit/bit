@@ -32,7 +32,7 @@ describe('env', function () {
       expect(env).to.equal('teambit.harmony/aspect');
     });
   });
-  describe('run bit env set X and then tag bit env set Y', () => {
+  describe('run bit env set X and then bit env set Y', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
