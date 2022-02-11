@@ -199,8 +199,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
       // Remove extensions without config
-      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
-        return { id: entry.stringId, config: entry.rawConfig };
+      const clonedEntry = entry.clone();
+      if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
+        removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
+        if (isEmpty(clonedEntry.rawConfig)) return undefined;
+        return { id: clonedEntry.stringId, config: clonedEntry.config };
       }
       return undefined;
     });
@@ -288,4 +291,9 @@ export function removeInternalConfigFields(config?: ExtensionConfig): ExtensionC
   const clonedConfig = cloneDeep(config);
   INTERNAL_CONFIG_FIELDS.forEach((field) => delete clonedConfig[field]);
   return clonedConfig;
+}
+
+export function removeInternalConfigFieldsWithMutation(config?: ExtensionConfig) {
+  if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return;
+  INTERNAL_CONFIG_FIELDS.forEach((field) => delete config[field]);
 }
