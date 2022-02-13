@@ -59,6 +59,7 @@ export class PnpmPackageManager implements PackageManager {
     const rootManifest = workspaceManifest.toJson({
       includeDir: true,
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: installOptions.installPeersFromEnvs,
     });
 
     const componentsManifests = this.computeComponentsManifests(
@@ -118,7 +119,7 @@ export class PnpmPackageManager implements PackageManager {
         nodeLinker: installOptions.nodeLinker,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: config.publicHoistPattern,
+        publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
       },
       this.logger
     );

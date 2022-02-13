@@ -577,7 +577,7 @@ export class ScopeMain implements ComponentFactory {
         // for some reason this needs to be false, otherwise tagging components in some workspaces
         // result in error during Preview task:
         // "No matching version found for <some-component-on-the-workspace>"
-        seedersOnly: false,
+        seedersOnly: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
         host: this,
@@ -615,7 +615,6 @@ export class ScopeMain implements ComponentFactory {
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
-
     return defs;
   }
 
@@ -689,8 +688,12 @@ export class ScopeMain implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
-    const componentsIds = await this.listIds(includeCache);
+  async list(
+    filter?: { offset: number; limit: number },
+    includeCache = false,
+    includeFromLanes = false
+  ): Promise<Component[]> {
+    const componentsIds = await this.listIds(includeCache, includeFromLanes);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
@@ -710,12 +713,14 @@ export class ScopeMain implements ComponentFactory {
    * get ids of all scope components.
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
-  async listIds(includeCache = false): Promise<ComponentID[]> {
+  async listIds(includeCache = false, includeFromLanes = false): Promise<ComponentID[]> {
     const allModelComponents = await this.legacyScope.list();
-    const modelComponentsToList = includeCache
-      ? allModelComponents
-      : allModelComponents.filter((modelComponent) => this.exists(modelComponent));
-
+    const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
+      const cacheFilter = includeCache ? true : this.exists(modelComponent);
+      const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
+      return cacheFilter && lanesFilter;
+    };
+    const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
     const ids = modelComponentsToList.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );

@@ -52,7 +52,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false },
-      { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true } }
+      { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true } }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);

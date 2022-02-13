@@ -66,6 +66,11 @@ export type Target = {
   externalizePeer?: boolean;
 
   /**
+   * Whether to run compression by the bundler
+   */
+  compress?: boolean;
+
+  /**
    * List of peer dependencies
    */
   peers?: string[];
@@ -165,6 +170,11 @@ export interface BundlerContext extends BuildContext {
    * Make the peer dependencies externals for all targets
    */
   externalizePeer?: boolean;
+
+  /**
+   * Whether to run compression by the bundler
+   */
+  compress?: boolean;
 
   /**
    * config for html generation for all targets
