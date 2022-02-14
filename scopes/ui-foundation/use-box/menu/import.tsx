@@ -2,7 +2,6 @@ import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
 
@@ -19,22 +18,24 @@ export type ImportProps = {
    * component display name
    */
   componentName: string;
+  /**
+   * showInstall flag
+   */
+  showInstallMethod?: boolean;
 } & ExpandableTabContentProps;
 
-export function Import({ componentId, packageName, componentName, ...rest }: ImportProps) {
-  const lanes = useLanesContext();
-  const currentLane = lanes?.model.currentLane;
+export function Import({ componentId, packageName, componentName, showInstallMethod = true, ...rest }: ImportProps) {
   return (
     <ExpandableTabContent
       {...rest}
       content={
         <div className={styles.importContent}>
-          {!currentLane ? (
+          {showInstallMethod && (
             <>
               <div>{`Add ${componentName} as a dependency`}</div>
               <TooltipCopybox content={`bit install ${packageName}`} />
             </>
-          ) : null}
+          )}
           <div>{`Import ${componentName} to your workspace`}</div>
           <TooltipCopybox content={`bit import ${componentId}`} />
         </div>

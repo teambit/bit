@@ -11,7 +11,13 @@ export type NavPlugin = {
 };
 
 export type OrderedNavigationSlot = SlotRegistry<NavPlugin>;
+export type ConsumePluginOptions = {
+  currentLane?: LaneModel;
+};
 
-export type ConsumePlugin = (componentModel: ComponentModel, currentLane?: LaneModel) => ConsumeMethod | undefined;
+export type ConsumePlugin = (
+  componentModel: ComponentModel,
+  options?: ConsumePluginOptions
+) => ConsumeMethod | undefined;
 
 export type ConsumeMethodSlot = SlotRegistry<ConsumePlugin[]>;

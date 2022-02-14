@@ -112,7 +112,7 @@ function useConsumeMethods(
     () =>
       flatten(consumeMethods.values())
         .map((method) => {
-          return method?.(componentModel, currentLane);
+          return method?.(componentModel, { currentLane });
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
     [consumeMethods, componentModel]

@@ -15,8 +15,8 @@ export class PkgUI {
     return pkg;
   }
 
-  private npmConsumeMethod: ConsumePlugin = (comp, currentLane) => {
-    if (currentLane) return undefined;
+  private npmConsumeMethod: ConsumePlugin = (comp, options) => {
+    if (options?.currentLane) return undefined;
 
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
