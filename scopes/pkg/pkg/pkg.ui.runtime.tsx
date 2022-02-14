@@ -19,7 +19,7 @@ export class PkgUI {
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
-      Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
+      Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.dev`}
