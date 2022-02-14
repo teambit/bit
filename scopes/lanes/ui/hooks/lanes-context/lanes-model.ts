@@ -124,4 +124,7 @@ export class LanesModel {
   readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
   readonly currentLane?: LaneModel;
   readonly lanes: LaneModel[];
+
+  isInCurrentLane = (componentId: ComponentID) =>
+    this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
 }
