@@ -13,6 +13,11 @@ const DOCS_QUERY = gql`
           version
           scope
         }
+        aspects {
+          id
+          icon
+          data
+        }
         displayName
         packageName
         elementsUrl

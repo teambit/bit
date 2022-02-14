@@ -108,49 +108,11 @@ const SUB_COMPONENT_REMOVED = gql`
   ${componentIdFields}
 `;
 
-function uniteGql(sizeFields) {
-  const a = !sizeFields || sizeFields.length === 0 ? {} : sizeFields;
-  const b = Array.isArray(a) ? flatten(a) : a;
-  // const cd = gql`
-  // fragment c on Component {
-  // }`;
-  const c = merge(b, componentFields);
-  // const d = c instanceof DocumentNode ? c : ''
-  console.log('vcc', c);
-  const size = sizeFields?.[0]?.loc?.source?.body;
-  console.log('size', sizeFields, size, merge(b, componentFields));
-  // debugger
-  const GET_COMPONENT = gql`
-    query Component($id: String!, $extensionId: String!) {
-      getHost(id: $extensionId) {
-        id # used for GQL caching
-        get(id: $id) {
-          ...c
-        }
-      }
-    }
-    ${c}
-  `;
-
-  return GET_COMPONENT;
-}
-
-// function
-
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(componentId: string, host: string, _componentFields?: DocumentNode[]) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  // const bla = mergeTypeDefs([GET_COMPONENT, _componentFields || []])
-  // const bla2 = uniteGql(_componentFields || [])
-
-  // console.log("bla2", bla2)
-  console.log('_componentFields props', _componentFields);
-  console.log('componentFields', componentFields);
-  const unite = uniteGql(_componentFields);
-  console.log('unite', unite, GET_COMPONENT);
-  // debugger
-  const { data, error, loading, subscribeToMore } = useDataQuery(unite, {
+  const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host },
   });
 
@@ -241,7 +203,7 @@ export function useComponentQuery(componentId: string, host: string, _componentF
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
     return {
-      componentDescriptor: rawComponent ? ComponentDescriptor.fromObject(rawComponent.id) : undefined,
+      componentDescriptor: rawComponent ? ComponentDescriptor.fromObject({ id: rawComponent.id }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error
