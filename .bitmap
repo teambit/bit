@@ -183,6 +183,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder"
     },
+    "builder-data": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pipelines/modules/builder-data"
+    },
     "bundler": {
         "scope": "teambit.compilation",
         "version": "0.0.647",
