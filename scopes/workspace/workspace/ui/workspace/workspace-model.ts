@@ -1,5 +1,6 @@
 // import { ComponentMeta } from '@teambit/component';
 import { ComponentID, ComponentModel, ComponentModelProps } from '@teambit/component';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 
@@ -39,7 +40,12 @@ export class Workspace {
     /**
      * components container in the workspace.
      */
-    readonly components: ComponentModel[]
+    readonly components: ComponentModel[],
+
+    /**
+     * components contained in the workspace.
+     */
+    readonly componentDescriptors: ComponentDescriptor[]
   ) {}
 
   /**
@@ -50,17 +56,22 @@ export class Workspace {
   }
 
   static from({ name, path, components, icon }: WorkspaceProps) {
+    const componentDescriptors = components.map((component) => {
+      const id = ComponentID.fromObject(component.id);
+      return ComponentDescriptor.fromObject({ id });
+    });
     return new Workspace(
       name,
       path,
       icon,
       components.map((value) => {
         return ComponentModel.from(value);
-      })
+      }),
+      componentDescriptors
     );
   }
 
   static empty() {
-    return new Workspace('', '', '', []);
+    return new Workspace('', '', '', [], []);
   }
 }
