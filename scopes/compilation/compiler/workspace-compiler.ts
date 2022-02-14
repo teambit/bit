@@ -9,8 +9,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Dist, SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -43,7 +42,7 @@ export class ComponentCompiler {
   constructor(
     private pubsub: PubsubMain,
     private workspace: Workspace,
-    private component: ConsumerComponent,
+    private component: Component,
     private compilerInstance: Compiler,
     private compilerId: string,
     private logger: Logger,
@@ -64,10 +63,10 @@ export class ComponentCompiler {
 
     if (this.compilerInstance.transpileFile) {
       await Promise.all(
-        this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file, options.initiator))
+        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, options.initiator))
       );
     } else if (this.compilerInstance.transpileComponent) {
-      await this.compileAllFilesWithNewCompiler(this.component, options.initiator);
+      await this.compileAllFiles(this.component, options.initiator);
     } else {
       throw new Error(
         `compiler ${this.compilerId.toString()} doesn't implement either "transpileFile" or "transpileComponent" methods`
@@ -82,7 +81,7 @@ export class ComponentCompiler {
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
     const buildResults = this.dists.map((distFile) => distFile.path);
-    if (this.component.compiler) loader.succeed();
+    if (this.component.state._consumer.compiler) loader.succeed();
     this.pubsub.pub(
       CompilerAspect.id,
       new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
@@ -110,17 +109,17 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   }
 
   private get distDir(): PathOsBasedRelative {
-    const packageName = componentIdToPackageName(this.component);
+    const packageName = componentIdToPackageName(this.component.state._consumer);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = DEFAULT_DIST_DIRNAME;
     return path.join(packageDir, distDirName);
   }
 
   private get componentDir(): PathOsBasedAbsolute {
-    return this.workspace.componentDir(new ComponentID(this.component.id));
+    return this.workspace.componentDir(this.component.id);
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile, initiator: CompilationInitiator): Promise<void> {
+  private async compileOneFile(file: AbstractVinyl, initiator: CompilationInitiator): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -150,13 +149,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFilesWithNewCompiler(
-    component: ConsumerComponent,
-    initiator: CompilationInitiator
-  ): Promise<void> {
+  private async compileAllFiles(component: Component, initiator: CompilationInitiator): Promise<void> {
     const base = this.distDir;
-    const filesToCompile: SourceFile[] = [];
-    component.files.forEach((file: SourceFile) => {
+    const filesToCompile: AbstractVinyl[] = [];
+    component.filesystem.files.forEach((file: AbstractVinyl) => {
       const isFileSupported = this.compilerInstance.isFileSupported(file.path);
       if (isFileSupported) {
         filesToCompile.push(file);
@@ -268,7 +264,7 @@ export class WorkspaceCompiler {
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     const components = await this.workspace.getMany(componentIds);
 
-    const componentsAndNewCompilers: ComponentCompiler[] = [];
+    const componentsCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
       const environment = this.envs.getEnv(c).env;
       const compilerInstance = environment.getCompiler?.();
@@ -276,23 +272,16 @@ export class WorkspaceCompiler {
       // inside the component dir.
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
-        componentsAndNewCompilers.push(
-          new ComponentCompiler(
-            this.pubsub,
-            this.workspace,
-            c.state._consumer,
-            compilerInstance,
-            compilerName,
-            this.logger
-          )
+        componentsCompilers.push(
+          new ComponentCompiler(this.pubsub, this.workspace, c, compilerInstance, compilerName, this.logger)
         );
       }
     });
-    const newCompilersResultOnWorkspace = await mapSeries(componentsAndNewCompilers, (componentAndNewCompilers) =>
-      componentAndNewCompilers.compile(noThrow, options)
+    const resultOnWorkspace = await mapSeries(componentsCompilers, (componentCompiler) =>
+      componentCompiler.compile(noThrow, options)
     );
 
-    return newCompilersResultOnWorkspace;
+    return resultOnWorkspace;
   }
 
   private async getIdsToCompile(

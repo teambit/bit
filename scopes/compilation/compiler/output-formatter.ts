@@ -1,9 +1,10 @@
 import chalk from 'chalk';
+import { ComponentsStatus } from './compiler.cmd';
 
-export const formatCompileResults = (compileResults, verbose) =>
+export const formatCompileResults = (compileResults: ComponentsStatus[], verbose: boolean) =>
   compileResults
-    .map((componentResult) => ({
-      componentId: componentResult.component.name,
+    .map((componentResult: ComponentsStatus) => ({
+      componentId: componentResult.component.id.fullName,
       files: componentResult.buildResults,
       status: componentResult.errors.length ? 'FAILURE' : 'SUCCESS',
       icon: componentResult.errors.length ? chalk.red('✗') : chalk.green('✔'),
