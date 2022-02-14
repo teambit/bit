@@ -12,7 +12,7 @@ export class ComponentTreeWidget implements ComponentTreeNode {
     const lanes = useLanesContext();
     if (!workspaceComponent) return null;
 
-    const isInCurrentLane = lanes.model.currentLane?.components.some(
+    const isInCurrentLane = lanes?.model.currentLane?.components.some(
       (comp) => comp.model.id.name === workspaceComponent.id.name
     );
 

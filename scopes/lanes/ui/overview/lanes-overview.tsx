@@ -10,7 +10,8 @@ export type LanesOverviewProps = {
   routeSlot: RouteSlot;
 };
 export function LanesOverview({ routeSlot }: LanesOverviewProps) {
-  const { model } = useLanesContext();
+  const lanesContext = useLanesContext();
+  const model = lanesContext?.model;
 
   const currentLane = model?.currentLane;
 

@@ -48,9 +48,9 @@ export function CodeTabTree({
       const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-      const { model } = useLanesContext();
+      const lanesContext = useLanesContext();
 
-      const currentLaneUrl = model.currentLane?.url || '';
+      const currentLaneUrl = lanesContext?.model.currentLane?.url || '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
       const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);

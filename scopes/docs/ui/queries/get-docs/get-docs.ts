@@ -1,6 +1,5 @@
 import { useQuery, gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
-import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 
 export const docsFields = gql`
   fragment docsFields on ReactDocs {

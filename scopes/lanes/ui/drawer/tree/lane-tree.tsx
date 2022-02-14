@@ -12,23 +12,26 @@ export type LaneTreeProps = {
 };
 
 export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
-  const { model } = useLanesContext();
-  const { lanes, lanesByScope } = model;
-  const activeLaneName = model.currentLane?.name;
+  const lanesContext = useLanesContext();
+  const model = lanesContext?.model;
+  const lanes = model?.lanes;
+  const lanesByScope = model?.lanesByScope;
+
+  const activeLaneName = model?.currentLane?.name;
 
   const tree: TreeNode<PayloadType> = useMemo(() => {
-    const scopes = [...lanesByScope.keys()];
+    const scopes = (lanesByScope && [...lanesByScope.keys()]) || [];
     return {
       id: '',
       children: showScope
         ? scopes.map((scope) => ({
             id: scope,
-            children: (lanesByScope.get(scope) || []).map((lane) => ({
+            children: (lanesByScope?.get(scope) || []).map((lane) => ({
               id: lane.id,
               payload: lane,
             })),
           }))
-        : lanes.map((lane) => ({
+        : lanes?.map((lane) => ({
             id: lane.id,
             payload: lane,
           })),

@@ -23,7 +23,7 @@ export type ImportProps = {
 
 export function Import({ componentId, packageName, componentName, ...rest }: ImportProps) {
   const lanes = useLanesContext();
-  const currentLane = lanes.model.currentLane;
+  const currentLane = lanes?.model.currentLane;
   return (
     <ExpandableTabContent
       {...rest}

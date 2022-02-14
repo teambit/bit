@@ -31,6 +31,8 @@ export type LanesOverviewMenuProps = {
 };
 /**
  * top bar menu.
+ * Note: Currently it has been copied from menu.tsx (scope/component/component/ui/menu)
+ * Once tab-link component is ready update it
  */
 export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMenuProps) {
   //   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
@@ -69,6 +71,7 @@ function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]
   return (first ?? 0) - (second ?? 0);
 }
 
+/** TODO: replace it with tab-link */
 function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
   const { search } = useLocation(); // sticky query params

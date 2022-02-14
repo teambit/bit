@@ -24,21 +24,23 @@ export class LanesDrawer implements DrawerType {
   widget = (<Widget />);
 
   Context = ({ children }) => {
-    const { model } = useLanesContext();
-    const isCollapsed = !model.currentLane;
+    const lanesContext = useLanesContext();
+    const isCollapsed = !lanesContext?.model.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
   render = () => {
-    const { model, updateCurrentLane } = useLanesContext();
+    const lanesContext = useLanesContext();
+    const model = lanesContext?.model;
+    const updateCurrentLane = lanesContext?.updateCurrentLane;
     const location = useLocation();
 
     useEffect(() => {
-      const currentLane = model.lanes.find((lane) => {
+      const currentLane = model?.lanes.find((lane) => {
         const laneUrl = LanesModel.getLaneUrlFromPathname(location.pathname);
         return laneUrl === lane.url;
       });
-      if (currentLane?.id !== model.currentLane?.id) updateCurrentLane(currentLane);
+      if (currentLane?.id !== model?.currentLane?.id) updateCurrentLane?.(currentLane);
     }, [location.pathname]);
 
     const { collapsed } = useContext(LaneTreeContext);

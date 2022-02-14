@@ -40,13 +40,16 @@ export class LanesModel {
 
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
+
   static getLaneUrlFromPathname: (pathname: string) => string | undefined = (pathname) => {
     const [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
     if (!maybeLaneId) return undefined;
     const [, ...laneId] = maybeLaneId.split('/');
     return `${LanesModel.baseLaneRoute}/${laneId.slice(0, 3).join('/')}`;
   };
+
   static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
+
   static getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
     laneId ? `${LanesModel.getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';
 
@@ -78,26 +81,28 @@ export class LanesModel {
   }
 
   static groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
-    return lanes.reduce((accum, next) => {
-      const { scope } = next;
-      if (!accum.has(scope)) {
-        accum.set(scope, [next]);
+    const grouped = new Map<string, LaneModel[]>();
+    lanes.forEach((lane) => {
+      const { scope } = lane;
+      if (!grouped.has(scope)) {
+        grouped.set(scope, [lane]);
       } else {
-        const existing = accum.get(scope) as LaneModel[];
-        accum.set(scope, [...existing, next]);
+        const existing = grouped.get(scope) as LaneModel[];
+        grouped.set(scope, [...existing, lane]);
       }
-      return accum;
-    }, new Map<string, LaneModel[]>());
+    });
+    return grouped;
   }
 
   static groupByComponentHash(lanes: LaneModel[]): Map<string, { lane: LaneModel; component: LaneComponentModel }> {
-    return lanes.reduce((accum, lane) => {
+    const grouped = new Map<string, { lane: LaneModel; component: LaneComponentModel }>();
+    lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        accum.set(component.model.id.version as string, { lane, component });
+        grouped.set(component.model.id.version as string, { lane, component });
       });
-      return accum;
-    }, new Map<string, { lane: LaneModel; component: LaneComponentModel }>());
+    });
+    return grouped;
   }
 
   static from(lanesData: LanesQueryResult, currentScope: ScopeModel): LanesModel {

@@ -68,8 +68,8 @@ function VersionRelatedDropdowns({
 }) {
   const location = useLocation();
   const isNew = component.tags.isEmpty();
-  const { model } = useLanesContext();
-  const currentLane = model.currentLane;
+  const lanesContext = useLanesContext();
+  const currentLane = lanesContext?.model?.currentLane;
 
   const isWorkspace = host === 'teambit.workspace/workspace';
   const versionList = useMemo(() => {

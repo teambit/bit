@@ -11,10 +11,7 @@ export type LanesContextType = {
 export const LanesContext: React.Context<LanesContextType | undefined> = createContext<LanesContextType | undefined>(
   undefined
 );
-export const useLanesContext: () => LanesContextType = () => {
+export const useLanesContext: () => LanesContextType | undefined = () => {
   const lanesContext = useContext(LanesContext);
-  if (!lanesContext) {
-    throw new Error('Missing LanesContext.Provider');
-  }
   return lanesContext;
 };
