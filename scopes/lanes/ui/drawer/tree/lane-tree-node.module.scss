@@ -42,18 +42,12 @@
     flex: 1;
     min-width: 0;
 
-    > span {
+    .laneName {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding: 0 8px;
     }
-  }
-  img {
-    transition: filter 300ms ease-in-out;
-    filter: grayscale(1);
-    height: 16px;
-    width: 16px;
   }
 
   .right {

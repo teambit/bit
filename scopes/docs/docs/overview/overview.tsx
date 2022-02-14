@@ -8,6 +8,7 @@ import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-m
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './overview.module.scss';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
@@ -43,12 +44,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
     return (
       <div className={styles.overviewWrapper}>
-        {laneId ? (
-          <div className={styles.lane}>
-            <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={laneId} />
-            <span>{laneId}</span>
-          </div>
-        ) : null}
+        {laneId && <LaneOverview laneId={laneId} />}
         <Separator isPresentational />
         <ComponentOverview
           className={styles.componentOverviewBlock}
@@ -72,10 +68,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   return laneId ? (
     <div className={styles.overviewWrapper}>
-      <div className={styles.lane}>
-        <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={laneId} />
-        <span>{laneId}</span>
-      </div>
+      <LaneOverview laneId={laneId} />
       <Separator isPresentational />
       <ComponentPreview
         component={component}
@@ -93,5 +86,14 @@ export function Overview({ titleBadges }: OverviewProps) {
       fullContentHeight
       scrolling="no"
     />
+  );
+}
+
+function LaneOverview({ laneId }: { laneId: string }): JSX.Element {
+  return (
+    <div className={styles.lane}>
+      <Icon of="lane"></Icon>
+      <span>{laneId}</span>
+    </div>
   );
 }

@@ -9,6 +9,7 @@ import { ExportingComponents } from '@teambit/component.instructions.exporting-c
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
@@ -55,7 +56,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       {currentLane ? (
         <>
           <div className={styles.lane}>
-            <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={currentLane.id} />
+            <Icon of="lane"></Icon>
             <span className={styles.laneName}>{currentLane.id}</span>
           </div>
           <Separator isPresentational className={styles.separator} />
