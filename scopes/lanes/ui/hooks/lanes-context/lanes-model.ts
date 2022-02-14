@@ -40,7 +40,12 @@ export class LanesModel {
 
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
-
+  static getLaneUrlFromPathname: (pathname: string) => string | undefined = (pathname) => {
+    const [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
+    if (!maybeLaneId) return undefined;
+    const [, ...laneId] = maybeLaneId.split('/');
+    return `${LanesModel.baseLaneRoute}/${laneId.slice(0, 3).join('/')}`;
+  };
   static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
   static getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
     laneId ? `${LanesModel.getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';

@@ -51,8 +51,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         date: String
         hash: String!
         tag: String
-        parents: [String]!
-        lane: String
         # id: String!
       }
 

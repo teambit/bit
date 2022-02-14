@@ -28,4 +28,3 @@ export {
   LanesOverviewMenuProps,
   LanesOrderedNavigationSlot,
 } from './overview';
-export { LanesPage } from './lanes-page';

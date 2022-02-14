@@ -11,7 +11,6 @@ import {
   LanesOverview,
   LanesProvider,
   LanesOrderedNavigationSlot,
-  LanesPage,
   LanesModel,
   LanesOverviewMenu,
 } from '@teambit/lanes.ui.lanes';
@@ -51,54 +50,44 @@ export class LanesUI {
   private readonly hostAspect?: WorkspaceUI | ScopeUI;
   private readonly host: string;
 
-  private registerExplicitHostRoutes() {
-    if (this.hostAspect) {
-      this.hostAspect.registerRoutes([
-        {
-          path: LanesModel.laneComponentUrlRegex,
-          children: this.componentUi.getComponentUI(this.host),
-        },
-        {
-          path: LanesModel.laneRouteUrlRegex,
-          children: <LanesOverview routeSlot={this.routeSlot} />,
-        },
-      ]);
-      this.hostAspect.registerMenuRoutes([
-        {
-          path: LanesModel.laneComponentUrlRegex,
-          children: this.componentUi.getMenu(this.host),
-        },
-        {
-          path: LanesModel.laneRouteUrlRegex,
-          children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
-        },
-      ]);
-    }
+  private registerHostAspectRoutes() {
+    if (!this.hostAspect) return;
+    this.hostAspect.registerRoutes([
+      {
+        path: LanesModel.laneComponentUrlRegex,
+        children: this.componentUi.getComponentUI(this.host),
+      },
+      {
+        path: LanesModel.laneRouteUrlRegex,
+        children: <LanesOverview routeSlot={this.routeSlot} />,
+      },
+    ]);
+    this.hostAspect.registerMenuRoutes([
+      {
+        path: LanesModel.laneComponentUrlRegex,
+        children: this.componentUi.getMenu(this.host),
+      },
+      {
+        path: LanesModel.laneRouteUrlRegex,
+        children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
+      },
+    ]);
   }
 
-  private registerExplicitLanesRoutes() {
-    this.registerNavigation({
-      href: '~gallery',
-      children: 'Gallery',
-    });
+  private registerLanesRoutes() {
     this.registerNavigation({
       href: '',
       children: 'Gallery',
     });
   }
 
-  private registerExplicitRoutes() {
-    this.registerExplicitHostRoutes();
-    this.registerExplicitLanesRoutes();
+  private registerRoutes() {
+    this.registerHostAspectRoutes();
+    this.registerLanesRoutes();
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return (
-      <LanesProvider>
-        <LanesPage />
-        {children}
-      </LanesProvider>
-    );
+    return <LanesProvider>{children}</LanesProvider>;
   };
 
   registerRoute(route: RouteProps) {
@@ -150,7 +139,7 @@ export class LanesUI {
     uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     const drawer = new LanesDrawer(lanesUi.lanesHost === 'workspace');
     lanesUi.registerDrawers(drawer);
-    lanesUi.registerExplicitRoutes();
+    lanesUi.registerRoutes();
 
     return lanesUi;
   }

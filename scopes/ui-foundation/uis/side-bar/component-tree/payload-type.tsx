@@ -7,4 +7,4 @@ export class ScopePayload {
   }
 }
 
-export type PayloadType = ComponentModel | ScopePayload | undefined | LaneModel;
+export type PayloadType = ComponentModel | ScopePayload | LaneModel | undefined;

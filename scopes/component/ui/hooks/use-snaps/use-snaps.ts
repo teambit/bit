@@ -14,7 +14,6 @@ const getComponentSnaps = gql`
         date
         hash
         tag
-        lane
       }
     }
   }

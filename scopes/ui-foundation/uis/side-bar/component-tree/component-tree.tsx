@@ -4,7 +4,6 @@ import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
-import { useLanesContext, LanesActionTypes } from '@teambit/lanes.ui.lanes';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
@@ -19,7 +18,6 @@ type ComponentTreeProps = {
 
 export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
   const { pathname } = useLocation();
-  const { dispatch } = useLanesContext();
 
   const activeComponent = useMemo(() => {
     const componentUrlRegex = new RegExp(componentIdUrlRegex);
@@ -30,9 +28,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
-  const onSelect = () => {
-    dispatch({ type: LanesActionTypes.UPDATE_CURRENT_LANE });
-  };
+
   const rootNode = useMemo(() => {
     const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
@@ -44,7 +40,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   }, [components]);
 
   return (
-    <TreeContextProvider onSelect={onSelect}>
+    <TreeContextProvider>
       <div style={indentStyle(1)}>
         <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
       </div>

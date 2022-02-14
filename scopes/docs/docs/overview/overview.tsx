@@ -70,32 +70,28 @@ export function Overview({ titleBadges }: OverviewProps) {
     );
   }
 
-  return (
-    <>
-      {laneId ? (
-        <div className={styles.overviewWrapper}>
-          <div className={styles.lane}>
-            <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={laneId} />
-            <span>{laneId}</span>
-          </div>
-          <Separator isPresentational />
-          <ComponentPreview
-            component={component}
-            style={{ width: '100%', height: '100%' }}
-            previewName="overview"
-            fullContentHeight
-            scrolling="no"
-          />
-        </div>
-      ) : (
-        <ComponentPreview
-          component={component}
-          style={{ width: '100%', height: '100%' }}
-          previewName="overview"
-          fullContentHeight
-          scrolling="no"
-        />
-      )}
-    </>
+  return laneId ? (
+    <div className={styles.overviewWrapper}>
+      <div className={styles.lane}>
+        <img src={'https://static.bit.dev/bit-icons/lane.svg'} alt={laneId} />
+        <span>{laneId}</span>
+      </div>
+      <Separator isPresentational />
+      <ComponentPreview
+        component={component}
+        style={{ width: '100%', height: '100%' }}
+        previewName="overview"
+        fullContentHeight
+        scrolling="no"
+      />
+    </div>
+  ) : (
+    <ComponentPreview
+      component={component}
+      style={{ width: '100%', height: '100%' }}
+      previewName="overview"
+      fullContentHeight
+      scrolling="no"
+    />
   );
 }

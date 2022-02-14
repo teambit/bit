@@ -1,6 +1,8 @@
 import React, { ReactNode, useReducer, useEffect } from 'react';
 import { useLanes, LanesModel, LaneModel } from '@teambit/lanes.ui.lanes';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { LanesContext } from './lanes-context';
+import { LanesContextType } from '.';
 
 export enum LanesActionTypes {
   UPDATE_LANES = 'UPDATE_LANES',
@@ -50,10 +52,25 @@ const lanesReducer = (state: LanesModel, action: LanesActions) => {
 export function LanesProvider({ children }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes();
   const [state, dispatch] = useReducer<typeof lanesReducer>(lanesReducer, lanesModel);
+  const context: LanesContextType = {
+    model: state,
+    updateCurrentLane: (lane?: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_CURRENT_LANE, payload: lane }),
+    updateLane: (lane: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_LANE, payload: lane }),
+    updateLanes: (lanes: LanesModel) => dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanes }),
+  };
+
+  const location = useLocation();
+
   useEffect(() => {
     if (!loading) {
-      dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanesModel });
+      context.updateLanes(lanesModel);
+      const currentLane = lanesModel.lanes.find((lane) => {
+        const laneUrl = LanesModel.getLaneUrlFromPathname(location.pathname);
+        return laneUrl === lane.url;
+      });
+      context.updateCurrentLane(currentLane);
     }
   }, [loading]);
-  return <LanesContext.Provider value={{ model: state, dispatch }}>{children}</LanesContext.Provider>;
+
+  return <LanesContext.Provider value={context}>{children}</LanesContext.Provider>;
 }

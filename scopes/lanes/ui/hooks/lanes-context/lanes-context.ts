@@ -1,8 +1,12 @@
-import { createContext, useContext, Dispatch } from 'react';
-import { LanesModel } from './lanes-model';
-import { LanesActions } from './lanes-provider';
+import { createContext, useContext } from 'react';
+import { LanesModel, LaneModel } from './lanes-model';
 
-export type LanesContextType = { model: LanesModel; dispatch: Dispatch<LanesActions> };
+export type LanesContextType = {
+  model: LanesModel;
+  updateCurrentLane: (lane?: LaneModel) => void;
+  updateLanes: (lanes: LanesModel) => void;
+  updateLane: (lane: LaneModel) => void;
+};
 
 export const LanesContext: React.Context<LanesContextType | undefined> = createContext<LanesContextType | undefined>(
   undefined

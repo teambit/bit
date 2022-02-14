@@ -54,20 +54,11 @@ export type DefaultValue = {
 };
 
 export function useDocs(componentId: ComponentID) {
-  const query = useRouterQuery();
-  const version = query.get('version') || undefined;
-  const id = withVersion(componentId.toStringWithoutVersion(), version);
   const { data } = useQuery<PropertiesResult>(getProperties, {
-    variables: { id },
+    variables: { id: componentId.toString() },
   });
 
   const properties = data?.getHost?.getDocs?.properties;
 
   return properties;
-}
-
-function withVersion(id: string, version?: string) {
-  if (!version) return id;
-  if (id.includes('@')) return id;
-  return `${id}@${version}`;
 }
