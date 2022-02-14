@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LaneTreeNode } from './lane-tree-node';
 
@@ -14,40 +14,41 @@ export type LaneTreeProps = {
 export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
   const lanesContext = useLanesContext();
   const model = lanesContext?.model;
-  const lanes = model?.lanes;
-  const lanesByScope = model?.lanesByScope;
-
   const activeLaneName = model?.currentLane?.name;
 
-  const tree: TreeNode<PayloadType> = useMemo(() => {
-    const scopes = (lanesByScope && [...lanesByScope.keys()]) || [];
-    return {
-      id: '',
-      children: showScope
-        ? scopes.map((scope) => ({
-            id: scope,
-            children: (lanesByScope?.get(scope) || []).map((lane) => ({
-              id: lane.id,
-              payload: lane,
-            })),
-          }))
-        : lanes?.map((lane) => ({
-            id: lane.id,
-            payload: lane,
-          })),
-    };
-  }, [lanes]);
+  const tree: TreeNode<PayloadType> = useMemo(() => laneToTree(model, { showScope }), [model?.lanes]);
+
   return (
     <TreeContextProvider selected={model?.currentLane?.id}>
       <div style={indentStyle(1)}>
-        <Tree TreeNode={DefaultTreeNodeRenderer} activePath={activeLaneName} tree={tree} isCollapsed={isCollapsed} />
+        <Tree TreeNode={LaneTreeNodeRenderer} activePath={activeLaneName} tree={tree} isCollapsed={isCollapsed} />
       </div>
     </TreeContextProvider>
   );
 }
 
-function DefaultTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
+function LaneTreeNodeRenderer(props: TreeNodeProps<PayloadType>) {
   const payload = props.node.payload;
   if (!payload) return <ScopeTreeNode {...props} />;
   return <LaneTreeNode {...props} />;
+}
+
+function laneToTree(lanesModel: LanesModel | undefined, { showScope }: { showScope: boolean }) {
+  const lanesByScope = lanesModel?.lanesByScope;
+  const scopes = (lanesByScope && [...lanesByScope.keys()]) || [];
+  return {
+    id: '',
+    children: showScope
+      ? scopes.map((scope) => ({
+          id: scope,
+          children: (lanesByScope?.get(scope) || []).map((lane) => ({
+            id: lane.id,
+            payload: lane,
+          })),
+        }))
+      : lanesModel?.lanes.map((lane) => ({
+          id: lane.id,
+          payload: lane,
+        })),
+  };
 }

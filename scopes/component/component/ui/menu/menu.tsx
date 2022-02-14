@@ -115,6 +115,6 @@ function useConsumeMethods(
           return method?.(componentModel, { currentLane });
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
-    [consumeMethods, componentModel]
+    [consumeMethods, componentModel, currentLane]
   );
 }
