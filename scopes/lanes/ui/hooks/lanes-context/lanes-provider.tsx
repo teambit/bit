@@ -59,6 +59,7 @@ export function LanesProvider({ children }: LanesProviderProps) {
     updateLanes: (lanes: LanesModel) => dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanes }),
   };
 
+  // TODO: Currently this is being registered outside of the Browser Context
   const location = useLocation();
 
   useEffect(() => {

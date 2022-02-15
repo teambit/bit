@@ -24,10 +24,6 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (!snaps) return null;
 
-  // snaps = currentLane
-  //   ? snaps.filter((snap) => snap.lane === currentLane?.name)
-  //   : snaps.filter((snap) => snap.lane === 'main');
-
   if (snaps.length === 0 && !loading) {
     return (
       <div className={classNames(styles.changeLogPage, className)}>
@@ -53,7 +49,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   return (
     <>
-      {currentLane ? (
+      {currentLane && (
         <>
           <div className={styles.lane}>
             <Icon of="lane"></Icon>
@@ -61,7 +57,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
           </div>
           <Separator isPresentational className={styles.separator} />
         </>
-      ) : null}
+      )}
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
