@@ -2,16 +2,29 @@ import { ComponentModel } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
+/**
+ * GQL (lanes/getLanes/components)
+ * Return type of each Component in a Lane
+ */
 export type LaneComponentQueryResult = {
   id: ComponentIdObj;
   head: string;
 };
+/**
+ * GQL (lanes/getLanes)
+ * Return type of each Lane in a Scope/Workspace
+ */
 export type LaneQueryResult = {
   name: string;
   remote?: string;
   isMerged: boolean;
   components: LaneComponentQueryResult[];
 };
+/**
+ * GQL (lanes)
+ * Return type of the entire /lanes query.
+ * Represents All Lanes and Current Lane in Scope/Workspace
+ */
 export type LanesQueryResult = {
   lanes?: {
     getLanes?: LaneQueryResult[];
@@ -19,7 +32,13 @@ export type LanesQueryResult = {
   };
 };
 export type LanesHost = 'workspace' | 'scope';
+/**
+ * Represents a Component on a Lane. Extends ComponentModel and adds a Lane Component URL
+ */
 export type LaneComponentModel = { model: ComponentModel; url: string };
+/**
+ * Represents a single Lane in a Workspace/Scope
+ */
 export type LaneModel = {
   id: string;
   scope: string;
@@ -28,11 +47,18 @@ export type LaneModel = {
   isMerged: boolean | null;
   components: LaneComponentModel[];
 };
+/**
+ * Props to instantiate a LanesModel
+ */
 export type LanesModelProps = {
   lanes: LaneModel[];
   currentLane?: LaneModel;
 };
-
+/**
+ * Represents the entire Lanes State in a Workspace/Scope
+ * Provides helper methods to extract and map Lane information
+ * Keeps track of all the lanes and the currently selected lane from the UI
+ */
 export class LanesModel {
   static baseLaneRoute = '/~lane';
 

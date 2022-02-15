@@ -137,7 +137,7 @@ export class LanesUI {
       scope
     );
     uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
-    const drawer = new LanesDrawer(lanesUi.lanesHost === 'workspace');
+    const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
     lanesUi.registerDrawers(drawer);
     lanesUi.registerRoutes();
 

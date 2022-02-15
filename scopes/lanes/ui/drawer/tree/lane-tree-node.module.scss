@@ -7,8 +7,7 @@
   justify-content: space-between;
   padding-right: 8px;
   font-size: inherit;
-  font-size: 1em;
-
+  font-size: var(--bit-p-xs);
   /*
   * TODO - move to a link component when its ready in the design scope (for browser resets)
   */

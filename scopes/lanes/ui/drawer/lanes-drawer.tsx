@@ -18,6 +18,10 @@ const LaneTreeContext = createContext<{
 });
 
 export type LanesDrawerProps = {
+  /**
+   * displays the scope name for each lane
+   * used in Workspace as a consumer can have multiple lanes across different scopes
+   */
   showScope: boolean;
 };
 
