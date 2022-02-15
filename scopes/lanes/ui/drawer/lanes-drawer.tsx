@@ -17,8 +17,12 @@ const LaneTreeContext = createContext<{
   setCollapsed: () => {},
 });
 
+export type LanesDrawerProps = {
+  showScope: boolean;
+};
+
 export class LanesDrawer implements DrawerType {
-  constructor(private showScope: boolean) {}
+  constructor(private props: LanesDrawerProps) {}
   id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);
@@ -46,7 +50,9 @@ export class LanesDrawer implements DrawerType {
     const { collapsed } = useContext(LaneTreeContext);
 
     if (!model || !model.lanes) return <FullLoader />;
+
     const { lanes } = model;
+    const { showScope } = this.props;
 
     if (lanes.length === 0)
       return (
@@ -54,7 +60,7 @@ export class LanesDrawer implements DrawerType {
           There are no lanes in your current workspace
         </span>
       );
-    return <LaneTree showScope={this.showScope} isCollapsed={collapsed}></LaneTree>;
+    return <LaneTree showScope={showScope} isCollapsed={collapsed}></LaneTree>;
   };
 }
 
