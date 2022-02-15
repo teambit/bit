@@ -1,6 +1,5 @@
-import React, { ReactNode, useReducer, useEffect } from 'react';
+import React, { ReactNode, useReducer, useEffect, useMemo } from 'react';
 import { useLanes, LanesModel, LaneModel } from '@teambit/lanes.ui.lanes';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { LanesContext } from './lanes-context';
 import { LanesContextType } from '.';
 
@@ -25,6 +24,7 @@ export type LanesActions = LanesUpdateLanesAction | LanesUpdateLaneAction | Lane
 
 export type LanesProviderProps = {
   children: ReactNode;
+  currentLaneUrl?: string;
 };
 
 const lanesReducer = (state: LanesModel, action: LanesActions) => {
@@ -49,27 +49,30 @@ const lanesReducer = (state: LanesModel, action: LanesActions) => {
   }
 };
 
-export function LanesProvider({ children }: LanesProviderProps) {
+export function LanesProvider({ children, currentLaneUrl }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes();
   const [state, dispatch] = useReducer<typeof lanesReducer>(lanesReducer, lanesModel);
+  const currentLane = useMemo(
+    () =>
+      state?.lanes.find((lane) => {
+        return currentLaneUrl === lane.url;
+      }),
+    [currentLaneUrl, state.lanes]
+  );
+
   const context: LanesContextType = {
-    model: state,
+    model: {
+      ...state,
+      currentLane,
+    },
     updateCurrentLane: (lane?: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_CURRENT_LANE, payload: lane }),
     updateLane: (lane: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_LANE, payload: lane }),
     updateLanes: (lanes: LanesModel) => dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanes }),
   };
 
-  // TODO: Currently this is being registered outside of the Browser Context
-  const location = useLocation();
-
   useEffect(() => {
     if (!loading) {
       context.updateLanes(lanesModel);
-      const currentLane = lanesModel.lanes.find((lane) => {
-        const laneUrl = LanesModel.getLaneUrlFromPathname(location.pathname);
-        return laneUrl === lane.url;
-      });
-      context.updateCurrentLane(currentLane);
     }
   }, [loading]);
 

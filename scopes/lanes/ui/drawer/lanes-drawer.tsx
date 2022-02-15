@@ -1,11 +1,10 @@
-import React, { useContext, createContext, useState, useEffect } from 'react';
+import React, { useContext, createContext, useState } from 'react';
 import classNames from 'classnames';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { LanesModel, LaneTree, useLanesContext } from '@teambit/lanes.ui.lanes';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { LaneTree, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -40,16 +39,6 @@ export class LanesDrawer implements DrawerType {
   render = () => {
     const lanesContext = useLanesContext();
     const model = lanesContext?.model;
-    const updateCurrentLane = lanesContext?.updateCurrentLane;
-    const location = useLocation();
-
-    useEffect(() => {
-      const currentLane = model?.lanes.find((lane) => {
-        const laneUrl = LanesModel.getLaneUrlFromPathname(location.pathname);
-        return laneUrl === lane.url;
-      });
-      if (currentLane?.id !== model?.currentLane?.id) updateCurrentLane?.(currentLane);
-    }, [location.pathname]);
 
     const { collapsed } = useContext(LaneTreeContext);
 

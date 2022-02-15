@@ -13,6 +13,7 @@ import {
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
+  CurrentLaneFromUrl,
 } from '@teambit/lanes.ui.lanes';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
@@ -87,7 +88,11 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <LanesProvider>{children}</LanesProvider>;
+    return (
+      <LanesProvider>
+        <CurrentLaneFromUrl>{children}</CurrentLaneFromUrl>
+      </LanesProvider>
+    );
   };
 
   registerRoute(route: RouteProps) {

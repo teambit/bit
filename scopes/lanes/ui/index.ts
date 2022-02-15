@@ -28,3 +28,4 @@ export {
   LanesOverviewMenuProps,
   LanesOrderedNavigationSlot,
 } from './overview';
+export { CurrentLaneFromUrl } from './current-lane';
