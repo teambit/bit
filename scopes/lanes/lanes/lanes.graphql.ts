@@ -5,12 +5,6 @@ import { LanesMain } from './lanes.main.runtime';
 export function lanesSchema(lanesMain: LanesMain): Schema {
   return {
     typeDefs: gql`
-      type ComponentID {
-        name: String!
-        version: String
-        scope: String
-      }
-
       type CompLaneData {
         id: ComponentID!
         head: String!
