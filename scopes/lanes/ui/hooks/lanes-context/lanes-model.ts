@@ -62,28 +62,33 @@ export type LanesModelProps = {
 export class LanesModel {
   static baseLaneRoute = '/~lane';
 
-  static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
+  static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
 
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
+  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}/~component/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 
   static getLaneUrlFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    const [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
+    let [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
     if (!maybeLaneId) return undefined;
+    [maybeLaneId] = maybeLaneId.split('/~component');
     const [, ...laneId] = maybeLaneId.split('/');
-    return `${LanesModel.baseLaneRoute}/${laneId.slice(0, 3).join('/')}`;
+    const laneIdStr = laneId
+      .filter((id) => id)
+      .slice(0, 3)
+      .join('/');
+    return `${LanesModel.baseLaneRoute}/${laneIdStr}`;
   };
 
   static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
 
   static getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
-    laneId ? `${LanesModel.getLaneUrl(laneId)}/${componentId.fullName}?version=${componentId.version}` : '';
+    laneId ? `${LanesModel.getLaneUrl(laneId)}/~component/${componentId.fullName}?version=${componentId.version}` : '';
 
-  static mapToLaneModel(laneData: LaneQueryResult, currentScope: ScopeModel): LaneModel {
+  static mapToLaneModel(laneData: LaneQueryResult, currentScope?: ScopeModel): LaneModel {
     const { name, remote, isMerged } = laneData;
     const laneName = name;
-    const laneId = remote || name;
-    const laneScope = remote?.split('/')[0] || currentScope.name;
+    const laneScope = remote?.split('/')[0] || currentScope?.name || '';
+    const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
 
     const components = laneData.components.map((component) => {
       const componentModel = ComponentModel.from({
@@ -93,15 +98,17 @@ export class LanesModel {
         packageName: '',
         description: '',
       });
-      return { model: componentModel, url: LanesModel.getLaneComponentUrl(componentModel.id, laneId) };
+      const laneComponentUrl = LanesModel.getLaneComponentUrl(componentModel.id, laneId);
+      return { model: componentModel, url: laneComponentUrl };
     });
 
+    const laneUrl = LanesModel.getLaneUrl(laneId);
     return {
       id: laneId,
       name: laneName,
-      scope: laneScope || currentScope.name,
+      scope: laneScope,
       isMerged,
-      url: LanesModel.getLaneUrl(laneId),
+      url: laneUrl,
       components,
     };
   }
@@ -131,7 +138,7 @@ export class LanesModel {
     return grouped;
   }
 
-  static from(lanesData: LanesQueryResult, currentScope: ScopeModel): LanesModel {
+  static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LanesModel {
     const lanesResult = lanesData.lanes?.getLanes || [];
     const currentLaneName = lanesData.lanes?.getCurrentLaneName;
     const lanes = lanesResult.map((result) => LanesModel.mapToLaneModel(result, currentScope));
