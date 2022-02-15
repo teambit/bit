@@ -18,7 +18,6 @@ export type ComponentPageElement = {
 export type ComponentProps = {
   containerSlot?: ComponentPageSlot;
   routeSlot: RouteSlot;
-  fields: DocumentNodeSlot;
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
 };
@@ -28,11 +27,8 @@ export type DocumentNodeSlot = SlotRegistry<DocumentNode>;
 /**
  * main UI component of the Component extension.
  */
-export function Component({ routeSlot, containerSlot, host, onComponentChange, fields }: ComponentProps) {
-  console.log('fields', fields);
-  const f = flatten(fields.values());
-  // debugger
-  const { component, error } = useComponent(host, undefined, f);
+export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
+  const { component, error } = useComponent(host);
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component

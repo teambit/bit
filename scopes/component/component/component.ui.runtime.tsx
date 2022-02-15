@@ -160,36 +160,23 @@ export class ComponentUI {
     this.activeComponent = activeComponent;
   };
 
-  getComponentField() {
-    const docs = this.documentNodeSlot.values();
-    // debugger
-    console.log('docs', docs);
-    return docs;
-  }
-
   getComponentUI(host: string) {
-    // const a = this.getComponentField();
-    // console.log("component a", a)
     return (
       <Component
         routeSlot={this.routeSlot}
         containerSlot={this.pageItemSlot}
         onComponentChange={this.handleComponentChange}
-        fields={this.documentNodeSlot}
         host={host}
       />
     );
   }
 
   getMenu(host: string) {
-    // const a = this.getComponentField();
-    // console.log("menu a", a)
     return (
       <Menu
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
         widgetSlot={this.widgetSlot}
-        // fields={a}
         host={host}
         menuItemSlot={this.menuItemSlot}
       />
