@@ -51,7 +51,7 @@ export type ComponentCardProps = {
    * explicit link, to use instead of the component id. Using this opens the link in a new tab, as an external link.
    */
   href?: string;
-  overrideInternalLink?: string;
+  external?: boolean;
 } & BaseComponentCardProps;
 
 export function ComponentCard({
@@ -63,15 +63,11 @@ export function ComponentCard({
   envIcon,
   isDeprecated = false,
   href,
-  overrideInternalLink,
+  external,
 }: ComponentCardProps) {
   return (
     <Card className={className}>
-      <Link
-        className={styles.componentCardLink}
-        href={overrideInternalLink || href || id}
-        external={!overrideInternalLink && !!href}
-      >
+      <Link className={styles.componentCardLink} href={href || id} external={external}>
         <DeprecationSticker isDeprecated={isDeprecated} />
         <PreviewContainer preview={preview} />
 

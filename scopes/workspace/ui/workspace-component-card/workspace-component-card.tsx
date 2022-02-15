@@ -24,7 +24,7 @@ export function WorkspaceComponentCard({ component, componentUrl, ...rest }: Wor
     <div {...rest} className={styles.wrapper}>
       <ComponentCard
         id={component.id.fullName}
-        overrideInternalLink={componentUrl}
+        href={componentUrl}
         envIcon={component.environment?.icon}
         description={component.description}
         version={componentVersion}
