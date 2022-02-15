@@ -198,7 +198,9 @@ export function useComponentQuery(componentId: string, host: string) {
 
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
-    const aspects = rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data }));
+    const aspects = {
+      entries: rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data })),
+    };
     return {
       componentDescriptor: rawComponent
         ? ComponentDescriptor.fromObject({ id: rawComponent.id, aspectMap: aspects })
