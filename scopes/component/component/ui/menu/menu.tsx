@@ -1,5 +1,4 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
-import { DocumentNode } from 'graphql';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';

@@ -6,7 +6,6 @@ import { ComponentDescriptor } from '@teambit/component-descriptor';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
-import flatten from 'lodash.flatten';
 
 const componentIdFields = gql`
   fragment componentIdFields on ComponentID {

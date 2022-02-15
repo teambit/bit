@@ -1,4 +1,4 @@
-// import React from 'react';
+import React from 'react';
 import { DocumentNode } from 'graphql';
 import { gql } from '@apollo/client';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
@@ -26,6 +26,7 @@ export class SizerUIRuntime {
     `;
     component.registerComponentField(sizer);
 
+    // docs.registerTitleBadge({component: () => <div>dsd</div>});
     const ui = new SizerUIRuntime();
     return ui;
   }

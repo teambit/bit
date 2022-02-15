@@ -1,10 +1,10 @@
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
-import { ComponentDescriptorProps, ComponentDescriptor } from '@teambit/component-descriptor';
 
 export type Component = {
   component?: ComponentModel;
@@ -22,7 +22,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
   } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
   const version = query.get('version') || undefined;
-  // debugger
+
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
   if (!targetId) throw new TypeError('useComponent received no component id');
   return useComponentQuery(withVersion(targetId, version), host);
