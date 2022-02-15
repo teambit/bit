@@ -97,6 +97,13 @@ export default class BitIds extends Array<BitId> {
     return BitIds.fromArray(this.filter((id) => !bitIds.hasWithoutVersion(id)));
   }
 
+  toObject() {
+    return this.reduce((acc, bitId) => {
+      acc[bitId.toString()] = bitId;
+      return acc;
+    }, {});
+  }
+
   /**
    * make sure to pass only bit ids you know they have scope, otherwise, you'll get invalid bit ids.
    * this is mainly useful for remote commands where it is impossible to have a component without scope.
