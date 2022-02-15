@@ -704,6 +704,9 @@ export class Workspace implements ComponentFactory {
     };
   }
 
+  /**
+   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
+   */
   private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
     const resolvedList = await aspectListFromScope.pmap(async (entry) => {
       if (entry.id.scope !== this.scope.name) {
