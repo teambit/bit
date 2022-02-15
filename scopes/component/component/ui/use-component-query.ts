@@ -47,10 +47,6 @@ const componentFields = gql`
       icon
     }
 
-    size {
-      compressedTotal
-    }
-
     preview {
       includesEnvTemplate
     }
