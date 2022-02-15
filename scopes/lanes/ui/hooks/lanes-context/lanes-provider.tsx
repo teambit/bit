@@ -61,10 +61,7 @@ export function LanesProvider({ children, currentLaneUrl }: LanesProviderProps) 
   );
 
   const context: LanesContextType = {
-    model: {
-      ...state,
-      currentLane,
-    },
+    model: new LanesModel({ lanes: state.lanes, currentLane }),
     updateCurrentLane: (lane?: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_CURRENT_LANE, payload: lane }),
     updateLane: (lane: LaneModel) => dispatch({ type: LanesActionTypes.UPDATE_LANE, payload: lane }),
     updateLanes: (lanes: LanesModel) => dispatch({ type: LanesActionTypes.UPDATE_LANES, payload: lanes }),

@@ -13,7 +13,7 @@ export class ComponentTreeWidget implements ComponentTreeNode {
 
     const isInCurrentLane = useMemo(() => {
       return workspaceComponent?.id && lanes?.model.isInCurrentLane(workspaceComponent.id);
-    }, [lanes?.model, workspaceComponent?.id]);
+    }, [lanes?.model.currentLane, workspaceComponent?.id]);
 
     if (!workspaceComponent) return null;
 
