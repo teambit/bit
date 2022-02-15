@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import { History, UnregisterCallback, LocationListener, LocationDescriptor, Action } from 'history';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime } from '@teambit/ui';
+import { RenderPlugins, UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
@@ -11,9 +11,7 @@ import { RouteContext, RootRoute } from './route-context';
 import { Routing } from './routing-method';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
-type RenderRoutesOptions = {
-  initialLocation?: string;
-};
+type RenderContext = { initialLocation?: string };
 
 export class ReactRouterUI {
   private routerHistory?: History;
@@ -33,12 +31,8 @@ export class ReactRouterUI {
   /**
    * render all slot routes.
    */
-  renderRoutes(routes: RouteProps[], options: RenderRoutesOptions = {}): JSX.Element {
-    return (
-      <RouteContext reactRouterUi={this} routing={this.routingMode} location={options.initialLocation}>
-        <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
-      </RouteContext>
-    );
+  renderRoutes(routes: RouteProps[]) {
+    return <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>;
   }
 
   private unregisterListener?: UnregisterCallback = undefined;
@@ -111,6 +105,26 @@ export class ReactRouterUI {
     state?: Record<string, any>
   ) => {
     this.routerHistory?.push(path, state);
+  };
+
+  private AppRoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
+    return (
+      <RouteContext reactRouterUi={this} routing={this.routingMode} location={renderCtx?.initialLocation}>
+        {children}
+      </RouteContext>
+    );
+  };
+
+  public renderPlugin: RenderPlugins<RenderContext> = {
+    browserInit: () => {
+      const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      return { initialLocation };
+    },
+    serverInit: ({ browser }) => {
+      const initialLocation = browser?.location.url;
+      return { initialLocation };
+    },
+    reactContext: this.AppRoutingContext,
   };
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<LocationListener>()];
