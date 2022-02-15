@@ -1,9 +1,9 @@
-import React from 'react';
-import { DocumentNode } from 'graphql';
-import { gql } from '@apollo/client';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+// import React from 'react';
+// import { DocumentNode } from 'graphql';
+// import { gql } from '@apollo/client';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { DocsAspect, DocsUI } from '@teambit/docs';
+import { DocsAspect } from '@teambit/docs';
 import { ComponentSizerAspect } from './component-sizer.aspect';
 
 /**
@@ -16,15 +16,15 @@ export class SizerUIRuntime {
 
   static runtime = UIRuntime;
 
-  static async provider([component, docs]: [ComponentUI, DocsUI]) {
-    const sizer: DocumentNode = gql`
-      fragment sizeFields on Component {
-        size {
-          compressedTotal
-        }
-      }
-    `;
-    component.registerComponentField(sizer);
+  static async provider() {
+    // const sizer: DocumentNode = gql`
+    //   fragment sizeFields on Component {
+    //     size {
+    //       compressedTotal
+    //     }
+    //   }
+    // `;
+    // component.registerComponentField(sizer);
 
     // docs.registerTitleBadge({component: () => <div>dsd</div>});
     const ui = new SizerUIRuntime();
