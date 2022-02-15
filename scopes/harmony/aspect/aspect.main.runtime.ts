@@ -87,9 +87,11 @@ export class AspectMain {
 
   async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.removeSpecificComponentConfig(componentId, aspectId, true);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;

@@ -145,6 +145,9 @@ export default class CommandHelper {
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }
+  unsetEnv(compId: string) {
+    return this.runCmd(`bit envs unset ${compId}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
