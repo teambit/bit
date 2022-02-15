@@ -52,7 +52,7 @@ import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -71,7 +71,7 @@ import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick, partition } from 'lodash';
+import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -251,9 +251,13 @@ export class Workspace implements ComponentFactory {
   }
 
   private validateConfig() {
-    const defaultScope = this.config.defaultScope;
     if (this.consumer.isLegacy) return;
-    if (!defaultScope) throw new Error('defaultScope is missing');
+    if (isEmpty(this.config))
+      throw new BitError(
+        `fatal: workspace config is empty. probably one of bit files is missing. consider running "bit init"`
+      );
+    const defaultScope = this.config.defaultScope;
+    if (!defaultScope) throw new BitError('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
@@ -662,7 +666,12 @@ export class Workspace implements ComponentFactory {
         lane: lanes[0],
       };
     } catch (err) {
-      if (err instanceof InvalidScopeName || err instanceof ScopeNotFoundOrDenied || err instanceof LaneNotFound) {
+      if (
+        err instanceof InvalidScopeName ||
+        err instanceof ScopeNotFoundOrDenied ||
+        err instanceof LaneNotFound ||
+        err instanceof InvalidScopeNameFromRemote
+      ) {
         // the lane could be a local lane so no need to throw an error in such case
         loader.stop();
         this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
@@ -728,6 +737,11 @@ export class Workspace implements ComponentFactory {
    * it supports negate (!) character to exclude ids.
    */
   async idsByPattern(pattern: string): Promise<ComponentID[]> {
+    if (!pattern.includes('*') && !pattern.includes(',')) {
+      // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
+      const id = await this.resolveComponentId(pattern);
+      return [id];
+    }
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
@@ -1962,6 +1976,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const envIdStr = envId.toString();
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
+    await this.unsetEnvFromComponents(componentIds);
     componentIds.forEach((componentId) => {
       this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
       this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
