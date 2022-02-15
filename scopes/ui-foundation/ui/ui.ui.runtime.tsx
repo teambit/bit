@@ -41,12 +41,11 @@ export class UiUI {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
     const uiRoot = rootFactory();
-    const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation });
+    const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
-    const lifecycleHooks = this.renderPluginsSlot.toArray();
+    const lifecyclePlugins = this.getLifecyclePlugins();
 
-    const reactSsr = new ReactSSR(lifecycleHooks);
+    const reactSsr = new ReactSSR(lifecyclePlugins);
     await reactSsr.renderBrowser(
       <ClientContext>
         {hudItems}
@@ -61,12 +60,11 @@ export class UiUI {
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
     const uiRoot = rootFactory();
-    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: ssrContent?.browser?.location.url });
+    const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
+    const lifecyclePlugins = this.getLifecyclePlugins();
 
-    const lifecycleHooks = this.renderPluginsSlot.toArray();
-
-    const reactSsr = new ReactSSR(lifecycleHooks);
+    const reactSsr = new ReactSSR(lifecyclePlugins);
     const fullHtml = await reactSsr.renderServer(
       <ClientContext>
         {hudItems}
@@ -99,6 +97,14 @@ export class UiUI {
 
   registerRenderHooks<T, Y>(hooks: RenderPlugins<T, Y>) {
     return this.renderPluginsSlot.register(hooks);
+  }
+
+  // register from react-router aspect after reversing the dependency
+  private getLifecyclePlugins() {
+    const lifecycleHooks = this.renderPluginsSlot.toArray();
+    lifecycleHooks.unshift([ReactRouterAspect.id, this.router.renderPlugin]);
+
+    return lifecycleHooks;
   }
 
   private getRoot(rootExtension: string) {
