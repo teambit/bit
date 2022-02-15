@@ -29,6 +29,10 @@ describe('bit fork command', function () {
       expect(showFork.config).to.have.property('forkedFrom');
       expect(showFork.config.forkedFrom.name).to.equal('comp1');
     });
+    it('.bitmap should not have internal config fields', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp2.config[Extensions.forking]).to.not.have.property('__specific');
+    });
   });
   describe('fork a remote component with no --target-id flag', () => {
     before(() => {

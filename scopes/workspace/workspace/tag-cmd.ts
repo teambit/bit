@@ -27,6 +27,11 @@ ${WILDCARD_HELP('tag')}`;
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
     ['s', 'scope [version]', 'tag all components of the current scope'],
+    [
+      '',
+      'editor [editor]',
+      'open an editor to edit the tag messages per component, optionally specify the editor-name, default to vim',
+    ],
     ['', 'snapped [version]', 'tag components that their head is a snap (not a tag)'],
     ['', 'ver <version>', 'tag specified components with the given version'],
     ['p', 'patch', 'increment the patch version number'],
@@ -62,6 +67,7 @@ ${WILDCARD_HELP('tag')}`;
       message = '',
       ver,
       all = false,
+      editor = '',
       snapped = false,
       patch,
       minor,
@@ -134,6 +140,12 @@ ${WILDCARD_HELP('tag')}`;
     if (all && persist) {
       throw new GeneralError('you can use either --all or --persist, but not both');
     }
+    if (editor && persist) {
+      throw new GeneralError('you can use either --editor or --persist, but not both');
+    }
+    if (editor && message) {
+      throw new GeneralError('you can use either --editor or --message, but not both');
+    }
 
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
     if (releaseFlags.length > 1) {
@@ -152,6 +164,7 @@ ${WILDCARD_HELP('tag')}`;
       ids: id,
       all: Boolean(all),
       snapped: Boolean(snapped),
+      editor,
       message,
       exactVersion: getVersion(),
       releaseType,

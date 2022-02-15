@@ -565,7 +565,8 @@ export default class Scope {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
     const currentLane = this.lanes.getCurrentLaneId();
-    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash);
+    const startFrom = id.hasVersion() ? componentModel.getRef(id.version as string) : null;
+    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash, startFrom);
     return logs;
   }
 

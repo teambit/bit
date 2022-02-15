@@ -146,6 +146,7 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
+        "@testing-library/jest-dom": "5.11.10",
         "@testing-library/jest-native": "4.0.1",
         "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",
@@ -277,6 +278,7 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
+        "open-editor": "3.0.0",
         "p-limit": "3.1.0",
         "parallel-webpack": "2.6.0",
         "parse-package-name": "0.1.0",
@@ -343,12 +345,11 @@
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
         "ws": "7.4.2",
-        "yaml": "1.10.2",
-        "@testing-library/jest-dom": "5.11.10"
+        "yaml": "1.10.2"
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.218",
+        "@teambit/legacy": "1.0.220",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -419,7 +420,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.218"
+            "@teambit/legacy": "1.0.220"
           }
         }
       },
@@ -666,7 +667,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.218"
+            "@teambit/legacy": "1.0.220"
           }
         }
       }
@@ -723,7 +724,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.218",
+            "@teambit/legacy": "1.0.220",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -831,7 +832,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.218"
+            "@teambit/legacy": "1.0.220"
           }
         }
       }
