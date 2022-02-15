@@ -30,7 +30,7 @@ ${WILDCARD_HELP('tag')}`;
     [
       '',
       'editor [editor]',
-      'open an editor to edit the tag messages per component, optionally specify the editor-name, default to vim',
+      'EXPERIMENTAL. open an editor to edit the tag messages per component, optionally specify the editor-name, default to vim',
     ],
     ['', 'snapped [version]', 'tag components that their head is a snap (not a tag)'],
     ['', 'ver <version>', 'tag specified components with the given version'],
