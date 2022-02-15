@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap } from '@teambit/bundler';
 import type { Logger } from '@teambit/logger';
-import { isEmpty } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
 
@@ -34,8 +34,6 @@ export class WebpackBundler implements Bundler {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
-          // console.log('err webpack', err);
-
           if (err) {
             this.logger.error('get error from webpack compiler, full error:', err);
 
@@ -56,7 +54,7 @@ export class WebpackBundler implements Bundler {
             assets: Object.values(assetsMap),
             assetsByChunkName: info.assetsByChunkName,
             entriesAssetsMap,
-            errors: info.errors,
+            errors: this.getErrors(info),
             outputPath: stats.compilation.outputOptions.path,
             components,
             warnings: info.warnings,
@@ -68,6 +66,21 @@ export class WebpackBundler implements Bundler {
     });
     longProcessLogger.end();
     return componentOutput as BundlerResult[];
+  }
+
+  private getErrors(stats: StatsCompilation): Error[] {
+    if (!stats.errors) return [];
+    const fieldsToShow = ['message', 'moduleId', 'moduleName', 'moduleIdentifier', 'loc'];
+    return stats.errors.map((webpackError) => {
+      const lines = fieldsToShow.map((fieldName) => {
+        if (webpackError[fieldName]) {
+          return `${fieldName}: ${webpackError[fieldName]}`;
+        }
+        return undefined;
+      });
+      const errorMessage = compact(lines).join('\n');
+      return new BitError(errorMessage);
+    });
   }
 
   private getAssets(stats: StatsCompilation): AssetsMap {
