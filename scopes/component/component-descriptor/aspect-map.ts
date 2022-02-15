@@ -14,7 +14,10 @@ export class AspectMap {
     if (!this.entries || !Array.isArray(this.entries)) return undefined;
     const aspectEntry = this.entries.find((entry) => entry.aspectId === aspectId);
     if (!aspectEntry) return undefined;
-    return JSON.parse(aspectEntry.aspectData) as T;
+    if (typeof aspectEntry.aspectData === 'string') {
+      return JSON.parse(aspectEntry.aspectData) as T;
+    }
+    return aspectEntry.aspectData as T;
   }
 
   toObject(): AspectMapProps {
