@@ -3,7 +3,7 @@ import { join, resolve, basename } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
-import { flatten } from 'lodash';
+import { flatten, isEmpty } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type { Capsule } from '@teambit/isolator';
@@ -261,7 +261,10 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
     const result = results[0];
 
-    this.copyAssetsToCapsules(context, result);
+    if (isEmpty(result.errors)) {
+      // In case there are errors files will not be emitted so trying to copy them will fail anyway
+      this.copyAssetsToCapsules(context, result);
+    }
 
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       const metadata = this.computeComponentMetadata(context, result, component);

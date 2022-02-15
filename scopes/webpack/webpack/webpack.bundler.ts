@@ -80,7 +80,6 @@ export class WebpackBundler implements Bundler {
       });
       const errorMessage = compact(lines).join('\n');
       return new BitError(errorMessage);
-      // const { message, moduleId, moduleName, moduleIdentifier, loc } = webpackError;
     });
   }
 
