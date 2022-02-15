@@ -32,23 +32,13 @@ export type MenuProps = {
   menuItemSlot: MenuItemSlot;
 
   consumeMethodSlot: ConsumeMethodSlot;
-  fields?: DocumentNode[];
 };
 
 /**
  * top bar menu.
  */
-export function Menu({
-  navigationSlot,
-  widgetSlot,
-  className,
-  host,
-  menuItemSlot,
-  consumeMethodSlot,
-  fields,
-}: MenuProps) {
-  console.log('menu fields', fields);
-  const { component } = useComponent(host, undefined, []);
+export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot, consumeMethodSlot }: MenuProps) {
+  const { component } = useComponent(host);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
