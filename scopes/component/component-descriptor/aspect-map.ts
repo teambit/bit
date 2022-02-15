@@ -11,6 +11,7 @@ export class AspectMap {
   constructor(private entries: AspectDataEntry[]) {}
 
   get<T>(aspectId: string): T | undefined {
+    if (!this.entries || !Array.isArray(this.entries)) return undefined;
     const aspectEntry = this.entries.find((entry) => entry.aspectId === aspectId);
     if (!aspectEntry) return undefined;
     return JSON.parse(aspectEntry.aspectData) as T;

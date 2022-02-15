@@ -56,7 +56,8 @@ export class ComponentDescriptor {
   }
 
   static fromObject({ id, aspectMap }: ComponentDescriptorProps) {
-    return new ComponentDescriptor(ComponentID.fromObject(id), AspectMap.fromObject(aspectMap));
+    const aspects = AspectMap.fromObject(aspectMap);
+    return new ComponentDescriptor(ComponentID.fromObject(id), aspects);
   }
 
   static fromArray(componentsDescriptorProps: ComponentDescriptorProps[]) {

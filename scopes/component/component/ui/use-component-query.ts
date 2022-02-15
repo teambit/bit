@@ -1,12 +1,8 @@
-import { DocumentNode } from 'graphql';
-import { merge } from 'lodash';
-import { graphql } from '@apollo/client/react/hoc';
 import { useMemo, useEffect, useRef } from 'react';
-import { mergeTypeDefs } from '@graphql-tools/merge';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { ComponentDescriptorProps, ComponentDescriptor } from '@teambit/component-descriptor';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
@@ -109,7 +105,7 @@ const SUB_COMPONENT_REMOVED = gql`
 `;
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(componentId: string, host: string, _componentFields?: DocumentNode[]) {
+export function useComponentQuery(componentId: string, host: string) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
@@ -202,8 +198,11 @@ export function useComponentQuery(componentId: string, host: string, _componentF
 
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
+    const aspects = rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data }));
     return {
-      componentDescriptor: rawComponent ? ComponentDescriptor.fromObject({ id: rawComponent.id }) : undefined,
+      componentDescriptor: rawComponent
+        ? ComponentDescriptor.fromObject({ id: rawComponent.id, aspectMap: aspects })
+        : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error
