@@ -3,7 +3,7 @@ import { join, resolve, basename } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
-import { flatten } from 'lodash';
+import { flatten, isEmpty } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type { Capsule } from '@teambit/isolator';
@@ -16,6 +16,7 @@ import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
+import { PreviewOutputFileNotFound } from '../exceptions';
 
 export const PREVIEW_CHUNK_SUFFIX = 'preview';
 export const COMPONENT_CHUNK_SUFFIX = 'component';
@@ -164,6 +165,9 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
       files.forEach((asset) => {
         const filePath = this.getAssetAbsolutePath(context, asset);
+        if (!existsSync(filePath)) {
+          throw new PreviewOutputFileNotFound(component.id, filePath);
+        }
         const contents = readFileSync(filePath);
         // const exists = capsule.fs.existsSync(this.getArtifactDirectory());
         // if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
@@ -257,7 +261,10 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
     const result = results[0];
 
-    this.copyAssetsToCapsules(context, result);
+    if (isEmpty(result.errors)) {
+      // In case there are errors files will not be emitted so trying to copy them will fail anyway
+      this.copyAssetsToCapsules(context, result);
+    }
 
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       const metadata = this.computeComponentMetadata(context, result, component);
