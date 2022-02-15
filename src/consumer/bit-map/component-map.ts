@@ -14,6 +14,7 @@ import AddComponents from '../component-ops/add-components';
 import { AddContext, getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
@@ -154,13 +155,22 @@ export default class ComponentMap {
         ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
         : null,
       nextVersion: this.nextVersion,
-      config: this.config,
+      config: this.configToObject(),
     };
     const notNil = (val) => {
       return !R.isNil(val);
     };
     res = R.filter(notNil, res);
     return res;
+  }
+
+  private configToObject() {
+    if (!this.config) return undefined;
+    const config = {};
+    Object.keys(this.config).forEach((aspectId) => {
+      config[aspectId] = removeInternalConfigFields(this.config?.[aspectId]);
+    });
+    return config;
   }
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {

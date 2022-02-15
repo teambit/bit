@@ -49,6 +49,10 @@ describe('extensions config diff', function () {
         expect(output).to.have.string('+++ Ext4@0.0.1 configuration (0.0.1 modified)');
         expect(output).to.have.string('+ "key": "val-component-json"');
       });
+      it('bit diff should not show internal config fields', () => {
+        output = helper.command.diff();
+        expect(output).to.not.have.string('__specific');
+      });
     });
     describe('remove extension', () => {
       before(() => {
