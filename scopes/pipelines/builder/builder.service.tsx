@@ -4,7 +4,7 @@ import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
@@ -22,6 +22,7 @@ export type BuildServiceResults = {
 
 export type BuilderServiceOptions = {
   seedersOnly?: boolean;
+  originalSeeders?: ComponentID[];
   tasks?: string[];
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
@@ -94,10 +95,15 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
-        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
+        const { originalSeeders } = options;
+        const seeders = componentIds.filter((compId) =>
+          originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
+        );
+        const capsuleNetwork = await this.isolator.isolateComponents(seeders, {
           getExistingAsIs: true,
           seedersOnly: options.seedersOnly,
         });
+        capsuleNetwork.componentIdsOfSameEnv = componentIds;
         this.logger.console(
           `generated graph for env "${executionContext.id}", seeders total: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
         );

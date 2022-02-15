@@ -3,6 +3,7 @@ import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import CapsuleList from './capsule-list';
 
 export class Network {
+  componentIdsOfSameEnv?: ComponentID[];
   constructor(
     private _graphCapsules: CapsuleList,
     private seedersIds: ComponentID[],
@@ -15,6 +16,18 @@ export class Network {
    */
   get seedersCapsules(): CapsuleList {
     const capsules = this.seedersIds.map((seederId) => {
+      const capsule = this.graphCapsules.getCapsule(seederId);
+      if (!capsule) throw new Error(`unable to find ${seederId.toString()} in the capsule list`);
+      return capsule;
+    });
+    return CapsuleList.fromArray(capsules);
+  }
+
+  /**
+   * not only seeders, but also the dependencies of the seeder, as long as they belong to the same env.
+   */
+  get graphCapsulesOfSameEnv() {
+    const capsules = (this.componentIdsOfSameEnv || this.seedersIds).map((seederId) => {
       const capsule = this.graphCapsules.getCapsule(seederId);
       if (!capsule) throw new Error(`unable to find ${seederId.toString()} in the capsule list`);
       return capsule;

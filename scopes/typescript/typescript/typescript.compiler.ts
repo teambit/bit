@@ -87,7 +87,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   async preBuild(context: BuildContext) {
-    const capsules = context.capsuleNetwork.seedersCapsules;
+    const capsules = context.capsuleNetwork.graphCapsulesOfSameEnv;
     const capsuleDirs = capsules.map((capsule) => capsule.path);
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
