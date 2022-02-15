@@ -7,6 +7,7 @@ export class PreviewOutputFileNotFound extends BitError {
 
 This is usually a result of an error during the bundling process.
 The error might be an error of another component that uses the same env.
+Run "bit build" with "--dev" to see more info.
 Run "bit envs" to see other components that uses the same env`);
   }
 }
