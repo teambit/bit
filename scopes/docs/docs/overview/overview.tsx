@@ -9,6 +9,7 @@ import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import styles from './overview.module.scss';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
@@ -93,7 +94,7 @@ function LaneOverview({ laneId }: { laneId: string }): JSX.Element {
   return (
     <div className={styles.lane}>
       <Icon of="lane"></Icon>
-      <span>{laneId}</span>
+      <Ellipsis className={styles.laneName}>{laneId}</Ellipsis>
     </div>
   );
 }

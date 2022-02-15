@@ -10,6 +10,7 @@ import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
@@ -53,7 +54,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         <>
           <div className={styles.lane}>
             <Icon of="lane"></Icon>
-            <span className={styles.laneName}>{currentLane.id}</span>
+            <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
           </div>
           <Separator isPresentational className={styles.separator} />
         </>
