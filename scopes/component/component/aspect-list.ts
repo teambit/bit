@@ -36,7 +36,7 @@ export class AspectList {
    */
   get(id: string): AspectEntry | undefined {
     return this.entries.find((entry) => {
-      return entry.legacy.stringId === id;
+      return entry.legacy.stringId === id || entry.id.toStringWithoutVersion() === id;
     });
   }
 
