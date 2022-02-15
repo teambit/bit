@@ -1,4 +1,3 @@
-import { isEmpty } from 'lodash';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { AspectEntry, SerializableMap } from './aspect-entry';
@@ -14,6 +13,14 @@ export class AspectList {
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
+  }
+
+  /**
+   * transform an aspect list into a new one without the given aspect ids
+   */
+  withoutEntries(aspectIds: string[]): AspectList {
+    const entries = this.entries.filter((entry) => !aspectIds.includes(entry.legacy.stringId));
+    return new AspectList(entries);
   }
 
   /**
@@ -62,7 +69,7 @@ export class AspectList {
   toConfigObject() {
     const res = {};
     this.entries.forEach((entry) => {
-      if (entry.config && !isEmpty(entry.config)) {
+      if (entry.config) {
         res[entry.id.toString()] = entry.config;
       }
     });
