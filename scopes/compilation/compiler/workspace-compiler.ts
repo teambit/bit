@@ -18,6 +18,7 @@ import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-p
 import { UiMain } from '@teambit/ui';
 import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
 import { Compiler, CompilationInitiator } from './types';
@@ -61,13 +62,23 @@ export class ComponentCompiler {
       await dataToPersist.persistAllToFS();
     }
 
-    if (this.compilerInstance.transpileFile) {
+    const compilers: Compiler[] = (this.compilerInstance as MultiCompiler).compilers
+      ? (this.compilerInstance as MultiCompiler).compilers
+      : [this.compilerInstance];
+    const canTranspileFile = compilers.find((c) => c.transpileFile);
+    const canTranspileComponent = compilers.find((c) => c.transpileComponent);
+
+    if (canTranspileFile) {
       await Promise.all(
         this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, options.initiator))
       );
-    } else if (this.compilerInstance.transpileComponent) {
+    }
+
+    if (canTranspileComponent) {
       await this.compileAllFiles(this.component, options.initiator);
-    } else {
+    }
+
+    if (!canTranspileFile && !canTranspileComponent) {
       throw new Error(
         `compiler ${this.compilerId.toString()} doesn't implement either "transpileFile" or "transpileComponent" methods`
       );
