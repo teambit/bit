@@ -25,7 +25,7 @@ const isBrowser = typeof window !== "undefined";
 const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 ${idSetters.join('\n')}
 export function render(...props){
-  return Harmony.load([${identifiers.reverse().join(', ')}], '${runtime}', config)
+  return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
     .then((harmony) => {
       return harmony
       .run()

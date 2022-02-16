@@ -221,6 +221,7 @@ export class ScopeUI {
 
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
+    this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
@@ -339,7 +340,6 @@ export class ScopeUI {
     );
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
-    scopeUi.registerDrawers(new ComponentsDrawer(sidebarSlot));
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     scopeUi.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">

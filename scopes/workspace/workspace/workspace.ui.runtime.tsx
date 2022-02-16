@@ -96,6 +96,7 @@ export class WorkspaceUI {
 
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
+    this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
@@ -193,7 +194,7 @@ export class WorkspaceUI {
     );
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
-    workspaceUI.registerDrawers(new WorkspaceComponentsDrawer(sidebarSlot));
+
     workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
         Gallery

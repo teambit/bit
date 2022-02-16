@@ -14,14 +14,14 @@ import {
   LanesOverviewMenu,
   CurrentLaneFromUrl,
 } from '@teambit/lanes.ui.lanes';
-import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ReactRouterAspect, { NavLinkProps, ReactRouterUI } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
+import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 
 export class LanesUI {
-  static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect];
+  static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
   static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
@@ -102,15 +102,15 @@ export class LanesUI {
     });
   }
 
-  registerDrawers(...drawers: DrawerType[]) {
-    if (this.hostAspect) {
-      this.hostAspect.registerDrawers(...drawers);
-    }
-    return this;
-  }
-
   static async provider(
-    [uiUi, reactRouter, componentUi]: [UiUI, ReactRouterUI, ComponentUI],
+    [uiUi, reactRouter, componentUi, workspaceUi, scopeUi, sidebarUi]: [
+      UiUI,
+      ReactRouterUI,
+      ComponentUI,
+      WorkspaceUI,
+      ScopeUI,
+      SidebarUI
+    ],
     _,
     [routeSlot, menuItemSlot, menuRouteSlot, navSlot]: [RouteSlot, MenuItemSlot, RouteSlot, LanesOrderedNavigationSlot],
     harmony: Harmony
@@ -120,10 +120,10 @@ export class LanesUI {
     let workspace: WorkspaceUI | undefined;
     let scope: ScopeUI | undefined;
     if (host === WorkspaceAspect.id) {
-      workspace = harmony.get<WorkspaceUI>(WorkspaceAspect.id);
+      workspace = workspaceUi;
     }
     if (host === ScopeAspect.id) {
-      scope = harmony.get<ScopeUI>(ScopeAspect.id);
+      scope = scopeUi;
     }
     const lanesUi = new LanesUI(
       uiUi,
@@ -138,7 +138,7 @@ export class LanesUI {
     );
     uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
-    lanesUi.registerDrawers(drawer);
+    sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
 
     return lanesUi;
