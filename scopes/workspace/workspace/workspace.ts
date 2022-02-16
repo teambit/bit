@@ -66,7 +66,7 @@ import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -488,12 +488,13 @@ export class Workspace implements ComponentFactory {
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
-    const entiresP = extensionDataList.map(async (entry) => {
-      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
-    });
-
+    const entiresP = extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry));
     const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
+  private async extensionDataEntryToAspectEntry(dataEntry: ExtensionDataEntry): Promise<AspectEntry> {
+    return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
   /**
@@ -696,13 +697,16 @@ export class Workspace implements ComponentFactory {
       : await this.createAspectList(new ExtensionDataList());
 
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
-    await componentConfigFile.write(componentDir, { override: options.override });
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
+    await componentConfigFile.write({ override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
   }
 
+  /**
+   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
+   */
   private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
     const resolvedList = await aspectListFromScope.pmap(async (entry) => {
       if (entry.id.scope !== this.scope.name) {
@@ -1124,6 +1128,34 @@ export class Workspace implements ComponentFactory {
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
+  }
+
+  async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.addComponentConfig(id, aspectId, config);
+    }
+  }
+
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+    }
+  }
+
+  async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      return componentConfigFile.aspects.get(aspectId)?.config;
+    }
+    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
   }
 
   /**
@@ -1623,8 +1655,7 @@ export class Workspace implements ComponentFactory {
   private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
     await Promise.all(
       Array.from(componentConfigFiles).map(async (componentConfigFile) => {
-        const componentDir = this.componentDir(componentConfigFile.componentId, { ignoreVersion: true });
-        await componentConfigFile.write(componentDir, { override: true });
+        await componentConfigFile.write({ override: true });
       })
     );
   }
@@ -1977,10 +2008,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
-    componentIds.forEach((componentId) => {
-      this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
-      this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.addSpecificComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+        await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
+      })
+    );
     await this.bitMap.write();
   }
 
@@ -1990,18 +2023,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async unsetEnvFromComponents(ids: ComponentID[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
     const changed: ComponentID[] = [];
     const unchanged: ComponentID[] = [];
-    ids.forEach((id) => {
-      const bitMapEntry = this.bitMap.getBitmapEntry(id);
-      const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
-      const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
-      if (!currentEnv) {
-        unchanged.push(id);
-        return;
-      }
-      this.bitMap.removeComponentConfig(id, currentEnv, false);
-      this.bitMap.removeComponentConfig(id, EnvsAspect.id, false);
-      changed.push(id);
-    });
+    await Promise.all(
+      ids.map(async (id) => {
+        const envsAspect = await this.getSpecificComponentConfig(id, EnvsAspect.id);
+        const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
+        if (!currentEnv) {
+          unchanged.push(id);
+          return;
+        }
+        await this.removeSpecificComponentConfig(id, currentEnv, false);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
+        changed.push(id);
+      })
+    );
     await this.bitMap.write();
     return { changed, unchanged };
   }

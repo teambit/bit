@@ -7,6 +7,12 @@ export type RemovedObjectSerialized = {
   dependentBits: Record<string, any>;
   removedFromLane?: boolean;
   removedLanes: string[];
+  /**
+   * @deprecated
+   * 0.0.646 is the latest version this property is used. since then, no dependencies are removed.
+   * it's still here for "forward compatibility". (clients that use older version that bit.dev).
+   */
+  removedDependencies: BitIdStr[];
 };
 
 export default class RemovedObjects {
@@ -42,6 +48,7 @@ export default class RemovedObjects {
       dependentBits: this.dependentBits,
       removedFromLane: this.removedFromLane,
       removedLanes: this.removedLanes,
+      removedDependencies: [], // for forward compatibility
     };
   }
 

@@ -40,6 +40,7 @@ export type BasicTagParams = {
   disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
   preRelease?: string;
+  editor?: string;
 };
 
 type TagParams = {
