@@ -6,9 +6,8 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { DiagnosticAspect } from './diagnostic.aspect';
 import { DiagnosticRoute } from './diagnostic.route';
 import { Diagnostic } from './diagnostic';
-import { writeFile } from 'fs';
 
-export type DiagnosticSlot = SlotRegistry<Diagnostic>;
+export type DiagnosticSlot = SlotRegistry<Diagnostic[]>;
 
 export class DiagnosticMain {
   constructor(
@@ -19,34 +18,30 @@ export class DiagnosticMain {
   static dependencies = [ExpressAspect];
   static runtime = MainRuntime;
 
-  register(diagnostic: Diagnostic | Diagnostic[]) {
-    if (Array.isArray(diagnostic)) {
-      diagnostic.forEach((e) => {
-        this.diagnosticSlot.register(e);
-      });
-    } else this.diagnosticSlot.register(diagnostic);
-    return this;
+  register(...diagnostic: Diagnostic[]) {
+    this.diagnosticSlot.register(diagnostic);
   }
 
-  // TODO: joni support array
   getDiagnosticData() {
     const slots = this.diagnosticSlot.toArray();
-
-    const newSlots = slots.map(([aspectId, diagnostic]) => {
-      const { diagnosticFn } = diagnostic;
-      const diagnosticData = diagnosticFn();
-      return {
-        aspectId,
-        diagnosticData,
-      };
-    });
-    return newSlots;
+    return slots.reduce((prev, cSlot) => {
+      const [aspectId, diagnostic] = cSlot;
+      prev[aspectId] = { diagnosticData: [] };
+      diagnostic.forEach((diag) => {
+        const { diagnosticFn } = diag;
+        prev[aspectId].diagnosticData.push(diagnosticFn());
+      });
+      return prev;
+    }, {});
   }
 
+  // TODO: find a better way to extract the version.
   static getBitVersion() {
     const buffer = readFileSync(join(dirname(require.resolve('@teambit/bit')), '../', 'package.json'));
-    const json = JSON.parse(buffer.toString());
-    return json;
+    const json = buffer.toString();
+    const data = JSON.parse(json);
+    const { version } = data?.componentId;
+    return { version };
   }
 
   static async provider([express]: [ExpressMain], config: any, [diagnosticSlot]: [DiagnosticSlot]) {
