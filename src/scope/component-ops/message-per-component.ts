@@ -30,6 +30,7 @@ export class MessagePerComponentFetcher {
     if (template === afterSave) {
       throw new Error(`no changes have been done to the messages templates. consider using "--message" flag instead`);
     }
+    await tmp.remove(templateFilePath);
     return this.parseFileWithMessages(afterSave);
   }
 
