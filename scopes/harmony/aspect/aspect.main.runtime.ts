@@ -77,9 +77,11 @@ export class AspectMain {
     config: Record<string, any> = {}
   ): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;
