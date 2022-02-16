@@ -777,6 +777,18 @@ export class Workspace implements ComponentFactory {
     return newAndModified;
   }
 
+  async getComponentsUsingEnv(env: string, throwIfNotFound = false): Promise<Component[]> {
+    const allComps = await this.list();
+    const allEnvs = await this.envs.createEnvironment(allComps);
+    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => runtimeEnv.id === env);
+    if (!foundEnv && throwIfNotFound) {
+      const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
+      throw new BitError(`unable to find components that using "${env}" env.
+the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
+    }
+    return foundEnv?.components || [];
+  }
+
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     return this.componentLoader.getMany(ids, forCapsule);
   }
