@@ -74,6 +74,12 @@ export class AspectList {
     return serializedEntries;
   }
 
+  filter(ids?: string[]) {
+    return this.entries.filter((aspectEntry) => {
+      return ids?.includes(aspectEntry.id.toStringWithoutVersion());
+    });
+  }
+
   toLegacy(): ExtensionDataList {
     const legacyEntries = this.entries.map((entry) => entry.legacy);
     return ExtensionDataList.fromArray(legacyEntries);

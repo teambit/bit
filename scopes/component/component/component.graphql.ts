@@ -93,7 +93,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
-        aspects: [Aspect]
+        aspects(include: [String]): [Aspect]
       }
 
       type Aspect {
@@ -154,9 +154,10 @@ export function componentSchema(componentExtension: ComponentMain) {
           // graphql doesn't support map types
           return component.tags.toArray().map((tag) => tag.toObject());
         },
-        aspects: (component: Component) => {
-          const aspects = component.state.aspects.serialize();
-          return aspects;
+        aspects: (component: Component, { include }: { include?: string[] }) => {
+          if (!include) return component.state.aspects.serialize();
+          const aspects = component.state.aspects.filter(include);
+          return aspects.map((aspect) => aspect.serialize());
         },
       },
       ComponentHost: {
