@@ -32,19 +32,18 @@ export class LanesDrawer implements DrawerType {
 
   Context = ({ children }) => {
     const lanesContext = useLanesContext();
-    const isCollapsed = !lanesContext?.model.currentLane;
+    const isCollapsed = !lanesContext?.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
   render = () => {
     const lanesContext = useLanesContext();
-    const model = lanesContext?.model;
 
     const { collapsed } = useContext(LaneTreeContext);
 
-    if (!model || !model.lanes) return <FullLoader />;
+    if (!lanesContext || !lanesContext.lanes) return <FullLoader />;
 
-    const { lanes } = model;
+    const { lanes } = lanesContext;
     const { showScope } = this.props;
 
     if (lanes.length === 0)

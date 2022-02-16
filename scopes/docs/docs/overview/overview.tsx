@@ -21,7 +21,7 @@ export type OverviewProps = {
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const lanesModel = useLanesContext();
-  const laneId = lanesModel?.model.currentLane?.id;
+  const laneId = lanesModel?.currentLane?.id;
   const { data } = useFetchDocs(component.id.toString());
   const fetchComponent = data?.component;
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')

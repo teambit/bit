@@ -1,6 +1,5 @@
 export {
   LanesContext,
-  LanesContextType,
   useLanesContext,
   LanesProvider,
   LanesProviderProps,
@@ -11,10 +10,5 @@ export {
   LaneQueryResult,
   LanesQueryResult,
   LanesHost,
-  LanesActionTypes,
-  LanesActions,
-  LanesUpdateCurrentLaneAction,
-  LanesUpdateLaneAction,
-  LanesUpdateLanesAction,
 } from './lanes-context';
 export { useLanes } from './lanes-query';

@@ -12,8 +12,8 @@ export class ComponentTreeWidget implements ComponentTreeNode {
     const lanes = useLanesContext();
 
     const isInCurrentLane = useMemo(() => {
-      return workspaceComponent?.id && lanes?.model.isInCurrentLane(workspaceComponent.id);
-    }, [lanes?.model.currentLane, workspaceComponent?.id]);
+      return workspaceComponent?.id && lanes?.isInCurrentLane(workspaceComponent.id);
+    }, [lanes?.currentLane, workspaceComponent?.id]);
 
     if (!workspaceComponent) return null;
 

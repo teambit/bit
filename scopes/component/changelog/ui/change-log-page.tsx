@@ -18,7 +18,7 @@ type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.model?.currentLane;
+  const currentLane = lanesContext?.currentLane;
   const snapResult = useSnaps(component.id);
   const { loading } = snapResult;
   const { snaps } = snapResult;

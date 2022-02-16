@@ -282,6 +282,7 @@
         "p-limit": "3.1.0",
         "parallel-webpack": "2.6.0",
         "parse-package-name": "0.1.0",
+        "path-to-regexp": "6.2.0",
         "penpal": "5.3.0",
         "pluralize": "8.0.0",
         "postcss": "8.2.9",

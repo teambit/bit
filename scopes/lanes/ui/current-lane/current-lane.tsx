@@ -8,6 +8,6 @@ export type CurrentLaneFromUrlProps = {
 
 export function CurrentLaneFromUrl({ children }: CurrentLaneFromUrlProps) {
   const location = useLocation();
-  const currentLaneUrl = useMemo(() => LanesModel.getLaneUrlFromPathname(location.pathname), [location.pathname]);
-  return <LanesProvider currentLaneUrl={currentLaneUrl}>{children}</LanesProvider>;
+  const currentLaneId = useMemo(() => LanesModel.getLaneIdFromPathname(location.pathname), [location.pathname]);
+  return <LanesProvider currentLaneId={currentLaneId}>{children}</LanesProvider>;
 }

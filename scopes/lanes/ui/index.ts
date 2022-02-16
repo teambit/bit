@@ -1,6 +1,5 @@
 export {
   LanesContext,
-  LanesContextType,
   useLanesContext,
   LanesProvider,
   LanesProviderProps,
@@ -12,11 +11,6 @@ export {
   LanesQueryResult,
   useLanes,
   LanesHost,
-  LanesActionTypes,
-  LanesActions,
-  LanesUpdateCurrentLaneAction,
-  LanesUpdateLaneAction,
-  LanesUpdateLanesAction,
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {

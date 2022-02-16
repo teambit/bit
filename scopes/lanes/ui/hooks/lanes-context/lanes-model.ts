@@ -1,7 +1,7 @@
 import { ComponentModel } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-
+import { pathToRegexp } from 'path-to-regexp';
 /**
  * GQL (lanes/getLanes/components)
  * Return type of each Component in a Lane
@@ -28,7 +28,6 @@ export type LaneQueryResult = {
 export type LanesQueryResult = {
   lanes?: {
     getLanes?: LaneQueryResult[];
-    getCurrentLaneName?: string;
   };
 };
 export type LanesHost = 'workspace' | 'scope';
@@ -68,16 +67,15 @@ export class LanesModel {
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 
-  static getLaneUrlFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    let [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
-    if (!maybeLaneId) return undefined;
-    [maybeLaneId] = maybeLaneId.split(LanesModel.baseLaneComponentRoute);
-    const [, ...laneId] = maybeLaneId.split('/');
-    const laneIdStr = laneId
-      .filter((id) => id)
-      .slice(0, 3)
-      .join('/');
-    return `${LanesModel.baseLaneRoute}/${laneIdStr}`;
+  static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
+    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
+      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
+      : pathname;
+    const regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
+    const matches = regexp.exec(path);
+    if (!matches) return undefined;
+    const [, orgId, scopeId, laneId] = matches;
+    return `${orgId ? orgId.concat('.').concat(scopeId) : scopeId}/${laneId}`;
   };
 
   static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
@@ -141,12 +139,10 @@ export class LanesModel {
     return grouped;
   }
 
-  static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LanesModel {
+  static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LaneModel[] {
     const lanesResult = lanesData.lanes?.getLanes || [];
-    const currentLaneName = lanesData.lanes?.getCurrentLaneName;
     const lanes = lanesResult.map((result) => LanesModel.mapToLaneModel(result, currentScope));
-    const currentLane = lanes.find((lane) => lane.name === currentLaneName);
-    return new LanesModel({ lanes, currentLane });
+    return lanes;
   }
 
   constructor({ lanes, currentLane }: LanesModelProps) {

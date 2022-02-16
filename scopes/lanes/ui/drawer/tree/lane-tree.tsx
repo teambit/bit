@@ -13,13 +13,12 @@ export type LaneTreeProps = {
 
 export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
   const lanesContext = useLanesContext();
-  const model = lanesContext?.model;
-  const activeLaneName = model?.currentLane?.name;
+  const activeLaneName = lanesContext?.currentLane?.name;
 
-  const tree: TreeNode<PayloadType> = useMemo(() => laneToTree(model, { showScope }), [model?.lanes]);
+  const tree: TreeNode<PayloadType> = useMemo(() => laneToTree(lanesContext, { showScope }), [lanesContext?.lanes]);
 
   return (
-    <TreeContextProvider selected={model?.currentLane?.id}>
+    <TreeContextProvider selected={lanesContext?.currentLane?.id}>
       <div style={indentStyle(1)}>
         <Tree TreeNode={LaneTreeNodeRenderer} activePath={activeLaneName} tree={tree} isCollapsed={isCollapsed} />
       </div>

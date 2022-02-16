@@ -1,6 +1,6 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
-import { LanesModel, LanesQueryResult } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel, LanesQueryResult } from '@teambit/lanes.ui.lanes';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 
 const GET_LANES = gql`
@@ -23,13 +23,14 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(): { lanesModel: LanesModel } & QueryResult<LanesQueryResult> {
+export function useLanes(): { lanes: LaneModel[] } & QueryResult<LanesQueryResult> {
   const { data, ...rest } = useDataQuery<LanesQueryResult>(GET_LANES);
   const { scope, loading } = useScopeQuery();
+  const lanes = data ? LanesModel.from(data, scope) : [];
   return {
     ...rest,
     loading: rest.loading || !!loading,
     data,
-    lanesModel: (data && LanesModel.from(data, scope)) || new LanesModel({ lanes: [] }),
+    lanes,
   };
 }

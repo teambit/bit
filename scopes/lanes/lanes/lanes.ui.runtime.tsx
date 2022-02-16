@@ -9,7 +9,6 @@ import {
   LanesDrawer,
   LanesHost,
   LanesOverview,
-  LanesProvider,
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
@@ -88,11 +87,7 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return (
-      <LanesProvider>
-        <CurrentLaneFromUrl>{children}</CurrentLaneFromUrl>
-      </LanesProvider>
-    );
+    return <CurrentLaneFromUrl>{children}</CurrentLaneFromUrl>;
   };
 
   registerRoute(route: RouteProps) {

@@ -11,9 +11,8 @@ export type LanesOverviewProps = {
 };
 export function LanesOverview({ routeSlot }: LanesOverviewProps) {
   const lanesContext = useLanesContext();
-  const model = lanesContext?.model;
 
-  const currentLane = model?.currentLane;
+  const currentLane = lanesContext?.currentLane;
 
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
