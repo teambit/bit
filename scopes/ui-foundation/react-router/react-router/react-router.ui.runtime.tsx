@@ -73,10 +73,7 @@ export class ReactRouterUI {
   navigateTo = (
     /** destination */
     path: LocationDescriptor,
-    /**
-     * type of history action to execute (pop / push / replace).
-     * Supports state-object for legacy calls. (this will be removed when supported by symphony)
-     */
+    /** history action to execute (pop / push / replace) */
     action?: Action
   ) => {
     switch (action) {
