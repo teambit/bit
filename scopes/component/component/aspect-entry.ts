@@ -1,4 +1,8 @@
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+/**
+ * avoid importing any (non-type) legacy code here. otherwise, PreviewTask will throw cryptic errors
+ */
+
+import type { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {
@@ -13,6 +17,7 @@ export type AspectData = {
   [key: string]: any;
 };
 
+export type ResolveComponentIdFunc = (id: string) => Promise<ComponentID>;
 export class AspectEntry {
   constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
 
