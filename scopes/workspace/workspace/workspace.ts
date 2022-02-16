@@ -529,7 +529,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()]);
+        await this.loadAspects([component.id.toString()], undefined, component.id);
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -1051,7 +1051,7 @@ export class Workspace implements ComponentFactory {
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
-      await this.loadExtensions(extsWithoutSelf);
+      await this.loadExtensions(extsWithoutSelf, componentId);
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
         envWasFoundPreviously
@@ -1251,8 +1251,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
-    this.logger.debug(`loading ${ids.length} aspects`);
+  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+ids: ${ids.join(', ')}
+needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -1422,7 +1424,11 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
+  async loadExtensions(
+    extensions: ExtensionDataList,
+    originatedFrom?: ComponentID,
+    throwOnError = false
+  ): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -1437,7 +1443,7 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError);
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom);
   }
 
   /**

@@ -157,7 +157,6 @@ export default async function provideWorkspace(
     const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
-    await workspace.loadExtensions(extensions);
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId) {
