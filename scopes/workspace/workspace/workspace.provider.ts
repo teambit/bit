@@ -37,6 +37,7 @@ import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from '
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
+import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -157,7 +158,6 @@ export default async function provideWorkspace(
     const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
-    await workspace.loadExtensions(extensions);
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId) {
@@ -221,6 +221,7 @@ export default async function provideWorkspace(
   const envsCommand = cli.getCommand('envs');
   envsCommand?.commands?.push(new EnvsSetCmd(workspace)); // bit envs set
   envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
+  envsCommand?.commands?.push(new EnvsReplaceCmd(workspace)); // bit envs replace
 
   return workspace;
 }

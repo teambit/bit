@@ -66,7 +66,7 @@ import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -488,12 +488,13 @@ export class Workspace implements ComponentFactory {
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
-    const entiresP = extensionDataList.map(async (entry) => {
-      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
-    });
-
+    const entiresP = extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry));
     const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
+  private async extensionDataEntryToAspectEntry(dataEntry: ExtensionDataEntry): Promise<AspectEntry> {
+    return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
   /**
@@ -528,7 +529,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()]);
+        await this.loadAspects([component.id.toString()], undefined, component.id);
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -696,13 +697,16 @@ export class Workspace implements ComponentFactory {
       : await this.createAspectList(new ExtensionDataList());
 
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
-    await componentConfigFile.write(componentDir, { override: options.override });
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
+    await componentConfigFile.write({ override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
   }
 
+  /**
+   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
+   */
   private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
     const resolvedList = await aspectListFromScope.pmap(async (entry) => {
       if (entry.id.scope !== this.scope.name) {
@@ -736,17 +740,23 @@ export class Workspace implements ComponentFactory {
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string): Promise<ComponentID[]> {
+  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
     if (!pattern.includes('*') && !pattern.includes(',')) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      return [id];
+      if (this.exists(id)) return [id];
+      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the workspace`);
+      return [];
     }
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
-    return ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    if (throwForNoMatch && !idsFiltered.length) {
+      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+    }
+    return idsFiltered;
   }
 
   /**
@@ -771,6 +781,18 @@ export class Workspace implements ComponentFactory {
       newAndModified.push(...dependents);
     }
     return newAndModified;
+  }
+
+  async getComponentsUsingEnv(env: string, throwIfNotFound = false): Promise<Component[]> {
+    const allComps = await this.list();
+    const allEnvs = await this.envs.createEnvironment(allComps);
+    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => runtimeEnv.id === env);
+    if (!foundEnv && throwIfNotFound) {
+      const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
+      throw new BitError(`unable to find components that using "${env}" env.
+the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
+    }
+    return foundEnv?.components || [];
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
@@ -1041,7 +1063,7 @@ export class Workspace implements ComponentFactory {
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
-      await this.loadExtensions(extsWithoutSelf);
+      await this.loadExtensions(extsWithoutSelf, componentId);
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
         envWasFoundPreviously
@@ -1124,6 +1146,34 @@ export class Workspace implements ComponentFactory {
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
+  }
+
+  async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.addComponentConfig(id, aspectId, config);
+    }
+  }
+
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+    }
+  }
+
+  async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      return componentConfigFile.aspects.get(aspectId)?.config;
+    }
+    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
   }
 
   /**
@@ -1213,8 +1263,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
-    this.logger.debug(`loading ${ids.length} aspects`);
+  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+ids: ${ids.join(', ')}
+needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -1384,7 +1436,11 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
+  async loadExtensions(
+    extensions: ExtensionDataList,
+    originatedFrom?: ComponentID,
+    throwOnError = false
+  ): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -1399,7 +1455,7 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError);
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom);
   }
 
   /**
@@ -1623,8 +1679,7 @@ export class Workspace implements ComponentFactory {
   private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
     await Promise.all(
       Array.from(componentConfigFiles).map(async (componentConfigFile) => {
-        const componentDir = this.componentDir(componentConfigFile.componentId, { ignoreVersion: true });
-        await componentConfigFile.write(componentDir, { override: true });
+        await componentConfigFile.write({ override: true });
       })
     );
   }
@@ -1977,10 +2032,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const existsOnWorkspace = await this.hasId(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
-    componentIds.forEach((componentId) => {
-      this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
-      this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.addSpecificComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+        await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
+      })
+    );
     await this.bitMap.write();
   }
 
@@ -1990,18 +2047,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async unsetEnvFromComponents(ids: ComponentID[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
     const changed: ComponentID[] = [];
     const unchanged: ComponentID[] = [];
-    ids.forEach((id) => {
-      const bitMapEntry = this.bitMap.getBitmapEntry(id);
-      const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
-      const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
-      if (!currentEnv) {
-        unchanged.push(id);
-        return;
-      }
-      this.bitMap.removeComponentConfig(id, currentEnv, false);
-      this.bitMap.removeComponentConfig(id, EnvsAspect.id, false);
-      changed.push(id);
-    });
+    await Promise.all(
+      ids.map(async (id) => {
+        const envsAspect = await this.getSpecificComponentConfig(id, EnvsAspect.id);
+        const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
+        if (!currentEnv) {
+          unchanged.push(id);
+          return;
+        }
+        await this.removeSpecificComponentConfig(id, currentEnv, false);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
+        changed.push(id);
+      })
+    );
     await this.bitMap.write();
     return { changed, unchanged };
   }
