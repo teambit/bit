@@ -27,22 +27,31 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (snaps.length === 0 && !loading) {
     return (
-      <div className={classNames(styles.changeLogPage, className)}>
-        {currentLane ? <H1 className={styles.title}></H1> : null}
-
-        <H1 className={styles.title}>History</H1>
-        <Separator isPresentational className={styles.separatorNoChangeLog} />
-        <AlertCard
-          level="info"
-          title="There is no change log as this component has not been exported yet.
+      <>
+        {currentLane && (
+          <>
+            <div className={styles.lane}>
+              <Icon of="lane"></Icon>
+              <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
+            </div>
+            <Separator isPresentational className={styles.separator} />
+          </>
+        )}
+        <div className={classNames(styles.changeLogPage, className)}>
+          <H1 className={styles.title}>History</H1>
+          <Separator isPresentational className={styles.separatorNoChangeLog} />
+          <AlertCard
+            level="info"
+            title="There is no change log as this component has not been exported yet.
           Learn how to export components:"
-          className={styles.changeLogCard}
-        >
-          <MDXLayout>
-            <ExportingComponents />
-          </MDXLayout>
-        </AlertCard>
-      </div>
+            className={styles.changeLogCard}
+          >
+            <MDXLayout>
+              <ExportingComponents />
+            </MDXLayout>
+          </AlertCard>
+        </div>
+      </>
     );
   }
 
