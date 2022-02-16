@@ -280,8 +280,8 @@
         "rootDir": "scopes/component/component"
     },
     "component-descriptor": {
-        "scope": "",
-        "version": "",
+        "scope": "teambit.component",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
