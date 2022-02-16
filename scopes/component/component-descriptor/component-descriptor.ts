@@ -28,10 +28,6 @@ export class ComponentDescriptor {
     readonly aspectMap: AspectMap
   ) {}
 
-  get state() {
-    return this.aspectMap;
-  }
-
   get scope() {
     return this.id.scope;
   }

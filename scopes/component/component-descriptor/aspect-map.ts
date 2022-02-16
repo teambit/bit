@@ -1,5 +1,10 @@
 export type AspectDataEntry = {
   aspectId: string;
+  aspectData: Record<any, any>;
+};
+
+export type AspectDataEntryJson = {
+  aspectId: string;
   aspectData: string;
 };
 
@@ -7,16 +12,16 @@ export type AspectMapProps = {
   entries?: AspectDataEntry[];
 };
 
+export type AspectMapPropsJson = {
+  entries?: AspectDataEntryJson[];
+};
+
 export class AspectMap {
   constructor(private entries: AspectDataEntry[]) {}
 
   get<T>(aspectId: string): T | undefined {
-    if (!this.entries || !Array.isArray(this.entries)) return undefined;
     const aspectEntry = this.entries.find((entry) => entry.aspectId === aspectId);
     if (!aspectEntry) return undefined;
-    if (typeof aspectEntry.aspectData === 'string') {
-      return JSON.parse(aspectEntry.aspectData) as T;
-    }
     return aspectEntry.aspectData as T;
   }
 
@@ -28,6 +33,17 @@ export class AspectMap {
 
   static fromObject(obj?: AspectMapProps) {
     const entries = obj?.entries || [];
+    return new AspectMap(entries);
+  }
+
+  static fromJson(obj?: AspectMapPropsJson) {
+    const entries =
+      obj?.entries?.map(({ aspectId, aspectData }) => {
+        return {
+          aspectId,
+          aspectData: JSON.parse(aspectData),
+        };
+      }) || [];
     return new AspectMap(entries);
   }
 }

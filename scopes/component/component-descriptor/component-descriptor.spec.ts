@@ -7,6 +7,15 @@ const MOCK_ASPECT_MAP = AspectMap.fromObject({
   entries: [
     {
       aspectId: 'teambit.docs/docs',
+      aspectData: {},
+    },
+  ],
+});
+
+const MOCK_ASPECT_MAP_JSON = AspectMap.fromJson({
+  entries: [
+    {
+      aspectId: 'teambit.docs/docs',
       aspectData: '{}',
     },
   ],
@@ -15,6 +24,11 @@ const MOCK_ASPECT_MAP = AspectMap.fromObject({
 describe('ComponentDescriptor', () => {
   it('should contain a component id', () => {
     const descriptor = new ComponentDescriptor(ComponentID.fromString(MOCK_ID), MOCK_ASPECT_MAP);
+    expect(descriptor.id.scope).toEqual('teambit.components');
+  });
+
+  it('should contain a component id', () => {
+    const descriptor = new ComponentDescriptor(ComponentID.fromString(MOCK_ID), MOCK_ASPECT_MAP_JSON);
     expect(descriptor.id.scope).toEqual('teambit.components');
   });
 });
