@@ -1,4 +1,5 @@
 import React, { ComponentType } from 'react';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
@@ -11,6 +12,7 @@ import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
   component: ComponentType<any>;
+  weight?: number;
 };
 
 export type ComponentOverviewProps = {
@@ -21,6 +23,7 @@ export type ComponentOverviewProps = {
   packageName: string;
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
+  componentDescriptor?: ComponentDescriptor;
 } & SectionProps;
 
 export function ComponentOverview({
@@ -30,6 +33,7 @@ export function ComponentOverview({
   labels,
   packageName,
   elementsUrl,
+  componentDescriptor,
   ...rest
 }: ComponentOverviewProps) {
   let finalElementsUrl = elementsUrl;
@@ -43,7 +47,7 @@ export function ComponentOverview({
         <div className={styles.componentTitle}>
           <H1>{displayName}</H1>
           {titleBadges?.map((titleBadge, index) => {
-            return <titleBadge.component key={index} />;
+            return <titleBadge.component key={index} componentDescriptor={componentDescriptor} />;
           })}
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
