@@ -20,7 +20,7 @@ const componentFields = gql`
     id {
       ...componentIdFields
     }
-    aspects {
+    aspects(include: ["teambit.preview/preview"]) {
       id
       data
     }
