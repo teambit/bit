@@ -61,16 +61,17 @@ export type LanesModelProps = {
  */
 export class LanesModel {
   static baseLaneRoute = '/~lane';
+  static baseLaneComponentRoute = '/~component';
 
   static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
 
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}/~component/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
+  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 
   static getLaneUrlFromPathname: (pathname: string) => string | undefined = (pathname) => {
     let [, maybeLaneId] = pathname.split(LanesModel.baseLaneRoute);
     if (!maybeLaneId) return undefined;
-    [maybeLaneId] = maybeLaneId.split('/~component');
+    [maybeLaneId] = maybeLaneId.split(LanesModel.baseLaneComponentRoute);
     const [, ...laneId] = maybeLaneId.split('/');
     const laneIdStr = laneId
       .filter((id) => id)
@@ -81,8 +82,10 @@ export class LanesModel {
 
   static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId?: string) =>
-    laneId ? `${LanesModel.getLaneUrl(laneId)}/~component/${componentId.fullName}?version=${componentId.version}` : '';
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) =>
+    `${LanesModel.getLaneUrl(laneId)}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}?version=${
+      componentId.version
+    }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, currentScope?: ScopeModel): LaneModel {
     const { name, remote, isMerged } = laneData;
@@ -160,4 +163,10 @@ export class LanesModel {
 
   isInCurrentLane = (componentId: ComponentID) =>
     this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
+
+  getLaneComponentUrl = (version: string) => {
+    const componentAndLane = this.lanebyComponentHash.get(version);
+    if (!componentAndLane) return '';
+    return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);
+  };
 }
