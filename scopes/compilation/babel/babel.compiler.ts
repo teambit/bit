@@ -1,4 +1,6 @@
 import * as babel from '@babel/core';
+import multimatch from 'multimatch';
+import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
@@ -20,6 +22,7 @@ export class BabelCompiler implements Compiler {
   distGlobPatterns: string[];
   shouldCopyNonSupportedFiles: boolean;
   artifactName: string;
+  supportedFilesGlobPatterns: string[] | null;
   constructor(
     readonly id: string,
     private logger: Logger,
@@ -32,6 +35,9 @@ export class BabelCompiler implements Compiler {
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
+    this.supportedFilesGlobPatterns = options.supportedFilesGlobPatterns
+      ? flatten(options.supportedFilesGlobPatterns)
+      : null;
   }
 
   displayName = 'Babel';
@@ -146,6 +152,9 @@ export class BabelCompiler implements Compiler {
    * whether babel is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
+    if (this.supportedFilesGlobPatterns) {
+      return isFileSupported(filePath) && !!multimatch(filePath, this.supportedFilesGlobPatterns).length;
+    }
     return isFileSupported(filePath);
   }
 
