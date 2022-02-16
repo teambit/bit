@@ -23,14 +23,13 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(): { lanes: LaneModel[] } & QueryResult<LanesQueryResult> {
+export function useLanesQuery(): { lanes?: LaneModel[] } & Omit<QueryResult<LanesQueryResult>, 'data'> {
   const { data, ...rest } = useDataQuery<LanesQueryResult>(GET_LANES);
   const { scope, loading } = useScopeQuery();
-  const lanes = data ? LanesModel.from(data, scope) : [];
+  const lanes = data && LanesModel.from(data, scope);
   return {
     ...rest,
     loading: rest.loading || !!loading,
-    data,
     lanes,
   };
 }

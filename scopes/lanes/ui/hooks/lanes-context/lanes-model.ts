@@ -50,7 +50,7 @@ export type LaneModel = {
  * Props to instantiate a LanesModel
  */
 export type LanesModelProps = {
-  lanes: LaneModel[];
+  lanes?: LaneModel[];
   currentLane?: LaneModel;
 };
 /**
@@ -147,9 +147,9 @@ export class LanesModel {
 
   constructor({ lanes, currentLane }: LanesModelProps) {
     this.currentLane = currentLane;
-    this.lanes = lanes;
-    this.lanesByScope = LanesModel.groupByScope(lanes);
-    this.lanebyComponentHash = LanesModel.groupByComponentHash(lanes);
+    this.lanes = lanes || [];
+    this.lanesByScope = LanesModel.groupByScope(this.lanes);
+    this.lanebyComponentHash = LanesModel.groupByComponentHash(this.lanes);
   }
 
   readonly lanesByScope: Map<string, LaneModel[]>;

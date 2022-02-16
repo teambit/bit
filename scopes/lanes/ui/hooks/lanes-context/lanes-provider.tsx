@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from 'react';
-import { useLanes, LanesModel } from '@teambit/lanes.ui.lanes';
+import { useLanesQuery, LanesModel } from '@teambit/lanes.ui.lanes';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
@@ -8,13 +8,13 @@ export type LanesProviderProps = {
 };
 
 export function LanesProvider({ children, currentLaneId }: LanesProviderProps) {
-  const { lanes } = useLanes();
+  const { lanes } = useLanesQuery();
 
   const model = useMemo(
     () =>
       new LanesModel({
-        lanes: lanes,
-        currentLane: lanes.find((lane) => {
+        lanes,
+        currentLane: lanes?.find((lane) => {
           return currentLaneId === lane.id;
         }),
       }),
