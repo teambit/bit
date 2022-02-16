@@ -740,17 +740,23 @@ export class Workspace implements ComponentFactory {
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string): Promise<ComponentID[]> {
+  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
     if (!pattern.includes('*') && !pattern.includes(',')) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      return [id];
+      if (this.exists(id)) return [id];
+      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the workspace`);
+      return [];
     }
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
-    return ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    if (throwForNoMatch && !idsFiltered.length) {
+      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+    }
+    return idsFiltered;
   }
 
   /**

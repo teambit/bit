@@ -13,12 +13,12 @@ export class PatternCommand implements Command {
   constructor(private workspace: Workspace) {}
 
   async report([pattern]: [string]) {
-    const ids = await this.workspace.idsByPattern(pattern);
+    const ids = await this.json([pattern]);
     const title = chalk.green(`found ${chalk.bold(ids.length.toString())} components matching the pattern`);
     return `${title}\n${ids.join('\n')}`;
   }
 
   async json([pattern]: [string]) {
-    return this.workspace.idsByPattern(pattern);
+    return this.workspace.idsByPattern(pattern, false);
   }
 }
