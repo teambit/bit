@@ -108,9 +108,16 @@ export class AspectMain {
   }
 
   async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
-    const aspectCompId = await this.workspace.resolveComponentId(aspectId);
+    let aspectCompId = await this.workspace.resolveComponentId(aspectId);
     if (!aspectCompId.hasVersion()) {
-      throw new BitError(`please provide a version with your aspect (${aspectId}) to update to`);
+      try {
+        const fromRemote = await this.workspace.scope.getRemoteComponent(aspectCompId);
+        aspectCompId = aspectCompId.changeVersion(fromRemote.id.version);
+      } catch (err) {
+        throw new BitError(
+          `unable to find ${aspectId} in the remote. if this is a local aspect, please provide a version with your aspect (${aspectId}) to update to`
+        );
+      }
     }
     const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
     const allComps = await this.workspace.getMany(allCompIds);
@@ -120,7 +127,7 @@ export class AspectMain {
         if (!aspect) return undefined;
         if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
         await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), true);
-        await this.workspace.addSpecificComponentConfig(comp.id, aspectId, aspect.config);
+        await this.workspace.addSpecificComponentConfig(comp.id, aspectCompId.toString(), aspect.config);
         return comp.id;
       })
     );
