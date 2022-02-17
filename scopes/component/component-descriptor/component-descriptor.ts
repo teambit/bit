@@ -53,7 +53,14 @@ export class ComponentDescriptor {
 
   static fromObject({ id, aspectMap }: ComponentDescriptorProps) {
     const aspects = AspectMap.fromObject(aspectMap);
-    return new ComponentDescriptor(ComponentID.fromObject(id), aspects);
+    let idObj;
+    // TODO - check why we sometimes get a string and sometimes an object
+    if (typeof id === 'string') {
+      idObj = ComponentID.fromString(id);
+    } else {
+      idObj = ComponentID.fromObject(id);
+    }
+    return new ComponentDescriptor(idObj, aspects);
   }
 
   static fromArray(componentsDescriptorProps: ComponentDescriptorProps[]) {
