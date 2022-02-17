@@ -9,7 +9,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain, Network } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
@@ -88,18 +88,20 @@ export class BuilderMain {
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap } = options;
+    const ids = components.map((c) => c.id);
+    const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
-      { skipTests: options.skipTests }
+      { skipTests: options.skipTests, network }
     );
     if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
     if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
-        : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
+        ? await this.runSnapTasks(components, network, isolateOptions, envsExecutionResults.tasksResults)
+        : await this.runTagTasks(components, network, isolateOptions, envsExecutionResults.tasksResults);
       if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
@@ -218,15 +220,15 @@ export class BuilderMain {
    */
   async build(
     components: Component[],
-    isolateOptions?: IsolateComponentsOptions,
-    builderOptions?: BuilderServiceOptions
+    isolateOptions: IsolateComponentsOptions,
+    builderOptions: BuilderServiceOptions
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const network = await this.isolator.isolateComponents(ids, isolateOptions);
+    const network = builderOptions.network || (await this.isolator.isolateComponents(ids, isolateOptions));
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
-      originalSeeders: ids,
+      network,
       ...(builderOptions || {}),
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
@@ -235,6 +237,7 @@ export class BuilderMain {
 
   async runTagTasks(
     components: Component[],
+    network: Network,
     isolateOptions?: IsolateComponentsOptions,
     previousTasksResults?: TaskResults[]
   ): Promise<TaskResultsList> {
@@ -242,6 +245,7 @@ export class BuilderMain {
     const buildResult = await envs.runOnce(this.tagService, {
       seedersOnly: isolateOptions?.seedersOnly,
       previousTasksResults,
+      network,
     });
 
     return buildResult;
@@ -249,6 +253,7 @@ export class BuilderMain {
 
   async runSnapTasks(
     components: Component[],
+    network: Network,
     isolateOptions?: IsolateComponentsOptions,
     previousTasksResults?: TaskResults[]
   ): Promise<TaskResultsList> {
@@ -256,6 +261,7 @@ export class BuilderMain {
     const buildResult = await envs.runOnce(this.snapService, {
       seedersOnly: isolateOptions?.seedersOnly,
       previousTasksResults,
+      network,
     });
 
     return buildResult;

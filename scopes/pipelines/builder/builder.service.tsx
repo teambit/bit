@@ -3,7 +3,7 @@ import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
-import { IsolatorMain } from '@teambit/isolator';
+import { IsolatorMain, Network } from '@teambit/isolator';
 import { Component, ComponentID } from '@teambit/component';
 import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
@@ -21,8 +21,8 @@ export type BuildServiceResults = {
 };
 
 export type BuilderServiceOptions = {
+  network?: Network;
   seedersOnly?: boolean;
-  originalSeeders?: ComponentID[];
   tasks?: string[];
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
@@ -92,20 +92,15 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
     const envsBuildContext: EnvsBuildContext = {};
+    const { network } = options;
+    if (!network) throw new Error(`network must be passed in BuilderServiceOptions`);
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
-        const { originalSeeders } = options;
-        const seeders = componentIds.filter((compId) =>
-          originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
-        );
-        const capsuleNetwork = await this.isolator.isolateComponents(seeders, {
-          getExistingAsIs: true,
-          seedersOnly: options.seedersOnly,
-        });
-        capsuleNetwork.componentIdsOfSameEnv = componentIds;
+        const seeders = componentIds.filter((compId) => network.seedersIds.find((seeder) => compId.isEqual(seeder)));
+        const capsuleNetwork = new Network(network.graphCapsules, seeders, network.capsulesRootDir, componentIds);
         this.logger.console(
-          `generated graph for env "${executionContext.id}", seeders total: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
+          `graph for env "${executionContext.id}": seeders total: ${capsuleNetwork.seedersCapsules.length}, graph of same env: ${componentIds.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
         );
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,

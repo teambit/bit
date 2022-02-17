@@ -3,11 +3,11 @@ import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import CapsuleList from './capsule-list';
 
 export class Network {
-  componentIdsOfSameEnv?: ComponentID[];
   constructor(
     private _graphCapsules: CapsuleList,
-    private seedersIds: ComponentID[],
-    private _capsulesRootDir: string
+    readonly seedersIds: ComponentID[],
+    private _capsulesRootDir: string,
+    readonly componentIdsOfSameEnv?: ComponentID[]
   ) {}
 
   /**
