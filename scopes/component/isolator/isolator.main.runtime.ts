@@ -179,7 +179,6 @@ export class IsolatorMain {
     legacyScope?: LegacyScope
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
-    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(
       `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
@@ -191,8 +190,6 @@ export class IsolatorMain {
       : await this.createGraph(seeders, createGraphOpts);
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
   }
 
