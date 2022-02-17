@@ -26,7 +26,7 @@ export class DiagnosticMain {
     const slots = this.diagnosticSlot.toArray();
     return slots.reduce((prev, cSlot) => {
       const [aspectId, diagnostic] = cSlot;
-      prev[aspectId] = { diagnosticData: [] };
+      prev[aspectId] = { reports: [] };
       diagnostic.forEach((diag) => {
         const { diagnosticFn } = diag;
         prev[aspectId].diagnosticData.push(diagnosticFn());
