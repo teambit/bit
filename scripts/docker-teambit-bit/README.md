@@ -1,16 +1,16 @@
-Docker containers for bit harmony.
+# Docker containers for bit harmony.
 
 _This dockers are not dealing with legacy bit (pre-harmony) for legacy bit please refer to [bit-docker](https://github.com/teambit/bit-docker)_
 
 ## Structure
 
-- Dockerfile-bit: A docker file which installs bvm and then use bvm to install bit. this docker is usually useful for runnig bit commands like tag and export on CI machine
-- Dockerfile-bit-server: A docker file based on the `Dockerfile-bit` (using from) which create a bare scope, and initialized the bit server on it (bit start)
-- Dockerfile-symphony: for internal use only
+- Dockerfile-bit: A docker file which installs bvm and then uses bvm to install bit. This docker is usually useful for running bit commands like tag and export on CI machine
+- Dockerfile-bit-server: A docker file based on the `Dockerfile-bit` (using from) which creates a bare scope, and initializes the bit server on it (bit start)
+- Dockerfile-symphony: For internal use only
 
-## Using from dockerhub
+## Using from Dockerhub
 
-The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hub.docker.com/r/bitcli/bit) and [Dockerfile-bit-server](https://hub.docker.com/r/bitcli/bit-server)
+The docker images hosted on Dockerhub on those links [Dockerfile-bit](https://hub.docker.com/r/bitcli/bit) and [Dockerfile-bit-server](https://hub.docker.com/r/bitcli/bit-server)
 
 ## Building locally
 
@@ -27,24 +27,24 @@ The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hu
 
 ### Run the server container
 
-1. `docker run -it -p {host-port}:3000 bitcli/bit-server:latest` - replace the host port with the port you want to use on your host machine for example 5000
+1. `docker run -it -p {host-port}:3000 bitcli/bit-server:latest` - replace the host port with the port you want to use on your host machine, for example 5000
 1. browse `http://localhost:{host-port}` and make sure you see the bit's ui
 
 ## Exporting components to bit server
 
-1. make sure you run the server container and validate it works
-1. on your local workspace run `bit remote add http://localhost:{host-port}` you should get a message saying remote-scope was added
-1. set `remote-scope` on your `workspace.jsonc` as `defaultScope`
-1. run `bit export`
+1. Make sure you run the server container and validate it works
+2. On your local workspace run `bit remote add http://localhost:{host-port}` you should get a message saying remote-scope was added
+3. Set `remote-scope` on your `workspace.jsonc` as `defaultScope`
+4. Run `bit export`
 
 ## Advanced usage
 
 ### Using specific version of bit on the bit server
 
-Bit server is getting a `BIT_VERSION` argument which is used in the `FROM` statement. you can use it with `docker build -f ./Dockerfile-bit-server --build-arg BIT_VERSION={version} -t bitcli/bit-server:{version} .`
-This will make your to fetch the cli container from dockerhub with the specificed version
+Bit server is getting a `BIT_VERSION` argument which is used in the `FROM` statement. You can use it with `docker build -f ./Dockerfile-bit-server --build-arg BIT_VERSION={version} -t bitcli/bit-server:{version} .`
+This will make your server to fetch the cli container from Dockerhub with the specified version
 
-### Change bare scope name and location on the server containter
+### Change bare scope name and location on the server container
 
 The scope name is defined by the folder name of the containing scope (`remote-scope` by default).
 This name is then later used for setting it up in the `workspace.jsonc` file.
@@ -52,11 +52,11 @@ In case you want to change it you can pass the build arg called `SCOPE_PATH` lik
 
 ### Using volume to make sure data is persisted
 
-In order to persist the scope data, you want the scope folder to be live outside the container in the host machine.
+In order to persist the scope data, you want the scope folder to live outside the container in the host machine.
 You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so:
 `docker run -it -v {scope-path-on-host}:/root/remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
 
-_Usually it's better to use volumes then bind mounts, or even handle the mounts by an orchestrator like kubernetees but this topics is out of the scope in this guide_
+_Usually it's better to use volumes than bind mounts, or even handle the mounts by an orchestrator like Kubernetes but this topics is out of the scope in this guide_
 
 ### Combining scope volume with scope name/location
 
@@ -75,12 +75,12 @@ An example with actual values (use `/root/bit-server-docker-logs` for logs on ho
 
 _In most cases it make sense to use [tmpfs-mounts](https://docs.docker.com/storage/tmpfs/) for this, but this as well is out of the scope for this guide_
 
-## Important notes:
+## Important notes
 
 - Do not mount the same scope directory on the host to multiple bit-server containers.
   Bit is using different in memory cache mechanism, so mount the same dir into different servers instances, might produce unpredictable outcome.
 
 ## Troubleshooting
 
-- **problem**: running bit start on the server containter is killed with code 137
-  **solution**: increase the memory provided by the host machine (usually 4GB should be enouth - this is also the value we provide for the node process by `NODE_OPTIONS=--max_old_space_size=4096`). for example in mac - [docker for mac resources](https://docs.docker.com/docker-for-mac/#resources)
+- **Problem**: Running bit start on the server container is killed with code 137
+  **Solution**: Increase the memory provided by the host machine (usually 4GB should be enough - this is also the value we provide for the node process by `NODE_OPTIONS=--max_old_space_size=4096`). For example in mac - [docker for mac resources](https://docs.docker.com/docker-for-mac/#resources)
