@@ -1,3 +1,5 @@
+export type DiagnosticFc = () => Object;
+
 export interface Diagnostic {
-  diagnosticFn: () => Object;
+  diagnosticFn: DiagnosticFc;
 }
