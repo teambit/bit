@@ -1,5 +1,3 @@
-import fs from 'fs-extra'
-import path from 'path'
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
@@ -18,6 +16,7 @@ import { MutatedProject, mutateModules, InstallOptions, PeerDependencyIssuesByPr
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
+import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { readConfig } from './read-config';
@@ -98,7 +97,10 @@ async function generateResolverAndFetcher(
 }
 
 export async function getPeerDependencyIssues(
-  rootManifest,
+  rootManifest: {
+    rootDir: string;
+    manifest: ProjectManifest;
+  },
   manifestsByPaths: Record<string, any>,
   opts: {
     storeDir: string;
@@ -171,7 +173,6 @@ export async function install(
   // then when overriding the link, A will still works
   // This is the rational behind not deleting this completely, but need further check that it really works
 
-  await includeAllComponentsFromDir(rootManifest.rootDir, manifestsByPaths)
   // eslint-disable-next-line
   for (const rootDir in manifestsByPaths) {
     const manifest = manifestsByPaths[rootDir];
@@ -227,23 +228,6 @@ export async function install(
   } finally {
     stopReporting();
   }
-}
-
-async function includeAllComponentsFromDir (rootDir: string, manifestsByPaths) {
-  const files = await fs.readdir(rootDir, { withFileTypes: true })
-  return Promise.all(
-    files
-      .filter((file) => file.isDirectory() && file.name !== 'node_modules')
-      .map((dir) => path.join(rootDir, dir.name))
-      .filter((dirPath) => !manifestsByPaths[dirPath])
-      .map(async (dirPath) => {
-        try {
-          manifestsByPaths[dirPath] = await fs.readJson(path.join(dirPath, 'package.json'))
-        } catch (err: any) {
-          if (err.code !== 'ENOENT') throw err
-        }
-      })
-  )
 }
 
 export async function resolveRemoteVersion(

@@ -4,6 +4,7 @@ import {
   CreateFromComponentsOptions,
   WorkspacePolicy,
   DependencyResolverMain,
+  includeAllComponentsFromDir,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -28,7 +29,10 @@ const defaultCacheDir = join(userHome, '.pnpm-cache');
 
 interface Manifests {
   componentsManifests: Record<string, ProjectManifest>;
-  rootManifest: ProjectManifest;
+  rootManifest: {
+    rootDir: string;
+    manifest: ProjectManifest;
+  };
 }
 
 export class PnpmPackageManager implements PackageManager {
@@ -107,6 +111,7 @@ export class PnpmPackageManager implements PackageManager {
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { storeDir, cacheDir } = this._getGlobalPnpmDirs(installOptions?.cacheRootDir);
     const { config } = await this.readConfig();
+    await includeAllComponentsFromDir(rootManifest.rootDir, componentsManifests)
     await install(
       rootManifest,
       componentsManifests,
