@@ -4,7 +4,7 @@ import {
   CreateFromComponentsOptions,
   WorkspacePolicy,
   DependencyResolverMain,
-  includeAllComponentsFromDir,
+  extendWithComponentsFromDir,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -110,7 +110,7 @@ export class PnpmPackageManager implements PackageManager {
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { storeDir, cacheDir } = this._getGlobalPnpmDirs(installOptions?.cacheRootDir);
     const { config } = await this.readConfig();
-    await includeAllComponentsFromDir(rootManifest.rootDir, componentsManifests)
+    await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests)
     await install(
       rootManifest,
       componentsManifests,

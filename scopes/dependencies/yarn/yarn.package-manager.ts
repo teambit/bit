@@ -1,6 +1,6 @@
 import parsePackageName from 'parse-package-name';
 import {
-  includeAllComponentsFromDir,
+  extendWithComponentsFromDir,
   WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
@@ -89,7 +89,7 @@ export class YarnPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
-    await includeAllComponentsFromDir(rootDir, manifests)
+    await extendWithComponentsFromDir(rootDir, manifests)
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);

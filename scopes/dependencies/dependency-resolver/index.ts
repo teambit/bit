@@ -66,4 +66,4 @@ export { InstallOptions } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource } from './policy/variant-policy/variant-policy';
 export { OutdatedPkg } from './get-all-policy-pkgs';
-export { includeAllComponentsFromDir } from './include-all-components-from-dir'
+export { extendWithComponentsFromDir } from './extend-with-components-from-dir'
