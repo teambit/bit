@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
@@ -44,13 +45,19 @@ export class NewComponentHelperMain {
   ) {
     const targetPath = this.getNewComponentPath(targetId, options?.path);
     await this.workspace.write(targetPath, comp);
-    await this.workspace.track({
-      rootDir: targetPath,
-      componentName: targetId.fullName,
-      mainFile: comp.state._consumer.mainFile,
-      defaultScope: options?.scope,
-      config,
-    });
+    try {
+      await this.workspace.track({
+        rootDir: targetPath,
+        componentName: targetId.fullName,
+        mainFile: comp.state._consumer.mainFile,
+        defaultScope: options?.scope,
+        config,
+      });
+    } catch (err) {
+      await fs.remove(targetPath);
+      throw err;
+    }
+
     await this.workspace.bitMap.write();
     this.workspace.clearCache();
     // this takes care of compiling the component as well
