@@ -7,7 +7,7 @@ export class Network {
     private _graphCapsules: CapsuleList,
     readonly seedersIds: ComponentID[],
     private _capsulesRootDir: string,
-    readonly componentIdsOfSameEnv?: ComponentID[]
+    private _componentIdsOfSameEnv?: ComponentID[]
   ) {}
 
   /**
@@ -27,12 +27,16 @@ export class Network {
    * not only seeders, but also the dependencies of the seeder, as long as they belong to the same env.
    */
   get graphCapsulesOfSameEnv() {
-    const capsules = (this.componentIdsOfSameEnv || this.seedersIds).map((seederId) => {
+    const capsules = this.componentIdsOfSameEnv.map((seederId) => {
       const capsule = this.graphCapsules.getCapsule(seederId);
       if (!capsule) throw new Error(`unable to find ${seederId.toString()} in the capsule list`);
       return capsule;
     });
     return CapsuleList.fromArray(capsules);
+  }
+
+  get componentIdsOfSameEnv(): ComponentID[] {
+    return this._componentIdsOfSameEnv || this.seedersIds;
   }
 
   /**

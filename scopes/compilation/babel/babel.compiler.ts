@@ -63,7 +63,7 @@ export class BabelCompiler implements Compiler {
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const capsules = context.capsuleNetwork.seedersCapsules;
+    const capsules = context.capsuleNetwork.graphCapsulesOfSameEnv;
     const componentsResults: ComponentResult[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('compile babel components', capsules.length);
     await mapSeries(capsules, async (capsule) => {
