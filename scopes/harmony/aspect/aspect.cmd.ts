@@ -53,6 +53,27 @@ ${PATTERN_HELP('aspect set')}`;
   }
 }
 
+export class UpdateAspectCmd implements Command {
+  name = 'update <aspect-id> [pattern]';
+  description = 'update a version of an aspect';
+  extendedDescription = `default to all components using the aspect, unless "pattern" is provided.
+${PATTERN_HELP('aspect update <aspect-id>')}
+examples:
+"bit update scope.org/aspect '**/ui/**'" - update "ui" components that use scope.org/aspect to the latest version
+"bit update scope.org/aspect@2.0.0"      - updates all components using scope.org/aspect to version 2.0.0.`;
+
+  options = [];
+  group = 'development';
+
+  constructor(private aspect: AspectMain) {}
+
+  async report([aspectId, pattern]: [string, string]) {
+    const results = await this.aspect.updateAspectsToComponents(aspectId, pattern);
+    if (!results.length) return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
+    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+  }
+}
+
 export class UnsetAspectCmd implements Command {
   name = 'unset <pattern> <aspect-id>';
   description = `unset an aspect from component(s).`;
