@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from '@teambit/ui.routing.provider';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider'
 
 import { MenuLinkItem } from './link-item';
 
