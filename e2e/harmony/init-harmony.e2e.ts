@@ -33,4 +33,25 @@ describe('init command on Harmony', function () {
       expect(objectsPath).to.be.a.directory().and.empty;
     });
   });
+  // previously, it would consider the ".git" directory as the scope-path
+  describe('delete "objects" dir from the scope after initiating with git', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony({ initGit: true });
+      helper.scopeHelper.reInitRemoteScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.fs.deletePath('.git/bit/objects');
+    });
+    it('should show a descriptive error', () => {
+      expect(() => helper.command.status()).to.throw(`scope not found at`);
+    });
+    it('bit init should fix it', () => {
+      helper.command.init();
+      helper.general.runWithTryCatch('bit status'); // first run could throw about rebuilding index.json
+      expect(() => helper.command.status()).to.not.throw();
+    });
+  });
 });
