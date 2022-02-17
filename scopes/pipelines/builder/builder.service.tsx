@@ -4,7 +4,7 @@ import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain, Network } from '@teambit/isolator';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';

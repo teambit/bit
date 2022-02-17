@@ -160,7 +160,7 @@ export class TypescriptCompiler implements Compiler {
    */
   private async runTscBuild(network: Network): Promise<ComponentResult[]> {
     const rootDir = network.capsulesRootDir;
-    const capsules = network.graphCapsules;
+    const capsules = network.seedersCapsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
     const formatHost = {
       getCanonicalFileName: (p) => p,
