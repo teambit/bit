@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
@@ -29,18 +29,14 @@ export class DiagnosticMain {
       prev[aspectId] = { reports: [] };
       diagnostic.forEach((diag) => {
         const { diagnosticFn } = diag;
-        prev[aspectId].diagnosticData.push(diagnosticFn());
+        prev[aspectId].reports.push(diagnosticFn());
       });
       return prev;
     }, {});
   }
 
-  // TODO: find a better way to extract the version.
   static getBitVersion() {
-    const buffer = readFileSync(join(dirname(require.resolve('@teambit/bit')), '../', 'package.json'));
-    const json = buffer.toString();
-    const data = JSON.parse(json);
-    const { version } = data?.componentId;
+    const version = getHarmonyVersion(true);
     return { version };
   }
 
