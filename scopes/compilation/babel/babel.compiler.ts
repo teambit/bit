@@ -98,32 +98,34 @@ export class BabelCompiler implements Compiler {
     await fs.ensureDir(path.join(capsule.path, this.distDir));
     await Promise.all(
       sourceFiles.map(async (filePath) => {
-        const absoluteFilePath = path.join(capsule.path, filePath);
-        this.options.babelTransformOptions ||= {};
-        this.options.babelTransformOptions.sourceFileName = path.basename(filePath);
-        this.options.babelTransformOptions.filename = path.basename(filePath);
-        try {
-          const result = await transpileFilePathAsync(
-            absoluteFilePath,
-            this.options.babelTransformOptions || {},
-            this.babelModule
-          );
-          if (!result || !result.length) {
-            this.logger.debug(
-              `getting an empty response from Babel for the file ${filePath}. it might be configured to be ignored`
+        if (this.isFileSupported(filePath)) {
+          const absoluteFilePath = path.join(capsule.path, filePath);
+          this.options.babelTransformOptions ||= {};
+          this.options.babelTransformOptions.sourceFileName = path.basename(filePath);
+          this.options.babelTransformOptions.filename = path.basename(filePath);
+          try {
+            const result = await transpileFilePathAsync(
+              absoluteFilePath,
+              this.options.babelTransformOptions || {},
+              this.babelModule
             );
-            return;
+            if (!result || !result.length) {
+              this.logger.debug(
+                `getting an empty response from Babel for the file ${filePath}. it might be configured to be ignored`
+              );
+              return;
+            }
+            // Make sure to get only the relative path of the dist because we want to add the dist dir.
+            // If we use the result outputPath we will get an absolute path here
+            const distPath = this.replaceFileExtToJs(filePath);
+            const distPathMap = `${distPath}.map`;
+            await fs.outputFile(path.join(capsule.path, this.distDir, distPath), result[0].outputText);
+            if (result.length > 1) {
+              await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
+            }
+          } catch (err: any) {
+            componentResult.errors?.push(err);
           }
-          // Make sure to get only the relative path of the dist because we want to add the dist dir.
-          // If we use the result outputPath we will get an absolute path here
-          const distPath = this.replaceFileExtToJs(filePath);
-          const distPathMap = `${distPath}.map`;
-          await fs.outputFile(path.join(capsule.path, this.distDir, distPath), result[0].outputText);
-          if (result.length > 1) {
-            await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
-          }
-        } catch (err: any) {
-          componentResult.errors?.push(err);
         }
       })
     );
