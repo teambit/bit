@@ -67,6 +67,12 @@ export class LanesModel {
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 
+  static drawer = {
+    id: 'LANES',
+    name: 'LANES',
+    order: 100,
+  };
+
   static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
     const path = pathname.includes(LanesModel.baseLaneComponentRoute)
       ? pathname.split(LanesModel.baseLaneComponentRoute)[0]

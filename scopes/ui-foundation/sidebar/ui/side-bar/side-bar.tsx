@@ -4,6 +4,7 @@ import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
 import { DrawerType, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
+import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 export type SideBarProps = {
   /**
@@ -20,7 +21,16 @@ export type SideBarProps = {
  * side bar component.
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
-  const drawers = flatten(drawerSlot.values()).sort(sortFn);
+  const lanesContext = useLanesContext();
+  const hasLanes = lanesContext?.lanes && lanesContext?.lanes.length > 0;
+  const drawers = flatten(drawerSlot.values())
+    .sort(sortFn)
+    .filter((drawer) => {
+      if (!hasLanes) {
+        return drawer.id !== LanesModel.drawer.id;
+      }
+      return true;
+    });
   const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
   const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 

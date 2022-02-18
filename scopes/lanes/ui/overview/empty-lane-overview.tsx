@@ -10,7 +10,7 @@ export type EmptyLaneProps = {} & EmptyComponentGalleryProps;
 export function EmptyLane(props: EmptyLaneProps) {
   return (
     <EmptyComponentGallery {...props}>
-      <div className={styles.text}>Start by adding new components to this Lane.</div>
+      <div className={styles.text}>Start by snapping components to this Lane.</div>
     </EmptyComponentGallery>
   );
 }
