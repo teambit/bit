@@ -2,6 +2,31 @@ import { ComponentID } from '@teambit/component';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import CapsuleList from './capsule-list';
 
+/**
+ * collection of isolated components (capsules).
+ * normally, "seeders" are the components that this network was created for.
+ * "graphCapsules" is the graph created from the seeders and it includes also the dependencies.
+ *
+ * however, during "bit build"/"bit tag"/"bit snap", things are more complex because there is one more variable in the
+ * picture, which is the "env". the Network is created per env.
+ * in practice, for "build-task", a task is called per env, and the network passed to the task is relevant to that env.
+ * the "originalSeeders" are the ones the network was created for, but only for this env.
+ * the "seeders" are similar to the "graphCapsules" above, which contains also the dependencies, but only for this env.
+ * the "graphCapsules" is the entire graph, including capsules from other envs.
+ *
+ * for example:
+ * comp1 depends on comp2. comp1 env is "react". comp2 env is "aspect".
+ *
+ * when the user is running "bit build comp1", two `Network` instances will be created with the following:
+ * Network for "react" env:  originalSeeders: ['comp1'], seeders: ['comp1'], graphCapsules: ['comp1', 'comp2'].
+ * Network for "aspect" env: originalSeeders: [], seeders: ['comp2'], graphCapsules: ['comp2'].
+ *
+ * on the other hand, when the user is running "bit capsule create comp1", only one `Network` instance is created:
+ * Network: originalSeeders: ['comp1'], seeders: ['comp1'], graphCapsules: ['comp1', 'comp2'].
+ *
+ * (as a side note, another implementation was attempt to have the "seeders" as the original-seeders for build,
+ * however, it's failed. see https://github.com/teambit/bit/pull/5407 for more details).
+ */
 export class Network {
   _originalSeeders: ComponentID[] | undefined;
   constructor(
@@ -36,6 +61,10 @@ export class Network {
     return CapsuleList.fromArray(capsules);
   }
 
+  /**
+   * originalSeeders are not always set (currently, only during build process), so if they're missing, just provide the
+   * seeders, which are probably the original-seeders
+   */
   private getOriginalSeeders(): ComponentID[] {
     return this._originalSeeders || this.seedersIds;
   }
