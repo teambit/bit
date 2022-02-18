@@ -71,6 +71,16 @@ describe('bit rename command', function () {
         expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'my.comp')).to.not.be.a.path();
       });
     });
+    describe('rename when the path is not empty', () => {
+      before(() => {
+        helper.fs.outputFile('src/index.ts', 'hello');
+      });
+      it('should throw an error', () => {
+        expect(() => helper.command.rename('comp1', 'comp2', '--path src')).to.throw(
+          'unable to create component at "src", this directory is not empty'
+        );
+      });
+    });
   });
   describe('rename a new component', () => {
     before(() => {
