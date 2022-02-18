@@ -416,7 +416,7 @@
             "@teambit/legacy": "-"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
@@ -467,7 +467,7 @@
             "@teambit/legacy": "-"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {}
@@ -661,7 +661,7 @@
           "devDependencies": {
             "react": "-",
             "react-dom": "-",
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@types/postcss-normalize": "9.0.1"
           },
           "peerDependencies": {
@@ -828,7 +828,7 @@
             "utf-8-validate": "5.0.5"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
