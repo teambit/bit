@@ -3,6 +3,7 @@ import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import CapsuleList from './capsule-list';
 
 export class Network {
+  _originalSeeders: ComponentID[] | undefined;
   constructor(
     private _graphCapsules: CapsuleList,
     private seedersIds: ComponentID[],
@@ -10,8 +11,8 @@ export class Network {
   ) {}
 
   /**
-   * seeders capsules only without the entire graph. normally, this includes the capsules of one
-   * env.
+   * for build-tasks (during bit build/tag/snap), this includes the component graph of the current env only.
+   * otherwise, this includes the original components the network was created for.
    */
   get seedersCapsules(): CapsuleList {
     const capsules = this.seedersIds.map((seederId) => {
@@ -20,6 +21,23 @@ export class Network {
       return capsule;
     });
     return CapsuleList.fromArray(capsules);
+  }
+
+  /**
+   * for build-tasks (during bit build/tag/snap), this includes the original components of the current env.
+   * otherwise, this is the same as `this.seedersCapsules()`.
+   */
+  get originalSeedersCapsules(): CapsuleList {
+    const capsules = this.getOriginalSeeders().map((seederId) => {
+      const capsule = this.graphCapsules.getCapsule(seederId);
+      if (!capsule) throw new Error(`unable to find ${seederId.toString()} in the capsule list`);
+      return capsule;
+    });
+    return CapsuleList.fromArray(capsules);
+  }
+
+  private getOriginalSeeders(): ComponentID[] {
+    return this._originalSeeders || this.seedersIds;
   }
 
   /**
