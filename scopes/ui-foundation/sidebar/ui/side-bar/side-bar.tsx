@@ -63,5 +63,5 @@ function sortFn(first: DrawerType, second: DrawerType) {
   // <0 - first < second
   // >0 - first > second
 
-  return ((first.order || 0) ?? 0) - ((second.order || 0) ?? 0);
+  return (first.order ?? 0) - (second.order ?? 0);
 }

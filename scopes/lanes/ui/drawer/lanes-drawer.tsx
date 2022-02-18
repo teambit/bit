@@ -25,11 +25,13 @@ export type LanesDrawerProps = {
 };
 
 export class LanesDrawer implements DrawerType {
-  constructor(private props: LanesDrawerProps) {}
   order = LanesModel.drawer.order;
   id = LanesModel.drawer.id;
   name = LanesModel.drawer.name;
   widget = (<Widget />);
+
+  constructor(private props: LanesDrawerProps) {}
+
   isHidden = () => {
     const lanesContext = useLanesContext();
     const hasLanes = lanesContext?.lanes && lanesContext?.lanes.length > 0;
@@ -42,6 +44,7 @@ export class LanesDrawer implements DrawerType {
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
   };
+
   render = () => {
     const lanesContext = useLanesContext();
 
