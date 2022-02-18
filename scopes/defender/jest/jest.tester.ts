@@ -154,17 +154,22 @@ export class JestTester implements Tester {
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
-    const testsOutPut = await this.jestModule.runCLI(withEnv, [this.jestConfig]);
-    const testResults = testsOutPut.results.testResults;
-    const componentsWithTests = this.attachTestsToComponent(context, testResults);
-    const componentTestResults = this.buildTestsObj(
-      testsOutPut.results,
-      componentsWithTests,
-      context,
-      jestConfigWithSpecs
-    );
-    const globalErrors = this.getErrors(testResults);
-    return { components: componentTestResults, errors: globalErrors };
+    try {
+      const testsOutPut = await this.jestModule.runCLI(withEnv, [this.jestConfig]);
+      const testResults = testsOutPut.results.testResults;
+      const componentsWithTests = this.attachTestsToComponent(context, testResults);
+      const componentTestResults = this.buildTestsObj(
+        testsOutPut.results,
+        componentsWithTests,
+        context,
+        jestConfigWithSpecs
+      );
+      const globalErrors = this.getErrors(testResults);
+      return { components: componentTestResults, errors: globalErrors };
+    } catch (e) {
+      const components = context.components.map((comp) => ({ componentId: comp.id }));
+      return { components, errors: [e as Error] };
+    }
   }
 
   async watch(context: TesterContext): Promise<Tests> {

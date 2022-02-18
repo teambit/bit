@@ -62,5 +62,8 @@ export function propogateUntil(fromPath: string): string | undefined {
     { cwd: fromPath, type: 'directory' }
   );
   if (!filePath) return undefined;
+  if (filePath.endsWith(path.join('.git', 'objects'))) {
+    return undefined; // happens when "objects" dir is deleted from the scope
+  }
   return path.dirname(filePath);
 }
