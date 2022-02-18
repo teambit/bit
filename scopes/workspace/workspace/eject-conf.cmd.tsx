@@ -31,7 +31,7 @@ export default class EjectConfCmd implements Command {
     const ejectResult = await this.json(args, options);
     const [componentId] = args;
     return (
-      <Text color="yellow">
+      <Text color="green">
         successfully ejected config for component {componentId} in path {ejectResult.configPath}
       </Text>
     );
