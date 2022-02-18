@@ -166,6 +166,9 @@ export default class CommandHelper {
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
   }
+  use(aspectId: string, flags = '') {
+    return this.runCmd(`bit use ${aspectId} ${flags}`);
+  }
   dependencies(values = '') {
     return this.runCmd(`bit dependencies ${values}`);
   }
