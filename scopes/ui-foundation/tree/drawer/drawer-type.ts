@@ -34,4 +34,9 @@ export type DrawerType = {
    * order in which the drawer gets rendered
    */
   order?: number;
+
+  /**
+   * used to filter the drawers before rendering
+   */
+  isHidden?: () => boolean;
 };

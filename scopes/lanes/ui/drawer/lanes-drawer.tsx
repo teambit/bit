@@ -30,6 +30,11 @@ export class LanesDrawer implements DrawerType {
   id = LanesModel.drawer.id;
   name = LanesModel.drawer.name;
   widget = (<Widget />);
+  isHidden = () => {
+    const lanesContext = useLanesContext();
+    const hasLanes = lanesContext?.lanes && lanesContext?.lanes.length > 0;
+    return !hasLanes;
+  };
 
   Context = ({ children }) => {
     const lanesContext = useLanesContext();
