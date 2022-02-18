@@ -26,6 +26,7 @@ export type LanesDrawerProps = {
 
 export class LanesDrawer implements DrawerType {
   constructor(private props: LanesDrawerProps) {}
+  order = 100;
   id = 'LANES';
   name = 'LANES';
   widget = (<Widget />);

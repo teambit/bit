@@ -29,4 +29,9 @@ export type DrawerType = {
    * component to render within the drawer.
    */
   render: ComponentType;
+
+  /**
+   * order in which the drawer gets rendered
+   */
+  order?: number;
 };

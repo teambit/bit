@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
-import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
+import { DrawerType, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
 
@@ -20,7 +20,7 @@ export type SideBarProps = {
  * side bar component.
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
-  const drawers = flatten(drawerSlot.values());
+  const drawers = flatten(drawerSlot.values()).sort(sortFn);
   const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
   const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
@@ -54,4 +54,11 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
       })}
     </div>
   );
+}
+function sortFn(first: DrawerType, second: DrawerType) {
+  // 0  - equal
+  // <0 - first < second
+  // >0 - first > second
+
+  return ((first.order || 0) ?? 0) - ((second.order || 0) ?? 0);
 }
