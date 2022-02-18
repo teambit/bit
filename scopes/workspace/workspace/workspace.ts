@@ -691,14 +691,15 @@ export class Workspace implements ComponentFactory {
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
-    const component = await this.scope.get(componentId);
-    const aspects = component?.state.aspects
-      ? await this.resolveScopeAspectListIds(component?.state.aspects)
-      : await this.createAspectList(new ExtensionDataList());
+    const component = await this.get(componentId);
+    const aspects = component.state.aspects;
 
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
     await componentConfigFile.write({ override: options.override });
+    // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
+    this.bitMap.removeEntireConfig(id);
+    await this.bitMap.write();
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
