@@ -74,6 +74,7 @@ import { RenamingAspect } from '@teambit/renaming';
 import { ComponentLogAspect } from '@teambit/component-log';
 import { ClearCacheAspect } from '@teambit/clear-cache';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import { MochaAspect } from '@teambit/mocha';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -152,6 +153,7 @@ export const manifestsMap = {
   [NewComponentHelperAspect.id]: NewComponentHelperAspect,
   [ComponentLogAspect.id]: ComponentLogAspect,
   [ClearCacheAspect.id]: ClearCacheAspect,
+  [MochaAspect.id]: MochaAspect,
 };
 
 export function isCoreAspect(id: string) {

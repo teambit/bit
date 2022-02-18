@@ -525,6 +525,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
+    "mocha": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/mocha"
+    },
     "model/composition-id": {
         "scope": "teambit.compositions",
         "version": "0.0.485",

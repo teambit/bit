@@ -1,0 +1,23 @@
+import { MainRuntime } from '@teambit/cli';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { MochaAspect } from './mocha.aspect';
+import { MochaTester } from './mocha.tester';
+
+export class MochaMain {
+  constructor(private logger: Logger) {}
+
+  // eslint-disable-next-line global-require
+  createTester(mochaConfig: any, mochaModule = require('mocha')) {
+    return new MochaTester(MochaAspect.id, this.logger, mochaConfig, mochaModule);
+  }
+
+  static slots = [];
+  static dependencies = [LoggerAspect];
+  static runtime = MainRuntime;
+  static async provider([loggerMain]: [LoggerMain]) {
+    const logger = loggerMain.createLogger(MochaAspect.id);
+    return new MochaMain(logger);
+  }
+}
+
+MochaAspect.addRuntime(MochaMain);
