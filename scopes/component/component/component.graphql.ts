@@ -155,9 +155,7 @@ export function componentSchema(componentExtension: ComponentMain) {
           return component.tags.toArray().map((tag) => tag.toObject());
         },
         aspects: (component: Component, { include }: { include?: string[] }) => {
-          if (!include) return component.state.aspects.serialize();
-          const aspects = component.state.aspects.filter(include);
-          return aspects.map((aspect) => aspect.serialize());
+          return component.state.aspects.filter(include).serialize();
         },
       },
       ComponentHost: {
