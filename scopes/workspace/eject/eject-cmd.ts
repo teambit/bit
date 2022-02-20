@@ -1,13 +1,14 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
-import { compact } from 'lodash';
 import { ComponentsEjector } from './components-ejector';
 
 export class EjectCmd implements Command {
-  name = 'eject <id...>';
+  name = 'eject <pattern>';
   description = 'replaces the components from the local scope with the corresponding packages';
+  extendedDescription = `${PATTERN_HELP('eject')}`;
   alias = 'E';
   options = [
     ['f', 'force', 'ignore local version. remove the components even when they are staged or modified'],
@@ -21,11 +22,11 @@ export class EjectCmd implements Command {
   constructor(private workspace: Workspace, private logger: Logger) {}
 
   async report(
-    [ids]: [string[]],
+    [pattern]: [string],
     { force = false, json = false, keepFiles = false }: { force: boolean; json: boolean; keepFiles: boolean }
   ): Promise<string> {
-    const bitIds = ids.map((id) => this.workspace.consumer.bitMap.getExistingBitId(id)); // this also assure that the ID is in .bitmap
-    const componentEjector = new ComponentsEjector(this.workspace, this.logger, compact(bitIds), { force, keepFiles });
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const componentEjector = new ComponentsEjector(this.workspace, this.logger, componentIds, { force, keepFiles });
     const ejectResults = await componentEjector.eject();
     if (json) return JSON.stringify(ejectResults, null, 2);
     return ejectTemplate(ejectResults);

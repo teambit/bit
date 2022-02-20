@@ -69,8 +69,9 @@ export default class ScopeHelper {
     this.cleanLocalScope();
     this.initLocalScope();
   }
-  reInitLocalScopeHarmony(opts?: { registry: string }) {
+  reInitLocalScopeHarmony(opts?: { registry?: string; initGit?: boolean }) {
     this.cleanLocalScope();
+    if (opts?.initGit) this.command.runCmd('git init');
     this.initHarmonyWorkspace();
     if (opts?.registry) {
       this.fs.writeFile('.npmrc', `registry=${opts.registry}`);

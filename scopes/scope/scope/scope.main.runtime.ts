@@ -360,7 +360,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+ids: ${ids.join(', ')}
+needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     return compact(scopeManifests.map((manifest) => manifest.id));
@@ -436,7 +439,7 @@ export class ScopeMain implements ComponentFactory {
         skipIfExists,
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
       },
       this.legacyScope
     );
@@ -579,7 +582,7 @@ export class ScopeMain implements ComponentFactory {
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
         host: this,
       },
       this.legacyScope
@@ -867,14 +870,14 @@ export class ScopeMain implements ComponentFactory {
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true);
+    await this.loadAspects(aspectIds, true, id);
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true);
+    await this.loadAspects(aspectIds, true, component.id);
   }
 
   /**
