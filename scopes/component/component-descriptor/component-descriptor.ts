@@ -1,19 +1,15 @@
 import { ComponentID } from '@teambit/component';
-import { AspectMapProps, AspectMap } from './aspect-map';
+import { AspectListProps, AspectList } from './aspect-list';
 
 export type ComponentDescriptorProps = {
   /**
    * serialized component ID.
    */
-  id: {
-    name: string;
-    scope: string;
-    version?: string;
-  };
+  id: string;
   /**
    * aspects map data
    */
-  aspectMap?: AspectMapProps;
+  aspectList?: AspectListProps;
 };
 
 export class ComponentDescriptor {
@@ -25,7 +21,7 @@ export class ComponentDescriptor {
     /**
      *  aspect map
      */
-    readonly aspectMap: AspectMap
+    readonly aspectList: AspectList
   ) {}
 
   get scope() {
@@ -33,13 +29,13 @@ export class ComponentDescriptor {
   }
 
   get<T>(aspectId: string): T | undefined {
-    return this.aspectMap.get<T>(aspectId);
+    return this.aspectList.get<T>(aspectId);
   }
 
   toObject(): ComponentDescriptorProps {
     return {
-      id: this.id.toObject(),
-      aspectMap: this.aspectMap.toObject(),
+      id: this.id.toString(),
+      aspectList: this.aspectList.toObject(),
     };
   }
 
@@ -51,16 +47,9 @@ export class ComponentDescriptor {
     return this.stringify();
   }
 
-  static fromObject({ id, aspectMap }: ComponentDescriptorProps) {
-    const aspects = AspectMap.fromObject(aspectMap);
-    let idObj;
-    // TODO - check why we sometimes get a string and sometimes an object
-    if (typeof id === 'string') {
-      idObj = ComponentID.fromString(id);
-    } else {
-      idObj = ComponentID.fromObject(id);
-    }
-    return new ComponentDescriptor(idObj, aspects);
+  static fromObject({ id, aspectList }: ComponentDescriptorProps) {
+    const aspects = AspectList.fromObject(aspectList);
+    return new ComponentDescriptor(ComponentID.fromString(id), aspects);
   }
 
   static fromArray(componentsDescriptorProps: ComponentDescriptorProps[]) {

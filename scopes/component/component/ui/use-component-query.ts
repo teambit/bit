@@ -193,13 +193,12 @@ export function useComponentQuery(componentId: string, host: string) {
 
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
-    const aspects = {
+    const aspectList = {
       entries: rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data })),
     };
+    const id = ComponentID.fromObject(rawComponent.id);
     return {
-      componentDescriptor: rawComponent
-        ? ComponentDescriptor.fromObject({ id: rawComponent.id, aspectMap: aspects })
-        : undefined,
+      componentDescriptor: rawComponent ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error
