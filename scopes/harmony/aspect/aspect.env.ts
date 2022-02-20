@@ -51,7 +51,7 @@ export class AspectEnv implements DependenciesEnv {
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: false,
     };
   }
