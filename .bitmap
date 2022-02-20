@@ -351,6 +351,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/dev-files"
     },
+    "diagnostic": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/diagnostic",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "docs": {
         "scope": "teambit.docs",
         "version": "0.0.650",
