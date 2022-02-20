@@ -6,7 +6,7 @@ import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
