@@ -2,7 +2,7 @@ import { useMemo, useEffect, useRef } from 'react';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { ComponentDescriptor } from '@teambit/component-descriptor';
+import { ComponentDescriptor, AspectList } from '@teambit/component-descriptor';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
