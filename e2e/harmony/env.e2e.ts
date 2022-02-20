@@ -31,6 +31,11 @@ describe('env', function () {
       const env = helper.env.getComponentEnv('comp1');
       expect(env).to.equal('teambit.harmony/aspect');
     });
+    it('ejecting the conf to component.json should not write internal fields', () => {
+      helper.command.ejectConf('comp1');
+      const compJson = helper.componentJson.read('comp1');
+      expect(compJson.extensions[Extensions.envs]).to.not.have.property('__specific');
+    });
   });
   describe('run bit env set X and then bit env set Y', () => {
     before(() => {

@@ -1,8 +1,10 @@
+import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
 import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
+import { isDirEmpty } from '@teambit/legacy/dist/utils';
 import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
@@ -43,18 +45,43 @@ export class NewComponentHelperMain {
     config?: { [aspectName: string]: any }
   ) {
     const targetPath = this.getNewComponentPath(targetId, options?.path);
+    await this.throwForExistingPath(targetPath);
     await this.workspace.write(targetPath, comp);
-    await this.workspace.track({
-      rootDir: targetPath,
-      componentName: targetId.fullName,
-      mainFile: comp.state._consumer.mainFile,
-      defaultScope: options?.scope,
-      config,
-    });
+    try {
+      await this.workspace.track({
+        rootDir: targetPath,
+        componentName: targetId.fullName,
+        mainFile: comp.state._consumer.mainFile,
+        defaultScope: options?.scope,
+        config,
+      });
+    } catch (err) {
+      await fs.remove(targetPath);
+      throw err;
+    }
+
     await this.workspace.bitMap.write();
     this.workspace.clearCache();
     // this takes care of compiling the component as well
     await this.workspace.triggerOnComponentAdd(targetId);
+  }
+
+  private async throwForExistingPath(targetPath: string) {
+    try {
+      const stat = await fs.stat(targetPath);
+      if (!stat.isDirectory()) {
+        throw new BitError(`unable to create component at "${targetPath}", this path already exists`);
+      }
+      const isEmpty = await isDirEmpty(targetPath);
+      if (!isEmpty) {
+        throw new BitError(`unable to create component at "${targetPath}", this directory is not empty`);
+      }
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return;
+      }
+      throw err;
+    }
   }
 
   async getConfigFromExistingToNewComponent(comp: Component) {

@@ -12,7 +12,6 @@ function parse(buffer: Buffer): BitObject {
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
   const [type, hash] = headers.split(SPACE_DELIMITER);
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return types[type].parse(contents, hash);
 }
@@ -112,8 +111,9 @@ path: ${err.path}`);
   /**
    * see `this.parseSync` for the sync version
    */
-  static parseObject(fileContents: Buffer): Promise<BitObject> {
-    return inflate(fileContents).then((buffer) => parse(buffer));
+  static async parseObject(fileContents: Buffer, filePath?: string): Promise<BitObject> {
+    const buffer = await inflate(fileContents, filePath);
+    return parse(buffer);
   }
 
   // static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {

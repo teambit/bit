@@ -1,11 +1,12 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import { promisify } from 'util';
 import zlib from 'zlib';
 
-export default function inflate(buffer: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    zlib.inflate(buffer, (err, res) => {
-      if (err) return reject(err);
-      return resolve(res);
-    });
-  });
+export default async function inflate(buffer: Buffer, filePath?: string): Promise<Buffer> {
+  const inflateP = promisify(zlib.inflate);
+  try {
+    return await inflateP(buffer);
+  } catch (err: any) {
+    const filePathStr = filePath ? ` of "${filePath}"` : '';
+    throw new Error(`fatal: zlib.inflate${filePathStr} has failed with an error: "${err.message}"`);
+  }
 }
