@@ -11,6 +11,7 @@ import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
   component: ComponentType<any>;
+  weight?: number;
 };
 
 export type ComponentOverviewProps = {
