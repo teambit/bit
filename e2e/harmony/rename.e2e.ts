@@ -1,6 +1,9 @@
-import { expect } from 'chai';
+import path from 'path';
+import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
+
+chai.use(require('chai-fs'));
 
 describe('bit rename command', function () {
   this.timeout(0);
@@ -56,6 +59,26 @@ describe('bit rename command', function () {
         const show = helper.command.showComponentParsedHarmony('comp2');
         const scope = show.find((item) => item.title === 'id');
         expect(scope.json).to.equal('org.ui/comp2');
+      });
+    });
+    describe('rename with invalid name', () => {
+      it('should delete the newly created component-dir', () => {
+        try {
+          helper.command.rename('comp1', 'my.comp'); // the dot is invalid here
+        } catch (err: any) {
+          expect(err.message).to.have.string('"my.comp" is invalid');
+        }
+        expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'my.comp')).to.not.be.a.path();
+      });
+    });
+    describe('rename when the path is not empty', () => {
+      before(() => {
+        helper.fs.outputFile('src/index.ts', 'hello');
+      });
+      it('should throw an error', () => {
+        expect(() => helper.command.rename('comp1', 'comp2', '--path src')).to.throw(
+          'unable to create component at "src", this directory is not empty'
+        );
       });
     });
   });

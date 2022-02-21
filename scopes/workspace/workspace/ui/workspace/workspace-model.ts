@@ -58,7 +58,7 @@ export class Workspace {
   static from({ name, path, components, icon }: WorkspaceProps) {
     const componentDescriptors = components.map((component) => {
       const id = ComponentID.fromObject(component.id);
-      return ComponentDescriptor.fromObject({ id });
+      return ComponentDescriptor.fromObject({ id: id.toString() });
     });
     return new Workspace(
       name,

@@ -47,7 +47,7 @@ export class ScopeModel {
     const components = scope.components || [];
     const componentDescriptors = scope.components.map((component) => {
       const id = ComponentID.fromObject(component.id);
-      return ComponentDescriptor.fromObject({ id });
+      return ComponentDescriptor.fromObject({ id: id.toString() });
     });
 
     return new ScopeModel(

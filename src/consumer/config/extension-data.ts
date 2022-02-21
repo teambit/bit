@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import R, { forEachObjIndexed } from 'ramda';
+import R from 'ramda';
 import { compact, isEmpty, cloneDeep } from 'lodash';
-
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
@@ -100,19 +99,6 @@ export class ExtensionDataEntry {
       R.clone(this.data)
     );
   }
-
-  // static fromConfigEntry(id: BitId, config: Record<string, any>) {
-  //   // TODO: refactor the core names registry to be outside the ExtensionDataList
-  //   // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //   const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
-  //   let entry;
-  //   if (!isCore) {
-  //     entry = new ExtensionDataEntry(undefined, id, undefined, config, undefined);
-  //   } else {
-  //     entry = new ExtensionDataEntry(undefined, undefined, id.toString(), config, undefined);
-  //   }
-  //   return entry;
-  // }
 }
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
@@ -213,8 +199,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
       // Remove extensions without config
-      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
-        return { id: entry.stringId, config: entry.rawConfig };
+      const clonedEntry = entry.clone();
+      if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
+        removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
+        if (isEmpty(clonedEntry.rawConfig)) return undefined;
+        return { id: clonedEntry.stringId, config: clonedEntry.config };
       }
       return undefined;
     });
@@ -241,19 +230,8 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return ExtensionDataList.fromArray(arr);
   }
 
-  static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
-    const arr: ExtensionDataEntry[] = [];
-    forEachObjIndexed((config, id) => {
-      const isCore = ExtensionDataList.coreExtensionsNames.has(id);
-      let entry;
-      if (!isCore) {
-        const parsedId = BitId.parse(id, true);
-        entry = new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
-      } else {
-        entry = new ExtensionDataEntry(undefined, undefined, id, config, undefined);
-      }
-      arr.push(entry);
-    }, obj);
+  static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
+    const arr = Object.keys(obj).map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
     return this.fromArray(arr);
   }
 
@@ -299,9 +277,23 @@ function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEn
   return false;
 }
 
+export function configEntryToDataEntry(extensionId: string, config: any): ExtensionDataEntry {
+  const isCore = ExtensionDataList.coreExtensionsNames.has(extensionId);
+  if (!isCore) {
+    const parsedId = BitId.parse(extensionId, true);
+    return new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
+  }
+  return new ExtensionDataEntry(undefined, undefined, extensionId, config, undefined);
+}
+
 export function removeInternalConfigFields(config?: ExtensionConfig): ExtensionConfig | undefined {
   if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return config;
   const clonedConfig = cloneDeep(config);
   INTERNAL_CONFIG_FIELDS.forEach((field) => delete clonedConfig[field]);
   return clonedConfig;
+}
+
+export function removeInternalConfigFieldsWithMutation(config?: ExtensionConfig) {
+  if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return;
+  INTERNAL_CONFIG_FIELDS.forEach((field) => delete config[field]);
 }

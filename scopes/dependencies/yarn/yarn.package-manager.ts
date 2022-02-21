@@ -1,5 +1,6 @@
 import parsePackageName from 'parse-package-name';
 import {
+  extendWithComponentsFromDir,
   WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
@@ -73,8 +74,7 @@ export class YarnPackageManager implements PackageManager {
 
     const project = new Project(rootDirPath, { configuration: config });
 
-    const rootManifest = workspaceManifest.toJson({
-      includeDir: true,
+    const rootManifest = workspaceManifest.toJsonWithDir({
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: installOptions.installPeersFromEnvs,
     }).manifest;
@@ -89,6 +89,7 @@ export class YarnPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+    await extendWithComponentsFromDir(rootDir, manifests);
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);

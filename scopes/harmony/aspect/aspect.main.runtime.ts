@@ -1,5 +1,7 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { compact } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
@@ -13,7 +15,7 @@ import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
-import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd } from './aspect.cmd';
+import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -77,9 +79,11 @@ export class AspectMain {
     config: Record<string, any> = {}
   ): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;
@@ -87,9 +91,11 @@ export class AspectMain {
 
   async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.removeSpecificComponentConfig(componentId, aspectId, true);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;
@@ -101,6 +107,34 @@ export class AspectMain {
     }
     const componentFromScope = await this.workspace.scope.get(id);
     return this.workspace.componentExtensions(id, componentFromScope);
+  }
+
+  async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
+    let aspectCompId = await this.workspace.resolveComponentId(aspectId);
+    if (!aspectCompId.hasVersion()) {
+      try {
+        const fromRemote = await this.workspace.scope.getRemoteComponent(aspectCompId);
+        aspectCompId = aspectCompId.changeVersion(fromRemote.id.version);
+      } catch (err) {
+        throw new BitError(
+          `unable to find ${aspectId} in the remote. if this is a local aspect, please provide a version with your aspect (${aspectId}) to update to`
+        );
+      }
+    }
+    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
+    const allComps = await this.workspace.getMany(allCompIds);
+    const updatedComponentIds = await Promise.all(
+      allComps.map(async (comp) => {
+        const aspect = comp.state.aspects.get(aspectCompId.toStringWithoutVersion());
+        if (!aspect) return undefined;
+        if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
+        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), true);
+        await this.workspace.addSpecificComponentConfig(comp.id, aspectCompId.toString(), aspect.config);
+        return comp.id;
+      })
+    );
+    await this.workspace.bitMap.write();
+    return compact(updatedComponentIds);
   }
 
   static runtime = MainRuntime;
@@ -172,6 +206,7 @@ export class AspectMain {
       new GetAspectCmd(aspectMain),
       new SetAspectCmd(aspectMain),
       new UnsetAspectCmd(aspectMain),
+      new UpdateAspectCmd(aspectMain),
     ];
     cli.register(aspectCmd);
 

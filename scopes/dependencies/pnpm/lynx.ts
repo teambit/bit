@@ -12,10 +12,17 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { MutatedProject, mutateModules, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import {
+  MutatedProject,
+  mutateModules,
+  InstallOptions,
+  PeerDependencyIssuesByProjects,
+  ProjectOptions,
+} from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
+import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { readConfig } from './read-config';
@@ -96,7 +103,10 @@ async function generateResolverAndFetcher(
 }
 
 export async function getPeerDependencyIssues(
-  rootManifest,
+  rootManifest: {
+    rootDir: string;
+    manifest: ProjectManifest;
+  },
   manifestsByPaths: Record<string, any>,
   opts: {
     storeDir: string;

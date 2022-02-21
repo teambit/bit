@@ -1,19 +1,15 @@
 import { ComponentID } from '@teambit/component';
-import { AspectMapProps, AspectMap } from './aspect-map';
+import { AspectListProps, AspectList } from './aspect-list';
 
 export type ComponentDescriptorProps = {
   /**
    * serialized component ID.
    */
-  id: {
-    name: string;
-    scope: string;
-    version?: string;
-  };
+  id: string;
   /**
    * aspects map data
    */
-  aspectMap?: AspectMapProps;
+  aspectList?: AspectListProps;
 };
 
 export class ComponentDescriptor {
@@ -25,25 +21,21 @@ export class ComponentDescriptor {
     /**
      *  aspect map
      */
-    readonly aspectMap: AspectMap
+    readonly aspectList: AspectList
   ) {}
-
-  get state() {
-    return this.aspectMap;
-  }
 
   get scope() {
     return this.id.scope;
   }
 
   get<T>(aspectId: string): T | undefined {
-    return this.aspectMap.get<T>(aspectId);
+    return this.aspectList.get<T>(aspectId);
   }
 
   toObject(): ComponentDescriptorProps {
     return {
-      id: this.id.toObject(),
-      aspectMap: this.aspectMap.toObject(),
+      id: this.id.toString(),
+      aspectList: this.aspectList.toObject(),
     };
   }
 
@@ -55,9 +47,9 @@ export class ComponentDescriptor {
     return this.stringify();
   }
 
-  static fromObject({ id, aspectMap }: ComponentDescriptorProps) {
-    const aspects = AspectMap.fromObject(aspectMap);
-    return new ComponentDescriptor(ComponentID.fromObject(id), aspects);
+  static fromObject({ id, aspectList }: ComponentDescriptorProps) {
+    const aspects = AspectList.fromObject(aspectList);
+    return new ComponentDescriptor(ComponentID.fromString(id), aspects);
   }
 
   static fromArray(componentsDescriptorProps: ComponentDescriptorProps[]) {

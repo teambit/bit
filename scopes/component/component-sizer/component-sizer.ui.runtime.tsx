@@ -14,14 +14,13 @@ export class SizerUIRuntime {
   static runtime = UIRuntime;
 
   static async provider([docs]: [DocsUI]) {
+    debugger;
+    console.log('yaaa');
     docs?.registerTitleBadge({
       component: ({ componentDescriptor }) => {
         return <ComponentSize componentDescriptor={componentDescriptor} />;
       },
       weight: 30,
     });
-    const ui = new SizerUIRuntime();
-    return ui;
   }
 }
-ComponentSizerAspect.addRuntime(SizerUIRuntime);

@@ -350,7 +350,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.220",
+        "@teambit/legacy": "1.0.223",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -417,11 +417,11 @@
             "@teambit/legacy": "-"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.220"
+            "@teambit/legacy": "1.0.223"
           }
         }
       },
@@ -468,7 +468,7 @@
             "@teambit/legacy": "-"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {}
@@ -662,13 +662,13 @@
           "devDependencies": {
             "react": "-",
             "react-dom": "-",
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@types/postcss-normalize": "9.0.1"
           },
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.220"
+            "@teambit/legacy": "1.0.223"
           }
         }
       }
@@ -725,7 +725,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.220",
+            "@teambit/legacy": "1.0.223",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -829,11 +829,11 @@
             "utf-8-validate": "5.0.5"
           },
           "devDependencies": {
-            "@types/mocha": "5.2.7",
+            "@types/mocha": "9.1.0",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.220"
+            "@teambit/legacy": "1.0.223"
           }
         }
       }
