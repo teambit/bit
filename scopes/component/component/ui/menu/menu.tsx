@@ -5,10 +5,12 @@ import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { compact, flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
+import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
@@ -69,21 +71,25 @@ function VersionRelatedDropdowns({
   const location = useLocation();
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
+  const snapResult = useSnaps(component.id);
+
   const currentLane = lanesContext?.currentLane;
 
   const isWorkspace = host === 'teambit.workspace/workspace';
-  const versionList = useMemo(() => {
-    const tagsArray = !currentLane
-      ? component.tags
-          ?.toArray()
-          .map((tag) => tag?.version?.version)
-          .filter((x) => x !== undefined)
-          .reverse()
-      : [component.id.version];
-    const wsLink = [isWorkspace && !isNew && !currentLane ? 'workspace' : undefined];
+  const snaps = useMemo(() => {
+    return (snapResult.snaps || []).filter((snap) => !snap.tag);
+  }, [snapResult.snaps]);
+
+  const tags: LegacyComponentLog[] = useMemo(() => {
+    const tagsArray = (snapResult.snaps || []).filter((snap) => snap.tag);
+    const wsLink = [
+      isWorkspace && !isNew && !currentLane
+        ? { lane: 'main', parents: [], tag: 'workspace', hash: 'workspace', message: '' }
+        : undefined,
+    ];
 
     return compact([...wsLink, ...tagsArray]);
-  }, [component.tags, isWorkspace, isNew, currentLane]);
+  }, [isWorkspace, isNew, currentLane, snapResult.snaps]);
 
   const currentVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
@@ -91,14 +97,14 @@ function VersionRelatedDropdowns({
   const methods = useConsumeMethods(consumeMethods, component, currentLane);
   return (
     <>
-      {versionList.length > 0 && (
+      {tags.length > 0 && (
         <UseBoxDropdown
           position="bottom-end"
           className={styles.useBox}
           Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
-      <VersionDropdown versions={versionList} currentVersion={currentVersion} latestVersion={component.latest} />
+      <VersionDropdown tags={tags} snaps={snaps} currentVersion={currentVersion} latestVersion={component.latest} />
     </>
   );
 }

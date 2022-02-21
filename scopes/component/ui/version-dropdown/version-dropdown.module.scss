@@ -90,3 +90,11 @@
     }
   }
 }
+
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  line-height: 14px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  overflow-x: auto;
+}
