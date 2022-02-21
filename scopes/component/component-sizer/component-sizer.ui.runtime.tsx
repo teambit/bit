@@ -14,9 +14,7 @@ export class SizerUIRuntime {
   static runtime = UIRuntime;
 
   static async provider([docs]: [DocsUI]) {
-    debugger;
-    console.log('yaaa');
-    docs?.registerTitleBadge({
+    docs.registerTitleBadge({
       component: ({ componentDescriptor }) => {
         return <ComponentSize componentDescriptor={componentDescriptor} />;
       },
@@ -24,3 +22,5 @@ export class SizerUIRuntime {
     });
   }
 }
+
+ComponentSizerAspect.addRuntime(SizerUIRuntime);

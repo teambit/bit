@@ -8,12 +8,12 @@ import styles from './component-size.module.scss';
 export type ComponentSizeProps = { componentDescriptor: ComponentDescriptor } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentSize({ componentDescriptor, ...rest }: ComponentSizeProps) {
-  const builderData = componentDescriptor.get('teambit.pipelines/builder');
+  // TODO - fix type
+  const builderData: any = componentDescriptor.get('teambit.pipelines/builder');
   // const builder = BuilderData.fromJson(a);
   // TODO - find a better way to extract data and which type to use
-  const size = builderData?.aspectsData?.find((x) => x.aspectId === 'teambit.preview/preview')?.data?.size?.total;
-  // console.log('com', componentDescriptor, a, a?.aspectsData, size);
-  console.log('builder', builderData);
+  const size = builderData?.aspectsData?.find(({ aspectId }) => aspectId === 'teambit.preview/preview')?.data?.size
+    ?.compressedTotal;
   if (!size) return null;
   return (
     <Tooltip
