@@ -1,5 +1,6 @@
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { DocsAspect, DocsUI } from '@teambit/docs';
 import { ComponentSize } from '@teambit/component.ui.component-size';
 import { ComponentSizerAspect } from './component-sizer.aspect';
@@ -15,7 +16,7 @@ export class SizerUIRuntime {
 
   static async provider([docs]: [DocsUI]) {
     docs.registerTitleBadge({
-      component: ({ componentDescriptor }) => {
+      component: ({ componentDescriptor }: { componentDescriptor: ComponentDescriptor }) => {
         return <ComponentSize componentDescriptor={componentDescriptor} />;
       },
       weight: 30,
