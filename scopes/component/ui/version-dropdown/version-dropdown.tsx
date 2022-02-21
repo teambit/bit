@@ -1,7 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-// import { Contributors } from '@teambit/design.ui.contributors';
+import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
@@ -24,8 +24,9 @@ export type VersionDropdownProps = {
 
 export function VersionDropdown({ snaps, tags, currentVersion, latestVersion }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
+  const noMultipeVersions = (snaps || []).concat(tags).length < 2;
 
-  if ((snaps || []).concat(tags).length < 2) {
+  if (noMultipeVersions) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
@@ -93,38 +94,51 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
       <div className={styles.tabs}>
         {tabs.map(({ name }, index) => {
           return (
-            <Tab key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
+            <Tab className={styles.tab} key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
               {name}
             </Tab>
           );
         })}
       </div>
       <div className={styles.versionContainer}>
-        {activeVersions?.payload.map(({ version }, index) => {
-          const isCurrent = version === currentVersion;
-          // const author = useMemo(() => {
-          //   return {
-          //     displayName: username,
-          //     email,
-          //   };
-          // }, [version]);
-          // const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
-
-          return (
-            <NavLink
-              href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
-              key={index}
-              className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
-            >
-              <Ellipsis>
-                <span className={styles.version}>{version}</span>
-              </Ellipsis>
-              {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
-              {/* <Contributors contributors={[author || {}]} timestamp={timestamp} /> */}
-            </NavLink>
-          );
-        })}
+        {activeVersions?.payload.map((versionObj, index) => (
+          <VersionInfo
+            key={index}
+            currentVersion={currentVersion}
+            latestVersion={latestVersion}
+            {...versionObj}
+          ></VersionInfo>
+        ))}
       </div>
+    </div>
+  );
+}
+
+type VersionInfoProps = VersionDropdownVersion & {
+  currentVersion?: string;
+  latestVersion?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+function VersionInfo({ version, currentVersion, latestVersion, date, ...rest }: VersionInfoProps) {
+  const isCurrent = version === currentVersion;
+  // const author = useMemo(() => {
+  //   return {
+  //     displayName: username,
+  //     email,
+  //   };
+  // }, [version]);
+  const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+  return (
+    <div {...rest}>
+      <NavLink
+        href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
+        className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
+      >
+        <Ellipsis className={styles.version}>{version}</Ellipsis>
+        {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
+        <TimeAgo className={styles.versionTimestamp} date={timestamp} />
+        {/* <Contributors contributors={[author || {}]} timestamp={timestamp} /> */}
+      </NavLink>
     </div>
   );
 }

@@ -6,7 +6,7 @@
     align-items: center;
   }
   .menu {
-    width: 300px;
+    width: 350px;
     padding: 0;
     right: 0;
     // top: 43px;
@@ -45,6 +45,7 @@
   }
   .version {
     margin-right: 16px;
+    max-width: 60%;
   }
   .label {
     background-color: white;
@@ -97,4 +98,17 @@
   line-height: 14px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   overflow-x: auto;
+  .tab {
+    font-weight: bold;
+    padding-top: 4px;
+    font-size: 12px;
+  }
+}
+.versionRow {
+  display: flex;
+  justify-content: space-between;
+
+  .versionTimestamp {
+    margin-right: 2px;
+  }
 }
