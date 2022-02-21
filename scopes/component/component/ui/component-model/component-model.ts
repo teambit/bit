@@ -32,7 +32,7 @@ export type ComponentModelProps = {
 };
 
 export type ComponentPreview = {
-  includesEnvTemplate?: boolean
+  includesEnvTemplate?: boolean;
 };
 
 export type ComponentServer = {

@@ -1,4 +1,8 @@
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import {
+  ExtensionDataList,
+  ExtensionDataEntry,
+  removeInternalConfigFields,
+} from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { AspectEntry, SerializableMap } from './aspect-entry';
 
@@ -70,7 +74,7 @@ export class AspectList {
     const res = {};
     this.entries.forEach((entry) => {
       if (entry.config) {
-        res[entry.id.toString()] = entry.config;
+        res[entry.id.toString()] = removeInternalConfigFields(entry.config);
       }
     });
     return res;
@@ -79,6 +83,14 @@ export class AspectList {
   serialize() {
     const serializedEntries = this.entries.map((entry) => entry.serialize());
     return serializedEntries;
+  }
+
+  filter(ids?: string[]): AspectList {
+    if (!ids?.length) return new AspectList(this.entries);
+    const entries = this.entries.filter((aspectEntry) => {
+      return ids?.includes(aspectEntry.id.toStringWithoutVersion());
+    });
+    return new AspectList(entries);
   }
 
   toLegacy(): ExtensionDataList {

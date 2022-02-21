@@ -18,16 +18,24 @@ export type ImportProps = {
    * component display name
    */
   componentName: string;
+  /**
+   * showInstall flag
+   */
+  showInstallMethod?: boolean;
 } & ExpandableTabContentProps;
 
-export function Import({ componentId, packageName, componentName, ...rest }: ImportProps) {
+export function Import({ componentId, packageName, componentName, showInstallMethod = true, ...rest }: ImportProps) {
   return (
     <ExpandableTabContent
       {...rest}
       content={
         <div className={styles.importContent}>
-          <div>{`Add ${componentName} as a dependency`}</div>
-          <TooltipCopybox content={`bit install ${packageName}`} />
+          {showInstallMethod && (
+            <>
+              <div>{`Add ${componentName} as a dependency`}</div>
+              <TooltipCopybox content={`bit install ${packageName}`} />
+            </>
+          )}
           <div>{`Import ${componentName} to your workspace`}</div>
           <TooltipCopybox content={`bit import ${componentId}`} />
         </div>

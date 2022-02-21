@@ -440,7 +440,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         skipIfExists,
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
       },
       this.legacyScope
     );
@@ -587,7 +587,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
         host: this,
       },
       this.legacyScope

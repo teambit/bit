@@ -292,7 +292,7 @@ export class ReactEnv
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: true,
     };
   }

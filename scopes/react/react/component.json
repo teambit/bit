@@ -50,7 +50,7 @@
           "react": "-",
           "react-dom": "-",
           "@teambit/legacy": "-",
-          "@types/mocha": "5.2.7",
+          "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
           "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
@@ -59,7 +59,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.221"
+          "@teambit/legacy": "1.0.223"
         }
       }
     }

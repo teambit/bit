@@ -3,12 +3,12 @@ import { NextFunction, Request, Response, Route } from '@teambit/express';
 import { ComponentMain } from './component.main.runtime';
 
 export type RegisteredComponentRoute = Route & {
-  resolveComponent?: boolean
-}
+  resolveComponent?: boolean;
+};
 
 export type ComponentUrlParams = {
-  componentId: string
-}
+  componentId: string;
+};
 
 export class ComponentRoute implements Route {
   constructor(private registerRoute: RegisteredComponentRoute, private componentExtension: ComponentMain) {}
@@ -19,7 +19,7 @@ export class ComponentRoute implements Route {
     return [
       async (req: Request<ComponentUrlParams>, res: Response, next: NextFunction) => {
         const resolveComponent = this.registerRoute.resolveComponent ?? true;
-        if (resolveComponent){
+        if (resolveComponent) {
           const { componentId } = req.params;
           const host = this.componentExtension.getHost();
           const compId = await host.resolveComponentId(componentId);

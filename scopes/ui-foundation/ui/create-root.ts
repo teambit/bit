@@ -16,6 +16,7 @@ export async function createRoot(
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
 
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
+  config['teambit.harmony/bit'] = rootExtensionName;
 
   return `
 ${createImports(aspectDefs)}
@@ -23,7 +24,6 @@ ${createImports(aspectDefs)}
 const isBrowser = typeof window !== "undefined";
 const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 ${idSetters.join('\n')}
-
 export function render(...props){
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
     .then((harmony) => {
