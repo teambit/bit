@@ -43,13 +43,9 @@
   &.currentVersion {
     background: var(--bit-accent-bg, #eceaff);
   }
-  .version {
-    margin-right: 16px;
-    max-width: 60%;
-  }
   .label {
     background-color: white;
-    margin-right: 8px;
+    padding: 0px 8px;
   }
 }
 
@@ -110,5 +106,17 @@
 
   .versionTimestamp {
     margin-right: 2px;
+  }
+  .versionUserAvatar {
+    padding: 0px 8px;
+  }
+  .version {
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+  }
+  .versionName {
+    padding: 0px 8px;
   }
 }

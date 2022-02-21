@@ -6,6 +6,8 @@ import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { UserAvatar, AccountObj } from '@teambit/design.ui.avatar';
+
 import classNames from 'classnames';
 import React, { useState, useMemo } from 'react';
 
@@ -88,7 +90,7 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
     <div {...rest}>
       <div className={styles.top}>
         <div className={styles.title}>
-          <span>Switch to tag, lane or snap</span>
+          <span>Switch to tag or snap</span>
         </div>
       </div>
       <div className={styles.tabs}>
@@ -101,9 +103,9 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
         })}
       </div>
       <div className={styles.versionContainer}>
-        {activeVersions?.payload.map((versionObj, index) => (
+        {activeVersions?.payload.map((versionObj) => (
           <VersionInfo
-            key={index}
+            key={versionObj.hash}
             currentVersion={currentVersion}
             latestVersion={latestVersion}
             {...versionObj}
@@ -119,14 +121,15 @@ type VersionInfoProps = VersionDropdownVersion & {
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-function VersionInfo({ version, currentVersion, latestVersion, date, ...rest }: VersionInfoProps) {
+function VersionInfo({ version, currentVersion, latestVersion, date, username, email, ...rest }: VersionInfoProps) {
   const isCurrent = version === currentVersion;
-  // const author = useMemo(() => {
-  //   return {
-  //     displayName: username,
-  //     email,
-  //   };
-  // }, [version]);
+  const author = useMemo(() => {
+    return {
+      displayName: username,
+      email,
+    };
+  }, [version]);
+
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
   return (
     <div {...rest}>
@@ -134,10 +137,12 @@ function VersionInfo({ version, currentVersion, latestVersion, date, ...rest }: 
         href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
         className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
       >
-        <Ellipsis className={styles.version}>{version}</Ellipsis>
-        {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
+        <div className={styles.version}>
+          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} />
+          <Ellipsis className={styles.versionName}>{version}</Ellipsis>
+          {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
+        </div>
         <TimeAgo className={styles.versionTimestamp} date={timestamp} />
-        {/* <Contributors contributors={[author || {}]} timestamp={timestamp} /> */}
       </NavLink>
     </div>
   );
