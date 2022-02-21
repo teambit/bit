@@ -21,7 +21,7 @@ export type SideBarProps = {
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   const drawers = flatten(drawerSlot.values())
-    .filter((drawer) => !drawer?.isHidden || !drawer.isHidden())
+    .filter((drawer) => !drawer?.isHidden?.())
     .sort(sortFn);
 
   const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
