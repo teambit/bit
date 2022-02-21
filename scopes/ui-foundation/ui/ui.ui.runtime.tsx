@@ -99,12 +99,12 @@ export class UiUI {
     return this.renderPluginsSlot.register(plugins);
   }
 
-  // register from react-router aspect after reversing the dependency
   private getLifecyclePlugins() {
-    const lifecycleHooks = this.renderPluginsSlot.toArray();
-    lifecycleHooks.unshift([ReactRouterAspect.id, this.router.renderPlugin]);
+    const lifecyclePlugins = this.renderPluginsSlot.toArray();
+    // react-router should register its plugin, when we can reverse it's dependency to depend on Ui
+    lifecyclePlugins.unshift([ReactRouterAspect.id, this.router.renderPlugin]);
 
-    return lifecycleHooks;
+    return lifecyclePlugins;
   }
 
   private getRoot(rootExtension: string) {
