@@ -72,21 +72,17 @@ function VersionRelatedDropdowns({
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
   const snapResult = useSnaps(component.id);
-
   const currentLane = lanesContext?.currentLane;
-
   const isWorkspace = host === 'teambit.workspace/workspace';
+
   const snaps = useMemo(() => {
     return (snapResult.snaps || []).filter((snap) => !snap.tag);
   }, [snapResult.snaps]);
 
   const tags: LegacyComponentLog[] = useMemo(() => {
     const tagsArray = (snapResult.snaps || []).filter((snap) => snap.tag);
-    const wsLink = [
-      isWorkspace && !isNew && !currentLane
-        ? { lane: 'main', parents: [], tag: 'workspace', hash: 'workspace', message: '' }
-        : undefined,
-    ];
+    const workspaceTag = { lane: 'main', parents: [], tag: 'workspace', hash: 'workspace', message: '' };
+    const wsLink = [isWorkspace && !isNew && !currentLane ? workspaceTag : undefined];
 
     return compact([...wsLink, ...tagsArray]);
   }, [isWorkspace, isNew, currentLane, snapResult.snaps]);
