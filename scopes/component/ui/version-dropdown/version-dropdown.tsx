@@ -13,9 +13,11 @@ import styles from './version-dropdown.module.scss';
 
 const LOCAL_VERSION = 'workspace';
 
-type VersionDropdownProps = {
-  tags: LegacyComponentLog[];
-  snaps: LegacyComponentLog[];
+export type VersionDropdownVersion = Partial<LegacyComponentLog> & { version: string };
+
+export type VersionDropdownProps = {
+  tags: VersionDropdownVersion[];
+  snaps?: VersionDropdownVersion[];
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -23,7 +25,7 @@ type VersionDropdownProps = {
 export function VersionDropdown({ snaps, tags, currentVersion, latestVersion }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
-  if (snaps.concat(tags).length < 2) {
+  if ((snaps || []).concat(tags).length < 2) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
@@ -44,8 +46,7 @@ export function VersionDropdown({ snaps, tags, currentVersion, latestVersion }: 
         <VersionMenu
           key={key}
           tags={tags}
-          snaps={snaps}
-          laneSnaps={[]}
+          snaps={snaps || []}
           currentVersion={currentVersion}
           latestVersion={latestVersion}
         ></VersionMenu>
@@ -63,23 +64,20 @@ function VersionPlaceholder({ currentVersion, className }: { currentVersion?: st
   );
 }
 type VersionMenuProps = {
-  tags: LegacyComponentLog[];
-  snaps: LegacyComponentLog[];
-  laneSnaps: LegacyComponentLog[];
+  tags: VersionDropdownVersion[];
+  snaps: VersionDropdownVersion[];
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-const VERSION_TAB_NAMES: Array<'TAG' | 'LANE' | 'SNAP'> = ['TAG', 'LANE', 'SNAP'];
+const VERSION_TAB_NAMES: Array<'TAG' | 'SNAP'> = ['TAG', 'SNAP'];
 
-function VersionMenu({ tags, snaps, laneSnaps, currentVersion, latestVersion, ...rest }: VersionMenuProps) {
+function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: VersionMenuProps) {
   const [activeTab, setActiveTab] = useState(0);
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
       case 'SNAP':
         return { name, payload: snaps };
-      case 'LANE':
-        return { name, payload: laneSnaps };
       default:
         return { name, payload: tags };
     }
@@ -102,8 +100,7 @@ function VersionMenu({ tags, snaps, laneSnaps, currentVersion, latestVersion, ..
         })}
       </div>
       <div className={styles.versionContainer}>
-        {activeVersions?.payload.map(({ hash, tag }, index) => {
-          const version = tag || hash;
+        {activeVersions?.payload.map(({ version }, index) => {
           const isCurrent = version === currentVersion;
           // const author = useMemo(() => {
           //   return {
