@@ -32,7 +32,7 @@ export class ReactRouterUI {
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[]) {
-    return <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>;
+    return <RootRoute routeSlot={this.routeSlot} rootRoutes={routes} />;
   }
 
   private unregisterListener?: UnregisterCallback = undefined;
@@ -73,17 +73,9 @@ export class ReactRouterUI {
   navigateTo = (
     /** destination */
     path: LocationDescriptor,
-    /**
-     * type of history action to execute (pop / push / replace).
-     * Supports state-object for legacy calls. (this will be removed when supported by symphony)
-     */
-    action?: Action | Record<string, any>
+    /** history action to execute (pop / push / replace) */
+    action?: Action
   ) => {
-    if (typeof action !== 'string') {
-      this.legacyNavigateTo(path as string, action);
-      return;
-    }
-
     switch (action) {
       case 'POP':
         return; // TBD;
@@ -94,17 +86,6 @@ export class ReactRouterUI {
       default:
         this.routerHistory?.push(path);
     }
-  };
-
-  /**
-   * change browser location
-   */
-  private legacyNavigateTo = (
-    /** destination */
-    path: string,
-    state?: Record<string, any>
-  ) => {
-    this.routerHistory?.push(path, state);
   };
 
   private AppRoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {

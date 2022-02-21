@@ -17,7 +17,7 @@ export class NodeEnv implements DependenciesEnv {
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: false,
     };
   }

@@ -12,4 +12,11 @@ export class EnvEnv {
       type: EnvEnvType,
     };
   }
+
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: false,
+    };
+  }
 }

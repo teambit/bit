@@ -60,7 +60,7 @@ export class PreviewPreview {
 
         return includedPreview.selectPreviewModel?.(
           componentId.fullName,
-          await this.getPreviewModule(prevName, componentId)
+          await this.getPreviewModule(prevName, componentId, name)
         );
       })
     );
@@ -75,12 +75,16 @@ export class PreviewPreview {
     );
   };
 
-  async getPreviewModule(name: string, id: ComponentID): Promise<PreviewModule> {
+  async getPreviewModule(name: string, id: ComponentID, parentPreviewName?: string): Promise<PreviewModule> {
     if (PREVIEW_MODULES[name].componentMap[id.fullName]) return PREVIEW_MODULES[name];
-    // if (!window[name]) throw new PreviewNotFound(name);
-    // const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
-    // const component = window[id.toStringWithoutVersion()];
-    const component: any = await this.fetchComponentPreview(id, name);
+    let component;
+    // Handle case when there is overview but no composition on the workspace dev server
+    if (!parentPreviewName || !PREVIEW_MODULES[parentPreviewName].componentMap[id.fullName]) {
+      // if (!window[name]) throw new PreviewNotFound(name);
+      // const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
+      // const component = window[id.toStringWithoutVersion()];
+      component = await this.fetchComponentPreview(id, name);
+    }
 
     return {
       mainModule: PREVIEW_MODULES[name].mainModule,

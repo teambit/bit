@@ -150,6 +150,8 @@ export class UIServer {
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));
     const proxyEntries = await this.getProxyFromPlugins();
+
+    // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
       if (!entry) return;
