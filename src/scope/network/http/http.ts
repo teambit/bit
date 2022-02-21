@@ -502,7 +502,10 @@ export class Http implements Network {
           getLanes {
             name
             components {
-              id
+              id {
+                name
+                scope
+              }
               head
             }
             isMerged
