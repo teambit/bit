@@ -6,7 +6,7 @@ import { VersionLabel } from '@teambit/component.ui.version-label';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { UserAvatar, AccountObj } from '@teambit/design.ui.avatar';
+import { UserAvatar } from '@teambit/design.ui.avatar';
 
 import classNames from 'classnames';
 import React, { useState, useMemo } from 'react';
@@ -15,11 +15,11 @@ import styles from './version-dropdown.module.scss';
 
 const LOCAL_VERSION = 'workspace';
 
-export type VersionDropdownVersion = Partial<LegacyComponentLog> & { version: string };
+export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
 
 export type VersionDropdownProps = {
-  tags: VersionDropdownVersion[];
-  snaps?: VersionDropdownVersion[];
+  tags: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -67,8 +67,8 @@ function VersionPlaceholder({ currentVersion, className }: { currentVersion?: st
   );
 }
 type VersionMenuProps = {
-  tags: VersionDropdownVersion[];
-  snaps: VersionDropdownVersion[];
+  tags: DropdownComponentVersion[];
+  snaps: DropdownComponentVersion[];
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -76,7 +76,8 @@ type VersionMenuProps = {
 const VERSION_TAB_NAMES: Array<'TAG' | 'SNAP'> = ['TAG', 'SNAP'];
 
 function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: VersionMenuProps) {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTabIndex, setActiveTab] = useState(0);
+
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
       case 'SNAP':
@@ -85,7 +86,9 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
         return { name, payload: tags };
     }
   }).filter((tab) => tab.payload.length > 0);
-  const activeVersions = useMemo(() => tabs.find((_, index) => index === activeTab), [activeTab, tabs]);
+
+  const activeTab = useMemo(() => tabs.find((_, index) => index === activeTabIndex), [activeTabIndex, tabs]);
+
   return (
     <div {...rest}>
       <div className={styles.top}>
@@ -96,14 +99,19 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
       <div className={styles.tabs}>
         {tabs.map(({ name }, index) => {
           return (
-            <Tab className={styles.tab} key={index} isActive={activeTab === index} onClick={() => setActiveTab(index)}>
+            <Tab
+              className={styles.tab}
+              key={index}
+              isActive={activeTabIndex === index}
+              onClick={() => setActiveTab(index)}
+            >
               {name}
             </Tab>
           );
         })}
       </div>
       <div className={styles.versionContainer}>
-        {activeVersions?.payload.map((versionObj) => (
+        {activeTab?.payload.map((versionObj) => (
           <VersionInfo
             key={versionObj.hash}
             currentVersion={currentVersion}
@@ -116,7 +124,7 @@ function VersionMenu({ tags, snaps, currentVersion, latestVersion, ...rest }: Ve
   );
 }
 
-type VersionInfoProps = VersionDropdownVersion & {
+type VersionInfoProps = DropdownComponentVersion & {
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -131,6 +139,7 @@ function VersionInfo({ version, currentVersion, latestVersion, date, username, e
   }, [version]);
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+
   return (
     <div {...rest}>
       <NavLink
