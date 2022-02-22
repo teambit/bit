@@ -58,19 +58,13 @@ chai.use(require('chai-string'));
       expect(env2).to.equal(`${envId2}@0.0.1`);
     });
     it('all packages are correctly installed inside capsules', () => {
-      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir);
-      const nodeEnv1CapsuleDir = path.join(
-        scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-1'))!
-      );
-      const nodeEnv2CapsuleDir = path.join(
-        scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-2'))!
-      );
-      expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path();
-      expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path();
-    });
+      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed()
+      const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir)
+      const nodeEnv1CapsuleDir = path.join(scopeAspectsCapsulesRootDir, capsuleDirs.find((dir) => dir.includes('node-env-1'))!)
+      const nodeEnv2CapsuleDir = path.join(scopeAspectsCapsulesRootDir, capsuleDirs.find((dir) => dir.includes('node-env-2'))!)
+      expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path()
+      expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path()
+    })
   });
   describe('using Yarn', () => {
     before(() => {
@@ -93,10 +87,10 @@ chai.use(require('chai-string'));
       expect(env2).to.equal(`${envId2}@0.0.1`);
     });
     it('all packages are correctly installed inside capsules', () => {
-      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.get')).to.be.a.path();
-      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.flatten')).to.be.a.path();
-    });
+      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed()
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.get')).to.be.a.path()
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.flatten')).to.be.a.path()
+    })
   });
   after(() => {
     npmCiRegistry.destroy();
