@@ -79,14 +79,11 @@ function VersionRelatedDropdowns({
   }, [snapResult.snaps]);
 
   const tags = useMemo(() => {
-    const tagsArray = (snapResult.snaps || []).filter((snap) => snap.tag);
-    const workspaceTag = { lane: 'main', parents: [], tag: 'workspace', hash: 'workspace', message: '' };
-    const wsLink = [isWorkspace && !isNew && !currentLane ? workspaceTag : undefined];
-
-    return compact([...wsLink, ...tagsArray]).map((tag) => ({ ...tag, version: tag.tag as string }));
-  }, [isWorkspace, isNew, currentLane, snapResult.snaps]);
+    return (snapResult.snaps || []).filter((snap) => snap.tag).map((tag) => ({ ...tag, version: tag.tag as string }));
+  }, [snapResult.snaps]);
 
   const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
+  const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
@@ -105,6 +102,7 @@ function VersionRelatedDropdowns({
         tags={tags}
         snaps={snaps}
         lanes={lanes}
+        localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}
       />

@@ -22,11 +22,19 @@ export type VersionDropdownProps = {
   tags: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
   lanes?: LaneModel[];
+  localVersion?: boolean;
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function VersionDropdown({ snaps, tags, lanes, currentVersion, latestVersion }: VersionDropdownProps) {
+export function VersionDropdown({
+  snaps,
+  tags,
+  lanes,
+  currentVersion,
+  latestVersion,
+  localVersion,
+}: VersionDropdownProps) {
   const [key, setKey] = useState(0);
   const noMultipeVersions = (snaps || []).concat(tags).length < 2;
 
@@ -55,6 +63,7 @@ export function VersionDropdown({ snaps, tags, lanes, currentVersion, latestVers
           lanes={lanes || []}
           currentVersion={currentVersion}
           latestVersion={latestVersion}
+          localVersion={localVersion}
         ></VersionMenu>
       </Dropdown>
     </div>
@@ -73,13 +82,14 @@ type VersionMenuProps = {
   tags: DropdownComponentVersion[];
   snaps: DropdownComponentVersion[];
   lanes: LaneModel[];
+  localVersion?: boolean;
   currentVersion?: string;
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 const VERSION_TAB_NAMES: Array<'TAG' | 'SNAP' | 'LANE'> = ['TAG', 'SNAP', 'LANE'];
 
-function VersionMenu({ tags, snaps, lanes, currentVersion, latestVersion, ...rest }: VersionMenuProps) {
+function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestVersion, ...rest }: VersionMenuProps) {
   const [activeTabIndex, setActiveTab] = useState(0);
 
   const tabs = VERSION_TAB_NAMES.map((name) => {
@@ -101,6 +111,21 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, latestVersion, ...res
         <div className={styles.title}>
           <span>Switch to tag or snap</span>
         </div>
+        {localVersion && (
+          <NavLink
+            href={'?'}
+            className={classNames(
+              styles.versionLine,
+              styles.versionRow,
+              currentVersion === 'workspace' && styles.currentVersion
+            )}
+          >
+            <div className={styles.version}>
+              <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
+              <span className={styles.versionName}>workspace</span>
+            </div>
+          </NavLink>
+        )}
       </div>
       <div className={styles.tabs}>
         {tabs.map(({ name }, index) => {
