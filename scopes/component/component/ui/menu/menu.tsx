@@ -86,6 +86,8 @@ function VersionRelatedDropdowns({
     return compact([...wsLink, ...tagsArray]).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [isWorkspace, isNew, currentLane, snapResult.snaps]);
 
+  const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
+
   const currentVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
 
@@ -99,7 +101,13 @@ function VersionRelatedDropdowns({
           Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
-      <VersionDropdown tags={tags} snaps={snaps} currentVersion={currentVersion} latestVersion={component.latest} />
+      <VersionDropdown
+        tags={tags}
+        snaps={snaps}
+        lanes={lanes}
+        currentVersion={currentVersion}
+        latestVersion={component.latest}
+      />
     </>
   );
 }
