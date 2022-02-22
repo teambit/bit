@@ -44,7 +44,7 @@ import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-sc
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { Compiler } from '@teambit/compiler';
-import { compact, uniq, slice, uniqBy, difference, sortBy, groupBy } from 'lodash';
+import { compact, uniq, slice, uniqBy, difference, groupBy } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
