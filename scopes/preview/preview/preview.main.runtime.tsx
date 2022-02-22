@@ -142,7 +142,7 @@ export class PreviewMain {
       PreviewAspect.id,
       PREVIEW_TASK_NAME
     );
-    if (!artifacts || !artifacts.length) return undefined;
+    if (!artifacts) return undefined;
     return new PreviewArtifact(artifacts);
   }
 
