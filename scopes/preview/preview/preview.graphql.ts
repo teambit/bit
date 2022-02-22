@@ -19,14 +19,14 @@ export function previewSchema(previewExtension: PreviewMain) {
       Component: {
         preview: (component: Component) => {
           // return previewExtension.getPreview(component);
-          return {component};
+          return { component };
         },
       },
       Preview: {
-        includesEnvTemplate: ({component}) => {
+        includesEnvTemplate: ({ component }) => {
           return previewExtension.isBundledWithEnv(component);
-        }
-      }
+        },
+      },
     },
   };
 }

@@ -35,10 +35,12 @@ export function applyUpdates(
         break;
       case 'variants':
         if (outdatedPkg.variantPattern) {
-          const { variantPattern, targetField, name } = outdatedPkg
+          const { variantPattern, targetField, name } = outdatedPkg;
           updatedVariants.add(outdatedPkg.variantPattern);
-          if (variantPoliciesByPatterns[variantPattern]?.[targetField]?.[name]?.['version']) { // eslint-disable-line
-            variantPoliciesByPatterns[variantPattern][targetField]![name]['version'] = outdatedPkg.latestRange // eslint-disable-line
+          // eslint-disable-next-line dot-notation
+          if (variantPoliciesByPatterns[variantPattern]?.[targetField]?.[name]?.['version']) {
+            // eslint-disable-line
+            variantPoliciesByPatterns[variantPattern][targetField]![name]['version'] = outdatedPkg.latestRange; // eslint-disable-line
           } else {
             variantPoliciesByPatterns[variantPattern][targetField]![name] = outdatedPkg.latestRange; // eslint-disable-line
           }

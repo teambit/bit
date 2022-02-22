@@ -20,7 +20,7 @@ const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
 };
 
-type InstallArgs = {
+export type InstallArgs = {
   rootDir: string | undefined;
   rootPolicy: WorkspacePolicy;
   componentDirectoryMap: ComponentMap<string>;
