@@ -46,18 +46,14 @@ export function ComponentOverview({
       <div className={textColumn}>
         <div className={styles.componentTitle}>
           <H1>{displayName}</H1>
-          {titleBadges
-            // @ts-ignore
-            ?.sort((a, b) => a?.weight - b?.weight)
-            ?.map((titleBadge, index) => {
-              return (
-                <titleBadge.component
-                  className={styles.titleBadge}
-                  key={index}
-                  componentDescriptor={componentDescriptor}
-                />
-              );
-            })}
+          <div className={styles.badgeContainer}>
+            {titleBadges
+              // @ts-ignore
+              ?.sort((a, b) => a?.weight - b?.weight)
+              ?.map((titleBadge, index) => {
+                return <titleBadge.component key={index} componentDescriptor={componentDescriptor} />;
+              })}
+          </div>
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
