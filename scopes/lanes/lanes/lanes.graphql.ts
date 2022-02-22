@@ -62,7 +62,10 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
-            components: lane.components,
+            components: lane.components.map((component) => ({
+              ...component,
+              id: { ...component.id, version: component.head },
+            })),
             isMerged: Boolean(lane.isMerged),
             remote: lane.remote,
           }));
