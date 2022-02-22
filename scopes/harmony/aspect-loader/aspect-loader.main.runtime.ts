@@ -1,18 +1,19 @@
 import { join } from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
+import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { ComponentID, Component } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection } from 'lodash';
+import { difference, compact, flatten, intersection, cloneDeep } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -130,15 +131,24 @@ export class AspectLoaderMain {
 
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
+    try {
+      const compiler = this.getCompiler(component);
 
-    const compiler = this.getCompiler(component);
+      if (!compiler) {
+        return join(modulePath, runtimeFile.relative);
+      }
 
-    if (!compiler) {
-      return join(modulePath, runtimeFile.relative);
+      const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
+      return join(modulePath, dist);
+    } catch (e) {
+      this.logger.info(`got an error during get runtime path, probably the env is not loaded yet ${e}`);
+      // TODO: we are manually adding the dist here and replace the file name to handle case when
+      // we load aspects from scope, and their env in the same iteration, but we get into the aspect before its
+      // env, so it's env doesn't exist yet
+      // we should make sure to first load the env correctly before loading the aspect
+      const distPath = join(modulePath, DEFAULT_DIST_DIRNAME, replaceFileExtToJs(runtimeFile.relative));
+      return distPath;
     }
-
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
-    return join(modulePath, dist);
   }
 
   isAspectLoaded(id: string) {
@@ -268,7 +278,8 @@ export class AspectLoaderMain {
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
-    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+    // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloneDeep(manifest));
     return newManifest;
   }
 

@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { get, pick } from 'lodash';
+import { cloneDeep, get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -991,6 +991,9 @@ export class DependencyResolverMain {
       });
     };
     if (manifest.dependencies) {
+      // TODO: add a way to access it properly with harmony (currently it's readonly)
+      // @ts-ignore
+      manifest.dependencies = cloneDeep(manifest.dependencies);
       await updateDirectDepsVersions(manifest.dependencies);
     }
     // TODO: add a function to get all runtimes and not access private member
@@ -999,10 +1002,14 @@ export class DependencyResolverMain {
       // @ts-ignore
       await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
+          // TODO: add a way to access it properly with harmony (currently it's readonly)
+          // @ts-ignore
+          runtime.dependencies = cloneDeep(runtime.dependencies);
           await updateDirectDepsVersions(runtime.dependencies);
         }
       });
     }
+
     return manifest;
   }
 

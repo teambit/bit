@@ -1312,12 +1312,9 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       })
     );
 
-    const manifestsIds = workspaceManifests.map((m) => m.id);
-
-    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
-
-    const allManifests = [...scopeManifests, ...workspaceManifests];
-    await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
+    const workspaceManifestsIds = compact(workspaceManifests.map((m) => m.id));
+    const scopeManifestsIds = await this.scope.loadAspects(scopeIds, throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(workspaceManifests, throwOnError);
 
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
@@ -1331,7 +1328,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
-    return compact(allManifests.map((manifest) => manifest.id));
+    return compact(scopeManifestsIds.concat(workspaceManifestsIds));
   }
 
   /**
