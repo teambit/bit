@@ -64,6 +64,10 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
             name: lane.name,
             components: lane.components.map((component) => ({
               ...component,
+              /**
+               * make sure the BitId has the version mapped,
+               * otherwise graphql will cache the lane component response across different lanes with the same component id
+               */
               id: { ...component.id, version: component.head },
             })),
             isMerged: Boolean(lane.isMerged),
