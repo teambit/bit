@@ -15,7 +15,7 @@ export class SizerUIRuntime {
 
   static async provider([docs]: [DocsUI]) {
     docs.registerTitleBadge({
-      component: ({ componentDescriptor }: { componentDescriptor: ComponentDescriptor }) => {
+      component: function badge({ componentDescriptor }: { componentDescriptor: ComponentDescriptor }) {
         return <ComponentSize componentDescriptor={componentDescriptor} />;
       },
       weight: 30,
