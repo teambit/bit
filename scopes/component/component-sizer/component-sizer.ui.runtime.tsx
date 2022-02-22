@@ -9,7 +9,6 @@ import { ComponentSizerAspect } from './component-sizer.aspect';
  * Component size aspect.
  */
 export class SizerUIRuntime {
-  // constructor() {}
   static dependencies = [DocsAspect];
 
   static runtime = UIRuntime;
