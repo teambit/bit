@@ -689,6 +689,10 @@ export class Workspace implements ComponentFactory {
     return ExtensionDataList.fromConfigObject(this.config.extensions);
   }
 
+  async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
+    return Promise.all(ids.map((id) => this.ejectConfig(id, options)));
+  }
+
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
