@@ -14,6 +14,7 @@ const GET_LANES = gql`
           id {
             name
             scope
+            version
           }
           head
         }
