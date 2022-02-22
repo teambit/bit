@@ -1,5 +1,7 @@
 import React from 'react';
 import fileSize from 'pretty-bytes';
+import type { ComponentPreviewSize } from '@teambit/preview';
+import { BuilderData } from '@teambit/builder-data';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -8,13 +10,12 @@ import styles from './component-size.module.scss';
 export type ComponentSizeProps = { componentDescriptor: ComponentDescriptor } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentSize({ componentDescriptor, ...rest }: ComponentSizeProps) {
-  // TODO - fix type
-  const builderData: any = componentDescriptor.get('teambit.pipelines/builder');
-  // const builder = BuilderData.fromJson(a);
-  // TODO - find a better way to extract data and which type to use
-  const size = builderData?.aspectsData?.find(({ aspectId }) => aspectId === 'teambit.preview/preview')?.data?.size
-    ?.compressedTotal;
-  if (!size) return null;
+  const builderData = componentDescriptor.get<BuilderData>('teambit.pipelines/builder');
+  const builder = builderData && BuilderData.fromJson(builderData);
+  const size: ComponentPreviewSize = builder?.getDataByAspect('teambit.preview/preview')?.size;
+  const compressedSize = size?.compressedTotal;
+
+  if (!compressedSize) return null;
   return (
     <Tooltip
       className={styles.componentSizeTooltip}
@@ -28,7 +29,7 @@ export function ComponentSize({ componentDescriptor, ...rest }: ComponentSizePro
       <div {...rest}>
         <PillLabel>
           <img style={{ width: '16px', marginRight: '4px' }} src="https://static.bit.dev/bit-icons/weight.svg" />
-          {fileSize(size)}
+          {fileSize(compressedSize)}
         </PillLabel>
       </div>
     </Tooltip>
