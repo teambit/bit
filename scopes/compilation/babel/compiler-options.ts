@@ -12,4 +12,11 @@ export type BabelCompilerOptions = {
    * ```
    */
   babelTransformOptions?: TransformOptions;
+
+  /**
+   * Determines which files should be compiled by the Babel compiler.
+   * It only works with the file types supported by Babel (.ts, .tsx, .js, .jsx, .d.ts).
+   * See https://github.com/mrmlnc/fast-glob for the supported glob patters syntax.
+   */
+  supportedFilesGlobPatterns?: string[];
 } & Partial<CompilerOptions>;

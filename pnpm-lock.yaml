@@ -442,6 +442,7 @@ importers:
       parse-gitignore: 1.0.1
       parse-package-name: 0.1.0
       path-browserify: 1.0.1
+      path-to-regexp: 6.2.0
       penpal: 5.3.0
       pino: 6.11.1
       pino-pretty: 4.5.0
@@ -999,6 +1000,7 @@ importers:
       parse-gitignore: registry.npmjs.org/parse-gitignore/1.0.1
       parse-package-name: registry.npmjs.org/parse-package-name/0.1.0
       path-browserify: registry.npmjs.org/path-browserify/1.0.1
+      path-to-regexp: registry.npmjs.org/path-to-regexp/6.2.0
       penpal: registry.npmjs.org/penpal/5.3.0
       pino: registry.npmjs.org/pino/6.11.1
       pino-pretty: registry.npmjs.org/pino-pretty/4.5.0
@@ -1585,6 +1587,9 @@ importers:
     specifiers: {}
 
   scopes/lanes/lanes:
+    specifiers: {}
+
+  scopes/lanes/ui:
     specifiers: {}
 
   scopes/mdx/aspect-docs/mdx:
@@ -29267,6 +29272,12 @@ packages:
     version: 1.8.0
     dependencies:
       isarray: registry.npmjs.org/isarray/0.0.1
+    dev: false
+
+  registry.npmjs.org/path-to-regexp/6.2.0:
+    resolution: {integrity: sha512-f66KywYG6+43afgE/8j/GoiNyygk/bnoCbps++3ErRKsIYkGGupyv07R2Ok5m9i67Iqc+T2g1eAUGUPzWhYTyg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.2.0.tgz}
+    name: path-to-regexp
+    version: 6.2.0
     dev: false
 
   registry.npmjs.org/path-type/2.0.0:

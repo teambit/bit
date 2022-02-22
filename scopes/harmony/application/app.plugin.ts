@@ -5,7 +5,7 @@ import { ApplicationSlot } from './application.main.runtime';
 export class AppPlugin implements PluginDefinition {
   constructor(private appSlot: ApplicationSlot) {}
 
-  pattern = '*.app.*';
+  pattern = '*.app.*?(ts|tsx|js|jsx)$';
 
   runtimes = [MainRuntime.name];
 
