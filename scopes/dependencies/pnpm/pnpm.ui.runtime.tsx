@@ -15,7 +15,9 @@ export class PnpmUI {
     return pnpm;
   }
 
-  private consumeMethod: ConsumePlugin = (comp) => {
+  private consumeMethod: ConsumePlugin = (comp, options) => {
+    if (options?.currentLane) return undefined;
+
     const registry = comp.packageName.split('/')[0];
     const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {

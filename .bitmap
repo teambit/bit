@@ -1269,6 +1269,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
     },
+    "ui/lanes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui"
+    },
     "ui/load-preview": {
         "scope": "teambit.workspace",
         "version": "0.0.488",

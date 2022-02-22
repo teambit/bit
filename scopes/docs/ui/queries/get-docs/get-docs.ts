@@ -17,7 +17,7 @@ export const docsFields = gql`
 `;
 
 const getProperties = gql`
-  query($id: String!) {
+  query ($id: String!) {
     getHost {
       id # used for GQL caching
       getDocs(id: $id) {
@@ -53,10 +53,8 @@ export type DefaultValue = {
 };
 
 export function useDocs(componentId: ComponentID) {
-  const id = componentId._legacy.name;
-
   const { data } = useQuery<PropertiesResult>(getProperties, {
-    variables: { id },
+    variables: { id: componentId.toString() },
   });
 
   const properties = data?.getHost?.getDocs?.properties;
