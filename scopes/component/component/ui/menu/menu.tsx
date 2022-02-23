@@ -8,6 +8,7 @@ import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
+import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
@@ -67,23 +68,27 @@ function VersionRelatedDropdowns({
 }) {
   const location = useLocation();
   const isNew = component.tags.isEmpty();
+  const lanesContext = useLanesContext();
+  const currentLane = lanesContext?.currentLane;
 
   const isWorkspace = host === 'teambit.workspace/workspace';
   const versionList = useMemo(() => {
-    const tagsArray = component.tags
-      ?.toArray()
-      .map((tag) => tag?.version?.version)
-      .filter((x) => x !== undefined)
-      .reverse();
-    const wsLink = [isWorkspace && !isNew ? 'workspace' : undefined];
+    const tagsArray = !currentLane
+      ? component.tags
+          ?.toArray()
+          .map((tag) => tag?.version?.version)
+          .filter((x) => x !== undefined)
+          .reverse()
+      : [component.id.version];
+    const wsLink = [isWorkspace && !isNew && !currentLane ? 'workspace' : undefined];
 
     return compact([...wsLink, ...tagsArray]);
-  }, [component.tags, isWorkspace, isNew]);
+  }, [component.tags, isWorkspace, isNew, currentLane]);
 
   const currentVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
 
-  const methods = useConsumeMethods(consumeMethods, component);
+  const methods = useConsumeMethods(consumeMethods, component, currentLane);
   return (
     <>
       {versionList.length > 0 && (
@@ -98,14 +103,18 @@ function VersionRelatedDropdowns({
   );
 }
 
-function useConsumeMethods(consumeMethods: ConsumeMethodSlot, componentModel: ComponentModel): ConsumeMethod[] {
+function useConsumeMethods(
+  consumeMethods: ConsumeMethodSlot,
+  componentModel: ComponentModel,
+  currentLane?: LaneModel
+): ConsumeMethod[] {
   return useMemo(
     () =>
       flatten(consumeMethods.values())
         .map((method) => {
-          return method?.(componentModel);
+          return method?.(componentModel, { currentLane });
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
-    [consumeMethods, componentModel]
+    [consumeMethods, componentModel, currentLane]
   );
 }

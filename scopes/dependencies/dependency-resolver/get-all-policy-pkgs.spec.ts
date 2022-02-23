@@ -1,4 +1,4 @@
-import { getAllPolicyPkgs } from './get-all-policy-pkgs'
+import { getAllPolicyPkgs } from './get-all-policy-pkgs';
 import { WorkspacePolicy } from './policy';
 
 describe('getAllPolicyPkgs()', () => {
@@ -28,6 +28,6 @@ describe('getAllPolicyPkgs()', () => {
         targetField: 'dependencies',
         variantPattern: 'comp',
       },
-    ])
+    ]);
   });
 });

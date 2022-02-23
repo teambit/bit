@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from 'react';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
@@ -18,6 +19,10 @@ const componentFields = gql`
   fragment componentFields on Component {
     id {
       ...componentIdFields
+    }
+    aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder"]) {
+      id
+      data
     }
     packageName
     elementsUrl
@@ -41,6 +46,7 @@ const componentFields = gql`
       id
       icon
     }
+
     preview {
       includesEnvTemplate
     }
@@ -186,9 +192,13 @@ export function useComponentQuery(componentId: string, host: string) {
   }, []);
 
   const rawComponent = data?.getHost?.get;
-
   return useMemo(() => {
+    const aspectList = {
+      entries: rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data })),
+    };
+    const id = rawComponent && ComponentID.fromObject(rawComponent.id);
     return {
+      componentDescriptor: id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error

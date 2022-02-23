@@ -10,7 +10,7 @@ export type PreviewModule<T = any> = {
     default: (...args: any[]) => void;
   };
 
-  isSplitComponentBundle?: boolean
+  isSplitComponentBundle?: boolean;
 };
 
 /** single preview module, e.g. compositions file */

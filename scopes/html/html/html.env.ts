@@ -21,7 +21,7 @@ export class HtmlEnv implements Environment {
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: true,
     };
   }

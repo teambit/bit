@@ -15,10 +15,10 @@ export class NodeEnv implements DependenciesEnv {
     };
   }
 
-  getPreviewConfig(){
+  getPreviewConfig() {
     return {
-      // strategyName: 'component',
-      splitComponentBundle: false
-    }
+      strategyName: 'component',
+      splitComponentBundle: false,
+    };
   }
 }

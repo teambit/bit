@@ -5,6 +5,7 @@ import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useMemo } from 'react';
+import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './version-block.module.scss';
 
@@ -19,6 +20,8 @@ export type VersionBlockProps = {
  */
 export function VersionBlock({ isLatest, className, snap, componentId, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
+  const lanes = useLanesContext();
+  const currentLaneUrl = lanes?.currentLane ? `${lanes?.currentLane?.url}${LanesModel.baseLaneComponentRoute}` : '';
   const version = tag || hash;
   const author = useMemo(() => {
     return {
@@ -27,6 +30,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
     };
   }, [snap]);
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+
   return (
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
@@ -40,7 +44,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <NavLink className={styles.titleLink} href={`/${componentId}?version=${version}`}>
+        <NavLink className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
           <H3 size="xs" className={styles.versionTitle}>
             {tag ? `v${tag}` : hash}
           </H3>
