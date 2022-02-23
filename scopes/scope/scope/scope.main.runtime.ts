@@ -44,7 +44,7 @@ import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-sc
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { Compiler } from '@teambit/compiler';
-import { compact, uniq, slice, uniqBy, difference } from 'lodash';
+import { compact, uniq, slice, uniqBy, difference, groupBy } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -364,6 +364,31 @@ export class ScopeMain implements ComponentFactory {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor?.toString() || '<unknown>'}`);
+    const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    return envsManifestsIds.concat(otherManifestsIds);
+  }
+
+  /**
+   * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
+   * @param ids
+   */
+  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs: string[]; other: string[] }> {
+    const components = await this.getNonLoadedAspects(ids);
+    const envsIds = uniq(
+      components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId))
+    );
+    const grouped = groupBy(ids, (id) => {
+      if (envsIds.includes(id)) return 'envs';
+      return 'other';
+    });
+    return grouped as { envs: string[]; other: string[] };
+  }
+
+  private async getManifestsAndLoadAspects(ids: string[], throwOnError = false): Promise<string[]> {
     const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     return compact(scopeManifests.map((manifest) => manifest.id));
@@ -430,7 +455,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   async getResolvedAspects(components: Component[], { skipIfExists = true } = {}): Promise<RequireableComponent[]> {
-    if (!components.length) return [];
+    if (!components || !components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
