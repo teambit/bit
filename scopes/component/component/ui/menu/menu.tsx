@@ -1,6 +1,6 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { compact, flatten, groupBy } from 'lodash';
