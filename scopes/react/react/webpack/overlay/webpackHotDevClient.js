@@ -1,4 +1,12 @@
 /* eslint-disable */
+/*
+ * this file was copied as is from `react-dev-utils/webpackHotDevClient`
+ * and adjusted for our socket url.
+ *
+ * we use just set process.env.WDS_* with the EnvironmentPlugin or DefinePlugin
+ * once we get react-error-overlay up and running again
+ */
+
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
  *
@@ -57,14 +65,16 @@ if (module.hot && typeof module.hot.dispose === 'function') {
   });
 }
 
+const querystring = module.id.substring(module.id.indexOf('?'));
+const urlParams = new URLSearchParams(querystring);
+
 // Connect to WebpackDevServer via a socket.
 var connection = new WebSocket(
   url.format({
     protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-    hostname: process.env.WDS_SOCKET_HOST || window.location.hostname,
-    port: process.env.WDS_SOCKET_PORT || window.location.port,
-    // Hardcoded in WebpackDevServer
-    pathname: process.env.WDS_SOCKET_PATH || '/ws',
+    hostname: window.location.hostname,
+    port: window.location.port,
+    pathname: urlParams.get('sockPath') || '/ws',
     slashes: true,
   })
 );
