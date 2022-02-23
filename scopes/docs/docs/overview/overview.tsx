@@ -47,7 +47,6 @@ export function Overview({ titleBadges }: OverviewProps) {
     return (
       <div className={styles.overviewWrapper}>
         {laneId && <LaneOverview laneId={laneId} />}
-        <Separator isPresentational />
         <ComponentOverview
           className={styles.componentOverviewBlock}
           displayName={component.displayName}
@@ -72,7 +71,6 @@ export function Overview({ titleBadges }: OverviewProps) {
   return laneId ? (
     <div className={styles.overviewWrapper}>
       <LaneOverview laneId={laneId} />
-      <Separator isPresentational />
       <ComponentPreview
         component={component}
         style={{ width: '100%', height: '100%' }}
@@ -93,9 +91,12 @@ export function Overview({ titleBadges }: OverviewProps) {
 
 function LaneOverview({ laneId }: { laneId: string }): JSX.Element {
   return (
-    <div className={styles.lane}>
-      <Icon of="lane"></Icon>
-      <Ellipsis className={styles.laneName}>{laneId}</Ellipsis>
-    </div>
+    <>
+      <div className={styles.lane}>
+        <Icon of="lane"></Icon>
+        <Ellipsis className={styles.laneName}>{laneId}</Ellipsis>
+      </div>
+      <Separator isPresentational />
+    </>
   );
 }
