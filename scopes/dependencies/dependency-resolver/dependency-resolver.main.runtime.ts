@@ -993,7 +993,7 @@ export class DependencyResolverMain {
     if (manifest.dependencies) {
       // TODO: add a way to access it properly with harmony (currently it's readonly)
       // @ts-ignore
-      manifest.dependencies = cloneDeep(manifest.dependencies);
+      manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
     // TODO: add a function to get all runtimes and not access private member
@@ -1004,7 +1004,7 @@ export class DependencyResolverMain {
         if (runtime.dependencies) {
           // TODO: add a way to access it properly with harmony (currently it's readonly)
           // @ts-ignore
-          runtime.dependencies = cloneDeep(runtime.dependencies);
+          runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
         }
       });

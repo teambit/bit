@@ -270,6 +270,14 @@ export class AspectLoaderMain {
     this.failedLoadAspect.push(id);
   }
 
+  cloneManifest(manifest: any) {
+    const cloned = Object.assign(Object.create(Object.getPrototypeOf(manifest)), manifest);
+    cloned.provider = manifest.provider;
+    cloned.addRuntime = manifest.addRuntime;
+    cloned.getRuntime = manifest.getRuntime;
+    return cloned;
+  }
+
   /**
    * run "require" of the component code to get the manifest
    */
@@ -279,7 +287,8 @@ export class AspectLoaderMain {
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
     // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
-    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloneDeep(manifest));
+    const cloned = this.cloneManifest(manifest);
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
     return newManifest;
   }
 
