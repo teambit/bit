@@ -987,6 +987,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/component-preview"
     },
+    "ui/component-size": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-size"
+    },
     "ui/component-status": {
         "scope": "teambit.component",
         "version": "0.0.488",

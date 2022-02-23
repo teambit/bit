@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import flatten from 'lodash.flatten';
-import { ComponentContext } from '@teambit/component';
+import { ComponentContext, ComponentDescriptorContext } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
@@ -20,6 +20,7 @@ export type OverviewProps = {
 
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
+  const componentDescriptor = useContext(ComponentDescriptorContext);
   const lanesModel = useLanesContext();
   const laneId = lanesModel?.currentLane?.id;
   const { data } = useFetchDocs(component.id.toString());
@@ -55,6 +56,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           labels={labels || []}
           packageName={component.packageName}
           titleBadges={badges}
+          componentDescriptor={componentDescriptor}
         />
         <ComponentPreview
           component={component}

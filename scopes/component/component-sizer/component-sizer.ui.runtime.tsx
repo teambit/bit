@@ -1,20 +1,25 @@
-import { ComponentAspect } from '@teambit/component';
+import React from 'react';
 import { UIRuntime } from '@teambit/ui';
-import { DocsAspect } from '@teambit/docs';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import { DocsAspect, DocsUI } from '@teambit/docs';
+import { ComponentSize } from '@teambit/component.ui.component-size';
 import { ComponentSizerAspect } from './component-sizer.aspect';
 
 /**
- * Component code tab aspect. Presents the code tab page and allows to control the code tab and register specific icons for each file type.
- *  @example CodeUI.registerEnvFileIcon([(fileName) => (/your-regexp/.test(fileName) ? 'your.icon.url' : undefined)])
+ * Component size aspect.
  */
 export class SizerUIRuntime {
-  static dependencies = [ComponentAspect, DocsAspect];
+  static dependencies = [DocsAspect];
 
   static runtime = UIRuntime;
 
-  static async provider() {
-    const ui = new SizerUIRuntime();
-    return ui;
+  static async provider([docs]: [DocsUI]) {
+    docs.registerTitleBadge({
+      component: function badge({ componentDescriptor }: { componentDescriptor: ComponentDescriptor }) {
+        return <ComponentSize componentDescriptor={componentDescriptor} />;
+      },
+      weight: 30,
+    });
   }
 }
 

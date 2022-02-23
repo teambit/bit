@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
-import path from 'path'
+import fs from 'fs-extra';
+import path from 'path';
 
 /**
  * Currently, the same capsule directory is used multiple times during installation.
@@ -9,8 +9,8 @@ import path from 'path'
  * This way the package manager will have all the necessary information to keep the node_modules directory
  * in the correct state.
  */
-export async function extendWithComponentsFromDir (rootDir: string, manifestsByPaths) {
-  const files = await fs.readdir(rootDir, { withFileTypes: true })
+export async function extendWithComponentsFromDir(rootDir: string, manifestsByPaths) {
+  const files = await fs.readdir(rootDir, { withFileTypes: true });
   return Promise.all(
     files
       .filter((file) => file.isDirectory() && file.name !== 'node_modules')
@@ -18,11 +18,10 @@ export async function extendWithComponentsFromDir (rootDir: string, manifestsByP
       .filter((dirPath) => !manifestsByPaths[dirPath])
       .map(async (dirPath) => {
         try {
-          manifestsByPaths[dirPath] = await fs.readJson(path.join(dirPath, 'package.json'))
+          manifestsByPaths[dirPath] = await fs.readJson(path.join(dirPath, 'package.json'));
         } catch (err: any) {
-          if (err.code !== 'ENOENT') throw err
+          if (err.code !== 'ENOENT') throw err;
         }
       })
-  )
+  );
 }
-
