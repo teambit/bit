@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { cloneDeep, get, pick } from 'lodash';
+import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
