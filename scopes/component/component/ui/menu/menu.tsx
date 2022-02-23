@@ -3,7 +3,7 @@ import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-import { compact, flatten, groupBy } from 'lodash';
+import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
 import React, { useMemo } from 'react';
