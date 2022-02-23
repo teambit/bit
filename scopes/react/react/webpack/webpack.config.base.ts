@@ -19,6 +19,7 @@ const moduleFileExtensions = [
   'mjs',
   'web.js',
   'js',
+  'cjs',
   'web.ts',
   'ts',
   'web.tsx',
@@ -328,7 +329,7 @@ export default function (isEnvProduction = false): Configuration {
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
+              exclude: [/\.(js|mjs|cjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
               type: 'asset',
             },
             // ** STOP ** Are you adding a new loader?

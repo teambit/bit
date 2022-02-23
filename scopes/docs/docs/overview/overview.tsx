@@ -87,7 +87,6 @@ export function Overview({ titleBadges }: OverviewProps) {
       style={{ width: '100%', height: '100%' }}
       previewName="overview"
       fullContentHeight
-      scrolling="no"
     />
   );
 }
