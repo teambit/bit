@@ -1311,11 +1311,26 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         return index;
       })
     );
-
     const workspaceManifestsIds = compact(workspaceManifests.map((m) => m.id));
-    const scopeManifestsIds = await this.scope.loadAspects(scopeIds, throwOnError);
-    await this.aspectLoader.loadExtensionsByManifests(workspaceManifests, throwOnError);
+    // We are grouping the scope aspects by whether they are envs of something of the list or not
+    // if yes, we want to load them first
+    // the rest we will load together with the workspace aspects
+    const scopeIdsGrouped = await this.scope.groupAspectIdsByEnvOfTheList(scopeIds);
+    const scopeEnvsManifestsIds =
+      scopeIdsGrouped.envs && scopeIdsGrouped.envs.length
+        ? await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError)
+        : [];
+    const scopeOtherManifests =
+      scopeIdsGrouped.other && scopeIdsGrouped.other.length
+        ? await this.scope.getManifestsGraphRecursively(
+            scopeIdsGrouped.other,
+            compact(workspaceManifestsIds),
+            throwOnError
+          )
+        : [];
+    const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
+    await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
       return workspaceComps[index];
@@ -1328,7 +1343,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
-    return compact(scopeManifestsIds.concat(workspaceManifestsIds));
+    return compact(scopeEnvsManifestsIds.concat(scopeOtherManifestsIds).concat(workspaceManifestsIds));
   }
 
   /**

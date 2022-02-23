@@ -364,6 +364,17 @@ export class ScopeMain implements ComponentFactory {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor?.toString() || '<unknown>'}`);
+    const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    return envsManifestsIds.concat(otherManifestsIds);
+  }
+
+  /**
+   * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
+   * @param ids
+   */
+  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs: string[]; other: string[] }> {
     const components = await this.getNonLoadedAspects(ids);
     const envsIds = uniq(
       components
@@ -374,9 +385,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       if (envsIds.includes(id)) return 'envs';
       return 'other';
     });
-    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
-    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
-    return envsManifestsIds.concat(otherManifestsIds);
+    return grouped as { envs: string[]; other: string[] };
   }
 
   private async getManifestsAndLoadAspects(ids: string[], throwOnError = false): Promise<string[]> {
