@@ -1015,7 +1015,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
-    excludeOrigins?: ExtensionsOrigin[] = []
+    excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
