@@ -87,10 +87,10 @@ type VersionMenuProps = {
   latestVersion?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-const VERSION_TAB_NAMES: Array<'TAG' | 'SNAP' | 'LANE'> = ['TAG', 'SNAP', 'LANE'];
+const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
 
 function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestVersion, ...rest }: VersionMenuProps) {
-  const [activeTabIndex, setActiveTab] = useState(0);
+  const [activeTabIndex, setActiveTab] = useState<number>(0);
 
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
@@ -102,8 +102,6 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
         return { name, payload: tags };
     }
   }).filter((tab) => tab.payload.length > 0);
-
-  const activeTab = useMemo(() => tabs.find((_, index) => index === activeTabIndex), [activeTabIndex, tabs]);
 
   return (
     <div {...rest}>
@@ -142,9 +140,9 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
         })}
       </div>
       <div className={styles.versionContainer}>
-        {activeTab?.name === 'LANE'
-          ? activeTab?.payload.map((payload) => <LaneInfo key={payload.id} {...payload}></LaneInfo>)
-          : activeTab?.payload.map((payload) => (
+        {tabs[activeTabIndex]?.name === 'LANE'
+          ? tabs[activeTabIndex]?.payload.map((payload) => <LaneInfo key={payload.id} {...payload}></LaneInfo>)
+          : tabs[activeTabIndex]?.payload.map((payload) => (
               <VersionInfo
                 key={payload.hash}
                 currentVersion={currentVersion}
