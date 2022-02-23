@@ -7,7 +7,7 @@ import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
-
+import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import classNames from 'classnames';
 import React, { useState, useMemo } from 'react';
@@ -25,6 +25,7 @@ export type VersionDropdownProps = {
   localVersion?: boolean;
   currentVersion?: string;
   latestVersion?: string;
+  loading?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -34,11 +35,13 @@ export function VersionDropdown({
   currentVersion,
   latestVersion,
   localVersion,
+  loading,
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
+
   const noMultipeVersions = (snaps || []).concat(tags).length < 2;
 
-  if (noMultipeVersions) {
+  if (noMultipeVersions && !loading) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
@@ -56,15 +59,18 @@ export function VersionDropdown({
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
         placeholder={<VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />}
       >
-        <VersionMenu
-          key={key}
-          tags={tags}
-          snaps={snaps || []}
-          lanes={lanes || []}
-          currentVersion={currentVersion}
-          latestVersion={latestVersion}
-          localVersion={localVersion}
-        ></VersionMenu>
+        {loading && <LineSkeleton className={styles.loading} count={6} />}
+        {loading || (
+          <VersionMenu
+            key={key}
+            tags={tags}
+            snaps={snaps || []}
+            lanes={lanes || []}
+            currentVersion={currentVersion}
+            latestVersion={latestVersion}
+            localVersion={localVersion}
+          />
+        )}
       </Dropdown>
     </div>
   );

@@ -105,6 +105,7 @@ function VersionRelatedDropdowns({
         localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}
+        loading={snapResult.loading}
       />
     </>
   );
