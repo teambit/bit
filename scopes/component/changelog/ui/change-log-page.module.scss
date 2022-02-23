@@ -22,17 +22,3 @@
 .changeLogCard {
   margin-bottom: 8px;
 }
-
-.lane {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding: 24px 0px 24px 32px;
-  font-size: var(--bit-p-xs);
-
-  .laneName {
-    overflow: hidden;
-    white-space: nowrap;
-    padding: 0px 8px;
-  }
-}
