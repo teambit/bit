@@ -1,7 +1,7 @@
+import path from 'path';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Text } from 'ink';
-import React from 'react';
+import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 
 import { EjectConfOptions, EjectConfResult, Workspace } from './workspace';
 
@@ -13,11 +13,11 @@ type EjectConfOptionsCLI = {
 };
 
 export default class EjectConfCmd implements Command {
-  name = 'eject-conf [id]';
-  description = 'ejecting components configuration';
+  name = 'eject-conf <pattern>';
+  description = 'eject components configuration (create a `component.json` file)';
+  extendedDescription = `${PATTERN_HELP('eject-conf')}`;
   alias = '';
   group = 'development';
-  shortDescription = 'eject the target component configuration file (e.g. create a `component.json` file)';
   options = [
     ['p', 'propagate', 'mark propagate true in the config file'],
     ['o', 'override', 'override file if exist'],
@@ -25,27 +25,17 @@ export default class EjectConfCmd implements Command {
 
   constructor(private workspace: Workspace) {}
 
-  // TODO: remove this ts-ignore
-  // @ts-ignore
-  async render(args: EjectConfArgs, options: EjectConfOptionsCLI) {
-    const ejectResult = await this.json(args, options);
-    const [componentId] = args;
-    return (
-      <Text color="green">
-        successfully ejected config for component {componentId} in path {ejectResult.configPath}
-      </Text>
-    );
-  }
-
   async report(args: EjectConfArgs, options: EjectConfOptionsCLI): Promise<string> {
     const ejectResult = await this.json(args, options);
-    const [componentId] = args;
-    return `successfully ejected config for component ${chalk.bold(componentId)} in path ${chalk.green(
-      ejectResult.configPath
-    )}`;
+    const paths = ejectResult
+      .map((result) => result.configPath)
+      .map((p) => path.relative(this.workspace.path, p))
+      .join('\n');
+    return chalk.green(`successfully ejected config in the following path(s)
+${chalk.bold(paths)}`);
   }
 
-  async json([componentId]: EjectConfArgs, options: EjectConfOptionsCLI): Promise<EjectConfResult> {
+  async json([pattern]: EjectConfArgs, options: EjectConfOptionsCLI): Promise<EjectConfResult[]> {
     const ejectOptions = options;
     if (ejectOptions.propagate === 'true') {
       ejectOptions.propagate = true;
@@ -54,9 +44,8 @@ export default class EjectConfCmd implements Command {
       ejectOptions.override = true;
     }
 
-    const id = await this.workspace.resolveComponentId(componentId);
-
-    const results = await this.workspace.ejectConfig(id, ejectOptions as EjectConfOptions);
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const results = await this.workspace.ejectMultipleConfigs(componentIds, ejectOptions as EjectConfOptions);
     return results;
   }
 }
