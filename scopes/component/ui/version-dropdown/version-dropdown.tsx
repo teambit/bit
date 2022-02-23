@@ -140,9 +140,9 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
         })}
       </div>
       <div className={styles.versionContainer}>
-        {tabs[activeTabIndex]?.name === 'LANE'
-          ? tabs[activeTabIndex]?.payload.map((payload) => <LaneInfo key={payload.id} {...payload}></LaneInfo>)
-          : tabs[activeTabIndex]?.payload.map((payload) => (
+        {tabs[activeTabIndex].name === 'LANE'
+          ? tabs[activeTabIndex].payload.map((payload) => <LaneInfo key={payload.id} {...payload}></LaneInfo>)
+          : tabs[activeTabIndex].payload.map((payload) => (
               <VersionInfo
                 key={payload.hash}
                 currentVersion={currentVersion}
