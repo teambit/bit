@@ -1,9 +1,13 @@
+/* eslint-disable */
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+'use strict';
+
 const friendlySyntaxErrorLabel = 'Syntax error:';
 
 function isLikelyASyntaxError(message) {
@@ -11,9 +15,20 @@ function isLikelyASyntaxError(message) {
 }
 
 // Cleans up webpack error messages.
-function formatMessage(error) {
-  let message = error.message;
-  let lines = message.split('\n');
+function formatMessage(message) {
+  let lines = [];
+
+  if (typeof message === 'string') {
+    lines = message.split('\n');
+  } else if ('message' in message) {
+    lines = message['message'].split('\n');
+  } else if (Array.isArray(message)) {
+    message.forEach((message) => {
+      if ('message' in message) {
+        lines = message['message'].split('\n');
+      }
+    });
+  }
 
   // Strip webpack-added headers off errors/warnings
   // https://github.com/webpack/webpack/blob/master/lib/ModuleError.js
@@ -64,9 +79,9 @@ function formatMessage(error) {
   }
 
   // Add helpful message for users trying to use Sass for the first time
-  if (lines[1] && lines[1].match(/Cannot find module.+node-sass/)) {
-    lines[1] = 'To import Sass files, you first need to install node-sass.\n';
-    lines[1] += 'Run `npm install node-sass` or `yarn add node-sass` inside your workspace.';
+  if (lines[1] && lines[1].match(/Cannot find module.+sass/)) {
+    lines[1] = 'To import Sass files, you first need to install sass.\n';
+    lines[1] += 'Run `npm install sass` or `yarn add sass` inside your workspace.';
   }
 
   message = lines.join('\n');
