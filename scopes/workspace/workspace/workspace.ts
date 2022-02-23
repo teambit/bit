@@ -696,8 +696,11 @@ export class Workspace implements ComponentFactory {
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.get(componentId);
-    const aspects = component.state.aspects;
-
+    const { extensions } = await this.componentExtensions(component.id, undefined, [
+      'WorkspaceDefault',
+      'WorkspaceVariants',
+    ]);
+    const aspects = await this.createAspectList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
     await componentConfigFile.write({ override: options.override });
@@ -1011,7 +1014,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async componentExtensions(
     componentId: ComponentID,
-    componentFromScope?: Component
+    componentFromScope?: Component,
+    excludeOrigins?: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
@@ -1032,8 +1036,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
-      // do not merge from scope data when there is component config file
-      // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
@@ -1080,33 +1082,35 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (bitMapExtensions) {
+    if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
-    if (configFileExtensions) {
+    if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
-    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
+    if (!excludeOrigins.includes('ModelSpecific')) {
+      await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
+    }
     let continuePropagating = componentConfigFile?.propagate ?? true;
-    if (variantsExtensions && continuePropagating) {
-      // Put it in the start to make sure the config file is stronger
+    if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
       const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
       await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
-      // Put it in the start to make sure the config file is stronger
+    if (
+      wsDefaultExtensions &&
+      continuePropagating &&
+      !isDefaultExtension &&
+      !excludeOrigins.includes('WorkspaceDefault')
+    ) {
       await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
-
-    // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
-    if (mergeFromScope && continuePropagating) {
+    if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
