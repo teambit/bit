@@ -7,8 +7,8 @@ export class MochaMain {
   constructor(private logger: Logger) {}
 
   // eslint-disable-next-line global-require
-  createTester(mochaConfig: any, mochaModule = require('mocha')) {
-    return new MochaTester(MochaAspect.id, this.logger, mochaConfig, mochaModule);
+  createTester(mochaConfig: any, babelConfig?: any, mochaModule = require('mocha')) {
+    return new MochaTester(MochaAspect.id, this.logger, mochaConfig, babelConfig, mochaModule);
   }
 
   static slots = [];

@@ -76,6 +76,7 @@ import { ClearCacheAspect } from '@teambit/clear-cache';
 import { DiagnosticAspect } from '@teambit/diagnostic';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { MochaAspect } from '@teambit/mocha';
+import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -155,6 +156,7 @@ export const manifestsMap = {
   [ComponentLogAspect.id]: ComponentLogAspect,
   [ClearCacheAspect.id]: ClearCacheAspect,
   [MochaAspect.id]: MochaAspect,
+  [BitCustomAspectAspect.id]: BitCustomAspectAspect,
   [DiagnosticAspect.id]: DiagnosticAspect,
 };
 

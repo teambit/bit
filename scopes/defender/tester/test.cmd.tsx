@@ -91,6 +91,11 @@ export class TestCmd implements Command {
         junit,
         coverage,
       });
+      // todo: fix this. it throws for legit failures.
+      tests.throwErrorsIfExist();
+      if (tests.hasErrors()) {
+        code = 1;
+      }
       tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
     }
     const { seconds } = timer.stop();

@@ -171,6 +171,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
+    "bit-custom-aspect": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/bit-custom-aspect"
+    },
     "bit-error": {
         "scope": "teambit.harmony",
         "version": "0.0.394",
