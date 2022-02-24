@@ -2,9 +2,11 @@
   max-height: 100%;
   overflow: hidden;
   min-height: 32px;
-
   display: flex;
   flex-direction: column;
+  &.open {
+    flex: 1;
+  }
 }
 .drawerName {
   font-size: var(--bit-p-xxs, 12px);
@@ -73,8 +75,8 @@
   transition: max-height 300ms ease-in-out;
   overflow-x: hidden;
   overflow-y: auto;
-
   max-height: 0;
+
   &.open {
     max-height: 100%;
   }
