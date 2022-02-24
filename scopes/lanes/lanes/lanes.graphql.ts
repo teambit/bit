@@ -62,7 +62,14 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
-            components: lane.components,
+            components: lane.components.map((component) => ({
+              ...component,
+              /**
+               * make sure the BitId has the version mapped,
+               * otherwise graphql will cache the lane component response across different lanes with the same component id
+               */
+              id: { ...component.id, version: component.head },
+            })),
             isMerged: Boolean(lane.isMerged),
             remote: lane.remote,
           }));

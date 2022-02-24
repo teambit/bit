@@ -689,6 +689,10 @@ export class Workspace implements ComponentFactory {
     return ExtensionDataList.fromConfigObject(this.config.extensions);
   }
 
+  async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
+    return Promise.all(ids.map((id) => this.ejectConfig(id, options)));
+  }
+
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
@@ -1311,14 +1315,26 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         return index;
       })
     );
+    const workspaceManifestsIds = compact(workspaceManifests.map((m) => m.id));
+    // We are grouping the scope aspects by whether they are envs of something of the list or not
+    // if yes, we want to load them first
+    // the rest we will load together with the workspace aspects
+    const scopeIdsGrouped = await this.scope.groupAspectIdsByEnvOfTheList(scopeIds);
+    const scopeEnvsManifestsIds =
+      scopeIdsGrouped.envs && scopeIdsGrouped.envs.length
+        ? await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError)
+        : [];
+    const scopeOtherManifests =
+      scopeIdsGrouped.other && scopeIdsGrouped.other.length
+        ? await this.scope.getManifestsGraphRecursively(
+            scopeIdsGrouped.other,
+            compact(workspaceManifestsIds),
+            throwOnError
+          )
+        : [];
+    const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
-    const manifestsIds = workspaceManifests.map((m) => m.id);
-
-    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
-
-    const allManifests = [...scopeManifests, ...workspaceManifests];
-    await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
-
+    await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
       return workspaceComps[index];
@@ -1331,7 +1347,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
-    return compact(allManifests.map((manifest) => manifest.id));
+    return compact(scopeEnvsManifestsIds.concat(scopeOtherManifestsIds).concat(workspaceManifestsIds));
   }
 
   /**

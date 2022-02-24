@@ -132,8 +132,9 @@ export class ScopeComponentLoader {
 
   private getTagMap(modelComponent: ModelComponent): TagMap {
     const tagMap = new TagMap();
-    Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
+    const allVersions = modelComponent.versionsIncludeOrphaned;
+    Object.keys(allVersions).forEach((versionStr: string) => {
+      const tag = new Tag(allVersions[versionStr].toString(), new SemVer(versionStr));
       tagMap.set(tag.version, tag);
     });
     return tagMap;
