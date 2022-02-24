@@ -60,15 +60,13 @@ chai.use(require('chai-string'));
     it('all packages are correctly installed inside capsules', () => {
       const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
       const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const nodeEnv1CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-1'))!
+        capsuleDirs.find((dir) => dir.includes('node-env-1')) as string
       );
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const nodeEnv2CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-2'))!
+        capsuleDirs.find((dir) => dir.includes('node-env-2')) as string
       );
       expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path();
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path();
