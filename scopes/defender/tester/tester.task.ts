@@ -55,7 +55,6 @@ export class TesterTask implements BuildTask {
     // TODO: remove after fix AbstractVinyl on capsule
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
-    const generalErrorsMessages = flatten(testsResults.errors).map((err) => err.message) || [];
 
     // write junit files
     await Promise.all(
@@ -73,8 +72,8 @@ export class TesterTask implements BuildTask {
       artifacts: getArtifactDef(), // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
         const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
-          if (file?.error?.failureMessage) {
-            errors.push(file.error.failureMessage);
+          if (file?.error) {
+            errors.push(file.error);
           }
           file.tests.forEach((test) => {
             if (test.error) errors.push(test.error);
@@ -87,12 +86,11 @@ export class TesterTask implements BuildTask {
         if (!component) {
           throw new Error(`unable to find ${componentTests.componentId.toString()} in capsules`);
         }
-        const errors = (componentErrors || []).concat(generalErrorsMessages);
 
         return {
           component,
           metadata: { tests: componentTests.results },
-          errors,
+          errors: componentErrors,
         };
       }),
     };

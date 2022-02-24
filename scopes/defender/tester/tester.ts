@@ -5,7 +5,7 @@ import { TestsResult } from '@teambit/tests-results';
 
 export type Tests = {
   components: ComponentsResults[];
-  errors?: Error[];
+  errors?: Error[]; // global errors for watch
 };
 
 export type ComponentsResults = {

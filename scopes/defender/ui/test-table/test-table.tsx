@@ -17,7 +17,7 @@ export function TestTable({ testResults, ...rest }: TestTableProps) {
   return (
     <div {...rest}>
       {testResults.map((testFile, index) => {
-        const testHasErrors = testFile?.error?.failureMessage;
+        const testHasErrors = testFile?.error;
         const borderColor = testFile.failed > 0 || testHasErrors ? '#e62e5c' : '#37b26c';
         return (
           <div key={index} className={styles.testTable}>

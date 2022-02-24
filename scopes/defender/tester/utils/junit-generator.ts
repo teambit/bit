@@ -10,9 +10,9 @@ export function testsResultsToJUnitFormat(components: ComponentsResults[]): stri
       suite.timestamp(new Date(compResult.results?.start).toISOString());
     }
     compResult.results?.testFiles.forEach((testFile) => {
-      if (testFile.error?.error) {
+      if (testFile.error) {
         const testCase = suite.testCase().className(testFile.file).name(testFile.file);
-        testCase.error(stripAnsi(testFile.error.error as string));
+        testCase.error(stripAnsi(testFile.error as string));
       }
       testFile.tests.forEach((test) => {
         const testCase = suite.testCase().className(testFile.file).name(test.name);

@@ -91,7 +91,7 @@ export class TestCmd implements Command {
         junit,
         coverage,
       });
-      tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
+      if (tests.hasErrors()) code = 1;
     }
     const { seconds } = timer.stop();
 
