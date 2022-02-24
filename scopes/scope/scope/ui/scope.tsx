@@ -6,7 +6,7 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
-import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
