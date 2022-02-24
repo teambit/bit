@@ -4,11 +4,19 @@
   min-width: 0;
   padding: 24px 0px 24px 32px;
   font-size: var(--bit-p-s);
-
   .laneId {
     overflow: hidden;
     white-space: nowrap;
     padding: 0px 8px;
     font-size: var(--bit-p-xs);
   }
+  &:hover {
+    .laneId {
+      text-decoration: underline;
+    }
+  }
+}
+.laneUrl {
+  color: inherit;
+  text-decoration: none;
 }

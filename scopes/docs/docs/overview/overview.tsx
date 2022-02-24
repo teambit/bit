@@ -19,7 +19,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const lanesModel = useLanesContext();
-  const laneId = lanesModel?.currentLane?.id;
+  const currentLane = lanesModel?.currentLane;
   const { data } = useFetchDocs(component.id.toString());
   const fetchComponent = data?.component;
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
@@ -43,7 +43,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
     return (
       <div className={styles.overviewWrapper}>
-        <LaneId laneId={laneId} />
+        <LaneId lane={currentLane} />
         <ComponentOverview
           className={styles.componentOverviewBlock}
           displayName={component.displayName}
@@ -65,9 +65,9 @@ export function Overview({ titleBadges }: OverviewProps) {
     );
   }
 
-  return laneId ? (
+  return currentLane ? (
     <div className={styles.overviewWrapper}>
-      <LaneId laneId={laneId} />
+      <LaneId lane={currentLane} />
       <ComponentPreview
         component={component}
         style={{ width: '100%', height: '100%' }}
