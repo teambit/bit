@@ -186,6 +186,7 @@
     "object-diff": "0.0.4",
     "object-hash": "2.1.1",
     "open": "7.4.2",
+    "open-editor": "3.0.0",
     "ora": "5.4.1",
     "p-event": "4.2.0",
     "p-map": "4.0.0",
