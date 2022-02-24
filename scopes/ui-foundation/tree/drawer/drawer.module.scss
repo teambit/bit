@@ -4,6 +4,7 @@
   min-height: 32px;
   display: flex;
   flex-direction: column;
+  flex: 0;
   &.open {
     flex: 1;
   }
