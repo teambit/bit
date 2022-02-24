@@ -4,7 +4,7 @@ import { H2 } from '@teambit/documenter.ui.heading';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 import { ComponentContext } from '@teambit/component';
-import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
