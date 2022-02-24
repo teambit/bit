@@ -1,7 +1,6 @@
 import { BuildContext, BuiltTaskResult, BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import fs from 'fs-extra';
 import { join } from 'path';
-import { flatten } from 'lodash';
 import { Compiler, CompilerAspect } from '@teambit/compiler';
 import { DevFilesMain } from '@teambit/dev-files';
 import { ComponentMap } from '@teambit/component';

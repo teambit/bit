@@ -1,4 +1,5 @@
 import { TestResult } from './test-results';
+
 export class TestsFiles {
   constructor(
     public file: string,
