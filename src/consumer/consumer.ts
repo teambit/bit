@@ -573,10 +573,10 @@ export default class Consumer {
     if (this.isLegacy) {
       tagParams.persist = true;
     }
-    const { ids, persist } = tagParams;
+    const { ids, soft } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    if (persist) {
+    if (!soft) {
       await this.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this._loadComponentsForTag(ids);
@@ -659,6 +659,7 @@ export default class Consumer {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
       components: ids.toString(),
     });
+    await this.componentFsCache.deleteAllDependenciesDataCache();
     const components = await this._loadComponentsForTag(ids);
 
     this.throwForComponentIssues(components, ignoreIssues);
