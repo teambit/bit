@@ -22,9 +22,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
           pass
           failed
           pending
-          error {
-            failureMessage
-          }
+          error
           tests {
             ancestor
             duration
@@ -39,7 +37,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
 `;
 
 const GET_COMPONENT = gql`
-  query($id: String!) {
+  query ($id: String!) {
     getHost {
       id # for GQL caching
       getTests(id: $id) {
@@ -51,9 +49,7 @@ const GET_COMPONENT = gql`
             pass
             failed
             pending
-            error {
-              failureMessage
-            }
+            error
             tests {
               ancestor
               duration

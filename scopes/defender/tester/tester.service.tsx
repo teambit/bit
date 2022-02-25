@@ -158,10 +158,6 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
     const results = await tester.test(testerContext);
 
-    results.errors?.forEach((error) => {
-      this.logger.console(error?.message);
-    });
-
     return results;
   }
 }

@@ -4,7 +4,7 @@ import { compact, flatten } from 'lodash';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap } from '@teambit/tester';
+import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap, ComponentsResults } from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
@@ -66,10 +66,11 @@ export class JestTester implements Tester {
     components: ComponentMap<JestTestResult[] | undefined>,
     testerContext: TesterContext,
     config?: any
-  ) {
+  ): ComponentsResults[] {
     const testsSuiteResult = components.toArray().map(([component, testsFiles]) => {
-      if (!testsFiles) return;
-      if (testsFiles?.length === 0) return;
+      if (!testsFiles) return undefined;
+      if (testsFiles?.length === 0) return undefined;
+      const errors = this.getErrors(testsFiles);
       const tests = testsFiles.map((test) => {
         const file = new AbstractVinyl({ path: test.testFilePath, contents: readFileSync(test.testFilePath) });
         const testResults = test.testResults.map((testResult) => {
@@ -85,7 +86,12 @@ export class JestTester implements Tester {
           );
         });
         const filePath = file?.basename || test.testFilePath;
-        const error = test.testExecError?.message;
+        const getError = () => {
+          if (!test.testExecError) return undefined;
+          if (testerContext.watch) return test.failureMessage as string;
+          return test.testExecError?.message;
+        };
+        const error = getError();
         return new TestsFiles(
           filePath,
           testResults,
@@ -97,15 +103,14 @@ export class JestTester implements Tester {
           error
         );
       });
-      // TODO @guy - fix this eslint error
-      // eslint-disable-next-line
       return {
         componentId: component.id,
         results: new TestsResult(tests, aggregatedResult.success, aggregatedResult.startTime),
+        errors,
       };
     });
 
-    return compact(testsSuiteResult) as { componentId: ComponentID; results: TestsResult }[];
+    return compact(testsSuiteResult);
   }
 
   private getErrors(testResult: JestTestResult[]): JestError[] {
@@ -160,7 +165,8 @@ export class JestTester implements Tester {
       context,
       jestConfigWithSpecs
     );
-    return { components: componentTestResults };
+    const allErrors = componentTestResults.map((comp) => comp.errors || []).flat();
+    return { components: componentTestResults, errors: allErrors };
   }
 
   async watch(context: TesterContext): Promise<Tests> {
