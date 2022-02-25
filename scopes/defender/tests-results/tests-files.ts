@@ -16,10 +16,15 @@ export class TestsFiles {
 
     public slow?: boolean,
 
-    public error?: string
+    public error?: Error
   ) {}
 
   get totalTests() {
     return this.tests.length;
+  }
+
+  get errorStr() {
+    if (!this.error) return undefined;
+    return this.error.message;
   }
 }

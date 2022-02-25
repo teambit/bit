@@ -88,8 +88,8 @@ export class JestTester implements Tester {
         const filePath = file?.basename || test.testFilePath;
         const getError = () => {
           if (!test.testExecError) return undefined;
-          if (testerContext.watch) return test.failureMessage as string;
-          return test.testExecError?.message;
+          if (testerContext.watch) return new JestError(test.failureMessage as string);
+          return new JestError(test.testExecError?.message, test.testExecError?.stack);
         };
         const error = getError();
         return new TestsFiles(

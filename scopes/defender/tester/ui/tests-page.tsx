@@ -22,7 +22,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
           pass
           failed
           pending
-          error
+          errorStr
           tests {
             ancestor
             duration
@@ -49,7 +49,7 @@ const GET_COMPONENT = gql`
             pass
             failed
             pending
-            error
+            errorStr
             tests {
               ancestor
               duration
