@@ -70,17 +70,7 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: getArtifactDef(), // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
-        const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
-          if (file?.error) {
-            errors.push(file.error);
-          }
-          file.tests.forEach((test) => {
-            if (test.error) errors.push(test.error);
-            if (test.failure) errors.push(test.failure);
-          });
-
-          return errors;
-        }, []);
+        const componentErrors = componentTests.errors;
         const component = context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component;
         if (!component) {
           throw new Error(`unable to find ${componentTests.componentId.toString()} in capsules`);

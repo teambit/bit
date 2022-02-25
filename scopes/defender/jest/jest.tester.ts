@@ -8,7 +8,7 @@ import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap, Compone
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
-import { ComponentMap, ComponentID } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type jest from 'jest';
 import { JestError } from './error';
@@ -88,7 +88,12 @@ export class JestTester implements Tester {
         const filePath = file?.basename || test.testFilePath;
         const getError = () => {
           if (!test.testExecError) return undefined;
-          if (testerContext.watch) return new JestError(test.failureMessage as string);
+          if (testerContext.watch) {
+            // for some reason, during watch ('bit start'), if a file has an error, the `test.testExecError` is `{}`
+            // (an empty object). the failureMessage contains the stringified error.
+            // @todo: consider to always use the failureMessage, regardless the context.watch.
+            return new JestError(test.failureMessage as string);
+          }
           return new JestError(test.testExecError?.message, test.testExecError?.stack);
         };
         const error = getError();
@@ -118,8 +123,7 @@ export class JestTester implements Tester {
       if (test.testExecError) {
         const { message, stack, code, type } = test.testExecError;
         errors.push(new JestError(message, stack, code, type));
-      }
-      if (test.failureMessage) {
+      } else if (test.failureMessage) {
         errors.push(new JestError(test.failureMessage));
       }
       return errors;
