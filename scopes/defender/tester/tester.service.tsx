@@ -12,7 +12,6 @@ import { Tester, Tests, CallbackFn } from './tester';
 import { TesterAspect } from './tester.aspect';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
-import { NoTestFilesFound } from './exceptions';
 
 const chalk = require('chalk');
 
