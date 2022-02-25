@@ -60,6 +60,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   return (
     <>
       <LaneId lane={currentLane} />
+      <Separator isPresentational />
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />

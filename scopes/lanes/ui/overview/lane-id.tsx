@@ -1,5 +1,4 @@
 import React from 'react';
-import { Separator } from '@teambit/design.ui.separator';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
@@ -14,14 +13,11 @@ export function LaneId({ lane, className, ...rest }: LaneIdProps) {
   if (!lane) return null;
 
   return (
-    <>
-      <NavLink href={lane.url} className={styles.laneUrl}>
-        <div {...rest} className={classNames(styles.lane, className)}>
-          <Icon of="lane"></Icon>
-          <Ellipsis className={styles.laneId}>{lane.id}</Ellipsis>
-        </div>
-      </NavLink>
-      <Separator isPresentational />
-    </>
+    <NavLink href={lane.url} className={styles.laneUrl}>
+      <div {...rest} className={classNames(styles.lane, className)}>
+        <Icon of="lane"></Icon>
+        <Ellipsis className={styles.laneId}>{lane.id}</Ellipsis>
+      </div>
+    </NavLink>
   );
 }
