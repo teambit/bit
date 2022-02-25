@@ -103,9 +103,7 @@ export class TestCmd implements Command {
       code,
       data: (
         <Box>
-          <Text>tested </Text>
-          <Text color="cyan">{components.length} </Text>
-          <Text>components in </Text>
+          <Text>test has been completed in </Text>
           <Text color="cyan">{seconds} </Text>
           <Text>seconds.</Text>
         </Box>

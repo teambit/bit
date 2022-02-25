@@ -12,7 +12,7 @@ export function testsResultsToJUnitFormat(components: ComponentsResults[]): stri
     compResult.results?.testFiles.forEach((testFile) => {
       if (testFile.error) {
         const testCase = suite.testCase().className(testFile.file).name(testFile.file);
-        testCase.error(stripAnsi(testFile.error as string));
+        testCase.error(stripAnsi(testFile.error.message as string));
       }
       testFile.tests.forEach((test) => {
         const testCase = suite.testCase().className(testFile.file).name(test.name);
