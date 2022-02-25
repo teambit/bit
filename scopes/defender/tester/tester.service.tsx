@@ -112,7 +112,9 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       return acc;
     }, 0);
 
-    if (testCount === 0 && !options.ui) throw new NoTestFilesFound(this.patterns.join(','));
+    if (testCount === 0 && !options.ui) {
+      return { components: [] };
+    }
 
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);

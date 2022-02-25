@@ -43,7 +43,6 @@ export class TestCmd implements Command {
     [userPattern]: [string],
     { watch = false, debug = false, all = false, env, scope, junit, coverage = false }: TestFlags
   ) {
-    this.logger.off();
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
     timer.start();
@@ -77,6 +76,10 @@ export class TestCmd implements Command {
 
     let code = 0;
     if (watch && !debug) {
+      // avoid turning off the logger for non-watch scenario. otherwise, when this aspect throws errors, they'll be
+      // swallowed. (Jest errors are shown regardless via Jest, but if the tester is unable to run Jest in the first
+      // place, these errors won't be shown)
+      this.logger.off();
       await this.tester.watch(components, {
         watch,
         debug,
