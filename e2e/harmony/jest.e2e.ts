@@ -80,6 +80,29 @@ describe('Jest Tester', function () {
       expect(output).to.have.string('SomeError');
     });
   });
+  describe('env with an incorrect Jest config', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
+      helper.env.setCustomEnv('custom-react-env');
+      helper.fs.outputFile('custom-react-env/jest/jest.config.js', specFilePassingFixture());
+      helper.command.compile();
+      helper.command.install();
+      helper.command.setEnv('comp1', 'custom-react-env');
+    });
+    it('bit test should exit with non-zero code', () => {
+      expect(() => helper.command.test()).to.throw();
+    });
+    it('bit test should show the error', () => {
+      const output = helper.general.runWithTryCatch('bit test');
+      expect(output).to.have.string('describe is not defined');
+    });
+    it('bit build should show the error', () => {
+      const output = helper.general.runWithTryCatch('bit build');
+      expect(output).to.have.string('describe is not defined');
+    });
+  });
 });
 
 function specFilePassingFixture() {
@@ -108,4 +131,13 @@ function specFileErroringFixture() {
   });
 });
 `;
+}
+
+function invalidJestConfigFixture() {
+  return `module.exports = {
+    transformIgnorePatterns: [
+      someUndefinedFunc(),
+    ],
+  };
+  `;
 }
