@@ -86,7 +86,7 @@ describe('Jest Tester', function () {
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.env.setCustomEnv('custom-react-env');
-      helper.fs.outputFile('custom-react-env/jest/jest.config.js', specFilePassingFixture());
+      helper.fs.outputFile('custom-react-env/jest/jest.config.js', invalidJestConfigFixture());
       helper.command.compile();
       helper.command.install();
       helper.command.setEnv('comp1', 'custom-react-env');
@@ -96,11 +96,11 @@ describe('Jest Tester', function () {
     });
     it('bit test should show the error', () => {
       const output = helper.general.runWithTryCatch('bit test');
-      expect(output).to.have.string('describe is not defined');
+      expect(output).to.have.string('someUndefinedFunc is not defined');
     });
     it('bit build should show the error', () => {
       const output = helper.general.runWithTryCatch('bit build');
-      expect(output).to.have.string('describe is not defined');
+      expect(output).to.have.string('someUndefinedFunc is not defined');
     });
   });
 });
