@@ -53,12 +53,11 @@ export class PubsubUI {
       },
     });
 
-    // absorb valid errors like 'connection destroyed'
     connection.promise
       .then((childConnection) => (this.childApi = childConnection))
-      .catch(() => {
+      .catch((err) => {
         // eslint-disable-next-line no-console
-        console.error('[Pubsub.ui]', 'failed connecting to child iframe');
+        console.error('[Pubsub.ui]', 'failed connecting to child iframe:', err);
       });
 
     const destroy = () => {

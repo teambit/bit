@@ -26,7 +26,7 @@ export function PreviewPlaceholder({
     );
 
   if (shouldShowPreview) {
-    return <ComponentComposition component={component} hotReload={false} composition={selectedPreview} />;
+    return <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />;
   }
 
   return (
