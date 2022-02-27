@@ -17,12 +17,15 @@ export async function createRoot(
 
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
   config['teambit.harmony/bit'] = rootExtensionName;
+  // Escaping "'" in case for example in the config you have something like:
+  // description: "team's scope"
+  const stringifiedConfig = toWindowsCompatiblePath(JSON.stringify(config)).replace(/'/g, "\\'");
 
   return `
 ${createImports(aspectDefs)}
 
 const isBrowser = typeof window !== "undefined";
-const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
+const config = JSON.parse('${stringifiedConfig}');
 ${idSetters.join('\n')}
 export function render(...props){
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
