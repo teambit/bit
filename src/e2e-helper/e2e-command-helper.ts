@@ -44,16 +44,19 @@ export default class CommandHelper {
     cmd: string,
     cwd: string = this.scopes.localPath,
     stdio: StdioOptions = 'pipe',
-    overrideFeatures?: string
+    overrideFeatures?: string,
+    getStderrAsPartOfTheOutput = false // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
   ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
-    cmd = featuresTogglePrefix + cmd;
-    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
+    const cmdWithFeatures = featuresTogglePrefix + cmd;
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
+    const cmdOutput = getStderrAsPartOfTheOutput
+      ? childProcess.spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio }).output.toString()
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -414,8 +417,8 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  build(id = '') {
-    return this.runCmd(`bit build ${id}`);
+  build(id = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit build ${id}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -423,6 +426,10 @@ export default class CommandHelper {
       .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit build ${id} ${value}`, cwd);
+  }
+
+  test(flags = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   testComponent(id = '', flags = '') {

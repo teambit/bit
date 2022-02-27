@@ -1,3 +1,6 @@
+/* eslint-disable */
+/** this file was copied as is from react-dev-utils/refreshOverlayInterop */
+
 // @remove-on-eject-begin
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
