@@ -62,8 +62,9 @@ export default class ComponentJsonHelper {
     this.addKeyVal('defaultScope', scope);
   }
 
-  composePath(componentRelativeDir = 'bar'): string {
-    return path.join(this.scopes.localPath, componentRelativeDir, COMPONENT_CONFIG_FILE_NAME);
+  composePath(componentRelativeDir = 'bar', absolutePath = true): string {
+    const file = path.join(componentRelativeDir, COMPONENT_CONFIG_FILE_NAME);
+    return absolutePath ? path.join(this.scopes.localPath, file) : file;
   }
 
   // addDefaultOwner(owner: string) {

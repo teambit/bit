@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
-import type ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { Component } from '@teambit/component';
 import { formatCompileResults } from './output-formatter';
 import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
 import { CompilationInitiator } from './types';
@@ -12,14 +12,14 @@ import { CompilationInitiator } from './types';
 import { CompilerAspect } from './compiler.aspect';
 import { ComponentCompilationOnDoneEvent } from './events';
 
-type ComponentsStatus = {
+export type ComponentsStatus = {
   buildResults: string[];
-  component: Array<ConsumerComponent>;
-  errors: Array<CompileError>;
+  component: Component;
+  errors: CompileError[];
 };
 
 export class CompileCmd implements Command {
-  componentsStatus: Array<ComponentsStatus> = [];
+  componentsStatus: ComponentsStatus[] = [];
   name = 'compile [component...]';
   description = 'compile components in the development workspace';
   alias = '';
@@ -47,7 +47,7 @@ export class CompileCmd implements Command {
 
     outputString += '\n';
     outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-    outputString += formatCompileResults(this.componentsStatus, compilerOptions.verbose);
+    outputString += formatCompileResults(this.componentsStatus, !!compilerOptions.verbose);
     outputString += '\n';
 
     outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);

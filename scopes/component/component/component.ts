@@ -99,7 +99,7 @@ export class Component {
       return this.tags.getLatest();
     } catch (err: any) {
       if (err instanceof CouldNotFindLatest) {
-        return this.head.toString();
+        return this.head.hash;
       }
       throw err;
     }

@@ -1,10 +1,5 @@
 import { TestResult } from './test-results';
 
-export type Error = {
-  failureMessage?: string | null;
-  error?: string;
-};
-
 export class TestsFiles {
   constructor(
     public file: string,
@@ -26,5 +21,10 @@ export class TestsFiles {
 
   get totalTests() {
     return this.tests.length;
+  }
+
+  get errorStr() {
+    if (!this.error) return undefined;
+    return this.error.message;
   }
 }
