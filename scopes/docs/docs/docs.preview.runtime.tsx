@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { PreviewAspect, RenderingContext, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
 
 import { DocsAspect } from './docs.aspect';
+import { ComponentID } from '@teambit/component-id';
 
 export class DocsPreview {
   constructor(
@@ -11,10 +12,10 @@ export class DocsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render = (componentId: string, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
-    const docsModule = this.selectPreviewModel(componentId, modules);
+  render = (componentId: ComponentID, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
+    const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
-    modules.mainModule.default(NoopProvider, componentId, docsModule, compositions, context);
+    modules.mainModule.default(NoopProvider, componentId.toString(), docsModule, compositions, context);
   };
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {
