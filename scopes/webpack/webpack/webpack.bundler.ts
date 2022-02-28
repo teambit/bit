@@ -4,6 +4,7 @@ import type { Logger } from '@teambit/logger';
 import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
+import { sep, normalize } from 'path';
 
 type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
@@ -21,7 +22,7 @@ export class WebpackBundler implements Bundler {
     private logger: Logger,
 
     private webpack
-  ) {}
+  ) { }
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
@@ -132,18 +133,13 @@ export class WebpackBundler implements Bundler {
     return gzipped.size;
   }
 
+
   private getComponents(outputPath: string) {
-    const splitPath = outputPath.split('/');
-    splitPath.pop();
-    const path = splitPath.join('/');
-    const target = this.targets.find((targetCandidate) => {
-      return path === targetCandidate.outputPath;
-    });
+    const path = outputPath.substring(0, outputPath.lastIndexOf(sep));
+    const target = this.targets.find((targetCandidate) => path === targetCandidate.outputPath);
 
-    if (!target) {
-      throw new Error(`Could not find component id for path "${path}"`);
-    }
-
+    if (!target) throw new Error(`Could not find component id for path "${path}"`);
     return target.components;
   }
+
 }
