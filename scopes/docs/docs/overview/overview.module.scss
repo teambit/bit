@@ -7,17 +7,4 @@
     margin: 0 auto;
     margin-bottom: 0;
   }
-  .lane {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-    padding: 24px 0px 16px 32px;
-    .laneName {
-      overflow: hidden;
-      white-space: nowrap;
-      font-size: large;
-      padding: 0px 8px;
-    }
-  }
 }
