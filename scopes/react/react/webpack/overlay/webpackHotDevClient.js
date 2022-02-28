@@ -1,25 +1,46 @@
-/* eslint-disable promise/catch-or-return */
+/* eslint-disable */
+/*
+ * this file was copied as is from `react-dev-utils/webpackHotDevClient`
+ * and adjusted for our socket url.
+ *
+ * we use just set process.env.WDS_* with the EnvironmentPlugin or DefinePlugin
+ * once we get react-error-overlay up and running again
+ */
+
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-const stripAnsi = require('strip-ansi');
-const ErrorOverlay = require('react-error-overlay');
-const url = require('url');
-const launchEditorEndpoint = require('./launch-editor-endpoint');
-const formatWebpackMessages = require('./format-webpack-messages');
+
+'use strict';
+
+// This alternative WebpackDevServer combines the functionality of:
+// https://github.com/webpack/webpack-dev-server/blob/webpack-1/client/index.js
+// https://github.com/webpack/webpack/blob/webpack-1/hot/dev-server.js
+
+// It only supports their simplest configuration (hot updates on same server).
+// It makes some opinionated choices on top, like adding a syntax error overlay
+// that looks similar to our console output. The error overlay is inspired by:
+// https://github.com/glenjamin/webpack-hot-middleware
+
+var stripAnsi = require('strip-ansi');
+var url = require('url');
+var launchEditorEndpoint = require('./launchEditorEndpoint');
+var formatWebpackMessages = require('./formatWebpackMessages');
+var ErrorOverlay = require('react-error-overlay');
 
 ErrorOverlay.setEditorHandler(function editorHandler(errorLocation) {
   // Keep this sync with errorOverlayMiddleware.js
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   fetch(
-    `${launchEditorEndpoint}?fileName=${window.encodeURIComponent(
-      errorLocation.fileName
-    )}&lineNumber=${window.encodeURIComponent(errorLocation.lineNumber || 1)}&colNumber=${window.encodeURIComponent(
-      errorLocation.colNumber || 1
-    )}`
+    launchEditorEndpoint +
+      '?fileName=' +
+      window.encodeURIComponent(errorLocation.fileName) +
+      '&lineNumber=' +
+      window.encodeURIComponent(errorLocation.lineNumber || 1) +
+      '&colNumber=' +
+      window.encodeURIComponent(errorLocation.colNumber || 1)
   );
 });
 
@@ -29,9 +50,9 @@ ErrorOverlay.setEditorHandler(function editorHandler(errorLocation) {
 // application. This is handled below when we are notified of a compile (code
 // change).
 // See https://github.com/facebook/create-react-app/issues/3096
-let hadRuntimeError = false;
+var hadRuntimeError = false;
 ErrorOverlay.startReportingRuntimeErrors({
-  onError() {
+  onError: function () {
     hadRuntimeError = true;
   },
   filename: '/static/js/bundle.js',
@@ -44,18 +65,16 @@ if (module.hot && typeof module.hot.dispose === 'function') {
   });
 }
 
-// Connect to WebpackDevServer via a socket.
 const querystring = module.id.substring(module.id.indexOf('?'));
 const urlParams = new URLSearchParams(querystring);
 
-const connection = new WebSocket(
+// Connect to WebpackDevServer via a socket.
+var connection = new WebSocket(
   url.format({
     protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
     hostname: window.location.hostname,
     port: window.location.port,
-    // Hardcoded in WebpackDevServer
-    pathname: urlParams.get('sockPath') || '/sockjs-node',
-    // pathname: '_hmr/teambit.bad-jokes/extensions/harmony-react',
+    pathname: urlParams.get('sockPath') || '/ws',
     slashes: true,
   })
 );
@@ -64,24 +83,20 @@ const connection = new WebSocket(
 // to avoid spamming the console. Disconnect usually happens
 // when developer stops the server.
 connection.onclose = function () {
-  // eslint-disable-next-line no-console
   if (typeof console !== 'undefined' && typeof console.info === 'function') {
-    // eslint-disable-next-line no-console
     console.info('The development server has disconnected.\nRefresh the page if necessary.');
   }
 };
 
 // Remember some state related to hot module replacement.
-let isFirstCompilation = true;
-let mostRecentCompilationHash = null;
-let hasCompileErrors = false;
+var isFirstCompilation = true;
+var mostRecentCompilationHash = null;
+var hasCompileErrors = false;
 
 function clearOutdatedErrors() {
   // Clean up outdated compile errors, if any.
-  // eslint-disable-next-line no-console
   if (typeof console !== 'undefined' && typeof console.clear === 'function') {
     if (hasCompileErrors) {
-      // eslint-disable-next-line no-console
       console.clear();
     }
   }
@@ -91,7 +106,7 @@ function clearOutdatedErrors() {
 function handleSuccess() {
   clearOutdatedErrors();
 
-  const isHotUpdate = !isFirstCompilation;
+  var isHotUpdate = !isFirstCompilation;
   isFirstCompilation = false;
   hasCompileErrors = false;
 
@@ -109,27 +124,23 @@ function handleSuccess() {
 function handleWarnings(warnings) {
   clearOutdatedErrors();
 
-  const isHotUpdate = !isFirstCompilation;
+  var isHotUpdate = !isFirstCompilation;
   isFirstCompilation = false;
   hasCompileErrors = false;
 
   function printWarnings() {
     // Print warnings to the console.
-    const formatted = formatWebpackMessages({
-      warnings,
+    var formatted = formatWebpackMessages({
+      warnings: warnings,
       errors: [],
     });
 
-    // eslint-disable-next-line no-console
     if (typeof console !== 'undefined' && typeof console.warn === 'function') {
-      // eslint-disable-next-line no-plusplus
-      for (let i = 0; i < formatted.warnings.length; i++) {
+      for (var i = 0; i < formatted.warnings.length; i++) {
         if (i === 5) {
-          // eslint-disable-next-line
           console.warn('There were more warnings in other files.\n' + 'You can find a complete log in the terminal.');
           break;
         }
-        // eslint-disable-next-line no-console
         console.warn(stripAnsi(formatted.warnings[i]));
       }
     }
@@ -155,8 +166,8 @@ function handleErrors(errors) {
   hasCompileErrors = true;
 
   // "Massage" webpack messages.
-  const formatted = formatWebpackMessages({
-    errors,
+  var formatted = formatWebpackMessages({
+    errors: errors,
     warnings: [],
   });
 
@@ -164,11 +175,8 @@ function handleErrors(errors) {
   ErrorOverlay.reportBuildError(formatted.errors[0]);
 
   // Also log them to the console.
-  // eslint-disable-next-line no-console
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < formatted.errors.length; i++) {
-      // eslint-disable-next-line no-console
+    for (var i = 0; i < formatted.errors.length; i++) {
       console.error(stripAnsi(formatted.errors[i]));
     }
   }
@@ -191,7 +199,7 @@ function handleAvailableHash(hash) {
 
 // Handle messages from the server.
 connection.onmessage = function (e) {
-  const message = JSON.parse(e.data);
+  var message = JSON.parse(e.data);
   switch (message.type) {
     case 'hash':
       handleAvailableHash(message.data);
@@ -228,6 +236,18 @@ function canApplyUpdates() {
   return module.hot.status() === 'idle';
 }
 
+function canAcceptErrors() {
+  // NOTE: This var is injected by Webpack's DefinePlugin, and is a boolean instead of string.
+  const hasReactRefresh = process.env.FAST_REFRESH;
+
+  const status = module.hot.status();
+  // React refresh can handle hot-reloading over errors.
+  // However, when hot-reload status is abort or fail,
+  // it indicates the current update cannot be applied safely,
+  // and thus we should bail out to a forced reload for consistency.
+  return hasReactRefresh && ['abort', 'fail'].indexOf(status) === -1;
+}
+
 // Attempt to update code on the fly, fall back to a hard reload.
 function tryApplyUpdates(onHotUpdateSuccess) {
   if (!module.hot) {
@@ -241,7 +261,13 @@ function tryApplyUpdates(onHotUpdateSuccess) {
   }
 
   function handleApplyUpdates(err, updatedModules) {
-    if (err || !updatedModules || hadRuntimeError) {
+    const haveErrors = err || hadRuntimeError;
+    // When there is no error but updatedModules is unavailable,
+    // it indicates a critical failure in hot-reloading,
+    // e.g. server is not ready to serve new bundle,
+    // and hence we need to do a forced reload.
+    const needsForcedReload = !err && !updatedModules;
+    if ((haveErrors && !canAcceptErrors()) || needsForcedReload) {
       window.location.reload();
       return;
     }
@@ -258,7 +284,7 @@ function tryApplyUpdates(onHotUpdateSuccess) {
   }
 
   // https://webpack.github.io/docs/hot-module-replacement.html#check
-  const result = module.hot.check(/* autoApply */ true, handleApplyUpdates);
+  var result = module.hot.check(/* autoApply */ true, handleApplyUpdates);
 
   // // webpack 2 returns a Promise instead of invoking a callback
   if (result && result.then) {
