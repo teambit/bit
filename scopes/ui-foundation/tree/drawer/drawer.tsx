@@ -25,17 +25,17 @@ export function DrawerUI({
   // consider passing the entire drawer type instead of passing each parameter
   if (!name) return null;
   return (
-    <div {...rest} className={classNames(styles.drawer, { [styles.open]: isOpen }, className)}>
+    <div {...rest} className={classNames(styles.drawer, isOpen && styles.open, className)}>
       <Context>
-        <div className={classNames(styles.drawerName, { [styles.open]: isOpen })}>
+        <div className={classNames(styles.drawerName, isOpen && styles.open)}>
           <div onClick={onToggle}>
-            <Icon className={classNames(styles.arrow, { [styles.collapsed]: !isOpen })} of="fat-arrow-down" />
+            <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
             <span>{name}</span>
           </div>
           {Widget}
         </div>
 
-        <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>{children}</div>
+        <div className={classNames(styles.drawerContent, isOpen && styles.open)}>{children}</div>
       </Context>
     </div>
   );
