@@ -17,7 +17,7 @@ import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
-import { Doc, DocPropList } from './doc';
+import { Doc, DocPropList } from '@teambit/docs.entities.doc';
 
 export type ComponentDocs = {
   files: string[];

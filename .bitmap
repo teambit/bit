@@ -381,6 +381,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/web-components/elements"
     },
+    "entities/doc": {
+        "scope": "teambit.docs",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/entities/doc"
+    },
     "entities/semantic-schema": {
         "scope": "teambit.semantics",
         "version": "0.0.6",
