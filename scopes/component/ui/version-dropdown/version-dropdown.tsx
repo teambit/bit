@@ -113,7 +113,7 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
     <div {...rest}>
       <div className={styles.top}>
         <div className={styles.title}>
-          <span>Switch to tag or snap</span>
+          <span>Switch to view tags, snaps, or lanes</span>
         </div>
         {localVersion && (
           <NavLink
