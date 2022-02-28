@@ -490,10 +490,14 @@ export default class Scope {
     const modelComponent = await this.sources.get(id);
     if (modelComponent) {
       // @todo: what about other places the model-component is loaded
-      const currentLane = await this.lanes.getCurrentLaneObject();
+      const currentLane = await this.getCurrentLaneObject();
       await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
     }
     return modelComponent;
+  }
+
+  async getCurrentLaneObject() {
+    return this.loadLane(this.lanes.getCurrentLaneId());
   }
 
   /**
