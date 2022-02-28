@@ -46,7 +46,14 @@ const componentFields = gql`
       id
       icon
     }
-
+    snaps {
+      message
+      username
+      email
+      date
+      hash
+      tag
+    }
     preview {
       includesEnvTemplate
     }

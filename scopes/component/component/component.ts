@@ -105,6 +105,10 @@ export class Component {
     }
   }
 
+  async getSnaps() {
+    return this.factory.getLogs(this.id);
+  }
+
   stringify(): string {
     return JSON.stringify({
       id: this.id,

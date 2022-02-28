@@ -83,10 +83,9 @@ export default function (workDir: string, envId: string): Configuration {
       new ReactRefreshWebpackPlugin({
         overlay: {
           sockPath: `_hmr/${envId}`,
-          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
-          // errors
-          entry: require.resolve('./react-hot-dev-client'),
-          module: require.resolve('./refresh'),
+          // TODO - react-error-overlay not showing runtime errors - https://github.com/teambit/bit/issues/5452
+          entry: require.resolve('./overlay/webpackHotDevClient'),
+          module: require.resolve('./overlay/refreshOverlayInterop'),
         },
 
         // we use '@pmmmwh/react-refresh-webpack-plugin/loader' directly where relevant.

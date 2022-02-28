@@ -5,7 +5,7 @@ import { TestsResult } from '@teambit/tests-results';
 
 export type Tests = {
   components: ComponentsResults[];
-  errors?: Error[];
+  errors?: Error[]; // aggregated errors from all components
 };
 
 export type ComponentsResults = {
@@ -17,6 +17,10 @@ export type ComponentsResults = {
    * test results for the component.
    */
   results?: TestsResult;
+  /**
+   * aggregated errors from all files
+   */
+  errors?: Error[];
 
   /**
    * loading.

@@ -6,10 +6,8 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import styles from './overview.module.scss';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
@@ -22,7 +20,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const lanesModel = useLanesContext();
-  const laneId = lanesModel?.currentLane?.id;
+  const currentLane = lanesModel?.currentLane;
   const { data } = useFetchDocs(component.id.toString());
   const fetchComponent = data?.component;
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
@@ -46,7 +44,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
     return (
       <div className={styles.overviewWrapper}>
-        {laneId && <LaneOverview laneId={laneId} />}
+        <LaneBreadcrumb lane={currentLane} />
         <Separator isPresentational />
         <ComponentOverview
           className={styles.componentOverviewBlock}
@@ -69,9 +67,9 @@ export function Overview({ titleBadges }: OverviewProps) {
     );
   }
 
-  return laneId ? (
+  return currentLane ? (
     <div className={styles.overviewWrapper}>
-      <LaneOverview laneId={laneId} />
+      <LaneBreadcrumb lane={currentLane} />
       <Separator isPresentational />
       <ComponentPreview
         component={component}
@@ -88,14 +86,5 @@ export function Overview({ titleBadges }: OverviewProps) {
       previewName="overview"
       fullContentHeight
     />
-  );
-}
-
-function LaneOverview({ laneId }: { laneId: string }): JSX.Element {
-  return (
-    <div className={styles.lane}>
-      <Icon of="lane"></Icon>
-      <Ellipsis className={styles.laneName}>{laneId}</Ellipsis>
-    </div>
   );
 }
