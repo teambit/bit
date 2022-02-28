@@ -136,11 +136,13 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         },
       },
 
-      onBeforeSetupMiddleware({ app, server }) {
+      onBeforeSetupMiddleware(wds) {
+        const { app } = wds;
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        app.use(evalSourceMapMiddleware(server));
+        // @ts-ignore @types/wds mismatch
+        app.use(evalSourceMapMiddleware(wds));
         // This lets us open files from the runtime error overlay.
         app.use(errorOverlayMiddleware());
       },

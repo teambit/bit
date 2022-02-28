@@ -5,7 +5,7 @@ export const componentFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.ts`,
     content: `
-exoprt type ${Name}Props: {
+export type ${Name}Props = {
   text: string
 }
 export function ${Name}({text}: ${Name}Props) {
