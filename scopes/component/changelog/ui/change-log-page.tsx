@@ -8,7 +8,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import styles from './change-log-page.module.scss';
@@ -59,15 +59,8 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   return (
     <>
-      {currentLane && (
-        <>
-          <div className={styles.lane}>
-            <Icon of="lane"></Icon>
-            <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
-          </div>
-          <Separator isPresentational className={styles.separator} />
-        </>
-      )}
+      <LaneBreadcrumb lane={currentLane} />
+      <Separator isPresentational />
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
