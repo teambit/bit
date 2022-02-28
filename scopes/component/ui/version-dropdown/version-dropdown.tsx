@@ -1,8 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { TimeAgo } from '@teambit/design.ui.time-ago';
-import { VersionLabel } from '@teambit/component.ui.version-label';
+
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
@@ -10,11 +9,13 @@ import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import classNames from 'classnames';
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 
 import styles from './version-dropdown.module.scss';
+import { VersionInfo } from './version-info';
+import { LaneInfo } from './lane-info';
 
-const LOCAL_VERSION = 'workspace';
+export const LOCAL_VERSION = 'workspace';
 
 export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
 
@@ -24,6 +25,7 @@ export type VersionDropdownProps = {
   lanes?: LaneModel[];
   localVersion?: boolean;
   currentVersion?: string;
+  currentLane?: LaneModel;
   latestVersion?: string;
   loading?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -36,12 +38,13 @@ export function VersionDropdown({
   latestVersion,
   localVersion,
   loading,
+  currentLane,
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
-  const noMultipeVersions = (snaps || []).concat(tags).length < 2;
+  const singleVersion = (snaps || []).concat(tags).length < 2;
 
-  if (noMultipeVersions && !loading) {
+  if (singleVersion && !loading) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
@@ -64,11 +67,12 @@ export function VersionDropdown({
           <VersionMenu
             key={key}
             tags={tags}
-            snaps={snaps || []}
-            lanes={lanes || []}
+            snaps={snaps}
+            lanes={lanes}
             currentVersion={currentVersion}
             latestVersion={latestVersion}
             localVersion={localVersion}
+            currentLane={currentLane}
           />
         )}
       </Dropdown>
@@ -85,27 +89,37 @@ function VersionPlaceholder({ currentVersion, className }: { currentVersion?: st
   );
 }
 type VersionMenuProps = {
-  tags: DropdownComponentVersion[];
-  snaps: DropdownComponentVersion[];
-  lanes: LaneModel[];
+  tags?: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+  lanes?: LaneModel[];
   localVersion?: boolean;
   currentVersion?: string;
   latestVersion?: string;
+  currentLane?: LaneModel;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
 
-function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestVersion, ...rest }: VersionMenuProps) {
+function VersionMenu({
+  tags,
+  snaps,
+  lanes,
+  currentVersion,
+  localVersion,
+  latestVersion,
+  currentLane,
+  ...rest
+}: VersionMenuProps) {
   const [activeTabIndex, setActiveTab] = useState<number>(0);
 
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
       case 'SNAP':
-        return { name, payload: snaps };
+        return { name, payload: snaps || [] };
       case 'LANE':
-        return { name, payload: lanes };
+        return { name, payload: lanes || [] };
       default:
-        return { name, payload: tags };
+        return { name, payload: tags || [] };
     }
   }).filter((tab) => tab.payload.length > 0);
 
@@ -121,12 +135,12 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
             className={classNames(
               styles.versionLine,
               styles.versionRow,
-              currentVersion === 'workspace' && styles.currentVersion
+              currentVersion === LOCAL_VERSION && styles.currentVersion
             )}
           >
             <div className={styles.version}>
               <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
-              <span className={styles.versionName}>workspace</span>
+              <span className={styles.versionName}>{LOCAL_VERSION}</span>
             </div>
           </NavLink>
         )}
@@ -136,7 +150,7 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
           return (
             <Tab
               className={styles.tab}
-              key={index}
+              key={name}
               isActive={activeTabIndex === index}
               onClick={() => setActiveTab(index)}
             >
@@ -146,65 +160,20 @@ function VersionMenu({ tags, snaps, lanes, currentVersion, localVersion, latestV
         })}
       </div>
       <div className={styles.versionContainer}>
-        {tabs[activeTabIndex].name === 'LANE'
-          ? tabs[activeTabIndex].payload.map((payload) => <LaneInfo key={payload.id} {...payload}></LaneInfo>)
-          : tabs[activeTabIndex].payload.map((payload) => (
-              <VersionInfo
-                key={payload.hash}
-                currentVersion={currentVersion}
-                latestVersion={latestVersion}
-                {...payload}
-              ></VersionInfo>
-            ))}
+        {tabs[activeTabIndex].name === 'LANE' &&
+          tabs[activeTabIndex].payload.map((payload) => (
+            <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
+          ))}
+        {tabs[activeTabIndex].name !== 'LANE' &&
+          tabs[activeTabIndex].payload.map((payload) => (
+            <VersionInfo
+              key={payload.hash}
+              currentVersion={currentVersion}
+              latestVersion={latestVersion}
+              {...payload}
+            ></VersionInfo>
+          ))}
       </div>
-    </div>
-  );
-}
-
-type VersionInfoProps = DropdownComponentVersion & {
-  currentVersion?: string;
-  latestVersion?: string;
-};
-
-function VersionInfo({ version, currentVersion, latestVersion, date, username, email }: VersionInfoProps) {
-  const isCurrent = version === currentVersion;
-  const author = useMemo(() => {
-    return {
-      displayName: username,
-      email,
-    };
-  }, [version]);
-
-  const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
-
-  return (
-    <div key={version}>
-      <NavLink
-        href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
-        className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
-      >
-        <div className={styles.version}>
-          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} />
-          <Ellipsis className={styles.versionName}>{version}</Ellipsis>
-          {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
-        </div>
-        <TimeAgo className={styles.versionTimestamp} date={timestamp} />
-      </NavLink>
-    </div>
-  );
-}
-
-type LaneInfoProps = LaneModel;
-
-function LaneInfo({ id, url }: LaneInfoProps) {
-  return (
-    <div key={id}>
-      <NavLink href={url} className={classNames(styles.versionLine, styles.versionRow)}>
-        <span>
-          <Icon className={styles.laneIcon} of="lane"></Icon>
-          {id}
-        </span>
-      </NavLink>
     </div>
   );
 }

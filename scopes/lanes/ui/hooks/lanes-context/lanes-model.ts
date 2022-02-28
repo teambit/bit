@@ -147,8 +147,9 @@ export class LanesModel {
         const id = component.model.id.fullName;
         const version = component.model.id.version as string;
         byHash.set(version, { lane, component });
-        const existing = byId.has(id) ? (byId.get(id) as LaneModel[]) : [];
-        byId.set(id, [...existing, lane]);
+        const existing = byId.get(id) || [];
+        existing.push(lane);
+        byId.set(id, existing);
       });
     });
     return { byHash, byId };
@@ -179,7 +180,8 @@ export class LanesModel {
   isInCurrentLane = (componentId: ComponentID) =>
     this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
 
-  getLaneComponentUrlByVersion = (version: string) => {
+  getLaneComponentUrlByVersion = (version?: string) => {
+    if (!version) return '';
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return '';
     return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);

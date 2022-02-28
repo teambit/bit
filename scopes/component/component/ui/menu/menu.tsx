@@ -5,7 +5,6 @@ import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
-import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -70,17 +69,17 @@ function VersionRelatedDropdowns({
   const location = useLocation();
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
-  const snapResult = useSnaps(component.id);
   const currentLane = lanesContext?.currentLane;
+  const logs = component.snaps;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (snapResult.snaps || []).filter((snap) => !snap.tag).map((snap) => ({ ...snap, version: snap.hash }));
-  }, [snapResult.snaps]);
+    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+  }, [logs]);
 
   const tags = useMemo(() => {
-    return (snapResult.snaps || []).filter((snap) => snap.tag).map((tag) => ({ ...tag, version: tag.tag as string }));
-  }, [snapResult.snaps]);
+    return (logs || []).filter((log) => log.tag).map((tag) => ({ ...tag, version: tag.tag as string }));
+  }, [logs]);
 
   const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;
@@ -105,7 +104,7 @@ function VersionRelatedDropdowns({
         localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}
-        loading={snapResult.loading}
+        currentLane={currentLane}
       />
     </>
   );
