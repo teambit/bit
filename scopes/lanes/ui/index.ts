@@ -21,7 +21,7 @@ export {
   LanesOverviewMenu,
   LanesOverviewMenuProps,
   LanesOrderedNavigationSlot,
-  LaneId,
-  LaneIdProps,
+  LaneBreadcrumb,
+  LaneBreadcrumbProps,
 } from './overview';
 export { CurrentLaneFromUrl } from './current-lane';

@@ -5,11 +5,12 @@ import classNames from 'classnames';
 
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
-import styles from './lane-id.module.scss';
 
-export type LaneIdProps = { lane?: LaneModel } & React.HTMLAttributes<HTMLDivElement>;
+import styles from './lane-breadcrumb.module.scss';
 
-export function LaneId({ lane, className, ...rest }: LaneIdProps) {
+export type LaneBreadcrumbProps = { lane?: LaneModel } & React.HTMLAttributes<HTMLDivElement>;
+
+export function LaneBreadcrumb({ lane, className, ...rest }: LaneBreadcrumbProps) {
   if (!lane) return null;
 
   return (

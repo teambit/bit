@@ -6,7 +6,7 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
-import { LaneId, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
 
@@ -44,7 +44,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
     return (
       <div className={styles.overviewWrapper}>
-        <LaneId lane={currentLane} />
+        <LaneBreadcrumb lane={currentLane} />
         <Separator isPresentational />
         <ComponentOverview
           className={styles.componentOverviewBlock}
@@ -69,7 +69,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   return currentLane ? (
     <div className={styles.overviewWrapper}>
-      <LaneId lane={currentLane} />
+      <LaneBreadcrumb lane={currentLane} />
       <Separator isPresentational />
       <ComponentPreview
         component={component}
