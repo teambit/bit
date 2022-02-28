@@ -93,7 +93,15 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
+        # component logs(snaps)
+        snaps(snapFilter: SnapFilter): [LogEntry]!
+
         aspects(include: [String]): [Aspect]
+      }
+
+      input SnapFilter {
+        type: String
+        take: Int
       }
 
       type Aspect {
@@ -156,6 +164,18 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
+        },
+        snaps: async (component: Component, { snapFilter }: { snapFilter?: { type?: string; take?: number } }) => {
+          const allSnaps = await component.getSnaps();
+          if (!snapFilter) return allSnaps;
+          const { type, take } = snapFilter;
+          const typeFilter = (snap) => {
+            if (type === 'tag') return snap.tag;
+            if (type === 'snap') return !snap.tag;
+            return true;
+          };
+          const takeFilter = (snaps) => (take && snaps.slice(0, take)) || snaps;
+          return takeFilter(allSnaps.filter(typeFilter));
         },
       },
       ComponentHost: {
