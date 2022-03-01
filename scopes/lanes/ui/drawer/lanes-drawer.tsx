@@ -1,4 +1,4 @@
-import React, { useContext, createContext, useState } from 'react';
+import React, { useContext, createContext, useState, useEffect } from 'react';
 import classNames from 'classnames';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -11,9 +11,11 @@ import styles from './lanes-drawer.module.scss';
 const LaneTreeContext = createContext<{
   collapsed: boolean;
   setCollapsed: (x: boolean) => void;
+  showScope: boolean;
 }>({
   collapsed: true,
   setCollapsed: () => {},
+  showScope: true,
 });
 
 export type LanesDrawerProps = {
@@ -42,7 +44,10 @@ export class LanesDrawer implements DrawerType {
     const lanesContext = useLanesContext();
     const isCollapsed = !lanesContext?.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
-    return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
+    const [showScope] = useState(this.props.showScope);
+    return (
+      <LaneTreeContext.Provider value={{ collapsed, setCollapsed, showScope }}>{children}</LaneTreeContext.Provider>
+    );
   };
 
   render = () => {
@@ -66,7 +71,8 @@ export class LanesDrawer implements DrawerType {
 }
 
 function Widget() {
-  const { collapsed, setCollapsed } = useContext(LaneTreeContext);
+  const { collapsed, setCollapsed, showScope } = useContext(LaneTreeContext);
+  if (!showScope) return null;
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
