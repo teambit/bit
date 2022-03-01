@@ -151,13 +151,13 @@ async function getComponentStatus(
       `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
     );
   }
-  const getNewVersion = (): string => {
+  const getNewVersion = async (): Promise<string> => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
     // @ts-ignore if !reset the version is defined
-    return latestVersion ? componentModel.latest() : version;
+    return latestVersion ? componentModel.latestIncludeRemote(repo) : version;
   };
-  const newVersion = getNewVersion();
+  const newVersion = await getNewVersion();
   if (version && !latestVersion) {
     const hasVersion = await componentModel.hasVersion(version, repo);
     if (!hasVersion)
