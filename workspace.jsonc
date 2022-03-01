@@ -298,7 +298,7 @@
         "react-animate-height": "2.0.23",
         "react-dev-utils": "11.0.4",
         "react-error-boundary": "^3.0.0",
-        "react-error-overlay": "6.0.10",
+        "react-error-overlay": "6.0.9", // 6.0.10 breaks hot reloading
         "react-flow-renderer": "8.3.7",
         "react-popper": "2.2.4",
         "react-router-dom": "5.2.0",
