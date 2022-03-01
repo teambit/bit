@@ -2,8 +2,6 @@ import stripAnsi from 'strip-ansi';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-
-import { slice } from 'lodash';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
