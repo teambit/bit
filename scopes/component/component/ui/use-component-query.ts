@@ -111,7 +111,7 @@ export function useComponentQuery(componentId: string, host: string) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
-    variables: { id: componentId, extensionId: host, logLimit: 5 },
+    variables: { id: componentId, extensionId: host },
   });
 
   useEffect(() => {
