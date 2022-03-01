@@ -452,7 +452,7 @@ describe('bit snap command', function () {
             expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
           });
           it('should not include the component when running bit tag --all', () => {
-            const output = helper.general.runWithTryCatch('bit tag -a -f');
+            const output = helper.general.runWithTryCatch('bit tag -a');
             expect(output).to.have.string('nothing to tag');
           });
           it('should block snapping the component', () => {

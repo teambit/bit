@@ -159,7 +159,7 @@ describe('bit test command', function () {
     describe('tagging the component with --force flag', () => {
       let output;
       before(() => {
-        output = helper.command.tagAllComponents('--force');
+        output = helper.command.tagComponent('utils/is-type', undefined, '--force');
       });
       it('should tag the component successfully', () => {
         expect(output).to.have.string('1 component(s) tagged');

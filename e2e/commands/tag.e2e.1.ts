@@ -214,7 +214,7 @@ describe('bit tag command', function () {
       it('Should increment the minor version when --minor flag specified', () => {
         helper.fs.createFile('components', 'a.js', 'console.log("v0.1.0")');
         helper.fs.createFile('components', 'b.js', 'console.log("v0.1.0")');
-        output = helper.command.tagAllComponents('-f --minor');
+        output = helper.command.tagAllComponents('--minor');
         expect(output).to.have.string('components/a@0.1.0');
         expect(output).to.have.string('components/b@0.1.0');
       });
@@ -230,14 +230,14 @@ describe('bit tag command', function () {
         helper.fs.createFile('components', 'd.js');
         helper.command.addComponent('components/c.js', { i: 'components/c' });
         helper.command.addComponent('components/d.js', { i: 'components/d' });
-        output = helper.command.tagAllComponents('-f', '5.12.10');
+        output = helper.command.tagAllComponents(undefined, '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
         helper.fs.createFile('components', 'a.js', 'console.log("v3.3.3")');
         helper.fs.createFile('components', 'b.js', 'console.log("v3.3.3")');
-        output = helper.command.tagAllComponents('-f', '3.3.3');
+        output = helper.command.tagAllComponents(undefined, '3.3.3');
         expect(output).to.have.string('components/a@3.3.3');
         expect(output).to.have.string('components/b@3.3.3');
       });

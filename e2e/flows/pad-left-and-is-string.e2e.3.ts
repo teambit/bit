@@ -8,7 +8,8 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 // legacy test as it tests lots of the originallySharedDir functionality
-describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
+// skip this test, it has no use in Harmony world.
+describe.skip('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
