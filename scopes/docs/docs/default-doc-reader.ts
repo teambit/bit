@@ -3,8 +3,8 @@ import type { PkgMain } from '@teambit/pkg';
 import type { Component } from '@teambit/component';
 import type { CompilerMain } from '@teambit/compiler';
 import type { Workspace } from '@teambit/workspace';
+import { Doc } from '@teambit/docs.entities.doc';
 import { DocReader } from './doc-reader';
-import { Doc } from './doc';
 
 export class DefaultDocReader implements DocReader {
   constructor(private pkg: PkgMain, private compiler: CompilerMain, private workspace: Workspace) {}
