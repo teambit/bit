@@ -12,6 +12,7 @@ import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { validateVersion } from '../../../utils/semver-helper';
 import loader from '../../../cli/loader';
+import GeneralError from '../../../error/general-error';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -65,6 +66,11 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
   const preHook = isMany ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
+  if (!consumer.isLegacy) {
+    if (force && all) {
+      throw new GeneralError('you can use either "--force" or "--all", but not both. consider using "--workspace"');
+    }
+  }
   const componentsList = new ComponentsList(consumer);
   loader.start('determine components to tag...');
   const newComponents = await componentsList.listNewComponents();

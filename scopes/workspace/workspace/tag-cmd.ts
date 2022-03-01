@@ -128,9 +128,6 @@ ${WILDCARD_HELP('tag')}`;
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
     }
-    if (force && all) {
-      throw new GeneralError('you can use either "--force" or "--all", but not both. consider using "--workspace"');
-    }
     if (typeof ignoreUnresolvedDependencies === 'boolean') {
       ignoreIssues = ignoreUnresolvedDependencies;
     }
