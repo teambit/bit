@@ -1,5 +1,5 @@
 import { Logger } from '@teambit/logger';
-import { ComponentsResults, Tester, TesterContext, Tests } from '@teambit/tester';
+import { ComponentsResults, Tester, CallbackFn, TesterContext, Tests } from '@teambit/tester';
 import Mocha from 'mocha';
 import babelRegister from '@babel/register';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
@@ -7,6 +7,7 @@ import pMapSeries from 'p-map-series';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 
 export class MochaTester implements Tester {
+  _callback: CallbackFn | undefined;
   displayName = 'Mocha';
   constructor(
     readonly id: string,
@@ -21,9 +22,18 @@ export class MochaTester implements Tester {
     babelRegister({ extensions: ['.js', '.jsx', '.ts', '.tsx'], ...(this.babelConfig || {}) });
     const specsPerComp = context.specFiles.toArray();
     const componentsResults: ComponentsResults[] = await pMapSeries(specsPerComp, async ([component, files]) => {
-      const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => this.runMochaOnOneFile(file));
+      const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => {
+        try {
+          return await this.runMochaOnOneFile(file);
+        } catch (err: any) {
+          const errMsg = `Mocha found an error while working on "${file.path}". ${err.message}`;
+          this.logger.error(errMsg, err);
+          this.logger.consoleFailure(errMsg);
+          return new TestsFiles(file.relative, [], 0, 0, 0, undefined, undefined, err);
+        }
+      });
       const allComponentErrors = testsFiles
-        .map((testFile) => testFile.tests.map((test) => test.failureErrOrStr as Error))
+        .map((testFile) => testFile.error || testFile.tests.map((test) => test.failureErrOrStr as Error))
         .flat();
       return {
         componentId: component.id,
@@ -32,6 +42,18 @@ export class MochaTester implements Tester {
       };
     });
     return new Tests(componentsResults);
+  }
+
+  async watch(context: TesterContext): Promise<Tests> {
+    const results = await this.test(context);
+    if (this._callback) {
+      this._callback(results);
+    }
+    return results;
+  }
+
+  async onTestRunComplete(callback: CallbackFn) {
+    this._callback = callback;
   }
 
   private async runMochaOnOneFile(file: AbstractVinyl): Promise<TestsFiles> {
