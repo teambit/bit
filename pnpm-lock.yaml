@@ -458,6 +458,7 @@ importers:
       prerender-loader: 1.3.0
       prettier: 2.3.2
       prettier-eslint: 11.0.0
+      pretty-bytes: 5.6.0
       pretty-time: 1.1.0
       process: 0.11.10
       prompt: 1.1.0
@@ -474,7 +475,7 @@ importers:
       react-docgen-typescript: 1.21.0
       react-dom: 17.0.2
       react-error-boundary: ^3.0.0
-      react-error-overlay: 6.0.10
+      react-error-overlay: 6.0.9
       react-flow-renderer: 8.3.7
       react-native-web: ^0.16.0
       react-popper: 2.2.4
@@ -1017,6 +1018,7 @@ importers:
       prerender-loader: registry.npmjs.org/prerender-loader/1.3.0_memory-fs@0.5.0+webpack@5.51.1
       prettier: registry.npmjs.org/prettier/2.3.2
       prettier-eslint: registry.npmjs.org/prettier-eslint/11.0.0
+      pretty-bytes: registry.npmjs.org/pretty-bytes/5.6.0
       pretty-time: registry.npmjs.org/pretty-time/1.1.0
       process: registry.npmjs.org/process/0.11.10
       prompt: registry.npmjs.org/prompt/1.1.0
@@ -1033,7 +1035,7 @@ importers:
       react-docgen-typescript: registry.npmjs.org/react-docgen-typescript/1.21.0_typescript@4.4.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
       react-error-boundary: registry.npmjs.org/react-error-boundary/3.1.4_react@17.0.2
-      react-error-overlay: registry.npmjs.org/react-error-overlay/6.0.10
+      react-error-overlay: registry.npmjs.org/react-error-overlay/6.0.9
       react-flow-renderer: registry.npmjs.org/react-flow-renderer/8.3.7_react-dom@17.0.2+react@17.0.2
       react-native-web: registry.npmjs.org/react-native-web/0.16.5_react-dom@17.0.2+react@17.0.2
       react-popper: registry.npmjs.org/react-popper/2.2.4_d22317e0deac099a83c1e579dc65c815
@@ -1146,6 +1148,9 @@ importers:
       '@types/testing-library__jest-dom': registry.npmjs.org/@types/testing-library__jest-dom/5.9.5
       chai: registry.npmjs.org/chai/4.3.0
       react-test-renderer: registry.npmjs.org/react-test-renderer/16.14.0_react@17.0.2
+
+  components/entities/doc:
+    specifiers: {}
 
   scopes/code/hooks/use-code-params:
     specifiers: {}
@@ -31543,6 +31548,12 @@ packages:
     resolution: {integrity: sha512-mKR90fX7Pm5seCOfz8q9F+66VCc1PGsWSBxKbITjfKVQHMNF2zudxHnMdJiB1fRCb+XsbQV9sO9DCkgsMQgBIA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/react-error-overlay/-/react-error-overlay-6.0.10.tgz}
     name: react-error-overlay
     version: 6.0.10
+    dev: false
+
+  registry.npmjs.org/react-error-overlay/6.0.9:
+    resolution: {integrity: sha512-nQTTcUu+ATDbrSD1BZHr5kgSD4oF8OFjxun8uAaL8RwPBacGBNPf/yAuVVdx17N8XNzRDMrZ9XcKZHCjPW+9ew==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/react-error-overlay/-/react-error-overlay-6.0.9.tgz}
+    name: react-error-overlay
+    version: 6.0.9
     dev: false
 
   registry.npmjs.org/react-fast-compare/3.2.0:
