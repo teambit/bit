@@ -1,6 +1,8 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { compact } from 'lodash';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
@@ -45,6 +47,10 @@ export class AspectMain {
       })
     );
     return results;
+  }
+
+  get babelConfig() {
+    return babelConfig;
   }
 
   private async getAspectNamesForComponent(id: ComponentID): Promise<AspectSource[]> {
@@ -135,6 +141,18 @@ export class AspectMain {
     );
     await this.workspace.bitMap.write();
     return compact(updatedComponentIds);
+  }
+
+  /**
+   * override the dependency configuration of the component environment.
+   */
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
+    return this.envs.override({
+      getDependencies: async () => {
+        const reactDeps = await this.aspectEnv.getDependencies();
+        return mergeDeepLeft(dependencyPolicy, reactDeps);
+      },
+    });
   }
 
   static runtime = MainRuntime;
