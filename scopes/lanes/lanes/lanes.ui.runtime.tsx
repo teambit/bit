@@ -14,11 +14,12 @@ import {
   LanesOverviewMenu,
   CurrentLaneFromUrl,
 } from '@teambit/lanes.ui.lanes';
-import ScopeAspect, { ScopeUI } from '@teambit/scope';
+import ScopeAspect, { ScopeUI, OverviewLineSlot } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ReactRouterAspect, { NavLinkProps, ReactRouterUI } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import { OverviewLine } from '@teambit/scope/scope.ui.runtime';
 
 export class LanesUI {
   static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -37,6 +38,10 @@ export class LanesUI {
     private menuRouteSlot: RouteSlot,
     private navSlot: LanesOrderedNavigationSlot,
     private menuItemSlot: MenuItemSlot,
+    /**
+     * overview line slot to add new lines beneath the overview section
+     */
+    private overviewSlot: OverviewLineSlot,
     private reactRouter: ReactRouterUI,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
@@ -69,7 +74,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
+        children: <LanesOverviewMenu navigationSlot={this.navSlot} overviewSlot={this.overviewSlot} host={this.host} />,
       },
     ]);
   }
@@ -95,6 +100,14 @@ export class LanesUI {
     return this;
   }
 
+  /**
+   * register a new line beneath the lane overview section.
+   */
+  registerOverviewLine(...lines: OverviewLine[]) {
+    this.overviewSlot.register(lines);
+    return this;
+  }
+
   registerNavigation(nav: NavLinkProps, order?: number) {
     this.navSlot.register({
       props: nav,
@@ -112,7 +125,13 @@ export class LanesUI {
       SidebarUI
     ],
     _,
-    [routeSlot, menuItemSlot, menuRouteSlot, navSlot]: [RouteSlot, MenuItemSlot, RouteSlot, LanesOrderedNavigationSlot],
+    [routeSlot, menuItemSlot, overviewSlot, menuRouteSlot, navSlot]: [
+      RouteSlot,
+      MenuItemSlot,
+      OverviewLineSlot,
+      RouteSlot,
+      LanesOrderedNavigationSlot
+    ],
     harmony: Harmony
   ) {
     const { config } = harmony;
@@ -132,6 +151,7 @@ export class LanesUI {
       menuRouteSlot,
       navSlot,
       menuItemSlot,
+      overviewSlot,
       reactRouter,
       workspace,
       scope
