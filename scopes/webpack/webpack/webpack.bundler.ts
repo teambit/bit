@@ -4,7 +4,7 @@ import type { Logger } from '@teambit/logger';
 import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
-import { sep, normalize } from 'path';
+import { sep } from 'path';
 
 type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
