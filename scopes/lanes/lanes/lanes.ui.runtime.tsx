@@ -16,7 +16,7 @@ import {
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI, OverviewLineSlot } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ReactRouterAspect, { NavLinkProps, ReactRouterUI } from '@teambit/react-router';
+import ReactRouterAspect, { NavLinkProps } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { OverviewLine } from '@teambit/scope/scope.ui.runtime';
@@ -32,17 +32,13 @@ export class LanesUI {
   ];
 
   constructor(
-    private uiUi: UiUI,
     private componentUi: ComponentUI,
     private routeSlot: RouteSlot,
-    private menuRouteSlot: RouteSlot,
     private navSlot: LanesOrderedNavigationSlot,
-    private menuItemSlot: MenuItemSlot,
     /**
      * overview line slot to add new lines beneath the overview section
      */
     private overviewSlot: OverviewLineSlot,
-    private reactRouter: ReactRouterUI,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
   ) {
@@ -64,7 +60,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverview routeSlot={this.routeSlot} />,
+        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
     ]);
     this.hostAspect.registerMenuRoutes([
@@ -74,7 +70,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverviewMenu navigationSlot={this.navSlot} overviewSlot={this.overviewSlot} host={this.host} />,
+        children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} />,
       },
     ]);
   }
@@ -116,22 +112,9 @@ export class LanesUI {
   }
 
   static async provider(
-    [uiUi, reactRouter, componentUi, workspaceUi, scopeUi, sidebarUi]: [
-      UiUI,
-      ReactRouterUI,
-      ComponentUI,
-      WorkspaceUI,
-      ScopeUI,
-      SidebarUI
-    ],
+    [uiUi, componentUi, workspaceUi, scopeUi, sidebarUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
     _,
-    [routeSlot, menuItemSlot, overviewSlot, menuRouteSlot, navSlot]: [
-      RouteSlot,
-      MenuItemSlot,
-      OverviewLineSlot,
-      RouteSlot,
-      LanesOrderedNavigationSlot
-    ],
+    [routeSlot, overviewSlot, navSlot]: [RouteSlot, OverviewLineSlot, LanesOrderedNavigationSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
@@ -144,18 +127,7 @@ export class LanesUI {
     if (host === ScopeAspect.id) {
       scope = scopeUi;
     }
-    const lanesUi = new LanesUI(
-      uiUi,
-      componentUi,
-      routeSlot,
-      menuRouteSlot,
-      navSlot,
-      menuItemSlot,
-      overviewSlot,
-      reactRouter,
-      workspace,
-      scope
-    );
+    const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, workspace, scope);
     uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
     sidebarUi.registerDrawer(drawer);

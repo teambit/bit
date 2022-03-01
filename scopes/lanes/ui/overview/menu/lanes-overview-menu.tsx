@@ -1,12 +1,10 @@
 import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { SlotRegistry } from '@teambit/harmony';
 import classnames from 'classnames';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import { useRouteMatch, useLocation } from 'react-router-dom';
-import { OverviewLineSlot } from '@teambit/scope';
-import { flatten } from 'lodash';
 import styles from './lanes-overview-menu.module.scss';
 
 export type NavPlugin = {
@@ -30,16 +28,14 @@ export type LanesOverviewMenuProps = {
    * main dropdown item slot
    */
   menuItemSlot?: MenuItemSlot;
-  overviewSlot?: OverviewLineSlot;
 };
 /**
  * top bar menu.
  * Note: Currently it has been copied from menu.tsx (scope/component/component/ui/menu)
  * Once tab-link component is ready update it
  */
-export function LanesOverviewMenu({ navigationSlot, className, overviewSlot }: LanesOverviewMenuProps) {
+export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMenuProps) {
   //   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
-  const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
   return (
     <div className={classnames(styles.topBar, className)}>
@@ -52,7 +48,6 @@ export function LanesOverviewMenu({ navigationSlot, className, overviewSlot }: L
         </div>
         <MainDropdown menuItems={mainMenuItems} />
       </div> */}
-      {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
     </div>
   );
 }
