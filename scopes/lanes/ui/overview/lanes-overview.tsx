@@ -1,17 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, ComponentType } from 'react';
 import { LaneDetails, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
-import { OverviewLineSlot } from '@teambit/scope';
 import flatten from 'lodash.flatten';
+import { SlotRegistry } from '@teambit/harmony';
 import { EmptyLane } from './empty-lane-overview';
 
 import styles from './lanes-overview.module.scss';
 
+export type LaneOverviewLine = ComponentType;
+export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
+
 export type LanesOverviewProps = {
   routeSlot: RouteSlot;
-  overviewSlot?: OverviewLineSlot;
+  overviewSlot?: LaneOverviewLineSlot;
 };
 export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   const lanesContext = useLanesContext();

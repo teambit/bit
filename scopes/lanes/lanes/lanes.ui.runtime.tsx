@@ -12,18 +12,19 @@ import {
   LanesModel,
   LanesOverviewMenu,
   CurrentLaneFromUrl,
+  LaneOverviewLineSlot,
+  LaneOverviewLine,
 } from '@teambit/lanes.ui.lanes';
-import ScopeAspect, { ScopeUI, OverviewLineSlot } from '@teambit/scope';
+import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import { NavLinkProps } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
-import { OverviewLine } from '@teambit/scope/scope.ui.runtime';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<OverviewLineSlot>(), Slot.withType<NavigationSlot>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<LaneOverviewLineSlot>(), Slot.withType<NavigationSlot>()];
 
   constructor(
     private componentUi: ComponentUI,
@@ -32,7 +33,7 @@ export class LanesUI {
     /**
      * overview line slot to add new lines beneath the overview section
      */
-    private overviewSlot: OverviewLineSlot,
+    private overviewSlot: LaneOverviewLineSlot,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
   ) {
@@ -93,7 +94,7 @@ export class LanesUI {
   /**
    * register a new line beneath the lane overview section.
    */
-  registerOverviewLine(...lines: OverviewLine[]) {
+  registerOverviewLine(...lines: LaneOverviewLine[]) {
     this.overviewSlot.register(lines);
     return this;
   }
@@ -108,7 +109,7 @@ export class LanesUI {
   static async provider(
     [uiUi, componentUi, workspaceUi, scopeUi, sidebarUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
     _,
-    [routeSlot, overviewSlot, navSlot]: [RouteSlot, OverviewLineSlot, LanesOrderedNavigationSlot],
+    [routeSlot, overviewSlot, navSlot]: [RouteSlot, LaneOverviewLineSlot, LanesOrderedNavigationSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
