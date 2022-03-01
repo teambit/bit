@@ -1,14 +1,7 @@
 import { TesterAspect } from './tester.aspect';
 
-export type {
-  Tester,
-  Tests,
-  TesterContext,
-  CallbackFn,
-  SpecFiles,
-  ComponentPatternsMap,
-  ComponentsResults,
-} from './tester';
+export { Tests } from './tester';
+export type { Tester, TesterContext, CallbackFn, SpecFiles, ComponentPatternsMap, ComponentsResults } from './tester';
 export type { TesterMain } from './tester.main.runtime';
 export type { TesterUI } from './tester.ui.runtime';
 
