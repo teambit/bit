@@ -2,6 +2,7 @@ import { Logger } from '@teambit/logger';
 import { ComponentsResults, Tester, CallbackFn, TesterContext, Tests } from '@teambit/tester';
 import Mocha from 'mocha';
 import babelRegister from '@babel/register';
+import type { TransformOptions } from '@babel/core';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
 import pMapSeries from 'p-map-series';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -13,8 +14,12 @@ export class MochaTester implements Tester {
   constructor(
     readonly id: string,
     private logger: Logger,
-    readonly mochaConfig: any,
-    private babelConfig: any,
+    readonly mochaConfig: Mocha.MochaOptions,
+    /**
+     * babel config are needed when the spec files are not native javascript and need to be compiled.
+     * pass the same config you pass to your babel compiler if you're using one.
+     */
+    private babelConfig: TransformOptions,
     private MochaModule: typeof Mocha
   ) {}
   async test(context: TesterContext): Promise<Tests> {
