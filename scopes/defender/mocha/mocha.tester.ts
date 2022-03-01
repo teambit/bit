@@ -5,6 +5,7 @@ import babelRegister from '@babel/register';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
 import pMapSeries from 'p-map-series';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { compact } from 'lodash';
 
 export class MochaTester implements Tester {
   _callback: CallbackFn | undefined;
@@ -17,10 +18,13 @@ export class MochaTester implements Tester {
     private MochaModule: typeof Mocha
   ) {}
   async test(context: TesterContext): Promise<Tests> {
-    // todo: remove this "extensions" property and use "only" with a function that returns true
-    // for the specs files paths only. see syntax here: https://babeljs.io/docs/en/babel-register
-    babelRegister({ extensions: ['.js', '.jsx', '.ts', '.tsx'], ...(this.babelConfig || {}) });
     const specsPerComp = context.specFiles.toArray();
+    const allSpecsFiles = specsPerComp.map(([, specFiles]) => specFiles.map((specFile) => specFile.path)).flat();
+    babelRegister({
+      only: [(filePath: string) => allSpecsFiles.includes(filePath)],
+      extensions: ['.es6', '.es', '.jsx', '.js', '.mjs', '.ts', '.tsx'],
+      ...(this.babelConfig || {}),
+    });
     const componentsResults: ComponentsResults[] = await pMapSeries(specsPerComp, async ([component, files]) => {
       const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => {
         try {
@@ -38,12 +42,15 @@ export class MochaTester implements Tester {
       return {
         componentId: component.id,
         results: new TestsResult(testsFiles),
-        errors: allComponentErrors,
+        errors: compact(allComponentErrors),
       };
     });
     return new Tests(componentsResults);
   }
 
+  /**
+   * @todo: make this work. currently, it doesn't update the UI upon changes.
+   */
   async watch(context: TesterContext): Promise<Tests> {
     const results = await this.test(context);
     if (this._callback) {
