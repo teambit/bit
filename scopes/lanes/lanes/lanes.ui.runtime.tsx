@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import { Slot, Harmony } from '@teambit/harmony';
-import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -16,13 +15,13 @@ import {
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI, OverviewLineSlot } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ReactRouterAspect, { NavLinkProps } from '@teambit/react-router';
+import { NavLinkProps } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { OverviewLine } from '@teambit/scope/scope.ui.runtime';
 
 export class LanesUI {
-  static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
+  static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<RouteProps>(), Slot.withType<OverviewLineSlot>(), Slot.withType<NavigationSlot>()];
 
