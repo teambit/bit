@@ -24,12 +24,7 @@ import { OverviewLine } from '@teambit/scope/scope.ui.runtime';
 export class LanesUI {
   static dependencies = [UIAspect, ReactRouterAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
   static runtime = UIRuntime;
-  static slots = [
-    Slot.withType<RouteProps>(),
-    Slot.withType<MenuItemSlot>(),
-    Slot.withType<RouteProps>(),
-    Slot.withType<NavigationSlot>(),
-  ];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<OverviewLineSlot>(), Slot.withType<NavigationSlot>()];
 
   constructor(
     private componentUi: ComponentUI,
