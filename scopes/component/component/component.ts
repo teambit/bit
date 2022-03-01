@@ -105,7 +105,7 @@ export class Component {
     }
   }
 
-  async getSnaps() {
+  async getLogs() {
     return this.factory.getLogs(this.id);
   }
 

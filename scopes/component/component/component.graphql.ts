@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 
+import { slice } from 'lodash';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
@@ -93,15 +94,10 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
-        # component logs(snaps)
-        snaps(snapFilter: SnapFilter): [LogEntry]!
+        # component logs
+        logs(type: String, offset: Int, limit: Int): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
-      }
-
-      input SnapFilter {
-        type: String
-        take: Int
       }
 
       type Aspect {
@@ -131,7 +127,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         listInvalid: [InvalidComponent]!
 
         # get component logs(snaps) by component id
-        snaps(id: String!): [LogEntry]!
+        snaps(id: String!): [LogEntry]! @deprecated(reason: "Use the logs field on Component")
       }
 
       type Query {
@@ -165,17 +161,19 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
-        snaps: async (component: Component, { snapFilter }: { snapFilter?: { type?: string; take?: number } }) => {
-          const allSnaps = await component.getSnaps();
-          if (!snapFilter) return allSnaps;
-          const { type, take } = snapFilter;
+        logs: async (component: Component, filter?: { type?: string; offset?: number; limit?: number }) => {
+          const allLogs = await component.getLogs();
+          if (!filter) return allLogs;
+          const { type, limit, offset } = filter;
           const typeFilter = (snap) => {
             if (type === 'tag') return snap.tag;
             if (type === 'snap') return !snap.tag;
             return true;
           };
-          const takeFilter = (snaps) => (take && snaps.slice(0, take)) || snaps;
-          return takeFilter(allSnaps.filter(typeFilter));
+          let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
+          filteredLogs = (limit && slice(filteredLogs, offset, limit + (offset || 0))) || filteredLogs;
+
+          return filteredLogs;
         },
       },
       ComponentHost: {
