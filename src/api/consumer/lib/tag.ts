@@ -51,18 +51,18 @@ type TagParams = {
   ids: string[];
   all: boolean;
   snapped: boolean;
-  scope?: string | boolean;
+  workspace?: string | boolean;
   includeImported: boolean;
   incrementBy: number;
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams): Promise<TagResults | null> {
-  const { ids, all, exactVersion, releaseType, force, ignoreIssues, scope, includeImported, persist, snapped } =
+  const { ids, all, exactVersion, releaseType, force, ignoreIssues, workspace, includeImported, persist, snapped } =
     tagParams;
   const idsHasWildcard = hasWildcard(ids);
-  const isAll = Boolean(all || scope || idsHasWildcard);
   const validExactVersion = validateVersion(exactVersion);
-  const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
+  const isMany = Boolean(all || workspace || idsHasWildcard);
+  const preHook = isMany ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
@@ -70,7 +70,7 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
   const newComponents = await componentsList.listNewComponents();
   const { bitIds, warnings } = await getComponentsToTag(
     consumer,
-    Boolean(scope),
+    Boolean(workspace),
     exactVersion,
     includeImported,
     persist,
@@ -93,7 +93,7 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
-  const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
+  const postHook = isMany ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
   HooksManagerInstance.triggerHook(postHook, tagResults);
   Analytics.setExtraData(
     'num_components',
@@ -107,9 +107,9 @@ export async function tagAction(tagParams: TagParams): Promise<TagResults | null
 
 async function getComponentsToTag(
   consumer: Consumer,
-  isAllScope: boolean,
+  isAllWorkspace: boolean,
   exactVersion: string | undefined,
-  includeImported: boolean,
+  includeImported: boolean, // relevant for the legacy only. it does nothing on Harmony
   persist: boolean,
   force: boolean,
   ids: string[],
@@ -122,8 +122,8 @@ async function getComponentsToTag(
     return { bitIds: softTaggedComponents, warnings: [] };
   }
 
-  const tagPendingComponents = isAllScope
-    ? await componentsList.listTagPendingOfAllScope(includeImported)
+  const tagPendingComponents = isAllWorkspace
+    ? await componentsList.listPotentialTagAllWorkspace(includeImported)
     : await componentsList.listTagPendingComponents();
 
   const snappedComponents = await componentsList.listSnappedComponentsOnMain();
@@ -156,7 +156,7 @@ async function getComponentsToTag(
 
   tagPendingComponents.push(...snappedComponentsIds);
 
-  if (isAllScope && exactVersion) {
+  if (isAllWorkspace && exactVersion) {
     const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
     tagPendingComponentsLatest.forEach((componentId) => {
       if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {

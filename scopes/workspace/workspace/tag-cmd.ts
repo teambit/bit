@@ -26,7 +26,8 @@ ${WILDCARD_HELP('tag')}`;
   options = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
-    ['s', 'scope [version]', 'tag all components of the current scope'],
+    ['s', 'scope [version]', 'DEPRECATED. please use --workspace instead'],
+    ['w', 'workspace [version]', 'tag all components in the workspace even if they have no changes'],
     [
       '',
       'editor [editor]',
@@ -38,7 +39,7 @@ ${WILDCARD_HELP('tag')}`;
     ['', 'minor', 'increment the minor version number'],
     ['', 'major', 'increment the major version number'],
     ['', 'pre-release [identifier]', 'EXPERIMENTAL. increment a pre-release version (e.g. 1.0.0-dev.1)'],
-    ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
+    ['f', 'force', 'force-tag even when the component has not changed. this cannot be used with "--all"'],
     ['v', 'verbose', 'show specs output on failure'],
     ['', 'ignore-unresolved-dependencies', 'DEPRECATED. use --ignore-issues instead'],
     ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
@@ -81,6 +82,7 @@ ${WILDCARD_HELP('tag')}`;
       skipTests = false,
       skipAutoTag = false,
       scope,
+      workspace,
       build,
       soft = false,
       persist = false,
@@ -98,27 +100,36 @@ ${WILDCARD_HELP('tag')}`;
       ignoreUnresolvedDependencies?: boolean;
       ignoreIssues?: boolean;
       scope?: string | boolean;
+      workspace?: string | boolean;
       incrementBy?: number;
       disableDeployPipeline?: boolean;
       disableTagPipeline?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
+    if (scope) {
+      // eslint-disable-next-line no-console
+      console.log(chalk.yellow(`--scope has been deprecated, please use --workspace instead`));
+      workspace = scope;
+    }
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (soft) build = false;
     function getVersion(): string | undefined {
-      if (scope && isString(scope)) return scope;
+      if (workspace && isString(workspace)) return workspace;
       if (all && isString(all)) return all;
       if (snapped && isString(snapped)) return snapped;
       return ver;
     }
 
-    if (!id.length && !all && !snapped && !scope && !persist) {
+    if (!id.length && !all && !snapped && !workspace && !persist) {
       throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id.length && all) {
       throw new GeneralError(
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
+    }
+    if (force && all) {
+      throw new GeneralError('you can use either "--force" or "--all", but not both. consider using "--workspace"');
     }
     if (typeof ignoreUnresolvedDependencies === 'boolean') {
       ignoreIssues = ignoreUnresolvedDependencies;
@@ -153,7 +164,7 @@ ${WILDCARD_HELP('tag')}`;
     }
 
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-    const includeImported = Boolean(scope && all);
+    const includeImported = Boolean(workspace && all);
 
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
@@ -178,7 +189,7 @@ ${WILDCARD_HELP('tag')}`;
       build,
       soft,
       persist,
-      scope,
+      workspace,
       includeImported,
       disableTagAndSnapPipelines,
       forceDeploy,

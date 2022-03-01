@@ -247,7 +247,11 @@ export default class ComponentsList {
     return components;
   }
 
-  async listTagPendingOfAllScope(includeImported = false): Promise<BitId[]> {
+  /**
+   * list all components that can be tagged.
+   * in Harmony - it's all the components in the workspace. (the "includeImported" param does nothing)
+   */
+  async listPotentialTagAllWorkspace(includeImported = false): Promise<BitId[]> {
     const tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
       const importedComponents = this.idsFromBitMap(COMPONENT_ORIGINS.IMPORTED);
