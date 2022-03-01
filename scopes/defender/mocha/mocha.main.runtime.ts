@@ -8,10 +8,10 @@ import { MochaTester } from './mocha.tester';
 export class MochaMain {
   constructor(private logger: Logger) {}
 
-  // eslint-disable-next-line global-require
   createTester(
     mochaConfig: Mocha.MochaOptions = {},
     babelConfig: TransformOptions = {},
+    // eslint-disable-next-line global-require
     mochaModule = require('mocha')
   ) {
     return new MochaTester(MochaAspect.id, this.logger, mochaConfig, babelConfig, mochaModule);
