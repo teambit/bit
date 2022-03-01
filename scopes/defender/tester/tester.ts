@@ -3,10 +3,12 @@ import { ExecutionContext } from '@teambit/envs';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { TestsResult } from '@teambit/tests-results';
 
-export type Tests = {
-  components: ComponentsResults[];
-  errors?: Error[]; // aggregated errors from all components
-};
+export class Tests {
+  constructor(public components: ComponentsResults[]) {}
+  get errors(): Error[] {
+    return this.components.map((comp) => comp.errors || []).flat();
+  }
+}
 
 export type ComponentsResults = {
   /**

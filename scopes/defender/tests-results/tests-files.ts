@@ -16,6 +16,10 @@ export class TestsFiles {
 
     public slow?: boolean,
 
+    /**
+     * this should not include any failures.
+     * it is relevant only when the tester got an unexpected error.
+     */
     public error?: Error
   ) {}
 

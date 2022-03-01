@@ -20,25 +20,18 @@ export class MochaTester implements Tester {
     // for the specs files paths only. see syntax here: https://babeljs.io/docs/en/babel-register
     babelRegister({ extensions: ['.js', '.jsx', '.ts', '.tsx'], ...(this.babelConfig || {}) });
     const specsPerComp = context.specFiles.toArray();
-    const errors: Error[] = [];
     const componentsResults: ComponentsResults[] = await pMapSeries(specsPerComp, async ([component, files]) => {
-      const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => {
-        try {
-          return await this.runMochaOnOneFile(file);
-        } catch (err: any) {
-          errors.push(err);
-          return new TestsFiles(file.relative, [], 0, 0, 0, undefined, undefined, { error: err.toString() });
-        }
-      });
+      const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => this.runMochaOnOneFile(file));
+      const allComponentErrors = testsFiles
+        .map((testFile) => testFile.tests.map((test) => test.failureErrOrStr as Error))
+        .flat();
       return {
         componentId: component.id,
         results: new TestsResult(testsFiles),
+        errors: allComponentErrors,
       };
     });
-    return {
-      components: componentsResults,
-      errors: errors.length ? errors : undefined,
-    };
+    return new Tests(componentsResults);
   }
 
   private async runMochaOnOneFile(file: AbstractVinyl): Promise<TestsFiles> {
@@ -49,21 +42,10 @@ export class MochaTester implements Tester {
       const runner = mocha
         .run()
         .on('test end', function (test) {
-          // console.log("🚀 ~ file: mocha.tester.ts ~ line 66 ~ MochaTester ~ .on ~ test", test)
-          testResults.push(
-            new TestResult(test.titlePath(), test.title, test.state, test.duration, undefined, test.err?.message)
-          );
-          // console.log('Test done: '+ test.title);
-        })
-        .on('pass', function (test) {
-          // testResults.push(new TestResult(test.titlePath(), test.title, 'passed', test.duration));
-          // console.log('Test passed');
-          // console.log(test);
-        })
-        .on('fail', function (test, err) {
-          // console.log('Test fail');
-          // console.log(test);
-          // console.log(err);
+          const state = test.state;
+          if (!state)
+            throw new Error(`the test.state of "${test.title}", file "${file.path}" is neither passed nor failed`);
+          testResults.push(new TestResult(test.titlePath(), test.title, state, test.duration, undefined, test.err));
         })
         .on('end', function () {
           const stats = runner.stats;
