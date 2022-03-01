@@ -5,22 +5,27 @@ import type { ComponentMap } from '@teambit/component';
 export function generateLink(
   prefix: string,
   componentMap: ComponentMap<string[]>,
-  defaultModule?: string,
+  mainModule?: string,
   isSplitComponentBundle = false
 ): string {
   return `
 import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
 import harmony from '${toWindowsCompatiblePath(require.resolve('@teambit/harmony'))}';
-${defaultModule ? `const defaultModule = require('${toWindowsCompatiblePath(defaultModule)}'` : ''});
-linkModules('${prefix}', defaultModule, ${isSplitComponentBundle}, {
-  ${componentMap
-    .toArray()
-    .map(([component, modulePaths]: any) => {
-      return `'${component.id.fullName}': [${modulePaths
-        .map((path) => `require('${toWindowsCompatiblePath(path)}')`)
-        .join(', ')}]`;
-    })
-    .join(',\n')}
+${mainModule ? `import * as mainModule from '${toWindowsCompatiblePath(mainModule)}';` : 'const mainModule = {};'};
+
+linkModules('${prefix}', {
+  mainModule,
+  isSplitComponentBundle: ${isSplitComponentBundle},
+  componentMap: {
+    ${componentMap
+      .toArray()
+      .map(([component, modulePaths]) => {
+        return `'${component.id.fullName}': [${modulePaths
+          .map((path) => `require('${toWindowsCompatiblePath(path)}')`)
+          .join(', ')}]`;
+      })
+      .join(',\n')}
+  }
 });
 `;
 }
