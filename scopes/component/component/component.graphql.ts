@@ -162,18 +162,7 @@ export function componentSchema(componentExtension: ComponentMain) {
           return component.state.aspects.filter(include).serialize();
         },
         logs: async (component: Component, filter?: { type?: string; offset?: number; limit?: number }) => {
-          const allLogs = await component.getLogs();
-          if (!filter) return allLogs;
-          const { type, limit, offset } = filter;
-          const typeFilter = (snap) => {
-            if (type === 'tag') return snap.tag;
-            if (type === 'snap') return !snap.tag;
-            return true;
-          };
-          let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
-          filteredLogs = (limit && slice(filteredLogs, offset, limit + (offset || 0))) || filteredLogs;
-
-          return filteredLogs;
+          return component.getLogs(filter);
         },
       },
       ComponentHost: {
