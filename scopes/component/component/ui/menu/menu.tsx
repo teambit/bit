@@ -70,7 +70,7 @@ function VersionRelatedDropdowns({
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.currentLane;
-  const logs = component.snaps;
+  const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
