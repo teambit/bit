@@ -17,6 +17,7 @@ export type LaneProps = {
   scope?: string;
   components?: LaneComponent[];
   hash: string;
+  readmeComponent?: LaneComponent;
 };
 
 export type LaneComponent = { id: BitId; head: Ref };
@@ -27,6 +28,8 @@ export default class Lane extends BitObject {
   scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
   remoteLaneId?: RemoteLaneId;
   components: LaneComponent[];
+  readmeComponent?: LaneComponent;
+
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   constructor(props: LaneProps) {
     super();
@@ -35,6 +38,7 @@ export default class Lane extends BitObject {
     this.scope = props.scope;
     this.components = props.components || [];
     this._hash = props.hash;
+    this.readmeComponent = props.readmeComponent;
   }
   id(): string {
     return this.name;
@@ -62,6 +66,10 @@ export default class Lane extends BitObject {
           id: { scope: component.id.scope, name: component.id.name },
           head: component.head.toString(),
         })),
+        readmeComponent: this.readmeComponent && {
+          id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
+          head: this.readmeComponent.head.toString(),
+        },
       },
       (val) => !!val
     );
@@ -122,6 +130,10 @@ export default class Lane extends BitObject {
     // clone the objects to not change the original data.
     this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
   }
+  setReadmeComponent(laneComponent: LaneComponent) {
+    this.readmeComponent = laneComponent;
+  }
+
   async isFullyMerged(scope: Scope): Promise<boolean> {
     const { unmerged } = await this.getMergedAndUnmergedIds(scope);
     return unmerged.length === 0;
