@@ -3,7 +3,7 @@ import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-import { compact, flatten, groupBy } from 'lodash';
+import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
@@ -70,20 +70,19 @@ function VersionRelatedDropdowns({
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.currentLane;
-
+  const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
-  const versionList = useMemo(() => {
-    const tagsArray = !currentLane
-      ? component.tags
-          ?.toArray()
-          .map((tag) => tag?.version?.version)
-          .filter((x) => x !== undefined)
-          .reverse()
-      : [component.id.version];
-    const wsLink = [isWorkspace && !isNew && !currentLane ? 'workspace' : undefined];
 
-    return compact([...wsLink, ...tagsArray]);
-  }, [component.tags, isWorkspace, isNew, currentLane]);
+  const snaps = useMemo(() => {
+    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+  }, [logs]);
+
+  const tags = useMemo(() => {
+    return (logs || []).filter((log) => log.tag).map((tag) => ({ ...tag, version: tag.tag as string }));
+  }, [logs]);
+
+  const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
+  const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
@@ -91,14 +90,22 @@ function VersionRelatedDropdowns({
   const methods = useConsumeMethods(consumeMethods, component, currentLane);
   return (
     <>
-      {versionList.length > 0 && (
+      {tags.length > 0 && (
         <UseBoxDropdown
           position="bottom-end"
           className={styles.useBox}
           Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
         />
       )}
-      <VersionDropdown versions={versionList} currentVersion={currentVersion} latestVersion={component.latest} />
+      <VersionDropdown
+        tags={tags}
+        snaps={snaps}
+        lanes={lanes}
+        localVersion={localVersion}
+        currentVersion={currentVersion}
+        latestVersion={component.latest}
+        currentLane={currentLane}
+      />
     </>
   );
 }
