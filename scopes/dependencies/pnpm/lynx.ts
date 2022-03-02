@@ -214,6 +214,7 @@ export async function install(
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
+    pruneLockfileImporters: true,
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,
