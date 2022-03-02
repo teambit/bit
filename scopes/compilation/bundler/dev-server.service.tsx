@@ -4,6 +4,7 @@ import { flatten } from 'lodash';
 import React from 'react';
 import { Text, Newline } from 'ink';
 import highlight from 'cli-highlight';
+import { sep } from 'path';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
@@ -144,7 +145,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       entry: await getEntry(context, this.runtimeSlot),
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
-      publicPath: `/public`,
+      publicPath: `${sep}public`,
     });
   }
 }

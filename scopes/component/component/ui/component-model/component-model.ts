@@ -29,7 +29,7 @@ export type ComponentModelProps = {
   host?: string;
   latest?: string;
   preview?: ComponentPreview;
-  snaps?: LegacyComponentLog[];
+  logs?: LegacyComponentLog[];
 };
 
 export type ComponentPreview = {
@@ -121,7 +121,7 @@ export class ComponentModel {
 
     readonly preview?: ComponentPreview,
 
-    readonly snaps?: LegacyComponentLog[]
+    readonly logs?: LegacyComponentLog[]
   ) {}
 
   get version() {
@@ -150,7 +150,7 @@ export class ComponentModel {
     host,
     latest,
     preview,
-    snaps,
+    logs,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -170,7 +170,7 @@ export class ComponentModel {
       host,
       latest,
       preview,
-      snaps
+      logs
     );
   }
 

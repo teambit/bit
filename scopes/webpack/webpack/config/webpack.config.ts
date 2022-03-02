@@ -4,6 +4,7 @@ import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
+import { sep } from 'path';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WebpackAssetsManifest from 'webpack-assets-manifest';
@@ -41,7 +42,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
     output: {
       // The build folder.
-      path: `${target.outputPath}/public`,
+      path: `${target.outputPath}${sep}public`,
     },
     stats: {
       errorDetails: true,

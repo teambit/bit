@@ -18,11 +18,11 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.currentLane;
-  const { snaps } = component;
+  const { logs } = component;
 
-  if (!snaps) return null;
+  if (!logs) return null;
 
-  if (snaps.length === 0) {
+  if (logs.length === 0) {
     return (
       <>
         {currentLane && (
@@ -52,7 +52,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  const latestVersion = snaps[0]?.tag || snaps[0]?.hash;
+  const latestVersion = logs[0]?.tag || logs[0]?.hash;
 
   return (
     <>
@@ -61,7 +61,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
-        {snaps.map((snap, index) => {
+        {logs.map((snap, index) => {
           const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
           return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
         })}

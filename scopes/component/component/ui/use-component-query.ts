@@ -46,7 +46,7 @@ const componentFields = gql`
       id
       icon
     }
-    snaps {
+    logs(type: $logType, offset: $logOffset, limit: $logLimit) {
       message
       username
       email
@@ -62,7 +62,7 @@ const componentFields = gql`
 `;
 
 const GET_COMPONENT = gql`
-  query Component($id: String!, $extensionId: String!) {
+  query Component($id: String!, $extensionId: String!, $logType: String, $logOffset: Int, $logLimit: Int) {
     getHost(id: $extensionId) {
       id # used for GQL caching
       get(id: $id) {
@@ -74,7 +74,7 @@ const GET_COMPONENT = gql`
 `;
 
 const SUB_SUBSCRIPTION_ADDED = gql`
-  subscription OnComponentAdded {
+  subscription OnComponentAdded($logType: String, $logOffset: Int, $logLimit: Int) {
     componentAdded {
       component {
         ...componentFields
@@ -85,7 +85,7 @@ const SUB_SUBSCRIPTION_ADDED = gql`
 `;
 
 const SUB_COMPONENT_CHANGED = gql`
-  subscription OnComponentChanged {
+  subscription OnComponentChanged($logType: String, $logOffset: Int, $logLimit: Int) {
     componentChanged {
       component {
         ...componentFields
