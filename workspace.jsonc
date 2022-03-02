@@ -68,6 +68,7 @@
         "@teambit/base-ui.layout.grid-component": "1.0.0",
         "@teambit/base-ui.layout.page-frame": "1.0.0",
         "@teambit/base-ui.loaders.loader-ribbon": "1.0.0",
+        "@teambit/base-ui.loaders.skeleton": "1.0.1",
         "@teambit/base-ui.routing.link": "1.0.0",
         "@teambit/base-ui.routing.native-link": "1.0.0",
         "@teambit/base-ui.routing.native-nav-link": "1.0.0",
