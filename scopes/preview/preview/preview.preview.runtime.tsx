@@ -73,6 +73,7 @@ export class PreviewPreview {
     );
 
     const includes = includesAll.filter((module) => !!module);
+    // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
 
     return preview.render(
