@@ -108,6 +108,10 @@ export default class Lanes {
         remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
+        readmeComponent: laneObject.readmeComponent && {
+          id: laneObject.readmeComponent?.id,
+          head: laneObject.readmeComponent.head.toString(),
+        },
       };
     };
     if (name) {
@@ -128,4 +132,5 @@ export type LaneData = {
   components: Array<{ id: BitId; head: string }>;
   remote: string | null;
   isMerged: boolean | null;
+  readmeComponent?: { id: BitId; head: string };
 };

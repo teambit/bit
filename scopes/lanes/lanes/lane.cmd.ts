@@ -327,7 +327,6 @@ export class LaneRemoveCmd implements Command {
     return chalk.green(`successfully removed the following lane(s): ${chalk.bold(laneResults.join(', '))}`);
   }
 }
-
 export class LaneCmd implements Command {
   name = 'lane [name]';
   shortDescription = 'show lanes details';
@@ -352,6 +351,34 @@ https://${BASE_DOCS_DOMAIN}/docs/lanes`;
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);
+  }
+}
+
+export class LaneReadmeCmd implements Command {
+  name = 'readme <laneName> <componentId>';
+  description = 'track/untrack lane readme component';
+  options = [['r', '--remove', 'remove it as a readme component']] as CommandOptions;
+  loader = true;
+  private = true;
+  skipWorkspace = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName, componentId]: [string, string], options: { remove?: boolean }): Promise<string> {
+    const { result, message } = await this.lanes.trackLaneReadme(laneName, componentId, options);
+
+    if (result)
+      return chalk.green(
+        `the component ${componentId} has been successfully ${
+          options.remove ? 'removed' : 'added'
+        } as the readme component for the lane ${laneName}`
+      );
+
+    return chalk.red(
+      `${message}\nthe component ${componentId} could not be ${
+        options.remove ? 'removed' : 'added'
+      } as a readme Component.`
+    );
   }
 }
 

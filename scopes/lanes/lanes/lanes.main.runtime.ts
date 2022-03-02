@@ -14,6 +14,8 @@ import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/compone
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { BitId } from '@teambit/legacy-bit-id';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -23,6 +25,7 @@ import {
   LaneRemoveCmd,
   LaneShowCmd,
   LaneTrackCmd,
+  LaneReadmeCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -158,6 +161,48 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
+  async trackLaneReadme(
+    laneName: string,
+    readmeComponentIdStr: string,
+    options?: { remove?: boolean }
+  ): Promise<{ result: boolean; message?: string }> {
+    const host: Workspace | ScopeMain = this.workspace || this.scope;
+    const readmeComponentId = await host.resolveComponentId(readmeComponentIdStr);
+    const readmeComponentBitId = new BitId(readmeComponentId);
+    const laneId: LaneId = LaneId.from(laneName);
+    let lane: Lane | null | undefined;
+
+    if (!readmeComponentId) {
+      return { result: false, message: `invalid component id ${readmeComponentIdStr}` };
+    }
+
+    if (this.workspace) {
+      lane = await this.workspace.consumer.scope.loadLane(laneId);
+    } else {
+      lane = await this.scope.legacyScope.loadLane(laneId);
+    }
+
+    if (!lane) {
+      return { result: false, message: `cannot find Lane ${laneName}` };
+    }
+
+    lane.setReadmeComponent(readmeComponentBitId);
+    if (this.workspace) {
+      const result = this.workspace.bitMap.addComponentConfig(
+        readmeComponentId,
+        LanesAspect.id,
+        options?.remove
+          ? undefined
+          : {
+              readme: true,
+            }
+      );
+      await this.workspace.bitMap.write();
+      return { result };
+    }
+    return { result: true };
+  }
+
   private getLaneDataOfDefaultLane(): LaneData | null {
     const consumer = this.workspace?.consumer;
     if (!consumer) return null;
@@ -188,6 +233,7 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
+        new LaneReadmeCmd(lanesMain),
       ];
       cli.register(laneCmd, switchCmd);
       graphql.register(lanesSchema(lanesMain));

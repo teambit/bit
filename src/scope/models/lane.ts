@@ -29,8 +29,8 @@ export default class Lane extends BitObject {
   remoteLaneId?: RemoteLaneId;
   components: LaneComponent[];
   readmeComponent?: LaneComponent;
-
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
+
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -130,8 +130,18 @@ export default class Lane extends BitObject {
     // clone the objects to not change the original data.
     this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
   }
-  setReadmeComponent(laneComponent: LaneComponent) {
-    this.readmeComponent = laneComponent;
+  setReadmeComponent(id?: BitId) {
+    if (!id) {
+      this.readmeComponent = undefined;
+      return;
+    }
+    const readmeComponent = this.getComponent(id);
+    if (!readmeComponent) {
+      throw new GeneralError(
+        `${id} doesn't exist on the lane ${this.name}. Cannot add it as a readme component. Please make sure the component has been snapped on the lane`
+      );
+    }
+    this.readmeComponent = readmeComponent;
   }
 
   async isFullyMerged(scope: Scope): Promise<boolean> {
@@ -173,11 +183,16 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
+    let isReadmeComponentValid = false;
     this.components.forEach((component) => {
+      isReadmeComponentValid = !this.readmeComponent || component.id.isEqualWithoutVersion(this.readmeComponent.id);
       if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
     });
+    if (!isReadmeComponentValid) {
+      throw new GeneralError(`${message}, readme component is not a lane component`);
+    }
     if (this.name === DEFAULT_LANE) {
       throw new GeneralError(`${message}, this name is reserved as the default lane`);
     }
