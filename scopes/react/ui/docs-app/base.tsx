@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, ComponentType } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import classNames from 'classnames';
 import { docsFile } from '@teambit/documenter.types.docs-file';
