@@ -98,11 +98,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects(include: [String]): [Aspect]
       }
 
-      input SnapFilter {
-        type: String
-        take: Int
-      }
-
       type Aspect {
         id: String!
         icon: String
