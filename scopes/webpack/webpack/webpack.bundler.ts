@@ -22,7 +22,7 @@ export class WebpackBundler implements Bundler {
     private logger: Logger,
 
     private webpack
-  ) {}
+  ) { }
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
@@ -133,6 +133,7 @@ export class WebpackBundler implements Bundler {
     return gzipped.size;
   }
 
+
   private getComponents(outputPath: string) {
     const path = outputPath.substring(0, outputPath.lastIndexOf(sep));
     const target = this.targets.find((targetCandidate) => path === targetCandidate.outputPath);
@@ -140,4 +141,5 @@ export class WebpackBundler implements Bundler {
     if (!target) throw new Error(`Could not find component id for path "${path}"`);
     return target.components;
   }
+
 }
