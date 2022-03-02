@@ -11,11 +11,11 @@ import styles from './lanes-drawer.module.scss';
 const LaneTreeContext = createContext<{
   collapsed: boolean;
   setCollapsed: (x: boolean) => void;
-  showScope: boolean;
+  canCollapse: boolean;
 }>({
   collapsed: true,
   setCollapsed: () => {},
-  showScope: true,
+  canCollapse: true,
 });
 
 export type LanesDrawerProps = {
@@ -44,9 +44,10 @@ export class LanesDrawer implements DrawerType {
     const lanesContext = useLanesContext();
     const isCollapsed = !lanesContext?.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
-    const [showScope] = useState(this.props.showScope);
     return (
-      <LaneTreeContext.Provider value={{ collapsed, setCollapsed, showScope }}>{children}</LaneTreeContext.Provider>
+      <LaneTreeContext.Provider value={{ collapsed, setCollapsed, canCollapse: this.props.showScope }}>
+        {children}
+      </LaneTreeContext.Provider>
     );
   };
 
@@ -71,8 +72,8 @@ export class LanesDrawer implements DrawerType {
 }
 
 function Widget() {
-  const { collapsed, setCollapsed, showScope } = useContext(LaneTreeContext);
-  if (!showScope) return null;
+  const { collapsed, setCollapsed, canCollapse } = useContext(LaneTreeContext);
+  if (!canCollapse) return null;
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
