@@ -16,6 +16,7 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Scope } from '@teambit/legacy/dist/scope';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -168,38 +169,30 @@ export class LanesMain {
   ): Promise<{ result: boolean; message?: string }> {
     const host: Workspace | ScopeMain = this.workspace || this.scope;
     const readmeComponentId = await host.resolveComponentId(readmeComponentIdStr);
-    const readmeComponentBitId = new BitId(readmeComponentId);
-    const laneId: LaneId = LaneId.from(laneName);
-    let lane: Lane | null | undefined;
-
     if (!readmeComponentId) {
       return { result: false, message: `invalid component id ${readmeComponentIdStr}` };
     }
-
-    if (this.workspace) {
-      lane = await this.workspace.consumer.scope.loadLane(laneId);
-    } else {
-      lane = await this.scope.legacyScope.loadLane(laneId);
-    }
+    const readmeComponentBitId = new BitId(readmeComponentId);
+    const laneId: LaneId = LaneId.from(laneName);
+    const scope: Scope = this.workspace ? this.workspace.consumer.scope : this.scope.legacyScope;
+    const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {
-      return { result: false, message: `cannot find Lane ${laneName}` };
+      return { result: false, message: `cannot find lane ${laneName}` };
     }
 
-    lane.setReadmeComponent(readmeComponentBitId);
+    lane.setReadmeComponent(options?.remove ? undefined : readmeComponentBitId);
+    await scope.lanes.saveLane(lane);
     if (this.workspace) {
-      const result = this.workspace.bitMap.addComponentConfig(
-        readmeComponentId,
-        LanesAspect.id,
-        options?.remove
-          ? undefined
-          : {
-              readme: true,
-            }
-      );
+      options?.remove
+        ? this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false)
+        : this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, {
+            readme: true,
+          });
       await this.workspace.bitMap.write();
-      return { result };
+      return { result: true };
     }
+
     return { result: true };
   }
 

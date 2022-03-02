@@ -375,7 +375,7 @@ export class LaneReadmeCmd implements Command {
       );
 
     return chalk.red(
-      `${message}\nthe component ${componentId} could not be ${
+      `${message || ''}\nthe component ${componentId} could not be ${
         options.remove ? 'removed' : 'added'
       } as a readme Component.`
     );

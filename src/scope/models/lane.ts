@@ -89,6 +89,10 @@ export default class Lane extends BitObject {
         id: new BitId({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head),
       })),
+      readmeComponent: laneObject.readmeComponent && {
+        id: new BitId({ scope: laneObject.readmeComponent.id.scope, name: laneObject.readmeComponent.id.name }),
+        head: new Ref(laneObject.readmeComponent.head),
+      },
       hash: laneObject.hash || hash,
     });
   }
@@ -183,9 +187,13 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    let isReadmeComponentValid = false;
+    let isReadmeComponentValid = !this.readmeComponent;
     this.components.forEach((component) => {
-      isReadmeComponentValid = !this.readmeComponent || component.id.isEqualWithoutVersion(this.readmeComponent.id);
+      // if the readmeComponent exists and it is invalid, revalidate it and ensure it is a lane component
+      if (this.readmeComponent && !isReadmeComponentValid) {
+        isReadmeComponentValid = component.id.isEqualWithoutVersion(this.readmeComponent.id);
+      }
+
       if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
