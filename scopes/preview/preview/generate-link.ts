@@ -11,7 +11,7 @@ export function generateLink(
   return `
 import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
 import harmony from '${toWindowsCompatiblePath(require.resolve('@teambit/harmony'))}';
-${mainModule ? `import * as mainModule from '${toWindowsCompatiblePath(mainModule)}';` : 'const mainModule = {};'};
+${mainModule ? `import * as mainModule from '${toWindowsCompatiblePath(mainModule)}';` : 'const mainModule = {};'}
 
 ${
   // generate imports:
