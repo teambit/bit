@@ -30,6 +30,7 @@ export type InstallArgs = {
 
 export type InstallOptions = {
   installTeambitBit: boolean;
+  workspaceDir?: string;
 };
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -84,7 +85,7 @@ export class DependencyInstaller {
     const calculatedPmOpts = Object.assign(
       {},
       DEFAULT_PM_INSTALL_OPTIONS,
-      { cacheRootDir: this.cacheRootDir, nodeLinker: this.nodeLinker },
+      { cacheRootDir: this.cacheRootDir, nodeLinker: this.nodeLinker, workspaceDir: options.workspaceDir },
       packageManagerOptions
     );
     if (options.installTeambitBit) {

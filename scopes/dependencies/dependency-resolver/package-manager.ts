@@ -25,6 +25,8 @@ export type PackageManagerInstallOptions = {
   overrides?: Record<string, string>;
 
   nodeLinker?: 'hoisted' | 'isolated';
+
+  workspaceDir?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -39,6 +41,7 @@ export type ResolvedPackageVersion = {
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
+  workspaceDir?: string;
   // fetchToCache?: boolean;
   // update?: boolean;
 };
