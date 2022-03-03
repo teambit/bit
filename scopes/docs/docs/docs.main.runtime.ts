@@ -11,13 +11,13 @@ import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Doc, DocPropList } from '@teambit/docs.entities.doc';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
-import { Doc, DocPropList } from './doc';
 
 export type ComponentDocs = {
   files: string[];

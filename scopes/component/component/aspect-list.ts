@@ -103,6 +103,10 @@ export class AspectList {
     return ids;
   }
 
+  clone(): AspectList {
+    return new AspectList(this.entries.map((entry) => entry.clone()));
+  }
+
   static fromLegacyExtensions(legacyDataList: ExtensionDataList, scope?: string): AspectList {
     const newEntries = legacyDataList.map((entry) => {
       return new AspectEntry(getAspectId(entry, scope), entry);

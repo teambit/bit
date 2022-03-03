@@ -3,12 +3,11 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/design.ui.separator';
 import { VersionBlock } from '@teambit/component.ui.version-block';
 import classNames from 'classnames';
-import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import styles from './change-log-page.module.scss';
@@ -19,13 +18,11 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.currentLane;
-  const snapResult = useSnaps(component.id);
-  const { loading } = snapResult;
-  const { snaps } = snapResult;
+  const { logs } = component;
 
-  if (!snaps) return null;
+  if (!logs) return null;
 
-  if (snaps.length === 0 && !loading) {
+  if (logs.length === 0) {
     return (
       <>
         {currentLane && (
@@ -55,23 +52,16 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  const latestVersion = snaps[0]?.tag || snaps[0]?.hash;
+  const latestVersion = logs[0]?.tag || logs[0]?.hash;
 
   return (
     <>
-      {currentLane && (
-        <>
-          <div className={styles.lane}>
-            <Icon of="lane"></Icon>
-            <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
-          </div>
-          <Separator isPresentational className={styles.separator} />
-        </>
-      )}
+      <LaneBreadcrumb lane={currentLane} />
+      <Separator isPresentational />
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
-        {snaps.map((snap, index) => {
+        {logs.map((snap, index) => {
           const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
           return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
         })}
