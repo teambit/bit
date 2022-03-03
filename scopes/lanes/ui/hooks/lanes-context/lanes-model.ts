@@ -19,6 +19,7 @@ export type LaneQueryResult = {
   remote?: string;
   isMerged: boolean;
   components: LaneComponentQueryResult[];
+  readmeComponent?: LaneComponentQueryResult;
 };
 /**
  * GQL (lanes)
@@ -45,6 +46,7 @@ export type LaneModel = {
   name: string;
   isMerged: boolean | null;
   components: LaneComponentModel[];
+  readmeComponent?: LaneComponentModel;
 };
 /**
  * Props to instantiate a LanesModel
@@ -93,7 +95,7 @@ export class LanesModel {
     }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, currentScope?: ScopeModel): LaneModel {
-    const { name, remote, isMerged } = laneData;
+    const { name, remote, isMerged, readmeComponent } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
@@ -111,6 +113,16 @@ export class LanesModel {
     });
 
     const laneUrl = LanesModel.getLaneUrl(laneId);
+    const readmeComponentModel =
+      readmeComponent &&
+      ComponentModel.from({
+        id: { ...readmeComponent.id, version: readmeComponent.head, scope: readmeComponent.id.scope || laneScope },
+        displayName: readmeComponent.id.name,
+        compositions: [],
+        packageName: '',
+        description: '',
+      });
+
     return {
       id: laneId,
       name: laneName,
@@ -118,6 +130,10 @@ export class LanesModel {
       isMerged,
       url: laneUrl,
       components,
+      readmeComponent: readmeComponentModel && {
+        model: readmeComponentModel,
+        url: LanesModel.getLaneComponentUrl(readmeComponentModel.id, laneId),
+      },
     };
   }
 

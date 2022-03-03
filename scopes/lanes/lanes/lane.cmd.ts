@@ -78,7 +78,7 @@ export class LaneListCmd implements Command {
         if (details) {
           const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
-          return laneTitle + readmeComponentStr + components;
+          return laneTitle + readmeComponentStr.concat('\n') + components;
         }
         return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)${readmeComponentStr}`;
       })
@@ -384,14 +384,16 @@ export class LaneReadmeCmd implements Command {
 }
 
 function outputComponents(components: LaneData['components']): string {
-  const componentsTitle = `\tcomponents (${components.length})\n`;
+  const componentsTitle = `\t${chalk.bold(`components (${components.length})`)}\n`;
   const componentsStr = components.map((c) => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
   return componentsTitle + componentsStr;
 }
 
 function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
-  return `\n\t${chalk.bold(`${chalk.yellow('readme component')} - ${component.id.toString()} - ${component.head}`)}`;
+  return `\n\t${chalk.bold(
+    `${chalk.yellow('readme component')}\n\t  ${component.id.toString()} - ${component.head}`
+  )}\n`;
 }
 
 function outputRemoteLane(remoteLane: string | null | undefined): string {

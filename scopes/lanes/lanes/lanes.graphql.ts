@@ -15,6 +15,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         components: [CompLaneData]
         isMerged: Boolean
         remote: String
+        readmeComponent: CompLaneData
       }
 
       type FileDiff {
@@ -72,6 +73,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
             })),
             isMerged: Boolean(lane.isMerged),
             remote: lane.remote,
+            readmeComponent: lane.readmeComponent,
           }));
         },
         getLaneByName: async (lanes: LanesMain, { name }: { name: string }) => {
