@@ -167,14 +167,23 @@ export class LanesMain {
     readmeComponentIdStr: string,
     options?: { remove?: boolean }
   ): Promise<{ result: boolean; message?: string }> {
-    const host: Workspace | ScopeMain = this.workspace || this.scope;
+    /**
+     * separate remove - not as a flag
+     * only support workspace for first version
+     * use docs to render lane readme
+     */
+    if (!this.workspace) {
+      throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
+    }
+
+    const host = this.scope;
     const readmeComponentId = await host.resolveComponentId(readmeComponentIdStr);
     if (!readmeComponentId) {
       return { result: false, message: `cannot find component ${readmeComponentIdStr}` };
     }
     const readmeComponentBitId = new BitId(readmeComponentId);
     const laneId: LaneId = LaneId.from(laneName);
-    const scope: Scope = this.workspace ? this.workspace.consumer.scope : this.scope.legacyScope;
+    const scope: Scope = this.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {
