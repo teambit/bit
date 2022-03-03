@@ -74,12 +74,13 @@ export class LaneListCmd implements Command {
       .filter((l) => l.name !== currentLane)
       // @ts-ignore
       .map((laneData) => {
+        const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
         if (details) {
           const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
-          return laneTitle + components;
+          return laneTitle + readmeComponentStr + components;
         }
-        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)`;
+        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)${readmeComponentStr}`;
       })
       .join('\n');
 
@@ -386,6 +387,11 @@ function outputComponents(components: LaneData['components']): string {
   const componentsTitle = `\tcomponents (${components.length})\n`;
   const componentsStr = components.map((c) => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
   return componentsTitle + componentsStr;
+}
+
+function outputReadmeComponent(component: LaneData['readmeComponent']): string {
+  if (!component) return '';
+  return `\n\t${chalk.bold(`${chalk.yellow('readme component')} - ${component.id.toString()} - ${component.head}`)}`;
 }
 
 function outputRemoteLane(remoteLane: string | null | undefined): string {

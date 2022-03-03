@@ -170,7 +170,7 @@ export class LanesMain {
     const host: Workspace | ScopeMain = this.workspace || this.scope;
     const readmeComponentId = await host.resolveComponentId(readmeComponentIdStr);
     if (!readmeComponentId) {
-      return { result: false, message: `invalid component id ${readmeComponentIdStr}` };
+      return { result: false, message: `cannot find component ${readmeComponentIdStr}` };
     }
     const readmeComponentBitId = new BitId(readmeComponentId);
     const laneId: LaneId = LaneId.from(laneName);
@@ -183,16 +183,26 @@ export class LanesMain {
 
     lane.setReadmeComponent(options?.remove ? undefined : readmeComponentBitId);
     await scope.lanes.saveLane(lane);
+
     if (this.workspace) {
-      options?.remove
-        ? this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false)
-        : this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, {
-            readme: true,
-          });
+      const existingLaneConfig =
+        this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
+      if (options?.remove && existingLaneConfig !== '-') {
+        delete existingLaneConfig[laneName];
+        this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { ...existingLaneConfig });
+      } else if (existingLaneConfig !== '-') {
+        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, {
+          ...existingLaneConfig,
+          [laneName]: { readme: true },
+        });
+      } else {
+        // this should not happen but is it still possible to set
+        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { [laneName]: { readme: true } });
+      }
       await this.workspace.bitMap.write();
       return { result: true };
     }
-
     return { result: true };
   }
 
