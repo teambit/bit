@@ -32,7 +32,7 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
         className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
       >
         <div className={styles.version}>
-          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} />
+          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={styles.versionName}>{version}</Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
         </div>
