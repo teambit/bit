@@ -13,116 +13,121 @@
     font-size: var(--bit-p-xs);
     border-radius: 6px;
   }
-}
 
-.title {
-  padding: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  margin-bottom: 8px;
-}
+  .title {
+    padding: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
 
-.versionContainer {
-  max-height: 240px;
-  overflow-y: scroll;
-}
-.versionLine {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 24px;
-  text-decoration: none;
-  color: var(--bit-text-color-heavy);
-  &:hover {
-    background-color: var(--bit-bg-heavy, #f6f6f6);
+  .titleContainer {
+    margin-bottom: 2px;
   }
-  &:last-child {
-    margin-bottom: 8px;
-  }
-  &.currentVersion {
-    background: var(--bit-accent-bg, #eceaff);
-  }
-  .label {
-    background-color: white;
-    padding: 0px 8px;
-  }
-}
 
-.placeholder {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  padding: 0 8px;
-  height: 30px;
-  border-radius: 6px;
-  user-select: none;
-  transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--bit-border-color, #babec9);
-  > span {
-    display: none;
+  .versionContainer {
+    max-height: 240px;
+    overflow-y: scroll;
   }
-  > div {
-    max-width: 80px;
-  }
-}
 
-.withVersions {
-  cursor: pointer;
-  > div {
-    margin-right: 5px;
-  }
-  > span {
-    display: unset;
-  }
-  &:hover {
-    background-color: var(--bit-bg-heavy);
-  }
-  [data-open='true'] & {
-    transition: color 300ms, background-color 300ms ease-in-out;
-    background-color: var(--bit-bg-color, #ffffff);
-    color: var(--bit-accent-color, #6c5ce7);
+  .versionLine {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 24px;
+    text-decoration: none;
+    color: var(--bit-text-color-heavy);
     &:hover {
-      background-color: var(--bit-bg-color, #ffffff);
+      background-color: var(--bit-bg-heavy, #f6f6f6);
+    }
+    &:last-child {
+      margin-bottom: 2px;
+      border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+    }
+    &.currentVersion {
+      background: var(--bit-accent-bg, #eceaff);
+    }
+    .label {
+      background-color: white;
+      padding: 0px 8px;
     }
   }
-}
 
-.tabs {
-  display: flex;
-  padding: 0 24px;
-  line-height: 14px;
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  overflow-x: auto;
-  .tab {
-    font-weight: bold;
-    padding-top: 4px;
-    font-size: 12px;
-  }
-}
-.versionRow {
-  display: flex;
-  justify-content: space-between;
-
-  .versionTimestamp {
-    margin-right: 2px;
-  }
-  .versionUserAvatar {
-    padding: 0px 8px;
-  }
-  .laneIcon {
-    padding: 0px 4px;
-  }
-  .version {
-    width: 60%;
+  .placeholder {
     display: flex;
-    flex-direction: row;
-    align-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 8px;
+    height: 30px;
+    border-radius: 6px;
+    user-select: none;
+    transition: background-color 300ms ease-in-out;
+    border: 1px solid var(--bit-border-color, #babec9);
+    > span {
+      display: none;
+    }
+    > div {
+      max-width: 80px;
+    }
   }
-  .versionName {
-    padding: 0px 8px;
+
+  .withVersions {
+    cursor: pointer;
+    > div {
+      margin-right: 5px;
+    }
+    > span {
+      display: unset;
+    }
+    &:hover {
+      background-color: var(--bit-bg-heavy);
+    }
+    [data-open='true'] & {
+      transition: color 300ms, background-color 300ms ease-in-out;
+      background-color: var(--bit-bg-color, #ffffff);
+      color: var(--bit-accent-color, #6c5ce7);
+      &:hover {
+        background-color: var(--bit-bg-color, #ffffff);
+      }
+    }
   }
-}
-.loading {
-  color: var(--bit-bg-heavy, #f6f6f6);
+
+  .tabs {
+    display: flex;
+    padding: 0 24px;
+    line-height: 14px;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+    overflow-x: auto;
+    .tab {
+      font-weight: bold;
+      padding-top: 4px;
+      font-size: 12px;
+    }
+  }
+  .versionRow {
+    display: flex;
+    justify-content: space-between;
+
+    .versionTimestamp {
+      margin-right: 2px;
+    }
+    .versionUserAvatar {
+      padding: 0px 8px;
+    }
+    .laneIcon {
+      padding: 0px 4px;
+    }
+    .version {
+      width: 60%;
+      display: flex;
+      flex-direction: row;
+      align-content: space-between;
+    }
+    .versionName {
+      padding: 0px 8px;
+    }
+  }
+  .loading {
+    color: var(--bit-bg-heavy, #f6f6f6);
+  }
 }
