@@ -147,7 +147,7 @@ function VersionMenu({
           </NavLink>
         )}
       </div>
-      <div className={multipleTabs && styles.tabs}>
+      <div className={classNames(multipleTabs && styles.tabs)}>
         {multipleTabs &&
           tabs.map(({ name }, index) => {
             return (
