@@ -26,7 +26,6 @@ import {
   LaneRemoveCmd,
   LaneShowCmd,
   LaneTrackCmd,
-  LaneReadmeCmd,
   LaneReadmeAddCmd,
   LaneReadmeRemoveCmd,
 } from './lane.cmd';
