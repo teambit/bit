@@ -24,6 +24,8 @@ export type { ComponentUI } from './component.ui.runtime';
 export { Section } from './section';
 export { ComponentContext, ComponentDescriptorContext } from './ui/context/component-context';
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
+export { ComponentProvider } from './ui/context/component-provider';
+export { useComponent } from './ui/use-component';
 export { ConsumePlugin } from './ui/menu';
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';

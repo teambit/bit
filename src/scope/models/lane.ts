@@ -139,11 +139,9 @@ export default class Lane extends BitObject {
       this.readmeComponent = undefined;
       return;
     }
-    const readmeComponent = this.getComponent(id);
+    const readmeComponent = this.getComponentByName(id);
     if (!readmeComponent) {
-      throw new GeneralError(
-        `${id} doesn't exist on the lane ${this.name}. Cannot add it as a readme component. Please make sure the component has been snapped on the lane`
-      );
+      throw new GeneralError(`cannot add ${id} as a readme component. ${id} doesn't exist on the lane ${this.name}`);
     }
     this.readmeComponent = readmeComponent;
   }

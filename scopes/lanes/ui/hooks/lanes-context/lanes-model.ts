@@ -65,7 +65,6 @@ export class LanesModel {
   static baseLaneComponentRoute = '/~component';
 
   static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
-
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 

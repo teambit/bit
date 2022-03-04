@@ -355,30 +355,53 @@ https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   }
 }
 
-export class LaneReadmeCmd implements Command {
-  name = 'readme <laneName> <componentId>';
-  description = 'track/untrack lane readme component';
-  options = [['r', '--remove', 'remove it as a readme component']] as CommandOptions;
+export class LaneReadmeRemoveCmd implements Command {
+  name = 'readme-remove [laneName]';
+  description = 'remove lane readme component';
+  options = [] as CommandOptions;
   loader = true;
   private = true;
-  skipWorkspace = true;
+  skipWorkspace = false;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName, componentId]: [string, string], options: { remove?: boolean }): Promise<string> {
-    const { result, message } = await this.lanes.trackLaneReadme(laneName, componentId, options);
+  async report([laneName]: [string]): Promise<string> {
+    const { result, message } = await this.lanes.removeLaneReadme(laneName);
+
+    if (result) {
+      return chalk.green(
+        `the readme component has been successfully from the lane ${laneName || this.lanes.getCurrentLane()}`
+      );
+    }
+
+    return chalk.red(`${message}\n`);
+  }
+}
+
+export class LaneReadmeAddCmd implements Command {
+  name = 'readme-add <componentId> [laneName]';
+  description = 'add lane readme component';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  skipWorkspace = false;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([componentId, laneName]: [string, string]): Promise<string> {
+    const { result, message } = await this.lanes.addLaneReadme(componentId, laneName);
 
     if (result)
       return chalk.green(
-        `the component ${componentId} has been successfully ${
-          options.remove ? 'removed' : 'added'
-        } as the readme component for the lane ${laneName}`
+        `the component ${componentId} has been successfully added as the readme component for the lane ${
+          laneName || this.lanes.getCurrentLane()
+        }`
       );
 
     return chalk.red(
-      `${message || ''}\nthe component ${componentId} could not be ${
-        options.remove ? 'removed' : 'added'
-      } as a readme Component.`
+      `${message || ''}\nthe component ${componentId} could not be added as a readme component for the lane ${
+        laneName || this.lanes.getCurrentLane()
+      }`
     );
   }
 }

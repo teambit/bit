@@ -7,17 +7,18 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import {
   LanesDrawer,
   LanesHost,
-  LanesOverview,
+  LaneOverview,
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
   CurrentLaneFromUrl,
   LaneOverviewLineSlot,
   LaneOverviewLine,
+  LaneReadme,
+  NavPlugin,
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import { NavLinkProps } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 
@@ -53,10 +54,12 @@ export class LanesUI {
         path: LanesModel.laneComponentUrlRegex,
         children: this.componentUi.getComponentUI(this.host),
       },
+      { path: `${LanesModel.laneRouteUrlRegex}/~readme`, children: <LaneReadme host={this.host} /> },
       {
-        path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.host} />,
+        path: `${LanesModel.laneRouteUrlRegex}/~overview`,
+        children: <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
+      { path: `${LanesModel.laneRouteUrlRegex}`, children: <LaneReadme host={this.host} /> },
     ]);
     this.hostAspect.registerMenuRoutes([
       {
@@ -71,10 +74,22 @@ export class LanesUI {
   }
 
   private registerLanesRoutes() {
-    this.registerNavigation({
-      href: '',
-      children: 'Gallery',
-    });
+    this.registerNavigation([
+      {
+        props: {
+          href: '',
+          children: 'README',
+        },
+        order: 1,
+      },
+      {
+        props: {
+          href: '~gallery',
+          children: 'Gallery',
+        },
+        order: 1,
+      },
+    ]);
   }
 
   private registerRoutes() {
@@ -99,11 +114,8 @@ export class LanesUI {
     return this;
   }
 
-  registerNavigation(nav: NavLinkProps, order?: number) {
-    this.navSlot.register({
-      props: nav,
-      order,
-    });
+  registerNavigation(routes: NavPlugin[]) {
+    this.navSlot.register(routes);
   }
 
   static async provider(

@@ -27,6 +27,8 @@ import {
   LaneShowCmd,
   LaneTrackCmd,
   LaneReadmeCmd,
+  LaneReadmeAddCmd,
+  LaneReadmeRemoveCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -162,55 +164,85 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
-  async trackLaneReadme(
-    laneName: string,
-    readmeComponentIdStr: string,
-    options?: { remove?: boolean }
-  ): Promise<{ result: boolean; message?: string }> {
-    /**
-     * separate remove - not as a flag
-     * only support workspace for first version
-     * use docs to render lane readme
-     */
+  async removeLaneReadme(laneName?: string): Promise<{ result: boolean; message?: string }> {
+    if (!this.workspace) {
+      throw new BitError('unable to remove the lane readme component outside of Bit workspace');
+    }
+    const currentLaneName = this.getCurrentLane();
+
+    if (!laneName && !currentLaneName) {
+      return {
+        result: false,
+        message: 'unable to remove the lane readme component. Either pass a laneName or switch to a lane',
+      };
+    }
+
+    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
+    const scope: Scope = this.workspace.scope.legacyScope;
+    const lane: Lane | null | undefined = await scope.loadLane(laneId);
+
+    if (!lane?.readmeComponent) {
+      return {
+        result: false,
+        message: `there is no readme component added to the lane ${laneName || currentLaneName}`,
+      };
+    }
+
+    if (this.workspace) {
+      const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
+      const existingLaneConfig =
+        this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
+
+      if (existingLaneConfig !== '-') {
+        delete existingLaneConfig[lane.name];
+        this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { ...existingLaneConfig });
+      } else {
+        // this should not happen but is it still possible to set the config as "-"
+        this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+      }
+      await this.workspace.bitMap.write();
+    }
+
+    lane.setReadmeComponent(undefined);
+    await scope.lanes.saveLane(lane);
+
+    return { result: true };
+  }
+
+  async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
     }
+    const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
 
-    const host = this.scope;
-    const readmeComponentId = await host.resolveComponentId(readmeComponentIdStr);
-    if (!readmeComponentId) {
-      return { result: false, message: `cannot find component ${readmeComponentIdStr}` };
-    }
+    const currentLaneName = this.getCurrentLane();
+
     const readmeComponentBitId = new BitId(readmeComponentId);
-    const laneId: LaneId = LaneId.from(laneName);
-    const scope: Scope = this.scope.legacyScope;
+    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
+    const scope: Scope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {
       return { result: false, message: `cannot find lane ${laneName}` };
     }
 
-    lane.setReadmeComponent(options?.remove ? undefined : readmeComponentBitId);
+    lane.setReadmeComponent(readmeComponentBitId);
     await scope.lanes.saveLane(lane);
 
     if (this.workspace) {
       const existingLaneConfig =
         this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
-      if (options?.remove && existingLaneConfig !== '-') {
-        delete existingLaneConfig[laneName];
-        this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
-        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { ...existingLaneConfig });
-      } else if (existingLaneConfig !== '-') {
+      if (existingLaneConfig !== '-') {
         this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, {
           ...existingLaneConfig,
-          [laneName]: { readme: true },
+          [lane.name]: { readme: true },
         });
       } else {
-        // this should not happen but is it still possible to set
-        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { [laneName]: { readme: true } });
+        // this should not happen but is it still possible to set the config as "-"
+        this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { [lane.name]: { readme: true } });
       }
       await this.workspace.bitMap.write();
-      return { result: true };
     }
     return { result: true };
   }
@@ -245,7 +277,8 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
-        new LaneReadmeCmd(lanesMain),
+        new LaneReadmeAddCmd(lanesMain),
+        new LaneReadmeRemoveCmd(lanesMain),
       ];
       cli.register(laneCmd, switchCmd);
       graphql.register(lanesSchema(lanesMain));

@@ -13,7 +13,7 @@ import styles from './overview.module.scss';
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
-  titleBadges: TitleBadgeSlot;
+  titleBadges?: TitleBadgeSlot;
 };
 
 export function Overview({ titleBadges }: OverviewProps) {
@@ -40,7 +40,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   if (component.preview?.includesEnvTemplate === false) {
     const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
-    const badges = flatten(titleBadges.values());
+    const badges = flatten(titleBadges?.values());
 
     return (
       <div className={styles.overviewWrapper}>
