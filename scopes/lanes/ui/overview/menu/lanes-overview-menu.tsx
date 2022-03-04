@@ -82,8 +82,7 @@ function sortFn({ order: first }: NavPlugin, { order: second }: NavPlugin) {
 /** TODO: replace it with tab-link */
 function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
-  const location = useLocation(); // sticky query params
-  const { search, pathname } = location;
+  const { search, pathname } = useLocation(); // sticky query params
   const { href } = props;
   const target = `${extendPath(url, href)}${search}`;
 
