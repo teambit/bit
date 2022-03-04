@@ -81,11 +81,10 @@ function sortFn({ order: first }: NavPlugin, { order: second }: NavPlugin) {
 
 /** TODO: replace it with tab-link */
 function TopBarNav(props: NavLinkProps) {
-  const routeMatch = useRouteMatch();
+  const { url } = useRouteMatch();
   const location = useLocation(); // sticky query params
   const { search, pathname } = location;
   const { href } = props;
-  const { url } = routeMatch;
   const target = `${extendPath(url, href)}${search}`;
 
   return (
