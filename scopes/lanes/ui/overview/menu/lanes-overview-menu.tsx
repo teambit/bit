@@ -64,8 +64,8 @@ function MenuNav({ navigationSlot }: { navigationSlot: LanesOrderedNavigationSlo
 
   return (
     <nav className={styles.navigation}>
-      {plugins.map((menuItem) => (
-        <TopBarNav key={menuItem.id} {...menuItem.props} />
+      {plugins.map((menuItem, index) => (
+        <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />
       ))}
     </nav>
   );

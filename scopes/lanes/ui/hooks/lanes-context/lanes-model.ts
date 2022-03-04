@@ -77,10 +77,12 @@ export class LanesModel {
   static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
 
   static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
-      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
-      : pathname;
-    const matches = LanesModel.regexp.exec(path);
+    if (!pathname.includes(LanesModel.baseLaneRoute)) return undefined;
+    const separator = '/~';
+    const [baseLaneRoute, laneIdRoute] = pathname.split(separator);
+    const laneUrlFromPathname = separator.concat(baseLaneRoute.concat(laneIdRoute));
+    const matches = LanesModel.regexp.exec(laneUrlFromPathname);
+
     if (!matches) return undefined;
     const [, orgId, scopeId, laneId] = matches;
     return `${orgId ? orgId.concat('.').concat(scopeId) : scopeId}/${laneId}`;

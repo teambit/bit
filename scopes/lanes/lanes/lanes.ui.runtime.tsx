@@ -56,10 +56,10 @@ export class LanesUI {
       },
       { path: `${LanesModel.laneRouteUrlRegex}/~readme`, children: <LaneReadme host={this.host} /> },
       {
-        path: `${LanesModel.laneRouteUrlRegex}/~overview`,
+        path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
         children: <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
-      { path: `${LanesModel.laneRouteUrlRegex}`, children: <LaneReadme host={this.host} /> },
+      { exact: true, path: `${LanesModel.laneRouteUrlRegex}`, children: <LaneReadme host={this.host} /> },
     ]);
     this.hostAspect.registerMenuRoutes([
       {
