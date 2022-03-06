@@ -5,6 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 
+import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
@@ -103,6 +104,22 @@ export class Component {
       }
       throw err;
     }
+  }
+
+  async getLogs(filter?: { type?: string; offset?: number; limit?: number }) {
+    const allLogs = await this.factory.getLogs(this.id);
+    if (!filter) return allLogs;
+    const { type, limit, offset } = filter;
+    const typeFilter = (snap) => {
+      if (type === 'tag') return snap.tag;
+      if (type === 'snap') return !snap.tag;
+      return true;
+    };
+    let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
+    if (limit) {
+      filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
+    }
+    return filteredLogs;
   }
 
   stringify(): string {

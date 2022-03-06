@@ -2,7 +2,6 @@ import stripAnsi from 'strip-ansi';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
@@ -93,6 +92,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
+        # component logs
+        logs(type: String, offset: Int, limit: Int): [LogEntry]!
+
         aspects(include: [String]): [Aspect]
       }
 
@@ -123,7 +125,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         listInvalid: [InvalidComponent]!
 
         # get component logs(snaps) by component id
-        snaps(id: String!): [LogEntry]!
+        snaps(id: String!): [LogEntry]! @deprecated(reason: "Use the logs field on Component")
       }
 
       type Query {
@@ -156,6 +158,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
+        },
+        logs: async (component: Component, filter?: { type?: string; offset?: number; limit?: number }) => {
+          return component.getLogs(filter);
         },
       },
       ComponentHost: {

@@ -9,7 +9,7 @@ import {
 import { Component, ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvDefinition, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { cloneDeep, compact } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
@@ -65,7 +65,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
           // that's needed to make sure the providers register there are running correctly
           const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
-          const previewModules = await this.getPreviewModules(envComponent);
+          const previewModules = await this.getPreviewModules(envDef);
           // const templatesFile = previewModules.map((template) => {
           //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
           // });
@@ -218,16 +218,16 @@ export class EnvPreviewTemplateTask implements BuildTask {
     };
   }
 
-  async getPreviewModules(envComponent: Component): Promise<ModuleExpose[]> {
-    const env = this.envs.getEnv(envComponent);
+  async getPreviewModules(envDef: EnvDefinition): Promise<ModuleExpose[]> {
     const previewDefs = this.preview.getDefs();
+
     const modules = compact(
       await Promise.all(
         previewDefs.map(async (def) => {
           if (!def.renderTemplatePathByEnv) return undefined;
           return {
             name: def.prefix,
-            path: await def.renderTemplatePathByEnv(env.env),
+            path: await def.renderTemplatePathByEnv(envDef.env),
             include: def.include,
           };
         })

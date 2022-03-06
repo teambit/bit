@@ -36,6 +36,7 @@ export type LanesOverviewMenuProps = {
  */
 export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMenuProps) {
   //   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+
   return (
     <div className={classnames(styles.topBar, className)}>
       <div className={styles.leftSide}>

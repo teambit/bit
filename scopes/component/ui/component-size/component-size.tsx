@@ -1,5 +1,5 @@
 import React from 'react';
-// import fileSize from 'pretty-bytes';
+import fileSize from 'pretty-bytes';
 import type { ComponentPreviewSize } from '@teambit/preview';
 import { BuilderData } from '@teambit/builder-data';
 import { PillLabel } from '@teambit/design.ui.pill-label';
@@ -29,7 +29,7 @@ export function ComponentSize({ componentDescriptor, ...rest }: ComponentSizePro
       <div {...rest}>
         <PillLabel>
           <img style={{ width: '16px', marginRight: '4px' }} src="https://static.bit.dev/bit-icons/weight.svg" />
-          {compressedSize}
+          {fileSize(compressedSize)}
         </PillLabel>
       </div>
     </Tooltip>
