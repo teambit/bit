@@ -21,8 +21,10 @@ const componentFields = gql`
       ...componentIdFields
     }
     aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder"]) {
-      id
-      data
+      aspectId: id
+      # TODO - check why aspectId doesnt work
+      # also - consider changing to data -> aspectData. we do it anyway in use-component-query
+      aspectData: data
     }
     packageName
     elementsUrl
@@ -201,7 +203,7 @@ export function useComponentQuery(componentId: string, host: string) {
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
     const aspectList = {
-      entries: rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data })),
+      entries: rawComponent?.aspects,
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
     return {
