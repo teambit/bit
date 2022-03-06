@@ -1,8 +1,8 @@
 import React, { ReactNode } from 'react';
 import { PreviewAspect, RenderingContext, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
+import { ComponentID } from '@teambit/component-id';
 
 import { DocsAspect } from './docs.aspect';
-import { ComponentID } from '@teambit/component-id';
 
 export class DocsPreview {
   constructor(
