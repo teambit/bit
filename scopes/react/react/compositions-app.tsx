@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentType } from 'react';
 import { Composer } from '@teambit/base-ui.utils.composer';
 import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { RenderingContext } from '@teambit/preview';
@@ -14,11 +14,10 @@ export function CompositionsApp({
   Composition,
   previewContext,
 }: {
-  Composition?: React.ComponentType;
+  Composition?: ComponentType;
   previewContext: RenderingContext;
 }) {
-  const reactContext = previewContext.get(ReactAspect.id);
-  const providers = reactContext?.providers || [];
+  const { providers = [] } = previewContext.get(ReactAspect.id) || {};
 
   const safeComposition = useFallback(Composition && <Composition />, <StandaloneNotFoundPage />);
 
