@@ -18,14 +18,15 @@ type ComponentRoute = {
 
 export function useComponent(host: string, id?: ComponentID): Component {
   const {
-    params: { componentId },
-  } = useRouteMatch<ComponentRoute>();
+    params: { componentId, laneId },
+  } = useRouteMatch<ComponentRoute & { laneId?: string }>();
   const query = useQuery();
   const version = query.get('version') || undefined;
 
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
+  const logFilters = laneId && version ? { logVersionOffset: version } : undefined;
   if (!targetId) throw new TypeError('useComponent received no component id');
-  return useComponentQuery(withVersion(targetId, version), host);
+  return useComponentQuery(withVersion(targetId, version), host, logFilters);
 }
 
 function withVersion(id: string, version?: string) {

@@ -400,12 +400,7 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(
-    repo: Repository,
-    currentLane: LocalLaneId,
-    shortHash = false,
-    startFrom?: Ref | null
-  ): Promise<ComponentLog[]> {
+  async collectLogs(repo: Repository, shortHash = false, startFrom?: Ref | null): Promise<ComponentLog[]> {
     const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     return versionsInfo.map((versionInfo) => {
@@ -418,7 +413,7 @@ export default class Component extends BitObject {
         tag: versionInfo.tag,
         hash: getRef(versionInfo.ref),
         parents: versionInfo.parents.map((parent) => getRef(parent)),
-        lane: versionInfo.onLane ? currentLane.name : DEFAULT_LANE,
+        onLane: versionInfo.onLane,
       };
     });
   }

@@ -106,8 +106,9 @@ export class Component {
     }
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number }) {
-    const allLogs = await this.factory.getLogs(this.id);
+  async getLogs(filter?: { type?: string; offset?: number; limit?: number; versionOffset?: string }) {
+    const id = !filter?.versionOffset ? ComponentID.fromString(this.id.toStringWithoutVersion()) : this.id;
+    const allLogs = await this.factory.getLogs(id);
     if (!filter) return allLogs;
     const { type, limit, offset } = filter;
     const typeFilter = (snap) => {

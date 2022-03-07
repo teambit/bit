@@ -50,6 +50,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         date: String
         hash: String!
         tag: String
+        onLane: Boolean
         # id: String!
       }
 
@@ -93,7 +94,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         tags: [Tag]!
 
         # component logs
-        logs(type: String, offset: Int, limit: Int): [LogEntry]!
+        logs(type: String, offset: Int, limit: Int, versionOffset: String): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
       }
@@ -159,7 +160,10 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
-        logs: async (component: Component, filter?: { type?: string; offset?: number; limit?: number }) => {
+        logs: async (
+          component: Component,
+          filter?: { type?: string; offset?: number; limit?: number; versionOffset?: string }
+        ) => {
           return component.getLogs(filter);
         },
       },
