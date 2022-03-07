@@ -2,6 +2,7 @@ import { useRouteMatch } from 'react-router-dom';
 import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
@@ -18,14 +19,21 @@ type ComponentRoute = {
 
 export function useComponent(host: string, id?: ComponentID): Component {
   const {
-    params: { componentId, laneId },
-  } = useRouteMatch<ComponentRoute & { laneId?: string }>();
+    params: { componentId },
+  } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
   const version = query.get('version') || undefined;
-
+  const lanesContext = useLanesContext();
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
-  const logFilters = laneId && version ? { logVersionOffset: version } : undefined;
   if (!targetId) throw new TypeError('useComponent received no component id');
+  const currentLane = lanesContext?.currentLane;
+  // when on a lane, always fetch all the logs starting from the 'head' version
+  const logFilters = currentLane
+    ? {
+        logHead: currentLane.components.find((component) => component.model.id.fullName === targetId)?.model.id.version,
+      }
+    : undefined;
+
   return useComponentQuery(withVersion(targetId, version), host, logFilters);
 }
 

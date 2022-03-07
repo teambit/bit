@@ -24,9 +24,9 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
   }, [version]);
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
-  const currentVersionRef = isCurrent ? useRef<HTMLDivElement>(null) : null;
+  const currentVersionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (currentVersionRef) {
+    if (isCurrent) {
       currentVersionRef.current?.scrollIntoView();
     }
   }, [isCurrent]);

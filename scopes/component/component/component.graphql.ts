@@ -94,7 +94,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         tags: [Tag]!
 
         # component logs
-        logs(type: String, offset: Int, limit: Int, versionOffset: String): [LogEntry]!
+        logs(type: String, offset: Int, limit: Int, head: String): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
       }
@@ -162,7 +162,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         logs: async (
           component: Component,
-          filter?: { type?: string; offset?: number; limit?: number; versionOffset?: string }
+          filter?: { type?: string; offset?: number; limit?: number; head?: string }
         ) => {
           return component.getLogs(filter);
         },

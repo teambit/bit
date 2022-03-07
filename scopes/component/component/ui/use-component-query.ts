@@ -46,7 +46,7 @@ const componentFields = gql`
       id
       icon
     }
-    logs(type: $logType, offset: $logOffset, limit: $logLimit, versionOffset: $logVersionOffset) {
+    logs(type: $logType, offset: $logOffset, limit: $logLimit, head: $logHead) {
       message
       username
       email
@@ -69,7 +69,7 @@ const GET_COMPONENT = gql`
     $logType: String
     $logOffset: Int
     $logLimit: Int
-    $logVersionOffset: String
+    $logHead: String
   ) {
     getHost(id: $extensionId) {
       id # used for GQL caching
@@ -82,7 +82,7 @@ const GET_COMPONENT = gql`
 `;
 
 const SUB_SUBSCRIPTION_ADDED = gql`
-  subscription OnComponentAdded($logType: String, $logOffset: Int, $logLimit: Int, $logVersionOffset: String) {
+  subscription OnComponentAdded($logType: String, $logOffset: Int, $logLimit: Int, $logHead: String) {
     componentAdded {
       component {
         ...componentFields
@@ -93,7 +93,7 @@ const SUB_SUBSCRIPTION_ADDED = gql`
 `;
 
 const SUB_COMPONENT_CHANGED = gql`
-  subscription OnComponentChanged($logType: String, $logOffset: Int, $logLimit: Int, $logVersionOffset: String) {
+  subscription OnComponentChanged($logType: String, $logOffset: Int, $logLimit: Int, $logHead: String) {
     componentChanged {
       component {
         ...componentFields
@@ -118,7 +118,7 @@ const SUB_COMPONENT_REMOVED = gql`
 export function useComponentQuery(
   componentId: string,
   host: string,
-  filters?: { logType?: string; logOffset?: number; logLimit?: number; logVersionOffset?: string }
+  filters?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string }
 ) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
