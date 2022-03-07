@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import * as modulesYaml from '@pnpm/modules-yaml';
@@ -54,9 +53,7 @@ chai.use(require('chai-string'));
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        const capsules = helper.command.capsuleListParsed();
-        const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
-        fs.removeSync(scopeAspectCapsulesPath);
+        helper.capsules.removeScopeAspectCapsules();
         helper.command.status(); // populate capsules.
       });
       it('packageExtensions is taken into account when running install in the capsule', () => {
@@ -76,9 +73,7 @@ chai.use(require('chai-string'));
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        const capsules = helper.command.capsuleListParsed();
-        const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
-        fs.removeSync(scopeAspectCapsulesPath);
+        helper.capsules.removeScopeAspectCapsules();
         helper.command.status(); // populate capsules.
       });
       it('workspace .npmrc is taken into account when running install in the capsule', async () => {

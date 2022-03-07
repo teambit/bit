@@ -81,10 +81,10 @@ export class PnpmPackageManager implements PackageManager {
   async _getGlobalPnpmDirs(
     opts: {
       cacheRootDir?: string;
-      workspaceDir?: string;
+      packageManagerConfigRootDir?: string;
     } = {}
   ) {
-    const { config } = await this.readConfig(opts.workspaceDir);
+    const { config } = await this.readConfig(opts.packageManagerConfigRootDir);
     const storeDir = opts.cacheRootDir ? join(opts.cacheRootDir, '.pnpm-store') : config.storeDir ?? defaultStoreDir;
     const cacheDir = opts.cacheRootDir ? join(opts.cacheRootDir, '.pnpm-cache') : config.cacheDir ?? defaultCacheDir;
     return { storeDir, cacheDir };
@@ -115,7 +115,7 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
-    const { config } = await this.readConfig(installOptions.workspaceDir);
+    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests);
     await install(
       rootManifest,

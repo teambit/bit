@@ -399,7 +399,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     visited: string[] = [],
     throwOnError = false,
     opts: {
-      workspaceDir?: string;
+      packageManagerConfigRootDir?: string;
     } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
@@ -459,7 +459,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
   async getResolvedAspects(
     components: Component[],
-    opts?: { skipIfExists?: boolean; workspaceDir?: string }
+    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
     const network = await this.isolator.isolateComponents(
@@ -473,7 +473,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         installOptions: {
           copyPeerToRuntimeOnRoot: true,
           dedupe: false,
-          workspaceDir: opts?.workspaceDir,
+          packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
         },
       },
       this.legacyScope
@@ -549,7 +549,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   async requireAspects(
     components: Component[],
     throwOnError = false,
-    opts: { workspaceDir?: string } = {}
+    opts: { packageManagerConfigRootDir?: string } = {}
   ): Promise<Array<ExtensionManifest | Aspect>> {
     const requireableExtensions = await this.getResolvedAspects(components, opts);
     if (!requireableExtensions) {

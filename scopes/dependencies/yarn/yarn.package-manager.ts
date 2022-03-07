@@ -72,7 +72,7 @@ export class YarnPackageManager implements PackageManager {
     const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
     const config = await this.computeConfiguration(rootDirPath, cacheDir, {
       nodeLinker: installOptions.nodeLinker,
-      workspaceDir: installOptions.workspaceDir,
+      packageManagerConfigRootDir: installOptions.packageManagerConfigRootDir,
     });
 
     const project = new Project(rootDirPath, { configuration: config });
@@ -308,17 +308,17 @@ export class YarnPackageManager implements PackageManager {
     cacheFolder: string,
     options: {
       nodeLinker?: 'hoisted' | 'isolated';
-      workspaceDir?: string;
+      packageManagerConfigRootDir?: string;
     }
   ): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const pluginConfig = getPluginConfiguration();
-    let startingCwd: PortablePath
-    if (options.workspaceDir) {
-      startingCwd = npath.toPortablePath(options.workspaceDir);
+    let startingCwd: PortablePath;
+    if (options.packageManagerConfigRootDir) {
+      startingCwd = npath.toPortablePath(options.packageManagerConfigRootDir);
     } else {
-      startingCwd = rootDirPath
+      startingCwd = rootDirPath;
     }
     const config = await Configuration.find(startingCwd, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
@@ -409,7 +409,7 @@ export class YarnPackageManager implements PackageManager {
     const rootDirPath = npath.toPortablePath(options.rootDir);
     const cacheDir = this.getCacheFolder(options.cacheRootDir);
     const config = await this.computeConfiguration(rootDirPath, cacheDir, {
-      workspaceDir: options.workspaceDir,
+      packageManagerConfigRootDir: options.packageManagerConfigRootDir,
     });
 
     const project = new Project(rootDirPath, { configuration: config });

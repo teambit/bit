@@ -26,7 +26,7 @@ export type PackageManagerInstallOptions = {
 
   nodeLinker?: 'hoisted' | 'isolated';
 
-  workspaceDir?: string;
+  packageManagerConfigRootDir?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -41,7 +41,7 @@ export type ResolvedPackageVersion = {
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
-  workspaceDir?: string;
+  packageManagerConfigRootDir?: string;
   // fetchToCache?: boolean;
   // update?: boolean;
 };

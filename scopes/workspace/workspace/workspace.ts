@@ -481,7 +481,7 @@ export class Workspace implements ComponentFactory {
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       {
-        workspaceDir: this.path,
+        packageManagerConfigRootDir: this.path,
       }
     );
     const resolvedComponents = components.map((component) => {
@@ -1336,7 +1336,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
             compact(workspaceManifestsIds),
             throwOnError,
             {
-              workspaceDir: this.path,
+              packageManagerConfigRootDir: this.path,
             }
           )
         : [];

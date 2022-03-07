@@ -76,7 +76,10 @@ export default class ScopeHelper {
     if (opts?.initGit) this.command.runCmd('git init');
     this.initHarmonyWorkspace();
     if (opts?.registry) {
-      this._writeNpmrc({ registry: opts.registry });
+      this._writeNpmrc({
+        registry: opts.registry,
+        ...opts.npmrcConfig,
+      });
       this._writeYarnRC({
         unsafeHttpWhitelist: ['localhost'],
         ...opts?.yarnRCConfig,
