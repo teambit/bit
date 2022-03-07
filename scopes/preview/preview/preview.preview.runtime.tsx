@@ -77,7 +77,7 @@ export class PreviewPreview {
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
 
     return preview.render(
-      componentId.fullName,
+      componentId,
       await this.getPreviewModule(name, componentId),
       includes,
       this.getRenderingContext(componentAspects)

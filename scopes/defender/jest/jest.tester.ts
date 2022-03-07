@@ -169,8 +169,7 @@ export class JestTester implements Tester {
       context,
       jestConfigWithSpecs
     );
-    const allErrors = componentTestResults.map((comp) => comp.errors || []).flat();
-    return { components: componentTestResults, errors: allErrors };
+    return new Tests(componentTestResults);
   }
 
   async watch(context: TesterContext): Promise<Tests> {

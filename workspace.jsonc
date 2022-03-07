@@ -68,6 +68,7 @@
         "@teambit/base-ui.layout.grid-component": "1.0.0",
         "@teambit/base-ui.layout.page-frame": "1.0.0",
         "@teambit/base-ui.loaders.loader-ribbon": "1.0.0",
+        "@teambit/base-ui.loaders.skeleton": "1.0.1",
         "@teambit/base-ui.routing.link": "1.0.0",
         "@teambit/base-ui.routing.native-link": "1.0.0",
         "@teambit/base-ui.routing.native-nav-link": "1.0.0",
@@ -253,6 +254,7 @@
         "https-proxy-agent": "5.0.0",
         "humanize-duration": "3.23.1",
         "humanize-string": "2.1.0",
+        "ini": "2.0.0",
         "is-primitive": "3.0.1",
         "jest": "26.6.3",
         "jest-message-util": "26.6.2",
@@ -298,7 +300,7 @@
         "react-animate-height": "2.0.23",
         "react-dev-utils": "11.0.4",
         "react-error-boundary": "^3.0.0",
-        "react-error-overlay": "6.0.9", // 6.0.10 breaks hot reloading
+        "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
         "react-popper": "2.2.4",
         "react-router-dom": "5.2.0",
@@ -351,7 +353,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.228",
+        "@teambit/legacy": "1.0.229",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -422,7 +424,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.228"
+            "@teambit/legacy": "1.0.229"
           }
         }
       },
@@ -675,7 +677,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.228"
+            "@teambit/legacy": "1.0.229"
           }
         }
       }
@@ -732,7 +734,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.228",
+            "@teambit/legacy": "1.0.229",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -840,7 +842,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.228"
+            "@teambit/legacy": "1.0.229"
           }
         }
       }

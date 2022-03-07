@@ -60,6 +60,7 @@ export type IsolateComponentsInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 type CreateGraphOptions = {
@@ -130,6 +131,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  packageManagerConfigRootDir?: string;
 };
 
 type CapsulePackageJsonData = {
@@ -286,6 +289,7 @@ export class IsolatorMain {
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
+      packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
     };
 
     const packageManagerInstallOptions = {
