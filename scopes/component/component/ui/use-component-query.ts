@@ -21,8 +21,11 @@ const componentFields = gql`
       ...componentIdFields
     }
     aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder"]) {
-      id
-      data
+      # 'id' property in gql refers to a *global* identifier and used for caching.
+      # this makes aspect data cache under the same key, even when they are under different components.
+      # renaming the property fixes that.
+      aspectId: id
+      aspectData: data
     }
     packageName
     elementsUrl
@@ -213,7 +216,7 @@ export function useComponentQuery(
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
     const aspectList = {
-      entries: rawComponent?.aspects?.map((aspect) => ({ aspectId: aspect.id, aspectData: aspect.data })),
+      entries: rawComponent?.aspects,
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
     return {
