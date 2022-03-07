@@ -68,7 +68,7 @@ export class PreviewPreview {
     const includes = includesAll.filter((module) => !!module);
 
     return preview.render(
-      componentId.fullName,
+      componentId,
       await this.getPreviewModule(name, componentId),
       includes,
       this.getRenderingContext()
