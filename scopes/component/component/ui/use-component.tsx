@@ -30,7 +30,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
   // when on a lane, always fetch all the logs starting from the 'head' version
   const logFilters = currentLane
     ? {
-        logFilters: {
+        log: {
           logHead: currentLane.components.find((component) => component.model.id.fullName === targetId)?.model.id
             .version,
         },

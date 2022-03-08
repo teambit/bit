@@ -121,12 +121,12 @@ const SUB_COMPONENT_REMOVED = gql`
 export function useComponentQuery(
   componentId: string,
   host: string,
-  filters?: { logFilters?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string } }
+  filters?: { log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string } }
 ) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
-    variables: { id: componentId, extensionId: host, ...(filters?.logFilters || {}) },
+    variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
   });
 
   useEffect(() => {
