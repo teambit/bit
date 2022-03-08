@@ -122,9 +122,11 @@ function VersionMenu({
         return { name, payload: tags || [] };
     }
   }).filter((tab) => tab.payload.length > 0);
-  const message =
-    tabs.length > 1 ? 'Switch to view tags, snaps, or lanes' : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
+
   const multipleTabs = tabs.length > 1;
+  const message = multipleTabs
+    ? 'Switch to view tags, snaps, or lanes'
+    : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
 
   return (
     <div {...rest}>
