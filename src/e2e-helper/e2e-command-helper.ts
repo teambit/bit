@@ -13,7 +13,6 @@ import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
-import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
