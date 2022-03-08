@@ -2,6 +2,7 @@ import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
+import memoize from 'memoizee';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -9,12 +10,14 @@ import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { ClickInsideAnIframeEvent } from './events';
 import { PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
+import { fetchComponentAspects } from './gql/fetch-component-aspects';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
 const PREVIEW_MODULES: Record<string, PreviewModule> = {};
 
-export type RenderingContextProvider = () => { [key: string]: any };
+export type RenderingContextOptions = { aspectsFilter?: string[] };
+export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };
 export type RenderingContextSlot = SlotRegistry<RenderingContextProvider>;
 
 export class PreviewPreview {
@@ -42,17 +45,21 @@ export class PreviewPreview {
     });
   }
 
+  private isDev = false;
+
   /**
    * render the preview.
    */
-  render = async () => {
+  render = async (rootExt?: string) => {
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
+    if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
 
     const preview = this.getPreview(name);
     if (!preview || !componentId) {
       throw new PreviewNotFound(previewName);
     }
+
     const includesAll = await Promise.all(
       (preview.include || []).map(async (prevName) => {
         const includedPreview = this.getPreview(prevName);
@@ -66,28 +73,32 @@ export class PreviewPreview {
     );
 
     const includes = includesAll.filter((module) => !!module);
+    // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
+    const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
 
     return preview.render(
       componentId,
       await this.getPreviewModule(name, componentId),
       includes,
-      this.getRenderingContext()
+      this.getRenderingContext(componentAspects)
     );
   };
 
   async getPreviewModule(name: string, id: ComponentID, parentPreviewName?: string): Promise<PreviewModule> {
-    if (PREVIEW_MODULES[name].componentMap[id.fullName]) return PREVIEW_MODULES[name];
+    const relevantModel = PREVIEW_MODULES[name];
+    if (relevantModel.componentMap[id.fullName]) return relevantModel;
+
     let component;
     // Handle case when there is overview but no composition on the workspace dev server
     if (!parentPreviewName || !PREVIEW_MODULES[parentPreviewName].componentMap[id.fullName]) {
       // if (!window[name]) throw new PreviewNotFound(name);
-      // const isSplitComponentBundle = PREVIEW_MODULES[name].isSplitComponentBundle ?? false;
+      // const isSplitComponentBundle = relevantModel.isSplitComponentBundle ?? false;
       // const component = window[id.toStringWithoutVersion()];
       component = await this.fetchComponentPreview(id, name);
     }
 
     return {
-      mainModule: PREVIEW_MODULES[name].mainModule,
+      mainModule: relevantModel.mainModule,
       componentMap: {
         [id.fullName]: component,
       },
@@ -185,6 +196,11 @@ export class PreviewPreview {
     return script;
   }
 
+  private getComponentAspects = memoize(fetchComponentAspects, {
+    max: 100,
+    maxAge: 12 * 60 * 60 * 1000,
+  });
+
   /**
    * register a new preview.
    */
@@ -196,8 +212,8 @@ export class PreviewPreview {
   /**
    * get the preview rendering context.
    */
-  getRenderingContext() {
-    return new RenderingContext(this.renderingContextSlot);
+  getRenderingContext(aspectsFilter?: string[]) {
+    return new RenderingContext(this.renderingContextSlot, { aspectsFilter });
   }
 
   /**
@@ -260,17 +276,8 @@ export class PreviewPreview {
   }
 }
 
-export function linkModules(
-  previewName: string,
-  defaultModule: any,
-  isSplitComponentBundle: boolean,
-  componentMap: { [key: string]: any }
-) {
-  PREVIEW_MODULES[previewName] = {
-    mainModule: defaultModule,
-    isSplitComponentBundle,
-    componentMap,
-  };
+export function linkModules(previewName: string, previewModule: PreviewModule) {
+  PREVIEW_MODULES[previewName] = previewModule;
 }
 
 PreviewAspect.addRuntime(PreviewPreview);

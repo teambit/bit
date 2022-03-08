@@ -30,6 +30,7 @@ export type InstallArgs = {
 
 export type InstallOptions = {
   installTeambitBit: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -81,12 +82,13 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     // Make sure to take other default if passed options with only one option
-    const calculatedPmOpts = Object.assign(
-      {},
-      DEFAULT_PM_INSTALL_OPTIONS,
-      { cacheRootDir: this.cacheRootDir, nodeLinker: this.nodeLinker },
-      packageManagerOptions
-    );
+    const calculatedPmOpts = {
+      ...DEFAULT_PM_INSTALL_OPTIONS,
+      cacheRootDir: this.cacheRootDir,
+      nodeLinker: this.nodeLinker,
+      packageManagerConfigRootDir: options.packageManagerConfigRootDir,
+      ...packageManagerOptions,
+    };
     if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
         throw new MainAspectNotInstallable();
