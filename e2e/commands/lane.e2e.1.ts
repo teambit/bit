@@ -22,7 +22,7 @@ describe('bit lane command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('lane readme', () => {
+  describe('lane readme', () => {
     let laneScopeWithUnsnappedComponents;
     let laneScopeWithSnappedComponents;
     let laneScopeWithReadme;
