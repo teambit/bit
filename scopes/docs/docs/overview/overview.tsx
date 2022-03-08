@@ -24,7 +24,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const currentLane = lanesModel?.currentLane;
 
   const envType: string = componentDescriptor?.get<any>('teambit.envs/envs')?.type;
-  const showHeaderOutsideIframe = component.preview?.includesEnvTemplate === false || !ENV_LIST.includes(envType) 
+  const showHeaderOutsideIframe = component?.preview?.includesEnvTemplate === false || !ENV_LIST.includes(envType) 
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
