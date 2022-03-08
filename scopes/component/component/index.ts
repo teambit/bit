@@ -22,7 +22,7 @@ export { ComponentMap } from './component-map';
 export type { ComponentMain } from './component.main.runtime';
 export type { ComponentUI } from './component.ui.runtime';
 export { Section } from './section';
-export { ComponentContext, ComponentDescriptorContext } from './ui/context/component-context';
+export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider } from './ui/context/component-provider';
 export { useComponent } from './ui/use-component';

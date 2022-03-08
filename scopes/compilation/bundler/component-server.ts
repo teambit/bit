@@ -88,6 +88,7 @@ export class ComponentServer {
    * get the url of the component server.
    */
   get url() {
-    return `/preview/${this.context.envRuntime.id}`;
+    // tailing `/` is required!
+    return `/preview/${this.context.envRuntime.id}/`;
   }
 }

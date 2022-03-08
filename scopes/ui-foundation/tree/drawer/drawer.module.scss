@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   flex: 0;
+  border-bottom: 1px solid #ededed;
+
   &.open {
     flex: 1;
   }
