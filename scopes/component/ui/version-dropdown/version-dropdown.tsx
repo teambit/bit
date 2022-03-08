@@ -171,7 +171,7 @@ function VersionMenu({
         {tabs[activeTabIndex].name !== 'LANE' &&
           tabs[activeTabIndex].payload.map((payload) => (
             <VersionInfo
-              key={payload.hash}
+              key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
               {...payload}

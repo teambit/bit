@@ -32,7 +32,7 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
   }, [isCurrent]);
 
   return (
-    <div key={version} ref={currentVersionRef}>
+    <div ref={currentVersionRef}>
       <NavLink
         href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
         className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
