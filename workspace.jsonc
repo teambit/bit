@@ -242,6 +242,7 @@
         "get-port": "5.1.1",
         "get-xpath": "3.0.1",
         "graceful-fs": "4.2.4",
+        "graphql-introspection-filtering": "1.0.0",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
         "graphql-tools": "6.2.4",

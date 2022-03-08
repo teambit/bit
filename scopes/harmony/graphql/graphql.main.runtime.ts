@@ -1,4 +1,5 @@
-import { mergeSchemas } from 'graphql-tools';
+import makeFilteredSchema, { schemaDirectivesToFilters } from 'graphql-introspection-filtering';
+import { mergeSchemas, makeExecutableSchema } from 'graphql-tools';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -6,7 +7,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe } from 'graphql';
+import { execute, subscribe, GraphQLSchema } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
@@ -239,6 +240,16 @@ export class GraphqlMain {
     return schemaSlots.map(([extensionId, schema]) => {
       const moduleDeps = this.getModuleDependencies(extensionId);
 
+      const executableSchema = makeExecutableSchema({
+        typeDefs: schema.typeDefs,
+        resolvers: schema.resolvers,
+        schemaDirectives: schema.schemaDirectives,
+      });
+      const filters = schemaDirectivesToFilters(schema.schemaDirectives);
+      // filtered schema is a GraphQLSchema
+      const filteredSchema = makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
+
+      // how to make this schema part of the module? this way isn't working
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
