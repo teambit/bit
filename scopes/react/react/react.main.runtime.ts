@@ -33,6 +33,7 @@ import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates, workspaceTemplates } from './react.templates';
+import { BodyInjectionTransformer } from './transformers-webpack/body-injection-transformer';
 
 type ReactDeps = [
   EnvsMain,
@@ -363,6 +364,10 @@ export class ReactMain {
       properties: docs.properties,
     };
   }
+
+  webpackTransformers = {
+    bodyInjector: BodyInjectionTransformer,
+  };
 
   static runtime = MainRuntime;
   static dependencies = [
