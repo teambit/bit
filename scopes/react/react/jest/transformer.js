@@ -8,6 +8,7 @@ const presets = [
   [
     require('@babel/preset-env'),
     {
+      modules: false,
       targets: {
         node: 12,
       },
@@ -17,7 +18,6 @@ const presets = [
   ],
 ];
 const plugins = [
-  [require('@babel/plugin-transform-modules-commonjs')],
   [require('babel-plugin-transform-typescript-metadata')],
   [require('@babel/plugin-proposal-decorators'), { legacy: true }],
   [require('@babel/plugin-transform-runtime')],
