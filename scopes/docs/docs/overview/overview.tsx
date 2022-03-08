@@ -9,7 +9,7 @@ import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
 
-const ENV_LIST = ['react', 'env', 'aspect', 'lit', 'html'];
+const ENV_LIST_WITH_DOCS_TEMPLATE = ['react', 'env', 'aspect', 'lit', 'html'];
 
 const ENV_ASPECT_NAME = 'teambit.envs/envs';
 
@@ -26,7 +26,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const currentLane = lanesModel?.currentLane;
 
   const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
-  const showHeaderOutsideIframe = component?.preview?.includesEnvTemplate === false || !ENV_LIST.includes(envType);
+  const showHeaderOutsideIframe = component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType);
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
