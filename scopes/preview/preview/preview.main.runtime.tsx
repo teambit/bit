@@ -282,7 +282,7 @@ export class PreviewMain {
 
   writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
-    const targetPath = join(targetDir, `__${prefix}-${this.timestamp}.js`);
+    const targetPath = join(targetDir, `${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {

@@ -478,7 +478,12 @@ export class Workspace implements ComponentFactory {
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const componentIds = await this.resolveMultipleComponentIds(ids);
     const components = await this.getMany(componentIds);
-    const network = await this.isolator.isolateComponents(components.map((c) => c.id));
+    const network = await this.isolator.isolateComponents(
+      components.map((c) => c.id),
+      {
+        packageManagerConfigRootDir: this.path,
+      }
+    );
     const resolvedComponents = components.map((component) => {
       const capsule = network.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
@@ -1329,7 +1334,10 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         ? await this.scope.getManifestsGraphRecursively(
             scopeIdsGrouped.other,
             compact(workspaceManifestsIds),
-            throwOnError
+            throwOnError,
+            {
+              packageManagerConfigRootDir: this.path,
+            }
           )
         : [];
     const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
