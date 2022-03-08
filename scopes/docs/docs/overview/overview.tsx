@@ -14,11 +14,12 @@ export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
   titleBadges?: TitleBadgeSlot;
+  cannotBeConsumed?: boolean;
 };
 
-export function Overview({ titleBadges }: OverviewProps) {
+export function Overview({ titleBadges, cannotBeConsumed }: OverviewProps) {
   const component = useContext(ComponentContext);
-  const componentDescriptor = useComponentDescriptor()
+  const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
   const currentLane = lanesModel?.currentLane;
   const { data } = useFetchDocs(component.id.toString());
@@ -55,6 +56,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           packageName={component.packageName}
           titleBadges={badges}
           componentDescriptor={componentDescriptor}
+          cannotBeConsumed={cannotBeConsumed}
         />
         <ComponentPreview
           component={component}

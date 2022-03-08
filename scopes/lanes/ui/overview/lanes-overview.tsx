@@ -23,7 +23,14 @@ export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
   const currentLane = lanesContext?.currentLane;
 
   if (!currentLane || !currentLane.id) return null;
-  if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
+  if (currentLane.components.length === 0)
+    return (
+      <EmptyLane
+        message={'Start by snapping components to this Lane.'}
+        name={currentLane.name}
+        title={'Snap components to'}
+      />
+    );
 
   return (
     <div className={styles.container}>
