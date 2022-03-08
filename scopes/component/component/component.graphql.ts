@@ -50,7 +50,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         date: String
         hash: String!
         tag: String
-        onLane: Boolean
         # id: String!
       }
 
