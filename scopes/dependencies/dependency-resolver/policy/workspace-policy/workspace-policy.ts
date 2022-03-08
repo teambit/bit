@@ -1,7 +1,7 @@
 import { uniqWith } from 'lodash';
 import { sortObject } from '@teambit/legacy/dist/utils';
-import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, DependencyLifecycleType } from '../../dependencies';
+import { Policy, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
+import { KEY_NAME_BY_LIFECYCLE_TYPE, WorkspaceDependencyLifecycleType } from '../../dependencies';
 import { EntryAlreadyExist } from './exceptions';
 
 export type WorkspacePolicyConfigKeys = Omit<PolicyConfigKeys, 'devDependencies'>;
@@ -14,7 +14,7 @@ export type WorkspacePolicyManifest = Partial<
   Record<WorkspacePolicyConfigKeysNames, WorkspacePolicyLifecycleManifestObject>
 >;
 
-type WorkspacePolicyLifecycleConfigObject = {
+export type WorkspacePolicyLifecycleConfigObject = {
   [dependencyId: string]: WorkspacePolicyConfigEntryValue;
 };
 
@@ -37,7 +37,9 @@ export type WorkspacePolicyEntryValue = {
   preserve?: boolean;
 };
 
-export type WorkspacePolicyEntry = PolicyEntry & {
+export type WorkspacePolicyEntry = {
+  dependencyId: string;
+  lifecycleType: WorkspaceDependencyLifecycleType;
   value: WorkspacePolicyEntryValue;
 };
 
@@ -62,7 +64,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
       if (!calculatedOpts.updateExisting) {
         throw new EntryAlreadyExist(entry);
       }
-      this.remove(entry.dependencyId);
+      this.remove([entry.dependencyId]);
     }
     this._policiesEntries.push(entry);
   }
@@ -76,7 +78,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return new WorkspacePolicy(filtered);
   }
 
-  find(depId: string, lifecycleType?: DependencyLifecycleType): WorkspacePolicyEntry | undefined {
+  find(depId: string, lifecycleType?: WorkspaceDependencyLifecycleType): WorkspacePolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => {
       const idEqual = entry.dependencyId === depId;
       const lifecycleEqual = lifecycleType ? entry.lifecycleType === lifecycleType : true;
@@ -85,14 +87,17 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return matchedEntry;
   }
 
-  remove(depId: string): WorkspacePolicy {
+  remove(depIds: string[]): WorkspacePolicy {
     const entries = this.entries.filter((entry) => {
-      return entry.dependencyId !== depId;
+      return !depIds.includes(entry.dependencyId);
     });
     return new WorkspacePolicy(entries);
   }
 
-  getDepVersion(depId: string, lifecycleType?: DependencyLifecycleType): WorkspacePolicyEntryVersion | undefined {
+  getDepVersion(
+    depId: string,
+    lifecycleType?: WorkspaceDependencyLifecycleType
+  ): WorkspacePolicyEntryVersion | undefined {
     const entry = this.find(depId, lifecycleType);
     if (!entry) {
       return undefined;
@@ -137,7 +142,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return res;
   }
 
-  byLifecycleType(lifecycleType: DependencyLifecycleType): WorkspacePolicy {
+  byLifecycleType(lifecycleType: WorkspaceDependencyLifecycleType): WorkspacePolicy {
     const filtered = this._policiesEntries.filter((entry) => entry.lifecycleType === lifecycleType);
     return new WorkspacePolicy(filtered);
   }

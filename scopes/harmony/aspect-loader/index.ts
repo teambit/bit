@@ -12,6 +12,7 @@ export {
   getAspectDistDir,
   getCoreAspectPackageName,
   getCoreAspectName,
+  getAspectDirFromBvm,
 } from './core-aspects';
 export { PluginDefinition } from './plugin-definition';
 export { AspectDefinition } from './aspect-definition';

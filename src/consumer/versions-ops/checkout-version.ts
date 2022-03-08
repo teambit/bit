@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
@@ -60,6 +60,7 @@ export default async function checkoutVersion(
   const { version, ids, promptMergeOptions } = checkoutProps;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
+  await consumer.scope.import(BitIds.fromArray(ids || []));
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     (component) => component.mergeResults && component.mergeResults.hasConflicts
@@ -87,6 +88,8 @@ export default async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
+  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
+
   const componentsWithDependencies = componentsResults
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
@@ -101,6 +104,7 @@ export default async function checkoutVersion(
       writeDists: !checkoutProps.ignoreDist,
       writeConfig: checkoutProps.writeConfig,
       writePackageJson: !checkoutProps.ignorePackageJson,
+      resetConfig: checkoutProps.reset,
     });
     await manyComponentsWriter.writeAll();
     await deleteFilesIfNeeded(componentsResults, consumer);
@@ -130,6 +134,7 @@ async function getComponentStatus(
   checkoutProps: CheckoutProps
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
+  const repo = consumer.scope.objects;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
   const returnFailure = (msg: string, unchangedLegitimately = false) => {
@@ -140,27 +145,29 @@ async function getComponentStatus(
   if (!componentModel) {
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  const unmerged = repo.unmergedComponents.getEntry(component.name);
   if (!reset && unmerged && unmerged.resolved === false) {
     return returnFailure(
       `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
     );
   }
-  const getNewVersion = (): string => {
+  const getNewVersion = async (): Promise<string> => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
-    // $FlowFixMe if !reset the version is defined
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return latestVersion ? componentModel.latest() : version;
+    // @ts-ignore if !reset the version is defined
+    return latestVersion ? componentModel.latestIncludeRemote(repo) : version;
   };
-  const newVersion = getNewVersion();
+  const newVersion = await getNewVersion();
   if (version && !latestVersion) {
-    const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+    const hasVersion = await componentModel.hasVersion(version, repo);
     if (!hasVersion)
       return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
+  if (!currentlyUsedVersion) {
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} is new`);
+  }
   if (version && currentlyUsedVersion === version) {
     // it won't be relevant for 'reset' as it doesn't have a version
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
@@ -171,21 +178,32 @@ async function getComponentStatus(
       true
     );
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
+  const isModified = await consumer.isComponentModified(currentVersionObject, component);
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
+  // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
+  // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
+  // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
+  // 0.0.2+modification. in other words, it won't make any change.
+  // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
+  // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
+  // to be added to 0.0.1
+  // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
+  const baseVersion = currentlyUsedVersion;
+  const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  if (version) {
-    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
+  // if the component is not modified, no need to try merge the files, they will be written later on according to the
+  // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
+  if (version && isModified) {
+    const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     mergeResults = await threeWayMerge({
       consumer,
-      otherComponent: component,
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      currentLabel: newVersion,
+      otherComponent,
+      otherLabel: newVersion,
+      currentComponent: component,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
   }
@@ -224,7 +242,7 @@ export async function applyVersion(
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy } = checkoutProps;
-  const filesStatus = {};
+  let filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
     // otherwise it's impossible to have conflicts
@@ -246,22 +264,23 @@ export async function applyVersion(
   files.forEach((file) => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
-  let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    modifiedStatus = applyModifiedVersion(
+    const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
       files,
       mergeResults,
       mergeStrategy,
       componentWithDependencies.component.originallySharedDir
     );
+    filesStatus = { ...filesStatus, ...modifiedStatus };
+    componentWithDependencies.component.files = modifiedFiles;
   }
   const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
   componentWithDependencies.component.dependenciesSavedAsComponents =
     shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
   return {
-    applyVersionResult: { id, filesStatus: Object.assign(filesStatus, modifiedStatus) },
+    applyVersionResult: { id, filesStatus },
     component: componentWithDependencies,
   };
 }
@@ -278,13 +297,16 @@ export function applyModifiedVersion(
   mergeResults: MergeResultsThreeWay,
   mergeStrategy: MergeStrategy | null | undefined,
   sharedDir?: string
-): Record<string, any> {
+): { filesStatus: Record<string, any>; modifiedFiles: SourceFile[] } {
+  let modifiedFiles = componentFiles.map((file) => file.clone());
   const filesStatus = {};
-  if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
+  if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) {
+    return { filesStatus, modifiedFiles };
+  }
   mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const pathWithSharedDir = (p: string) => (sharedDir ? path.join(sharedDir, p) : p);
-    const foundFile = componentFiles.find((componentFile) => pathWithSharedDir(componentFile.relative) === filePath);
+    const foundFile = modifiedFiles.find((componentFile) => pathWithSharedDir(componentFile.relative) === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);
@@ -292,31 +314,84 @@ export function applyModifiedVersion(
     } else if (file.output) {
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
+    } else if (file.isBinaryConflict) {
+      // leave the file as is and notify the user later about it.
+      foundFile.contents = file.fsFile.contents;
+      filesStatus[file.filePath] = FileStatus.binaryConflict;
     } else {
       throw new GeneralError(`file ${filePath} does not have output nor conflict`);
     }
   });
   mergeResults.addFiles.forEach((file) => {
-    componentFiles.push(file.fsFile);
+    modifiedFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
   mergeResults.removeFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     filesStatus[file.filePath] = FileStatus.removed;
-    componentFiles = componentFiles.filter((f) => f.relative !== filePath);
+    modifiedFiles = modifiedFiles.filter((f) => f.relative !== filePath);
+  });
+  mergeResults.remainDeletedFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    modifiedFiles = modifiedFiles.filter((f) => f.relative !== filePath);
+    filesStatus[file.filePath] = FileStatus.remainDeleted;
   });
   mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
-    const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
+    const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
+  mergeResults.updatedFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    foundFile.contents = file.content;
+    filesStatus[file.filePath] = FileStatus.updated;
+  });
 
-  return filesStatus;
+  return { filesStatus, modifiedFiles };
 }
 
-async function deleteFilesIfNeeded(componentsResults: ApplyVersionWithComps[], consumer: Consumer): Promise<void> {
+/**
+ * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
+ * this function only mark them as such. later `deleteFilesIfNeeded()` will delete them
+ */
+export function markFilesToBeRemovedIfNeeded(
+  succeededComponents: ComponentStatus[],
+  componentsResults: ApplyVersionWithComps[]
+) {
+  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
+    const bitId = next.id.toString();
+    if (!accum[bitId]) accum[bitId] = next;
+    return accum;
+  }, {});
+
+  componentsResults.forEach((componentResult) => {
+    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
+    const bitId = componentResult.applyVersionResult.id.toString();
+    const succeededComponent = succeededComponentsByBitId[bitId];
+    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
+
+    filePathsFromFS.forEach((file) => {
+      const filename = pathNormalizeToLinux(file.relative);
+      if (!existingFilePathsFromModel[filename]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        existingFilePathsFromModel[filename] = FileStatus.removed;
+      }
+    });
+  });
+}
+
+/**
+ * it's needed in case the checked out version removed files that exist on the current version.
+ * without this function, these files would be left on the filesystem.
+ */
+export async function deleteFilesIfNeeded(
+  componentsResults: ApplyVersionWithComps[],
+  consumer: Consumer
+): Promise<void> {
   const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
     return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
       if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {

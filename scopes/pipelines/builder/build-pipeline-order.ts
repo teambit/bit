@@ -55,12 +55,6 @@ export function calculatePipelineOrder(
   });
   const pipelineEnvs: PipelineEnv[] = [];
   envs.forEach((envDefinition) => {
-    if (envDefinition.env.getPipe) {
-      // @todo: remove once this confusion is over
-      throw new Error(
-        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${envDefinition.id}" to "getBuildPipe()"`
-      );
-    }
     const pipeline = getPipelineForEnv(taskSlot, envDefinition.env, pipeNameOnEnv);
     pipelineEnvs.push({ env: envDefinition, pipeline });
   });
@@ -113,7 +107,7 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
   if (!task.dependencies || !task.dependencies.length) return;
   const taskId = BuildTaskHelper.serializeId(task);
   task.dependencies.forEach((dependency) => {
-    const { aspectId, name } = BuildTaskHelper.deserializeId(dependency);
+    const { aspectId, name } = BuildTaskHelper.deserializeIdAllowEmptyName(dependency);
     const dependencyTasks = pipeline.filter((pipelineTask) => {
       if (pipelineTask.aspectId !== aspectId) return false;
       return name ? name === pipelineTask.name : true;

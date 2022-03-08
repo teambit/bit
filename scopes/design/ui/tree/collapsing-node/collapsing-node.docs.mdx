@@ -1,0 +1,24 @@
+---
+description: 'A collapsable Tree Node component.'
+labels: ['collapsable', 'Tree', 'Animated']
+---
+
+import { useState } from 'react';
+import { CollapsingNode } from './collapsing-node';
+
+A basic component that renders a collapsable content.
+
+### Component usage
+
+```js live
+() => {
+  const node = {
+    id: '1',
+    children: [{ id: '2', children: [{ id: '3' }] }],
+  };
+
+  const [isOpen, setOpen] = useState(false);
+  const title = <div onClick={() => setOpen(!isOpen)}>My Folder</div>;
+  return <CollapsingNode title={title} isOpen={isOpen} node={node} depth={1} />;
+};
+```

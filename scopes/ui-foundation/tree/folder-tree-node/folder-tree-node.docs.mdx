@@ -1,0 +1,16 @@
+---
+labels: ['react', 'ui']
+description: 'A collapsable tree node'
+---
+
+A tree node component that accepts children to render inside it.
+
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { FolderTreeNode } from './folder-tree-node';
+import { node } from './folder-tree-node.mock';
+
+```ts live
+<ThemeCompositions>
+  <FolderTreeNode node={node} depth={2} />
+</ThemeCompositions>
+```

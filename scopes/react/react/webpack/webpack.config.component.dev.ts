@@ -6,11 +6,13 @@ import { ComponentID } from '@teambit/component-id';
 import '@teambit/react.babel.bit-react-transformer';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
+const matchNothingRegex = 'a^';
+
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
 // export default function (workDir: string, envId: string): Configuration {
-export default function (workDir: string, envId: string, componentsDirs: string[]): Configuration {
+export default function (workDir: string, envId: string): Configuration {
   return {
     module: {
       rules: [
@@ -32,6 +34,7 @@ export default function (workDir: string, envId: string, componentsDirs: string[
           // only apply to packages with componentId in their package.json (ie. bit components)
           descriptionData: { componentId: ComponentID.isValidObject },
           use: [
+            require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'),
             {
               loader: require.resolve('babel-loader'),
               options: {
@@ -57,6 +60,7 @@ export default function (workDir: string, envId: string, componentsDirs: string[
           // only apply to packages with componentId in their package.json (ie. bit components)
           descriptionData: { componentId: (value) => !!value },
           use: [
+            require.resolve('@pmmmwh/react-refresh-webpack-plugin/loader'),
             {
               loader: require.resolve('babel-loader'),
               options: {
@@ -79,25 +83,15 @@ export default function (workDir: string, envId: string, componentsDirs: string[
       new ReactRefreshWebpackPlugin({
         overlay: {
           sockPath: `_hmr/${envId}`,
-          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
-          // errors
-          entry: require.resolve('./react-hot-dev-client'),
-          module: require.resolve('./refresh'),
+          // TODO - react-error-overlay not showing runtime errors - https://github.com/teambit/bit/issues/5452
+          entry: require.resolve('./overlay/webpackHotDevClient'),
+          module: require.resolve('./overlay/refreshOverlayInterop'),
         },
 
-        // // having no value for include, exclude === revert to the defaults!
-        // // original/defaults values:
-        // include: /\.([cm]js|[jt]sx?|flow)$/i,
-        // exclude: /node_modules/,
-
-        include: componentsDirs,
-        exclude: [
-          // prevent recursion:
-          /react-refresh-webpack-plugin/i,
-          // file type filtering was done by `include`, so need to negative-filter them out here
-          // A lookbehind assertion (`?<!`) has to be fixed width
-          /(?<!\.mdx)(?<!\.js)$/i,
-        ],
+        // we use '@pmmmwh/react-refresh-webpack-plugin/loader' directly where relevant.
+        // FYI, original defaults of the plugin are:
+        // include: /\.([cm]js|[jt]sx?|flow)$/i, exclude: /node_modules/,
+        include: matchNothingRegex,
       }),
     ],
   };

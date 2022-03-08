@@ -4,19 +4,19 @@ export const componentFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
     relativePath: `${name}.tsx`,
-    content: `import React from 'react';
+    content: `import React, { ReactNode } from 'react';
 
 export type ${Name}Props = {
   /**
-   * a text to be rendered in the component.
+   * a node to be rendered in the special component.
    */
-  text: string
+  children?: ReactNode;
 };
 
-export function ${Name}({ text }: ${Name}Props) {
+export function ${Name}({ children }: ${Name}Props) {
   return (
     <div>
-      {text}
+      {children}
     </div>
   );
 }

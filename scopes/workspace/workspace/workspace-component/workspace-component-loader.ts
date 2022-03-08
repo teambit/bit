@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, T
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -110,12 +110,24 @@ export class WorkspaceComponentLoader {
     return component;
   }
 
+  async getIfExist(componentId: ComponentID) {
+    try {
+      return await this.get(componentId);
+    } catch (err: any) {
+      if (this.isComponentNotExistsError(err)) {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
   private addMultipleEnvsIssueIfNeeded(component: Component) {
     const envs = this.envs.getAllEnvsConfiguredOnComponent(component);
-    if (envs.length < 2) {
+    const envIds = uniq(envs.map((env) => env.id));
+    if (envIds.length < 2) {
       return;
     }
-    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envs.map((e) => e.id);
+    component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envIds;
   }
 
   clearCache() {
@@ -134,13 +146,12 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-
-    let extensionDataList = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions } = await this.workspace.componentExtensions(id, componentFromScope);
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    extensionDataList = ExtensionDataList.mergeConfigs([
+    const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConsumerComponent,
-      extensionDataList,
+      extensions,
     ]).filterRemovedExtensions();
 
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data

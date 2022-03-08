@@ -40,6 +40,7 @@ export type BasicTagParams = {
   disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
   preRelease?: string;
+  editor?: string;
 };
 
 type TagParams = {
@@ -158,7 +159,7 @@ async function getComponentsToTag(
   if (isAllScope && exactVersion) {
     const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
     tagPendingComponentsLatest.forEach((componentId) => {
-      if (componentId.version && semver.gt(componentId.version, exactVersion)) {
+      if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
       }
     });

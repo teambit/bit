@@ -25,6 +25,7 @@ import {
   LaneTrackCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
+import { SwitchCmd } from './switch.cmd';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -83,7 +84,7 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneName();
   }
 
-  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions): Promise<TrackLane> {
+  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
@@ -175,10 +176,12 @@ export class LanesMain {
   static async provider([cli, scope, workspace, graphql]: [CLIMain, ScopeMain, Workspace, GraphqlMain]) {
     const lanesMain = new LanesMain(workspace, scope);
     const isLegacy = workspace && workspace.consumer.isLegacy;
+    const switchCmd = new SwitchCmd();
     if (!isLegacy) {
       const laneCmd = new LaneCmd(lanesMain, workspace, scope);
       laneCmd.commands = [
         new LaneListCmd(lanesMain, workspace, scope),
+        switchCmd,
         new LaneShowCmd(lanesMain, workspace, scope),
         new LaneCreateCmd(lanesMain),
         new LaneMergeCmd(lanesMain),
@@ -186,7 +189,7 @@ export class LanesMain {
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
       ];
-      cli.register(laneCmd);
+      cli.register(laneCmd, switchCmd);
       graphql.register(lanesSchema(lanesMain));
     }
     return lanesMain;
@@ -194,3 +197,5 @@ export class LanesMain {
 }
 
 LanesAspect.addRuntime(LanesMain);
+
+export default LanesMain;

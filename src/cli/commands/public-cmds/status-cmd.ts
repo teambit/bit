@@ -68,6 +68,7 @@ export default class Status implements LegacyCommand {
     componentsWithTrackDirs,
     softTaggedComponents,
     snappedComponents,
+    laneName,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -153,7 +154,8 @@ export default class Status implements LegacyCommand {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = '(use "bit merge <remote-name>/<lane-name> [component-id]" to merge changes)\n';
+    const pendingMergeDesc = `(use "bit untag" to add local changes on top of the remote and discard local tags.
+alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
@@ -221,7 +223,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
+    const stagedDesc = '\n(use "bit export to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       stagedComponents.map((c) => format(c, true)),
@@ -235,26 +237,29 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
+    const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
+
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
-    return (
+    const statusMsg =
       importPendingWarning +
-        [
-          outdatedStr,
-          pendingMergeStr,
-          compWithConflictsStr,
-          newComponentsOutput,
-          modifiedComponentOutput,
-          snappedComponentsOutput,
-          stagedComponentsOutput,
-          autoTagPendingOutput,
-          invalidComponentOutput,
-          individualFilesOutput,
-          trackDirOutput,
-        ]
-          .filter((x) => x)
-          .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
-        troubleshootingStr || chalk.yellow(statusWorkspaceIsCleanMsg)
-    );
+      [
+        outdatedStr,
+        pendingMergeStr,
+        compWithConflictsStr,
+        newComponentsOutput,
+        modifiedComponentOutput,
+        snappedComponentsOutput,
+        stagedComponentsOutput,
+        autoTagPendingOutput,
+        invalidComponentOutput,
+        individualFilesOutput,
+        trackDirOutput,
+      ]
+        .filter((x) => x)
+        .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      troubleshootingStr;
+
+    return (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
   }
 }

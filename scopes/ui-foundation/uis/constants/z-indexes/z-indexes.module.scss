@@ -7,3 +7,11 @@ $nav-z-index: 100;
 
 // 5000 < z < 6000 - modals and overlays
 $modal-z-index: 5000;
+
+// 15000 < 16000 - meta "always on top" items
+$highlighter-z-index: 15500;
+
+// theoretical max value is around
+// 32,768 (2^16)
+// and can be up to 1,073,741,824 (2^30), depending on the browser
+// (depending on the browser)

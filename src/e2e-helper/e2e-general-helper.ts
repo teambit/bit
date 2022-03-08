@@ -36,6 +36,16 @@ export default class GeneralHelper {
   getRemoteRefPath(lane = DEFAULT_LANE, remote = this.scopes.remote) {
     return path.join(this.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, remote, lane);
   }
+  getRemoteRefContent(lane = DEFAULT_LANE, remote = this.scopes.remote) {
+    const refPath = this.getRemoteRefPath(lane, remote);
+    return fs.readJsonSync(refPath);
+  }
+  getRemoteHead(compId: string, lane = DEFAULT_LANE, remote = this.scopes.remote): string {
+    const refContent = this.getRemoteRefContent(lane, remote);
+    const record = refContent.find((_) => _.id.name === compId);
+    if (!record) throw new Error(`unable to find ${compId} in the ref file`);
+    return record.head;
+  }
   getHashPathOfComponent(compId: string, cwd = this.scopes.localPath): string {
     const scope = this.command.catScope(true, cwd);
     const comp3 = scope.find((item) => item.name === compId);

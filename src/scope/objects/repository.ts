@@ -23,6 +23,8 @@ import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
+import { Types } from '../object-registrar';
+import { Lane, ModelComponent, Symlink } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -113,18 +115,19 @@ export default class Repository {
       return cached;
     }
     let fileContentsRaw: Buffer;
+    const objectPath = this.objectPath(ref);
     try {
-      fileContentsRaw = await fs.readFile(this.objectPath(ref));
+      fileContentsRaw = await fs.readFile(objectPath);
     } catch (err: any) {
       if (err.code !== 'ENOENT') {
-        logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+        logger.error(`Failed reading a ref file ${objectPath}. Error: ${err.message}`);
         throw err;
       }
-      logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
+      logger.trace(`Failed finding a ref file ${objectPath}.`);
       if (throws) {
         // if we just `throw err` we loose the stack trace.
         // see https://stackoverflow.com/questions/68022123/no-stack-in-fs-promises-readfile-enoent-error
-        const msg = `fatal: failed finding an object file ${this.objectPath(ref)} in the filesystem at ${err.path}`;
+        const msg = `fatal: failed finding an object file ${objectPath} in the filesystem at ${err.path}`;
         throw Object.assign(err, { stack: new Error(msg).stack });
       }
       // @ts-ignore @todo: fix! it should return BitObject | null.
@@ -132,7 +135,7 @@ export default class Repository {
     }
     const size = fileContentsRaw.byteLength;
     const fileContents = await this.onRead(fileContentsRaw);
-    const parsedObject = await BitObject.parseObject(fileContents);
+    const parsedObject = await BitObject.parseObject(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory
@@ -141,10 +144,30 @@ export default class Repository {
     return parsedObject;
   }
 
-  async list(): Promise<BitObject[]> {
+  /**
+   * this is restricted to provide objects according to the given types. Otherwise, big scopes (>1GB) could crush.
+   * example usage: `this.list([ModelComponent, Symlink, Lane])`
+   */
+  async list(types: Types): Promise<BitObject[]> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
-    return pMap(refs, (ref) => this.load(ref), { concurrency });
+    const objects: BitObject[] = [];
+    await pMap(
+      refs,
+      async (ref) => {
+        const object = await this.load(ref);
+        types.forEach((type) => {
+          if (
+            object instanceof type ||
+            type.name === object.constructor.name // needed when Harmony calls this function
+          )
+            objects.push(object);
+        });
+      },
+      { concurrency }
+    );
+
+    return objects;
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -216,7 +239,7 @@ export default class Repository {
       return scopeIndex;
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        const bitObjects: BitObject[] = await this.list();
+        const bitObjects: BitObject[] = await this.list([ModelComponent, Symlink, Lane]);
         const scopeIndex = ScopeIndex.create(this.scopePath);
         const added = scopeIndex.addMany(bitObjects);
         if (added) await scopeIndex.write();

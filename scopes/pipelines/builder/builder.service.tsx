@@ -4,8 +4,8 @@ import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
-import { Component } from '@teambit/component';
-import { BuildPipe } from './build-pipe';
+import { Component, ComponentID } from '@teambit/component';
+import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTaskHelper } from './build-task';
@@ -20,7 +20,14 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
-export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[]; skipTests?: boolean };
+export type BuilderServiceOptions = {
+  seedersOnly?: boolean;
+  originalSeeders?: ComponentID[];
+  tasks?: string[];
+  skipTests?: boolean;
+  previousTasksResults?: TaskResults[];
+  dev?: boolean;
+};
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -88,21 +95,33 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
+        const { originalSeeders } = options;
+        const originalSeedersOfThisEnv = componentIds.filter((compId) =>
+          originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
+        );
         const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
           getExistingAsIs: true,
           seedersOnly: options.seedersOnly,
         });
+        capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
         this.logger.console(
-          `generated graph for env "${executionContext.id}", seeders total: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
+          `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
         );
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
           previousTasksResults: [],
+          dev: options.dev,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
     );
-    const buildPipe = BuildPipe.from(tasksQueue, envsBuildContext, this.logger, this.artifactFactory);
+    const buildPipe = BuildPipe.from(
+      tasksQueue,
+      envsBuildContext,
+      this.logger,
+      this.artifactFactory,
+      options.previousTasksResults
+    );
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();
     buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();

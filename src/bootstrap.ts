@@ -100,6 +100,7 @@ function enableLoaderIfPossible() {
     'create',
     'test',
     'install',
+    'update',
     'link',
     'import',
     'log',

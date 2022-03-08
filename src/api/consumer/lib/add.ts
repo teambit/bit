@@ -17,6 +17,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
   const addContext: AddContext = { consumer };
+  addProps.shouldHandleOutOfSync = true;
   const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();

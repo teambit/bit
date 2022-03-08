@@ -52,6 +52,16 @@ export class ComponentMap<T> {
 
     return new ComponentMap(new Map(tuples));
   }
+
+  /**
+   * similar to Array.forEach, but here you get both, the value and the component.
+   */
+  forEach(predicate: (value: T, component: Component) => void): void {
+    this.toArray().forEach(([component, value]) => {
+      predicate(value, component);
+    });
+  }
+
   /**
    * flatten values of all components into a single array.
    */

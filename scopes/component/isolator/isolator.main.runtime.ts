@@ -58,7 +58,9 @@ export type IsolateComponentsInstallOptions = {
   dedupe?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
+  installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 type CreateGraphOptions = {
@@ -129,6 +131,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  packageManagerConfigRootDir?: string;
 };
 
 type CapsulePackageJsonData = {
@@ -140,6 +144,7 @@ type CapsulePackageJsonData = {
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   installPackages: true,
   dedupe: true,
+  installPeersFromEnvs: true,
   copyPeerToRuntimeOnComponents: false,
   copyPeerToRuntimeOnRoot: true,
 };
@@ -177,7 +182,6 @@ export class IsolatorMain {
     legacyScope?: LegacyScope
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
-    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(
       `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
@@ -189,8 +193,6 @@ export class IsolatorMain {
       : await this.createGraph(seeders, createGraphOpts);
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
   }
 
@@ -260,10 +262,12 @@ export class IsolatorMain {
     // that was written before, didn't have these dependencies in order for the package-manager to
     // be able to install them without crushing when the versions don't exist yet
     capsulesWithPackagesData.forEach((capsuleWithPackageData) => {
-      capsuleWithPackageData.capsule.fs.writeFileSync(
-        PACKAGE_JSON,
-        JSON.stringify(capsuleWithPackageData.currentPackageJson, null, 2)
-      );
+      const { currentPackageJson, capsule } = capsuleWithPackageData;
+      if (!currentPackageJson)
+        throw new Error(
+          `isolator.createCapsules, unable to find currentPackageJson for ${capsule.component.id.toString()}`
+        );
+      capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
 
     return capsuleList;
@@ -282,14 +286,17 @@ export class IsolatorMain {
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
 
-    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
+      packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
     };
+
     const packageManagerInstallOptions = {
       dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
     };
     await installer.install(
       capsulesDir,
@@ -310,7 +317,7 @@ export class IsolatorMain {
       rootDir: capsulesDir,
       linkingOptions,
     });
-    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
@@ -352,7 +359,7 @@ export class IsolatorMain {
     );
   }
 
-  private getPeersOnlyPolicy(): WorkspacePolicy {
+  private getWorkspacePeersOnlyPolicy(): WorkspacePolicy {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
     return peerOnlyPolicy;
@@ -406,9 +413,14 @@ export class IsolatorMain {
   }
 
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string): PathOsBasedAbsolute {
-    const capsulesRootBaseDir =
-      rootBaseDir || this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
+    const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
     return path.join(capsulesRootBaseDir, hash(baseDir));
+  }
+
+  async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
+    const dirToDelete = capsuleBaseDir ? this.getCapsulesRootDir(capsuleBaseDir) : this.getRootDirOfAllCapsules();
+    await fs.remove(dirToDelete);
+    return dirToDelete;
   }
 
   private async createCapsulesFromComponents(
@@ -422,6 +434,10 @@ export class IsolatorMain {
       })
     );
     return capsules;
+  }
+
+  private getRootDirOfAllCapsules(): string {
+    return this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
   }
 
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
@@ -456,9 +472,13 @@ export class IsolatorMain {
   ) {
     const updateP = capsules.map(async (capsule) => {
       const packageJson = await this.getCurrentPackageJson(capsule, capsules);
-      const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
-      if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
-      found.currentPackageJson = packageJson.packageJsonObject;
+      const found = capsulesWithPackagesData.filter((c) => c.capsule.component.id.isEqual(capsule.component.id));
+      if (!found.length) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
+      if (found.length > 1)
+        throw new Error(
+          `updateWithCurrentPackageJsonData found duplicate capsules: ${capsule.component.id.toString()}""`
+        );
+      found[0].currentPackageJson = packageJson.packageJsonObject;
     });
     return Promise.all(updateP);
   }

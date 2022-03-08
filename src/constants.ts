@@ -140,7 +140,7 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
@@ -457,6 +457,12 @@ export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
 export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
+export const PATTERN_HELP = (command: string) =>
+  `you can use a <pattern> for multiple component ids, such as bit ${command} "org.scope/utils/**". use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+always wrap the pattern with quotes to avoid collision with shell commands.
+to validate the pattern before running this command, run "bit pattern <pattern>".
+`;
+
 export const CURRENT_UPSTREAM = 'current';
 
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
@@ -483,6 +489,9 @@ export enum Extensions {
   compiler = 'teambit.compilation/compiler',
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
+  deprecation = 'teambit.component/deprecation',
+  forking = 'teambit.component/forking',
+  renaming = 'teambit.component/renaming',
 }
 
 export enum BuildStatus {

@@ -12,6 +12,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
+import { EnvAspect } from '@teambit/env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -28,9 +29,12 @@ import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
+import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
+import { ReactElementsAspect } from '@teambit/react-elements';
+import { ElementsAspect } from '@teambit/elements';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
@@ -60,10 +64,19 @@ import MDXAspect from '@teambit/mdx';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
+import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
+import { ForkingAspect } from '@teambit/forking';
+import { RenamingAspect } from '@teambit/renaming';
+import { ComponentLogAspect } from '@teambit/component-log';
+import { ClearCacheAspect } from '@teambit/clear-cache';
+import { DiagnosticAspect } from '@teambit/diagnostic';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import { MochaAspect } from '@teambit/mocha';
+import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -79,6 +92,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
+  [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
@@ -89,6 +103,7 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
+  [EnvAspect.id]: EnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -98,6 +113,8 @@ export const manifestsMap = {
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
   [ReactNativeAspect.id]: ReactNativeAspect,
+  [ReactElementsAspect.id]: ReactElementsAspect,
+  [ElementsAspect.id]: ElementsAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -126,12 +143,21 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
+  [ImporterAspect.id]: ImporterAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
   [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
+  [ForkingAspect.id]: ForkingAspect,
+  [RenamingAspect.id]: RenamingAspect,
+  [NewComponentHelperAspect.id]: NewComponentHelperAspect,
+  [ComponentLogAspect.id]: ComponentLogAspect,
+  [ClearCacheAspect.id]: ClearCacheAspect,
+  [MochaAspect.id]: MochaAspect,
+  [BitCustomAspectAspect.id]: BitCustomAspectAspect,
+  [DiagnosticAspect.id]: DiagnosticAspect,
 };
 
 export function isCoreAspect(id: string) {

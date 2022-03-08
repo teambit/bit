@@ -40,6 +40,9 @@ export class Runtime {
     return this.run(service, options, [envRuntime]);
   }
 
+  /**
+   * execute a service once for all environments.
+   */
   async runOnce<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<any> {
     if (!service.runOnce) throw new Error('a service must implement `runOnce()` in order to be executed');
     const envsExecutionContext = this.getEnvExecutionContext();
@@ -53,7 +56,7 @@ export class Runtime {
   }
 
   /**
-   * execute a service on all environments.
+   * execute a service on each one of the environments.
    */
   async run<T>(
     /**
@@ -80,7 +83,7 @@ export class Runtime {
         };
       } catch (err: any) {
         this.logger.error(err.message, err);
-        this.logger.consoleFailure(`service ${service.name} env ${env.id} has failed. ${err.message}`);
+        this.logger.consoleFailure(`service "${service.name}" of env "${env.id}" has failed. error: ${err.message}`);
         errors.push(err);
         return {
           env,

@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import fs from 'fs-extra';
 import { join } from 'path';
 import { Compiler, CompilerAspect } from '@teambit/compiler';
@@ -7,8 +7,6 @@ import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
 import { testsResultsToJUnitFormat } from './utils/junit-generator';
-
-const JUNIT_PATH = '__bit_junit.xml';
 
 /**
  * tester build task. Allows to test components during component build.
@@ -65,34 +63,19 @@ export class TesterTask implements BuildTask {
         if (!capsule) {
           throw new Error(`unable to find ${compResult.componentId.toString()} in capsules`);
         }
-        await fs.writeFile(join(capsule.path, JUNIT_PATH), junit);
-        await this.writeNpmIgnore(capsule.path);
+        await fs.outputFile(join(capsule.path, getJUnitArtifactPath()), junit);
       })
     );
 
     return {
-      artifacts: [
-        {
-          name: 'junit',
-          globPatterns: [JUNIT_PATH],
-        },
-      ], // @ts-ignore
+      artifacts: getArtifactDef(), // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
-        const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
-          if (file?.error?.failureMessage) {
-            errors.push(file.error.failureMessage);
-          }
-          file.tests.forEach((test) => {
-            if (test.error) errors.push(test.error);
-            if (test.failure) errors.push(test.failure);
-          });
-
-          return errors;
-        }, []);
+        const componentErrors = componentTests.errors;
         const component = context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component;
         if (!component) {
           throw new Error(`unable to find ${componentTests.componentId.toString()} in capsules`);
         }
+
         return {
           component,
           metadata: { tests: componentTests.results },
@@ -101,11 +84,18 @@ export class TesterTask implements BuildTask {
       }),
     };
   }
+}
 
-  private async writeNpmIgnore(dir: string) {
-    const NPM_IGNORE_FILE = '.npmignore';
-    const npmIgnorePath = join(dir, NPM_IGNORE_FILE);
-    const npmIgnoreEntriesStr = `\n${JUNIT_PATH}\n`;
-    await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
-  }
+export function getJUnitArtifactPath() {
+  return join(CAPSULE_ARTIFACTS_DIR, '__bit_junit.xml');
+}
+
+export function getArtifactDef() {
+  return [
+    {
+      name: 'junit',
+      globPatterns: [getJUnitArtifactPath()],
+      rootDir: CAPSULE_ARTIFACTS_DIR,
+    },
+  ];
 }

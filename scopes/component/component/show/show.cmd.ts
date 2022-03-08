@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
@@ -62,11 +63,12 @@ export class ShowCmd implements Command {
     const rows = await Promise.all(
       fragments.map(async (fragment) => {
         const row = await fragment.renderRow(component);
+        if (!row.content) return null;
         return [row.title, row.content];
       })
     );
 
-    const table = new CLITable([], rows);
+    const table = new CLITable([], compact(rows));
     return table.render();
   }
 

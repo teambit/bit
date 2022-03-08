@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
@@ -14,7 +15,6 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
 import { ComponentWithDependencies, Scope } from '../../scope';
-import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import { Lane, ModelComponent, Version } from '../../scope/models';
 import { getScopeRemotes } from '../../scope/scope-remotes';
@@ -34,11 +34,11 @@ export type ImportOptions = {
   verbose: boolean; // default: false
   merge?: boolean; // default: false
   mergeStrategy?: MergeStrategy;
-  withEnvironments: boolean; // default: false
+  withEnvironments?: boolean; // default: false. Ignored by Harmony - always false.
   writeToPath?: string;
-  writePackageJson: boolean; // default: true
+  writePackageJson?: boolean; // default: true. Ignored by Harmony - always false.
   writeConfig: boolean; // default: false
-  writeDists: boolean; // default: true
+  writeDists?: boolean; // default: true. Ignored by Harmony - always true, as they're inside node_modules.
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
   objectsOnly: boolean; // default: false
@@ -59,15 +59,17 @@ export type ImportStatus = 'added' | 'updated' | 'up to date';
 export type ImportDetails = {
   id: string;
   versions: string[];
+  latestVersion: string | null;
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
+  deprecated: boolean;
 };
-export type ImportResult = Promise<{
+export type ImportResult = {
   dependencies: ComponentWithDependencies[];
   envComponents?: Component[];
   importDetails: ImportDetails[];
-}>;
+};
 
 export default class ImportComponents {
   consumer: Consumer;
@@ -75,6 +77,7 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
+  private laneObjects: Lane[] = [];
   private divergeData: Array<ModelComponent> = [];
   // @ts-ignore
   constructor(consumer: Consumer, options: ImportOptions) {
@@ -83,10 +86,10 @@ export default class ImportComponents {
     this.options = options;
   }
 
-  importComponents(): ImportResult {
+  importComponents(): Promise<ImportResult> {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
-    if (!this.options.writePackageJson) {
+    if (this.consumer.isLegacy && !this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
@@ -97,18 +100,23 @@ export default class ImportComponents {
     return this.importSpecificComponents();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async importSpecificComponents(): ImportResult {
+  async importSpecificComponents(): Promise<ImportResult> {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(
-      bitIds,
-      true,
-      this.options.saveDependenciesAsComponents
-    );
+    const componentsWithDependencies = this.consumer.isLegacy
+      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
+      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
+    if (this.laneObjects && this.options.objectsOnly) {
+      // merge the lane objects
+      const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
+        this.scope.sources.mergeLane(laneObject, true)
+      );
+      const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
+      await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
+    }
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
     this._throwForDivergedHistory();
@@ -165,10 +173,23 @@ export default class ImportComponents {
 
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
-    if (this.options.lanes) {
-      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
-      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
+    if (this.options.lanes && !this.options.skipLane) {
+      const idsToFilter: BitId[] = [];
+      await Promise.all(
+        this.options.ids.map(async (idStr: string) => {
+          const ids: BitId[] = [];
+          if (hasWildcard(idStr)) {
+            const remoteIdsByWildcard = await getRemoteBitIdsByWildcards(idStr);
+            ids.push(...remoteIdsByWildcard);
+          } else {
+            ids.push(BitId.parse(idStr, true));
+          }
+          if (ids.some((id) => id.scope === this.options.lanes?.laneIds[0].scope)) {
+            idsToFilter.push(...ids);
+          }
+        })
+      );
+      await this.populateBitIdsFromLanes(bitIds, idsToFilter);
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -194,6 +215,18 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
+  }
+
+  private async populateBitIdsFromLanes(bitIds: BitId[], idsToFilter: BitId[]) {
+    if (!this.options.lanes) return;
+
+    this.laneObjects = this.options.lanes.lanes as Lane[];
+    const bitIdsFromLane = this.laneObjects.flatMap((lane) => lane.toBitIds());
+    const filteredIds =
+      idsToFilter.length > 0
+        ? bitIdsFromLane.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
+        : bitIdsFromLane;
+    bitIds.push(...filteredIds);
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
@@ -225,7 +258,7 @@ export default class ImportComponents {
     return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
-  async importAccordingToBitMap(): ImportResult {
+  async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
@@ -267,7 +300,7 @@ export default class ImportComponents {
               this.options.fromOriginalScope,
               this.options.allHistory
             )
-          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
@@ -355,19 +388,23 @@ export default class ImportComponents {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new ShowDoctorError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
-      const versionDifference = R.difference(afterImportVersions, beforeImportVersions);
+      const versionDifference: string[] = R.difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
         if (!versionDifference.length) return 'up to date';
         if (!beforeImportVersions.length) return 'added';
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
+      const deprecated = await modelComponent.isDeprecated(this.scope.objects);
+      const latestVersion = modelComponent.latest();
       return {
         id: idStr,
         versions: versionDifference,
+        latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
         status: getStatus(),
         filesStatus,
         missingDeps: component.missingDependencies,
+        deprecated,
       };
     });
     return Promise.all(detailsP);
@@ -434,19 +471,17 @@ export default class ImportComponents {
     const currentlyUsedVersion = existingBitMapBitId.version;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const currentComponent: Version = await componentModel.loadVersion(
+    const otherComponent: Version = await componentModel.loadVersion(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.id.version,
       this.consumer.scope.objects
     );
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
-      otherComponent: fsComponent,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      currentLabel: component.id.version,
+      otherComponent,
+      otherLabel: component.id.version as string,
+      currentComponent: fsComponent,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
     mergeStatus.mergeResults = mergeResults;
@@ -469,8 +504,8 @@ export default class ImportComponents {
     const component = componentMergeStatus.componentWithDependencies.component;
     const files = component.files;
 
-    const filesStatus = {};
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
+      const filesStatus = {};
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -481,6 +516,7 @@ export default class ImportComponents {
       return filesStatus;
     }
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
+      const filesStatus = {};
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -488,13 +524,16 @@ export default class ImportComponents {
       });
       return filesStatus;
     }
-    return applyModifiedVersion(
+    const { filesStatus, modifiedFiles } = applyModifiedVersion(
       component.files,
       mergeResults,
       this.options.mergeStrategy,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.originallySharedDir
     );
+    component.files = modifiedFiles;
+
+    return filesStatus;
   }
 
   /**

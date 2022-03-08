@@ -2,7 +2,7 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { BuildTask } from '@teambit/builder';
+import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
@@ -30,11 +30,10 @@ import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
+import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Configuration } from 'webpack';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -52,8 +51,9 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
-export const AspectEnvType = 'react';
+export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
@@ -236,24 +236,25 @@ export class ReactEnv
   getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
-    const componentsDirs = this.getComponentsModulesDirectories(context.components);
-    // const fileMapPath = this.writeFileMap(context.components, true);
-    // const componentDevConfig = componentPreviewDevConfigFactory(fileMapPath, this.workspace.path);
-    // const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id, componentsDirs);
+    const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const peers = this.getAllHostDeps();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     // const fileMapPath = this.writeFileMap(context.components);
-    const baseConfig = basePreviewConfigFactory(true);
-    const baseProdConfig = basePreviewProdConfigFactory();
+    const peers = this.getAllHostDeps();
+
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
@@ -262,34 +263,20 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
-  private getComponentsModulesDirectories(components: Component[]): string[] {
-    const dirs = components.map((component) => {
-      return this.pkg.getModulePath(component, { absPath: true });
-    });
-    return dirs;
+  /**
+   * Get the peers configured by the env on the components + the host deps configured by the env
+   */
+  private getAllHostDeps() {
+    const hostDeps = this.getHostDependencies();
+    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+    return peers;
   }
 
-  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
-    if (!config || !config.entry) {
-      return [];
-    }
-    if (typeof config.entry === 'string') {
-      return [config.entry];
-    }
-    if (Array.isArray(config.entry)) {
-      let entries: string[] = [];
-      entries = config.entry.reduce((acc, entry) => {
-        if (typeof entry === 'string') {
-          acc.push(entry);
-        }
-        return acc;
-      }, entries);
-      return entries;
-    }
-    return [];
+  getHostDependencies(): string[] {
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
   /**
@@ -308,6 +295,13 @@ export class ReactEnv
     return require.resolve('./mount');
   }
 
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: true,
+    };
+  }
+
   /**
    * define the package json properties to add to each component.
    */
@@ -318,6 +312,13 @@ export class ReactEnv
 
   getCjsPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  getNpmIgnore() {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
   /**
@@ -339,7 +340,6 @@ export class ReactEnv
         '@types/react': '^17.0.8',
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
-        // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.12.18',
         '@types/testing-library__jest-dom': '5.9.5',
@@ -367,7 +367,7 @@ export class ReactEnv
 
   async __getDescriptor() {
     return {
-      type: AspectEnvType,
+      type: ReactEnvType,
     };
   }
 }

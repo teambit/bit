@@ -412,11 +412,11 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/main)`);
-          expect(content).to.have.string(fixtures.fooFixtureV2);
-          expect(content).to.have.string('=======');
+          expect(content).to.have.string(`<<<<<<< ${localHead} (local)`);
           expect(content).to.have.string(fixtures.fooFixtureV3);
-          expect(content).to.have.string(`>>>>>>> ${localHead} (local)`);
+          expect(content).to.have.string('=======');
+          expect(content).to.have.string(fixtures.fooFixtureV2);
+          expect(content).to.have.string(`>>>>>>> ${secondSnap} (${helper.scopes.remote}/main)`);
         });
         it('should not change bitmap version', () => {
           helper.bitMap.expectToHaveIdHarmony('bar/foo', localHead, helper.scopes.remote);
@@ -477,11 +477,10 @@ describe('bit snap command', function () {
             helper.fixtures.createComponentBarFoo('');
             helper.command.untag('bar/foo');
           });
-          it('bit status should not show the component as a component with conflicts but as outdated', () => {
+          it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
             expect(status.modifiedComponent).to.have.lengthOf(1);
-            expect(status.outdatedComponents).to.have.lengthOf(1);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(0);
           });
@@ -706,7 +705,7 @@ describe('bit snap command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(authorFirstTag);
-      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.fixtures.populateComponents(1, false, ' v3');
       helper.command.tagAllWithoutBuild('-s 0.0.3');
       helper.command.importAllComponents();
     });
@@ -720,6 +719,24 @@ describe('bit snap command', function () {
       const compData = helper.command.catComponent('comp1');
       const firstTag = compData.versions['0.0.1'];
       expect(() => helper.command.catObject(firstTag)).to.not.throw();
+    });
+    it('bit status should suggest running either "bit untag" or "bit merge"', () => {
+      const output = helper.command.status();
+      expect(output).to.have.string('bit untag');
+      expect(output).to.have.string('bit merge');
+    });
+    describe('bit untag a diverge component', () => {
+      before(() => {
+        helper.command.untagAll();
+      });
+      it('should change the head to point to the remote head and not to the parent of the untagged version', () => {
+        const head = helper.command.getHead('comp1');
+        const remoteHead = helper.general.getRemoteHead('comp1');
+        expect(head).to.be.equal(remoteHead);
+      });
+      it('bit status after untag should show the component as modified only', () => {
+        helper.command.expectStatusToBeClean(['modifiedComponent']);
+      });
     });
   });
 });

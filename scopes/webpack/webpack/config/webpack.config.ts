@@ -1,34 +1,51 @@
+/* eslint-disable complexity */
+import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
+import { generateExternals } from '@teambit/webpack.modules.generate-externals';
+import { isUndefined, omitBy } from 'lodash';
+import CompressionPlugin from 'compression-webpack-plugin';
+import { sep } from 'path';
+import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import WebpackAssetsManifest from 'webpack-assets-manifest';
 import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
-import { html } from './html';
 
-export function configFactory(entries: string[], rootPath: string): Configuration {
-  return {
-    mode: 'production',
+export function configFactory(target: Target, context: BundlerContext): Configuration {
+  let truthyEntries =
+    Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
+  if (Array.isArray(truthyEntries) && !truthyEntries.length) {
+    truthyEntries = {};
+  }
+  const dev = Boolean(context.development);
+  const htmlConfig = target.html ?? context.html;
+  const compress = target.compress ?? context.compress;
+  const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
+  const shouldExternalizePeers =
+    (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
+  const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
+  const splitChunks = target.chunking?.splitChunks;
+
+  const config: Configuration = {
+    mode: dev ? 'development' : 'production',
     // Stop compilation early in production
     bail: true,
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
-    entry: entries.filter(Boolean),
+    // @ts-ignore
+    entry: truthyEntries,
+
+    infrastructureLogging: {
+      level: 'error',
+    },
 
     output: {
       // The build folder.
-      path: `${rootPath}/public`,
-
-      filename: 'static/js/[name].[contenthash:8].js',
-      // There are also additional JS chunk files if you use code splitting.
-      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
-      // webpack uses `publicPath` to determine where the app is being served from.
-      // It requires a trailing slash, or the file assets will get an incorrect path.
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      publicPath: ``,
-      // this defaults to 'window', but by setting it to 'this' then
-      // module chunks which are built will work in web workers as well.
-      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
-      // globalObject: 'this',
+      path: `${target.outputPath}${sep}public`,
+    },
+    stats: {
+      errorDetails: true,
     },
 
     resolve: {
@@ -37,31 +54,82 @@ export function configFactory(entries: string[], rootPath: string): Configuratio
       fallback: fallbacks,
     },
 
-    plugins: [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            templateContent: html('Preview'),
-          },
-          {
-            minify: {
-              removeComments: true,
-              collapseWhitespace: true,
-              removeRedundantAttributes: true,
-              useShortDoctype: true,
-              removeEmptyAttributes: true,
-              removeStyleLinkTypeAttributes: true,
-              keepClosingSlash: true,
-              minifyJS: true,
-              minifyCSS: true,
-              minifyURLs: true,
-            },
-          }
-        )
-      ),
-      new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
-    ],
+    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig), getAssetManifestPlugin()],
   };
+
+  if (target.filename) {
+    config.output = config.output || {};
+    config.output.filename = target.filename;
+  }
+
+  if (target.chunkFilename) {
+    config.output = config.output || {};
+    config.output.chunkFilename = target.chunkFilename;
+  }
+
+  if (target.runtimeChunkName) {
+    config.optimization = config.optimization || {};
+    config.optimization.runtimeChunk = {
+      name: target.runtimeChunkName,
+    };
+  }
+
+  if (splitChunks) {
+    config.optimization = config.optimization || {};
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      name: false,
+    };
+  }
+
+  if (htmlPlugins && htmlPlugins.length) {
+    if (!config.plugins) {
+      config.plugins = [];
+    }
+    config.plugins = config.plugins.concat(htmlPlugins);
+  }
+  if (compress) {
+    if (!config.plugins) {
+      config.plugins = [];
+    }
+    config.plugins = config.plugins.concat(new CompressionPlugin());
+  }
+  if (externals) {
+    config.externals = externals;
+  }
+  return config;
+}
+
+function getAssetManifestPlugin() {
+  return new WebpackAssetsManifest({ entrypoints: true });
+}
+
+function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {
+  return configs.map((config) => generateHtmlPlugin(config));
+}
+function generateHtmlPlugin(config: BundlerHtmlConfig) {
+  const baseConfig = {
+    filename: config.filename,
+    chunks: config.chunks,
+    title: config.title,
+    templateContent: config.templateContent,
+    minify: config.minify,
+    cache: false,
+    chunksSortMode: 'auto' as const,
+  };
+  if (baseConfig.chunks && baseConfig.chunks.length) {
+    // Make sure the order is that the preview root coming after the preview def
+    // we can't make it like this on the entries using depend on because this will
+    // prevent the splitting between different preview defs
+    // @ts-ignore
+    baseConfig.chunksSortMode = 'manual' as const;
+  }
+  const filteredConfig = omitBy(baseConfig, isUndefined);
+  return new HtmlWebpackPlugin(filteredConfig);
+}
+
+export function getExternals(deps: string[]) {
+  return generateExternals(deps, {
+    transformName: (depName) => camelcase(depName.replace('@', '').replace('/', '-'), { pascalCase: true }),
+  });
 }

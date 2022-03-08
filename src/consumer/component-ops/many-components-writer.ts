@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -49,6 +50,7 @@ export interface ManyComponentsWriterParams {
   saveOnLane?: boolean;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
+  resetConfig?: boolean;
 }
 
 /**
@@ -90,6 +92,7 @@ export default class ManyComponentsWriter {
   packageManager?: string;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
+  resetConfig?: boolean;
   // Apply config added by extensions
 
   constructor(params: ManyComponentsWriterParams) {
@@ -117,6 +120,7 @@ export default class ManyComponentsWriter {
     this.packageManager = params.packageManager;
     this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
+    this.resetConfig = params.resetConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
@@ -138,7 +142,7 @@ export default class ManyComponentsWriter {
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
-    await this._populateComponentsDependenciesToWrite();
+    if (this.isLegacy) await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
@@ -190,6 +194,11 @@ export default class ManyComponentsWriter {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
+    if (this.resetConfig) {
+      componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
+        delete componentWriter.existingComponentMap?.config;
+      });
+    }
     this.writtenComponents = await mapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
@@ -403,7 +412,14 @@ to move all component files to a different directory, run bit remove and then bi
         installProdPackagesOnly: this.installProdPackagesOnly,
       });
     } else {
-      await ManyComponentsWriter.externalInstaller?.install();
+      try {
+        await ManyComponentsWriter.externalInstaller?.install();
+      } catch (err: any) {
+        logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
+        throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
+error from the package-manager: ${err.message}.
+please use the '--log=error' flag for the full error.`);
+      }
       // this compiles all components on the workspace, not only the imported ones.
       // reason being is that the installed above deletes all dists dir of components that are somehow part of the
       // dependency graph. not only the imported components.

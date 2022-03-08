@@ -45,7 +45,7 @@ function detective(fileContent, syntax) {
 }
 
 function isImportStatement(node) {
-  if (node.type === 'Atrule' && node.name === 'import') {
+  if (node.type === 'Atrule' && (node.name === 'import' || node.name === 'use' || node.name === 'forward')) {
     return true;
   }
   return false;
@@ -58,6 +58,34 @@ function extractDependencies(importStatementNode) {
     importStatementNode.prelude.children.tail.data.type === 'Url'
   ) {
     return importStatementNode.prelude.children.tail.data.value.value.replace(/["']/g, '');
+  }
+
+  // @use and @forward of scss/sass syntax
+  if (
+    (importStatementNode.name === 'use' || importStatementNode.name === 'forward') &&
+    importStatementNode.prelude.type === 'AtrulePrelude' &&
+    importStatementNode.prelude.children?.head?.data
+  ) {
+    const getDepName = () => {
+      const headData = importStatementNode.prelude.children?.head?.data;
+      if (headData.type === 'String' && headData.value) return headData.value;
+      if (headData.type === 'Identifier' && headData.name) return headData.name;
+      return null;
+    };
+    const removeQuotes = (dep) => dep.replace(/["']/g, '');
+
+    const parseDepName = (dep?: string) => {
+      if (!dep) return undefined;
+      if (!dep.includes(':')) return removeQuotes(dep);
+      const pkgName = removeQuotes(dep.split(':')[0]);
+      if (pkgName === 'sass') return undefined; // it's a built-in module
+      return pkgName;
+    };
+    const depNameRaw = getDepName();
+    const depName = parseDepName(depNameRaw);
+    if (!depName) return [];
+
+    return depName;
   }
 
   // simple @import

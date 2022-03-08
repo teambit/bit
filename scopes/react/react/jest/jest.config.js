@@ -22,9 +22,11 @@ module.exports = {
   transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$', '^.+\\.module\\.(css|sass|scss)$'],
   modulePaths: [],
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': require.resolve('identity-obj-proxy'),
     '^react-native$': require.resolve('react-native-web'),
     '^.+\\.module\\.(css|sass|scss)$': require.resolve('identity-obj-proxy'),
   },
   moduleFileExtensions: ['web.js', 'js', 'web.ts', 'ts', 'web.tsx', 'tsx', 'json', 'web.jsx', 'jsx', 'node'],
+  testTimeout: 30000, // @todo remove this once mocha-tester is ready and aspect-api testing are using it.
   // watchPlugins: [require.resolve('jest-watch-typeahead/filename'), require.resolve('jest-watch-typeahead/testname')],
 };

@@ -6,6 +6,8 @@ import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
 
 type BuildOpts = {
+  all: boolean;
+  dev: boolean;
   rebuild: boolean;
   install: boolean;
   cachePackagesOnCapsulesRoot: boolean;
@@ -20,6 +22,8 @@ export class BuilderCmd implements Command {
   alias = '';
   group = 'development';
   options = [
+    ['a', 'all', 'build all components, not only modified and new'],
+    ['d', 'dev', 'run the pipeline in dev mode'],
     ['', 'install', 'install core aspects in capsules'],
     ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],
     [
@@ -40,15 +44,29 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
 
   async report(
     [userPattern]: [string],
-    { install = false, cachePackagesOnCapsulesRoot = false, reuseCapsules = false, tasks, listTasks }: BuildOpts
+    {
+      all = false,
+      dev = false,
+      install = false,
+      cachePackagesOnCapsulesRoot = false,
+      reuseCapsules = false,
+      tasks,
+      listTasks,
+    }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new ConsumerNotFound();
     if (listTasks) {
       return this.getListTasks(listTasks);
     }
+
     const longProcessLogger = this.logger.createLongProcessLogger('build');
-    const pattern = userPattern && userPattern.toString();
-    const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
+    const components = await this.workspace.getComponentsByUserInput(all, userPattern, true);
+    if (!components.length) {
+      return chalk.bold(
+        `no components found to build. use "--all" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
+      );
+    }
+    this.logger.consoleSuccess(`found ${components.length} components to build`);
 
     const envsExecutionResults = await this.builder.build(
       components,
@@ -62,6 +80,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         cachePackagesOnCapsulesRoot,
       },
       {
+        dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
       }
     );

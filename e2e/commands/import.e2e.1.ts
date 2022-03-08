@@ -8,6 +8,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -517,32 +518,6 @@ describe('bit import', function () {
     it.skip('should create bit.json file with envs in the folder', () => {});
   });
 
-  describe('import deprecated component', () => {
-    let output;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fs.createFile('src', 'imprel.js');
-      helper.fs.createFile('src', 'imprel.spec.js');
-      helper.fs.createFile('src/utils', 'myUtil.js');
-      helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
-        t: 'src/imprel.spec.js',
-        m: 'src/imprel.js',
-        i: 'imprel/imprel',
-      });
-      helper.command.tagComponent('imprel/imprel');
-      helper.command.deprecateComponent('imprel/imprel');
-      helper.command.exportComponent('imprel/imprel');
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      output = helper.command.importComponent('imprel/imprel');
-    });
-    it('should import component with deprecated msg', () => {
-      expect(output).to.have.string('successfully imported one component');
-      expect(output).to.have.string('imprel/imprel');
-      // expect(output).to.have.string('Deprecated');
-    });
-  });
-
   describe('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {
@@ -931,7 +906,10 @@ describe('bit import', function () {
         });
       });
     });
-    describe('re-import with a specific path', () => {
+    // on Windows, on CircleCI (not locally!), it shows the following error:
+    // Error: Command failed: set "BIT_FEATURES=legacy-workspace-config" && bit import m9t9r8rl-remote/bar/foo -p new-location
+    // EPERM: operation not permitted, rmdir 'C:\Users\circleci\AppData\Local\Temp\bit\e2e\6cg8m49z-local\components\bar\foo\node_modules\@bit\m9t9r8rl-remote.utils.is-string\node_modules'
+    (IS_WINDOWS ? describe.skip : describe)('re-import with a specific path', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(clonedLocalScope);
         helper.command.importComponent('bar/foo -p new-location');

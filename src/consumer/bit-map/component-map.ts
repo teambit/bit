@@ -14,11 +14,14 @@ import AddComponents from '../component-ops/add-components';
 import { AddContext, getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
 export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
+
+export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
 export type ComponentMapFile = {
   name: string;
@@ -39,6 +42,7 @@ type LaneVersion = { remoteLane: RemoteLaneId; version: string };
 export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux;
   trackDir?: PathLinux;
@@ -51,6 +55,7 @@ export type ComponentMapData = {
   defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
+  config?: Config;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -58,6 +63,7 @@ export type PathChange = { from: PathLinux; to: PathLinux };
 export default class ComponentMap {
   id: BitId;
   files: ComponentMapFile[];
+  defaultScope?: string;
   mainFile: PathLinux;
   rootDir?: PathLinux; // always set for IMPORTED and NESTED.
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
@@ -74,16 +80,18 @@ export default class ComponentMap {
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   onLanesOnly? = false; // whether a component is available only on lanes and not on main
   lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
-  defaultVersion?: string | null;
+  defaultVersion?: string | null; // temporarily store the "main" version. so then, once the file is written, this value is saved as the version
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
   scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
   version?: string; // Harmony only. empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
+  config?: { [aspectId: string]: Record<string, any> | '-' };
   constructor({
     id,
     files,
+    defaultScope,
     mainFile,
     rootDir,
     trackDir,
@@ -95,9 +103,11 @@ export default class ComponentMap {
     defaultVersion,
     isAvailableOnCurrentLane,
     nextVersion,
+    config,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
+    this.defaultScope = defaultScope;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
@@ -109,6 +119,7 @@ export default class ComponentMap {
     this.defaultVersion = defaultVersion;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
+    this.config = config;
   }
 
   static fromJson(
@@ -131,6 +142,7 @@ export default class ComponentMap {
       scope: this.scope,
       version: this.version,
       files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
+      defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
@@ -143,12 +155,22 @@ export default class ComponentMap {
         ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
         : null,
       nextVersion: this.nextVersion,
+      config: this.configToObject(),
     };
     const notNil = (val) => {
       return !R.isNil(val);
     };
     res = R.filter(notNil, res);
     return res;
+  }
+
+  private configToObject() {
+    if (!this.config) return undefined;
+    const config = {};
+    Object.keys(this.config).forEach((aspectId) => {
+      config[aspectId] = removeInternalConfigFields(this.config?.[aspectId]);
+    });
+    return config;
   }
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {

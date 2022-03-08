@@ -1,5 +1,4 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { Component } from '@teambit/component';
 
 export type TranspileFileParams = {
@@ -19,7 +18,7 @@ export enum CompilationInitiator {
 }
 
 export type TranspileComponentParams = {
-  component: ConsumerComponent;
+  component: Component;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
   initiator: CompilationInitiator; // origin of the compilation's request
@@ -69,6 +68,11 @@ export interface Compiler extends CompilerOptions {
    * id of the compiler.
    */
   id: string;
+
+  /**
+   * Delete dist folder before writing the new compiled files
+   */
+  deleteDistDir?: boolean;
 
   /**
    * serialized config of the compiler.

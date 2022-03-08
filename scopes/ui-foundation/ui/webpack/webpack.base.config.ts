@@ -58,6 +58,7 @@ export default function createWebpackConfig(
   return {
     stats: {
       children: true,
+      errorDetails: true,
     },
     mode: 'production',
     entry: {

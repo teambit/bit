@@ -16,11 +16,12 @@ export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.
   tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies.
   checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
+  printTypeErrors?: boolean; // whether print typescript errors to the console.
 };
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer;
-  private lastDiagnostics: protocol.DiagnosticEventBody[] = [];
+  public lastDiagnostics: protocol.DiagnosticEventBody[] = [];
   constructor(
     /**
      * absolute root path of the project.
@@ -143,6 +144,23 @@ export class TsserverClient {
     });
   }
 
+  async getDefinition(file: string, position: Position) {
+    const absFile = this.convertFileToAbsoluteIfNeeded(file);
+    this.openIfNeeded(absFile);
+    const response = await this.tsServer.request(CommandTypes.Definition, {
+      file: absFile,
+      line: position.line,
+      offset: position.character,
+    });
+
+    if (!response.success) {
+      // TODO: we need a function to handle responses properly here for all.
+      return response;
+    }
+
+    return response;
+  }
+
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
@@ -162,6 +180,7 @@ export class TsserverClient {
   async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     this.openIfNeeded(absFile);
+
     return this.tsServer.request(CommandTypes.SignatureHelp, {
       file: absFile,
       line: position.line,
@@ -250,7 +269,7 @@ export class TsserverClient {
   }
 
   private publishDiagnostic(message: protocol.DiagnosticEvent) {
-    if (!message.body?.diagnostics.length || !this.shouldCheckTypes()) {
+    if (!message.body?.diagnostics.length || !this.options.printTypeErrors) {
       return;
     }
     this.lastDiagnostics.push(message.body);

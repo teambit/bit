@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 import { domToFiber, toRootFiber } from './dom-to-fiber';
-import { FiberNode } from './fiber-node';
+import { FiberNode, ForwardRefInstance } from './fiber-node';
+
+export type ReactComponent = ComponentType | ForwardRefInstance;
 
 /**
  * a function that returns the React component of a given
@@ -24,16 +26,13 @@ export function toRootElement(element: HTMLElement | null) {
   return null;
 }
 
+/** @deprecated */
 export function domToReact(element: HTMLElement | null) {
-  if (element === null) return null;
-
-  const fiberNode = domToFiber(element);
-  const rootFiber = toRootFiber(fiberNode);
-
-  return rootFiber?.type || null;
+  const components = domToReacts(element);
+  return components.pop();
 }
 
-export function domToReacts(element: HTMLElement | null): ComponentType[] {
+export function domToReacts(element: HTMLElement | null): ReactComponent[] {
   if (element === null) return [];
 
   const fiberNode = domToFiber(element);
@@ -45,16 +44,14 @@ export function domToReacts(element: HTMLElement | null): ComponentType[] {
 /**
  * lists components that immediately rendered this element
  */
-function componentsOf(fiberNode: FiberNode | null) {
-  const componentFibers: FiberNode[] = [];
+function componentsOf(fiberNode: FiberNode | null): ReactComponent[] {
+  const components: ReactComponent[] = [];
 
   let current = fiberNode;
-  while (current && typeof current.type === 'function') {
-    componentFibers.push(current);
+  while (current && current.type !== null && typeof current.type !== 'string') {
+    components.push(current.type);
     current = current.return;
   }
 
-  const components = componentFibers.map((x) => x.type);
-  // fibers type is already checked to be 'function'
-  return components as ComponentType[];
+  return components;
 }

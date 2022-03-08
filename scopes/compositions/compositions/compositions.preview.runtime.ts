@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import {
   PreviewAspect,
   PreviewPreview,
@@ -18,10 +19,10 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render(componentId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
-    if (!modules.componentMap[componentId]) return;
+  render(componentId: ComponentID, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
+    if (!modules.componentMap[componentId.fullName]) return;
 
-    const compositions = this.selectPreviewModel(componentId, modules);
+    const compositions = this.selectPreviewModel(componentId.fullName, modules);
     const active = this.getActiveComposition(compositions);
 
     modules.mainModule.default(active, context);

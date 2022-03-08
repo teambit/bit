@@ -8,7 +8,11 @@ import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
-import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { ElementsWrapperContext } from '@teambit/elements';
+import type { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
+import { EnvPreviewConfig } from '@teambit/preview';
 
 export type EnvDescriptor = {
   type: string;
@@ -52,15 +56,24 @@ export interface DependenciesEnv extends Environment {
    * Returns the list of dependencies
    * Required for any task
    */
-  getDependencies?: () => VariantPolicyConfigObject | Promise<VariantPolicyConfigObject>;
+  getDependencies?: () => EnvPolicyConfigObject | Promise<EnvPolicyConfigObject>;
 }
 
+export type GetNpmIgnoreContext = {
+  capsule: Capsule;
+  component: Component;
+};
 export interface PackageEnv extends Environment {
   /**
    * define the package json properties to add to each component.
    * Used by `bit link` to augment package.json with new properties
    */
   getPackageJsonProps?: () => PackageJsonProps;
+
+  /**
+   * return `.npmignore` entries to be written before packing the component
+   */
+  getNpmIgnore?: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
 }
 
 export interface LinterEnv extends Environment {
@@ -97,6 +110,25 @@ export interface PreviewEnv extends Environment {
    * Required for `bit build` & `bit start`
    */
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
+
+  /**
+   * Returns preview config like the strategy name to use when bundling the components for the preview
+   */
+  getPreviewConfig?: () => EnvPreviewConfig;
+}
+
+export interface ElementsEnv extends Environment {
+  /**
+   * Returns a function that gets the context and wrap the component with a web component
+   * Required for `bit build`
+   */
+  getElementsWrapper: (context: ElementsWrapperContext) => string;
+
+  /**
+   * Returns a bundler for elements.
+   * Required for `bit build``
+   */
+  getElementsBundler: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
 }
 
 export type PipeServiceModifiersMap = Record<string, PipeServiceModifier>;

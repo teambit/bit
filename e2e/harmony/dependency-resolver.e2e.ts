@@ -65,17 +65,50 @@ describe('dependency-resolver extension', function () {
     // and maybe to also apply custom compiler which add deps
     describe('policies added by an env', function () {
       let barFooOutput;
-      before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
-        // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
-        barFooOutput = helper.command.showComponentParsed('bar/foo');
+      describe('policies added core env', function () {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.fixtures.createComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
+          // TODO: use custom env with versions provided from outside in the config by the user
+          helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
+          barFooOutput = helper.command.showComponentParsed('bar/foo');
+        });
+        it('should have the updated dependencies for bar/foo from the env', function () {
+          expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
+          expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
+        });
       });
-      it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
+      describe('policies added by custom env', function () {
+        let utilsIsTypeOutput;
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.fixtures.createComponentBarFoo('import "lodash.zip"');
+          helper.fixtures.addComponentBarFooAsDir();
+          helper.fixtures.createComponentUtilsIsType();
+          helper.fs.outputFile('utils/is-type.js', fixtures.isType);
+          helper.command.addComponent('utils', { i: 'utils/is-type' });
+          // important! don't disable the preview.
+          helper.bitJsonc.addDefaultScope();
+          const envName = helper.env.setCustomEnv('env-add-dependencies');
+          const envId = `${helper.scopes.remote}/${envName}`;
+          helper.extensions.addExtensionToVariant('*', envId);
+          helper.command.install('lodash.zip lodash.get');
+          helper.command.compile();
+          barFooOutput = helper.command.showComponentParsed('bar/foo');
+          utilsIsTypeOutput = helper.command.showComponentParsed('utils/is-type');
+        });
+        it('should have the updated dependencies for bar/foo from the env', function () {
+          expect(barFooOutput.devPackageDependencies).to.have.property('lodash.get', '4.4.2');
+        });
+        describe('auto detect peers policy', function () {
+          it('should resolve version for auto detected peers when used by the component from the env', () => {
+            expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.zip', '^4.0.0');
+          });
+          it('should not add peers when component is not using them', () => {
+            expect(utilsIsTypeOutput.peerPackageDependencies).to.not.have.property('lodash.zip');
+          });
+        });
       });
     });
     describe('policies added by extension', function () {
@@ -166,6 +199,97 @@ describe('dependency-resolver extension', function () {
         expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
         expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
         expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
+      });
+    });
+  });
+  describe('overrides', function () {
+    // This is the dependency graph that the overrides will modify:
+    // is-odd 1.0.0
+    // └─┬ is-number 3.0.0
+    //   └─┬ kind-of 3.2.2
+    //     └── is-buffer 1.1.6
+    // rimraf 3.0.2
+    // └─┬ glob 7.2.0
+    //   ├── fs.realpath 1.0.0
+    //   ├─┬ inflight 1.0.6
+    //   │ ├─┬ once 1.4.0
+    //   │ │ └── wrappy 1.0.2
+    //   │ └── wrappy 1.0.2
+    //   ├── inherits 2.0.4
+    //   ├─┬ minimatch 3.0.4
+    //   │ └─┬ brace-expansion 1.1.11
+    //   │   ├── balanced-match 1.0.2
+    //   │   └── concat-map 0.0.1
+    //   ├─┬ once 1.4.0
+    //   │ └── wrappy 1.0.2
+    //   └── path-is-absolute 1.0.1
+    describe('using Yarn as a package manager', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+          'is-odd': '1.0.0',
+          'glob@^7.1.3': '6.0.4',
+          'inflight>once': '1.3.0',
+        });
+        helper.command.install('is-even@0.1.2 rimraf@3.0.2');
+      });
+      it('should force a newer version of a subdependency using just the dependency name', function () {
+        // Without the override, is-odd would be 0.1.2
+        expect(helper.fixtures.fs.readJsonFile('node_modules/is-odd/package.json').version).to.eq('1.0.0');
+      });
+      it('should force a newer version of a subdependency using the dependency name and version', function () {
+        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/package.json').version).to.eq('6.0.4');
+      });
+      it('should not change the version of the package if the parent package does not match the pattern', function () {
+        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/node_modules/once/package.json').version).to.eq(
+          '1.4.0'
+        );
+      });
+      it('should change the version of the package if the parent package matches the pattern', function () {
+        // This gets hoisted from the dependencies of inflight
+        expect(helper.fixtures.fs.readJsonFile('node_modules/once/package.json').version).to.eq('1.3.0');
+      });
+    });
+    describe('using pnpm as a package manager', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
+          'is-odd': '1.0.0',
+          'glob@^7.1.3': '6.0.4',
+          'inflight>once': '1.3.0',
+        });
+        helper.command.install('is-even@0.1.2 rimraf@3.0.2');
+      });
+      it('should force a newer version of a subdependency using just the dependency name', function () {
+        // Without the override, is-odd would be 0.1.2
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+is-odd@1.0.0/node_modules/is-odd/package.json'
+          ).version
+        ).to.eq('1.0.0');
+      });
+      it('should force a newer version of a subdependency using the dependency name and version', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/glob/package.json'
+          ).version
+        ).to.eq('6.0.4');
+      });
+      it('should not change the version of the package if the parent package does not match the pattern', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/once/package.json'
+          ).version
+        ).to.eq('1.4.0');
+      });
+      it('should change the version of the package if the parent package matches the pattern', function () {
+        expect(
+          helper.fixtures.fs.readJsonFile(
+            'node_modules/.pnpm/registry.npmjs.org+inflight@1.0.6/node_modules/once/package.json'
+          ).version
+        ).to.eq('1.3.0');
       });
     });
   });

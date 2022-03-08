@@ -2,7 +2,7 @@ import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 import { parse, assign } from 'comment-json';
 
-export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceContext) {
+export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const scope = defaultScope || 'company.scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
@@ -27,28 +27,36 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
   };
 
   const variants = {
-    'teambit.workspace/variants': empty
-      ? {
-          '*': {
-            'teambit.react/react': {},
-          },
-        }
-      : parse(`{
-      "{ui/**}, {pages/**}": {
-        // uses the custom env
-        "${scope}/envs/my-react": {},
-        // uncomment the line below if you remove the custom env and remove the line above
-        // "teambit.react/react": {},
+    'teambit.workspace/variants': parse(`{
+      /**
+       * configures all components with namespaces 'ui', 'blocks', 'pages' and 'themes'
+       * to use the default React development environment.
+       *
+      */
+      "{ui/**}, {blocks/**}, {pages/**}, {themes/**}": {
+        "teambit.react/react": {}
       },
-      "{themes/**}": {
-        "teambit.react/react": {},
+  
+      /**
+       * configures components with namespaces 'entities', 'modules' and 'functions' to use the 
+       * default NodeJS dev environment.
+      */
+      "{entities/**}, {modules/**}, {functions/**}": {
+        "teambit.harmony/node": {}
       },
+      /**
+       * configures components with namespace 'content' to use the MDX dev environment.
+      */
       "{content/**}": {
-        "teambit.mdx/mdx": {},
+        "teambit.mdx/mdx": {}
       },
-      "{envs/**}, {extensions/**}": {
-        "teambit.harmony/aspect": {},
-      },
+  
+      /**
+       * configures components with namespaces 'envs' and 'aspects' to use the default Aspect development environment.
+      */
+      "{envs/**}, {aspects/**}, {apps/**}": {
+        "teambit.harmony/aspect": {}
+      }
     }`),
   };
 

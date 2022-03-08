@@ -10,7 +10,7 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
-import { createSsrMiddleware } from './ssr/render-middleware';
+import { createSsrMiddleware } from './ssr-middleware';
 import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
@@ -78,14 +78,8 @@ export class UIServer {
    */
   async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
-    const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 
-    return devConfig(
-      this.uiRoot.path,
-      [await this.ui.generateRoot(aspects, this.uiRootExtension)],
-      this.uiRoot.name,
-      aspectsPaths
-    );
+    return devConfig(this.uiRoot.path, [await this.ui.generateRoot(aspects, this.uiRootExtension)], this.uiRoot.name);
   }
 
   private setReady: () => void;
@@ -156,6 +150,8 @@ export class UIServer {
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));
     const proxyEntries = await this.getProxyFromPlugins();
+
+    // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
       if (!entry) return;

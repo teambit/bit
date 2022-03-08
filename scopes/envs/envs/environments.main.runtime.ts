@@ -12,7 +12,7 @@ import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
-import { EnvsCmd } from './envs.cmd';
+import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 
@@ -91,6 +91,18 @@ export class EnvsMain {
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.harmony/aspect',
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+      'teambit.envs/env',
+    ];
+  }
+
   /**
    * compose a new environment from a list of environment transformers.
    */
@@ -115,7 +127,7 @@ export class EnvsMain {
   /**
    * compose two environments into one.
    */
-  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
+  merge<T extends Environment, S extends Environment>(targetEnv: Environment, sourceEnv: Environment): T & S {
     const allNames = new Set<string>();
     const keys = ['icon', 'name', 'description'];
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
@@ -134,7 +146,7 @@ export class EnvsMain {
       targetEnv[key] = fn.bind(sourceEnv);
     });
 
-    return targetEnv as T;
+    return targetEnv as T & S;
   }
 
   getEnvData(component: Component): AspectData {
@@ -300,18 +312,49 @@ export class EnvsMain {
     return this.getDefaultEnv();
   }
 
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns #1 if exists, otherwise, #2.
+   */
   getAllEnvsConfiguredOnComponent(component: Component): EnvDefinition[] {
     // if a component has "envs" config, use it and ignore other components that are set up
     // in this components which happen to be envs.
-    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
-    if (envIdFromEnvsConfig) {
-      const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
-      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
-      if (envDef) {
-        return [envDef];
-      }
+    const envDef = this.getEnvFromEnvsConfig(component);
+    if (envDef) {
+      return [envDef];
     }
 
+    return this.getEnvsNotFromEnvsConfig(component);
+  }
+
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns only #1
+   */
+  getEnvFromEnvsConfig(component: Component): EnvDefinition | undefined {
+    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
+    if (!envIdFromEnvsConfig) {
+      return undefined;
+    }
+    const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+    const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+    return envDef;
+  }
+
+  /**
+   * an env can be configured on a component in two ways:
+   * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
+   * 2) the env aspect is set on the variant as any other aspect, e.g. `{ "my-env": {} }`
+   *
+   * this method returns only #2
+   */
+  getEnvsNotFromEnvsConfig(component: Component): EnvDefinition[] {
     return component.state.aspects.entries.reduce((acc: EnvDefinition[], aspectEntry) => {
       const envDef = this.getEnvDefinitionById(aspectEntry.id);
       if (envDef) acc.push(envDef);
@@ -410,6 +453,11 @@ export class EnvsMain {
     return undefined;
   }
 
+  getEnvFromComponent(envComponent: Component) {
+    const env = this.getEnvDefinitionById(envComponent.id);
+    return env;
+  }
+
   private printWarningIfFirstTime(envId: string, message: string) {
     if (!this.alreadyShownWarning[envId]) {
       this.alreadyShownWarning[envId] = true;
@@ -422,6 +470,18 @@ export class EnvsMain {
    */
   isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
+  }
+
+  isUsingAspectEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'aspect';
+  }
+
+  isUsingEnvEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'env';
   }
 
   /**
@@ -509,7 +569,9 @@ export class EnvsMain {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
     component.registerShowFragments([new EnvFragment(envs)]);
-    cli.register(new EnvsCmd(envs, component));
+    const envsCmd = new EnvsCmd(envs, component);
+    envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
+    cli.register(envsCmd);
     graphql.register(environmentsSchema(envs));
     return envs;
   }

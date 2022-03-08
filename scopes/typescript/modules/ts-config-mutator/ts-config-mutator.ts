@@ -1,4 +1,4 @@
-import { clone, merge } from 'lodash';
+import { cloneDeep, merge } from 'lodash';
 import { CompilerOptions } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 
@@ -8,7 +8,7 @@ export class TypescriptConfigMutator {
   constructor(public raw: TypeScriptCompilerOptions) {}
 
   clone(): TypescriptConfigMutator {
-    return new TypescriptConfigMutator(clone(this.raw));
+    return new TypescriptConfigMutator(cloneDeep(this.raw));
   }
 
   // TODO: move to a shared place, as all compilers mutators will need it

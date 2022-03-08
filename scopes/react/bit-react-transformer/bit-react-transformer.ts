@@ -2,9 +2,13 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import {
+  ComponentMeta,
+  componentMetaField,
+  componentMetaProperties,
+} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { metaFromPackageJson } from './meta-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
-import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl, fieldIsExported } from './model';
 
 export type BitReactTransformerOptions = {
   componentFilesPath?: string;
@@ -96,6 +100,23 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
           addComponentId(path.parentPath, filename, id.name);
           break;
 
+        // handle forwardRef
+        case 'CallExpression':
+          // direct forwardRef, e.g `const Comp = forwardRef(() => <div>comp</div>);`
+          if (node.init.callee.type === 'Identifier' && node.init.callee.name === 'forwardRef')
+            addComponentId(path.parentPath, filename, id.name);
+
+          // react.forwardRef, e.g `const Comp = React.forwardRef(() => <div>comp</div>);`
+          if (
+            node.init.callee.type === 'MemberExpression' &&
+            node.init.callee.property.type === 'Identifier' &&
+            node.init.callee.property.name === 'forwardRef'
+          ) {
+            addComponentId(path.parentPath, filename, id.name);
+          }
+
+          break;
+
         default:
           break;
       }
@@ -130,13 +151,15 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
 function metaToDeceleration(meta: ComponentMeta, types: typeof Types) {
   const properties = [
     // e.g. "id": "teambit.base-ui/input/button@0.6.10"
-    types.objectProperty(types.identifier(fieldComponentId), types.stringLiteral(meta.id)),
+    types.objectProperty(types.identifier(componentMetaProperties.componentId), types.stringLiteral(meta.id)),
 
     // e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
-    meta.homepage && types.objectProperty(types.identifier(fieldHomepageUrl), types.stringLiteral(meta.homepage)),
+    meta.homepage &&
+      types.objectProperty(types.identifier(componentMetaProperties.homepageUrl), types.stringLiteral(meta.homepage)),
 
     // "exported": true / false
-    meta.exported && types.objectProperty(types.identifier(fieldIsExported), types.booleanLiteral(meta.exported)),
+    meta.exported &&
+      types.objectProperty(types.identifier(componentMetaProperties.isExported), types.booleanLiteral(meta.exported)),
   ].filter((x) => x) as Types.ObjectProperty[];
 
   // variable deceleration, e.g. `var __bit_component = { ... };`

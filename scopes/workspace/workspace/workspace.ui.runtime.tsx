@@ -12,6 +12,7 @@ import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
@@ -59,8 +60,13 @@ export class WorkspaceUI {
   /**
    * register a route to the workspace.
    */
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoutes(routes: RouteProps[]) {
+    this.routeSlot.register(routes);
+    return this;
+  }
+
+  registerDrawers(...drawers: DrawerType[]) {
+    this.sidebar.registerDrawer(...drawers);
     return this;
   }
 
@@ -71,6 +77,11 @@ export class WorkspaceUI {
 
   registerMenuItem = (menuItems: MenuItem[]) => {
     this.menuItemSlot.register(menuItems);
+  };
+
+  registerMenuRoutes = (routes: RouteProps[]) => {
+    this.menuSlot.register(routes);
+    return this;
   };
 
   setComponents = (components: ComponentModel[]) => {
@@ -84,8 +95,8 @@ export class WorkspaceUI {
   componentSearcher: ComponentSearcher;
 
   uiRoot(): UIRoot {
-    this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
+    this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
@@ -190,7 +201,7 @@ export class WorkspaceUI {
       </MenuLinkItem>
     ));
 
-    workspaceUI.menuSlot.register([
+    workspaceUI.registerMenuRoutes([
       {
         exact: true,
         path: '/',
@@ -202,10 +213,12 @@ export class WorkspaceUI {
       },
     ]);
 
-    workspaceUI.routeSlot.register({
-      path: workspaceUI.componentUi.routePath,
-      children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
-    });
+    workspaceUI.registerRoutes([
+      {
+        path: workspaceUI.componentUi.routePath,
+        children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
+      },
+    ]);
     return workspaceUI;
   }
 }

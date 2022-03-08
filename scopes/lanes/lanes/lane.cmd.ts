@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
+import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
@@ -46,6 +47,7 @@ export class LaneListCmd implements Command {
       remote,
       merged,
       notMerged,
+      showDefaultLane: true,
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
@@ -186,7 +188,7 @@ export class LaneCreateCmd implements Command {
     const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
       ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
       : `the default-scope ${chalk.bold(result.remoteScope)}. to change it, please run "bit lane track" command`;
-    const title = chalk.green(`successfully added a new lane ${chalk.bold(result.localLane)}`);
+    const title = chalk.green(`successfully added and checked out to a new lane ${chalk.bold(result.localLane)}`);
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
     return `${title}\n${remoteScopeOutput}`;
   }
@@ -316,7 +318,7 @@ export class LaneRemoveCmd implements Command {
   ): Promise<string> {
     if (!silent) {
       const removePromptResult = await removePrompt();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
       }

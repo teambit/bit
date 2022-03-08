@@ -1,7 +1,10 @@
 import { MainRuntime } from '@teambit/cli';
+import { ConfigAspect } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import ConsumerOverrides from '@teambit/legacy/dist/consumer/config/consumer-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
+import { assign } from 'comment-json';
 import { omit, forEach } from 'lodash';
 import {
   MatchedPatternWithConfig,
@@ -19,17 +22,18 @@ export type VariantsComponentConfig = {
   defaultScope?: string;
   extensions: ExtensionDataList;
   maxSpecificity: number;
+  sortedMatches: MatchedPatternWithConfig[];
 };
 
 const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
 export class VariantsMain {
   static runtime = MainRuntime;
-  static dependencies = [];
+  static dependencies = [ConfigAspect];
 
   _loadedLegacy: ConsumerOverrides;
 
-  constructor(private patterns: Patterns) {
+  constructor(private patterns: Patterns, private configAspect: ConfigMain) {
     this._loadedLegacy = ConsumerOverrides.load(this.patterns);
     this.validateConfig();
   }
@@ -68,6 +72,7 @@ export class VariantsMain {
         matches.push({
           config: patternConfig,
           specificity: match.maxSpecificity,
+          pattern: match.pattern,
         });
       }
     });
@@ -93,12 +98,30 @@ export class VariantsMain {
       extensions: mergedExtensions,
       propagate,
       maxSpecificity: sortedMatches.length ? sortedMatches[0].specificity : -1,
+      sortedMatches,
     };
     return result;
   }
 
-  static async provider(_deps, config) {
-    return new VariantsMain(config);
+  /**
+   * Updates the specified extension object of the specified variant.
+   * @param {string} variant - The variant pattern.
+   * @param {string} extensionId - The extension ID.
+   * @param {Object} extensionConfig - The extension configuration.
+   * @param {boolean} opts.overrideExisting - When true, any existing entries are overriden.
+   */
+  setExtension(variant: string, extensionId: string, extensionConfig: any, opts?: { overrideExisting?: boolean }) {
+    const newVariant = this.patterns[variant] ?? {};
+    assign(newVariant, { [extensionId]: extensionConfig });
+    assign(this.patterns, { [variant]: newVariant });
+    this.configAspect.setExtension(VariantsAspect.id, this.patterns, {
+      overrideExisting: opts?.overrideExisting === true,
+      ignoreVersion: true,
+    });
+  }
+
+  static async provider([configAspect]: [ConfigMain], config) {
+    return new VariantsMain(config, configAspect);
   }
 }
 

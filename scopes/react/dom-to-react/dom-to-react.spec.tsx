@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { domToReact, toRootElement } from './dom-to-react';
+import { domToReact, domToReacts, toRootElement } from './dom-to-react';
 
 describe('domToReact', () => {
   it('should find simple React component', () => {
@@ -46,6 +46,85 @@ describe('domToReact', () => {
 
     const component = domToReact(target);
     expect(component).toEqual(BasicFragmentComponent);
+  });
+
+  test('should return the outer component, when a component is a decoration of two components', () => {
+    const { getByText } = render(<DecoratedDiv />);
+
+    const target = getByText('hello');
+    const component = domToReact(target);
+    expect(component).toEqual(DecoratedDiv);
+  });
+
+  test('should return the outer component, when a component is wrapper of another component', () => {
+    const { getByText } = render(<WrappedDiv />);
+
+    const target = getByText('hello');
+    const component = domToReact(target);
+    expect(component).toEqual(WrappedDiv);
+  });
+});
+
+describe('domToReacts', () => {
+  it('should find simple React component', () => {
+    const { getByText } = render(<DivComponent />);
+    const target = getByText('hello');
+
+    const components = domToReacts(target);
+    expect(components).toEqual([DivComponent]);
+  });
+
+  it('should find React component with fragment', () => {
+    const { getByText } = render(<FragmentComponent />);
+    const target = getByText('hello');
+
+    const components = domToReacts(target);
+    expect(components).toEqual([FragmentComponent]);
+  });
+
+  it('should find react component with array', () => {
+    const { getByText } = render(<ArrayComponent />);
+    const target = getByText('hello');
+
+    const components = domToReacts(target);
+    expect(components).toEqual([ArrayComponent]);
+  });
+
+  it('should find react component with nesting', () => {
+    const { getByText } = render(<NestedComponent />);
+    const target = getByText('hello');
+
+    const components = domToReacts(target);
+    expect(components).toEqual([NestedComponent]);
+  });
+
+  // doesn't work for text-only components
+  test.skip('should find React component with fragment', () => {
+    const { getByText } = render(
+      <Container>
+        <BasicFragmentComponent />
+      </Container>
+    );
+    const target = getByText('hello');
+
+    const components = domToReacts(target);
+    expect(components).toEqual([BasicFragmentComponent]);
+  });
+
+  test('should both components, when two react components correspond to a single element', () => {
+    const { getByText } = render(<DecoratedDiv />);
+
+    const target = getByText('hello');
+    const components = domToReacts(target);
+    expect(components).toEqual([DivComponent, DecoratedDiv]);
+  });
+
+  test('should return all 3 components, when a component is wrapper of another component', () => {
+    const { getByText } = render(<WrappedDiv />);
+
+    const target = getByText('hello');
+    const component = domToReacts(target);
+    expect(component).toEqual([DivComponent, WrapperComponent, WrappedDiv]);
   });
 });
 
@@ -102,6 +181,22 @@ function Container(props: React.HTMLAttributes<HTMLDivElement>) {
 
 function BasicFragmentComponent() {
   return <>hello</>;
+}
+
+function WrapperComponent({ children }: { children?: any }) {
+  return children;
+}
+
+function DecoratedDiv(props: React.HTMLAttributes<HTMLDivElement>) {
+  return <DivComponent {...props} />;
+}
+
+function WrappedDiv(props: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <WrapperComponent>
+      <DivComponent {...props} />
+    </WrapperComponent>
+  );
 }
 
 function FragmentComponent(props: React.HTMLAttributes<HTMLDivElement>) {

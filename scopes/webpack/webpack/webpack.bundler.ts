@@ -1,9 +1,12 @@
 import { BitError } from '@teambit/bit-error';
-import { Bundler, BundlerResult, Target } from '@teambit/bundler';
-import { Logger } from '@teambit/logger';
+import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap } from '@teambit/bundler';
+import type { Logger } from '@teambit/logger';
+import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
-import { Compiler, Configuration } from 'webpack';
+import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
+import { sep } from 'path';
 
+type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
   constructor(
     /**
@@ -22,6 +25,7 @@ export class WebpackBundler implements Bundler {
   ) {}
 
   async run(): Promise<BundlerResult[]> {
+    const startTime = Date.now();
     const compilers = this.configs.map((config: any) => this.webpack(config));
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
@@ -32,6 +36,8 @@ export class WebpackBundler implements Bundler {
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
           if (err) {
+            this.logger.error('get error from webpack compiler, full error:', err);
+
             return resolve({
               errors: [`${err.toString()}\n${err.stack}`],
               components,
@@ -39,11 +45,22 @@ export class WebpackBundler implements Bundler {
           }
           if (!stats) throw new BitError('unknown build error');
           const info = stats.toJson();
+
+          // console.log(JSON.stringify(info, null, 2));
+
+          const assetsMap = this.getAssets(info);
+          const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
+
           return resolve({
-            errors: info.errors,
+            assets: Object.values(assetsMap),
+            assetsByChunkName: info.assetsByChunkName,
+            entriesAssetsMap,
+            errors: this.getErrors(info),
             outputPath: stats.compilation.outputOptions.path,
             components,
             warnings: info.warnings,
+            startTime,
+            endTime: Date.now(),
           });
         });
       });
@@ -52,18 +69,75 @@ export class WebpackBundler implements Bundler {
     return componentOutput as BundlerResult[];
   }
 
-  private getComponents(outputPath: string) {
-    const splitPath = outputPath.split('/');
-    splitPath.pop();
-    const path = splitPath.join('/');
-    const target = this.targets.find((targetCandidate) => {
-      return path === targetCandidate.outputPath;
+  private getErrors(stats: StatsCompilation): Error[] {
+    if (!stats.errors) return [];
+    const fieldsToShow = ['message', 'moduleId', 'moduleName', 'moduleIdentifier', 'loc'];
+    return stats.errors.map((webpackError) => {
+      const lines = fieldsToShow.map((fieldName) => {
+        if (webpackError[fieldName]) {
+          return `${fieldName}: ${webpackError[fieldName]}`;
+        }
+        return undefined;
+      });
+      const errorMessage = compact(lines).join('\n');
+      return new BitError(errorMessage);
     });
+  }
 
-    if (!target) {
-      throw new Error(`Could not find component id for path "${path}"`);
-    }
+  private getAssets(stats: StatsCompilation): AssetsMap {
+    if (!stats.assets) return {};
+    return stats.assets.reduce((acc, asset) => {
+      acc[asset.name] = {
+        name: asset.name,
+        size: asset.size,
+        compressedSize: this.getCompressedSize(asset),
+      };
+      return acc;
+    }, {});
+  }
 
+  private getEntriesAssetsMap(stats: StatsCompilation, assetsMap: AssetsMap): EntriesAssetsMap {
+    const entriesMap = stats.entrypoints;
+    if (!entriesMap || !Object.keys(assetsMap).length) return {};
+    Object.entries(entriesMap).forEach(([, entryVal]) => {
+      let compressedAssetsSize = 0;
+      let compressedAuxiliaryAssetsSize = 0;
+      entryVal.assets?.forEach((asset) => {
+        const compressedSize = assetsMap[asset.name]?.compressedSize;
+        if (compressedSize) {
+          // @ts-ignore
+          asset.compressedSize = compressedSize;
+          compressedAssetsSize += compressedSize;
+        }
+      });
+      entryVal.auxiliaryAssets?.forEach((asset) => {
+        const compressedSize = assetsMap[asset.name]?.compressedSize;
+        if (compressedSize) {
+          // @ts-ignore
+          asset.compressedSize = compressedSize;
+          compressedAuxiliaryAssetsSize += compressedSize;
+        }
+      });
+      entryVal.compressedAssetsSize = compressedAssetsSize;
+      entryVal.compressedAuxiliaryAssetsSize = compressedAuxiliaryAssetsSize;
+    });
+    return entriesMap as any as EntriesAssetsMap;
+  }
+
+  private getCompressedSize(asset: StatsAsset): number | undefined {
+    if (!asset.related || isEmpty(asset.related)) return undefined;
+    const gzipped = asset.related.find((relatedAsset) => {
+      return relatedAsset.type === 'gzipped';
+    });
+    if (!gzipped) return undefined;
+    return gzipped.size;
+  }
+
+  private getComponents(outputPath: string) {
+    const path = outputPath.substring(0, outputPath.lastIndexOf(sep));
+    const target = this.targets.find((targetCandidate) => path === targetCandidate.outputPath);
+
+    if (!target) throw new Error(`Could not find component id for path "${path}"`);
     return target.components;
   }
 }

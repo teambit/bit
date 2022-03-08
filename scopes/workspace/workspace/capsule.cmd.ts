@@ -89,13 +89,12 @@ export class CapsuleListCmd implements Command {
 
   async report() {
     const list = await this.isolator.list(this.workspace.path);
-    const { workspaceCapsulesRootDir, scopeCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
+    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
     // TODO: improve output
     return chalk.green(`found ${chalk.cyan(list.capsules.length.toString())} capsule(s) for workspace:  ${chalk.cyan(
       list.workspace
     )}
 workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}
-scope capsules root-dir:           ${chalk.cyan(scopeCapsulesRootDir)}
 scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}
 use --json to get the list of all workspace capsules`);
   }
@@ -108,10 +107,34 @@ use --json to get the list of all workspace capsules`);
 
   private getCapsulesRootDirs() {
     const workspaceCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
-    const scopeCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
     const scopeAspectsCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
 
-    return { workspaceCapsulesRootDir, scopeCapsulesRootDir, scopeAspectsCapsulesRootDir };
+    return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir };
+  }
+}
+
+export class CapsuleDeleteCmd implements Command {
+  name = 'delete';
+  description = `delete capsules. with no args, only workspace's capsules are deleted`;
+  shortDescription = `delete capsules`;
+  group = 'capsules';
+  alias = '';
+  options = [
+    ['', 'scope-aspects', 'delete scope-aspects capsules'],
+    ['a', 'all', 'delete all capsules for all workspaces and scopes'],
+  ] as CommandOptions;
+
+  constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
+
+  async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
+    const capsuleBaseDirToDelete = (): string | null => {
+      if (all) return null;
+      if (scopeAspects) return this.workspace.scope.getAspectCapsulePath();
+      return this.workspace.path;
+    };
+    const capsuleBaseDir = capsuleBaseDirToDelete();
+    const deletedDir = await this.isolator.deleteCapsules(capsuleBaseDir);
+    return chalk.green(`the following capsules dir has been deleted ${chalk.bold(deletedDir)}`);
   }
 }
 

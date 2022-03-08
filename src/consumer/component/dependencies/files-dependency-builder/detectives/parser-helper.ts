@@ -1,3 +1,5 @@
+import { Specifier } from '../types/dependency-tree-type';
+
 export function getDependenciesFromMemberExpression(node) {
   if (
     node.object.type === 'CallExpression' &&
@@ -26,7 +28,7 @@ export function getDependenciesFromCallExpression(node) {
   return null;
 }
 
-export function getSpecifierValueForImportDeclaration(specifier) {
+export function getSpecifierValueForImportDeclaration(specifier): Specifier {
   return {
     isDefault: specifier.type === 'ImportDefaultSpecifier',
     // syntax of `import x from 'file'` doesn't have specifier.imported, only specifier.local

@@ -109,4 +109,51 @@ describe('create extension', function () {
       expect(() => helper.command.create('aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
     });
   });
+  describe('with --scope flag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope('my-scope');
+      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should add the component to the .bitmap file with a new defaultScope prop', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('my-aspect');
+      expect(bitMap['my-aspect']).to.have.property('defaultScope');
+      expect(bitMap['my-aspect'].defaultScope).to.equal(helper.scopes.remote);
+    });
+    it('bit show should show this scope as the defaultScope', () => {
+      const show = helper.command.showComponent('my-aspect');
+      expect(show).to.include(helper.scopes.remote);
+    });
+    describe('exporting the component', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('--ignore-issues');
+        // the fact the export succeed, means the defaultScope from .bitmap taken into account
+        // otherwise, it would have been used the workspace.jsonc defaultScope "my-scope" and fails.
+        helper.command.export();
+      });
+      it('should delete the defaultScope prop from .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('my-aspect');
+        expect(bitMap['my-aspect']).to.not.have.property('defaultScope');
+      });
+    });
+  });
+  describe('with env defined inside the aspect-template different than the variants', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should set the env according to the config from the env', () => {
+      const show = helper.command.showComponentParsedHarmony('my-aspect');
+      const env = show.find((item) => item.title === 'env');
+      expect(env.json).to.equal('teambit.harmony/aspect');
+    });
+    it('should remove the one from the variants', () => {
+      const show = helper.command.showComponent('my-aspect');
+      expect(show).to.not.include('teambit.react/react');
+    });
+  });
 });

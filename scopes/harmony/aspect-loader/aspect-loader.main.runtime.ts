@@ -1,18 +1,19 @@
 import { join } from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
+import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { ComponentID, Component } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten } from 'lodash';
+import { difference, compact, flatten, intersection } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -130,15 +131,24 @@ export class AspectLoaderMain {
 
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
+    try {
+      const compiler = this.getCompiler(component);
 
-    const compiler = this.getCompiler(component);
+      if (!compiler) {
+        return join(modulePath, runtimeFile.relative);
+      }
 
-    if (!compiler) {
-      return join(modulePath, runtimeFile.relative);
+      const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
+      return join(modulePath, dist);
+    } catch (e) {
+      this.logger.info(`got an error during get runtime path, probably the env is not loaded yet ${e}`);
+      // TODO: we are manually adding the dist here and replace the file name to handle case when
+      // we load aspects from scope, and their env in the same iteration, but we get into the aspect before its
+      // env, so it's env doesn't exist yet
+      // we should make sure to first load the env correctly before loading the aspect
+      const distPath = join(modulePath, DEFAULT_DIST_DIRNAME, replaceFileExtToJs(runtimeFile.relative));
+      return distPath;
     }
-
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
-    return join(modulePath, dist);
   }
 
   isAspectLoaded(id: string) {
@@ -194,6 +204,20 @@ export class AspectLoaderMain {
     return ids.concat(this._reserved);
   }
 
+  /**
+   * Get all the core envs ids which is still register in the bit manifest as core aspect
+   */
+  getCoreEnvsIds(): string[] {
+    const envsIds = this.envs.getCoreEnvsIds();
+    const allIds = this.getCoreAspectIds();
+    return intersection(allIds, envsIds);
+  }
+
+  isCoreEnv(id: string): boolean {
+    const ids = this.getCoreEnvsIds();
+    return ids.includes(id);
+  }
+
   private _reserved = ['teambit.harmony/bit', 'teambit.harmony/config'];
 
   getUserAspects(): string[] {
@@ -246,6 +270,14 @@ export class AspectLoaderMain {
     this.failedLoadAspect.push(id);
   }
 
+  cloneManifest(manifest: any) {
+    const cloned = Object.assign(Object.create(Object.getPrototypeOf(manifest)), manifest);
+    cloned.provider = manifest.provider;
+    cloned.addRuntime = manifest.addRuntime;
+    cloned.getRuntime = manifest.getRuntime;
+    return cloned;
+  }
+
   /**
    * run "require" of the component code to get the manifest
    */
@@ -254,7 +286,9 @@ export class AspectLoaderMain {
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
-    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, manifest);
+    // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
+    const cloned = this.cloneManifest(manifest);
+    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
     return newManifest;
   }
 
@@ -325,6 +359,7 @@ export class AspectLoaderMain {
       this.logger.console(error);
       throw new CannotLoadExtension(idStr, error);
     }
+    this.logger.error(errorMsg, error);
     if (this.logger.isLoaderStarted) {
       this.logger.consoleFailure(errorMsg);
     } else {
@@ -366,9 +401,12 @@ export class AspectLoaderMain {
     return !!(manifest.addRuntime && manifest.getRuntime);
   }
 
+  isValidAspect(manifest: any): boolean {
+    return this.isAspect(manifest) || manifest.provider;
+  }
+
   isAspectComponent(component: Component): boolean {
-    const data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
-    return Boolean(data && data.type === 'aspect');
+    return this.envs.isUsingAspectEnv(component);
   }
 
   /**
@@ -385,7 +423,7 @@ export class AspectLoaderMain {
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    const components = await scope.import(ids, useCache, true);
+    const components = await scope.import(ids, { useCache, throwIfNotExist: true });
 
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
@@ -430,8 +468,7 @@ export class AspectLoaderMain {
   async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
     try {
       const manifests = extensionsManifests.filter((manifest) => {
-        // @ts-ignore TODO: fix this
-        const isValid = this.isAspect(manifest) || manifest.provider;
+        const isValid = this.isValidAspect(manifest);
         if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
         return isValid;
       });

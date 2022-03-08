@@ -13,13 +13,14 @@ const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
   copyPeerToRuntimeOnRoot: true,
   copyPeerToRuntimeOnComponents: false,
+  installPeersFromEnvs: false,
 };
 
 const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
 };
 
-type InstallArgs = {
+export type InstallArgs = {
   rootDir: string | undefined;
   rootPolicy: WorkspacePolicy;
   componentDirectoryMap: ComponentMap<string>;
@@ -29,6 +30,7 @@ type InstallArgs = {
 
 export type InstallOptions = {
   installTeambitBit: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -54,7 +56,9 @@ export class DependencyInstaller {
 
     private preInstallSubscriberList?: PreInstallSubscriberList,
 
-    private postInstallSubscriberList?: PostInstallSubscriberList
+    private postInstallSubscriberList?: PostInstallSubscriberList,
+
+    private nodeLinker?: 'hoisted' | 'isolated'
   ) {}
 
   async install(
@@ -78,12 +82,13 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     // Make sure to take other default if passed options with only one option
-    const calculatedPmOpts = Object.assign(
-      {},
-      DEFAULT_PM_INSTALL_OPTIONS,
-      { cacheRootDir: this.cacheRootDir },
-      packageManagerOptions
-    );
+    const calculatedPmOpts = {
+      ...DEFAULT_PM_INSTALL_OPTIONS,
+      cacheRootDir: this.cacheRootDir,
+      nodeLinker: this.nodeLinker,
+      packageManagerConfigRootDir: options.packageManagerConfigRootDir,
+      ...packageManagerOptions,
+    };
     if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
         throw new MainAspectNotInstallable();

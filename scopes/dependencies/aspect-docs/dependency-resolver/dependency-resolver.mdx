@@ -81,6 +81,16 @@ To choose between 'Yarn' and 'pnpm', set the `packageManager` property to either
 }
 ```
 
+### Select the type of node_modules
+
+By default, pnpm creates a symlinked `node_modules` whereas Yarn creates a "classic" hoisted one.
+This may be changed by setting the `nodeLinker` configuration option.
+
+Allowed values of `nodeLinker`:
+
+- `"hoisted"` - create a hoisted (aka flat) `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
+- `"isolated"` - create a `node_modules` directory using symlinks. All dependencies are symlinked from a flat storage at `node_modules/.pnpm` (when using pnpm) or `node_modules/.store` (when using Yarn).
+
 ### Apply policies on all relevant components
 
 A dependency policy configured at the root level of the workspace configuration (JSON) will by default affect _all_ components that have that package as their dependency (i.e., components that have this module listed in their generated dependency graph).
@@ -372,6 +382,27 @@ The maximum amount of time (in milliseconds) to wait for HTTP requests to comple
 ### maxSockets
 
 The maximum number of connections to use per origin (protocol/host/port combination).
+
+## Overrides
+
+This field allows you to instruct Bit to override any dependency in the dependency graph. This is useful to enforce all your packages to use a single version of a dependency, backport a fix, or replace a dependency with a fork.
+
+An example of the `"overrides"` field:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "overrides": {
+      "foo": "^1.0.0",
+      "quux": "npm:@myorg/quux@^1.0.0",
+      "bar@^2.1.0": "3.0.0",
+      "qar@1>zoo": "2"
+    }
+  }
+}
+```
+
+You may specify the package the overriden dependency belongs to by separating the package selector from the dependency selector with a `">"`, for example `qar@1>zoo` will only override the `zoo` dependency of `qar@1`, not for any other dependencies.
 
 ## CLI reference
 

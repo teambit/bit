@@ -64,14 +64,13 @@ function enrichDataFromDependent(packageData: ResolvedPackageData, dependentDir:
   );
 
   const packageName = resolvePackageNameByPath(packageRelativePath);
-  const packageNameNormalized = packageName.replace('\\', '/');
   const packageVersion =
-    R.path(['dependencies', packageNameNormalized], dependentPackageJson) ||
-    R.path(['devDependencies', packageNameNormalized], dependentPackageJson) ||
-    R.path(['peerDependencies', packageNameNormalized], dependentPackageJson);
+    R.path(['dependencies', packageName], dependentPackageJson) ||
+    R.path(['devDependencies', packageName], dependentPackageJson) ||
+    R.path(['peerDependencies', packageName], dependentPackageJson);
   if (packageVersion) {
     packageData.dependentPackageJsonPath = packageJsonInfo.path;
-    packageData.name = packageNameNormalized;
+    packageData.name = packageName;
     packageData.versionUsedByDependent = packageVersion;
   }
 }

@@ -18,4 +18,11 @@ export class HtmlEnv implements Environment {
       },
     };
   }
+
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: true,
+    };
+  }
 }

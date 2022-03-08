@@ -8,7 +8,7 @@ import { SignMain } from './sign.main.runtime';
 
 type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean };
 export class SignCmd implements Command {
-  name = 'sign <component...>';
+  name = 'sign [component...]';
   private = true;
   description = 'complete the build process for components';
   alias = '';
@@ -21,7 +21,7 @@ export class SignCmd implements Command {
 
   constructor(private signMain: SignMain, private scope: ScopeMain, private logger: Logger) {}
 
-  async report([components]: [string[]], { multiple, alwaysSucceed, push }: SignOptions) {
+  async report([components = []]: [string[]], { multiple, alwaysSucceed, push }: SignOptions) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
     const results = await this.signMain.sign(componentIds, multiple, push);
     if (!results) {

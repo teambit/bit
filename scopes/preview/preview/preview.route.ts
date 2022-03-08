@@ -1,16 +1,12 @@
-import { Request, Response, Route } from '@teambit/express';
-import mime from 'mime';
+import type { NextFunction, Request, Response, Route } from '@teambit/express';
 import type { Component } from '@teambit/component';
 import { noPreview, serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
 
 import { PreviewMain } from './preview.main.runtime';
 import { PreviewArtifact } from './preview-artifact';
-
-type UrlParams = {
-  /** `/preview/:previewPath(*)` */
-  previewPath?: string;
-};
+import { getArtifactFileMiddleware } from './artifact-file-middleware';
+import type { PreviewUrlParams } from './artifact-file-middleware';
 
 export class PreviewRoute implements Route {
   constructor(
@@ -21,36 +17,42 @@ export class PreviewRoute implements Route {
     private logger: Logger
   ) {}
 
-  route = `/preview/:previewPath(*)`;
+  route = `/preview/:previewName?/:filePath(*)`;
   method = 'get';
 
   middlewares = [
-    async (req: Request<UrlParams>, res: Response) => {
+    async (req: Request<PreviewUrlParams>, res: Response, next: NextFunction) => {
       try {
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());
+        const isLegacyPath = await this.preview.isBundledWithEnv(component);
 
         let artifact: PreviewArtifact | undefined;
         // TODO - prevent error `getVinylsAndImportIfMissing is not a function` #4680
         try {
-          artifact = await this.preview.getPreview(component);
+          // Taking the env template (in this case we will take the component only bundle throw component-preview route)
+          // We use this route for the env template for backward compatibility - new scopes which contain components tagged with old versions of bit
+          if (!isLegacyPath) {
+            artifact = await this.preview.getEnvTemplateFromComponentEnv(component);
+          } else {
+            // If it's legacy (bundled together with the env template) take the preview bundle from the component directly
+            artifact = await this.preview.getPreview(component);
+          }
         } catch (e: any) {
+          this.logger.error(`getEnvTemplateFromComponentEnv or getPreview has failed`, e);
           return res.status(404).send(noPreview());
         }
-        // TODO: please fix file path concatenation here.
-        const file = artifact?.getFile(`public/${req.params.previewPath || 'index.html'}`);
-        if (!file) return res.status(404).send(noPreview());
-
-        const contents = file.contents;
-        const str = `${file.cwd}/${file.path}`;
-        const contentType = mime.getType(str);
-        if (contentType) res.set('Content-Type', contentType);
-        return res.send(contents);
+        // @ts-ignore
+        req.artifact = artifact;
+        // @ts-ignore
+        req.isLegacyPath = isLegacyPath;
+        return next();
       } catch (e: any) {
         this.logger.error('failed getting preview', e);
         return res.status(500).send(serverError());
       }
     },
+    getArtifactFileMiddleware(this.logger),
   ];
 }

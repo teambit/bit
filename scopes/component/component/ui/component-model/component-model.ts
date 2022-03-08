@@ -2,7 +2,7 @@ import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
@@ -18,6 +18,7 @@ export type ComponentModelProps = {
   server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
+  elementsUrl?: string; // pkg aspect
   compositions?: CompositionProps[];
   tags?: TagProps[];
   issuesCount?: number; // component/issues aspect
@@ -26,6 +27,13 @@ export type ComponentModelProps = {
   env?: Descriptor; // env aspect.
   labels?: string[];
   host?: string;
+  latest?: string;
+  preview?: ComponentPreview;
+  logs?: LegacyComponentLog[];
+};
+
+export type ComponentPreview = {
+  includesEnvTemplate?: boolean;
 };
 
 export type ComponentServer = {
@@ -75,6 +83,10 @@ export class ComponentModel {
      */
     readonly issuesCount?: number,
     /**
+     * elements url
+     */
+    readonly elementsUrl?: string,
+    /**
      * status of component.
      */
     readonly status?: any,
@@ -100,7 +112,16 @@ export class ComponentModel {
     /**
      * host of the component
      */
-    readonly host?: string
+    readonly host?: string,
+
+    /**
+     * latest version of component
+     */
+    readonly latest?: string,
+
+    readonly preview?: ComponentPreview,
+
+    readonly logs?: LegacyComponentLog[]
   ) {}
 
   get version() {
@@ -117,6 +138,7 @@ export class ComponentModel {
     displayName,
     compositions = [],
     packageName,
+    elementsUrl,
     tags = [],
     deprecation,
     buildStatus,
@@ -126,6 +148,9 @@ export class ComponentModel {
     description,
     labels,
     host,
+    latest,
+    preview,
+    logs,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -136,12 +161,16 @@ export class ComponentModel {
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
       buildStatus,
       issuesCount,
+      elementsUrl,
       status,
       deprecation,
       env,
       description,
       labels,
-      host
+      host,
+      latest,
+      preview,
+      logs
     );
   }
 

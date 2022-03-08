@@ -1,5 +1,8 @@
 import R from 'ramda';
 
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import logger from '@teambit/legacy/dist/logger/logger';
+import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { Consumer, loadConsumer } from '../../../consumer';
@@ -7,6 +10,9 @@ import ImportComponents, { ImportOptions } from '../../../consumer/component-ops
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '../../../error/general-error';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
+import { Lane } from '../../../scope/models';
+import { ScopeNotFoundOrDenied } from '../../../remotes/exceptions/scope-not-found-or-denied';
+import { LaneNotFound } from '../../scope/lib/exceptions/lane-not-found';
 
 export default async function fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean) {
   if (!lanes && !components) {
@@ -31,26 +37,49 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
     installNpmPackages: false,
     fromOriginalScope,
   };
-  const importComponents = new ImportComponents(consumer, importOptions);
   if (lanes) {
-    const laneIds = await getLaneIds();
-    importOptions.lanes = { laneIds };
+    importOptions.lanes = await getLanes();
+    importOptions.ids = [];
   }
+  const importComponents = new ImportComponents(consumer, importOptions);
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
   return { dependencies, envComponents, importDetails };
 
-  async function getLaneIds(): Promise<RemoteLaneId[]> {
+  async function getLanes(): Promise<{ laneIds: RemoteLaneId[]; lanes: Lane[] }> {
+    const result: { laneIds: RemoteLaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
+    let remoteLaneIds: RemoteLaneId[] = [];
     if (ids.length) {
-      return ids.map((id) => {
+      remoteLaneIds = ids.map((id) => {
         const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
         if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
-        // assuming it's a remote
         return RemoteLaneId.parse(id);
       });
+    } else {
+      remoteLaneIds = await consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();
     }
-    return consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(consumer.scope);
+    try {
+      const remoteLanes = await scopeComponentImporter.importLanes(remoteLaneIds);
+      result.laneIds.push(...remoteLaneIds);
+      result.lanes.push(...remoteLanes);
+    } catch (err) {
+      if (
+        err instanceof InvalidScopeName ||
+        err instanceof ScopeNotFoundOrDenied ||
+        err instanceof LaneNotFound ||
+        err instanceof InvalidScopeNameFromRemote
+      ) {
+        // the lane could be a local lane so no need to throw an error in such case
+        loader.stop();
+        logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
+      } else {
+        throw err;
+      }
+    }
+
+    return result;
   }
 }

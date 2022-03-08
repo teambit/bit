@@ -20,11 +20,13 @@ export type MergeStrategy = keyof typeof MergeOptions;
 export const FileStatus = {
   merged: chalk.green('auto-merged'),
   manual: chalk.red('CONFLICT'),
+  binaryConflict: chalk.red('unchanged-BINARY-CONFLICT'),
   updated: chalk.green('updated'),
   added: chalk.green('added'),
   removed: chalk.green('removed'),
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged'),
+  remainDeleted: chalk.green('remain-deleted'),
 };
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };

@@ -209,16 +209,12 @@ export async function getComponentStatus(
     );
   }
   const repo = consumer.scope.objects;
-  if (localLane) {
-    modelComponent.setLaneHeadLocal(localLane);
-    if (modelComponent.laneHeadLocal && modelComponent.laneHeadLocal.toString() !== existingBitMapId.version) {
-      throw new GeneralError(
-        `unable to merge ${id.toStringWithoutVersion()}, the component is checkout to a different version than the lane head. please run "bit checkout your-lane --lane" first`
-      );
-    }
-  }
+  const laneHeadIsDifferentThanCheckedOut =
+    localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
+  const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
+
   const otherLaneHead = new Ref(version);
-  const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead);
+  const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
   if (!divergeData.isDiverged()) {
     if (divergeData.isLocalAhead()) {
       // do nothing!
@@ -238,17 +234,14 @@ export async function getComponentStatus(
   }
   const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
   const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
-  const currentComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
-  // threeWayMerge expects `otherComponent` to be Component and `currentComponent` to be Version
-  // since it doesn't matter whether we take the changes from base to current or the changes from
-  // base to other, here we replace the two. the result is going to be the same.
+  const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
   const mergeResults = await threeWayMerge({
     consumer,
-    otherComponent: component, // this is actually the current
+    otherComponent,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    otherLabel: `${currentlyUsedVersion} (local)`,
-    currentComponent, // this is actually the other
-    currentLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
+    otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
+    currentComponent: component,
+    currentLabel: `${currentlyUsedVersion} (local)`,
     baseComponent,
   });
   return { componentFromFS: component, id, mergeResults };
@@ -275,7 +268,7 @@ export async function applyVersion({
   laneId: LaneId;
   localLane: Lane | null;
 }): Promise<ApplyVersionResult> {
-  const filesStatus = {};
+  let filesStatus = {};
   const unmergedComponent: UnmergedComponent = {
     // @ts-ignore
     id: { name: id.name, scope: id.scope },
@@ -325,16 +318,17 @@ export async function applyVersion({
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
-  let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    modifiedStatus = applyModifiedVersion(
+    const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
       files,
       mergeResults,
       mergeStrategy,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentWithDependencies.component.originallySharedDir
     );
+    componentWithDependencies.component.files = modifiedFiles;
+    filesStatus = { ...filesStatus, ...modifiedStatus };
   }
   const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
   componentWithDependencies.component.dependenciesSavedAsComponents =
@@ -371,7 +365,7 @@ export async function applyVersion({
     consumer.scope.objects.add(modelComponent);
   }
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  return { id, filesStatus };
 }
 
 async function snapResolvedComponents(

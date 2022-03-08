@@ -4,12 +4,13 @@ import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import UIAspect, { UiMain } from '@teambit/ui';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -21,6 +22,7 @@ import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
 import { CompilationInitiator, Compiler } from './types';
 import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
+import { compilerTemplate } from './templates/compiler';
 
 export class CompilerMain {
   constructor(
@@ -35,7 +37,7 @@ export class CompilerMain {
    * Run compilation on `bit new` and when new components are imported
    */
   compileOnWorkspace(
-    componentsIds: string[] | BitId[] = [], // when empty, it compiles all
+    componentsIds: string[] | BitId[] | ComponentID[] = [], // when empty, it compiles all
     options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
@@ -102,9 +104,10 @@ export class CompilerMain {
     AspectLoaderAspect,
     BuilderAspect,
     UIAspect,
+    GeneratorAspect,
   ];
 
-  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui]: [
+  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui, generator]: [
     CLIMain,
     Workspace,
     EnvsMain,
@@ -112,7 +115,8 @@ export class CompilerMain {
     PubsubMain,
     AspectLoaderMain,
     BuilderMain,
-    UiMain
+    UiMain,
+    GeneratorMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui, logger);
@@ -122,6 +126,7 @@ export class CompilerMain {
     if (workspace) {
       workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
+    generator.registerComponentTemplate([compilerTemplate]);
     ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
 
     return compilerMain;

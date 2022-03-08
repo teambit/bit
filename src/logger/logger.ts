@@ -160,17 +160,16 @@ class BitLogger implements IBitLogger {
     console ? this.console(fullMsg) : this.info(fullMsg);
   }
 
-  async exitAfterFlush(code = 0, commandName: string) {
+  async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
-    let level;
-    let msg;
-    if (code === 0) {
-      level = 'info';
-      msg = `[*] the command "${commandName}" has been completed successfully`;
-    } else {
-      level = 'error';
-      msg = `[*] the command "${commandName}" has been terminated with an error code ${code}`;
+    const isSuccess = code === 0;
+    const level = isSuccess ? 'info' : 'error';
+    if (cliOutput) {
+      this.logger.info(`[+] CLI-OUTPUT: ${cliOutput}`);
     }
+    const msg = isSuccess
+      ? `[*] the command "${commandName}" has been completed successfully`
+      : `[*] the command "${commandName}" has been terminated with an error code ${code}`;
     // this should have been helpful to not miss any log message when using `sync: false` in the
     // Pino opts, but sadly, it doesn't help.
     // const finalLogger = pino.final(pinoLogger);

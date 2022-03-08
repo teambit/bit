@@ -1,5 +1,4 @@
-import { YarnAspect } from './yarn.aspect';
+export { YarnAspect as default, YarnAspect } from './yarn.aspect';
 
 export type { YarnMain } from './yarn.main.runtime';
-export { YarnAspect };
-export default YarnAspect;
+export type { YarnUI } from './yarn.ui.runtime';

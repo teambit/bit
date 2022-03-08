@@ -4,6 +4,7 @@ import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
@@ -11,11 +12,13 @@ import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
+  private importedComponentsCache: InMemoryCache<boolean>;
   constructor(private scope: ScopeMain, private logger: Logger) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
 
-  async get(id: ComponentID): Promise<Component | undefined> {
+  async get(id: ComponentID, importIfMissing = true): Promise<Component | undefined> {
     const fromCache = this.getFromCache(id);
     if (fromCache) {
       return fromCache;
@@ -24,6 +27,17 @@ export class ScopeComponentLoader {
     this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+    // import if missing
+    if (
+      !modelComponent &&
+      importIfMissing &&
+      id._legacy.hasScope() &&
+      !this.importedComponentsCache.get(id.toString())
+    ) {
+      await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
+      this.importedComponentsCache.set(id.toString(), true);
+      modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+    }
     // Search with scope name for bare scopes
     if (!modelComponent && !legacyId.scope) {
       id = id.changeScope(this.scope.name);
@@ -37,7 +51,7 @@ export class ScopeComponentLoader {
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
     const snap = this.createSnapFromVersion(version);
     const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
+    const tagMap = this.getTagMap(modelComponent);
 
     const component = new Component(newId, snap, state, tagMap, this.scope);
     this.componentsCache.set(idStr, component);
@@ -54,7 +68,7 @@ export class ScopeComponentLoader {
       (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
     const snap = this.createSnapFromVersion(version);
     const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
+    const tagMap = this.getTagMap(modelComponent);
 
     return new Component(id, snap, state, tagMap, this.scope);
   }
@@ -116,10 +130,11 @@ export class ScopeComponentLoader {
     return undefined;
   }
 
-  private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
+  private getTagMap(modelComponent: ModelComponent): TagMap {
     const tagMap = new TagMap();
-    Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
+    const allVersions = modelComponent.versionsIncludeOrphaned;
+    Object.keys(allVersions).forEach((versionStr: string) => {
+      const tag = new Tag(allVersions[versionStr].toString(), new SemVer(versionStr));
       tagMap.set(tag.version, tag);
     });
     return tagMap;
@@ -144,7 +159,9 @@ export class ScopeComponentLoader {
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
       new Config(version.mainFile, consumerComponent.extensions),
-      this.scope.componentExtension.createAspectList(consumerComponent.extensions, this.scope.name),
+      // todo: see the comment of this "createAspectListFromLegacy" method. the aspect ids may be incorrect.
+      // find a better way to get the ids correctly.
+      this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions, this.scope.name),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       consumerComponent

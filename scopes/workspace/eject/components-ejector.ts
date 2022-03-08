@@ -9,7 +9,7 @@
  */
 import { Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -19,6 +19,7 @@ import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/packa
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { Logger } from '@teambit/logger';
+import { ComponentID } from '@teambit/component-id';
 
 export type EjectResults = {
   ejectedComponents: BitIds;
@@ -39,7 +40,6 @@ type FailedComponents = {
 
 export class ComponentsEjector {
   consumer: Consumer;
-  componentsIds: BitId[];
   idsToEject: BitIds;
   componentsToEject: Component[] = [];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -50,11 +50,10 @@ export class ComponentsEjector {
   constructor(
     private workspace: Workspace,
     private logger: Logger,
-    componentsIds: BitId[],
+    private componentsIds: ComponentID[],
     private ejectOptions: EjectOptions
   ) {
     this.consumer = this.workspace.consumer;
-    this.componentsIds = componentsIds;
     this.idsToEject = new BitIds();
     this.failedComponents = {
       modifiedComponents: new BitIds(),
@@ -88,7 +87,8 @@ export class ComponentsEjector {
     if (!this.componentsIds.length) return;
     const remotes = await getScopeRemotes(this.consumer.scope);
     const hubExportedComponents = new BitIds();
-    this.componentsIds.forEach((bitId) => {
+    this.componentsIds.forEach((componentId) => {
+      const bitId = componentId._legacy;
       if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);
       else if (remotes.isHub(bitId.scope as string)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
@@ -174,7 +174,7 @@ your package.json (if existed) has been restored, however, some bit generated da
 
   private async untrackComponents() {
     this.logger.debug('eject: removing the components from the .bitmap');
-    await this.consumer.cleanFromBitMap(this.idsToEject, new BitIds());
+    await this.consumer.cleanFromBitMap(this.idsToEject);
   }
 
   throwEjectError(message: string, originalError: Error) {

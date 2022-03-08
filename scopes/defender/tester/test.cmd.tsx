@@ -13,6 +13,7 @@ import type { TesterMain } from './tester.main.runtime';
 type TestFlags = {
   watch: boolean;
   debug: boolean;
+  all: boolean;
   env?: string;
   scope?: string;
   junit?: string;
@@ -28,6 +29,7 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
+    ['a', 'all', 'test all components, not only new and modified'],
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only the given env'],
@@ -39,18 +41,34 @@ export class TestCmd implements Command {
 
   async render(
     [userPattern]: [string],
-    { watch = false, debug = false, env, scope, junit, coverage = false }: TestFlags
+    { watch = false, debug = false, all = false, env, scope, junit, coverage = false }: TestFlags
   ) {
-    this.logger.off();
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
     timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
-    const pattern = userPattern && userPattern.toString();
-    const components =
-      pattern || scopeName ? await this.workspace.byPattern(pattern || '*', scopeName) : await this.workspace.list();
 
-    if (!components.length) throw new NoMatchingComponents(pattern);
+    const getPatternWithScope = () => {
+      if (!userPattern && !scope) return undefined;
+      const pattern = userPattern || '**';
+      return scopeName ? `${scopeName}/${pattern}` : pattern;
+    };
+    const patternWithScope = getPatternWithScope();
+    const components = await this.workspace.getComponentsByUserInput(all, patternWithScope, true);
+    if (!components.length) {
+      if (userPattern) throw new NoMatchingComponents(userPattern);
+      return {
+        code: 0,
+        data: (
+          <Box>
+            <Text bold>
+              no components found to test. use "--all" flag to test all components or specify the ids to test,
+              otherwise, only new and modified components will be tested{' '}
+            </Text>
+          </Box>
+        ),
+      };
+    }
 
     this.logger.console(
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
@@ -58,6 +76,10 @@ export class TestCmd implements Command {
 
     let code = 0;
     if (watch && !debug) {
+      // avoid turning off the logger for non-watch scenario. otherwise, when this aspect throws errors, they'll be
+      // swallowed. (Jest errors are shown regardless via Jest, but if the tester is unable to run Jest in the first
+      // place, these errors won't be shown)
+      this.logger.off();
       await this.tester.watch(components, {
         watch,
         debug,
@@ -72,7 +94,7 @@ export class TestCmd implements Command {
         junit,
         coverage,
       });
-      tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
+      if (tests.hasErrors()) code = 1;
     }
     const { seconds } = timer.stop();
 
@@ -81,9 +103,7 @@ export class TestCmd implements Command {
       code,
       data: (
         <Box>
-          <Text>tested </Text>
-          <Text color="cyan">{components.length} </Text>
-          <Text>components in </Text>
+          <Text>test has been completed in </Text>
           <Text color="cyan">{seconds} </Text>
           <Text>seconds.</Text>
         </Box>

@@ -18,6 +18,13 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
     };
   }
 
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: false,
+    };
+  }
+
   getPackageJsonProps() {
     return this.tsAspect.getCjsPackageJsonProps();
   }

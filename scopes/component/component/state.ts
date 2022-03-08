@@ -1,7 +1,9 @@
 import { IssuesList } from '@teambit/component-issues';
+import { ComponentID } from '@teambit/component-id';
 import ComponentFS from './component-fs';
 import Config from './config';
 import { AspectList } from './aspect-list';
+import { MainFileNotFound } from './exceptions';
 
 export class State {
   constructor(
@@ -32,6 +34,19 @@ export class State {
      */
     readonly _consumer: any
   ) {}
+
+  /**
+   * get the main file of the component.
+   */
+  get mainFile() {
+    const file = this.filesystem.files.find((componentFile) => {
+      return componentFile.relative === this._consumer.mainFile;
+    });
+
+    if (!file) throw new MainFileNotFound(ComponentID.fromLegacy(this._consumer.id), this._consumer.mainFile);
+
+    return file;
+  }
 
   /**
    * calculate the hash of this state

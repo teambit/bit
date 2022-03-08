@@ -1,6 +1,12 @@
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
-import { Compiler, CompilerOptions, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
+import {
+  Compiler,
+  CompilerOptions,
+  TranspileComponentParams,
+  TranspileFileOutput,
+  TranspileFileParams,
+} from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
 
@@ -63,6 +69,9 @@ export class MultiCompiler implements Compiler {
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const outputs = this.compilers.reduce<any>(
       (files, compiler) => {
+        if (!compiler.transpileFile) {
+          return files;
+        }
         return files?.flatMap((file) => {
           if (!compiler.isFileSupported(file?.outputPath)) return [file];
           const params = Object.assign({}, options, {
@@ -78,6 +87,14 @@ export class MultiCompiler implements Compiler {
     );
 
     return outputs;
+  }
+
+  async transpileComponent(params: TranspileComponentParams): Promise<void> {
+    await Promise.all(
+      this.compilers.map((compiler) => {
+        return compiler.transpileComponent?.(params);
+      })
+    );
   }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {

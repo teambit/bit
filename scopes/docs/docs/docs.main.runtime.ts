@@ -4,20 +4,20 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import ComponentAspect, { Component, ComponentMap } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { ExecutionContext } from '@teambit/envs';
+import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Doc, DocPropList } from '@teambit/docs.entities.doc';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
-import { Doc, DocPropList } from './doc';
 
 export type ComponentDocs = {
   files: string[];
@@ -91,8 +91,8 @@ export class DocsMain {
     return fromJsDocs?.description || '';
   }
 
-  async getTemplate(context: ExecutionContext) {
-    return context.env.getDocsTemplate();
+  async getTemplate(env: Environment) {
+    return env.getDocsTemplate();
   }
 
   getDocReader(extension: string) {

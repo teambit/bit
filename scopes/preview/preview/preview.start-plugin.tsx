@@ -37,15 +37,6 @@ export class PreviewStartPlugin implements StartPlugin {
         spawnTSServer: true,
         checkTypes: CheckTypes.None,
         preCompile: false,
-        msgs: {
-          onAll: () => {},
-          onStart: () => {},
-          onReady: () => {},
-          onChange: () => {},
-          onAdd: () => {},
-          onError: () => {},
-          onUnlink: () => {},
-        },
         initiator: CompilationInitiator.Start,
       })
       .catch((err) => {

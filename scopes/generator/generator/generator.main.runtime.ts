@@ -4,12 +4,11 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Component } from '@teambit/component';
-import { ComponentID } from '@teambit/component-id';
-import { loadBit } from '@teambit/bit';
+import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
-import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -32,6 +31,12 @@ export type GeneratorConfig = {
    * array of aspects to include in the list of templates.
    */
   aspects: string[];
+
+  /**
+   * by default core templates are shown.
+   * use this to hide them unless `--show-all` flag of `bit templates` was used
+   */
+  hideCoreTemplates: boolean;
 };
 
 export class GeneratorMain {
@@ -42,7 +47,8 @@ export class GeneratorMain {
     private config: GeneratorConfig,
     private workspace: Workspace,
     private envs: EnvsMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private newComponentHelper: NewComponentHelperMain
   ) {}
 
   /**
@@ -72,12 +78,19 @@ export class GeneratorMain {
     }: {
       id: string;
       template: WorkspaceTemplate | ComponentTemplate;
-    }) => ({
-      aspectId: id,
-      name: template.name,
-      description: template.description,
-      hidden: template.hidden,
-    });
+    }) => {
+      const shouldBeHidden = () => {
+        if (template.hidden) return true;
+        if (this.config.hideCoreTemplates && isCoreAspect(id)) return true;
+        return false;
+      };
+      return {
+        aspectId: id,
+        name: template.name,
+        description: template.description,
+        hidden: shouldBeHidden(),
+      };
+    };
     return this.isRunningInsideWorkspace()
       ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
       : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
@@ -187,18 +200,19 @@ export class GeneratorMain {
     const { namespace, aspect: aspectId } = options;
     const template = this.getComponentTemplate(templateName, aspectId);
     if (!template) throw new BitError(`template "${templateName}" was not found`);
-    const scope = options.scope || this.workspace.defaultScope;
-    if (!isValidScopeName(scope)) {
-      throw new InvalidScopeName(scope);
-    }
-    if (!scope) throw new BitError(`failed finding defaultScope`);
 
-    const componentIds = componentNames.map((componentName) => {
-      const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
-      return ComponentID.fromObject({ name: fullComponentName }, scope);
-    });
+    const componentIds = componentNames.map((componentName) =>
+      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
+    );
 
-    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
+    const componentGenerator = new ComponentGenerator(
+      this.workspace,
+      componentIds,
+      options,
+      template,
+      this.envs,
+      this.newComponentHelper
+    );
     return componentGenerator.generate();
   }
 
@@ -251,12 +265,26 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect, AspectLoaderAspect];
+  static dependencies = [
+    WorkspaceAspect,
+    CLIAspect,
+    GraphqlAspect,
+    EnvsAspect,
+    AspectLoaderAspect,
+    NewComponentHelperAspect,
+  ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader]: [Workspace, CLIMain, GraphqlMain, EnvsMain, AspectLoaderMain],
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper]: [
+      Workspace,
+      CLIMain,
+      GraphqlMain,
+      EnvsMain,
+      AspectLoaderMain,
+      NewComponentHelperMain
+    ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
@@ -266,7 +294,8 @@ export class GeneratorMain {
       config,
       workspace,
       envs,
-      aspectLoader
+      aspectLoader,
+      newComponentHelper
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);

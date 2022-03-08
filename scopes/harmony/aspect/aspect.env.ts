@@ -1,23 +1,21 @@
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-import { TsConfigTransformer } from '@teambit/typescript';
-import { BabelMain } from '@teambit/babel';
-import { CompilerAspect, CompilerMain, Compiler } from '@teambit/compiler';
-import { Environment, PackageEnv } from '@teambit/envs';
+import { Compiler } from '@teambit/compiler';
+import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext } from '@teambit/envs';
 import { merge } from 'lodash';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
-import { babelConfig } from './babel/babel-config';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
 export const AspectEnvType = 'aspect';
 
 /**
- * a component environment built for [Aspects](https://reactjs.org) .
+ * a component environment built for Aspects .
  */
-export class AspectEnv implements Environment, PackageEnv {
-  constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
+export class AspectEnv implements DependenciesEnv, PackageEnv {
+  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -32,16 +30,35 @@ export class AspectEnv implements Environment, PackageEnv {
     return targetConf;
   }
 
-  getCompiler() {
-    return this.babel.createCompiler({ babelTransformOptions: babelConfig });
-  }
-
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
   getPackageJsonProps(): PackageJsonProps {
     return this.reactEnv.getCjsPackageJsonProps();
+  }
+
+  getNpmIgnore(context: GetNpmIgnoreContext) {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    const patterns = ['/*.ts', `${CAPSULE_ARTIFACTS_DIR}/`];
+
+    // In order to load the env preview template from core aspects we need it to be in the package of the core envs
+    // This is because we don't have the core envs in the local scope so we load it from the package itself in the bvm installation
+    // as this will be excluded from the package tar by default (as it's under the CAPSULE_ARTIFACTS_DIR)
+    // we want to make sure to add it for the core envs
+    if (this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
+      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
+    }
+    return patterns;
+  }
+
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: false,
+    };
   }
 
   async getDependencies() {
@@ -70,30 +87,5 @@ export class AspectEnv implements Environment, PackageEnv {
         'react-dom': '^16.8.0 || ^17.0.0',
       },
     };
-  }
-
-  // TODO: move this to be in the aspect.main.runtime and use the react.overrideBuildPipe API.
-  // TODO: see example in e2e/fixtures/extensions/multiple-compilers-env/multiple-compilers-env.extension.ts
-  // TODO: or maybe even use the - react.overrideCompilerTasks
-  getBuildPipe() {
-    const transformer: TsConfigTransformer = (config: TypescriptConfigMutator) => {
-      config
-        .mergeTsConfig(tsconfig)
-        .setArtifactName('declaration')
-        .setDistGlobPatterns([`dist/**/*.d.ts`])
-        .setShouldCopyNonSupportedFiles(false);
-      return config;
-    };
-    const tsCompiler = this.reactEnv.getCompiler([transformer]);
-
-    const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
-
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
-
-    return [
-      this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
-      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
-      ...pipeWithoutCompiler,
-    ];
   }
 }

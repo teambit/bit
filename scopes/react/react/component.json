@@ -5,14 +5,6 @@
   },
   "propagate": true,
   "extensions": {
-    "teambit.pkg/pkg": {
-      "packageJson": {
-        "name": "@teambit/{name}",
-        "private": false,
-        "license": "Apache-2.0"
-      },
-      "packageManagerPublishArgs": ["--access public"]
-    },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
@@ -58,17 +50,16 @@
           "react": "-",
           "react-dom": "-",
           "@teambit/legacy": "-",
-          "@types/mocha": "5.2.7",
+          "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
           "@types/postcss-normalize": "9.0.1",
           "@types/react": "^17.0.8",
           "@types/react-dom": "^17.0.5"
-
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.164"
+          "@teambit/legacy": "1.0.230"
         }
       }
     }

@@ -12,6 +12,7 @@ import {
   DEFAULT_BIT_VERSION,
   DEFAULT_LANE,
   DEFAULT_LANGUAGE,
+  Extensions,
   TESTER_ENV_TYPE,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -22,7 +23,7 @@ import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '../../lane-id/lane-id';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
@@ -90,6 +91,9 @@ export default class Component extends BitObject {
   versions: Versions;
   orphanedVersions: Versions;
   lang: string;
+  /**
+   * @deprecated moved to the Version object inside teambit/deprecation aspect
+   */
   deprecated: boolean;
   bindingPrefix: string;
   /**
@@ -160,6 +164,14 @@ export default class Component extends BitObject {
     return this.head;
   }
 
+  /**
+   * returns the head hash. regardless of whether current lane is the default or not.
+   * if on a lane, it returns the head of the component on the lane.
+   */
+  getHeadRegardlessOfLane(): Ref | undefined {
+    return this.laneHeadLocal || this.getHead();
+  }
+
   getHeadAsTagIfExist(): string | undefined {
     if (!this.head) return undefined;
     return this.getTagOfRefIfExists(this.head) || this.head.toString();
@@ -206,7 +218,9 @@ export default class Component extends BitObject {
   }
 
   get versionsIncludeOrphaned(): Versions {
-    return { ...this.orphanedVersions, ...this.versions };
+    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
+    // but mutates `this.versions`.
+    return { ...this.versions, ...this.orphanedVersions };
   }
 
   hasTagIncludeOrphaned(version: string): boolean {
@@ -238,7 +252,7 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
-      this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
+      this.divergeData = await getDivergeData(repo, this, remoteHead, undefined, throws);
     }
   }
 
@@ -248,23 +262,15 @@ export default class Component extends BitObject {
     return this.divergeData;
   }
 
-  async populateLocalAndRemoteHeads(
-    repo: Repository,
-    laneId: LaneId,
-    lane: Lane | null,
-    remoteLaneId = laneId,
-    remoteScopeName = this.scope
-  ) {
-    // @todo: this doesn't take into account a case when local and remote have different names.
+  async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
-    if (remoteScopeName) {
+    if (this.scope) {
       // otherwise, it was never exported, so no remote head
-      this.laneHeadRemote = await repo.remoteLanes.getRef(
-        RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
-        this.toBitId()
-      );
+      if (lane?.remoteLaneId) {
+        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.remoteLaneId, this.toBitId());
+      }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
-      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
     }
   }
 
@@ -338,11 +344,11 @@ export default class Component extends BitObject {
     if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
+
     // either a user is on main or a lane, check whether the remote is ahead of the local
-    const allLocalHashes = await getAllVersionHashes(this, repo, false);
-    const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
-    if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
-    return remoteHead.toString(); // remote is ahead
+    await this.setDivergeData(repo, false);
+    const divergeData = this.getDivergeData();
+    return divergeData.isRemoteAhead() ? remoteHead.toString() : latestLocally;
   }
 
   latestVersion(): string {
@@ -354,7 +360,9 @@ export default class Component extends BitObject {
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.latest();
-    if (this.isEmpty()) return false; // in case a snap was created on another lane
+    if (this.isEmpty() && !this.laneHeadRemote) {
+      return false; // in case a snap was created on another lane
+    }
     if (isTag(latest) && isTag(version)) {
       return semver.gt(latest, version);
     }
@@ -392,8 +400,14 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(repo: Repository): Promise<ComponentLog[]> {
-    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false });
+  async collectLogs(
+    repo: Repository,
+    currentLane: LocalLaneId,
+    shortHash = false,
+    startFrom?: Ref | null
+  ): Promise<ComponentLog[]> {
+    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+    const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
@@ -402,7 +416,9 @@ export default class Component extends BitObject {
         // @ts-ignore
         email: log?.email || 'unknown',
         tag: versionInfo.tag,
-        hash: versionInfo.ref.toString(),
+        hash: getRef(versionInfo.ref),
+        parents: versionInfo.parents.map((parent) => getRef(parent)),
+        lane: versionInfo.onLane ? currentLane.name : DEFAULT_LANE,
       };
     });
   }
@@ -604,6 +620,11 @@ export default class Component extends BitObject {
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
+    const artifactsRefsFromExportedVersions: Ref[] = [];
+    const locallyChangedVersions = this.getLocalTagsOrHashes();
+    const locallyChangedHashes = locallyChangedVersions.map((v) =>
+      isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
+    );
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
     // @ts-ignore
@@ -611,7 +632,10 @@ export default class Component extends BitObject {
     versionsObjects.forEach((versionObject) => {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
-      artifactsRefs.push(...getRefsFromExtensions(versionObject.extensions));
+      const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
+      locallyChangedHashes.includes(versionObject.hash.toString())
+        ? artifactsRefs.push(...refsFromExtensions)
+        : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
     const loadedRefs: ObjectItem[] = [];
     try {
@@ -629,6 +653,11 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
         ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
         : await repo.loadManyRaw(artifactsRefs);
       loadedRefs.push(...loaded);
+      // ignore missing artifacts when exporting old versions that were exported in the past and are now exported to a
+      // different scope. this is happening for example when exporting a lane that has components from different
+      // remotes. it's ok to not have all artifacts from the other remotes to this remote.
+      const loadedExportedArtifacts = await repo.loadManyRawIgnoreMissing(artifactsRefsFromExportedVersions);
+      loadedRefs.push(...loadedExportedArtifacts);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an artifact object file "${err.path}"
@@ -668,7 +697,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return objectRef || Ref.from(version);
   }
 
-  toComponentVersion(versionStr: string | undefined): ComponentVersion {
+  toComponentVersion(versionStr?: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -687,6 +716,29 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return new ComponentVersion(this, versionNum!);
+  }
+
+  async isDeprecated(repo: Repository) {
+    // backward compatibility
+    if (this.deprecated) {
+      return true;
+    }
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's legacy, or new. If legacy, the "deprecated" prop should do. if it's new, the workspace should
+      // have the answer.
+      return false;
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's deprecated
+      return null;
+    }
+    const deprecationAspect = version.extensions.findCoreExtension(Extensions.deprecation);
+    if (!deprecationAspect) {
+      return false;
+    }
+    return deprecationAspect.config.deprecate;
   }
 
   /**
@@ -883,7 +935,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
   async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
     if (lane) {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
-      await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
+      await this.populateLocalAndRemoteHeads(repo, lane);
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }

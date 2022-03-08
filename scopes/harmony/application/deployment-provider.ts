@@ -1,5 +1,5 @@
-import { DeployContext } from './deploy-context';
+import { DeployFn } from './application';
 
 export interface DeploymentProvider {
-  deploy(context: DeployContext): Promise<void>;
+  deploy: DeployFn;
 }

@@ -5,7 +5,8 @@ import { Corner } from '@teambit/ui-foundation.ui.corner';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
-import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
+import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
@@ -23,7 +24,7 @@ export type ScopeProps = {
   badgeSlot: ScopeBadgeSlot;
   overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
-  context?: ScopeContextType;
+  context: ScopeContextType[];
   onSidebarTogglerChange: (callback: () => void) => void;
 };
 
@@ -38,7 +39,7 @@ export function Scope({
   badgeSlot,
   overviewLineSlot,
   cornerSlot,
-  context,
+  context = [],
   onSidebarTogglerChange,
 }: ScopeProps) {
   const { scope } = useScopeQuery();
@@ -50,14 +51,13 @@ export function Scope({
   }
   const CornerOverride = cornerSlot?.values()[0];
   scopeUi.setComponents(scope.components);
-  const defaultContext = ({ children }) => <div>{children}</div>;
-  const Context = context || defaultContext;
+  const Context = context.map((ctx) => [ctx, { scope }] as ComponentTuple);
 
   onSidebarTogglerChange(handleSidebarToggle);
 
   return (
     <ScopeProvider scope={scope}>
-      <Context scope={scope}>
+      <Composer components={Context}>
         <div className={styles.scope}>
           <TopBar
             className={styles.topbar}
@@ -86,7 +86,7 @@ export function Scope({
             </Pane>
           </SplitPane>
         </div>
-      </Context>
+      </Composer>
     </ScopeProvider>
   );
 }
