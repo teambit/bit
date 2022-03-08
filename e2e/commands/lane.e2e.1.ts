@@ -22,6 +22,59 @@ describe('bit lane command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+  describe.only('lane readme', () => {
+    let laneScopeWithUnsnappedComponents;
+    let laneScopeWithSnappedComponents;
+    let laneScopeWithReadme;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      laneScopeWithUnsnappedComponents = helper.scopeHelper.cloneLocalScope();
+      helper.command.snapAllComponentsWithoutBuild();
+      laneScopeWithSnappedComponents = helper.scopeHelper.cloneLocalScope();
+    });
+    it('bit lane readme-add [compId] [laneName] should not allow adding unsnapped components', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithUnsnappedComponents);
+      expect(() => helper.command.addLaneReadme('comp1', 'dev')).to.throw();
+    });
+    it('bit lane readme-add [compId] [laneName] should allow adding snapped components', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithSnappedComponents);
+      const readmeOutput = helper.command.addLaneReadme('comp1', 'dev');
+      expect(readmeOutput).to.have.string('comp1 has been successfully added as the readme component for the lane dev');
+      const laneOutput = helper.command.catLane('dev');
+      expect(laneOutput.readmeComponent.id.name).to.be.string('comp1');
+    });
+    it('bit lane readme-add [compId] should allow adding snapped components to the current lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithSnappedComponents);
+      const readmeOutput = helper.command.addLaneReadme('comp1', 'dev');
+      laneScopeWithReadme = helper.scopeHelper.cloneLocalScope();
+      expect(readmeOutput).to.have.string('comp1 has been successfully added as the readme component for the lane dev');
+    });
+    it('bit lane readme-remove [laneName] should remove existing readme component', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithReadme);
+      const readmeOutput = helper.command.removeLaneReadme('dev');
+      expect(readmeOutput).to.have.string('the readme component has been successfully from the lane dev');
+    });
+    it('bit lane readme-remove should remove existing readme component from the current lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithReadme);
+      const readmeOutput = helper.command.removeLaneReadme();
+      expect(readmeOutput).to.have.string('the readme component has been successfully from the lane dev');
+    });
+    it('bit lane readme-remove should throw an error when there no readme component added to the lane', () => {
+      const output = helper.command.removeLaneReadme();
+      expect(output).to.have.string('there is no readme component added to the lane dev');
+    });
+    it('bit lane should show the readme component', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScopeWithReadme);
+      const laneOutput = helper.command.catLane('dev');
+      const output = helper.command.showLanes();
+      expect(output).to.have.string(
+        `readme component\n\t  ${laneOutput.readmeComponent.id.name} - ${laneOutput.readmeComponent.head}`
+      );
+    });
+  });
   describe('creating a new lane without any component', () => {
     let output;
     before(() => {

@@ -13,6 +13,7 @@ import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
+import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -126,6 +127,12 @@ export default class CommandHelper {
             .map((key) => `-${key} ${options[key]}`)
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
+  }
+  addLaneReadme(id: string, laneName = '') {
+    return this.runCmd(`bit lane readme-add ${id} ${laneName}`);
+  }
+  removeLaneReadme(laneName = '') {
+    return this.runCmd(`bit lane readme-remove ${laneName}`);
   }
   sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);

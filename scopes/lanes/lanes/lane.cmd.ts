@@ -61,8 +61,11 @@ export class LaneListCmd implements Command {
     }
     const currentLane = this.lanes.getCurrentLane();
     let currentLaneStr = currentLane ? `current lane - ${chalk.bold(currentLane as string)}` : '';
+    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
+    const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
+    currentLaneStr += currentLaneReadmeComponentStr;
+
     if (details) {
-      const laneDataOfCurrentLane = lanes.find((l) => l.name === currentLane);
       const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
       if (currentLaneStr) {
