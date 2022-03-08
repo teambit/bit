@@ -1,5 +1,4 @@
-import { readFileSync } from 'fs';
-import { join, resolve, basename } from 'path';
+import { join, resolve, basename, dirname } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
@@ -162,23 +161,18 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       if (!capsule) return;
       const files = this.findAssetsForComponent(component, result.assets, result.entriesAssetsMap || {});
       if (!files) return;
+      const artifactDirFullPath = join(capsule.path, this.getArtifactDirectory());
+      // We don't use the mkdirSync as it uses the capsule fs which uses memfs, which doesn't know to handle nested none existing folders
+      mkdirpSync(artifactDirFullPath);
 
       files.forEach((asset) => {
         const filePath = this.getAssetAbsolutePath(context, asset);
         if (!existsSync(filePath)) {
           throw new PreviewOutputFileNotFound(component.id, filePath);
         }
-        const contents = readFileSync(filePath);
-        // const exists = capsule.fs.existsSync(this.getArtifactDirectory());
-        // if (!exists) capsule.fs.mkdirSync(this.getArtifactDirectory());
-        // We don't use the mkdirSync as it uses the capsule fs which uses memfs, which doesn't know to handle nested none existing folders
-        mkdirpSync(join(capsule.path, this.getArtifactDirectory()));
-        const filename = basename(asset.name);
-        // let filename = asset.name;
-        // if (filePath.endsWith('.css')){
-        //   filename = this.getCssFileName(capsule.component.id);
-        // }
-        capsule.fs.writeFileSync(join(this.getArtifactDirectory(), filename), contents);
+        const destFilePath = join(artifactDirFullPath, asset.name);
+        mkdirpSync(dirname(destFilePath));
+        capsule.fs.copyFileSync(filePath, destFilePath);
       });
     });
   }
