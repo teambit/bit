@@ -1,7 +1,8 @@
 {
   "componentId": {
     "name": "react",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.react"
   },
   "propagate": true,
   "extensions": {
@@ -25,9 +26,9 @@
           "react-app-polyfill": "1.0.6",
           "resolve-url-loader": "3.1.2",
           "@mdx-js/react": "1.6.22",
-          "jest-environment-jsdom": "26.6.2",
+          "jest-environment-jsdom": "27.5.1",
           "identity-obj-proxy": "3.0.0",
-          "jest-watch-typeahead": "0.6.1",
+          "jest-watch-typeahead": "1.0.0",
           "babel-plugin-named-asset-import": "0.3.7",
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
