@@ -10,7 +10,7 @@ import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain, UseTypescriptModifiers } from '@teambit/react';
+import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';

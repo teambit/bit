@@ -81,7 +81,7 @@ export class ReactEnv
     /**
      * typescript extension.
      */
-    private tsAspect: TypescriptMain,
+    protected tsAspect: TypescriptMain,
 
     /**
      * compiler extension.
