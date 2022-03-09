@@ -32,6 +32,7 @@ const defaultDocs = {
  * base template for react component documentation
  */
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
+  
   const { loading, error, data } = useFetchDocs(componentId);
 
   const { providers = [] } = renderingContext.get(ReactAspect.id) || {};
@@ -45,12 +46,14 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description, elementsUrl } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-
+  
+  // no need to check the env type because base is only used in react based docs
+  const showHeaderInPreview = component?.preview?.includesEnvTemplate !== false; 
+  
+  
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
-      {component.preview?.includesEnvTemplate === false ? (
-        <></>
-      ) : (
+      {showHeaderInPreview && (
         <ComponentOverview
           displayName={Content.displayName || displayName}
           version={version}

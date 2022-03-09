@@ -20,7 +20,7 @@ const componentFields = gql`
     id {
       ...componentIdFields
     }
-    aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder"]) {
+    aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder", "teambit.envs/envs"]) {
       # 'id' property in gql refers to a *global* identifier and used for caching.
       # this makes aspect data cache under the same key, even when they are under different components.
       # renaming the property fixes that.
