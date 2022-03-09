@@ -16,10 +16,6 @@ import { CompositionsSummary } from './compositions-summary/compositions-summary
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
 
-const ENV_LIST_WITH_DOCS_TEMPLATE = ['react', 'env', 'aspect', 'lit', 'html'];
-
-const ENV_ASPECT_NAME = 'teambit.envs/envs';
-
 export type DocsSectionProps = {
   docs?: docsFile;
   compositions: React.ComponentType[];
@@ -37,7 +33,7 @@ const defaultDocs = {
  * base template for react component documentation
  */
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
-  const componentDescriptor = useComponentDescriptor();
+  
   const { loading, error, data } = useFetchDocs(componentId);
 
   const { providers = [] } = renderingContext.get(ReactAspect.id) || {};
@@ -51,15 +47,14 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description, elementsUrl } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-
-  const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
-  const showHeaderOutsideIframe = component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType);
-
+  
+  // no need to check the env type because base is only used in react based docs
+  const showHeaderInPreview = component?.preview?.includesEnvTemplate !== false; 
+  
+  
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
-      {showHeaderOutsideIframe ? (
-        <></>
-      ) : (
+      {showHeaderInPreview && (
         <ComponentOverview
           displayName={Content.displayName || displayName}
           version={version}
