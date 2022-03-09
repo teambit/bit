@@ -7,7 +7,7 @@ describe('version dropdown tests', () => {
   /**
    *  https://github.com/jsdom/jsdom/issues/1695
    *  scrollIntoView is not implemented in jsdom
-   **/
+   * */
   beforeEach(() => {
     Element.prototype.scrollIntoView = jest.fn();
   });
