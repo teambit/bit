@@ -36,10 +36,9 @@ export class ComponentLogMain {
 
   private stringifyLogInfoOneLine(logInfo: ComponentLogInfo) {
     const parents = logInfo.parents.length ? `Parent(s): ${logInfo.parents.join(', ')}` : '<N/A>';
-    const lane = `Lane "${logInfo.lane}"`;
     return `${chalk.yellow(logInfo.hash)} ${logInfo.username || ''} ${logInfo.date || ''} ${
       logInfo.message
-    } ${lane}, ${parents}`;
+    }, ${parents}`;
   }
 
   static slots = [];
@@ -57,7 +56,7 @@ ComponentLogAspect.addRuntime(ComponentLogMain);
 export type ComponentLogInfo = {
   hash: string;
   message: string;
-  lane: string;
+  onLane?: boolean;
   parents: string[];
   username?: string;
   email?: string;

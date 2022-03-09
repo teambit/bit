@@ -20,7 +20,7 @@ const componentWithExplicitServer = ComponentModel.from({
   id: { name: 'input/button', version: '0.6.2', scope: 'teambit.base-ui' },
   server: {
     env: 'teambit.bit/overview',
-    url: '/preview/teambit.bit/overview',
+    url: '/preview/teambit.bit/overview/',
   },
   description: '',
   displayName: '',

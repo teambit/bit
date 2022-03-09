@@ -1,23 +1,50 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { VersionLabel } from '@teambit/component.ui.version-label';
+
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { UserAvatar } from '@teambit/design.ui.avatar';
+import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { LaneModel } from '@teambit/lanes.ui.lanes';
 import classNames from 'classnames';
-import React from 'react';
+import React, { useState } from 'react';
 
 import styles from './version-dropdown.module.scss';
+import { VersionInfo } from './version-info';
+import { LaneInfo } from './lane-info';
 
-const LOCAL_VERSION = 'workspace';
+export const LOCAL_VERSION = 'workspace';
 
-type VersionDropdownProps = {
-  versions: string[];
+export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
+
+export type VersionDropdownProps = {
+  tags: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+  lanes?: LaneModel[];
+  localVersion?: boolean;
   currentVersion?: string;
+  currentLane?: LaneModel;
   latestVersion?: string;
+  loading?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function VersionDropdown({ versions, currentVersion, latestVersion }: VersionDropdownProps) {
-  if (versions.length < 2) {
+export function VersionDropdown({
+  snaps,
+  tags,
+  lanes,
+  currentVersion,
+  latestVersion,
+  localVersion,
+  loading,
+  currentLane,
+}: VersionDropdownProps) {
+  const [key, setKey] = useState(0);
+
+  const singleVersion = (snaps || []).concat(tags).length < 2;
+
+  if (singleVersion && !loading) {
     return (
       <div className={styles.noVersions}>
         <VersionPlaceholder currentVersion={currentVersion} />
@@ -30,32 +57,24 @@ export function VersionDropdown({ versions, currentVersion, latestVersion }: Ver
       <Dropdown
         className={styles.dropdown}
         dropClass={styles.menu}
-        placeholder=""
-        clickOutside
-        PlaceholderComponent={() => (
-          <VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />
-        )}
+        clickToggles={false}
+        clickPlaceholderToggles={true}
+        onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+        placeholder={<VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />}
       >
-        <div>
-          <div className={styles.title}>Select version to view</div>
-          <div className={styles.versionContainer}>
-            {versions.map((version, index) => {
-              const isCurrent = version === currentVersion;
-
-              return (
-                <NavLink
-                  href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
-                  key={index}
-                  className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
-                >
-                  <span className={styles.version}>{version}</span>
-                  {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
-                  {/* {version === currentVersion && <VersionLabel className={styles.label} status="checked-out" />} */}
-                </NavLink>
-              );
-            })}
-          </div>
-        </div>
+        {loading && <LineSkeleton className={styles.loading} count={6} />}
+        {loading || (
+          <VersionMenu
+            key={key}
+            tags={tags}
+            snaps={snaps}
+            lanes={lanes}
+            currentVersion={currentVersion}
+            latestVersion={latestVersion}
+            localVersion={localVersion}
+            currentLane={currentLane}
+          />
+        )}
       </Dropdown>
     </div>
   );
@@ -66,6 +85,99 @@ function VersionPlaceholder({ currentVersion, className }: { currentVersion?: st
     <div className={classNames(styles.placeholder, className)}>
       <Ellipsis>{currentVersion}</Ellipsis>
       <Icon of="fat-arrow-down" />
+    </div>
+  );
+}
+type VersionMenuProps = {
+  tags?: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+  lanes?: LaneModel[];
+  localVersion?: boolean;
+  currentVersion?: string;
+  latestVersion?: string;
+  currentLane?: LaneModel;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
+
+function VersionMenu({
+  tags,
+  snaps,
+  lanes,
+  currentVersion,
+  localVersion,
+  latestVersion,
+  currentLane,
+  ...rest
+}: VersionMenuProps) {
+  const [activeTabIndex, setActiveTab] = useState<number>(0);
+
+  const tabs = VERSION_TAB_NAMES.map((name) => {
+    switch (name) {
+      case 'SNAP':
+        return { name, payload: snaps || [] };
+      case 'LANE':
+        return { name, payload: lanes || [] };
+      default:
+        return { name, payload: tags || [] };
+    }
+  }).filter((tab) => tab.payload.length > 0);
+
+  const multipleTabs = tabs.length > 1;
+  const message = multipleTabs
+    ? 'Switch to view tags, snaps, or lanes'
+    : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
+
+  return (
+    <div {...rest}>
+      <div className={styles.top}>
+        <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
+        {localVersion && (
+          <NavLink
+            href={'?'}
+            className={classNames(
+              styles.versionLine,
+              styles.versionRow,
+              currentVersion === LOCAL_VERSION && styles.currentVersion
+            )}
+          >
+            <div className={styles.version}>
+              <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
+              <span className={styles.versionName}>{LOCAL_VERSION}</span>
+            </div>
+          </NavLink>
+        )}
+      </div>
+      <div className={classNames(multipleTabs && styles.tabs)}>
+        {multipleTabs &&
+          tabs.map(({ name }, index) => {
+            return (
+              <Tab
+                className={styles.tab}
+                key={name}
+                isActive={activeTabIndex === index}
+                onClick={() => setActiveTab(index)}
+              >
+                {name}
+              </Tab>
+            );
+          })}
+      </div>
+      <div className={styles.versionContainer}>
+        {tabs[activeTabIndex].name === 'LANE' &&
+          tabs[activeTabIndex].payload.map((payload) => (
+            <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
+          ))}
+        {tabs[activeTabIndex].name !== 'LANE' &&
+          tabs[activeTabIndex].payload.map((payload) => (
+            <VersionInfo
+              key={payload.version}
+              currentVersion={currentVersion}
+              latestVersion={latestVersion}
+              {...payload}
+            ></VersionInfo>
+          ))}
+      </div>
     </div>
   );
 }

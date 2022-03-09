@@ -1,14 +1,17 @@
 import React, { useContext } from 'react';
 import flatten from 'lodash.flatten';
-import { ComponentContext, ComponentDescriptorContext } from '@teambit/component';
+import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
-import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
+
+const ENV_LIST_WITH_DOCS_TEMPLATE = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native']; // envs using react based docs
+
+const ENV_ASPECT_NAME = 'teambit.envs/envs';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
@@ -18,11 +21,14 @@ export type OverviewProps = {
 
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
-  const componentDescriptor = useContext(ComponentDescriptorContext);
+  const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
   const currentLane = lanesModel?.currentLane;
-  const { data } = useFetchDocs(component.id.toString());
-  const fetchComponent = data?.component;
+
+  const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
+  const showHeaderOutsideIframe =
+    component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType);
+
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
       <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
@@ -38,8 +44,7 @@ export function Overview({ titleBadges }: OverviewProps) {
       ></StatusMessageCard>
     );
 
-  if (component.preview?.includesEnvTemplate === false) {
-    const labels = component.labels.length > 0 ? component.labels : fetchComponent?.labels;
+  if (showHeaderOutsideIframe) {
     const badges = flatten(titleBadges.values());
 
     return (
@@ -50,8 +55,8 @@ export function Overview({ titleBadges }: OverviewProps) {
           className={styles.componentOverviewBlock}
           displayName={component.displayName}
           version={component.version}
-          abstract={component.description || fetchComponent?.description}
-          labels={labels || []}
+          abstract={component.description}
+          labels={component.labels}
           packageName={component.packageName}
           titleBadges={badges}
           componentDescriptor={componentDescriptor}

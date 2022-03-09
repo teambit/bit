@@ -63,7 +63,16 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         <Separator isPresentational className={styles.separator} />
         {logs.map((snap, index) => {
           const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
-          return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
+          const isCurrent = component.version === snap.tag || component.version === snap.hash;
+          return (
+            <VersionBlock
+              key={index}
+              componentId={component.id.fullName}
+              isLatest={isLatest}
+              snap={snap}
+              isCurrent={isCurrent}
+            />
+          );
         })}
       </div>
     </>

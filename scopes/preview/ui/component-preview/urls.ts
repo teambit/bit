@@ -15,21 +15,19 @@ export function toPreviewUrl(component: ComponentModel, previewName?: string, ad
  * generates preview server path from component data
  */
 export function toPreviewServer(component: ComponentModel, previewName?: string) {
-  let explicitUrl = component.server?.url;
-  // quickfix - preview urls in `start` (without `--dev`) won't work without trailing '/'
-  if (explicitUrl && !explicitUrl.endsWith('/')) explicitUrl += '/';
+  // explicit url is especially important for local workspace, because it's the url of the dev server.
+  const explicitUrl = component.server?.url;
+  if (explicitUrl) return explicitUrl;
 
-  // fallback url for all components. Includes versions support
-  // for example -
-  //  envUrl       - "/api/teambit.community/envs/community-react@1.17.0/~aspect/env-template/overview"
-  //  componentUrl - "/api/teambit.base-ui/input/button@0.6.2/~aspect/preview/"
   // Checking specifically with === false, to make sure we fallback to the old url
-  const defaultServerUrl =
-    component.preview?.includesEnvTemplate === false
-      ? toEnvTemplatePreviewUrl(component, previewName)
-      : toComponentPreviewUrl(component);
+  if (component.preview?.includesEnvTemplate === false) {
+    // for example - "/api/teambit.community/envs/community-react@1.17.0/~aspect/env-template/overview"
+    return toEnvTemplatePreviewUrl(component, previewName);
+  }
 
-  return explicitUrl || defaultServerUrl;
+  // (legacy)
+  // for example - "/api/teambit.base-ui/input/button@0.6.2/~aspect/preview/"
+  return toComponentPreviewUrl(component);
 }
 
 /**
