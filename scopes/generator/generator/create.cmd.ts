@@ -1,5 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { GeneratorMain } from './generator.main.runtime';
 
 export type CreateOptions = {
@@ -39,7 +40,7 @@ export class CreateCmd implements Command {
 `;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://bit.dev/docs/envs/using-envs`;
+    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://${BASE_DOCS_DOMAIN}/envs/using-envs`;
 
     return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }

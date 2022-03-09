@@ -1,4 +1,5 @@
 import React, { CSSProperties, HTMLAttributes } from 'react';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { Link } from '@teambit/base-ui.routing.link';
 
 const styles: Record<string, CSSProperties> = {
@@ -29,7 +30,7 @@ export function ContactIcons(props: ContactIconsProps) {
       <Link external style={styles.link} href="https://github.com/teambit/bit">
         <img alt="github" style={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
       </Link>
-      <Link external style={styles.link} href="https://bit.dev/docs">
+      <Link external style={styles.link} href={`https://${BASE_DOCS_DOMAIN}`}>
         <img alt="bit docs" style={styles.logo} src="https://static.bit.dev/bit-logo.svg" />
       </Link>
     </div>

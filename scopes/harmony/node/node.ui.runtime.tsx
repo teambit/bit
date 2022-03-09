@@ -3,6 +3,7 @@ import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
 import { TesterAspect, TesterUI } from '@teambit/tester';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { NodeAspect } from './node.aspect';
 
 export class NodeEnvUI {
@@ -18,7 +19,7 @@ export class NodeEnvUI {
         <EmptyBox
           title="This component doesn’t have any tests."
           linkText="Learn how to add tests to your node components"
-          link="https://bit.dev/docs/dev-services-overview/tester/tester-overview"
+          link={`https://${BASE_DOCS_DOMAIN}/dev-services-overview/tester/tester-overview`}
         />
       );
     });
@@ -28,7 +29,7 @@ export class NodeEnvUI {
         <EmptyBox
           title="This component doesn’t have any compositions."
           linkText="Learn how to add compositions to your node components"
-          link="https://bit.dev/docs/dev-services-overview/compositions/compositions-overview"
+          link={`https://${BASE_DOCS_DOMAIN}/dev-services-overview/compositions/compositions-overview`}
         />
       );
     });

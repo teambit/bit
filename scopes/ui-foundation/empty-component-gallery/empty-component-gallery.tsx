@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { ExternalLink } from '@teambit/design.ui.external-link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import styles from './empty-component-gallery.module.scss';
 
 export type EmptyComponentGalleryProps = {
@@ -24,7 +25,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       <div className={styles.title}>
         <span>New to Harmony?</span> &nbsp;
         <ExternalLink
-          href="https://bit.dev/docs/getting-started/installing-bit/installing-bit"
+          href={`https://${BASE_DOCS_DOMAIN}/getting-started/installing-bit/installing-bit`}
           className={styles.purpleLink}
         >
           <span className={styles.text}>Start tutorial</span>

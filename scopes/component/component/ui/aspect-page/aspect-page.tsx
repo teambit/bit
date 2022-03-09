@@ -6,6 +6,7 @@ import { gql } from '@apollo/client';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import styles from './aspect-page.module.scss';
 
 const GET_COMPONENT = gql`
@@ -35,7 +36,7 @@ export function AspectPage() {
       <EmptyBox
         title="This component is new and doesn’t have any aspects."
         linkText="Learn more about component aspects"
-        link="https://bit.dev/docs/extending-bit/aspect-overview"
+        link={`https://${BASE_DOCS_DOMAIN}/extending-bit/aspect-overview`}
       />
     );
   }
