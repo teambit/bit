@@ -13,12 +13,13 @@ export type VersionBlockProps = {
   componentId: string;
   isLatest: boolean;
   snap: LegacyComponentLog;
+  isCurrent: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 /**
  * change log section
  * @name VersionBlock
  */
-export function VersionBlock({ isLatest, className, snap, componentId, ...rest }: VersionBlockProps) {
+export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const lanes = useLanesContext();
   const currentLaneUrl = lanes?.currentLane ? `${lanes?.currentLane?.url}${LanesModel.baseLaneComponentRoute}` : '';
@@ -34,7 +35,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
   return (
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
-        <Labels isLatest={isLatest} isCurrent={false} />
+        <Labels isLatest={isLatest} isCurrent={isCurrent} />
         <NavLink className={styles.link} href={`~tests?version=${version}`}>
           Tests
         </NavLink>
