@@ -8,18 +8,32 @@ import {
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
-
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { Toggle } from '@teambit/design.ui.input.toggle';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import styles from './components-drawer.module.scss';
 
-const ScopeTreeContext = createContext<{ collapsed: boolean; setCollapsed: (x: boolean) => void }>({
+type ScopeTreeContextType = {
+  collapsed: boolean;
+  setCollapsed: (x: boolean) => void;
+  filterOpen: boolean;
+  setFilterOpen: (open: boolean) => void;
+  activeFilters: string[];
+  setActiveFilter: (filterId: string) => void;
+};
+
+const ScopeTreeContext = createContext<ScopeTreeContextType>({
   collapsed: true,
   setCollapsed: () => {},
+  activeFilters: [],
+  setActiveFilter: () => {},
+  filterOpen: false,
+  setFilterOpen: () => {},
 });
 
 export class ComponentsDrawer implements DrawerType {
@@ -29,17 +43,43 @@ export class ComponentsDrawer implements DrawerType {
 
   name = 'COMPONENTS';
 
-  widgets = [<Widget key={'components-drawer-widget'} />];
+  widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle0widget'} />];
+  Filters = [<DeprecateFilter key={'deprecate-filter'} />];
 
   Context = ({ children }) => {
     const [collapsed, setCollapsed] = useState(true);
-    return <ScopeTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</ScopeTreeContext.Provider>;
+    const [activeFilters, setActiveFilters] = useState<string[]>([]);
+    const [filterOpen, setFilterOpen] = useState<boolean>(false);
+
+    const handleActiveFilterToggle = (filterId: string) => {
+      const isFilterActive = activeFilters.includes(filterId);
+      if (isFilterActive) {
+        setActiveFilters((list) => list.filter((id) => id !== filterId));
+        return;
+      }
+      setActiveFilters((list) => list.concat(filterId));
+    };
+    return (
+      <ScopeTreeContext.Provider
+        value={{
+          collapsed,
+          setCollapsed,
+          activeFilters,
+          setActiveFilter: handleActiveFilterToggle,
+          filterOpen,
+          setFilterOpen,
+        }}
+      >
+        {children}
+      </ScopeTreeContext.Provider>
+    );
   };
 
   render = () => {
     const { scope } = useScopeQuery();
-    const { collapsed } = useContext(ScopeTreeContext);
+    const { collapsed, activeFilters } = useContext(ScopeTreeContext);
     const { treeNodeSlot } = this;
+    const hideDeprecatedComponets = activeFilters.find((activeFilter) => activeFilter === 'deprecate');
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -64,16 +104,51 @@ export class ComponentsDrawer implements DrawerType {
     );
 
     if (!scope) return <FullLoader />;
-    if (scope.components.length === 0)
+    const components = hideDeprecatedComponets
+      ? scope.components.filter((component) => !component.deprecation?.isDeprecate)
+      : scope.components;
+
+    if (components.length === 0)
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>Scope is empty</span>;
-    return <ComponentTree components={scope.components} isCollapsed={collapsed} TreeNode={TreeNodeRenderer} />;
+
+    return <ComponentTree components={components} isCollapsed={collapsed} TreeNode={TreeNodeRenderer} />;
   };
 }
 
-function Widget() {
+function TreeToggleWidget() {
   const { collapsed, setCollapsed } = useContext(ScopeTreeContext);
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
   return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
+}
+
+function FilterWidget() {
+  const { filterOpen, setFilterOpen } = useContext(ScopeTreeContext);
+  return (
+    <Icon
+      className={classNames(styles.filterWidgetIcon, filterOpen && styles.open)}
+      of="Ripple_filters"
+      onClick={() => setFilterOpen(!filterOpen)}
+    />
+  );
+}
+
+function DeprecateFilter() {
+  const { activeFilters, setActiveFilter, filterOpen } = useContext(ScopeTreeContext);
+  const isActive = activeFilters.includes('deprecate');
+
+  if (!filterOpen) return null;
+
+  return (
+    <div className={classNames(styles.deprecateFilter, isActive && styles.active)}>
+      <div className={styles.filterIcon}>
+        <Icon of="note-deprecated" />
+        <span>Deprecated</span>
+      </div>
+      <div>
+        <Toggle checked={isActive} onChange={() => setActiveFilter('deprecate')} />
+      </div>
+    </div>
+  );
 }

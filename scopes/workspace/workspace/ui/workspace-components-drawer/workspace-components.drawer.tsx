@@ -96,13 +96,14 @@ export class WorkspaceComponentsDrawer implements DrawerType {
     );
 
     if (!workspace) return <FullLoader />;
-    if (workspace.components.length === 0) {
-      return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
-    }
 
     const components = hideDeprecatedComponets
       ? workspace.components.filter((component) => !component.deprecation?.isDeprecate)
       : workspace.components;
+
+    if (components.length === 0) {
+      return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
+    }
 
     return <ComponentTree components={components} isCollapsed={collapsed} TreeNode={TreeNodeRenderer} />;
   };
