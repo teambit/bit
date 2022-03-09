@@ -16,7 +16,7 @@ describe('artifacts storage resolver', function () {
     // helper.bitJsonc.setPackageManager();
     envName = helper.env.setCustomEnv('elements-storage-resolver-env');
     envId = `${helper.scopes.remote}/${envName}`;
-    helper.fixtures.populateComponents(1);
+    helper.fixtures.populateComponents(1, undefined, undefined, undefined, true);
     helper.extensions.addExtensionToVariant('*', envId);
     helper.command.compile();
     helper.command.tagAllComponents();
