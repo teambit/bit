@@ -1,6 +1,5 @@
 import React, { HTMLAttributes } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useComponentDescriptor } from '@teambit/component';
 import classNames from 'classnames';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { isFunction } from 'ramda-adjunct';
