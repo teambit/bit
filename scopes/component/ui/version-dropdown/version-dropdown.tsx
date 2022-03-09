@@ -124,13 +124,14 @@ function VersionMenu({
   }).filter((tab) => tab.payload.length > 0);
 
   const multipleTabs = tabs.length > 1;
+  const message = multipleTabs
+    ? 'Switch to view tags, snaps, or lanes'
+    : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
 
   return (
     <div {...rest}>
       <div className={styles.top}>
-        <div className={classNames(styles.titleContainer, multipleTabs && styles.title)}>
-          {multipleTabs && <span>Switch to view tags, snaps, or lanes</span>}
-        </div>
+        <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
         {localVersion && (
           <NavLink
             href={'?'}
@@ -170,7 +171,7 @@ function VersionMenu({
         {tabs[activeTabIndex].name !== 'LANE' &&
           tabs[activeTabIndex].payload.map((payload) => (
             <VersionInfo
-              key={payload.hash}
+              key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
               {...payload}
