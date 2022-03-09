@@ -1,11 +1,12 @@
 import type { DocumentNode } from 'graphql';
-import type { SchemaDirectives } from '@graphql-modules/core';
+import { SchemaDirectiveVisitor } from 'graphql-tools';
 
 /**
  * graphql schema for an extension.
  */
+
 export type Schema = {
   typeDefs: DocumentNode;
   resolvers?: { [key: string]: any };
-  schemaDirectives?: SchemaDirectives;
+  schemaDirectives?: { [key: string]: SchemaDirectiveVisitor };
 };

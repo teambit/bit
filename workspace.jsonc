@@ -16,6 +16,8 @@
         "@babel/types": "^7.13.12",
         "@dreysolano/prerender-spa-plugin": "1.0.3",
         "@graphql-modules/core": "0.7.17",
+        "@graphql-tools/merge": "8.2.3",
+        "@graphql-tools/schema": "8.3.2",
         "@jest/test-result": "26.6.2",
         "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",

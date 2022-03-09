@@ -20,6 +20,8 @@ importers:
       '@babel/types': ^7.13.12
       '@dreysolano/prerender-spa-plugin': 1.0.3
       '@graphql-modules/core': 0.7.17
+      '@graphql-tools/merge': 8.2.3
+      '@graphql-tools/schema': 8.3.2
       '@jest/test-result': 26.6.2
       '@mdx-js/loader': 1.6.21
       '@mdx-js/mdx': 1.6.21
@@ -594,6 +596,8 @@ importers:
       '@babel/types': registry.npmjs.org/@babel/types/7.17.0
       '@dreysolano/prerender-spa-plugin': registry.npmjs.org/@dreysolano/prerender-spa-plugin/1.0.3_debug@4.3.2
       '@graphql-modules/core': registry.npmjs.org/@graphql-modules/core/0.7.17_e7c6f21e00ffec12c5da54c0b19e38c6
+      '@graphql-tools/merge': registry.npmjs.org/@graphql-tools/merge/8.2.3_graphql@14.7.0
+      '@graphql-tools/schema': registry.npmjs.org/@graphql-tools/schema/8.3.2_graphql@14.7.0
       '@jest/test-result': registry.npmjs.org/@jest/test-result/26.6.2
       '@mdx-js/loader': registry.npmjs.org/@mdx-js/loader/1.6.21_react@17.0.2
       '@mdx-js/mdx': registry.npmjs.org/@mdx-js/mdx/1.6.21
