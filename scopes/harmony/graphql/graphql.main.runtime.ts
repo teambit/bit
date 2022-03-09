@@ -13,6 +13,7 @@ import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
+import { printSchema } from 'graphql/utilities';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
@@ -102,6 +103,19 @@ export class GraphqlMain {
         credentials: true,
       })
     );
+
+    // const executableSchema = makeExecutableSchema({
+    //   typeDefs: schema.typeDefs,
+    //   resolvers: schema.resolvers,
+    //   schemaDirectives: schema.schemaDirectives,
+    // });
+
+    // const filters = schemaDirectivesToFilters(schema.schemaDirectives);
+    // const filteredSchema = makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
+
+    // const filteredSchemaDirectives = filteredSchema.getDirectives();
+    // const filteredTypeDefs = printSchema(filteredSchema);
+    // // const filteredResolvers =
 
     app.use(
       '/graphql',
@@ -240,16 +254,18 @@ export class GraphqlMain {
     return schemaSlots.map(([extensionId, schema]) => {
       const moduleDeps = this.getModuleDependencies(extensionId);
 
-      const executableSchema = makeExecutableSchema({
-        typeDefs: schema.typeDefs,
-        resolvers: schema.resolvers,
-        schemaDirectives: schema.schemaDirectives,
-      });
-      const filters = schemaDirectivesToFilters(schema.schemaDirectives);
-      // filtered schema is a GraphQLSchema
-      const filteredSchema = makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
+      // const executableSchema = makeExecutableSchema({
+      //   typeDefs: schema.typeDefs,
+      //   resolvers: schema.resolvers,
+      //   schemaDirectives: schema.schemaDirectives,
+      // });
 
-      // how to make this schema part of the module? this way isn't working
+      const filters = schemaDirectivesToFilters(schema.schemaDirectives);
+      makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
+
+      // const filteredSchemaDirectives = filteredSchema.getDirectives();
+      // const filteredTypeDefs = printSchema(filteredSchema);
+      // const filteredResolvers =
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
@@ -262,6 +278,7 @@ export class GraphqlMain {
           };
         },
       });
+      // module.
 
       this.modules.set(extensionId, module);
 
