@@ -39,7 +39,7 @@ export class CreateCmd implements Command {
 `;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://harmony-docs.bit.dev/building-with-bit/environments/#configure-environment-for-components`;
+    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://bit.dev/docs/envs/using-envs`;
 
     return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }

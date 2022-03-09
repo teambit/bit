@@ -72,7 +72,7 @@ function commandTemplate(name: string, description: string): string {
 function getHeader(): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow('bit documentation: https://harmony-docs.bit.dev')}`;
+${chalk.yellow('bit documentation: https://bit.dev/docs')}`;
 }
 
 function getFooter(): string {

@@ -29,7 +29,7 @@ export function ContactIcons(props: ContactIconsProps) {
       <Link external style={styles.link} href="https://github.com/teambit/bit">
         <img alt="github" style={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
       </Link>
-      <Link external style={styles.link} href="https://harmony-docs.bit.dev/">
+      <Link external style={styles.link} href="https://bit.dev/docs">
         <img alt="bit docs" style={styles.logo} src="https://static.bit.dev/bit-logo.svg" />
       </Link>
     </div>

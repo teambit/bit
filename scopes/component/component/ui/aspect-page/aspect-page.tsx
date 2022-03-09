@@ -9,7 +9,7 @@ import { Separator } from '@teambit/documenter.ui.separator';
 import styles from './aspect-page.module.scss';
 
 const GET_COMPONENT = gql`
-  query($id: String!) {
+  query ($id: String!) {
     getHost {
       get(id: $id) {
         aspects {
@@ -35,7 +35,7 @@ export function AspectPage() {
       <EmptyBox
         title="This component is new and doesn’t have any aspects."
         linkText="Learn more about component aspects"
-        link="https://harmony-docs.bit.dev/aspects/aspects-overview"
+        link="https://bit.dev/docs/extending-bit/aspect-overview"
       />
     );
   }
