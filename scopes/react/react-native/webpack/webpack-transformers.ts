@@ -1,16 +1,5 @@
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
 
-const reactNativeElementRule = {
-  test: /\.(jsx?|tsx?)$/,
-  include: [/node_modules\/react-native-/],
-  loader: require.resolve('babel-loader'),
-  options: {
-    cacheDirectory: false,
-    presets: ['@babel/preset-env', '@babel/preset-react'],
-  },
-};
-
-
 /**
  * Transformation to apply for both preview and dev server
  * @param config
@@ -18,14 +7,11 @@ const reactNativeElementRule = {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function commonTransformation(config: WebpackConfigMutator, _context: WebpackConfigTransformContext) {
-  config
-    .addAliases({
-      react: require.resolve('react'),
-      'react-dom/server': require.resolve('react-dom/server'),
-      'react-native$': require.resolve('react-native-web'),
-    })
-    .addModuleRule(reactNativeElementRule);
-
+  config.addAliases({
+    react: require.resolve('react'),
+    'react-dom/server': require.resolve('react-dom/server'),
+    'react-native$': require.resolve('react-native-web'),
+  });
   return config;
 }
 
