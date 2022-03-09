@@ -29,7 +29,7 @@ export class ComponentsDrawer implements DrawerType {
 
   name = 'COMPONENTS';
 
-  widget = (<Widget />);
+  widgets = [<Widget key={'components-drawer-widget'} />];
 
   Context = ({ children }) => {
     const [collapsed, setCollapsed] = useState(true);
