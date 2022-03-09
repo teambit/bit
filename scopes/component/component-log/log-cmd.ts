@@ -7,7 +7,7 @@ export default class LogCmd implements Command {
   name = 'log <id>';
   shortDescription = 'show components(s) version history';
   group = 'info';
-  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/view#log`;
+  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/reference/cli-reference#log`;
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],

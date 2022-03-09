@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import { build, buildAll } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_LEGACY_DOCS_DOMAIN } from '../../../constants';
 import { empty } from '../../../utils';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
@@ -11,7 +11,7 @@ export default class Build implements LegacyCommand {
   shortDescription =
     'build any set of components with configured compiler (component compiler or as defined in bit.json)';
   group: Group = 'development';
-  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components`;
+  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_LEGACY_DOCS_DOMAIN}/docs/building-components`;
   alias = '';
   opts = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],

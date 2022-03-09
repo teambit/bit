@@ -11,7 +11,7 @@ export default class ClearCacheCmd implements Command {
 1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
 2) components cache on the filesystem (mainly the dependencies graph and docs)
 3) scope's index file, which maps the component-id:object-hash
-https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
+https://${BASE_DOCS_DOMAIN}/workspace/clearing-cache`;
   alias = 'cc';
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
   loader = false;

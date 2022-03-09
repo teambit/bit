@@ -16,9 +16,9 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Init implements LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
-  shortDescription = 'create or reinitialize an empty Bit scope or reinitialize an existing one';
+  shortDescription = 'create or reinitialize an empty workspace';
   group: Group = 'start';
-  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;
+  description = `initialize an empty bit scope\nhttps://${BASE_DOCS_DOMAIN}/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],

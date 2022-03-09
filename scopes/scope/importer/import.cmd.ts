@@ -20,7 +20,7 @@ export default class ImportCmd implements Command {
   shortDescription = 'import components into your current working area';
   group = 'collaborate';
   description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
+  https://${BASE_DOCS_DOMAIN}/components/importing-components
   ${WILDCARD_HELP('import')}`;
   alias = '';
   options = [

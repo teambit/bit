@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Configuration file of the Bit workspace.",
-  "description": "This is the main configuration file of your bit workspace. for full documentation, please see: https://docs.bit.dev/configuration",
+  "description": "This is the main configuration file of your bit workspace. for full documentation, please see: https://bit.dev/docs/configuration",
   "type": "object",
   "properties": {
     "teambit.workspace/workspace": {

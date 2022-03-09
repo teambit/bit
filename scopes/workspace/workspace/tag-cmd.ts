@@ -19,7 +19,7 @@ export class Tag implements Command {
   shortDescription = 'record component changes and lock versions';
   description = `record component changes and lock versions.
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
-https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
+https://${BASE_DOCS_DOMAIN}/components/tags
 ${WILDCARD_HELP('tag')}`;
   alias = 't';
   loader = true;

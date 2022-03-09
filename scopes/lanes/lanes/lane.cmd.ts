@@ -332,7 +332,7 @@ export class LaneCmd implements Command {
   name = 'lane [name]';
   shortDescription = 'show lanes details';
   description = `show lanes details
-https://${BASE_DOCS_DOMAIN}/docs/lanes`;
+https://${BASE_DOCS_DOMAIN}/components/lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

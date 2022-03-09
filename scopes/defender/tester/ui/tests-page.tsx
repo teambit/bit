@@ -113,7 +113,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link="https://harmony-docs.bit.dev/testing/overview/"
+        link="https://bit.dev/docs/dev-services-overview/tester/tester-overview"
       />
     );
   }
