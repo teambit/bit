@@ -15,7 +15,6 @@ export const reactComponentJS: ComponentTemplate = {
       content: `export { ${Name} } from './${name}';
 `,
     };
-
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },
   config: {
