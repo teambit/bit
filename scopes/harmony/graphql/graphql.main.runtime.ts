@@ -116,6 +116,13 @@ export class GraphqlMain {
     // const filteredSchemaDirectives = filteredSchema.getDirectives();
     // const filteredTypeDefs = printSchema(filteredSchema);
     // // const filteredResolvers =
+    // const schemaSlots = this.moduleSlot.toArray();
+
+    // schemaSlots.map(([, schema]) => {
+    //   schema.schemaDirectives;
+    // });
+    // const filters = schemaDirectivesToFilters(schema.schemaDirectives);
+    // makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
 
     app.use(
       '/graphql',
@@ -254,19 +261,17 @@ export class GraphqlMain {
     return schemaSlots.map(([extensionId, schema]) => {
       const moduleDeps = this.getModuleDependencies(extensionId);
 
-      // const executableSchema = makeExecutableSchema({
-      //   typeDefs: schema.typeDefs,
-      //   resolvers: schema.resolvers,
-      //   schemaDirectives: schema.schemaDirectives,
-      // });
-
-      const filters = schemaDirectivesToFilters(schema.schemaDirectives);
-      makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
+      const executableSchema = makeExecutableSchema({
+        typeDefs: schema.typeDefs,
+        resolvers: schema.resolvers,
+        schemaDirectives: schema.schemaDirectives,
+      });
 
       // const filteredSchemaDirectives = filteredSchema.getDirectives();
       // const filteredTypeDefs = printSchema(filteredSchema);
       // const filteredResolvers =
       const module = new GraphQLModule({
+        extraSchemas: [executableSchema],
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
         schemaDirectives: schema.schemaDirectives,
@@ -278,7 +283,6 @@ export class GraphqlMain {
           };
         },
       });
-      // module.
 
       this.modules.set(extensionId, module);
 
