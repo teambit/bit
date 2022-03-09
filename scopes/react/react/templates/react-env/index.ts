@@ -48,4 +48,9 @@ export const reactEnvTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.envs/envs': {
+      env: 'teambit.envs/env',
+    },
+  }
 };
