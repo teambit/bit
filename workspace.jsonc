@@ -285,7 +285,7 @@
         "parallel-webpack": "2.6.0",
         "parse-package-name": "0.1.0",
         "path-to-regexp": "6.2.0",
-        "penpal": "6.2.1",
+        "penpal": "6.2.2",
         "pluralize": "8.0.0",
         "postcss": "8.2.9",
         "postcss-flexbugs-fixes": "5.0.2",
