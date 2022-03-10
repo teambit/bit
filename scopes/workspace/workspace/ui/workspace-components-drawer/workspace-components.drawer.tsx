@@ -141,7 +141,7 @@ function DeprecateFilter() {
         <span className={styles.filterIconLabel}>Deprecated</span>
       </div>
       <div>
-        <Toggle checked={isActive} onChange={() => setActiveFilter('deprecate')} />
+        <Toggle checked={isActive} onInputChanged={() => setActiveFilter('deprecate')} />
       </div>
     </div>
   );
