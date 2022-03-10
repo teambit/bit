@@ -42,7 +42,7 @@ export class WorkspaceComponentsDrawer implements DrawerType {
   id = 'workspace-components';
   name = 'COMPONENTS';
 
-  widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle0widget'} />];
+  widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle-widget'} />];
 
   Context = ({ children }) => {
     const [collapsed, setCollapsed] = useState(true);
