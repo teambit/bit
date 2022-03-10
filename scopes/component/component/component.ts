@@ -107,9 +107,11 @@ export class Component {
   }
 
   async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string }) {
+    const componentIdObj = this.id.toObject();
+
     const id = !filter?.head
-      ? ComponentID.fromObject({ name: this.id.name, scope: this.id.scope, version: undefined })
-      : ComponentID.fromObject({ name: this.id.name, scope: this.id.scope, version: filter.head });
+      ? await this.factory.resolveComponentId(this.id.toStringWithoutVersion())
+      : await this.factory.resolveComponentId(ComponentID.fromObject({ ...componentIdObj, version: filter.head }));
 
     const allLogs = await this.factory.getLogs(id);
     if (!filter) return allLogs;
