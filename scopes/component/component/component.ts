@@ -106,7 +106,7 @@ export class Component {
     }
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string }) {
+  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
     const componentIdObj = this.id.toObject();
 
     const id = !filter?.head
@@ -114,18 +114,25 @@ export class Component {
       : await this.factory.resolveComponentId(ComponentID.fromObject({ ...componentIdObj, version: filter.head }));
 
     const allLogs = await this.factory.getLogs(id);
+
     if (!filter) return allLogs;
-    const { type, limit, offset } = filter;
+
+    const { type, limit, offset, sort } = filter;
+
     const typeFilter = (snap) => {
       if (type === 'tag') return snap.tag;
       if (type === 'snap') return !snap.tag;
       return true;
     };
+
     let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
     if (limit) {
       filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
     }
-    return filteredLogs;
+
+    if (sort && sort === 'asc') return filteredLogs;
+
+    return filteredLogs.reverse();
   }
 
   stringify(): string {
