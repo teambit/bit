@@ -462,9 +462,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
-    const componentIDs = components.map((c) => c.id)
     const network = await this.isolator.isolateComponents(
-      componentIDs,
+      components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
         baseDir: this.getAspectCapsulePath(),
@@ -605,12 +604,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return [];
   }
 
-  getAspectCapsulePath(componentIDs?: ComponentID[]) {
-    let capsulePath = `${this.path}-aspects`
-    if (componentIDs?.length) {
-      capsulePath += `-${componentIDs.map((id) => id.toString()).sort().join('-')}`
-    }
-    return capsulePath
+  getAspectCapsulePath() {
+    return `${this.path}-aspects`;
   }
 
   private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
