@@ -73,6 +73,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       {
         installOptions: {
           installTeambitBit: install,
+          packageManagerConfigRootDir: this.workspace.path,
         },
         linkingOptions: { linkTeambitBit: !install },
         emptyRootDir: !reuseCapsules,
