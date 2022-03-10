@@ -14,6 +14,7 @@ import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 import { componentTemplates } from './mdx.templates';
+import { MdxEnv } from './mdx.env';
 import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
@@ -24,6 +25,7 @@ export type MDXConfig = {
 };
 
 export class MDXMain {
+
   icon() {
     return 'https://static.bit.dev/extensions-icons/mdx-icon-small.svg';
   }
@@ -36,13 +38,13 @@ export class MDXMain {
     return mdxCompiler;
   }
 
-  _mdxEnv: ReactEnv;
-  get mdxEnv() {
-    return this._mdxEnv;
-  }
-  private set mdxEnv(value: ReactEnv) {
-    this._mdxEnv = value;
-  }
+  // _mdxEnv: ReactEnv;
+  // get mdxEnv() {
+  //   return this._mdxEnv;
+  // }
+  // private set mdxEnv(value: ReactEnv) {
+  //   this._mdxEnv = value;
+  // }
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -72,7 +74,7 @@ export class MDXMain {
       GeneratorMain
     ],
     config: MDXConfig
-  ) {
+    ) {
     const mdx = new MDXMain();
     const tsTransformer: TsConfigTransformer = (tsconfig: TypescriptConfigMutator) => {
       // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
@@ -89,23 +91,27 @@ export class MDXMain {
         tsCompiler,
       ],
       {}
-    );
-    const mdxEnv = envs.compose(react.reactEnv, [
-      react.overrideCompiler(mdxCompiler),
-      react.overrideDependencies({
-        dependencies: {
-          '@teambit/mdx.ui.mdx-scope-context': '0.0.368',
-          '@mdx-js/react': '1.6.22',
-        },
-      }),
-      react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
-    ]);
-    envs.registerEnv(mdxEnv);
-    depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
-    docs.registerDocReader(new MDXDocReader(config.extensions));
-    generator.registerComponentTemplate(componentTemplates);
+      );
+      const envOverrides = [
+        react.overrideCompiler(mdxCompiler),
+        react.overrideDependencies({
+          dependencies: {
+            '@teambit/mdx.ui.mdx-scope-context': '0.0.368',
+            '@mdx-js/react': '1.6.22',
+          },
+        }),
+        react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
+      ]
 
-    mdx.mdxEnv = mdxEnv as ReactEnv;
+      const mdxComposedEnv: MdxEnv = envs.merge<MdxEnv, ReactEnv>(
+        new MdxEnv(),
+        envs.compose(react.reactEnv, envOverrides)
+      );
+      envs.registerEnv(mdxComposedEnv);
+      depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
+      docs.registerDocReader(new MDXDocReader(config.extensions));
+      generator.registerComponentTemplate(componentTemplates);
+
     return mdx;
   }
 }
