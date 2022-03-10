@@ -97,6 +97,7 @@
         "@teambit/base-ui.utils.string.affix": "1.0.0",
         "@teambit/base-ui.utils.sub-paths": "1.0.0",
         "@teambit/base-ui.utils.time-ago": "1.0.0",
+        "@teambit/bit.content.what-is-bit": "1.95.0",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
         "@teambit/component.instructions.exporting-components": "0.0.6",
