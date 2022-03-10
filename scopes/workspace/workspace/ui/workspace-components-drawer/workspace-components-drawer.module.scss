@@ -16,9 +16,12 @@
   margin: 4px 8px;
 
   .filterIcon {
-    font-size: 12px;
-    > span {
-      margin-right: 8px;
+    line-height: 16px;
+    display: flex;
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 12px;
     }
   }
 }
