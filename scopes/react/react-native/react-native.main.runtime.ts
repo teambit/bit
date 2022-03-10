@@ -117,17 +117,17 @@ export class ReactNativeMain {
       devServerConfig: [devServerConfigTransformer],
     };
 
-    const reactNativeEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
+    const reactNativeComposedEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
       new ReactNativeEnv(),
       react.compose([
         react.useWebpack(webpackModifiers),
         react.overrideJestConfig(jestConfig)
       ])
     );
-    envs.registerEnv(reactNativeEnv);
+    envs.registerEnv(reactNativeComposedEnv);
     generator.registerComponentTemplate(componentTemplates);
     generator.registerWorkspaceTemplate(workspaceTemplates);
-    return new ReactNativeMain(react, reactNativeEnv, envs);
+    return new ReactNativeMain(react, reactNativeComposedEnv, envs);
   }
 }
 
