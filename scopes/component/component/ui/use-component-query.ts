@@ -56,7 +56,6 @@ const componentFields = gql`
       date
       hash
       tag
-      onLane
     }
     preview {
       includesEnvTemplate
