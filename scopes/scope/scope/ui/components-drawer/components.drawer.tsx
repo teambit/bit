@@ -79,7 +79,7 @@ export class ComponentsDrawer implements DrawerType {
     const { scope } = useScopeQuery();
     const { collapsed, activeFilters } = useContext(ScopeTreeContext);
     const { treeNodeSlot } = this;
-    const hideDeprecatedComponets = activeFilters.find((activeFilter) => activeFilter === 'deprecate');
+    const showDeprecatedComponents = activeFilters.find((activeFilter) => activeFilter === 'deprecate');
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -104,9 +104,10 @@ export class ComponentsDrawer implements DrawerType {
     );
 
     if (!scope) return <FullLoader />;
-    const components = hideDeprecatedComponets
-      ? scope.components.filter((component) => !component.deprecation?.isDeprecate)
-      : scope.components;
+
+    const components = showDeprecatedComponents
+      ? scope.components
+      : scope.components.filter((component) => !component.deprecation?.isDeprecate);
 
     if (components.length === 0)
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>Scope is empty</span>;

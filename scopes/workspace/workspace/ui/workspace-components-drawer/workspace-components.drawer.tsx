@@ -80,7 +80,7 @@ export class WorkspaceComponentsDrawer implements DrawerType {
     const workspace = useContext(WorkspaceContext);
     const { collapsed, activeFilters } = useContext(WorkspaceTreeContext);
     const { treeNodeSlot } = this;
-    const hideDeprecatedComponets = activeFilters.find((activeFilter) => activeFilter === 'deprecate');
+    const showDeprecatedComponents = activeFilters.find((activeFilter) => activeFilter === 'deprecate');
 
     const TreeNodeRenderer = useCallback(
       function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -97,9 +97,9 @@ export class WorkspaceComponentsDrawer implements DrawerType {
 
     if (!workspace) return <FullLoader />;
 
-    const components = hideDeprecatedComponets
-      ? workspace.components.filter((component) => !component.deprecation?.isDeprecate)
-      : workspace.components;
+    const components = showDeprecatedComponents
+      ? workspace.components
+      : workspace.components.filter((component) => !component.deprecation?.isDeprecate);
 
     if (components.length === 0) {
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
