@@ -25,7 +25,7 @@ export function DrawerUI({
   // consider passing the entire drawer type instead of passing each parameter
   if (!name) return null;
   return (
-    <div {...rest} className={classNames(styles.drawer, isOpen && styles.open, className)}>
+    <div {...rest} className={classNames(styles.drawer, className)}>
       <Context>
         <div className={classNames(styles.drawerName, isOpen && styles.open)}>
           <div onClick={onToggle}>

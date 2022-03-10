@@ -1,7 +1,6 @@
-import React, { HTMLAttributes, useMemo } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import classNames from 'classnames';
-import flatten from 'lodash.flatten';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { isFunction } from 'ramda-adjunct';
 import { Composer } from '@teambit/base-ui.utils.composer';
@@ -35,8 +34,7 @@ const defaultDocs = {
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useFetchDocs(componentId);
 
-  const rawProviders = renderingContext.get(ReactAspect.id);
-  const reactContext = useMemo(() => flatten(Object.values(rawProviders || {})), [rawProviders]);
+  const { providers = [] } = renderingContext.get(ReactAspect.id) || {};
 
   if (!data || loading) return null;
   if (loading) return null;
@@ -48,11 +46,12 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { displayName, version, packageName, description, elementsUrl } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
+  // no need to check the env type because base is only used in react based docs
+  const showHeaderInPreview = component?.preview?.includesEnvTemplate !== false;
+
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
-      {component.preview?.includesEnvTemplate === false ? (
-        <></>
-      ) : (
+      {showHeaderInPreview && (
         <ComponentOverview
           displayName={Content.displayName || displayName}
           version={version}
@@ -63,7 +62,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
         />
       )}
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Composer components={reactContext}>
+        <Composer components={providers}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             {Content.isMDXComponent ? (
               <MDXLayout className={styles.mdx}>

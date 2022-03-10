@@ -123,12 +123,15 @@ function VersionMenu({
     }
   }).filter((tab) => tab.payload.length > 0);
 
+  const multipleTabs = tabs.length > 1;
+  const message = multipleTabs
+    ? 'Switch to view tags, snaps, or lanes'
+    : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
+
   return (
     <div {...rest}>
       <div className={styles.top}>
-        <div className={styles.title}>
-          <span>Switch to view tags, snaps, or lanes</span>
-        </div>
+        <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
         {localVersion && (
           <NavLink
             href={'?'}
@@ -145,19 +148,20 @@ function VersionMenu({
           </NavLink>
         )}
       </div>
-      <div className={styles.tabs}>
-        {tabs.map(({ name }, index) => {
-          return (
-            <Tab
-              className={styles.tab}
-              key={name}
-              isActive={activeTabIndex === index}
-              onClick={() => setActiveTab(index)}
-            >
-              {name}
-            </Tab>
-          );
-        })}
+      <div className={classNames(multipleTabs && styles.tabs)}>
+        {multipleTabs &&
+          tabs.map(({ name }, index) => {
+            return (
+              <Tab
+                className={styles.tab}
+                key={name}
+                isActive={activeTabIndex === index}
+                onClick={() => setActiveTab(index)}
+              >
+                {name}
+              </Tab>
+            );
+          })}
       </div>
       <div className={styles.versionContainer}>
         {tabs[activeTabIndex].name === 'LANE' &&
@@ -167,7 +171,7 @@ function VersionMenu({
         {tabs[activeTabIndex].name !== 'LANE' &&
           tabs[activeTabIndex].payload.map((payload) => (
             <VersionInfo
-              key={payload.hash}
+              key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
               {...payload}
