@@ -28,7 +28,7 @@ export class HtmlEnv implements Environment {
     };
   }
 
-    async __getDescriptor() {
+  async __getDescriptor() {
     return {
       type: HtmlEnvType,
     };
