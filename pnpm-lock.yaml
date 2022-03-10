@@ -446,7 +446,7 @@ importers:
       parse-package-name: 0.1.0
       path-browserify: 1.0.1
       path-to-regexp: 6.2.0
-      penpal: 6.2.1
+      penpal: 6.2.2
       pino: 6.11.1
       pino-pretty: 4.5.0
       pluralize: 8.0.0
@@ -1008,7 +1008,7 @@ importers:
       parse-package-name: registry.npmjs.org/parse-package-name/0.1.0
       path-browserify: registry.npmjs.org/path-browserify/1.0.1
       path-to-regexp: registry.npmjs.org/path-to-regexp/6.2.0
-      penpal: registry.npmjs.org/penpal/6.2.1
+      penpal: registry.npmjs.org/penpal/6.2.2
       pino: registry.npmjs.org/pino/6.11.1
       pino-pretty: registry.npmjs.org/pino-pretty/4.5.0
       pluralize: registry.npmjs.org/pluralize/8.0.0
@@ -29623,10 +29623,10 @@ packages:
     version: 1.2.0
     dev: false
 
-  registry.npmjs.org/penpal/6.2.1:
-    resolution: {integrity: sha512-gA2tL25HO2tOkj+/2DkgxM3YdVeWauqo85pzZ6bZgVOsdQWof5Y694Dsl+lAN/E8HWaCA2Te9het8ohf1O2bqA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/penpal/-/penpal-6.2.1.tgz}
+  registry.npmjs.org/penpal/6.2.2:
+    resolution: {integrity: sha512-RQD7hTx14/LY7QoS3tQYO3/fzVtwvZI+JeS5udgsu7FPaEDjlvfK9HBcme9/ipzSPKnrxSgacI9PI7154W62YQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/penpal/-/penpal-6.2.2.tgz}
     name: penpal
-    version: 6.2.1
+    version: 6.2.2
     dev: false
 
   registry.npmjs.org/performance-now/2.1.0:
