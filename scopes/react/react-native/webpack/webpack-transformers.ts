@@ -1,6 +1,6 @@
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
 
-const reactNativeElementRule = {
+const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
   include: [/node_modules\/react-native-/],
   loader: require.resolve('babel-loader'),
@@ -24,7 +24,7 @@ function commonTransformation(config: WebpackConfigMutator, _context: WebpackCon
       'react-dom/server': require.resolve('react-dom/server'),
       'react-native$': require.resolve('react-native-web'),
     })
-    .addModuleRule(reactNativeElementRule);
+    .addModuleRule(reactNativePackagesRule);
 
   return config;
 }
