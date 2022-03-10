@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { ReactNode, ComponentType, useState } from 'react';
+import React, { ReactNode, ComponentType } from 'react';
 
 import styles from './drawer.module.scss';
 
