@@ -20,14 +20,12 @@ export type { ${Name}Props } from './${name}';
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },
 
-  config: {
-    'teambit.envs/envs': {
-      env: 'teambit.html/html',
-    },
-  }
+  // config: {
+  //   'teambit.envs/envs': {
+  //     env: 'teambit.html/html',
+  //   },
+  // }
 };
-
-
 
 export const deprecatedHtmlComponentTemplate: ComponentTemplate = {
   name: 'html-component',
@@ -45,9 +43,9 @@ export type { ${Name}Props } from './${name}';
 
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },
-  config: {
-    'teambit.envs/envs': {
-      env: 'teambit.html/html',
-    },
-  }
+  // config: {
+  //   'teambit.envs/envs': {
+  //     env: 'teambit.html/html',
+  //   },
+  // }
 };
