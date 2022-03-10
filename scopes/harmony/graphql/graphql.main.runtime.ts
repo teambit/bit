@@ -72,8 +72,8 @@ export class GraphqlMain {
     /**
      * graphql pubsub. allows to emit events to clients.
      */
-    private pubSubSlot: PubSubSlot // private schemaStore: { //   resolversList: { [key: string]: any }[]; //   typeDefsList: any[]; //   schemaDirectives: {}; //   schemas: any[]; // } = { resolversList: [], typeDefsList: [], schemaDirectives: {}, schemas: [] }
-  ) {}
+    private pubSubSlot: PubSubSlot
+    ) {}
 
   get pubsub(): PubSubEngine {
     const pubSubSlots = this.pubSubSlot.values();
