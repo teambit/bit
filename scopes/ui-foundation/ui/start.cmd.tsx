@@ -1,5 +1,5 @@
 import React from 'react';
-import open from 'open';
+import openBrowser from 'react-dev-utils/openBrowser';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
@@ -78,7 +78,7 @@ export class StartCmd implements Command {
 
           await server.whenReady;
 
-          return open(this.ui.publicUrl || server.fullUrl);
+          return openBrowser(this.ui.publicUrl || server.fullUrl);
         })
         .catch((error) => this.logger.error(error));
     }
