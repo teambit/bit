@@ -35,7 +35,7 @@ export function DrawerUI({
             <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
             <span>{name}</span>
           </div>
-          {Widgets && Widgets.map((Widget) => Widget)}
+          {Widgets}
         </div>
         {Filters && <div className={classNames(styles.drawerFilters)}>{Filters.map((Filter) => Filter)}</div>}
         <div className={classNames(styles.drawerContent, isOpen && styles.open)}>{children}</div>

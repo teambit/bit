@@ -43,7 +43,7 @@ export class ComponentsDrawer implements DrawerType {
 
   name = 'COMPONENTS';
 
-  widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle0widget'} />];
+  widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle-widget'} />];
   Filters = [<DeprecateFilter key={'deprecate-filter'} />];
 
   Context = ({ children }) => {
