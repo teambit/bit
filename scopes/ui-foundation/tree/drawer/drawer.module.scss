@@ -4,13 +4,9 @@
   min-height: 32px;
   display: flex;
   flex-direction: column;
-  flex: 0;
   border-bottom: 1px solid #ededed;
-
-  &.open {
-    flex: 1;
-  }
 }
+
 .drawerName {
   font-size: var(--bit-p-xxs, 12px);
   height: 32px;
