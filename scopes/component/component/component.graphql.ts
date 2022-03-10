@@ -50,7 +50,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         date: String
         hash: String!
         tag: String
-        # id: String!
+        id: String!
       }
 
       type Author {
@@ -93,7 +93,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         tags: [Tag]!
 
         # component logs
-        logs(type: String, offset: Int, limit: Int): [LogEntry]!
+        logs(type: String, offset: Int, limit: Int, head: String, sort: String): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
       }
@@ -159,8 +159,11 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component, { include }: { include?: string[] }) => {
           return component.state.aspects.filter(include).serialize();
         },
-        logs: async (component: Component, filter?: { type?: string; offset?: number; limit?: number }) => {
-          return component.getLogs(filter);
+        logs: async (
+          component: Component,
+          filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
+        ) => {
+          return (await component.getLogs(filter)).map((log) => ({ ...log, id: log.hash }));
         },
       },
       ComponentHost: {
