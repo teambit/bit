@@ -225,7 +225,7 @@ export interface DependencyResolverWorkspaceConfig {
    * The list of components that should be installed in isolation from the workspace.
    * The component's package names should be used in this list, not their component IDs.
    */
-  rootComponents?: string[];
+  rootComponents?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -469,7 +469,7 @@ export class DependencyResolverMain {
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
-      hasRootComponents: Boolean(this.config.rootComponents?.length),
+      hasRootComponents: Boolean(this.config.rootComponents),
     };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(

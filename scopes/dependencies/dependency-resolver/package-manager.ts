@@ -32,7 +32,7 @@ export type PackageManagerInstallOptions = {
 
   packageImportMethod?: PackageImportMethod;
 
-  rootComponents?: string[];
+  rootComponents?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
