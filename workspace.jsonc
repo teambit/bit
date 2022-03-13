@@ -624,6 +624,12 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
+    "scopes/community": {
+      "defaultScope": "teambit.community"
+    },
+    "scopes/cloud": {
+      "defaultScope": "teambit.cloud"
+    },
     "scopes/base-react": {
       "defaultScope": "teambit.base-react",
       "teambit.envs/envs": {

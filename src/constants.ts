@@ -171,8 +171,6 @@ export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_WEB_DOMAIN}/`;
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const SEARCH_DOMAIN = `api.${BASE_WEB_DOMAIN}`;
-
 export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
 
 export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;

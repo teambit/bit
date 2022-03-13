@@ -261,6 +261,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/cli/webpack/error"
     },
+    "cloud": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/cloud",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "code": {
         "scope": "teambit.component",
         "version": "0.0.672",
@@ -272,6 +284,18 @@
         "version": "0.0.672",
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/command-bar"
+    },
+    "community": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/community/community",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
     },
     "compiler": {
         "scope": "teambit.compilation",
