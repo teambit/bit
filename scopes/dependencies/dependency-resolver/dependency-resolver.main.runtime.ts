@@ -80,7 +80,7 @@ import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 /**
  * @deprecated use BIT_CLOUD_REGISTRY instead
  */
-export const BIT_DEV_REGISTRY = 'https://node.bit.cloud/';
+export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 

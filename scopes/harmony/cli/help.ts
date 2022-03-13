@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import { capitalize } from 'lodash';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { CommandList } from './cli.main.runtime';
 import { getCommandId } from './get-command-id';
@@ -72,7 +73,7 @@ function commandTemplate(name: string, description: string): string {
 function getHeader(): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow('bit documentation: https://bit.dev/docs')}`;
+${chalk.yellow(`bit documentation: https://${BASE_DOCS_DOMAIN}`)}`;
 }
 
 function getFooter(): string {
