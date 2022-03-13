@@ -11,7 +11,7 @@ export type NewOptions = {
 };
 
 export class NewCmd implements Command {
-  name = 'new <templateName> <workspaceName>';
+  name = 'new <workspaceName> [templateName]';
   description = 'Create a new workspace from a template';
   shortDescription = '';
   alias = '';
@@ -36,9 +36,14 @@ export class NewCmd implements Command {
 
   constructor(private generator: GeneratorMain) {}
 
-  async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
+  async report([workspaceName, templateName]: [string, string], options: NewOptions & { standalone: boolean }) {
     options.skipGit = options.skipGit ?? options.standalone;
-    const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
+    const defaultTemplateName = 'react';
+    const results = await this.generator.generateWorkspaceTemplate(
+      workspaceName,
+      templateName || defaultTemplateName,
+      options
+    );
     return chalk.white(
       `${chalk.green(`
 
