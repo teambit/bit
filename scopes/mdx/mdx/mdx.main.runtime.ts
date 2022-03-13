@@ -103,10 +103,7 @@ export class MDXMain {
         react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
       ]
 
-      const mdxComposedEnv: MdxEnv = envs.merge<MdxEnv, ReactEnv>(
-        new MdxEnv(),
-        envs.compose(react.reactEnv, envOverrides)
-      );
+      const mdxComposedEnv = react.compose(envOverrides, new MdxEnv()) as MdxEnv & ReactEnv;
       envs.registerEnv(mdxComposedEnv);
       depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
       docs.registerDocReader(new MDXDocReader(config.extensions));
