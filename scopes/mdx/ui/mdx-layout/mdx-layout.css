@@ -11,11 +11,6 @@
   text-transform: uppercase;
 }
 
-.admonition svg {
-  stroke: currentColor;
-  fill: currentColor;
-}
-
 .admonition-heading > div {
   margin-top: 0;
   margin-bottom: 0;
@@ -32,6 +27,9 @@
   width: 18px;
   height: 22px;
   stroke-width: 0;
+
+  stroke: currentColor;
+  fill: currentColor;
 }
 
 .admonition-content > :last-child {
