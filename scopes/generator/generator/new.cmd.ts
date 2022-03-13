@@ -38,7 +38,6 @@ export class NewCmd implements Command {
 
   async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
     options.skipGit = options.skipGit ?? options.standalone;
-    // const defaultTemplateName = 'react';
     const results = await this.generator.generateWorkspaceTemplate(
       workspaceName,
       templateName,
