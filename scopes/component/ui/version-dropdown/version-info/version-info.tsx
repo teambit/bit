@@ -1,7 +1,7 @@
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { VersionLabel } from '@teambit/component.ui.version-label';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -24,9 +24,15 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
   }, [version]);
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+  const currentVersionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isCurrent) {
+      currentVersionRef.current?.scrollIntoView();
+    }
+  }, [isCurrent]);
 
   return (
-    <div key={version}>
+    <div ref={currentVersionRef}>
       <NavLink
         href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
         className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}

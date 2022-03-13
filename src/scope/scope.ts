@@ -568,9 +568,8 @@ export default class Scope {
   async loadComponentLogs(id: BitId, shortHash = false): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const currentLane = this.lanes.getCurrentLaneId();
     const startFrom = id.hasVersion() ? componentModel.getRef(id.version as string) : null;
-    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash, startFrom);
+    const logs = await componentModel.collectLogs(this.objects, shortHash, startFrom);
     return logs;
   }
 

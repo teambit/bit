@@ -4,13 +4,9 @@
   min-height: 32px;
   display: flex;
   flex-direction: column;
-  flex: 0;
   border-bottom: 1px solid #ededed;
-
-  &.open {
-    flex: 1;
-  }
 }
+
 .drawerName {
   font-size: var(--bit-p-xxs, 12px);
   height: 32px;
@@ -23,7 +19,6 @@
   font-weight: bold;
   padding: 0 8px;
 
-  border-bottom: 1px solid #ededed;
   transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
     border-color: var(--bit-bg-heavy, #f6f6f6);
@@ -83,4 +78,10 @@
   &.open {
     max-height: 100%;
   }
+}
+
+.drawerFilters {
+  display: flex;
+  border-bottom: 1px solid #ededed;
+  flex-direction: column;
 }
