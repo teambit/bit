@@ -8,15 +8,17 @@ import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
-import React from 'react';
+import React, { useContext } from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
+// import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
+import { ComponentsDrawer } from '../../component/component-drawer/component-drawer';
+import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -94,9 +96,23 @@ export class WorkspaceUI {
 
   componentSearcher: ComponentSearcher;
 
+  getWorkspaceDrawer = () => {
+    return new ComponentsDrawer({
+      id: 'workspace-components-drawer',
+      name: 'COMPONENTS',
+      getDrawerData: () => {
+        const workspace = useContext(WorkspaceContext);
+        return {
+          loading: !workspace,
+          components: workspace.components || [],
+        };
+      },
+    });
+  };
+
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
-    this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
+    // this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},

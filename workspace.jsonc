@@ -101,6 +101,7 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/component.instructions.exporting-components": "0.0.6",
         "@teambit/design.elements.icon": "1.0.5",
+        "@teambit/design.inputs.selectors.multi-select": "0.0.15",
         "@teambit/design.ui.icon-button": "1.0.10",
         "@teambit/design.ui.input.toggle": "1.0.12",
         "@teambit/documenter.code.react-playground": "4.0.1",

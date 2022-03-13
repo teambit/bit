@@ -44,7 +44,7 @@ export class ComponentsDrawer implements DrawerType {
   name = 'COMPONENTS';
 
   widgets = [<FilterWidget key={'filter-widget'} />, <TreeToggleWidget key={'tree-toggle-widget'} />];
-  Filters = [<DeprecateFilter key={'deprecate-filter'} />];
+  // Filters = [<DeprecateFilter key={'deprecate-filter'} />];
 
   Context = ({ children }) => {
     const [collapsed, setCollapsed] = useState(true);
@@ -132,24 +132,5 @@ function FilterWidget() {
       of="Ripple_filters"
       onClick={() => setFilterOpen(!filterOpen)}
     />
-  );
-}
-
-function DeprecateFilter() {
-  const { activeFilters, setActiveFilter, filterOpen } = useContext(ScopeTreeContext);
-  const isActive = activeFilters.includes('deprecate');
-
-  if (!filterOpen) return null;
-
-  return (
-    <div className={classNames(styles.deprecateFilter, isActive && styles.active)}>
-      <div className={styles.filterIcon}>
-        <Icon of="note-deprecated" />
-        <span className={styles.filterIconLabel}>Deprecated</span>
-      </div>
-      <div>
-        <Toggle checked={isActive} onInputChanged={() => setActiveFilter('deprecate')} />
-      </div>
-    </div>
   );
 }
