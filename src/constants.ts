@@ -142,6 +142,13 @@ export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
+/**
+ * URLS
+ */
+export const BASE_CLOUD_DOMAIN = 'bit.cloud';
+
+export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
@@ -171,6 +178,12 @@ export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
 export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
+
+export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
+
+export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
+
+// END URLS
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
@@ -499,9 +512,5 @@ export enum BuildStatus {
   Failed = 'failed',
   Succeed = 'succeed',
 }
-
-export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
-
-export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
