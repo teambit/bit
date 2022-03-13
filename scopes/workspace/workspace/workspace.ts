@@ -1733,8 +1733,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
-    const rootComponents = this.dependencyResolver.config.rootComponents;
-    const hasRootComponents = Boolean(rootComponents?.length);
+    const hasRootComponents = Boolean(this.dependencyResolver.config.rootComponents);
     if (hasRootComponents && this.dependencyResolver.config.packageManager !== 'teambit.dependencies/pnpm') {
       throw new BitError('rootComponents are only supported by the pnpm package manager');
     }
@@ -1745,7 +1744,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
-      rootComponents,
+      rootComponents: hasRootComponents,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     await this.link({

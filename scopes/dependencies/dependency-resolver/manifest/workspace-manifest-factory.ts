@@ -59,12 +59,12 @@ export class WorkspaceManifestFactory {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();
       dedupedDependencies.componentDependenciesMap = componentDependenciesMap;
     }
-    const envPeers = await this.getEnvsPeersPolicy(components);
-    const componentsManifestsMap = getComponentsManifests(
+    const componentsManifestsMap = await this.getComponentsManifests(
       dedupedDependencies,
       components,
       optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
+    const envPeers = this.getEnvsPeersPolicy(componentsManifestsMap);
     const workspaceManifest = new WorkspaceManifest(
       name,
       version,
@@ -76,10 +76,11 @@ export class WorkspaceManifestFactory {
     return workspaceManifest;
   }
 
-  private async getEnvsPeersPolicy(components: Component[]) {
-    const foundEnvs: EnvPolicy[] = await Promise.all(
-      components.map((component) => this.dependencyResolver.getComponentEnvPolicy(component))
-    );
+  private getEnvsPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
+    const foundEnvs: EnvPolicy[] = [];
+    for (const component of componentsManifestsMap.values()) {
+      foundEnvs.push(component.envPolicy);
+    }
     const peersPolicies = foundEnvs.map((policy) => policy.peersAutoDetectPolicy);
     // TODO: At the moment we are just merge everything, so in case of conflicts one will be taken
     // TODO: once we have root for each env, we should know to handle it differently
@@ -146,6 +147,52 @@ export class WorkspaceManifestFactory {
       updateDependencyVersion(dep, rootPolicy, mergedPolicies);
     });
   }
+
+  /**
+   * Get the components manifests based on the calculated dedupedDependencies
+   *
+   * @param {DedupedDependencies} dedupedDependencies
+   * @param {Component[]} components
+   * @returns {ComponentsManifestsMap}
+   */
+  async getComponentsManifests(
+    dedupedDependencies: DedupedDependencies,
+    components: Component[],
+    createManifestForComponentsWithoutDependencies = true
+  ): Promise<ComponentsManifestsMap> {
+    const componentsManifests: ComponentsManifestsMap = new Map();
+    await Promise.all(
+      components.map(async (component) => {
+        const packageName = componentIdToPackageName(component.state._consumer);
+        if (
+          dedupedDependencies.componentDependenciesMap.has(packageName) ||
+          createManifestForComponentsWithoutDependencies
+        ) {
+          const blankDependencies: ManifestDependenciesObject = {
+            dependencies: {},
+            devDependencies: {},
+            peerDependencies: {},
+          };
+          let dependencies = blankDependencies;
+          if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
+            dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as ManifestDependenciesObject;
+          }
+
+          const getVersion = (): string => {
+            if (!component.id.hasVersion()) return '0.0.1-new';
+            if (component.id._legacy.isVersionSnap()) return `0.0.1-${component.id.version}`;
+            return component.id.version as string;
+          };
+
+          const version = getVersion();
+          const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+          const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component, envPolicy);
+          componentsManifests.set(packageName, manifest);
+        }
+      })
+    );
+    return componentsManifests;
+  }
 }
 
 function filterComponents(dependencyList: DependencyList, componentsToFilterOut: Component[]): DependencyList {
@@ -193,47 +240,4 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
     return true;
   });
   return filtered;
-}
-
-/**
- * Get the components manifests based on the calculated dedupedDependencies
- *
- * @param {DedupedDependencies} dedupedDependencies
- * @param {Component[]} components
- * @returns {ComponentsManifestsMap}
- */
-function getComponentsManifests(
-  dedupedDependencies: DedupedDependencies,
-  components: Component[],
-  createManifestForComponentsWithoutDependencies = true
-): ComponentsManifestsMap {
-  const componentsManifests: ComponentsManifestsMap = new Map();
-  components.forEach((component) => {
-    const packageName = componentIdToPackageName(component.state._consumer);
-    if (
-      dedupedDependencies.componentDependenciesMap.has(packageName) ||
-      createManifestForComponentsWithoutDependencies
-    ) {
-      const blankDependencies: ManifestDependenciesObject = {
-        dependencies: {},
-        devDependencies: {},
-        peerDependencies: {},
-      };
-      let dependencies = blankDependencies;
-      if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
-        dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as ManifestDependenciesObject;
-      }
-
-      const getVersion = (): string => {
-        if (!component.id.hasVersion()) return '0.0.1-new';
-        if (component.id._legacy.isVersionSnap()) return `0.0.1-${component.id.version}`;
-        return component.id.version as string;
-      };
-
-      const version = getVersion();
-      const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component);
-      componentsManifests.set(packageName, manifest);
-    }
-  });
-  return componentsManifests;
 }

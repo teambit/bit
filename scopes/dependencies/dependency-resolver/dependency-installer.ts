@@ -103,7 +103,7 @@ export class DependencyInstaller {
       });
     }
 
-    if (!packageManagerOptions.rootComponents?.length) {
+    if (!packageManagerOptions.rootComponents) {
       // remove node modules dir for all components dirs, since it might contain left overs from previous install
       await this.cleanCompsNodeModules(componentDirectoryMap);
     }

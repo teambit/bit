@@ -156,6 +156,8 @@ export async function getPeerDependencyIssues(
   });
 }
 
+const ROOT_COMPS_DIR = 'node_modules/.root_components';
+
 export async function install(
   rootManifest,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -167,7 +169,7 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-    rootComponents?: string[];
+    rootComponents?: boolean;
   } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>
   & Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -176,11 +178,30 @@ export async function install(
   if (!rootManifest.manifest.dependenciesMeta) {
     rootManifest.manifest.dependenciesMeta = {};
   }
-  for (const rootComponent of options?.rootComponents ?? []) {
-    const alias = `${rootComponent}__root`;
-    rootManifest.manifest.devDependencies[alias] = `workspace:${rootComponent}@*`;
-    rootManifest.manifest.dependenciesMeta[alias] = { injected: true };
+  const newManifestsByPaths: Record<string, ProjectManifest> = {};
+  const rootComponents: string[] = [];
+  if (options?.rootComponents) {
+    for (const manifest of Object.values(manifestsByPaths)) {
+      const name = manifest.name!.toString(); // eslint-disable-line
+      const id = `${ROOT_COMPS_DIR}/${name}`;
+      rootComponents.push(encodeURIComponent(id));
+      newManifestsByPaths[path.join(rootManifest.rootDir, id)] = {
+        name: id,
+        dependencies: {
+          [name]: `workspace:*`,
+          ...manifest.peerDependencies,
+          ...manifest['defaultPeerDependencies'], // eslint-disable-line
+        },
+        dependenciesMeta: {
+          [name]: { injected: true },
+        },
+      };
+    }
   }
+  manifestsByPaths = {
+    ...newManifestsByPaths,
+    ...manifestsByPaths,
+  };
   const { packagesToBuild, workspacePackages } = groupPkgs({
     ...manifestsByPaths,
     [rootManifest.rootDir]: rootManifest.manifest,
@@ -208,12 +229,12 @@ export async function install(
     rawConfig: authConfig,
     ...options,
   };
-  if (options?.rootComponents?.length) {
+  if (rootComponents.length) {
     opts.hooks = {
-      readPackage: readPackageHook.bind(null, options.rootComponents) as any,
+      readPackage: readPackageHook as any,
     };
     opts.hoistingLimits = new Map();
-    opts.hoistingLimits.set('.@', new Set(options.rootComponents.map((name) => `${name}__root`)));
+    opts.hoistingLimits.set('.@', new Set(rootComponents));
   }
 
   const stopReporting = defaultReporter({
@@ -241,32 +262,24 @@ export async function install(
   }
 }
 
-function readPackageHook(rootComponents: string[], pkg: PackageManifest, workspaceDir?: string): PackageManifest {
-  if (!pkg.dependencies) return pkg;
+function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
+  if (!pkg.dependencies || pkg.name?.startsWith(`${ROOT_COMPS_DIR}/`)) {
+    return pkg;
+  }
   // workspaceDir is set only for workspace packages
   if (workspaceDir) {
     return readWorkspacePackageHook(pkg);
   }
-  return readDependencyPackageHook(rootComponents, pkg);
+  return readDependencyPackageHook(pkg);
 }
 
-function readDependencyPackageHook(rootComponents: string[], pkg: PackageManifest): PackageManifest {
+function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
   const dependenciesMeta = pkg.dependenciesMeta ?? {};
   for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
     if (version.startsWith('workspace:')) {
       // This instructs pnpm to hard link the component from the workspace, not symlink it.
       dependenciesMeta[name] = { injected: true };
     }
-  }
-  if (rootComponents.includes(pkg.name)) {
-    return {
-      ...pkg,
-      dependencies: {
-        ...pkg.peerDependencies,
-        ...pkg.dependencies,
-      },
-      dependenciesMeta,
-    };
   }
   return {
     ...pkg,
@@ -283,10 +296,7 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   }
   return {
     ...pkg,
-    dependencies: {
-      ...pkg.peerDependencies,
-      ...newDeps,
-    },
+    dependencies: newDeps,
   };
 }
 
@@ -306,7 +316,9 @@ async function linkManifestsToInjectedDeps({
   await Promise.all(
     Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
       const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
-      if (pkgName) {
+      if (!pkgName) return
+      const pkgDir = path.join(rootDir, 'node_modules', pkgName)
+      if (fs.existsSync(pkgDir)) {
         const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
         await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
       }

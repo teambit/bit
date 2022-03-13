@@ -16,7 +16,7 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { memoize, omit } from 'lodash';
+import { memoize, omit, fromPairs } from 'lodash';
 import { PkgMain } from '@teambit/pkg';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { read as readModulesState } from '@pnpm/modules-yaml';
@@ -52,6 +52,7 @@ export class PnpmPackageManager implements PackageManager {
       createManifestForComponentsWithoutDependencies: true,
       dedupe: installOptions.dedupe,
       dependencyFilterFn: installOptions.dependencyFilterFn,
+      hasRootComponents: Boolean(installOptions.rootComponents),
     };
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
@@ -180,8 +181,12 @@ export class PnpmPackageManager implements PackageManager {
   ): Record<string, ProjectManifest> {
     return componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
       const packageName = this.pkg.getPackageName(component);
-      if (componentsManifestsFromWorkspace.has(packageName)) {
-        acc[dir] = componentsManifestsFromWorkspace.get(packageName)?.toJson({ copyPeerToRuntime });
+      const manifest = componentsManifestsFromWorkspace.get(packageName);
+      if (manifest) {
+        acc[dir] = manifest.toJson({ copyPeerToRuntime });
+        acc[dir].defaultPeerDependencies = fromPairs(
+          manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
+        );
       }
       return acc;
     }, {});
