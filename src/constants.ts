@@ -74,6 +74,8 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT',
 };
 
+export const REPO_NAME = 'teambit/bit';
+
 export const DEFAULT_INDEX_NAME = 'index';
 
 export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
@@ -161,15 +163,9 @@ export const SYMPHONY_GRAPHQL = `http://${SYMPHONY_URL}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
 
-export const REPO_NAME = 'teambit/bit';
-
 export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
-export const DEFAULT_BIT_ENV = 'production';
-
 export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_WEB_DOMAIN}/`;
-
-export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
 export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
 
@@ -183,7 +179,11 @@ export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
 
 // END URLS
 
+export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
+
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+
+export const DEFAULT_BIT_ENV = 'production';
 
 // Setting this to 99999 to prevent this issue:
 // https://github.com/mscdex/ssh2/issues/142
