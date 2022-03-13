@@ -3,7 +3,7 @@ import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@tea
 import { parse, assign } from 'comment-json';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
-  const scope = defaultScope || 'company.scope';
+  const scope = defaultScope || 'my-org.my-scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = scope;
