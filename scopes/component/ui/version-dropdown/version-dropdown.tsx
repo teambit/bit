@@ -42,7 +42,7 @@ export function VersionDropdown({
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
-  const singleVersion = (snaps || []).concat(tags).length < 2;
+  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
 
   if (singleVersion && !loading) {
     return (

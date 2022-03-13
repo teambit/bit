@@ -19,7 +19,6 @@
   font-weight: bold;
   padding: 0 8px;
 
-  border-bottom: 1px solid #ededed;
   transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
     border-color: var(--bit-bg-heavy, #f6f6f6);
@@ -79,4 +78,10 @@
   &.open {
     max-height: 100%;
   }
+}
+
+.drawerFilters {
+  display: flex;
+  border-bottom: 1px solid #ededed;
+  flex-direction: column;
 }
