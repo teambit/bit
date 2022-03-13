@@ -1,7 +1,7 @@
-import React, { createContext, ReactNode, ComponentType, useState, useContext } from 'react';
+import React, { createContext, ReactNode, useState, useContext } from 'react';
 import { SlotRegistry } from '@teambit/harmony';
 import { ComponentModel } from '@teambit/component';
-import { ComponentFilterContext } from '../component-filters/component-filters.context';
+import { ComponentFilterContext } from '@teambit/component-filters';
 
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
 export type DrawerComponentModel = { model: ComponentModel; isHidden?: boolean };

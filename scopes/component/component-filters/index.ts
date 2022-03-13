@@ -3,8 +3,9 @@ export {
   ComponentFilterCriteria,
   DeprecateFilterCriteria,
   EnvsFilterCriteria,
-  ComponentFilter,
+  ComponentFilters,
   ComponentFiltersProvider,
   ComponentFilterContext,
   ComponentFilterContextType,
+  ComponentFiltersSlot,
 } from './component-filters.context';

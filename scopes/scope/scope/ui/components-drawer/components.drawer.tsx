@@ -14,7 +14,6 @@ import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { Toggle } from '@teambit/design.ui.input.toggle';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import styles from './components-drawer.module.scss';
 

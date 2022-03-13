@@ -4,14 +4,14 @@ import { ComponentModel } from '@teambit/component';
 
 export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 
-export interface ComponentFilterCriteria<State> {
+export type ComponentFilterCriteria<State> = {
   id: string;
   render: ComponentType<{ components: ComponentModel[] }>;
   match: (component: ComponentModel, state: State) => boolean;
   state: State;
   alwaysRunMatch?: boolean;
   order?: number;
-}
+};
 
 export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;
 
@@ -23,10 +23,7 @@ export type ComponentFilterContextType = {
   filters: ComponentFilters;
   updateFilter: (filter: ComponentFilterCriteria<any>) => void;
   setFilters: (filters: ComponentFilters) => void;
-  matches: (
-    filters: ComponentFilters,
-    components: ComponentModel[]
-  ) => { component: ComponentModel; isHidden?: boolean }[];
+  matches: (filters: ComponentFilters, components: ComponentModel[]) => { model: ComponentModel; isHidden?: boolean }[];
 };
 
 export const ComponentFilterContext = createContext<ComponentFilterContextType>({
@@ -40,7 +37,7 @@ export const ComponentFilterContext = createContext<ComponentFilterContextType>(
         isHidden = !filter.match(component, filter.state);
       });
       return {
-        component,
+        model: component,
         isHidden,
       };
     });

@@ -291,6 +291,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
+    "component-drawer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-drawer"
+    },
+    "component-filters": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-filters"
+    },
     "component-id": {
         "scope": "teambit.component",
         "version": "0.0.401",

@@ -9,27 +9,26 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentModel } from '@teambit/component';
 import { TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
+import { Icon } from '@teambit/design.elements.icon';
 
 import flatten from 'lodash.flatten';
-import styles from './components-drawer.module.scss';
-import { DrawerComponentsContext } from './component-drawer.context';
-import {
-  ComponentFilters,
-  ComponentFiltersProvider,
-  ComponentFiltersSlot,
-} from '../component-filters/component-filters.context';
+import { ComponentFiltersProvider, ComponentFiltersSlot } from '@teambit/component-filters';
 import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
   ComponentTreeProvider,
   DrawerComponentsProvider,
   DrawerWidgetSlot,
+  DrawerComponentsContext,
+  ComponentFilterWidgetContext,
 } from './component-drawer.context';
+
+import styles from './component-drawer.module.scss';
 
 export type ComponentsDrawerProps = {
   id: string;
   name: string;
-  getDrawerData: () => { components: ComponentModel[]; loading?: boolean };
+  getDrawerComponents: () => { components: ComponentModel[]; loading?: boolean };
   filtersSlot?: ComponentFiltersSlot;
   drawerWidgetSlot?: DrawerWidgetSlot;
   treeNodeSlot?: ComponentTreeSlot;
@@ -43,13 +42,13 @@ export type ComponentsDrawerProps = {
 export class ComponentsDrawer implements DrawerType {
   readonly id: string;
   readonly name: string;
-  readonly getDrawerData: () => { components: ComponentModel[]; loading?: boolean };
+  readonly getDrawerComponents: () => { components: ComponentModel[]; loading?: boolean };
   readonly tooltip?: string;
   readonly order?: number;
   readonly isHidden?: () => boolean;
   readonly widgets: ReactNode[];
   readonly treeNodeSlot?: ComponentTreeSlot;
-  readonly filters: ComponentFilters;
+  readonly filtersSlot?: ComponentFiltersSlot;
   readonly customTreeNodeRenderer?: TreeNodeRenderer<PayloadType>;
   readonly emptyDrawerMessage?: ReactNode;
 
@@ -60,10 +59,10 @@ export class ComponentsDrawer implements DrawerType {
     this.order = props.order;
     this.isHidden = props.isHidden;
     this.widgets = (props.drawerWidgetSlot && flatten(props.drawerWidgetSlot?.values())) || [];
-    this.getDrawerData = props.getDrawerData;
+    this.getDrawerComponents = props.getDrawerComponents;
     this.treeNodeSlot = props.treeNodeSlot;
     this.emptyDrawerMessage = props.emptyDrawerMessage;
-    this.filters = (props.filtersSlot && flatten(props.filtersSlot.values())) || [];
+    this.filtersSlot = props.filtersSlot;
     this.customTreeNodeRenderer =
       props?.customTreeNodeRenderer &&
       useCallback(props.customTreeNodeRenderer(props.treeNodeSlot), [props.treeNodeSlot]);
@@ -72,15 +71,14 @@ export class ComponentsDrawer implements DrawerType {
   /**
    *
    * Compose Component Drawer Context from
-   *  1. Drawer Widget Context
-   *    1.1 Component Tree Widget Context
-   *    1.2 Component Tree Filter Widget Context
-   *  2. Component Filters Context
-   *  3. Component Drawer Components Context
+   *  1. Component Tree Widget Context
+   *  2. Component Tree Filter Widget Context
+   *  3. Component Filters Context
+   *  4. Drawer Components Context
    */
 
   Context = ({ children }) => {
-    const { components, loading } = this.getDrawerData();
+    const { components, loading } = this.getDrawerComponents();
     const combinedContexts = [
       [DrawerComponentsProvider, { components, loading }] as ComponentTuple<{
         components: ComponentModel[];
@@ -96,7 +94,7 @@ export class ComponentsDrawer implements DrawerType {
   render = () => {
     const { loading, components } = useContext(DrawerComponentsContext);
     const { collapsed } = useContext(ComponentTreeContext);
-    const { customTreeNodeRenderer, emptyDrawerMessage, filters } = this;
+    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot } = this;
 
     if (loading) return <FullLoader />;
 
@@ -105,32 +103,43 @@ export class ComponentsDrawer implements DrawerType {
     if (visibleComponents.length === 0)
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>;
 
+    const filtersWithKey = filtersSlot?.toArray().map(([key, filtersByKey]) => ({ filters: filtersByKey, key })) || [];
+
     return (
       <div>
-        {filters.map((filter) => (
-          <filter.render components={components.map((component) => component.model)} />
-        ))}
+        {filtersWithKey.map(({ filters, key }) => {
+          return (
+            <>
+              {filters.map((filter) => (
+                <filter.render
+                  key={`${key}-${filter.id}`}
+                  components={components.map((component) => component.model)}
+                ></filter.render>
+              ))}
+            </>
+          );
+        })}
         <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
       </div>
     );
   };
 }
 
-// function TreeToggleWidget() {
-//   const { collapsed, setCollapsed } = useContext(ComponentTreeContext);
-//   const icon = collapsed
-//     ? 'https://static.bit.dev/bit-icons/expand.svg'
-//     : 'https://static.bit.dev/bit-icons/collapse.svg';
-//   return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
-// }
+export function TreeToggleWidget() {
+  const { collapsed, setCollapsed } = useContext(ComponentTreeContext);
+  const icon = collapsed
+    ? 'https://static.bit.dev/bit-icons/expand.svg'
+    : 'https://static.bit.dev/bit-icons/collapse.svg';
+  return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
+}
 
-// function FilterWidget() {
-//   const { filterOpen, setFilterOpen } = useContext(ComponentTreeContext);
-//   return (
-//     <Icon
-//       className={classNames(styles.filterWidgetIcon, filterOpen && styles.open)}
-//       of="Ripple_filters"
-//       onClick={() => setFilterOpen(!filterOpen)}
-//     />
-//   );
-// }
+export function FilterWidget() {
+  const { filterWidgetOpen, setFilterWidget } = useContext(ComponentFilterWidgetContext);
+  return (
+    <Icon
+      className={classNames(styles.filterWidgetIcon, filterWidgetOpen && styles.open)}
+      of="Ripple_filters"
+      onClick={() => setFilterWidget(!filterWidgetOpen)}
+    />
+  );
+}
