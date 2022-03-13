@@ -12,7 +12,13 @@ import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 import { Icon } from '@teambit/design.elements.icon';
 
 import flatten from 'lodash.flatten';
-import { ComponentFiltersProvider, ComponentFiltersSlot } from '@teambit/component-filters';
+import {
+  ComponentFilterCriteria,
+  ComponentFilters,
+  ComponentFiltersProvider,
+  ComponentFiltersSlot,
+  ComponentFilterContext,
+} from '@teambit/component-filters';
 import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
@@ -79,6 +85,7 @@ export class ComponentsDrawer implements DrawerType {
 
   Context = ({ children }) => {
     const { components, loading } = this.getDrawerComponents();
+    const filters = flatten(this.filtersSlot?.values() || []);
     const combinedContexts = [
       [DrawerComponentsProvider, { components, loading }] as ComponentTuple<{
         components: ComponentModel[];
@@ -86,39 +93,43 @@ export class ComponentsDrawer implements DrawerType {
       }>,
       ComponentTreeProvider,
       ComponentFilterWidgetProvider,
-      ComponentFiltersProvider,
+      [ComponentFiltersProvider, { filters }] as ComponentTuple<{ filters: ComponentFilters }>,
     ];
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
   render = () => {
-    const { loading, components } = useContext(DrawerComponentsContext);
+    const drawerComponentContext = useContext(DrawerComponentsContext);
+    let { components } = drawerComponentContext;
+    const { loading } = drawerComponentContext;
     const { collapsed } = useContext(ComponentTreeContext);
+    const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
+    const { filters, matches } = useContext(ComponentFilterContext);
     const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot } = this;
 
     if (loading) return <FullLoader />;
 
+    const componentModels = components.map((component) => component.model);
+    components = matches(filters, componentModels);
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
     if (visibleComponents.length === 0)
       return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>;
 
-    const filtersWithKey = filtersSlot?.toArray().map(([key, filtersByKey]) => ({ filters: filtersByKey, key })) || [];
+    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] =
+      (filterWidgetOpen &&
+        flatten(
+          filtersSlot?.toArray().map(([key, filtersByKey]) => {
+            return filtersByKey.map((filter) => ({ ...filter, key }));
+          })
+        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
+      [];
 
     return (
       <div>
-        {filtersWithKey.map(({ filters, key }) => {
-          return (
-            <>
-              {filters.map((filter) => (
-                <filter.render
-                  key={`${key}-${filter.id}`}
-                  components={components.map((component) => component.model)}
-                ></filter.render>
-              ))}
-            </>
-          );
-        })}
+        {filtersWithKey.map((filter) => (
+          <>{<filter.render key={`${filter.key}-${filter.id}`} components={componentModels} />}</>
+        ))}
         <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
       </div>
     );

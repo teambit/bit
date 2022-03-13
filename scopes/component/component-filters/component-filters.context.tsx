@@ -44,16 +44,22 @@ export const ComponentFilterContext = createContext<ComponentFilterContextType>(
   },
 });
 
-export const ComponentFiltersProvider = ({ children }: { children: ReactNode }) => {
+export const ComponentFiltersProvider = ({
+  children,
+  filters,
+}: {
+  children: ReactNode;
+  filters?: ComponentFilters;
+}) => {
   const { filters: defaultValue, matches } = useContext(ComponentFilterContext);
-  const [filters, setFilters] = useState<ComponentFilters>(defaultValue);
+  const [filtersState, setFilters] = useState<ComponentFilters>(filters || defaultValue);
   return (
     <ComponentFilterContext.Provider
       value={{
-        filters,
+        filters: filtersState,
         setFilters,
         updateFilter: (updatedFilter) => {
-          setFilters(filters.map((filter) => (filter.id === updatedFilter.id ? updatedFilter : filter)));
+          setFilters(filtersState.map((filter) => (filter.id === updatedFilter.id ? updatedFilter : filter)));
         },
         matches,
       }}

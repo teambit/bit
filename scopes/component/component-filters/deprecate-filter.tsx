@@ -16,6 +16,7 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
 
 function deprecateFilter() {
   const { filters, updateFilter } = useContext(ComponentFilterContext);
+
   const currentFilter = filters.find((activeFilter) => activeFilter.id === DeprecateFilter.id) as
     | DeprecateFilterCriteria
     | undefined;
