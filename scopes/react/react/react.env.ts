@@ -244,21 +244,49 @@ export class ReactEnv
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    // const fileMapPath = this.writeFileMap(context.components);
-    const peers = this.getAllHostDeps();
+    return this.createComponentsWebpackBundler(context, transformers);
+  }
 
+  async createComponentsWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDeps();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
-    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
 
-    return this.webpack.createBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+  async createTemplateWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDeps();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      return merged;
+    };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
+
+  private async createWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    return this.webpack.createBundler(context, transformers);
   }
 
   /**
