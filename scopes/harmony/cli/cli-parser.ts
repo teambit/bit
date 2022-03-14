@@ -13,7 +13,12 @@ import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIParser {
-  constructor(private commands: Command[], private groups: GroupsType, public parser = yargs) {}
+  constructor(
+    private commands: Command[],
+    private groups: GroupsType,
+    public parser = yargs,
+    private docsDomain: string
+  ) {}
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);
@@ -99,7 +104,7 @@ export class CLIParser {
   }
 
   private printHelp() {
-    const help = formatHelp(this.commands, this.groups);
+    const help = formatHelp(this.commands, this.groups, this.docsDomain);
     // eslint-disable-next-line no-console
     console.log(help);
   }
