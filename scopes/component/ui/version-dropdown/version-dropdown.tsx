@@ -110,7 +110,12 @@ function VersionMenu({
   currentLane,
   ...rest
 }: VersionMenuProps) {
-  const [activeTabIndex, setActiveTab] = useState<number>(0);
+  const getActiveTabIndex = () => {
+    if (currentLane) return VERSION_TAB_NAMES.indexOf('LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion)) return VERSION_TAB_NAMES.indexOf('SNAP');
+    return VERSION_TAB_NAMES.indexOf('TAG');
+  };
+  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
 
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {

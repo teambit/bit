@@ -39,4 +39,9 @@ export type DrawerType = {
    * used to filter the drawers before rendering
    */
   isHidden?: () => boolean;
+
+  /**
+   * filters for the drawer
+   */
+  Filters?: ReactNode[];
 };

@@ -54,6 +54,7 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
             name={drawer.name}
             Widgets={drawer.widgets}
             Context={drawer.Context}
+            Filters={drawer.Filters}
           >
             <drawer.render />
           </DrawerUI>
