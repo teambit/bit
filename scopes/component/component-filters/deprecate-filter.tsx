@@ -14,7 +14,7 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
   render: deprecateFilter,
 };
 
-function deprecateFilter() {
+function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const { filters, updateFilter } = useContext(ComponentFilterContext);
 
   const currentFilter = filters.find((activeFilter) => activeFilter.id === DeprecateFilter.id) as
@@ -26,7 +26,7 @@ function deprecateFilter() {
   const isActive = currentFilter.state;
 
   return (
-    <div className={classNames(styles.deprecateFilter, isActive && styles.active)}>
+    <div className={classNames(styles.deprecateFilter, isActive && styles.active, className)}>
       <div className={styles.filterIcon}>
         <img src="https://static.bit.dev/bit-icons/deprecated.svg" />
         <span className={styles.filterIconLabel}>Deprecated</span>

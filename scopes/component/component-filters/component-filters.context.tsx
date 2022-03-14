@@ -6,7 +6,7 @@ export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 
 export type ComponentFilterCriteria<State> = {
   id: string;
-  render: ComponentType<{ components: ComponentModel[] }>;
+  render: ComponentType<{ components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>>;
   match: (component: ComponentModel, state: State) => boolean;
   state: State;
   order?: number;

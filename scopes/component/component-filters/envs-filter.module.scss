@@ -1,2 +1,13 @@
 .envsFilterContainer {
+  display: flex;
+  flex-direction: row;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 8px;
+  margin: 4px 8px;
+
+  > div {
+    line-height: 16px;
+    display: flex;
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
+import classNames from 'classnames';
 import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -21,7 +22,10 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-function envsFilter({ components }: { components: ComponentModel[] }) {
+function envsFilter({
+  components,
+  className,
+}: { components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>) {
   const { filters, updateFilter } = useContext(ComponentFilterContext);
   const currentFilter = filters.find((activeFilter) => activeFilter.id === EnvsFilter.id) as
     | EnvsFilterCriteria
@@ -65,7 +69,7 @@ function envsFilter({ components }: { components: ComponentModel[] }) {
   };
 
   return (
-    <div className={styles.envsFilterContainer}>
+    <div className={classNames(styles.envsFilterContainer, className)}>
       <MultiSelect
         itemsList={selectList}
         placeholderText={'Environments'}

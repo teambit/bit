@@ -127,7 +127,15 @@ export class ComponentsDrawer implements DrawerType {
     return (
       <>
         {filtersWithKey.map((filter) => (
-          <>{<filter.render key={`${filter.key}-${filter.id}`} components={componentModels} />}</>
+          <>
+            {
+              <filter.render
+                key={`${filter.key}-${filter.id}`}
+                components={componentModels}
+                className={styles.filter}
+              />
+            }
+          </>
         ))}
         <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
       </>
