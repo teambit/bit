@@ -115,7 +115,7 @@ export class WorkspaceUI {
   /**
    * workspace drawer instance
    */
-  getWorkspaceDrawer = () => {
+  getDrawer = () => {
     return new ComponentsDrawer({
       order: 0,
       id: 'workspace-components-drawer',
@@ -137,7 +137,7 @@ export class WorkspaceUI {
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
     // this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
-    const workspaceDrawer = this.getWorkspaceDrawer();
+    const workspaceDrawer = this.getDrawer();
     this.registerDrawers(workspaceDrawer);
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({

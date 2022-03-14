@@ -7,7 +7,7 @@ import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
-import React, { ComponentType, ReactNode } from 'react';
+import React, { ComponentType, ReactNode, useContext } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
@@ -15,10 +15,14 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { ComponentsDrawer, DrawerWidgetSlot, FilterWidget, TreeToggleWidget } from '@teambit/component-drawer';
+import { ComponentFilters, ComponentFiltersSlot, DeprecateFilter, EnvsFilter } from '@teambit/component-filters';
+import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
+import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
+import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
-import { ComponentsDrawer } from './ui/components-drawer';
 
 export type ScopeBadge = ComponentType;
 
@@ -93,7 +97,9 @@ export class ScopeUI {
     /**
      * add a new context to ui
      */
-    private contextSlot: ContextSlot
+    private contextSlot: ContextSlot,
+    private drawerWidgetSlot: DrawerWidgetSlot,
+    private drawerComponentsFiltersSlot: ComponentFiltersSlot
   ) {}
 
   private setSidebarToggle: (updated: CommandHandler) => void = () => {};
@@ -219,9 +225,64 @@ export class ScopeUI {
     return this;
   };
 
+  /**
+   * register component filters
+   */
+  registerDrawerComponentFilters = (filters: ComponentFilters) => {
+    this.drawerComponentsFiltersSlot.register(filters);
+  };
+
+  registerDrawerWidgets = (widgets: ReactNode[]) => {
+    this.drawerWidgetSlot.register(widgets);
+  };
+
+  /**
+   * scope drawer instance
+   */
+  getDrawer = () => {
+    const customScopeTreeNodeRenderer = (treeNodeSlot) =>
+      function TreeNode(props: TreeNodeProps<PayloadType>) {
+        const children = props.node.children;
+
+        if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+
+        // skip over scope node and render only children
+        if (props.node.payload instanceof ScopePayload) {
+          return (
+            <>
+              {children.map((childNode) => (
+                <TreeNode key={childNode.id} {...props} node={childNode}></TreeNode>
+              ))}
+            </>
+          );
+        }
+
+        return <NamespaceTreeNode {...props} />;
+      };
+
+    return new ComponentsDrawer({
+      order: 0,
+      id: 'scope-components-drawer',
+      name: 'COMPONENTS',
+      drawerWidgetSlot: this.drawerWidgetSlot,
+      filtersSlot: this.drawerComponentsFiltersSlot,
+      treeNodeSlot: this.sidebarSlot,
+      emptyDrawerMessage: 'Scope is empty',
+      getDrawerComponents: () => {
+        const scope = useContext(ScopeContext);
+        return {
+          loading: !scope,
+          components: scope.components || [],
+        };
+      },
+      customTreeNodeRenderer: customScopeTreeNodeRenderer,
+    });
+  };
+
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
-    this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
+    const scopeDrawer = this.getDrawer();
+    this.sidebar.registerDrawer(scopeDrawer);
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
@@ -286,6 +347,8 @@ export class ScopeUI {
     Slot.withType<OverviewLineSlot>(),
     Slot.withType<SidebarItemSlot>(),
     Slot.withType<ContextSlot>(),
+    Slot.withType<DrawerWidgetSlot>(),
+    Slot.withType<ComponentFiltersSlot>(),
   ];
 
   static async provider(
@@ -308,6 +371,8 @@ export class ScopeUI {
       cornerSlot,
       overviewSlot,
       contextSlot,
+      drawerWidgetSlot,
+      componentFiltersSlot,
     ]: [
       RouteSlot,
       RouteSlot,
@@ -318,7 +383,9 @@ export class ScopeUI {
       SidebarItemSlot,
       CornerSlot,
       OverviewLineSlot,
-      ContextSlot
+      ContextSlot,
+      DrawerWidgetSlot,
+      ComponentFiltersSlot
     ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
@@ -336,8 +403,15 @@ export class ScopeUI {
       menuItemSlot,
       cornerSlot,
       overviewSlot,
-      contextSlot
+      contextSlot,
+      drawerWidgetSlot,
+      componentFiltersSlot
     );
+    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    scopeUi.registerDrawerWidgets([
+      <FilterWidget key={'workspace-filter-widget'} />,
+      <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
+    ]);
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);

@@ -54,7 +54,7 @@ export class ComponentsDrawer implements DrawerType {
   readonly widgets: ReactNode[];
   readonly treeNodeSlot?: ComponentTreeSlot;
   readonly filtersSlot?: ComponentFiltersSlot;
-  readonly customTreeNodeRenderer?: TreeNodeRenderer<PayloadType>;
+  readonly customTreeNodeRenderer?: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
   readonly emptyDrawerMessage?: ReactNode;
 
   constructor(props: ComponentsDrawerProps) {
@@ -68,9 +68,7 @@ export class ComponentsDrawer implements DrawerType {
     this.treeNodeSlot = props.treeNodeSlot;
     this.emptyDrawerMessage = props.emptyDrawerMessage;
     this.filtersSlot = props.filtersSlot;
-    this.customTreeNodeRenderer =
-      props?.customTreeNodeRenderer &&
-      useCallback(props.customTreeNodeRenderer(props.treeNodeSlot), [props.treeNodeSlot]);
+    this.customTreeNodeRenderer = props?.customTreeNodeRenderer;
   }
 
   /**
@@ -104,7 +102,7 @@ export class ComponentsDrawer implements DrawerType {
     const { collapsed } = useContext(ComponentTreeContext);
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const { filters, matches } = useContext(ComponentFilterContext);
-    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot, id } = this;
+    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot, id, treeNodeSlot } = this;
 
     if (loading) return <FullLoader />;
 
@@ -134,12 +132,12 @@ export class ComponentsDrawer implements DrawerType {
       <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>
     );
 
+    const TreeNode = customTreeNodeRenderer && useCallback(customTreeNodeRenderer(treeNodeSlot), [treeNodeSlot]);
+
     return (
       <div key={id} className={styles.drawerContainer}>
         {filtersToRender}
-        {isVisible && (
-          <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
-        )}
+        {isVisible && <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={TreeNode} />}
         {isVisible || emptyDrawer}
       </div>
     );
