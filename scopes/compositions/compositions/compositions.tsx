@@ -21,7 +21,6 @@ import { AlertCard } from '@teambit/design.ui.alert-card';
 import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -165,12 +164,13 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
       ></StatusMessageCard>
     );
 
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   if (component.compositions.length === 0) {
     return (
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link={`https://${BASE_DOCS_DOMAIN}/dev-services-overview/compositions/compositions-overview`}
+        link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
       />
     );
   }

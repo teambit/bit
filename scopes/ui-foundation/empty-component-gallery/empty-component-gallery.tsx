@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import { ExternalLink } from '@teambit/design.ui.external-link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import styles from './empty-component-gallery.module.scss';
 
 export type EmptyComponentGalleryProps = {
@@ -14,6 +13,7 @@ export type EmptyComponentGalleryProps = {
  * page to be shown when workspace/scope has no components
  */
 export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryProps) {
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   return (
     <div className={styles.emptyComponentGallery}>
       <div className={styles.title}>
@@ -25,7 +25,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       <div className={styles.title}>
         <span>New to Harmony?</span> &nbsp;
         <ExternalLink
-          href={`https://${BASE_DOCS_DOMAIN}/getting-started/installing-bit/installing-bit`}
+          href={`https://bit.dev/docs/getting-started/installing-bit/installing-bit`}
           className={styles.purpleLink}
         >
           <span className={styles.text}>Start tutorial</span>

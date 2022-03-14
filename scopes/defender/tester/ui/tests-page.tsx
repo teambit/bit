@@ -9,7 +9,6 @@ import { TestLoader } from '@teambit/defender.ui.test-loader';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { EmptyStateSlot } from '../tester.ui.runtime';
 import styles from './tests-page.module.scss';
 
@@ -109,12 +108,13 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     );
   }
 
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link={`https://${BASE_DOCS_DOMAIN}/dev-services-overview/tester/tester-overview`}
+        link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
       />
     );
   }
