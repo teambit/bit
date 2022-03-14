@@ -8,7 +8,6 @@ import {
   ScopePayload,
 } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -121,17 +120,19 @@ function TreeToggleWidget() {
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
-  return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
+  return (
+    <div className={styles.widgetIcon}>
+      <img src={icon} onClick={() => setCollapsed(!collapsed)} />
+    </div>
+  );
 }
 
 function FilterWidget() {
   const { filterOpen, setFilterOpen } = useContext(ScopeTreeContext);
   return (
-    <Icon
-      className={classNames(styles.filterWidgetIcon, filterOpen && styles.open)}
-      of="Ripple_filters"
-      onClick={() => setFilterOpen(!filterOpen)}
-    />
+    <div className={classNames(styles.widgetIcon, styles.filterWidgetIcon, filterOpen && styles.open)}>
+      <img src="https://static.bit.dev/bit-icons/filter.svg" onClick={() => setFilterOpen(!filterOpen)} />
+    </div>
   );
 }
 
@@ -144,7 +145,7 @@ function DeprecateFilter() {
   return (
     <div className={classNames(styles.deprecateFilter, isActive && styles.active)}>
       <div className={styles.filterIcon}>
-        <Icon of="note-deprecated" />
+        <img src="https://static.bit.dev/bit-icons/deprecated.svg" />
         <span className={styles.filterIconLabel}>Deprecated</span>
       </div>
       <div>
