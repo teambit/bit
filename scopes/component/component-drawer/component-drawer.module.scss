@@ -24,6 +24,17 @@
   margin-right: 8px;
 }
 
+.filtersContainer {
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
+  max-height: 0;
+
+  &.open {
+    opacity: 1;
+    max-height: 100%;
+  }
+}
+
 .filter {
   display: flex;
   flex-direction: row;

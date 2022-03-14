@@ -114,18 +114,19 @@ export class ComponentsDrawer implements DrawerType {
 
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
-    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] =
-      (filterWidgetOpen &&
-        flatten(
-          filtersSlot?.toArray().map(([key, filtersByKey]) => {
-            return filtersByKey.map((filter) => ({ ...filter, key }));
-          })
-        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
-      [];
+    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = flatten(
+      filtersSlot?.toArray().map(([key, filtersByKey]) => {
+        return filtersByKey.map((filter) => ({ ...filter, key }));
+      })
+    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     const filtersToRender = filtersWithKey.map((filter) => {
       return (
-        <filter.render key={`${filter.key}-${filter.id}`} components={allComponentModels} className={styles.filter} />
+        <filter.render
+          key={`${filter.key}-${filter.id}`}
+          components={allComponentModels}
+          className={classNames(styles.filter)}
+        />
       );
     });
 
@@ -139,7 +140,7 @@ export class ComponentsDrawer implements DrawerType {
 
     return (
       <div key={id} className={styles.drawerContainer}>
-        {filtersToRender}
+        <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>{filtersToRender}</div>
         {isVisible && <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={TreeNode} />}
         {isVisible || emptyDrawer}
       </div>
