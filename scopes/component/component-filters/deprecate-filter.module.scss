@@ -6,13 +6,19 @@
   padding: 8px;
   margin: 4px 8px;
 
-  .filterIcon {
+  > div {
     line-height: 16px;
     display: flex;
+  }
+
+  .filterIcon {
+    img {
+      width: 16px;
+    }
 
     .filterIconLabel {
       margin: 0px 8px;
-      font-size: 12px;
+      font-size: 14px;
     }
   }
 }

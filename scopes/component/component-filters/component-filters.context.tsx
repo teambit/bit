@@ -12,10 +12,6 @@ export type ComponentFilterCriteria<State> = {
   order?: number;
 };
 
-export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;
-
-export type EnvsFilterCriteria = ComponentFilterCriteria<Map<string, boolean>>;
-
 export type ComponentFilters = ComponentFilterCriteria<any>[];
 
 export type ComponentFilterContextType = {
@@ -31,13 +27,13 @@ export const ComponentFilterContext = createContext<ComponentFilterContextType>(
   updateFilter: () => {},
   matches: (filters, components) => {
     return components.map((component) => {
-      let isHidden = false;
+      let isVisible = true;
       filters.forEach((filter) => {
-        isHidden = !filter.match(component, filter.state);
+        isVisible = filter.match(component, filter.state) && isVisible;
       });
       return {
         model: component,
-        isHidden,
+        isHidden: !isVisible,
       };
     });
   },

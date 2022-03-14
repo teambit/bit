@@ -7,6 +7,7 @@ import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
+import styles from './component-tree.module.scss';
 
 const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
@@ -41,7 +42,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
 
   return (
     <TreeContextProvider>
-      <div style={indentStyle(1)}>
+      <div style={indentStyle(1)} className={styles.treeContainer}>
         <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
       </div>
     </TreeContextProvider>

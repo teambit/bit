@@ -20,7 +20,6 @@ export function DrawerUI({
   isOpen,
   onToggle,
   Widgets,
-  Filters = [],
   Context = Noop,
   ...rest
 }: DrawerProps) {
@@ -37,7 +36,6 @@ export function DrawerUI({
           </div>
           {Widgets}
         </div>
-        {Filters && <div className={classNames(styles.drawerFilters)}>{Filters.map((Filter) => Filter)}</div>}
         <div className={classNames(styles.drawerContent, isOpen && styles.open)}>{children}</div>
       </Context>
     </div>

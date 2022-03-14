@@ -9,7 +9,6 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentModel } from '@teambit/component';
 import { TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
-import { Icon } from '@teambit/design.elements.icon';
 
 import flatten from 'lodash.flatten';
 import {
@@ -126,12 +125,12 @@ export class ComponentsDrawer implements DrawerType {
       [];
 
     return (
-      <div>
+      <>
         {filtersWithKey.map((filter) => (
           <>{<filter.render key={`${filter.key}-${filter.id}`} components={componentModels} />}</>
         ))}
         <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
-      </div>
+      </>
     );
   };
 }
@@ -141,16 +140,18 @@ export function TreeToggleWidget() {
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
-  return <img src={icon} className={styles.collapseIcon} onClick={() => setCollapsed(!collapsed)} />;
+  return (
+    <div className={styles.widgetIcon}>
+      <img src={icon} onClick={() => setCollapsed(!collapsed)} />
+    </div>
+  );
 }
 
 export function FilterWidget() {
   const { filterWidgetOpen, setFilterWidget } = useContext(ComponentFilterWidgetContext);
   return (
-    <Icon
-      className={classNames(styles.filterWidgetIcon, filterWidgetOpen && styles.open)}
-      of="Ripple_filters"
-      onClick={() => setFilterWidget(!filterWidgetOpen)}
-    />
+    <div className={classNames(styles.widgetIcon, styles.filterWidget)}>
+      <img src="https://static.bit.dev/bit-icons/filter.svg" onClick={() => setFilterWidget(!filterWidgetOpen)} />
+    </div>
   );
 }

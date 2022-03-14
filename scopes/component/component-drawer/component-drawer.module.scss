@@ -1,13 +1,21 @@
-.filterWidgetIcon {
-  margin-right: 12px;
+.widgetIcon {
   padding: 4px;
-
-  &:hover {
-    background: white;
-  }
-
+  border-radius: 8px;
+  align-items: center;
+  display: flex;
+  &:hover,
   &.open {
-    color: var(--bit-accent-color, #6c5ce7);
-    background-color: var(--bit-bg-heavy, #f6f6f6);
+    background-color: var(--bit-border-color-lightest, #ededed);
   }
+  img {
+    width: 16px;
+  }
+  &:active img,
+  &.open img {
+    filter: invert(38%) sepia(33%) saturate(7140%) hue-rotate(234deg) brightness(96%) contrast(87%);
+  }
+}
+
+.filterWidgetIcon {
+  margin-right: 8px;
 }

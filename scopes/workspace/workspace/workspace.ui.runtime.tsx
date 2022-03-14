@@ -14,7 +14,7 @@ import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } fro
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 // import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
-import { ComponentFiltersSlot, ComponentFilters, DeprecateFilter } from '@teambit/component-filters';
+import { ComponentFiltersSlot, ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component-filters';
 import { DrawerWidgetSlot, ComponentsDrawer, FilterWidget, TreeToggleWidget } from '@teambit/component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
@@ -241,7 +241,7 @@ export class WorkspaceUI {
       reactRouterUI
     );
 
-    workspaceUI.registerDrawerComponentFilters([DeprecateFilter]);
+    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
     workspaceUI.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,

@@ -1,11 +1,11 @@
-export { DeprecateFilter } from './deprecate-filter';
+export { DeprecateFilter, DeprecateFilterCriteria } from './deprecate-filter';
 export {
   ComponentFilterCriteria,
-  DeprecateFilterCriteria,
-  EnvsFilterCriteria,
   ComponentFilters,
   ComponentFiltersProvider,
   ComponentFilterContext,
   ComponentFilterContextType,
   ComponentFiltersSlot,
 } from './component-filters.context';
+
+export { EnvsFilterCriteria, EnvsFilter } from './envs-filter';

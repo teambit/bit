@@ -1,41 +1,78 @@
-// import classNames from 'classnames';
-// import React, { useContext } from 'react';
-// import { Icon } from '@teambit/evangelist.elements.icon';
-// import { Toggle } from '@teambit/design.ui.input.toggle';
-// import { ComponentFilterContext, EnvFilterCriteria } from './component-filters.context';
-// import styles from './deprecate-filter.module.scss';
+import React, { useContext } from 'react';
+import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
+import { ComponentModel } from '@teambit/component';
+import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
+import styles from './envs-filter.module.scss';
 
-// export const EnvFilter: EnvFilterCriteria = {
-//   id: 'deprecate',
-//   match: (component, _this) => {
+export type EnvFilterState = { active: boolean; icon?: string; env: string };
+export type EnvsFilterCriteria = ComponentFilterCriteria<Map<string, EnvFilterState>>;
 
-//   },
-//   state: false,
-//   alwaysRunMatch: true,
-//   order: 0,
-//   render: () => {
-//     const { filters, updateFilter } = useContext(ComponentFilterContext);
-//     const currentFilter = filters.find((activeFilter) => activeFilter.id === DeprecateFilter.id) as
-//       | EnvFilterCriteria
-//       | undefined;
+export const EnvsFilter: EnvsFilterCriteria = {
+  id: 'envs',
+  match: (component, state) => {
+    const activeEnvs = [...state.values()].filter((envState) => envState.active).map((envState) => envState.env);
+    // match everything when no envs are set
+    if (activeEnvs.length === 0) return true;
+    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(component.environment?.id) >= 0);
+    return matches;
+  },
+  state: new Map<string, EnvFilterState>(),
+  order: 1,
+  render: envsFilter,
+};
 
-//     if (!currentFilter) return null;
+function envsFilter({ components }: { components: ComponentModel[] }) {
+  const { filters, updateFilter } = useContext(ComponentFilterContext);
+  const currentFilter = filters.find((activeFilter) => activeFilter.id === EnvsFilter.id) as
+    | EnvsFilterCriteria
+    | undefined;
 
-//     const isActive = currentFilter.state;
+  if (!currentFilter) return null;
 
-//     return (
-//       <div className={classNames(styles.deprecateFilter, isActive && styles.active)}>
-//         <div className={styles.filterIcon}>
-//           <Icon of="note-deprecated" />
-//           <span className={styles.filterIconLabel}>Deprecated</span>
-//         </div>
-//         <div>
-//           <Toggle
-//             checked={isActive}
-//             onInputChanged={() => updateFilter({ ...currentFilter, state: !currentFilter.state })}
-//           />
-//         </div>
-//       </div>
-//     );
-//   },
-// };
+  const componentEnvSet = new Set<string>();
+  const componentsEnvsWithIcons = components
+    .filter((component) => {
+      if (!component.environment?.id) return false;
+
+      if (componentEnvSet.has(component.environment.id)) return false;
+      componentEnvSet.add(component.environment.id);
+      return true;
+    })
+    .map((component) => ({ env: component.environment?.id as string, icon: component.environment?.icon }));
+
+  const selectList = componentsEnvsWithIcons.map((filter) => ({
+    value: filter.env,
+    icon: filter.icon,
+    checked: Boolean(currentFilter.state.get(filter.env)?.active),
+  }));
+
+  const onCheck = (env: string, checked: boolean) => {
+    const currentState = currentFilter.state.get(env) || {
+      env,
+      icon: componentsEnvsWithIcons.find((c) => c.env === env)?.icon,
+      active: checked,
+    };
+
+    currentFilter.state.set(env, { ...currentState, active: checked });
+    updateFilter(currentFilter);
+  };
+
+  const onClear = () => {
+    currentFilter.state.forEach((value, key) => {
+      currentFilter.state.set(key, { ...value, active: false });
+    });
+    updateFilter(currentFilter);
+  };
+
+  return (
+    <div className={styles.envsFilterContainer}>
+      <MultiSelect
+        itemsList={selectList}
+        placeholderText={'Environments'}
+        onSubmit={() => {}}
+        onCheck={onCheck}
+        onClear={onClear}
+      />
+    </div>
+  );
+}

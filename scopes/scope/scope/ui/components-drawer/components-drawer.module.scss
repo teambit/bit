@@ -7,6 +7,25 @@
   width: 16px;
 }
 
+.deprecateFilter {
+  display: flex;
+  flex-direction: row;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 8px;
+  margin: 4px 8px;
+
+  .filterIcon {
+    line-height: 16px;
+    display: flex;
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 12px;
+    }
+  }
+}
+
 .filterWidgetIcon {
   margin-right: 12px;
   padding: 4px;
