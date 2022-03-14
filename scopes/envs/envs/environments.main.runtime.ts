@@ -425,7 +425,7 @@ export class EnvsMain {
     return envsAspect?.config.env;
   }
 
-  private getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
+  getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
     const envDef =
       this.getEnvDefinitionByStringId(id.toString()) ||
       this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
@@ -443,6 +443,14 @@ export class EnvsMain {
   getEnvFromComponent(envComponent: Component) {
     const env = this.getEnvDefinitionById(envComponent.id);
     return env;
+  }
+
+  /**
+   * Return the env definition of teambit.envs/env
+   */
+  getEnvsEnvDefinition(): EnvDefinition {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.getEnvDefinitionByStringId('teambit.envs/env')!;
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {
