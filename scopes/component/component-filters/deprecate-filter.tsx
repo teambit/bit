@@ -9,7 +9,6 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
   id: 'deprecate',
   match: (component, state) => state || !component.deprecation?.isDeprecate,
   state: false,
-  alwaysRunMatch: true,
   order: 0,
   render: deprecateFilter,
 };
