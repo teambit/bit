@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import { build, buildAll } from '../../../api/consumer';
-import { BASE_LEGACY_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN } from '../../../constants';
 import { empty } from '../../../utils';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
