@@ -4,7 +4,6 @@ import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge-cmd';
@@ -331,8 +330,7 @@ export class LaneRemoveCmd implements Command {
 export class LaneCmd implements Command {
   name = 'lane [name]';
   shortDescription = 'show lanes details';
-  description = `show lanes details
-https://${BASE_DOCS_DOMAIN}/components/lanes`;
+  description: string;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -348,7 +346,10 @@ https://${BASE_DOCS_DOMAIN}/components/lanes`;
   skipWorkspace = true;
   commands: Command[] = [];
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain, docsDomain: string) {
+    this.description = `show lanes details
+https://${docsDomain}/components/lanes`;
+  }
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);

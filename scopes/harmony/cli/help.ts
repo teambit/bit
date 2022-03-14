@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import { capitalize } from 'lodash';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { CommandList } from './cli.main.runtime';
 import { getCommandId } from './get-command-id';
@@ -20,11 +19,11 @@ type GroupContent = {
   description: string;
 };
 
-export function formatHelp(commands: CommandList, groups: GroupsType) {
+export function formatHelp(commands: CommandList, groups: GroupsType, docsDomain: string) {
   const helpProps = groupCommands(commands, groups);
   const commandsStr = formatCommandsHelp(helpProps);
 
-  return `${getHeader()}
+  return `${getHeader(docsDomain)}
 
 ${commandsStr}
 
@@ -70,10 +69,10 @@ function commandTemplate(name: string, description: string): string {
   return res;
 }
 
-function getHeader(): string {
+function getHeader(docsDomain: string): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow(`bit documentation: https://${BASE_DOCS_DOMAIN}`)}`;
+${chalk.yellow(`bit documentation: https://${docsDomain}`)}`;
 }
 
 function getFooter(): string {

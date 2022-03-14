@@ -2,20 +2,14 @@ import { Command, CommandOptions } from '@teambit/cli';
 
 import { exportAction } from '@teambit/legacy/dist/api/consumer';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 
 export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
-
-  description = `export components to a remote scope.
-bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
-\`bit export [id...]\` => export the given ids to their current scope
-
-https://${BASE_DOCS_DOMAIN}/components/exporting-components
-${WILDCARD_HELP('export remote-scope')}`;
+  description: string;
   alias = 'e';
   options = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
@@ -58,6 +52,15 @@ ${WILDCARD_HELP('export remote-scope')}`;
   group = 'collaborate';
   shortDescription = 'Export components to a remote scope';
   remoteOp = true;
+
+  constructor(private docsDomain: string) {
+    this.description = `export components to a remote scope.
+bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+\`bit export [id...]\` => export the given ids to their current scope
+
+https://${docsDomain}/components/exporting-components
+${WILDCARD_HELP('export remote-scope')}`;
+  }
 
   async report(
     [remote, ids = []]: [string, string[]],

@@ -1,6 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { GeneratorMain } from './generator.main.runtime';
 
 export type CreateOptions = {
@@ -26,7 +25,7 @@ export class CreateCmd implements Command {
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
   ] as CommandOptions;
 
-  constructor(private generator: GeneratorMain) {}
+  constructor(private generator: GeneratorMain, private docsDomain: string) {}
 
   async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
@@ -40,7 +39,7 @@ export class CreateCmd implements Command {
 `;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://${BASE_DOCS_DOMAIN}/envs/using-envs`;
+    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://${this.docsDomain}/envs/using-envs`;
 
     return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }

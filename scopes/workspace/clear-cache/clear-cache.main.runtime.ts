@@ -3,6 +3,8 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { clearCache } from '@teambit/legacy/dist/api/consumer';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { CommunityAspect, CommunityMain } from '@teambit/community';
+
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import ClearCacheCmd from './clear-cache-cmd';
 import { ClearCacheAspect } from './clear-cache.aspect';
@@ -22,11 +24,11 @@ export class ClearCacheMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, ScopeAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, ScopeAspect, CommunityAspect];
   static runtime = MainRuntime;
-  static async provider([workspace, cli, scope]: [Workspace, CLIMain, ScopeMain]) {
+  static async provider([workspace, cli, scope, community]: [Workspace, CLIMain, ScopeMain, CommunityMain]) {
     const clearCacheMain = new ClearCacheMain(workspace);
-    cli.register(new ClearCacheCmd(clearCacheMain));
+    cli.register(new ClearCacheCmd(clearCacheMain, community.getDocsDomain()));
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     return clearCacheMain;

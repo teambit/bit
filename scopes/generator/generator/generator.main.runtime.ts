@@ -3,6 +3,8 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { CommunityAspect, CommunityMain } from '@teambit/community';
+
 import { Component } from '@teambit/component';
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -272,18 +274,20 @@ export class GeneratorMain {
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
+    CommunityAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community]: [
       Workspace,
       CLIMain,
       GraphqlMain,
       EnvsMain,
       AspectLoaderMain,
-      NewComponentHelperMain
+      NewComponentHelperMain,
+      CommunityMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -297,7 +301,11 @@ export class GeneratorMain {
       aspectLoader,
       newComponentHelper
     );
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
+    const commands = [
+      new CreateCmd(generator, community.getDocsDomain()),
+      new TemplatesCmd(generator),
+      new NewCmd(generator),
+    ];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);

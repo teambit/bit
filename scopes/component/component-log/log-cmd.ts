@@ -1,13 +1,12 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { paintLog } from '@teambit/legacy/dist/cli/chalk-box';
 import { ComponentLogMain } from './component-log.main.runtime';
 
 export default class LogCmd implements Command {
   name = 'log <id>';
   shortDescription = 'show components(s) version history';
+  description: string;
   group = 'info';
-  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/reference/cli-reference#log`;
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
@@ -17,7 +16,9 @@ export default class LogCmd implements Command {
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
 
-  constructor(private componentLog: ComponentLogMain) {}
+  constructor(private componentLog: ComponentLogMain, docsDomain: string) {
+    this.description = `show components(s) tag history.\n  https://${docsDomain}/reference/cli-reference#log`;
+  }
 
   async report([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {
     if (parents) {
