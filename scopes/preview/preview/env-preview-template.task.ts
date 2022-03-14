@@ -90,7 +90,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       externalizePeer: false,
       development: context.dev,
     });
-    const bundlerResults = await mapSeries(Object.entries(groups), async ([envId, targetsGroup]) => {
+    const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;
       const bundler: Bundler = await targetsGroup.env.getTemplateBundler(bundlerContext);
       const bundlerResult = await bundler.run();
