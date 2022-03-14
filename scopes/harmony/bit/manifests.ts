@@ -160,8 +160,8 @@ export const manifestsMap = {
   [MochaAspect.id]: MochaAspect,
   [BitCustomAspectAspect.id]: BitCustomAspectAspect,
   [DiagnosticAspect.id]: DiagnosticAspect,
-  [CommunityAspect.id]: DiagnosticAspect,
-  [CloudAspect.id]: DiagnosticAspect,
+  [CommunityAspect.id]: CommunityAspect,
+  [CloudAspect.id]: CloudAspect,
 };
 
 export function isCoreAspect(id: string) {
