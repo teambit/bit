@@ -1,7 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { CommunityAspect, CommunityMain } from '@teambit/community';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
 
 import ImportCmd from './import.cmd';
 import { Importer } from './importer';

@@ -3,7 +3,8 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { clearCache } from '@teambit/legacy/dist/api/consumer';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
-import { CommunityAspect, CommunityMain } from '@teambit/community';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
 
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import ClearCacheCmd from './clear-cache-cmd';

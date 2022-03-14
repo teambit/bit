@@ -1,7 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { CommunityAspect, CommunityMain } from '@teambit/community';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
 
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';

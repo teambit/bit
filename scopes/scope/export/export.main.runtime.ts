@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
-import { CommunityAspect, CommunityMain } from '@teambit/community';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
 
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';

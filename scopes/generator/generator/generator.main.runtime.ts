@@ -3,7 +3,8 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { CommunityAspect, CommunityMain } from '@teambit/community';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
 
 import { Component } from '@teambit/component';
 import { isCoreAspect, loadBit } from '@teambit/bit';
