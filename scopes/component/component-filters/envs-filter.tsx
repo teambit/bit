@@ -5,13 +5,13 @@ import classNames from 'classnames';
 import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
-export type EnvFilterState = { active: boolean; icon?: string; env: string };
+export type EnvFilterState = { active: boolean; icon?: string; displayName: string; id: string };
 export type EnvsFilterCriteria = ComponentFilterCriteria<Map<string, EnvFilterState>>;
 
 export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
   match: (component, state) => {
-    const activeEnvs = [...state.values()].filter((envState) => envState.active).map((envState) => envState.env);
+    const activeEnvs = [...state.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
     const matches = Boolean(component.environment?.id && activeEnvs.indexOf(component.environment?.id) >= 0);
@@ -42,22 +42,29 @@ function envsFilter({
       componentEnvSet.add(component.environment.id);
       return true;
     })
-    .map((component) => ({ env: component.environment?.id as string, icon: component.environment?.icon }));
+    .map((component) => ({
+      displayName: component.environment?.id.split('/').pop() || (component.environment?.id as string),
+      id: component.environment?.id as string,
+      icon: component.environment?.icon,
+    }));
 
-  const selectList = componentsEnvsWithIcons.map((filter) => ({
-    value: filter.env,
-    icon: filter.icon,
-    checked: Boolean(currentFilter.state.get(filter.env)?.active),
-  }));
-
-  const onCheck = (env: string, checked: boolean) => {
-    const currentState = currentFilter.state.get(env) || {
-      env,
-      icon: componentsEnvsWithIcons.find((c) => c.env === env)?.icon,
-      active: checked,
+  const selectList = componentsEnvsWithIcons.map((filter) => {
+    return {
+      value: filter.displayName,
+      icon: filter.icon,
+      checked: Boolean(currentFilter.state.get(filter.id)?.active),
     };
+  });
 
-    currentFilter.state.set(env, { ...currentState, active: checked });
+  const onCheck = (value: string, checked: boolean) => {
+    const matchingEnv = componentsEnvsWithIcons.find((c) => c.displayName === value);
+
+    if (!matchingEnv) return;
+
+    const currentState = currentFilter.state.get(matchingEnv.id) || matchingEnv;
+
+    currentFilter.state.set(matchingEnv.id, { ...currentState, active: checked });
+
     updateFilter(currentFilter);
   };
 

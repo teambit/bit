@@ -104,16 +104,14 @@ export class ComponentsDrawer implements DrawerType {
     const { collapsed } = useContext(ComponentTreeContext);
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const { filters, matches } = useContext(ComponentFilterContext);
-    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot } = this;
+    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot, id } = this;
 
     if (loading) return <FullLoader />;
 
-    const componentModels = components.map((component) => component.model);
-    components = matches(filters, componentModels);
-    const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
+    const allComponentModels = components.map((component) => component.model);
+    components = matches(filters, allComponentModels);
 
-    if (visibleComponents.length === 0)
-      return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>;
+    const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
     const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] =
       (filterWidgetOpen &&
@@ -124,21 +122,26 @@ export class ComponentsDrawer implements DrawerType {
         ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
       [];
 
+    const filtersToRender = filtersWithKey.map((filter) => {
+      return (
+        <filter.render key={`${filter.key}-${filter.id}`} components={allComponentModels} className={styles.filter} />
+      );
+    });
+
+    const isVisible = visibleComponents.length > 0;
+
+    const emptyDrawer = (
+      <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>
+    );
+
     return (
-      <>
-        {filtersWithKey.map((filter) => (
-          <>
-            {
-              <filter.render
-                key={`${filter.key}-${filter.id}`}
-                components={componentModels}
-                className={styles.filter}
-              />
-            }
-          </>
-        ))}
-        <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
-      </>
+      <div key={id} className={styles.drawerContainer}>
+        {filtersToRender}
+        {isVisible && (
+          <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={customTreeNodeRenderer} />
+        )}
+        {isVisible || emptyDrawer}
+      </div>
     );
   };
 }

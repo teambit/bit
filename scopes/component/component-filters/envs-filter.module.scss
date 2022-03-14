@@ -1,3 +1,4 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 .envsFilterContainer {
   display: flex;
   flex-direction: row;
@@ -9,5 +10,6 @@
   > div {
     line-height: 16px;
     display: flex;
+    z-index: $nav-z-index + 2;
   }
 }

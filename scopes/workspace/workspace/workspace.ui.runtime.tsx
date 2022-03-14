@@ -123,6 +123,7 @@ export class WorkspaceUI {
       drawerWidgetSlot: this.drawerWidgetSlot,
       filtersSlot: this.drawerComponentsFiltersSlot,
       treeNodeSlot: this.sidebarSlot,
+      emptyDrawerMessage: 'Workspace is empty',
       getDrawerComponents: () => {
         const workspace = useContext(WorkspaceContext);
         return {
