@@ -3,12 +3,13 @@ import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
-import { flatten, groupBy } from 'lodash';
+import { flatten, groupBy, compact } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
@@ -78,7 +79,18 @@ function VersionRelatedDropdowns({
   }, [logs]);
 
   const tags = useMemo(() => {
-    return (logs || []).filter((log) => log.tag).map((tag) => ({ ...tag, version: tag.tag as string }));
+    const tagLookup = new Map<string, LegacyComponentLog>();
+    (logs || [])
+      .filter((log) => log.tag)
+      .forEach((tag) => {
+        tagLookup.set(tag?.tag as string, tag);
+      });
+    return compact(
+      component.tags
+        ?.toArray()
+        .reverse()
+        .map((tag) => tagLookup.get(tag.version.version))
+    ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [logs]);
 
   const lanes = lanesContext?.getLanesByComponentId(component.id) || [];

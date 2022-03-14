@@ -835,8 +835,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return this.componentLoader.getSnap(id, hash);
   }
 
-  async getLogs(id: ComponentID, shortHash = false): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id._legacy, shortHash);
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
+    return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
   }
 
   /**
