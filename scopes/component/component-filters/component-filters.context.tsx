@@ -9,7 +9,6 @@ export type ComponentFilterCriteria<State> = {
   render: ComponentType<{ components: ComponentModel[] }>;
   match: (component: ComponentModel, state: State) => boolean;
   state: State;
-  alwaysRunMatch?: boolean;
   order?: number;
 };
 
