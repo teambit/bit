@@ -879,7 +879,6 @@ jobs:
       - run: 'echo "starting harmony deploy"'
 
   e2e_test:
-    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -913,7 +912,6 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            NODE_OPTIONS: --max_old_space_size=8000
           when: always
       - store_test_results:
           path: bit/junit
