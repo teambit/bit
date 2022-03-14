@@ -13,7 +13,7 @@ import { Capsule } from '@teambit/isolator';
 import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
-import { cloneDeep, compact, flatten } from 'lodash';
+import { cloneDeep, compact, flatten, isEmpty } from 'lodash';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { PreviewDefinition } from '.';
@@ -80,6 +80,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
         return undefined;
       })
     );
+    if (isEmpty(grouped)) {
+      return { componentsResults: [] };
+    }
     return this.runBundlerForGroups(context, grouped);
   }
 
