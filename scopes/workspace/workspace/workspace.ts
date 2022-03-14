@@ -440,7 +440,7 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID, shortHash = false, startsFrom): Promise<ComponentLog[]> {
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
     return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
