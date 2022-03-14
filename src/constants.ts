@@ -74,6 +74,8 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT',
 };
 
+export const REPO_NAME = 'teambit/bit';
+
 export const DEFAULT_INDEX_NAME = 'index';
 
 export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
@@ -143,6 +145,10 @@ export const DEFAULT_DEPENDENCIES = {};
 export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
 /**
+ * URLS
+ */
+
+/**
  * @deprecated use 'BASE_CLOUD_DOMAIN' or 'BASE_COMMUNITY_DOMAIN'
  */
 export const BASE_WEB_DOMAIN = 'bit.dev';
@@ -163,15 +169,9 @@ export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 
-export const REPO_NAME = 'teambit/bit';
-
 export const DEFAULT_HUB_LOGIN = `https://${BASE_CLOUD_DOMAIN}/bit-login`;
 
-export const DEFAULT_BIT_ENV = 'production';
-
 export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_CLOUD_DOMAIN}/`;
-
-export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
 export const SEARCH_DOMAIN = `api.${BASE_CLOUD_DOMAIN}`;
 
@@ -181,7 +181,17 @@ export const DEFAULT_REGISTRY_URL = `https://node.bit.cloud`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
+export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
+
+export const CENTRAL_BIT_HUB_NAME = 'bit.cloud';
+
+// END URLS
+
+export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
+
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+
+export const DEFAULT_BIT_ENV = 'production';
 
 // Setting this to 99999 to prevent this issue:
 // https://github.com/mscdex/ssh2/issues/142
@@ -508,9 +518,5 @@ export enum BuildStatus {
   Failed = 'failed',
   Succeed = 'succeed',
 }
-
-export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
-
-export const CENTRAL_BIT_HUB_NAME = 'bit.cloud';
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
