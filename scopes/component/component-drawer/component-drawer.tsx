@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, ReactNode } from 'react';
+import React, { useCallback, useContext, ReactNode, useMemo } from 'react';
 import classNames from 'classnames';
 import { ComponentTree, PayloadType } from '@teambit/ui-foundation.ui.side-bar';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
@@ -107,7 +107,10 @@ export class ComponentsDrawer implements DrawerType {
     if (loading) return <FullLoader />;
 
     const allComponentModels = components.map((component) => component.model);
-    components = matches(filters, allComponentModels);
+
+    useMemo(() => {
+      components = matches(filters, allComponentModels);
+    }, [filters]);
 
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
