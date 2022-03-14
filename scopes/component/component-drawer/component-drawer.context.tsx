@@ -75,26 +75,3 @@ export const DrawerComponentsProvider = ({
     </DrawerComponentsContext.Provider>
   );
 };
-
-// export function ComponentFilters({ filters, components }: ComponentFiltersProps) {
-//   const [activeFilters, setActiveFilter] = useState<ComponentFilter[]>([]);
-//   let filteredComponents = components;
-//   activeFilters?.forEach((activeFilter) => {
-//     filteredComponents = filteredComponents.filter((component) => activeFilter.match(component, activeFilter.state));
-//   });
-// }
-
-// export const envs: ComponentFilter<Map<string, boolean>> = {
-//   id: 'envs',
-//   render: ({components}) => {
-//     const {activeFilters, setActiveFilter} = useContext(ComponentFilterContext);
-//     let uniqueEnvsWithIcons = new Map<string, string>();
-//     components.forEach(component => {
-//       if(component.environment) {
-//         uniqueEnvsWithIcons.set(component.environment?.id, component.environment?.icon);
-//       }
-//     });
-//     const multiSelectEnvsItemList = Array.from(uniqueEnvsWithIcons.keys()).map(env => ({value: env, icon: uniqueEnvsWithIcons.get(env), checked: activeFilters.find(activeFilter => activeFilter.id === env)}))
-//   },
-//   match: (component, state) =>
-// }
