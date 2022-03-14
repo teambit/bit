@@ -57,7 +57,7 @@ export interface ComponentFactory {
 
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
-  getLogs(id: ComponentID): Promise<ComponentLog[]>;
+  getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
   /**
    * returns a specific state of a component by hash or semver.
