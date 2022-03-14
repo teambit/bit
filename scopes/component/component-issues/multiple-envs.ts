@@ -1,4 +1,5 @@
 import { ComponentIssue, ISSUE_FORMAT_SPACE } from './component-issue';
+
 export class MultipleEnvs extends ComponentIssue {
   description = 'multiple envs';
   // TODO: pass the docs url into here after fetch it from the community aspect
