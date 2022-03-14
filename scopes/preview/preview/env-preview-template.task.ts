@@ -80,7 +80,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
         return undefined;
       })
     );
-    console.log('grouped', grouped);
     return this.runBundlerForGroups(context, grouped);
   }
 
@@ -95,13 +94,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       bundlerContext.targets = targetsGroup.targets;
       const bundler: Bundler = await targetsGroup.env.getTemplateBundler(bundlerContext);
       const bundlerResult = await bundler.run();
-      console.log('bundlerResult', envId, bundlerResult);
       return bundlerResult;
     });
 
     const results = await this.computeResults(bundlerContext, flatten(bundlerResults));
-    console.log('results', results);
-
     return results;
   }
 
