@@ -115,6 +115,13 @@ export interface PreviewEnv extends Environment {
    * Returns preview config like the strategy name to use when bundling the components for the preview
    */
   getPreviewConfig?: () => EnvPreviewConfig;
+
+  /**
+   * Returns a bundler for the env template.
+   * this bundler will be used to bundle the docs/compositions (or other preview) apps
+   * Required for `bit build` & `bit tag`
+   */
+  getTemplateBundler?: (context: BundlerContext, transformers?: any[]) => Promise<Bundler>;
 }
 
 export interface ElementsEnv extends Environment {
