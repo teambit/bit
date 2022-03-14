@@ -3,8 +3,26 @@
   display: block;
 }
 
-.collapseIcon {
-  width: 16px;
+.widgetIcon {
+  padding: 4px;
+  border-radius: 8px;
+  align-items: center;
+  display: flex;
+  &:hover,
+  &.open {
+    background-color: var(--bit-border-color-lightest, #ededed);
+  }
+  img {
+    width: 16px;
+  }
+  &:active img,
+  &.open img {
+    filter: invert(38%) sepia(33%) saturate(7140%) hue-rotate(234deg) brightness(96%) contrast(87%);
+  }
+}
+
+.filterWidgetIcon {
+  margin-right: 8px;
 }
 
 .deprecateFilter {
@@ -15,27 +33,19 @@
   padding: 8px;
   margin: 4px 8px;
 
-  .filterIcon {
+  > div {
     line-height: 16px;
     display: flex;
+  }
+
+  .filterIcon {
+    img {
+      width: 16px;
+    }
 
     .filterIconLabel {
       margin: 0px 8px;
-      font-size: 12px;
+      font-size: 14px;
     }
-  }
-}
-
-.filterWidgetIcon {
-  margin-right: 12px;
-  padding: 4px;
-
-  &:hover {
-    background: white;
-  }
-
-  &.open {
-    color: var(--bit-accent-color, #6c5ce7);
-    background-color: var(--bit-bg-heavy, #f6f6f6);
   }
 }
