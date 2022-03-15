@@ -33,11 +33,11 @@ export function Import({ componentId, packageName, componentName, showInstallMet
           {showInstallMethod && (
             <>
               <div>{`Add ${componentName} as a dependency`}</div>
-              <TooltipCopybox content={`bit install ${packageName}`} className={styles.marginBottom} />
+              <TooltipCopybox content={`bit install ${packageName}`} />
             </>
           )}
           <div>{`Import ${componentName} to your workspace`}</div>
-          <TooltipCopybox content={`bit import ${componentId}`} className={styles.marginBottom} />
+          <TooltipCopybox content={`bit import ${componentId}`} />
           <div>{`Fork ${componentName} to your workspace`}</div>
           <TooltipCopybox content={`bit fork ${componentId}`} />
         </div>
