@@ -133,7 +133,7 @@ export class ComponentsDrawer implements DrawerType {
     const isVisible = visibleComponents.length > 0;
 
     const emptyDrawer = (
-      <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>{emptyDrawerMessage}</span>
+      <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{emptyDrawerMessage}</span>
     );
 
     const TreeNode = customTreeNodeRenderer && useCallback(customTreeNodeRenderer(treeNodeSlot), [treeNodeSlot]);
