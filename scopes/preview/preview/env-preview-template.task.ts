@@ -50,9 +50,14 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const htmlConfig = this.generateHtmlConfig(previewDefs, PREVIEW_ROOT_CHUNK_NAME, PEERS_CHUNK_NAME, {
       dev: context.dev,
     });
+    const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const grouped: TargetsGroupMap = {};
     await Promise.all(
       context.components.map(async (component) => {
+        // Do not run over other components in the graph. it make the process much longer with no need
+        if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
+          return undefined;
+        }
         const envDef = this.envs.getEnvFromComponent(component);
         if (!envDef) return undefined;
         const env = envDef.env;
@@ -83,6 +88,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (isEmpty(grouped)) {
       return { componentsResults: [] };
     }
+
     return this.runBundlerForGroups(context, grouped);
   }
 
@@ -120,10 +126,17 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const env = envDef.env;
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
     const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-    const envGetDeps = (await env.getDependencies()) || {};
-    const envComponentPeers = Object.keys(envGetDeps.peerDependencies || {}) || [];
-    const envHostDeps = env.getHostDependencies() || [];
-    const peers = envComponentPeers.concat(envHostDeps);
+    let peers;
+    if (env.getHostDependencies && typeof env.getHostDependencies === 'function') {
+      peers = (await env.getHostDependencies()) || [];
+    } else {
+      const envComponentPeers = Object.keys((await env.getDependencies()).peerDependencies || {}) || [];
+      let additionalHostDeps = [];
+      if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
+        additionalHostDeps = await env.getAdditionalHostDependencies();
+      }
+      peers = envComponentPeers.concat(additionalHostDeps);
+    }
 
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
