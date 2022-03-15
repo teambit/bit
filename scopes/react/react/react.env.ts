@@ -232,7 +232,7 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const peers = this.getAllHostDeps();
+    const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
@@ -251,7 +251,7 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDeps();
+    const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
@@ -269,7 +269,7 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDeps();
+    const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
@@ -292,13 +292,14 @@ export class ReactEnv
   /**
    * Get the peers configured by the env on the components + the host deps configured by the env
    */
-  private getAllHostDeps() {
-    const hostDeps = this.getHostDependencies();
-    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+  getAllHostDependencies() {
+    const envComponentPeers = Object.keys(this.getDependencies().peerDependencies || {}) || [];
+    const additionalHostDeps = this.getAdditionalHostDependencies() || [];
+    const peers = envComponentPeers.concat(additionalHostDeps);
     return peers;
   }
 
-  getHostDependencies(): string[] {
+  getAdditionalHostDependencies(): string[] {
     return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
