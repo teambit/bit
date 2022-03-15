@@ -52,7 +52,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  const latestVersion = logs[0]?.tag || logs[0]?.hash;
+  const latestVersion = component.latest;
 
   return (
     <>
