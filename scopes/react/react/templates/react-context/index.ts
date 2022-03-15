@@ -20,9 +20,9 @@ export const reactContext: ComponentTemplate = {
       testFile(context),
     ];
   },
-  // config: {
-  //   'teambit.envs/envs': {
-  //     env: 'teambit.react/react',
-  //   },
-  // }
+  config: {
+    'teambit.envs/envs': {
+      env: 'teambit.react/react',
+    },
+  }
 };
