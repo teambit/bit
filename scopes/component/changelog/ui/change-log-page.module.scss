@@ -22,3 +22,8 @@
 .changeLogCard {
   margin-bottom: 8px;
 }
+
+.logContainer {
+  display: flex;
+  flex-direction: column-reverse;
+}
