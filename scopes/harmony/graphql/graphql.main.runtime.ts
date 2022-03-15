@@ -247,29 +247,20 @@ export class GraphqlMain {
   }
 
   private getDirectives(schemaSlot?: SchemaSlot) {
-    if (schemaSlot) {
-      const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
-      return schemaSlots.reduce((p, schema) => Object.assign(p, schema.schemaDirectives), {});
-    }
-    return { schemaDirectives: {} };
+    const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
+    return schemaSlots.reduce((p, schema) => Object.assign(p, schema.schemaDirectives), {});
   }
 
   private getResolvers(schemaSlot?: SchemaSlot) {
-    if (schemaSlot) {
-      const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
-      return schemaSlots.reduce((p, schema) => Object.assign(p, schema.resolvers), {});
-    }
-    return { resolvers: {} };
+    const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
+    return schemaSlots.reduce((p, schema) => Object.assign(p, schema.resolvers), {});
   }
 
   private getTypeDefs(schemaSlot?: SchemaSlot) {
-    if (schemaSlot) {
-      const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
-      const reduced: any[] = [];
-      schemaSlots.forEach((schema) => reduced.push(schema.typeDefs));
-      return reduced;
-    }
-    return [];
+    const reduced: DocumentNode[] = [];
+    const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
+    schemaSlots.forEach((schema) => reduced.push(schema.typeDefs));
+    return reduced;
   }
 
   private getSchemaForFilter(schemaSlot?: SchemaSlot) {
