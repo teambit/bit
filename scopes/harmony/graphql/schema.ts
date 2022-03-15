@@ -1,5 +1,5 @@
 import type { DocumentNode } from 'graphql';
-import { SchemaDirectiveVisitor } from 'graphql-tools';
+import { SchemaDirectiveVisitorClass } from 'graphql-tools';
 
 /**
  * graphql schema for an extension.
@@ -8,5 +8,5 @@ import { SchemaDirectiveVisitor } from 'graphql-tools';
 export type Schema = {
   typeDefs: DocumentNode;
   resolvers?: { [key: string]: any };
-  schemaDirectives?: { [key: string]: SchemaDirectiveVisitor };
+  schemaDirectives?: { [key: string]: SchemaDirectiveVisitorClass };
 };

@@ -1,5 +1,5 @@
 import makeFilteredSchema, { schemaDirectivesToFilters } from 'graphql-introspection-filtering';
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema, SchemaDirectiveVisitorClass } from 'graphql-tools';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -7,13 +7,14 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe, GraphQLSchema } from 'graphql';
+import { execute, subscribe, GraphQLSchema, DocumentNode } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { mergeSchemas } from '@graphql-tools/schema';
+import { IResolvers } from '@graphql-tools/utils';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
@@ -73,7 +74,7 @@ export class GraphqlMain {
      * graphql pubsub. allows to emit events to clients.
      */
     private pubSubSlot: PubSubSlot
-    ) {}
+  ) {}
 
   get pubsub(): PubSubEngine {
     const pubSubSlots = this.pubSubSlot.values();
@@ -85,24 +86,21 @@ export class GraphqlMain {
 
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true, schemaSlot } = options;
-    const localSchema = this.createRootModule(schemaSlot);
+    // const localSchema = this.createRootModule(schemaSlot);
+    // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    // const { schemaDirectives, resolvers, typeDefs } = this.getSchemaForFilter();
     const schemaDirectives = this.getDirectives(schemaSlot);
     const resolvers = this.getResolvers(schemaSlot);
     const typeDefs = this.getTypeDefs(schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    const executableSchema = makeExecutableSchema({ resolvers, typeDefs, schemaDirectives });
+    // debugger;
+    // const schemas = [localSchema.schema]
+    //   .concat(remoteSchemas)
+    //   .filter((x) => x)
+    //   .concat(executableSchema);
 
-    const executableSchema = makeExecutableSchema({
-      schemaDirectives,
-      resolvers,
-      typeDefs,
-    });
+    // const schema = mergeSchemas({ schemas });
 
-    const schemas = [localSchema.schema]
-      .concat(remoteSchemas)
-      .filter((x) => x)
-      .concat(executableSchema);
-
-    const schema = mergeSchemas({ schemas });
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
     app.use(
@@ -272,6 +270,21 @@ export class GraphqlMain {
       return reduced;
     }
     return [];
+  }
+
+  private getSchemaForFilter(schemaSlot?: SchemaSlot) {
+    const graphqlSchema: {
+      schemaDirectives: { [key: string]: SchemaDirectiveVisitorClass };
+      resolvers: IResolvers<any>;
+      typeDefs: DocumentNode[];
+    } = { schemaDirectives: {}, resolvers: {}, typeDefs: [] };
+    const schemaSlots = schemaSlot ? schemaSlot.values() : this.moduleSlot.values();
+    return schemaSlots.reduce((p, schema) => {
+      p.schemaDirectives = Object.assign(p.schemaDirectives, schema.schemaDirectives);
+      p.resolvers = Object.assign(p.resolvers, schema.resolvers);
+      p.typeDefs.push(schema.typeDefs);
+      return p;
+    }, graphqlSchema);
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {
