@@ -18,7 +18,7 @@ export class ListEnvsCmd implements Command {
 
   async report() {
     const allEnvs = this.envs.getAllRegisteredEnvs().join('\n');
-    const title = chalk.green('the following envs are registered:');
+    const title = chalk.green('the following envs are available in the workspace:');
     return `${title}\n${allEnvs}`;
   }
 }
