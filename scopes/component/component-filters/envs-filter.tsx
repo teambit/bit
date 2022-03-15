@@ -40,9 +40,8 @@ function envsFilter({
   const componentEnvSet = new Set<string>();
   const componentsEnvsWithIcons = components
     .filter((component) => {
-      if (!component.environment?.id) return false;
+      if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
 
-      if (componentEnvSet.has(component.environment.id)) return false;
       componentEnvSet.add(component.environment.id);
       return true;
     })
@@ -97,6 +96,7 @@ function envsFilter({
   };
 
   const onSubmit = () => {
+    //TODO: waiting for Josh to publish a new version of MultiSelect
     // event.stopPropagation();
     currentFilter.state.dropdownState = false;
     updateFilter(currentFilter);
@@ -115,6 +115,7 @@ function envsFilter({
         onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
+        //TODO: waiting for Josh to publish a new version of MultiSelect
         // open={currentFilter.state.dropdownState}
         onClick={onDropdownClicked}
         dropdownBorder={false}
