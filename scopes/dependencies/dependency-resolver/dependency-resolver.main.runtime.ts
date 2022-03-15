@@ -198,6 +198,13 @@ export interface DependencyResolverWorkspaceConfig {
    */
   overrides?: Record<string, string>;
 
+  /**
+   * This is similar to overrides, but will only affect installation in capsules.
+   * In case overrides is configured and this not, the regular overrides will affect capsules as well.
+   * in case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.
+   */
+  capsulesOverrides?: Record<string, string>;
+
   /*
    * Defines what linker should be used for installing Node.js packages.
    * Supported values are hoisted and isolated.

@@ -565,12 +565,11 @@ export default class Scope {
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId, shortHash = false): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: BitId, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const currentLane = this.lanes.getCurrentLaneId();
-    const startFrom = id.hasVersion() ? componentModel.getRef(id.version as string) : null;
-    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash, startFrom);
+    const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
+    const logs = await componentModel.collectLogs(this.objects, shortHash, startFromRef);
     return logs;
   }
 

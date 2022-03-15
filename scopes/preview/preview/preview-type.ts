@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { RenderingContext } from './rendering-context';
 import { PreviewModule } from './types/preview-module';
 
@@ -11,7 +12,7 @@ export interface PreviewType {
    * preview render method.
    */
   render(
-    componentId: string,
+    componentId: ComponentID,
     linkedModules: PreviewModule<any>,
     includedPreviews: string[],
     renderingContext: RenderingContext

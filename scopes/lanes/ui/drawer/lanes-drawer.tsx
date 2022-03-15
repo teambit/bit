@@ -11,9 +11,11 @@ import styles from './lanes-drawer.module.scss';
 const LaneTreeContext = createContext<{
   collapsed: boolean;
   setCollapsed: (x: boolean) => void;
+  canCollapse: boolean;
 }>({
   collapsed: true,
   setCollapsed: () => {},
+  canCollapse: true,
 });
 
 export type LanesDrawerProps = {
@@ -28,7 +30,7 @@ export class LanesDrawer implements DrawerType {
   order = LanesModel.drawer.order;
   id = LanesModel.drawer.id;
   name = LanesModel.drawer.name;
-  widget = (<Widget />);
+  widgets = [<Widget key={`${LanesModel.drawer.id}-widget`} />];
 
   constructor(private props: LanesDrawerProps) {}
 
@@ -42,7 +44,11 @@ export class LanesDrawer implements DrawerType {
     const lanesContext = useLanesContext();
     const isCollapsed = !lanesContext?.currentLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
-    return <LaneTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</LaneTreeContext.Provider>;
+    return (
+      <LaneTreeContext.Provider value={{ collapsed, setCollapsed, canCollapse: this.props.showScope }}>
+        {children}
+      </LaneTreeContext.Provider>
+    );
   };
 
   render = () => {
@@ -66,7 +72,8 @@ export class LanesDrawer implements DrawerType {
 }
 
 function Widget() {
-  const { collapsed, setCollapsed } = useContext(LaneTreeContext);
+  const { collapsed, setCollapsed, canCollapse } = useContext(LaneTreeContext);
+  if (!canCollapse) return null;
   const icon = collapsed
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';

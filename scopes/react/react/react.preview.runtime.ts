@@ -1,7 +1,7 @@
 import { ComponentType } from 'react';
 import flatten from 'lodash.flatten';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import PreviewAspect, { PreviewPreview, PreviewRuntime } from '@teambit/preview';
+import PreviewAspect, { PreviewPreview, PreviewRuntime, RenderingContextProvider } from '@teambit/preview';
 import { HighlighterProvider } from '@teambit/react.ui.highlighter-provider';
 import { ReactAspect } from './react.aspect';
 
@@ -15,11 +15,22 @@ export class ReactPreview {
     this.providerSlot.register(provider);
   }
 
-  getRenderingContext() {
+  getRenderingContext: RenderingContextProvider = ({ aspectsFilter }) => {
+    let entries = this.providerSlot.toArray();
+
+    if (aspectsFilter) {
+      const allowedAspects = new Set(aspectsFilter);
+      allowedAspects.add(ReactAspect.id);
+
+      entries = entries.filter(([aspectId]) => allowedAspects.has(aspectId));
+    }
+
+    const providers = flatten(entries.map(([, provider]) => provider));
+
     return {
-      providers: flatten(this.providerSlot.values()),
+      providers,
     };
-  }
+  };
 
   static runtime = PreviewRuntime;
 
@@ -32,9 +43,8 @@ export class ReactPreview {
 
     reactPreview.registerProvider([HighlighterProvider]);
 
-    preview.registerRenderContext(() => {
-      return reactPreview.getRenderingContext();
-    });
+    preview.registerRenderContext(reactPreview.getRenderingContext);
+
     return reactPreview;
   }
 }

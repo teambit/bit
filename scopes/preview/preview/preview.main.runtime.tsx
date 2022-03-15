@@ -282,7 +282,7 @@ export class PreviewMain {
 
   writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
-    const targetPath = join(targetDir, `__${prefix}-${this.timestamp}.js`);
+    const targetPath = join(targetDir, `${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -552,7 +552,10 @@ export class PreviewMain {
     ]);
 
     if (!config.disabled)
-      builder.registerBuildTasks([new EnvPreviewTemplateTask(preview, envs), new PreviewTask(bundler, preview)]);
+      builder.registerBuildTasks([
+        new EnvPreviewTemplateTask(preview, envs, aspectLoader),
+        new PreviewTask(bundler, preview),
+      ]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
