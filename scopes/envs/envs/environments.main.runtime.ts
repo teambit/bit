@@ -317,6 +317,10 @@ export class EnvsMain {
     return this.getEnvsNotFromEnvsConfig(component);
   }
 
+  getAllRegisteredEnvs(): string[] {
+    return this.envSlot.toArray().map((envData) => envData[0]);
+  }
+
   /**
    * an env can be configured on a component in two ways:
    * 1) explicitly inside "teambit.envs/envs". `{ "teambit.envs/envs": { "env": "my-env" } }`
