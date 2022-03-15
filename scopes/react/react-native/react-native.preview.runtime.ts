@@ -18,9 +18,8 @@ export class ReactNativePreview {
   static async provider([reactPreview, preview]: [ReactPreview, PreviewPreview]) {
     const reactNativePreview = new ReactNativePreview(reactPreview, preview);
 
-    preview.registerRenderContext(() => {
-      return reactNativePreview.getRenderingContext();
-    });
+    preview.registerRenderContext(reactNativePreview.getRenderingContext);
+
     return reactNativePreview;
   }
 }

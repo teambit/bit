@@ -242,6 +242,7 @@ export class GraphqlMain {
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
+        schemaDirectives: schema.schemaDirectives,
         imports: moduleDeps,
         context: (session) => {
           return {

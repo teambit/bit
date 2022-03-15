@@ -1,8 +1,9 @@
 import getConfig from '@pnpm/config';
 
-export async function readConfig() {
+export async function readConfig(dir?: string) {
   const pnpmConfig = await getConfig({
     cliOptions: {
+      dir,
       // 'global': true,
       // 'link-workspace-packages': true,
     },

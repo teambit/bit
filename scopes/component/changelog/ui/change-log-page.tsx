@@ -3,7 +3,6 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/design.ui.separator';
 import { VersionBlock } from '@teambit/component.ui.version-block';
 import classNames from 'classnames';
-import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
@@ -19,13 +18,11 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.currentLane;
-  const snapResult = useSnaps(component.id);
-  const { loading } = snapResult;
-  const { snaps } = snapResult;
+  const { logs } = component;
 
-  if (!snaps) return null;
+  if (!logs) return null;
 
-  if (snaps.length === 0 && !loading) {
+  if (logs.length === 0) {
     return (
       <>
         {currentLane && (
@@ -55,8 +52,6 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  const latestVersion = snaps[0]?.tag || snaps[0]?.hash;
-
   return (
     <>
       <LaneBreadcrumb lane={currentLane} />
@@ -64,10 +59,21 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
-        {snaps.map((snap, index) => {
-          const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
-          return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
-        })}
+        <div className={styles.logContainer}>
+          {logs.map((snap, index) => {
+            const isLatest = component.latest === snap.tag || component.latest === snap.hash;
+            const isCurrent = component.version === snap.tag || component.version === snap.hash;
+            return (
+              <VersionBlock
+                key={index}
+                componentId={component.id.fullName}
+                isLatest={isLatest}
+                snap={snap}
+                isCurrent={isCurrent}
+              />
+            );
+          })}
+        </div>
       </div>
     </>
   );
