@@ -120,10 +120,8 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           if (Object.prototype.hasOwnProperty.call(value, 'allVersionNodes')) {
             value.allVersionNodes.push(compKey);
           }
-
           const currentComp = this.node(compKey)?.attr;
           const latestComp = this.node(value.latestVersionNode)?.attr;
-
           const isLegacy = !currentComp?.head;
 
           if (isLegacy) {
