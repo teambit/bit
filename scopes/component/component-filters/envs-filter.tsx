@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
@@ -37,8 +37,6 @@ function envsFilter({
     | EnvsFilterCriteria
     | undefined;
 
-  if (!currentFilter) return null;
-
   const componentEnvSet = new Set<string>();
   const componentsEnvsWithIcons = components
     .filter((component) => {
@@ -53,6 +51,19 @@ function envsFilter({
       id: component.environment?.id as string,
       icon: component.environment?.icon,
     }));
+
+  // run only for the first time when the component mounts
+  useEffect(() => {
+    if (currentFilter) {
+      // set initial state of the dropdown to have all possible options checked
+      componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
+        currentFilter.state.envsState.set(componentEnvWithIcon.id, { ...componentEnvWithIcon, active: true });
+      });
+      updateFilter(currentFilter);
+    }
+  }, []);
+
+  if (!currentFilter) return null;
 
   const currentEnvsState = currentFilter.state.envsState;
 

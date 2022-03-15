@@ -9,7 +9,6 @@ export type DrawerProps = {
   isOpen: boolean;
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
   Widgets?: ReactNode[];
-  Filters?: ReactNode[];
   Context?: ComponentType<any>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
