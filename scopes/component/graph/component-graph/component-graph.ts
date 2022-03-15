@@ -122,7 +122,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           }
           const currentComp = this.node(compKey)?.attr;
           const latestComp = this.node(value.latestVersionNode)?.attr;
-          const isLegacy = !currentComp?.head;
+          const isLegacy = !currentComp?.head || !latestComp?.head;
 
           if (isLegacy) {
             const currentCompVersion = currentComp?.id._legacy.getVersion();
@@ -130,11 +130,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
             if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
               value.latestVersionNode = compKey;
             }
-          } else if (
-            currentComp.head &&
-            latestComp?.head &&
-            new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)
-          ) {
+          } else if (new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)) {
             value.latestVersionNode = compKey;
           }
         }
