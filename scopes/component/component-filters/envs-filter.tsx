@@ -5,19 +5,25 @@ import classNames from 'classnames';
 import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
-export type EnvFilterState = { active: boolean; icon?: string; displayName: string; id: string };
-export type EnvsFilterCriteria = ComponentFilterCriteria<Map<string, EnvFilterState>>;
+export type EnvFilterState = {
+  envsState: Map<string, { active: boolean; icon?: string; displayName: string; id: string }>;
+  dropdownState?: boolean;
+};
+export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
 
 export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
   match: (component, state) => {
-    const activeEnvs = [...state.values()].filter((envState) => envState.active).map((envState) => envState.id);
+    const { envsState } = state;
+    const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
     const matches = Boolean(component.environment?.id && activeEnvs.indexOf(component.environment?.id) >= 0);
     return matches;
   },
-  state: new Map<string, EnvFilterState>(),
+  state: {
+    envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
+  },
   order: 1,
   render: envsFilter,
 };
@@ -48,11 +54,13 @@ function envsFilter({
       icon: component.environment?.icon,
     }));
 
+  const currentEnvsState = currentFilter.state.envsState;
+
   const selectList = componentsEnvsWithIcons.map((filter) => {
     return {
       value: filter.displayName,
       icon: filter.icon,
-      checked: Boolean(currentFilter.state.get(filter.id)?.active),
+      checked: Boolean(currentEnvsState.get(filter.id)?.active),
     };
   });
 
@@ -61,17 +69,30 @@ function envsFilter({
 
     if (!matchingEnv) return;
 
-    const currentState = currentFilter.state.get(matchingEnv.id) || matchingEnv;
+    const currentState = currentEnvsState.get(matchingEnv.id) || matchingEnv;
 
-    currentFilter.state.set(matchingEnv.id, { ...currentState, active: checked });
-
+    currentEnvsState.set(matchingEnv.id, { ...currentState, active: checked });
+    if (checked && !currentFilter.state.dropdownState) {
+      currentFilter.state.dropdownState = true;
+    }
     updateFilter(currentFilter);
   };
 
   const onClear = () => {
-    currentFilter.state.forEach((value, key) => {
-      currentFilter.state.set(key, { ...value, active: false });
+    currentEnvsState.forEach((value, key) => {
+      currentEnvsState.set(key, { ...value, active: false });
     });
+    updateFilter(currentFilter);
+  };
+
+  const onSubmit = () => {
+    // event.stopPropagation();
+    currentFilter.state.dropdownState = false;
+    updateFilter(currentFilter);
+  };
+
+  const onDropdownClicked = () => {
+    currentFilter.state.dropdownState = !currentFilter.state.dropdownState;
     updateFilter(currentFilter);
   };
 
@@ -80,9 +101,14 @@ function envsFilter({
       <MultiSelect
         itemsList={selectList}
         placeholderText={'Environments'}
-        onSubmit={() => {}}
+        onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
+        // open={currentFilter.state.dropdownState}
+        onClick={onDropdownClicked}
+        dropdownBorder={false}
+        className={styles.envFilterDropdownContainer}
+        dropClass={styles.envFilterDropdown}
       />
     </div>
   );

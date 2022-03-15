@@ -6,10 +6,27 @@
   justify-content: space-between;
   padding: 8px;
   margin: 4px 8px;
+  width: calc(100% - 32px);
 
   > div {
     line-height: 16px;
     display: flex;
     z-index: $nav-z-index + 2;
+  }
+}
+.envFilterDropdownContainer {
+  width: 100%;
+}
+
+.envFilterDropdown {
+  width: 100%;
+  label > div {
+    width: 90%;
+  }
+  label > div > div:first-child {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 60%;
   }
 }
