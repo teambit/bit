@@ -21,8 +21,9 @@ export const reactContext: ComponentTemplate = {
     ];
   },
   config: {
+    'teambit.react/react': {},
     'teambit.envs/envs': {
       env: 'teambit.react/react',
     },
-  }
+  },
 };
