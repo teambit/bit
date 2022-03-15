@@ -10,7 +10,7 @@ import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
-  description = 'list all registered envs';
+  description = 'list all envs available in the workspace';
   options = [];
   group = 'development';
 
