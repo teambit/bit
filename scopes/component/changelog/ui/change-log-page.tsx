@@ -52,8 +52,6 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  const latestVersion = component.latest;
-
   return (
     <>
       <LaneBreadcrumb lane={currentLane} />
@@ -63,7 +61,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         <Separator isPresentational className={styles.separator} />
         <div className={styles.logContainer}>
           {logs.map((snap, index) => {
-            const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
+            const isLatest = component.latest === snap.tag || component.latest === snap.hash;
             const isCurrent = component.version === snap.tag || component.version === snap.hash;
             return (
               <VersionBlock
