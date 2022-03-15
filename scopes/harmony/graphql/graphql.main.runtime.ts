@@ -86,21 +86,20 @@ export class GraphqlMain {
 
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true, schemaSlot } = options;
-    // const localSchema = this.createRootModule(schemaSlot);
-    // const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    const localSchema = this.createRootModule(schemaSlot);
+    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     // const { schemaDirectives, resolvers, typeDefs } = this.getSchemaForFilter();
     const schemaDirectives = this.getDirectives(schemaSlot);
     const resolvers = this.getResolvers(schemaSlot);
     const typeDefs = this.getTypeDefs(schemaSlot);
     const executableSchema = makeExecutableSchema({ resolvers, typeDefs, schemaDirectives });
+    const schemas = [localSchema.schema]
+      .concat(remoteSchemas)
+      .filter((x) => x)
+      .concat(executableSchema);
+    const schema = mergeSchemas({ schemas });
+
     // debugger;
-    // const schemas = [localSchema.schema]
-    //   .concat(remoteSchemas)
-    //   .filter((x) => x)
-    //   .concat(executableSchema);
-
-    // const schema = mergeSchemas({ schemas });
-
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
     app.use(
@@ -112,9 +111,10 @@ export class GraphqlMain {
         credentials: true,
       })
     );
-    const filters = schemaDirectivesToFilters(schemaDirectives);
-    const filteredSchema = makeFilteredSchema(executableSchema, filters) as GraphQLSchema;
 
+    const filters = schemaDirectivesToFilters(schemaDirectives);
+    const filteredSchema = makeFilteredSchema(schema, filters) as GraphQLSchema;
+    
     app.use(
       '/graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -282,6 +282,7 @@ export class GraphqlMain {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
       const moduleDeps = this.getModuleDependencies(extensionId);
+
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,

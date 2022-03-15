@@ -22,6 +22,7 @@ importers:
       '@graphql-modules/core': 0.7.17
       '@graphql-tools/merge': 8.2.3
       '@graphql-tools/schema': 8.3.2
+      '@graphql-tools/utils': 7.10.0
       '@jest/test-result': 26.6.2
       '@mdx-js/loader': 1.6.21
       '@mdx-js/mdx': 1.6.21
@@ -597,6 +598,7 @@ importers:
       '@graphql-modules/core': registry.npmjs.org/@graphql-modules/core/0.7.17_e7c6f21e00ffec12c5da54c0b19e38c6
       '@graphql-tools/merge': registry.npmjs.org/@graphql-tools/merge/8.2.3_graphql@14.7.0
       '@graphql-tools/schema': registry.npmjs.org/@graphql-tools/schema/8.3.2_graphql@14.7.0
+      '@graphql-tools/utils': registry.npmjs.org/@graphql-tools/utils/7.10.0_graphql@14.7.0
       '@jest/test-result': registry.npmjs.org/@jest/test-result/26.6.2
       '@mdx-js/loader': registry.npmjs.org/@mdx-js/loader/1.6.21_react@17.0.2
       '@mdx-js/mdx': registry.npmjs.org/@mdx-js/mdx/1.6.21
@@ -687,7 +689,7 @@ importers:
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_react-dom@17.0.2+react@17.0.2
       '@teambit/design.ui.icon-button': registry.npmjs.org/@teambit/design.ui.icon-button/1.0.10_react-dom@17.0.2+react@17.0.2
       '@teambit/design.ui.input.toggle': registry.npmjs.org/@teambit/design.ui.input.toggle/1.0.12_react-dom@17.0.2+react@17.0.2
-      '@teambit/documenter.code.react-playground': registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_652d4555b7e677de3c21cb423acd98b0
+      '@teambit/documenter.code.react-playground': registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_884042120800d1af00337a57c001a17f
       '@teambit/documenter.content.documentation-links': registry.npmjs.org/@teambit/documenter.content.documentation-links/4.0.1_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.markdown.hybrid-live-code-snippet': registry.npmjs.org/@teambit/documenter.markdown.hybrid-live-code-snippet/0.1.3_884042120800d1af00337a57c001a17f
       '@teambit/documenter.markdown.mdx': registry.npmjs.org/@teambit/documenter.markdown.mdx/0.1.7_884042120800d1af00337a57c001a17f
@@ -10039,7 +10041,7 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
-  registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_652d4555b7e677de3c21cb423acd98b0:
+  registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_884042120800d1af00337a57c001a17f:
     resolution: {integrity: sha512-ElhYSW8VpdOA9DOOE+l85TM1R5tH4K1Fz7ofmb1bWcwFOYqk7qIl4r+lTW+H5x9jyNONkn/kn3A8Vu6d+K+7kA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/documenter.code.react-playground/-/documenter.code.react-playground-4.0.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1
     name: '@teambit/documenter.code.react-playground'
