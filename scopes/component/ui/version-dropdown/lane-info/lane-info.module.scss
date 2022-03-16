@@ -39,14 +39,6 @@
     background: var(--bit-bg-heaviest, #ededed);
   }
 
-  &:last-child {
-    margin-bottom: 2px;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
-
-  &.currentVersion {
-    background: var(--bit-accent-bg, #eceaff);
-  }
   .label {
     background-color: white;
     padding: 0px 8px;
