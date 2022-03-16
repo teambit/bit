@@ -30,21 +30,54 @@
   overflow-y: scroll;
 }
 
-.versionLine {
-  cursor: pointer;
+.versionRow {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  height: 36px;
+  height: 40px;
   padding: 0 24px;
-  text-decoration: none;
-  color: var(--bit-text-color-heavy);
-  &:hover {
-    background-color: var(--bit-bg-heavy, #f6f6f6);
+  &.localVersion {
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
+  .versionTimestamp {
+    margin-right: 2px;
+  }
+  .versionUserAvatar {
+    padding: 0px 8px;
+    height: 24px;
+    width: 24px;
+  }
+  .laneIcon {
+    padding: 0px 4px;
+  }
+  .version {
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    align-items: center;
+  }
+  .versionName {
+    padding: 0px 8px;
+  }
+}
+
+.interactive {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bit-bg-heavy, #f6f6f6);
+  }
+
+  &:active {
+    background: var(--bit-bg-heaviest, #ededed);
+  }
+
   &:last-child {
     margin-bottom: 2px;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
+
   &.currentVersion {
     background: var(--bit-accent-bg, #eceaff);
   }
@@ -105,29 +138,7 @@
     font-size: 12px;
   }
 }
-.versionRow {
-  display: flex;
-  justify-content: space-between;
 
-  .versionTimestamp {
-    margin-right: 2px;
-  }
-  .versionUserAvatar {
-    padding: 0px 8px;
-  }
-  .laneIcon {
-    padding: 0px 4px;
-  }
-  .version {
-    width: 60%;
-    display: flex;
-    flex-direction: row;
-    align-content: space-between;
-  }
-  .versionName {
-    padding: 0px 8px;
-  }
-}
 .loading {
   color: var(--bit-bg-heavy, #f6f6f6);
 }

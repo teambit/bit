@@ -1,5 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -138,19 +138,16 @@ function VersionMenu({
       <div className={styles.top}>
         <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
         {localVersion && (
-          <NavLink
+          <MenuLinkItem
             href={'?'}
-            className={classNames(
-              styles.versionLine,
-              styles.versionRow,
-              currentVersion === LOCAL_VERSION && styles.currentVersion
-            )}
+            isActive={() => currentVersion === LOCAL_VERSION}
+            className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>
               <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
               <span className={styles.versionName}>{LOCAL_VERSION}</span>
             </div>
-          </NavLink>
+          </MenuLinkItem>
         )}
       </div>
       <div className={classNames(multipleTabs && styles.tabs)}>
