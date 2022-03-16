@@ -1,30 +1,27 @@
-.versionLine {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 24px;
-  text-decoration: none;
-  color: var(--bit-text-color-heavy);
-  &:hover {
-    background-color: var(--bit-bg-heavy, #f6f6f6);
-  }
-  &:last-child {
-    margin-bottom: 8px;
-  }
-  &.currentVersion {
-    background: var(--bit-accent-bg, #eceaff);
-  }
-  .label {
-    background-color: white;
-    padding: 0px 8px;
-  }
-}
-
 .versionRow {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  padding: 0 24px;
+
+  .versionTimestamp {
+    margin-right: 2px;
+  }
+  .versionUserAvatar {
+    padding: 0px 8px;
+  }
   .laneIcon {
     padding: 0px 4px;
+  }
+  .version {
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    align-items: center;
+  }
+  .versionName {
+    padding: 0px 8px;
   }
 }
