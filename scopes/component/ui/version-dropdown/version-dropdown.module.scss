@@ -63,28 +63,6 @@
   }
 }
 
-.interactive {
-  cursor: pointer;
-
-  &:hover {
-    background: var(--bit-bg-heavy, #f6f6f6);
-  }
-
-  &:active {
-    background: var(--bit-bg-heaviest, #ededed);
-  }
-
-  &:last-child {
-    margin-bottom: 2px;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
-
-  .label {
-    background-color: white;
-    padding: 0px 8px;
-  }
-}
-
 .placeholder {
   display: flex;
   align-items: center;

@@ -27,20 +27,3 @@
     padding: 0px 8px;
   }
 }
-
-.interactive {
-  cursor: pointer;
-
-  &:hover {
-    background: var(--bit-bg-heavy, #f6f6f6);
-  }
-
-  &:active {
-    background: var(--bit-bg-heaviest, #ededed);
-  }
-
-  .label {
-    background-color: white;
-    padding: 0px 8px;
-  }
-}
