@@ -2,7 +2,7 @@ import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
-import { merge } from 'lodash';
+import { merge, uniq } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
@@ -119,6 +119,14 @@ export class ReactNativeMain {
       react.useWebpack(webpackModifiers),
       react.overrideJestConfig(jestConfig),
       react.overrideDependencies(getReactNativeDeps()),
+      envs.override({
+        getHostDependencies: async () => {
+          const reactAdditional = await react.reactEnv.getAdditionalHostDependencies();
+          const currentPeers = Object.keys(getReactNativeDeps().peerDependencies);
+          // We filter react-native as we don't want to bundle it to the web
+          return uniq(reactAdditional.concat(currentPeers).filter((dep) => dep !== 'react-native'));
+        },
+      }),
     ]);
     envs.registerEnv(reactNativeEnv);
     generator.registerComponentTemplate(componentTemplates);

@@ -6,5 +6,5 @@ export type LegacyComponentLog = {
   hash: string;
   tag?: string;
   parents: string[];
-  lane: string;
+  onLane?: boolean;
 };

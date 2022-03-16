@@ -135,15 +135,24 @@ export class LanesModel {
     return grouped;
   }
 
-  static groupByComponentHash(lanes: LaneModel[]): Map<string, { lane: LaneModel; component: LaneComponentModel }> {
-    const grouped = new Map<string, { lane: LaneModel; component: LaneComponentModel }>();
+  static groupByComponentHashAndId(lanes: LaneModel[]): {
+    byHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+    byId: Map<string, LaneModel[]>;
+  } {
+    const byHash = new Map<string, { lane: LaneModel; component: LaneComponentModel }>();
+    const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        grouped.set(component.model.id.version as string, { lane, component });
+        const id = component.model.id.fullName;
+        const version = component.model.id.version as string;
+        byHash.set(version, { lane, component });
+        const existing = byId.get(id) || [];
+        existing.push(lane);
+        byId.set(id, existing);
       });
     });
-    return grouped;
+    return { byHash, byId };
   }
 
   static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LaneModel[] {
@@ -156,20 +165,27 @@ export class LanesModel {
     this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.lanesByScope = LanesModel.groupByScope(this.lanes);
-    this.lanebyComponentHash = LanesModel.groupByComponentHash(this.lanes);
+    const { byHash, byId } = LanesModel.groupByComponentHashAndId(this.lanes);
+    this.lanebyComponentHash = byHash;
+    this.lanesByComponentId = byId;
   }
 
   readonly lanesByScope: Map<string, LaneModel[]>;
   readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+  readonly lanesByComponentId: Map<string, LaneModel[]>;
+
   readonly currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
   isInCurrentLane = (componentId: ComponentID) =>
     this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
 
-  getLaneComponentUrl = (version: string) => {
+  getLaneComponentUrlByVersion = (version?: string) => {
+    if (!version) return '';
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return '';
     return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);
   };
+
+  getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
 }

@@ -14,6 +14,7 @@ import {
   DependencyList,
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
+  PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -60,6 +61,7 @@ export type IsolateComponentsInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 type CreateGraphOptions = {
@@ -130,6 +132,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  packageManagerConfigRootDir?: string;
 };
 
 type CapsulePackageJsonData = {
@@ -286,13 +290,15 @@ export class IsolatorMain {
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
+      packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
     };
 
-    const packageManagerInstallOptions = {
+    const packageManagerInstallOptions: PackageManagerInstallOptions = {
       dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
+      overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
     };
     await installer.install(
       capsulesDir,
