@@ -22,11 +22,11 @@
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
-## Build composable web applications
+## Build composable software
  
-Bit is a toolchain for **composable application development**. With Bit, you can build anything in components.
+Bit is a toolchain for **composable software development**. With Bit, you can build anything in components.
   
-It’s built to **end monolithic web applications** and unlock a distributed form of development that is far more scalable, collaborative, and consistent.  
+It’s built to **end monolithic applications** and unlock a distributed form of development that is far more scalable, collaborative, and consistent.  
 
 Bit allows you to create components that are independently developed, versioned, and can be composed together via dependencies to build anything. Every component can be used and updated in many different applications.  
 
