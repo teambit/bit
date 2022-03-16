@@ -1,8 +1,12 @@
 import React, { useMemo } from 'react';
 import { ComponentComposition } from '@teambit/compositions';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
+import { Icon } from '@teambit/design.elements.icon';
+import { EnvIcon } from '@teambit/envs.ui.env-icon';
+
 import styles from './preview-placeholder.module.scss';
+
+const iconAspects = new Set(['teambit.harmony/aspect']);
 
 export function PreviewPlaceholder({
   component,
@@ -24,6 +28,14 @@ export function PreviewPlaceholder({
         <div>Processing preview</div>
       </div>
     );
+
+  if (!component.compositions.length && iconAspects.has(component.environment?.id || '')) {
+    return (
+      <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
+        <EnvIcon component={component} className={styles.envIcon} />
+      </div>
+    );
+  }
 
   if (shouldShowPreview) {
     return <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />;
