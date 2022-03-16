@@ -8,4 +8,4 @@ export const ComponentDescriptorContext: React.Context<ComponentDescriptor | und
   ComponentDescriptor | undefined
 >(undefined);
 
-export const useComponentDescriptor = () => useContext(ComponentDescriptorContext)
+export const useComponentDescriptor = () => useContext(ComponentDescriptorContext);

@@ -5,7 +5,7 @@ import React from 'react';
 import styles from './version-label.module.scss';
 
 type VersionLabelProps = {
-  status: 'latest' | 'checked-out';
+  status: 'latest' | 'checked-out' | 'current';
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionLabel({ status, className, ...rest }: VersionLabelProps) {
@@ -23,9 +23,10 @@ export type LabelsProps = {
 
 export function Labels({ isCurrent, isLatest }: LabelsProps) {
   return (
-    <div>
+    <div className={styles.labelContainer}>
       {isLatest && <VersionLabel className={styles.versionLabel} status="latest" />}
-      {isCurrent && <VersionLabel status="checked-out" />}
+      {/* {isCurrent && <VersionLabel status="checked-out" />} */}
+      {isCurrent && <VersionLabel className={styles.versionLabel} status="current" />}
       {!isLatest && !isCurrent && <div className={styles.emptyLabel} />}
     </div>
   );

@@ -1,55 +1,8 @@
 ---
-description: Component aspect for Bit components
+description: Composable, independent and reusable piece of software.
 labels: ['component', 'bit', 'extension', 'aspect']
 ---
 
-import { Component } from '@teambit/component.aspect-docs.component';
+import ComponentOverview from '@teambit/component.content.component-overview';
 
-<Component />
-
-## Expanding this aspect
-
-Bit allows you to register to slots and expand the component aspect with new capabilities.
-
-### Available slots:
-
-This aspect can be expanded via its available slots, to allow new capabilities to the component page ui.
-
-#### `registerConsumeMethod`:
-
-This method allows you to register new ways to consume a component, and present it in the component page ui. It will add any custom components to the `use-box` in the page's header.
-
-First, require the component aspect to your aspect's code, and use `registerConsumeMethod` to add your custom **consume method**.
-
-`registerConsumeMethod` expects a callback function that is provided with the `ComponentModel` data in it's `args` and returns an object with `Component` and a `Title` of type `ReactNode` that you would need to supply in order for them to render in the menu.
-
-Another optional parameter is the `order`. This will allow you to decide the order of your method in the tabs.
-
-:::note
-If `Title` or `Component` are `undefined`, the method will not be presented in the menu.
-:::
-
-```
-// in your aspect
-
-import { ComponentUI } from '@teambit/component';
-
-private pnpmMethod: ConsumePlugin = (componentModel) => {
-    const registry = componentModel.packageName.split('/')[0];
-    return {
-      Title: <img src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: (
-        <Install
-          config={`npm config set ${registry}:registry' https://node.bit.dev`}
-          componentName={componentModel.id.name}
-          packageManager="pnpm"
-          copyString={`pnpm i ${componentModel.packageName}`}
-          registryName={registry}
-        />
-      ),
-      order: 1,
-    };
-  };
-
-ComponentUI.registerConsumeMethod(YourAspect.pnpmMethod)
-```
+<ComponentOverview />

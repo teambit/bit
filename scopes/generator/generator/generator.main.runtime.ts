@@ -117,13 +117,13 @@ export class GeneratorMain {
   /**
    * returns a specific component template.
    */
-  getComponentTemplate(name: string, aspectId?: string): ComponentTemplate | undefined {
+  getComponentTemplate(name: string, aspectId?: string): { id: string; template: ComponentTemplate } | undefined {
     const templates = this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
     });
-    return found?.template;
+    return found;
   }
 
   /**
@@ -198,8 +198,8 @@ export class GeneratorMain {
     if (!this.workspace) throw new ConsumerNotFound();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
-    const template = this.getComponentTemplate(templateName, aspectId);
-    if (!template) throw new BitError(`template "${templateName}" was not found`);
+    const templateWithId = this.getComponentTemplate(templateName, aspectId);
+    if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
@@ -209,9 +209,10 @@ export class GeneratorMain {
       this.workspace,
       componentIds,
       options,
-      template,
+      templateWithId.template,
       this.envs,
-      this.newComponentHelper
+      this.newComponentHelper,
+      templateWithId.id
     );
     return componentGenerator.generate();
   }
