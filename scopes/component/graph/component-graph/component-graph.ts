@@ -120,9 +120,17 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           if (Object.prototype.hasOwnProperty.call(value, 'allVersionNodes')) {
             value.allVersionNodes.push(compKey);
           }
-          const currentCompVersion = this.node(compKey)?.attr.id._legacy.getVersion();
-          const latestCompVersion = this.node(value.latestVersionNode)?.attr.id._legacy.getVersion();
-          if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+          const currentComp = this.node(compKey)?.attr;
+          const latestComp = this.node(value.latestVersionNode)?.attr;
+          const isLegacy = !currentComp?.head || !latestComp?.head;
+
+          if (isLegacy) {
+            const currentCompVersion = currentComp?.id._legacy.getVersion();
+            const latestCompVersion = latestComp?.id._legacy.getVersion();
+            if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+              value.latestVersionNode = compKey;
+            }
+          } else if (new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)) {
             value.latestVersionNode = compKey;
           }
         }
