@@ -34,7 +34,7 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
     <div ref={currentVersionRef}>
       <MenuLinkItem isActive={() => isCurrent} href={`?version=${version}`} className={styles.versionRow}>
         <div className={styles.version}>
-          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} showTooltip={true} />
+          <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={styles.versionName}>{version}</Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
         </div>
