@@ -1,12 +1,11 @@
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { VersionLabel } from '@teambit/component.ui.version-label';
 import React, { useMemo, useRef, useEffect } from 'react';
-import classNames from 'classnames';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
-import { DropdownComponentVersion, LOCAL_VERSION } from '../version-dropdown';
+import { DropdownComponentVersion } from '../version-dropdown';
 import styles from './version-info.module.scss';
 
 export type VersionInfoProps = DropdownComponentVersion & {
@@ -33,17 +32,14 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
 
   return (
     <div ref={currentVersionRef}>
-      <NavLink
-        href={version === LOCAL_VERSION ? '?' : `?version=${version}`}
-        className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
-      >
+      <MenuLinkItem isActive={() => isCurrent} href={`?version=${version}`} className={styles.versionRow}>
         <div className={styles.version}>
-          <UserAvatar size={20} account={author} className={styles.versionUserAvatar} showTooltip={true} />
+          <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={styles.versionName}>{version}</Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
         </div>
         <TimeAgo className={styles.versionTimestamp} date={timestamp} />
-      </NavLink>
+      </MenuLinkItem>
     </div>
   );
 }
