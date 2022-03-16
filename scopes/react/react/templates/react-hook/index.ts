@@ -13,8 +13,9 @@ export const reactHook: ComponentTemplate = {
     return [indexFile(context), componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },
   config: {
+    'teambit.react/react': {},
     'teambit.envs/envs': {
       env: 'teambit.react/react',
     },
-  }
+  },
 };

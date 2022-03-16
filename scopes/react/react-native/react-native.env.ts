@@ -1,10 +1,20 @@
 import { Environment, DependenciesEnv } from '@teambit/envs';
+import type { ReactMain } from '@teambit/react';
+import { uniq } from 'lodash';
 
 export const ReactNativeEnvType = 'react-native';
 
 export class ReactNativeEnv implements Environment, DependenciesEnv {
+  constructor(private react: ReactMain) {}
 
-  getDependencies(){
+  async getHostDependencies() {
+    const reactAdditional = await this.react.reactEnv.getAdditionalHostDependencies();
+    const currentPeers = Object.keys(this.getDependencies().peerDependencies);
+    // We filter react-native as we don't want to bundle it to the web
+    return uniq(reactAdditional.concat(currentPeers).filter((dep) => dep !== 'react-native'));
+  }
+
+  getDependencies() {
     return {
       dependencies: {
         react: '-',

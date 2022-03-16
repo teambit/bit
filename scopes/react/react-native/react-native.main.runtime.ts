@@ -2,7 +2,7 @@ import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
-import { merge } from 'lodash';
+import { merge, uniq } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
@@ -118,11 +118,8 @@ export class ReactNativeMain {
     };
 
     const reactNativeComposedEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
-      new ReactNativeEnv(),
-      react.compose([
-        react.useWebpack(webpackModifiers),
-        react.overrideJestConfig(jestConfig)
-      ])
+      new ReactNativeEnv(react),
+      react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
     );
     envs.registerEnv(reactNativeComposedEnv);
     generator.registerComponentTemplate(componentTemplates);

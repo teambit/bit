@@ -1,6 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import React from 'react';
 import { Text, Newline } from 'ink';
+import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { Command } from '@teambit/cli';
 import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
@@ -9,40 +10,16 @@ import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
-  description = 'list all components envs';
+  description = 'list all envs available in the workspace';
   options = [];
   group = 'development';
 
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 
-  async render(): Promise<JSX.Element> {
-    const host = this.componentAspect.getHost();
-    // TODO: think what to do re this line with gilad.
-    if (!host) throw new Error('error: workspace not found');
-    const components = await host.list();
-    // TODO: refactor to a react table
-    return <Text>{this.getTable(components)}</Text>;
-  }
-
-  private getTable(components: Component[]) {
-    const tableData = components.map((component) => {
-      const env = this.envs.getDescriptor(component);
-      return {
-        component: component.id.toString(),
-        env: env ? env.id : 'N/A',
-      };
-    });
-
-    const header = [
-      {
-        value: 'component',
-      },
-      {
-        value: 'env',
-      },
-    ];
-    const table = CLITable.fromObject(header, tableData);
-    return table.render();
+  async report() {
+    const allEnvs = this.envs.getAllRegisteredEnvs().join('\n');
+    const title = chalk.green('the following envs are available in the workspace:');
+    return `${title}\n${allEnvs}`;
   }
 }
 
@@ -110,7 +87,33 @@ export class EnvsCmd implements Command {
 
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 
-  async render() {
-    return new ListEnvsCmd(this.envs, this.componentAspect).render();
+  async render(): Promise<JSX.Element> {
+    const host = this.componentAspect.getHost();
+    // TODO: think what to do re this line with gilad.
+    if (!host) throw new Error('error: workspace not found');
+    const components = await host.list();
+    // TODO: refactor to a react table
+    return <Text>{this.getTable(components)}</Text>;
+  }
+
+  private getTable(components: Component[]) {
+    const tableData = components.map((component) => {
+      const env = this.envs.getDescriptor(component);
+      return {
+        component: component.id.toString(),
+        env: env ? env.id : 'N/A',
+      };
+    });
+
+    const header = [
+      {
+        value: 'component',
+      },
+      {
+        value: 'env',
+      },
+    ];
+    const table = CLITable.fromObject(header, tableData);
+    return table.render();
   }
 }
