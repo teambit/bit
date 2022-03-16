@@ -36,6 +36,7 @@
   align-items: center;
   height: 40px;
   padding: 0 24px;
+
   &.localVersion {
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
@@ -78,9 +79,6 @@
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
 
-  &.currentVersion {
-    background: var(--bit-accent-bg, #eceaff);
-  }
   .label {
     background-color: white;
     padding: 0px 8px;
