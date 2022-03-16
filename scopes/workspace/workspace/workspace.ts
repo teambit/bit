@@ -440,8 +440,8 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id);
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
@@ -1288,8 +1288,9 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       const component = await this.get(id);
       const data = this.envs.getEnvData(component);
       const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
-
-      if (!isUsingAspectEnv && idsWithoutCore.includes(component.id.toString())) {
+      const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
+      const isValidAspect = isUsingAspectEnv || isUsingEnvEnv;
+      if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
         const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
         if (data.id === DEFAULT_ENV) {
           // when cloning a project, or when the node-modules dir is deleted, nothing works and all
@@ -1300,7 +1301,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
           throw err;
         }
       }
-      return isUsingAspectEnv;
+      return isValidAspect;
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);

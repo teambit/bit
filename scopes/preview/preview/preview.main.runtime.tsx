@@ -552,7 +552,10 @@ export class PreviewMain {
     ]);
 
     if (!config.disabled)
-      builder.registerBuildTasks([new EnvPreviewTemplateTask(preview, envs), new PreviewTask(bundler, preview)]);
+      builder.registerBuildTasks([
+        new EnvPreviewTemplateTask(preview, envs, aspectLoader),
+        new PreviewTask(bundler, preview),
+      ]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>

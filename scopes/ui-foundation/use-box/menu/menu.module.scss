@@ -49,7 +49,8 @@
   > div {
     margin: 12px 0;
   }
-  > div:nth-child(2) {
+  > div:nth-child(2),
+  > div:nth-child(4) {
     margin-bottom: 24px;
   }
 }
