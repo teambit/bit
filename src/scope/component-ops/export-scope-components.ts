@@ -280,6 +280,9 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         lane.components.forEach((c) => {
           c.id = c.id.changeScope(remoteName);
         });
+        if (lane.readmeComponent) {
+          lane.readmeComponent.id = lane.readmeComponent.id.changeScope(remoteName);
+        }
         return { ref: lane.hash(), buffer: await lane.compress() };
       })
     );
