@@ -144,7 +144,7 @@ function VersionMenu({
             className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>
-              <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
+              <UserAvatar size={24} account={{}} className={styles.versionUserAvatar} />
               <span className={styles.versionName}>{LOCAL_VERSION}</span>
             </div>
           </MenuLinkItem>
