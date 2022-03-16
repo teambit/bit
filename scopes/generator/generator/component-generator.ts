@@ -24,7 +24,8 @@ export class ComponentGenerator {
     private options: CreateOptions,
     private template: ComponentTemplate,
     private envs: EnvsMain,
-    private newComponentHelper: NewComponentHelperMain
+    private newComponentHelper: NewComponentHelperMain,
+    private aspectId: string
   ) {}
 
   async generate(): Promise<GenerateResult[]> {
@@ -75,18 +76,22 @@ export class ComponentGenerator {
     const nameCamelCase = camelcase(name);
     const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
     const mainFile = files.find((file) => file.isMain);
-    const config = this.addEnvIfProvidedByUser(this.template.config);
+    let config = this.template.config;
+    if (config && typeof config === 'function') {
+      config = config({ aspectId: this.aspectId });
+    }
+    const configWithEnv = this.addEnvIfProvidedByUser(config);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
       defaultScope: this.options.scope,
-      config,
+      config: configWithEnv,
     });
     const component = await this.workspace.get(componentId);
     const env = this.envs.getEnv(component);
-    await this.removeOtherEnvs(component, env, config);
+    await this.removeOtherEnvs(component, env, configWithEnv);
     return {
       id: componentId,
       dir: componentPath,
