@@ -46,7 +46,7 @@ export function Overview({ titleBadges, cannotBeConsumed }: OverviewProps) {
     );
 
   if (showHeaderOutsideIframe) {
-    const badges = flatten(titleBadges.values());
+    const badges = flatten(titleBadges?.values());
 
     return (
       <div className={styles.overviewWrapper}>
