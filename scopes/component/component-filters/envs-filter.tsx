@@ -88,16 +88,16 @@ function envsFilter({
     updateFilter(currentFilter);
   };
 
-  const onClear = () => {
+  const onClear = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.stopPropagation();
     currentEnvsState.forEach((value, key) => {
       currentEnvsState.set(key, { ...value, active: false });
     });
     updateFilter(currentFilter);
   };
 
-  const onSubmit = () => {
-    //TODO: waiting for Josh to publish a new version of MultiSelect
-    // event.stopPropagation();
+  const onSubmit = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.stopPropagation();
     currentFilter.state.dropdownState = false;
     updateFilter(currentFilter);
   };
@@ -115,8 +115,7 @@ function envsFilter({
         onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
-        //TODO: waiting for Josh to publish a new version of MultiSelect
-        // open={currentFilter.state.dropdownState}
+        open={currentFilter.state.dropdownState}
         onClick={onDropdownClicked}
         dropdownBorder={false}
         className={styles.envFilterDropdownContainer}
