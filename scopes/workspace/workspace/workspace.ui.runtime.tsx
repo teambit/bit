@@ -13,7 +13,6 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-// import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentFiltersSlot, ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component-filters';
 import { DrawerWidgetSlot, ComponentsDrawer, FilterWidget, TreeToggleWidget } from '@teambit/component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
@@ -136,7 +135,6 @@ export class WorkspaceUI {
 
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
-    // this.registerDrawers(new WorkspaceComponentsDrawer(this.sidebarSlot));
     const workspaceDrawer = this.getDrawer();
     this.registerDrawers(workspaceDrawer);
 
