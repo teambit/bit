@@ -817,7 +817,7 @@ export default class Consumer {
   private stripNodeModulesFromPackagePath(requirePath: string): string {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
-    const withoutPrefix = prefix ? requirePath.substr(requirePath.indexOf(prefix) + prefix.length) : requirePath;
+    const withoutPrefix = prefix ? requirePath.slice(requirePath.indexOf(prefix) + prefix.length) : requirePath;
     if (!withoutPrefix.includes('/') && withoutPrefix.startsWith('@')) {
       throw new GeneralError(
         'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'
