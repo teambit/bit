@@ -112,10 +112,6 @@ export default class ComponentLoader {
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id: BitId) => {
-      // @todo: this is a workaround due to an issue having teambit/legacy-bit-id package with two different versions
-      // one in the root, and the second in the component-id node_modules dir.
-      // once fixed, please uncomment the line below.
-      // if (!(id instanceof BitId)) {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }

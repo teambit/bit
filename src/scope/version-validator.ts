@@ -238,7 +238,7 @@ export default function validateVersionInstance(version: Version): void {
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {
-      if (!(dependency instanceof BitId)) {
+      if (dependency.constructor.name !== BitId.name) {
         throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
       }
       if (!dependency.hasVersion()) {

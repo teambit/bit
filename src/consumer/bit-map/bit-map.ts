@@ -408,10 +408,6 @@ export default class BitMap {
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
     if (bitId.constructor.name !== BitId.name) {
-      // @todo: this is a workaround due to an issue having teambit/legacy-bit-id package with two different versions
-      // one in the root, and the second in the component-id node_modules dir.
-      // once fixed, please uncomment the line below.
-      // if (!(bitId instanceof BitId)) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
     const allIds = this.getAllBitIdsFromAllLanes();
