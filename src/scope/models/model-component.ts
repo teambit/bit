@@ -44,6 +44,7 @@ import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
+import { INTERNAL_CONFIG_FIELDS } from '../../consumer/config/extension-data';
 
 type State = {
   versions?: {
@@ -736,6 +737,23 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return deprecationAspect.config.deprecate;
   }
 
+  async isLaneReadmeOf(repo: Repository): Promise<string[]> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // we dont support lanes in legacy
+      return [];
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's deprecated
+      return [];
+    }
+    const lanesAspect = version.extensions.findCoreExtension(Extensions.lanes);
+    if (!lanesAspect) {
+      return [];
+    }
+    return Object.keys(lanesAspect.config).filter((key) => INTERNAL_CONFIG_FIELDS.indexOf(key) < 0);
+  }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
    * when it's being called from the Consumer, some manipulation are done on the component, such
