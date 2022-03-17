@@ -282,7 +282,6 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         });
         if (lane.readmeComponent) {
           lane.readmeComponent.id = lane.readmeComponent.id.changeScope(remoteName);
-          lane.readmeComponent.head = lane.getComponentHead(lane.readmeComponent.id);
         }
         return { ref: lane.hash(), buffer: await lane.compress() };
       })
