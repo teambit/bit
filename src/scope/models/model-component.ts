@@ -494,13 +494,18 @@ export default class Component extends BitObject {
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
+      const currentBitId = this.toBitId();
       const versionToAddRef = Ref.from(versionToAdd);
-      const existingComponentInLane = lane.getComponentByName(this.toBitId());
+      const existingComponentInLane = lane.getComponentByName(currentBitId);
       const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
       if (currentHead && !currentHead.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(currentHead);
       }
-      lane.addComponent({ id: this.toBitId(), head: versionToAddRef });
+      lane.addComponent({ id: currentBitId, head: versionToAddRef });
+
+      if (lane.readmeComponent && lane.readmeComponent.id.isEqualWithoutScopeAndVersion(currentBitId)) {
+        lane.setReadmeComponent(currentBitId);
+      }
       repo.add(lane);
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;

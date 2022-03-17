@@ -17,18 +17,18 @@ export type LaneProps = {
   scope?: string;
   components?: LaneComponent[];
   hash: string;
-  readmeComponent?: LaneComponent;
+  readmeComponent?: LaneReadmeComponent;
 };
 
 export type LaneComponent = { id: BitId; head: Ref };
-
+export type LaneReadmeComponent = { id: BitId; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
   // @todo: delete this. seems like it being written to the filesystem and it should not
   scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
   remoteLaneId?: RemoteLaneId;
   components: LaneComponent[];
-  readmeComponent?: LaneComponent;
+  readmeComponent?: LaneReadmeComponent;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
 
   constructor(props: LaneProps) {
@@ -68,7 +68,7 @@ export default class Lane extends BitObject {
         })),
         readmeComponent: this.readmeComponent && {
           id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
-          head: this.readmeComponent.head.toString(),
+          head: this.readmeComponent.head?.toString() ?? null,
         },
       },
       (val) => !!val
@@ -91,7 +91,7 @@ export default class Lane extends BitObject {
       })),
       readmeComponent: laneObject.readmeComponent && {
         id: new BitId({ scope: laneObject.readmeComponent.id.scope, name: laneObject.readmeComponent.id.name }),
-        head: new Ref(laneObject.readmeComponent.head),
+        head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       hash: laneObject.hash || hash,
     });
@@ -141,9 +141,10 @@ export default class Lane extends BitObject {
     }
     const readmeComponent = this.getComponentByName(id);
     if (!readmeComponent) {
-      throw new GeneralError(`cannot add ${id} as a readme component. ${id} doesn't exist on the lane ${this.name}`);
+      this.readmeComponent = { id, head: null };
+    } else {
+      this.readmeComponent = readmeComponent;
     }
-    this.readmeComponent = readmeComponent;
   }
 
   async isFullyMerged(scope: Scope): Promise<boolean> {
@@ -185,20 +186,11 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    let isReadmeComponentValid = !this.readmeComponent;
     this.components.forEach((component) => {
-      // if the readmeComponent exists and it is invalid, revalidate it and ensure it is a lane component
-      if (this.readmeComponent && !isReadmeComponentValid) {
-        isReadmeComponentValid = component.id.isEqualWithoutVersion(this.readmeComponent.id);
-      }
-
       if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
     });
-    if (!isReadmeComponentValid) {
-      throw new GeneralError(`${message}, readme component is not a lane component`);
-    }
     if (this.name === DEFAULT_LANE) {
       throw new GeneralError(`${message}, this name is reserved as the default lane`);
     }
