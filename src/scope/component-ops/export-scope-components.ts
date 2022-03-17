@@ -348,7 +348,6 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
           ? lane.readmeComponent.id
           : lane.readmeComponent.id.changeScope(remoteName);
-        lane.readmeComponent.head = lane.getComponentHead(lane.readmeComponent.id);
       }
       const laneData = { ref: lane.hash(), buffer: await lane.compress() };
       objectList.addIfNotExist([laneData]);
