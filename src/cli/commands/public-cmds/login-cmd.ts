@@ -1,21 +1,21 @@
 import chalk from 'chalk';
 
 import { login } from '../../../api/consumer';
-import { BASE_WEB_DOMAIN } from '../../../constants';
+import { BASE_CLOUD_DOMAIN } from '../../../constants';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Login implements LegacyCommand {
   name = 'login';
-  description = 'log the CLI into Bit';
+  description = 'log the CLI into Bit Cloud';
   group: Group = 'general';
   alias = '';
   skipWorkspace = true;
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
-    ['', 'npmrc-path <path>', `path to npmrc file to configure ${BASE_WEB_DOMAIN} registry`],
-    ['', 'skip-registry-config', `don't configure ${BASE_WEB_DOMAIN} registry`],
+    ['', 'npmrc-path <path>', `path to npmrc file to configure ${BASE_CLOUD_DOMAIN} registry`],
+    ['', 'skip-registry-config', `don't configure ${BASE_CLOUD_DOMAIN} registry`],
     [
       '',
       'machine-name <string>',

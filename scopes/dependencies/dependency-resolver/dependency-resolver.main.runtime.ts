@@ -77,7 +77,11 @@ import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 
+/**
+ * @deprecated use BIT_CLOUD_REGISTRY instead
+ */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
+export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
