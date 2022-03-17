@@ -13,6 +13,17 @@
     display: flex;
     z-index: $nav-z-index + 2;
   }
+
+  .filterIcon {
+    img {
+      width: 16px;
+    }
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 14px;
+    }
+  }
 }
 .envFilterDropdownContainer {
   width: 100%;

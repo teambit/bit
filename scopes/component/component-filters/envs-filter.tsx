@@ -109,6 +109,9 @@ function envsFilter({
 
   return (
     <div className={classNames(styles.envsFilterContainer, className)}>
+      <div className={styles.filterIcon}>
+        <img src="https://static.bit.dev/bit-icons/env.svg" />
+      </div>
       <MultiSelect
         itemsList={selectList}
         placeholderText={'Environments'}
