@@ -112,21 +112,29 @@ export class ComponentsDrawer implements DrawerType {
 
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
-    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = flatten(
-      filtersSlot?.toArray().map(([key, filtersByKey]) => {
-        return filtersByKey.map((filter) => ({ ...filter, key }));
-      })
-    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
+      () =>
+        flatten(
+          filtersSlot?.toArray().map(([key, filtersByKey]) => {
+            return filtersByKey.map((filter) => ({ ...filter, key }));
+          })
+        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      [filtersSlot]
+    );
 
-    const filtersToRender = filtersWithKey.map((filter) => {
-      return (
-        <filter.render
-          key={`${filter.key}-${filter.id}`}
-          components={allComponentModels}
-          className={classNames(styles.filter)}
-        />
-      );
-    });
+    const filtersToRender = useMemo(
+      () =>
+        filtersWithKey.map((filter) => {
+          return (
+            <filter.render
+              key={`${filter.key}-${filter.id}`}
+              components={allComponentModels}
+              className={classNames(styles.filter)}
+            />
+          );
+        }),
+      [filters]
+    );
 
     const isVisible = visibleComponents.length > 0;
 
