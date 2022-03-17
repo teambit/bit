@@ -745,7 +745,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     }
     const version = (await repo.load(head)) as Version;
     if (!version) {
-      // the head Version doesn't exist locally, there is no way to know whether it's deprecated
+      // the head Version doesn't exist locally, there is no way to know whether it is a lane readme component
       return [];
     }
     const lanesAspect = version.extensions.findCoreExtension(Extensions.lanes);
