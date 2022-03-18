@@ -1,1 +1,1 @@
-export const baseUrl = 'https://bit.dev';
+export const baseUrl = 'https://bit.cloud';

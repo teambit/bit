@@ -9,7 +9,7 @@ import {
   BasicTagParams,
 } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { isString } from '@teambit/legacy/dist/utils';
-import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 
@@ -17,10 +17,7 @@ export class Tag implements Command {
   name = 'tag [id...]';
   group = 'development';
   shortDescription = 'record component changes and lock versions';
-  description = `record component changes and lock versions.
-if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
-https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
-${WILDCARD_HELP('tag')}`;
+  description: string;
   alias = 't';
   loader = true;
   options = [
@@ -59,6 +56,13 @@ ${WILDCARD_HELP('tag')}`;
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
+
+  constructor(private docsDomain: string) {
+    this.description = `record component changes and lock versions.
+if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
+https://${docsDomain}/components/tags
+${WILDCARD_HELP('tag')}`;
+  }
 
   // eslint-disable-next-line complexity
   async report(

@@ -407,7 +407,7 @@ export default class BitMap {
     bitId: BitId,
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
-    if (!(bitId instanceof BitId)) {
+    if (bitId.constructor.name !== BitId.name) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
     const allIds = this.getAllBitIdsFromAllLanes();

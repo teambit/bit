@@ -10,9 +10,9 @@ export class HelpCmd implements Command {
   group = 'general';
   options = [] as CommandOptions;
 
-  constructor(private cliMain: CLIMain) {}
+  constructor(private cliMain: CLIMain, private docsDomain: string) {}
 
   async report() {
-    return formatHelp(this.cliMain.commands, this.cliMain.groups);
+    return formatHelp(this.cliMain.commands, this.cliMain.groups, this.docsDomain);
   }
 }

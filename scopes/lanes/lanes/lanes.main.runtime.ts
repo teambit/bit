@@ -13,6 +13,9 @@ import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
+
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -171,14 +174,20 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect];
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql]: [CLIMain, ScopeMain, Workspace, GraphqlMain]) {
+  static async provider([cli, scope, workspace, graphql, community]: [
+    CLIMain,
+    ScopeMain,
+    Workspace,
+    GraphqlMain,
+    CommunityMain
+  ]) {
     const lanesMain = new LanesMain(workspace, scope);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd();
     if (!isLegacy) {
-      const laneCmd = new LaneCmd(lanesMain, workspace, scope);
+      const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
       laneCmd.commands = [
         new LaneListCmd(lanesMain, workspace, scope),
         switchCmd,
