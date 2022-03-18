@@ -31,6 +31,7 @@ import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { Scope } from '../../../scope';
+import { LaneReadmeComponent } from '../../../scope/models/lane';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -116,6 +117,11 @@ async function exportComponents({
     await _throwForModified(consumer, idsToExport);
     const { components } = await consumer.loadComponents(idsToExport);
     componentsToExport = components;
+  }
+
+  // validate lane readme component and ensure it has been snapped
+  if (laneObject?.readmeComponent) {
+    _throwForUnsnappedLaneReadme(laneObject);
   }
 
   const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
@@ -365,4 +371,18 @@ async function _throwForModified(consumer: Consumer, ids: BitIds) {
       );
     }
   });
+}
+
+function _throwForUnsnappedLaneReadme(lane: Lane) {
+  const readmeComponent = lane.readmeComponent as LaneReadmeComponent;
+
+  const isValid =
+    lane.getComponent(readmeComponent.id) && lane.getComponentHead(readmeComponent.id)?.isEqual(readmeComponent.head);
+
+  if (!isValid) {
+    throw new Error(
+      `${lane?.name} has a readme component ${readmeComponent.id} that hasn't been snapped on the lane.
+      Please run either snap -a or snap ${readmeComponent.id} to snap the component on the lane before exporting it.`
+    );
+  }
 }

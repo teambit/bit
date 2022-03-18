@@ -88,7 +88,7 @@ describe('bit lane command', function () {
       const bitMap = helper.bitMap.read();
       expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({ dev: { readme: true } });
     });
-    it.only('should not allow exporting a lane with unsnapped readme component', () => {
+    it('should not allow exporting a lane with unsnapped readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
       helper.command.snapComponentWithoutBuild('comp2');
       expect(() => helper.command.exportLane()).throws();
