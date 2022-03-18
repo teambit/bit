@@ -10,12 +10,17 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         head: String!
       }
 
+      type ReadmeCompLaneData {
+        id: ComponentID!
+        head: String
+      }
+
       type LanesData {
         name: String!
         components: [CompLaneData]
         isMerged: Boolean
         remote: String
-        readmeComponent: CompLaneData
+        readmeComponent: ReadmeCompLaneData
       }
 
       type FileDiff {

@@ -417,9 +417,10 @@ function outputComponents(components: LaneData['components']): string {
 
 function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
-  return `\n\t${chalk.bold(
-    `${chalk.yellow('readme component')}\n\t  ${component.id.toString()} - ${component.head}`
-  )}\n`;
+  return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
+    component.head ||
+    `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
+  }`}\n`;
 }
 
 function outputRemoteLane(remoteLane: string | null | undefined): string {
