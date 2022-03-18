@@ -18,22 +18,6 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
       `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
     );
   }
-  // // validate lane readme component and ensure it has been snapped
-  // if (lane.readmeComponent) {
-  //   console.log("🚀 ~ file: export-lanes.ts ~ line 24 ~ updateLanesAfterExport ~ lane", lane)
-  //   const isValid =
-  //     lane.components.findIndex(
-  //       (component) =>
-  //         component.id.isEqualWithoutVersion((lane.readmeComponent as LaneReadmeComponent).id) &&
-  //         lane.readmeComponent?.head === component.head
-  //     ) >= 0;
-  //   if (!isValid) {
-  //     throw new Error(
-  //       `${lane.name} has a readme component ${lane.readmeComponent.id} that hasn't been snapped on the lane.
-  //       Please run either snap -a or snap ${lane.readmeComponent.id} to snap the component on the lane before exporting it.`
-  //     );
-  //   }
-  // }
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
   const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
   consumer.bitMap.setRemoteLane(remoteLaneId);
