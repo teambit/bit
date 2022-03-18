@@ -1,23 +1,24 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { ClearCacheMain } from './clear-cache.main.runtime';
 
 export default class ClearCacheCmd implements Command {
   name = 'clear-cache';
   description = "clears Bit's cache from current working machine";
   group = 'general';
-  extendedDescription = `The following gets removed by this command:
-1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
-2) components cache on the filesystem (mainly the dependencies graph and docs)
-3) scope's index file, which maps the component-id:object-hash
-https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
+  extendedDescription: string;
   alias = 'cc';
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
   loader = false;
   skipWorkspace = true;
 
-  constructor(private clearCache: ClearCacheMain) {}
+  constructor(private clearCache: ClearCacheMain, private docsDomain: string) {
+    this.extendedDescription = `The following gets removed by this command:
+1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
+2) components cache on the filesystem (mainly the dependencies graph and docs)
+3) scope's index file, which maps the component-id:object-hash
+https://${docsDomain}/workspace/clearing-cache`;
+  }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {
     if (remote) {

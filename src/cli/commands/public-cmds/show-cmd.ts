@@ -9,7 +9,7 @@ import paintComponent from '../../templates/component-template';
 
 export default class Show implements LegacyCommand {
   name = 'show <id>';
-  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/view#show`;
+  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/components/component-config`;
   shortDescription = 'show component overview';
   group: Group = 'info';
   alias = '';

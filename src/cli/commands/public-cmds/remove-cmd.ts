@@ -14,7 +14,7 @@ export default class Remove implements LegacyCommand {
   shortDescription = 'remove component(s) from your working area, or a remote scope';
   group: Group = 'collaborate';
   description = `remove a component (local/remote)
-  https://${BASE_DOCS_DOMAIN}/docs/removing-components
+  https://${BASE_DOCS_DOMAIN}/components/removing-components
   ${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';
