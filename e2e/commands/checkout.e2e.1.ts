@@ -14,7 +14,7 @@ const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const successOutput = 'successfully switched';
 
-describe('bit checkout command', function () {
+describe('bit checkout command (legacy)', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -26,92 +26,6 @@ describe('bit checkout command', function () {
   });
   after(() => {
     helper.scopeHelper.destroy();
-  });
-  describe('for non existing component', () => {
-    it('show an error saying the component was not found', () => {
-      const useFunc = () => helper.command.runCmd('bit checkout 1.0.0 utils/non-exist');
-      const error = new MissingBitMapComponent('utils/non-exist');
-      helper.general.expectToThrow(useFunc, error);
-    });
-  });
-  describe('after the component was created', () => {
-    before(() => {
-      helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFoo();
-    });
-    it('before tagging it should show an error saying the component was not tagged yet', () => {
-      const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string("component bar/foo doesn't have any version yet");
-    });
-    describe('after the component was tagged', () => {
-      before(() => {
-        helper.command.tagAllComponents('', '0.0.5');
-      });
-      describe('using a non-exist version', () => {
-        it('should show an error saying the version does not exist', () => {
-          const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-          expect(output).to.have.string("component bar/foo doesn't have version 1.0.0");
-        });
-      });
-      describe('and component was modified', () => {
-        before(() => {
-          helper.fixtures.createComponentBarFoo(barFooV2);
-        });
-        it('should show an error saying the component already uses that version', () => {
-          const output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
-        });
-        describe('and tagged again', () => {
-          let output;
-          before(() => {
-            helper.command.tagAllComponents('', '0.0.10');
-            output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
-          });
-          it('should display a successful message', () => {
-            expect(output).to.have.string(successOutput);
-            expect(output).to.have.string('0.0.5');
-            expect(output).to.have.string('bar/foo');
-          });
-          it('should revert to v1', () => {
-            const fooContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
-            expect(fooContent.toString()).to.equal(barFooV1);
-          });
-          it('should update bitmap with the used version', () => {
-            const bitMap = helper.bitMap.read();
-            expect(bitMap).to.have.property('bar/foo@0.0.5');
-            expect(bitMap).to.not.have.property('bar/foo');
-            expect(bitMap).to.not.have.property('bar/foo@0.0.10');
-          });
-          it('should not show the component as modified', () => {
-            const statusOutput = helper.command.runCmd('bit status');
-            expect(statusOutput).to.not.have.string('modified components');
-          });
-          it('bit list should show the currently used version and latest local version', () => {
-            const listOutput = helper.command.listLocalScopeParsed('--outdated');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            expect(listOutput[0].currentVersion).to.equal('0.0.5');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            expect(listOutput[0].localVersion).to.equal('0.0.10');
-          });
-          describe('trying to tag when using an old version', () => {
-            before(() => {
-              helper.fixtures.createComponentBarFoo('console.log("modified components");');
-            });
-            it('should throw an error NewerVersionFound', () => {
-              const tagFunc = () => helper.command.tagComponent('bar/foo');
-              const error = new NewerVersionFound([
-                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' },
-              ]);
-              helper.general.expectToThrow(tagFunc, error);
-            });
-            it('should allow tagging when --ignore-newest-version flag is used', () => {
-              const tagOutput = helper.command.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(tagOutput).to.have.string('1 component(s) tagged');
-            });
-          });
-        });
-      });
-    });
   });
   describe('components with dependencies with multiple versions', () => {
     let localScope;
