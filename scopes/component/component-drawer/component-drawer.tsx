@@ -33,7 +33,7 @@ import styles from './component-drawer.module.scss';
 export type ComponentsDrawerProps = {
   id: string;
   name: string;
-  getDrawerComponents: () => { components: ComponentModel[]; loading?: boolean };
+  useComponents: () => { components: ComponentModel[]; loading?: boolean };
   filtersSlot?: ComponentFiltersSlot;
   drawerWidgetSlot?: DrawerWidgetSlot;
   treeNodeSlot?: ComponentTreeSlot;
@@ -47,7 +47,7 @@ export type ComponentsDrawerProps = {
 export class ComponentsDrawer implements DrawerType {
   readonly id: string;
   readonly name: string;
-  readonly getDrawerComponents: () => { components: ComponentModel[]; loading?: boolean };
+  readonly useComponents: () => { components: ComponentModel[]; loading?: boolean };
   readonly tooltip?: string;
   readonly order?: number;
   readonly isHidden?: () => boolean;
@@ -64,7 +64,7 @@ export class ComponentsDrawer implements DrawerType {
     this.order = props.order;
     this.isHidden = props.isHidden;
     this.widgets = (props.drawerWidgetSlot && flatten(props.drawerWidgetSlot?.values())) || [];
-    this.getDrawerComponents = props.getDrawerComponents;
+    this.useComponents = props.useComponents;
     this.treeNodeSlot = props.treeNodeSlot;
     this.emptyDrawerMessage = props.emptyDrawerMessage;
     this.filtersSlot = props.filtersSlot;
@@ -81,7 +81,7 @@ export class ComponentsDrawer implements DrawerType {
    */
 
   Context = ({ children }) => {
-    const { components, loading } = this.getDrawerComponents();
+    const { components, loading } = this.useComponents();
     const filters = flatten(this.filtersSlot?.values() || []);
     const combinedContexts = [
       [DrawerComponentsProvider, { components, loading }] as ComponentTuple<{

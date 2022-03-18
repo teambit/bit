@@ -268,7 +268,7 @@ export class ScopeUI {
       filtersSlot: this.drawerComponentsFiltersSlot,
       treeNodeSlot: this.sidebarSlot,
       emptyDrawerMessage: 'Scope is empty',
-      getDrawerComponents: () => {
+      useComponents: () => {
         const scope = useContext(ScopeContext);
         return {
           loading: !scope,
