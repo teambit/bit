@@ -1,6 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
+
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
@@ -36,18 +39,17 @@ export class ComponentLogMain {
 
   private stringifyLogInfoOneLine(logInfo: ComponentLogInfo) {
     const parents = logInfo.parents.length ? `Parent(s): ${logInfo.parents.join(', ')}` : '<N/A>';
-    const lane = `Lane "${logInfo.lane}"`;
     return `${chalk.yellow(logInfo.hash)} ${logInfo.username || ''} ${logInfo.date || ''} ${
       logInfo.message
-    } ${lane}, ${parents}`;
+    }, ${parents}`;
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, CommunityAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
+  static async provider([cli, workspace, community]: [CLIMain, Workspace, CommunityMain]) {
     const componentLog = new ComponentLogMain(workspace);
-    cli.register(new LogCmd(componentLog));
+    cli.register(new LogCmd(componentLog, community.getDocsDomain()));
     return componentLog;
   }
 }
@@ -57,7 +59,7 @@ ComponentLogAspect.addRuntime(ComponentLogMain);
 export type ComponentLogInfo = {
   hash: string;
   message: string;
-  lane: string;
+  onLane?: boolean;
   parents: string[];
   username?: string;
   email?: string;

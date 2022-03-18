@@ -490,10 +490,14 @@ export default class Scope {
     const modelComponent = await this.sources.get(id);
     if (modelComponent) {
       // @todo: what about other places the model-component is loaded
-      const currentLane = await this.lanes.getCurrentLaneObject();
+      const currentLane = await this.getCurrentLaneObject();
       await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
     }
     return modelComponent;
+  }
+
+  async getCurrentLaneObject() {
+    return this.loadLane(this.lanes.getCurrentLaneId());
   }
 
   /**
@@ -561,12 +565,11 @@ export default class Scope {
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId, shortHash = false): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: BitId, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const currentLane = this.lanes.getCurrentLaneId();
-    const startFrom = id.hasVersion() ? componentModel.getRef(id.version as string) : null;
-    const logs = await componentModel.collectLogs(this.objects, currentLane, shortHash, startFrom);
+    const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
+    const logs = await componentModel.collectLogs(this.objects, shortHash, startFromRef);
     return logs;
   }
 

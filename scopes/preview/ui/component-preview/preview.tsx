@@ -25,9 +25,10 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   queryParams?: string | string[];
 
   /**
-   * enable/disable hot reload for the composition preview.
+   * establish a pubsub connection to the iframe,
+   * allowing sending and receiving messages
    */
-  hotReload?: boolean;
+  pubsub?: boolean;
 
   /**
    * is preview being rendered in full height and should fit view height to content.
@@ -38,24 +39,19 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
 /**
  * renders a preview of a component.
  */
-// TODO - Kutner fix unused var - 'hotReload' should be used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ComponentPreview({
   component,
   previewName,
   queryParams,
+  pubsub = true,
   fullContentHeight = false,
   ...rest
 }: ComponentPreviewProps) {
   const [iframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
-  usePubSubIframe(iframeRef);
+  usePubSubIframe(pubsub ? iframeRef : undefined);
 
   const url = toPreviewUrl(component, previewName, queryParams);
   return (
     <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
   );
 }
-
-ComponentPreview.defaultProps = {
-  hotReload: true,
-};

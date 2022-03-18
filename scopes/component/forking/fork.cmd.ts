@@ -8,8 +8,10 @@ export type ForkOptions = {
 };
 
 export class ForkCmd implements Command {
-  name = 'fork <source-id> [target-id]';
+  name = 'fork <source-id> [target-name]';
   description = 'EXPERIMENTAL. create a new component out of an existing one';
+  extendedDescription = `note that [target-name] is the name only without the scope.
+to set the default-scope, please use --scope flag`;
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';

@@ -36,7 +36,8 @@ describe('component config', function () {
       });
       it('expect to output the path of the config', () => {
         alignedOutput = GeneralHelper.alignOutput(output);
-        expect(alignedOutput).to.have.string(getSuccessEjectMsg('bar/foo', componentJsonPath));
+        const compJsonRelative = helper.componentJson.composePath('bar', false);
+        expect(alignedOutput).to.have.string(compJsonRelative);
       });
       it('expect to write a component json file', () => {
         expect(componentJsonPath).to.be.a.file();
@@ -84,9 +85,7 @@ describe('component config', function () {
           helper.general.expectToThrow(ejectCmd, error);
         });
         it('should success if override used', () => {
-          output = helper.command.ejectConf('bar/foo', { override: '' });
-          alignedOutput = GeneralHelper.alignOutput(output);
-          expect(alignedOutput).to.have.string(getSuccessEjectMsg('bar/foo', componentJsonPath));
+          expect(() => helper.command.ejectConf('bar/foo', { override: '' })).not.to.throw();
         });
       });
       describe('when there are variant extensions defined', () => {
@@ -222,10 +221,6 @@ describe('component config', function () {
     });
   });
 });
-
-function getSuccessEjectMsg(compId: string, componentJsonPath: string): string {
-  return `successfully ejected config for component ${compId} in path ${componentJsonPath}`;
-}
 
 function getExtensionEntry(extensionId: string, config: any): any {
   return {

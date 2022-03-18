@@ -85,6 +85,14 @@ export class AspectList {
     return serializedEntries;
   }
 
+  filter(ids?: string[]): AspectList {
+    if (!ids?.length) return new AspectList(this.entries);
+    const entries = this.entries.filter((aspectEntry) => {
+      return ids?.includes(aspectEntry.id.toStringWithoutVersion());
+    });
+    return new AspectList(entries);
+  }
+
   toLegacy(): ExtensionDataList {
     const legacyEntries = this.entries.map((entry) => entry.legacy);
     return ExtensionDataList.fromArray(legacyEntries);
@@ -93,6 +101,10 @@ export class AspectList {
   stringIds(): string[] {
     const ids = this.entries.map((entry) => entry.id.toString());
     return ids;
+  }
+
+  clone(): AspectList {
+    return new AspectList(this.entries.map((entry) => entry.clone()));
   }
 
   static fromLegacyExtensions(legacyDataList: ExtensionDataList, scope?: string): AspectList {

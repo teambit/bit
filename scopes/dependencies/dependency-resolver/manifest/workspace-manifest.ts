@@ -37,10 +37,10 @@ export class WorkspaceManifest extends Manifest {
     return manifest;
   }
 
-  toJsonWithDir(options: WorkspaceManifestToJsonOptions = {}): { rootDir: string, manifest: Record<string, any> } {
+  toJsonWithDir(options: WorkspaceManifestToJsonOptions = {}): { rootDir: string; manifest: Record<string, any> } {
     return {
       manifest: this.toJson(options),
       rootDir: this.rootDir,
-    }
+    };
   }
 }

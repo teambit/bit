@@ -10,7 +10,7 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
-import path from 'path';
+import path, { sep } from 'path';
 import { html } from './html';
 
 /*
@@ -28,7 +28,7 @@ const port = process.env.WDS_SOCKET_PORT;
 //   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
 // );
 
-const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
+const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', sep, `${sep}public`);
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -136,11 +136,13 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         },
       },
 
-      onBeforeSetupMiddleware({ app, server }) {
+      onBeforeSetupMiddleware(wds) {
+        const { app } = wds;
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        app.use(evalSourceMapMiddleware(server));
+        // @ts-ignore @types/wds mismatch
+        app.use(evalSourceMapMiddleware(wds));
         // This lets us open files from the runtime error overlay.
         app.use(errorOverlayMiddleware());
       },

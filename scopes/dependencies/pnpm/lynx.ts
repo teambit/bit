@@ -12,7 +12,13 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { MutatedProject, mutateModules, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import {
+  MutatedProject,
+  mutateModules,
+  InstallOptions,
+  PeerDependencyIssuesByProjects,
+  ProjectOptions,
+} from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
@@ -208,6 +214,7 @@ export async function install(
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
+    pruneLockfileImporters: true,
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,

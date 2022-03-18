@@ -4,11 +4,11 @@ import { compact, flatten } from 'lodash';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap } from '@teambit/tester';
+import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap, ComponentsResults } from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
-import { ComponentMap, ComponentID } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type jest from 'jest';
 import { JestError } from './error';
@@ -66,10 +66,11 @@ export class JestTester implements Tester {
     components: ComponentMap<JestTestResult[] | undefined>,
     testerContext: TesterContext,
     config?: any
-  ) {
+  ): ComponentsResults[] {
     const testsSuiteResult = components.toArray().map(([component, testsFiles]) => {
-      if (!testsFiles) return;
-      if (testsFiles?.length === 0) return;
+      if (!testsFiles) return undefined;
+      if (testsFiles?.length === 0) return undefined;
+      const errors = this.getErrors(testsFiles);
       const tests = testsFiles.map((test) => {
         const file = new AbstractVinyl({ path: test.testFilePath, contents: readFileSync(test.testFilePath) });
         const testResults = test.testResults.map((testResult) => {
@@ -85,10 +86,17 @@ export class JestTester implements Tester {
           );
         });
         const filePath = file?.basename || test.testFilePath;
-        const error = {
-          failureMessage: test.testExecError ? test.failureMessage : undefined,
-          error: test.testExecError?.message,
+        const getError = () => {
+          if (!test.testExecError) return undefined;
+          if (testerContext.watch) {
+            // for some reason, during watch ('bit start'), if a file has an error, the `test.testExecError` is `{}`
+            // (an empty object). the failureMessage contains the stringified error.
+            // @todo: consider to always use the failureMessage, regardless the context.watch.
+            return new JestError(test.failureMessage as string);
+          }
+          return new JestError(test.testExecError?.message, test.testExecError?.stack);
         };
+        const error = getError();
         return new TestsFiles(
           filePath,
           testResults,
@@ -100,15 +108,14 @@ export class JestTester implements Tester {
           error
         );
       });
-      // TODO @guy - fix this eslint error
-      // eslint-disable-next-line
       return {
         componentId: component.id,
         results: new TestsResult(tests, aggregatedResult.success, aggregatedResult.startTime),
+        errors,
       };
     });
 
-    return compact(testsSuiteResult) as { componentId: ComponentID; results: TestsResult }[];
+    return compact(testsSuiteResult);
   }
 
   private getErrors(testResult: JestTestResult[]): JestError[] {
@@ -116,8 +123,7 @@ export class JestTester implements Tester {
       if (test.testExecError) {
         const { message, stack, code, type } = test.testExecError;
         errors.push(new JestError(message, stack, code, type));
-      }
-      if (test.failureMessage) {
+      } else if (test.failureMessage) {
         errors.push(new JestError(test.failureMessage));
       }
       return errors;
@@ -154,22 +160,16 @@ export class JestTester implements Tester {
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
-    try {
-      const testsOutPut = await this.jestModule.runCLI(withEnv, [this.jestConfig]);
-      const testResults = testsOutPut.results.testResults;
-      const componentsWithTests = this.attachTestsToComponent(context, testResults);
-      const componentTestResults = this.buildTestsObj(
-        testsOutPut.results,
-        componentsWithTests,
-        context,
-        jestConfigWithSpecs
-      );
-      const globalErrors = this.getErrors(testResults);
-      return { components: componentTestResults, errors: globalErrors };
-    } catch (e) {
-      const components = context.components.map((comp) => ({ componentId: comp.id }));
-      return { components, errors: [e as Error] };
-    }
+    const testsOutPut = await this.jestModule.runCLI(withEnv, [this.jestConfig]);
+    const testResults = testsOutPut.results.testResults;
+    const componentsWithTests = this.attachTestsToComponent(context, testResults);
+    const componentTestResults = this.buildTestsObj(
+      testsOutPut.results,
+      componentsWithTests,
+      context,
+      jestConfigWithSpecs
+    );
+    return new Tests(componentTestResults);
   }
 
   async watch(context: TesterContext): Promise<Tests> {

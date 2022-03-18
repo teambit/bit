@@ -5,6 +5,8 @@ import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { Bundler, BundlerContext } from '@teambit/bundler';
+import { WebpackConfigTransformer } from '@teambit/webpack';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -33,6 +35,10 @@ export class AspectEnv implements DependenciesEnv {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
+  async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    return this.reactEnv.createTemplateWebpackBundler(context, transformers);
+  }
+
   getNpmIgnore(context: GetNpmIgnoreContext) {
     // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
     // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
@@ -51,7 +57,7 @@ export class AspectEnv implements DependenciesEnv {
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: false,
     };
   }

@@ -68,6 +68,14 @@ export default class Graph extends GraphLib {
     return graphlib.json.write(this);
   }
 
+  toGraphOfIds() {
+    const graph = new Graph();
+
+    this.nodes().forEach((node) => graph.setNode(node, node));
+    this.edges().forEach((edge) => graph.setEdge(edge.v, edge.w, undefined, edge.name));
+    return graph;
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
@@ -140,5 +148,9 @@ export default class Graph extends GraphLib {
     }, graph.nodes());
 
     return graph;
+  }
+
+  findCycles(): string[][] {
+    return graphlib.alg.findCycles(this);
   }
 }

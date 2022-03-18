@@ -2,6 +2,9 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
+
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
@@ -22,7 +25,7 @@ export type CommandsSlot = SlotRegistry<CommandList>;
 export class CLIMain {
   public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
 
-  constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot) {}
+  constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot, private community: CommunityMain) {}
 
   /**
    * registers a new command in to the CLI.
@@ -85,7 +88,7 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const CliParser = new CLIParser(this.commands, this.groups);
+    const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getDocsDomain());
     await CliParser.parse();
   }
 
@@ -112,12 +115,16 @@ export class CLIMain {
     }
   }
 
-  static dependencies = [];
+  static dependencies = [CommunityAspect];
   static runtime = MainRuntime;
   static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
 
-  static async provider(deps, config, [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]) {
-    const cliMain = new CLIMain(commandsSlot, onStartSlot);
+  static async provider(
+    [community]: [CommunityMain],
+    config,
+    [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]
+  ) {
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, community);
     const legacyExtensions = await LegacyLoadExtensions();
     // Make sure to register all the hooks actions in the global hooks manager
     legacyExtensions.forEach((extension) => {
@@ -136,8 +143,8 @@ export class CLIMain {
     const legacyCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
-    const cliCmd = new CliCmd(cliMain);
-    const helpCmd = new HelpCmd(cliMain);
+    const cliCmd = new CliCmd(cliMain, community.getDocsDomain());
+    const helpCmd = new HelpCmd(cliMain, community.getDocsDomain());
     cliCmd.commands.push(cliGenerateCmd);
     cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
     return cliMain;

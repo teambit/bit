@@ -4,7 +4,7 @@ import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router
 import { SlotRegistry } from '@teambit/harmony';
 
 import styles from './component.module.scss';
-import { ComponentProvider } from './context';
+import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent } from './use-component';
 import { ComponentModel } from './component-model';
 
@@ -25,7 +25,7 @@ export type ComponentProps = {
  * main UI component of the Component extension.
  */
 export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
-  const { component, error } = useComponent(host);
+  const { component, componentDescriptor, error } = useComponent(host);
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component
@@ -39,10 +39,12 @@ export function Component({ routeSlot, containerSlot, host, onComponentChange }:
   if (!component) return <div></div>;
 
   return (
-    <ComponentProvider component={component}>
-      {before}
-      <div className={styles.container}>{routeSlot && <SlotSubRouter slot={routeSlot} />}</div>
-      {after}
-    </ComponentProvider>
+    <ComponentDescriptorProvider componentDescriptor={componentDescriptor}>
+      <ComponentProvider component={component}>
+        {before}
+        <div className={styles.container}>{routeSlot && <SlotSubRouter slot={routeSlot} />}</div>
+        {after}
+      </ComponentProvider>
+    </ComponentDescriptorProvider>
   );
 }

@@ -77,7 +77,11 @@ import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 
+/**
+ * @deprecated use BIT_CLOUD_REGISTRY instead
+ */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
+export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -197,6 +201,13 @@ export interface DependencyResolverWorkspaceConfig {
    * or replace a dependency with a fork.
    */
   overrides?: Record<string, string>;
+
+  /**
+   * This is similar to overrides, but will only affect installation in capsules.
+   * In case overrides is configured and this not, the regular overrides will affect capsules as well.
+   * in case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.
+   */
+  capsulesOverrides?: Record<string, string>;
 
   /*
    * Defines what linker should be used for installing Node.js packages.
@@ -991,6 +1002,9 @@ export class DependencyResolverMain {
       });
     };
     if (manifest.dependencies) {
+      // TODO: add a way to access it properly with harmony (currently it's readonly)
+      // @ts-ignore
+      manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
     // TODO: add a function to get all runtimes and not access private member
@@ -999,10 +1013,14 @@ export class DependencyResolverMain {
       // @ts-ignore
       await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
+          // TODO: add a way to access it properly with harmony (currently it's readonly)
+          // @ts-ignore
+          runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
         }
       });
     }
+
     return manifest;
   }
 

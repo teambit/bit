@@ -12,7 +12,6 @@ import { Tester, Tests, CallbackFn } from './tester';
 import { TesterAspect } from './tester.aspect';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
-import { NoTestFilesFound } from './exceptions';
 
 const chalk = require('chalk');
 
@@ -112,7 +111,10 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       return acc;
     }, 0);
 
-    if (testCount === 0 && !options.ui) throw new NoTestFilesFound(this.patterns.join(','));
+    if (testCount === 0 && !options.ui) {
+      this.logger.consoleWarning(`no tests found for environment ${chalk.cyan(context.id)}\n`);
+      return new Tests([]);
+    }
 
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
@@ -157,10 +159,6 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     }
 
     const results = await tester.test(testerContext);
-
-    results.errors?.forEach((error) => {
-      this.logger.console(error?.message);
-    });
 
     return results;
   }

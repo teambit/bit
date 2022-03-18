@@ -7,10 +7,12 @@ import styles from './workspace-component-card.module.scss';
 
 export type WorkspaceComponentCardProps = {
   component: ComponentModel;
+  componentUrl?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponentCardProps) {
+export function WorkspaceComponentCard({ component, componentUrl, ...rest }: WorkspaceComponentCardProps) {
   const [shouldShowPreview, togglePreview] = useState(false);
+
   const showPreview = () => {
     if (!shouldShowPreview) {
       togglePreview(true);
@@ -22,6 +24,7 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
     <div {...rest} className={styles.wrapper}>
       <ComponentCard
         id={component.id.fullName}
+        href={componentUrl}
         envIcon={component.environment?.icon}
         description={component.description}
         version={componentVersion}

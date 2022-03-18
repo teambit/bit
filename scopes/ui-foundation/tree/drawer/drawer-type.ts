@@ -13,7 +13,7 @@ export type DrawerType = {
   /**
    * drawer right widget
    */
-  widget?: ReactNode;
+  widgets?: ReactNode[];
 
   /**
    * drawer context
@@ -29,4 +29,19 @@ export type DrawerType = {
    * component to render within the drawer.
    */
   render: ComponentType;
+
+  /**
+   * order in which the drawer gets rendered
+   */
+  order?: number;
+
+  /**
+   * used to filter the drawers before rendering
+   */
+  isHidden?: () => boolean;
+
+  /**
+   * filters for the drawer
+   */
+  Filters?: ReactNode[];
 };

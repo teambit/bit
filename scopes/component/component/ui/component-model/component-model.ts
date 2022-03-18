@@ -2,7 +2,7 @@ import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
@@ -29,10 +29,11 @@ export type ComponentModelProps = {
   host?: string;
   latest?: string;
   preview?: ComponentPreview;
+  logs?: LegacyComponentLog[];
 };
 
 export type ComponentPreview = {
-  includesEnvTemplate?: boolean
+  includesEnvTemplate?: boolean;
 };
 
 export type ComponentServer = {
@@ -118,7 +119,9 @@ export class ComponentModel {
      */
     readonly latest?: string,
 
-    readonly preview?: ComponentPreview
+    readonly preview?: ComponentPreview,
+
+    readonly logs?: LegacyComponentLog[]
   ) {}
 
   get version() {
@@ -147,6 +150,7 @@ export class ComponentModel {
     host,
     latest,
     preview,
+    logs,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -165,7 +169,8 @@ export class ComponentModel {
       labels,
       host,
       latest,
-      preview
+      preview,
+      logs
     );
   }
 

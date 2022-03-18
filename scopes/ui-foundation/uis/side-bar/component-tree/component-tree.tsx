@@ -4,6 +4,7 @@ import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
@@ -39,9 +40,11 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
   }, [components]);
 
   return (
-    <div style={indentStyle(1)}>
-      <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
-    </div>
+    <TreeContextProvider>
+      <div style={indentStyle(1)}>
+        <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
+      </div>
+    </TreeContextProvider>
   );
 }
 

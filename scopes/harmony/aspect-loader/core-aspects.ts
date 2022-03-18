@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
-import {Config} from '@teambit/bvm.config';
+import { Config } from '@teambit/bvm.config';
 
 let _bvmConfig;
 
@@ -10,7 +10,7 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): str
   const packageName = getCoreAspectPackageName(id);
 
   let moduleDirectory;
-  if (pathsToResolveAspects && pathsToResolveAspects.length){
+  if (pathsToResolveAspects && pathsToResolveAspects.length) {
     moduleDirectory = require.resolve(packageName, { paths: pathsToResolveAspects });
   } else {
     moduleDirectory = require.resolve(packageName);
@@ -38,27 +38,27 @@ export function getAspectDir(id: string): string {
 }
 
 type BvmDirOptions = {
-  version?: string,
-  linkName?: string
-}
+  version?: string;
+  linkName?: string;
+};
 export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): string {
-  if (!_bvmConfig){
+  if (!_bvmConfig) {
     _bvmConfig = Config.load(false, ['env', 'file']);
   }
   const bvmConfig = _bvmConfig;
   let version;
-  if (bvmDirOptions?.version){
-    version = bvmDirOptions?.version
+  if (bvmDirOptions?.version) {
+    version = bvmDirOptions?.version;
   } else {
     const link = bvmDirOptions?.linkName || bvmConfig.getDefaultLinkName();
     const links = bvmConfig.getLinks();
     version = links[link];
-    if (!version){
+    if (!version) {
       throw new BitError(`can't find link named ${bvmDirOptions?.linkName} in bvm config`);
     }
   }
-  const {versionDir, exists} = bvmConfig.getSpecificVersionDir(version, true);
-  if (!exists){
+  const { versionDir, exists } = bvmConfig.getSpecificVersionDir(version, true);
+  if (!exists) {
     throw new BitError(`can't find version ${version} in bvm folder`);
   }
   return getAspectDirFromPath(id, [versionDir]);

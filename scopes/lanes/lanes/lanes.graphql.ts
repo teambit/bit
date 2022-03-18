@@ -6,7 +6,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
   return {
     typeDefs: gql`
       type CompLaneData {
-        id: String!
+        id: ComponentID!
         head: String!
       }
 
@@ -14,6 +14,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         name: String!
         components: [CompLaneData]
         isMerged: Boolean
+        remote: String
       }
 
       type FileDiff {
@@ -61,8 +62,16 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const lanesResults = await lanes.getLanes({});
           return lanesResults.map((lane) => ({
             name: lane.name,
-            components: lane.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
+            components: lane.components.map((component) => ({
+              ...component,
+              /**
+               * make sure the BitId has the version mapped,
+               * otherwise graphql will cache the lane component response across different lanes with the same component id
+               */
+              id: { ...component.id, version: component.head },
+            })),
             isMerged: Boolean(lane.isMerged),
+            remote: lane.remote,
           }));
         },
         getLaneByName: async (lanes: LanesMain, { name }: { name: string }) => {
@@ -70,7 +79,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
           const laneResult = lanesResults[0];
           return {
             name: laneResult.name,
-            components: laneResult.components.map((c) => ({ id: c.id.toString(), head: c.head.toString() })),
+            components: laneResult.components,
             isMerged: Boolean(laneResult.isMerged),
           };
         },
