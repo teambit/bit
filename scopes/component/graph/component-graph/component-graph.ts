@@ -29,16 +29,15 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     if (!this.shouldLimitToSeedersOnly()) {
       return cycles;
     }
-    const seederIdsStr = this.getSeederIdsStr();
+    const seederIdsStr = this.seederIds.map((id) => id.toString());
     const cyclesWithSeeders = cycles.filter((cycle) => {
-      const cycleNoVersions = cycle.map((id) => id.split('@')[0]);
-      return cycleNoVersions.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
+      return cycle.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
     });
     return cyclesWithSeeders;
   }
 
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
-    const seederIdsNoVersions = this.getSeederIdsStr();
+    const seederIdsNoVersions = this.seederIds.map((id) => id.toStringWithoutVersion());
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
     for (const [compFullName, versions] of this.versionMap) {
       if (versions.allVersionNodes.length > 1) {
@@ -97,10 +96,6 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   private shouldLimitToSeedersOnly() {
     return this.seederIds.length;
-  }
-
-  private getSeederIdsStr() {
-    return this.seederIds.map((id) => id.toStringWithoutVersion());
   }
 
   _calculateVersionMap() {
