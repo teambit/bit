@@ -51,7 +51,7 @@ export default class BitsrcTester {
   }
 
   generateRandomName() {
-    const randomName = Math.random().toString(36).substr(2, 5);
+    const randomName = Math.random().toString(36).slice(2, 7);
     return `ci-${randomName}`;
   }
 
