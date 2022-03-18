@@ -701,7 +701,8 @@ export class Workspace implements ComponentFactory {
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.get(componentId);
-    const { extensions } = await this.componentExtensions(component.id, undefined, [
+    const componentFromScope = await this.scope.get(id);
+    const { extensions } = await this.componentExtensions(component.id, componentFromScope, [
       'WorkspaceDefault',
       'WorkspaceVariants',
     ]);
