@@ -579,7 +579,7 @@ export function sendToAnalyticsAndSentry(err: Error) {
 
 function handleNonBitCustomErrors(err: Error): string {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (err.code === 'EACCES') {
+  if (err.code === 'EACCES' && err.path) {
     // see #1774
     return chalk.red(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
