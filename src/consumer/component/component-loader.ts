@@ -112,7 +112,7 @@ export default class ComponentLoader {
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id: BitId) => {
-      if (!(id instanceof BitId)) {
+      if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
       const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
