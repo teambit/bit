@@ -377,7 +377,9 @@ function _throwForUnsnappedLaneReadme(lane: Lane) {
   const readmeComponent = lane.readmeComponent as LaneReadmeComponent;
 
   const isValid =
-    lane.getComponent(readmeComponent.id) && lane.getComponentHead(readmeComponent.id)?.isEqual(readmeComponent.head);
+    readmeComponent?.head &&
+    lane.getComponent(readmeComponent.id) &&
+    lane.getComponentHead(readmeComponent.id)?.isEqual(readmeComponent?.head);
 
   if (!isValid) {
     throw new Error(
