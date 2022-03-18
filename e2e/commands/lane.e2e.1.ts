@@ -30,7 +30,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.command.createLane();
-      helper.fixtures.populateComponents(1);
+      helper.fixtures.populateComponents(2);
       laneWithoutReadme = helper.scopeHelper.cloneLocalScope();
       helper.command.addLaneReadme('comp1', 'dev');
       laneWithUnsnappedReadme = helper.scopeHelper.cloneLocalScope();
@@ -87,6 +87,11 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
       const bitMap = helper.bitMap.read();
       expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({ dev: { readme: true } });
+    });
+    it.only('should not allow exporting a lane with unsnapped readme component', () => {
+      helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
+      helper.command.snapComponentWithoutBuild('comp2');
+      expect(() => helper.command.exportLane()).throws();
     });
   });
   describe('creating a new lane without any component', () => {

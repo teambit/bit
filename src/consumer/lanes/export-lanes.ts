@@ -6,6 +6,7 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import { Lane } from '../../scope/models';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ComponentsList from '../component/components-list';
+import { LaneReadmeComponent } from '../../scope/models/lane';
 
 export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
   // lanes that don't have remoteLaneId should not be updated. it happens when updating to a
@@ -17,6 +18,21 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
     throw new Error(
       `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
     );
+  }
+  // validate lane readme component and ensure it has been snapped
+  if (lane.readmeComponent) {
+    const isValid =
+      lane.components.findIndex(
+        (component) =>
+          component.id.isEqualWithoutVersion((lane.readmeComponent as LaneReadmeComponent).id) &&
+          lane.readmeComponent?.head === component.head
+      ) >= 0;
+    if (!isValid) {
+      throw new Error(
+        `${lane.name} has a readme component ${lane.readmeComponent.id} that hasn't been snapped on the lane.
+        Please run either snap -a or snap ${lane.readmeComponent.id} to snap the component on the lane before exporting it.`
+      );
+    }
   }
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
   const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
