@@ -204,7 +204,7 @@ export class ReactEnv
 
   private writeFileMap(components: Component[], local?: boolean) {
     const fileMap = this.getFileMap(components, local);
-    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    const path = join(tmpdir(), `${Math.random().toString(36).slice(2, 11)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
   }

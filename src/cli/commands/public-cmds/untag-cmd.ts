@@ -12,7 +12,7 @@ export default class Untag implements LegacyCommand {
   shortDescription = 'revert versions tagged for component(s)';
   group: Group = 'development';
   description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
+  https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
   ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [

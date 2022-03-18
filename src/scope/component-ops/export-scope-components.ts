@@ -174,7 +174,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
     // @todo: maybe create a flag "no-central" to support this workflow
     throw new Error(
-      `some of your components are configured to be exported to a local scope and some to the bit.dev hub. this is not supported`
+      `some of your components are configured to be exported to a local scope and some to the bit.cloud hub. this is not supported`
     );
   }
 

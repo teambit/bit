@@ -28,7 +28,7 @@ scoping mechanism to easily find and reuse components created by you or by other
 		<licenseUrl>https://raw.githubusercontent.com/teambit/bit/master/LICENSE</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<iconUrl>http://assets.bit.dev/bit.png</iconUrl>
-		<docsUrl>https://docs.bit.dev/</docsUrl>
+		<docsUrl>https://bit.dev/docs</docsUrl>
 		<bugTrackerUrl>https://github.com/teambit/bit/issues</bugTrackerUrl>
 		<releaseNotes>https://github.com/teambit/bit/tags</releaseNotes>
 
