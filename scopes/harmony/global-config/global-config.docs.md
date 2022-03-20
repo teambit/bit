@@ -1,6 +1,6 @@
 ---
 displayName: GlobalConfig
-description: Get, Set, Delete, List against bit's global config
+description: Allows to read-from and write-to Bit's global config
 labels: ['aspect', 'config']
 ---
 
