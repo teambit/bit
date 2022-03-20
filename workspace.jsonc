@@ -380,6 +380,7 @@
       }
     },
     "nodeLinker": "hoisted",
+    "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
       "**/*.spec.ts"
