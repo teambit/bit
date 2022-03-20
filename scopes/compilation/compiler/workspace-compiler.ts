@@ -12,6 +12,7 @@ import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
@@ -47,6 +48,7 @@ export class ComponentCompiler {
     private compilerInstance: Compiler,
     private compilerId: string,
     private logger: Logger,
+    private dependencyResolver: DependencyResolverMain,
     private dists: Dist[] = [],
     private compileErrors: CompileError[] = []
   ) {}
@@ -57,7 +59,9 @@ export class ComponentCompiler {
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
       dataToPersist = new DataToPersist();
-      dataToPersist.removePath(new RemovePath(this.distDir));
+      for (const distDir of await this.distDirs()) {
+        dataToPersist.removePath(new RemovePath(distDir));
+      }
       dataToPersist.addBasePath(this.workspace.path);
       await dataToPersist.persistAllToFS();
     }
@@ -119,11 +123,18 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private get distDir(): PathOsBasedRelative {
+  private async distDirs(): Promise<PathOsBasedRelative[]> {
     const packageName = componentIdToPackageName(this.component.state._consumer);
     const packageDir = path.join('node_modules', packageName);
-    const distDirName = DEFAULT_DIST_DIRNAME;
-    return path.join(packageDir, distDirName);
+    const injectedDirs = await this.getInjectedDirs();
+    return [packageDir, ...injectedDirs].map((dist) => path.join(dist, DEFAULT_DIST_DIRNAME));
+  }
+
+  private async getInjectedDirs(): Promise<PathOsBasedRelative[]> {
+    const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
+      relative: true,
+    });
+    return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir);
   }
 
   private get componentDir(): PathOsBasedAbsolute {
@@ -142,42 +153,44 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         return;
       }
     }
-    const base = this.distDir;
-    if (isFileSupported && compileResults) {
-      this.dists.push(
-        ...compileResults.map(
-          (result) =>
-            new Dist({
-              base,
-              path: path.join(base, result.outputPath),
-              contents: Buffer.from(result.outputText),
-            })
-        )
-      );
-    } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
-      // compiler doesn't support this file type. copy the file as is to the dist dir.
-      this.dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
+    for (const base of await this.distDirs()) {
+      if (isFileSupported && compileResults) {
+        this.dists.push(
+          ...compileResults.map(
+            (result) =>
+              new Dist({
+                base,
+                path: path.join(base, result.outputPath),
+                contents: Buffer.from(result.outputText),
+              })
+          )
+        );
+      } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
+        // compiler doesn't support this file type. copy the file as is to the dist dir.
+        this.dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
+      }
     }
   }
 
   private async compileAllFiles(component: Component, initiator: CompilationInitiator): Promise<void> {
-    const base = this.distDir;
     const filesToCompile: AbstractVinyl[] = [];
-    component.filesystem.files.forEach((file: AbstractVinyl) => {
-      const isFileSupported = this.compilerInstance.isFileSupported(file.path);
-      if (isFileSupported) {
-        filesToCompile.push(file);
-      } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
-        // compiler doesn't support this file type. copy the file as is to the dist dir.
-        this.dists.push(
-          new Dist({
-            base,
-            path: path.join(base, file.relative),
-            contents: file.contents,
-          })
-        );
-      }
-    });
+    for (const base of await this.distDirs()) {
+      component.filesystem.files.forEach((file: AbstractVinyl) => {
+        const isFileSupported = this.compilerInstance.isFileSupported(file.path);
+        if (isFileSupported) {
+          filesToCompile.push(file);
+        } else if (this.compilerInstance.shouldCopyNonSupportedFiles) {
+          // compiler doesn't support this file type. copy the file as is to the dist dir.
+          this.dists.push(
+            new Dist({
+              base,
+              path: path.join(base, file.relative),
+              contents: file.contents,
+            })
+          );
+        }
+      });
+    }
 
     if (filesToCompile.length) {
       try {
@@ -201,7 +214,8 @@ export class WorkspaceCompiler {
     private pubsub: PubsubMain,
     private aspectLoader: AspectLoaderMain,
     private ui: UiMain,
-    private logger: Logger
+    private logger: Logger,
+    private dependencyResolver: DependencyResolverMain
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
@@ -284,7 +298,15 @@ export class WorkspaceCompiler {
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsCompilers.push(
-          new ComponentCompiler(this.pubsub, this.workspace, c, compilerInstance, compilerName, this.logger)
+          new ComponentCompiler(
+            this.pubsub,
+            this.workspace,
+            c,
+            compilerInstance,
+            compilerName,
+            this.logger,
+            this.dependencyResolver
+          )
         );
       }
     });
