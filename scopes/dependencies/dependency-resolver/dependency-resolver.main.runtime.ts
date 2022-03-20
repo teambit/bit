@@ -58,6 +58,7 @@ import {
   SerializedVariantPolicy,
 } from './policy';
 import {
+  PackageImportMethod,
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
@@ -214,6 +215,11 @@ export interface DependencyResolverWorkspaceConfig {
    * Supported values are hoisted and isolated.
    */
   nodeLinker?: 'hoisted' | 'isolated';
+
+  /*
+   * Controls the way packages are imported from the store.
+   */
+  packageImportMethod?: PackageImportMethod;
 }
 
 export interface DependencyResolverVariantConfig {

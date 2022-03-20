@@ -130,7 +130,7 @@ export class PnpmPackageManager implements PackageManager {
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        packageImportMethod: config.packageImportMethod,
+        packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
       },
       this.logger
     );
@@ -167,7 +167,7 @@ export class PnpmPackageManager implements PackageManager {
       registries,
       networkConfig,
       overrides: installOptions.overrides,
-      packageImportMethod: config.packageImportMethod,
+      packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
     });
   }
 
