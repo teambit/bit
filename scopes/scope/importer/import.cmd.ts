@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   ImportOptions,
   ImportDetails,
@@ -19,9 +19,7 @@ export default class ImportCmd implements Command {
   name = 'import [ids...]';
   shortDescription = 'import components into your current working area';
   group = 'collaborate';
-  description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
-  ${WILDCARD_HELP('import')}`;
+  description: string;
   alias = '';
   options = [
     ['p', 'path <path>', 'import components into a specific directory'],
@@ -60,7 +58,11 @@ export default class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: Importer) {}
+  constructor(private importer: Importer, private docsDomain: string) {
+    this.description = `import components into your current workspace.
+https://${docsDomain}/components/importing-components
+${WILDCARD_HELP('import')}`;
+  }
 
   async report(
     [ids = []]: [string[]],

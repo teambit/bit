@@ -1,7 +1,6 @@
 import { LaneModel } from '@teambit/lanes.ui.lanes';
-import classNames from 'classnames';
 import React from 'react';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './lane-info.module.scss';
 
@@ -12,15 +11,12 @@ export function LaneInfo({ id, url, currentLane }: LaneInfoProps) {
 
   return (
     <div key={id}>
-      <NavLink
-        href={url}
-        className={classNames(styles.versionLine, styles.versionRow, isCurrent && styles.currentVersion)}
-      >
+      <MenuLinkItem isActive={() => isCurrent} href={url} className={styles.versionRow}>
         <span>
           <Icon className={styles.laneIcon} of="lane"></Icon>
           {id}
         </span>
-      </NavLink>
+      </MenuLinkItem>
     </div>
   );
 }
