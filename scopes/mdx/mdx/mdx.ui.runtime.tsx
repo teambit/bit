@@ -13,22 +13,24 @@ export class MDXEnvUI {
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const mdxEnvUI = new MDXEnvUI();
 
+    // TODO: get the docs domain from the community aspect and pass it here as a prop
     testerUi.registerEmptyState(() => {
       return (
         <EmptyBox
           title="This component doesn’t have any tests."
           linkText="Learn how to add tests to your MDX components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
+          link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
         />
       );
     });
 
+    // TODO: get the docs domain from the community aspect and pass it here as a prop
     compositionsUI.registerEmptyState(() => {
       return (
         <EmptyBox
           title="This component doesn’t have any compositions."
           linkText="Learn how to add compositions to your MDX components"
-          link="https://harmony-docs.bit.dev/compositions/overview/"
+          link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
         />
       );
     });

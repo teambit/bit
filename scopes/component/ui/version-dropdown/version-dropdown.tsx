@@ -1,5 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -110,7 +110,12 @@ function VersionMenu({
   currentLane,
   ...rest
 }: VersionMenuProps) {
-  const [activeTabIndex, setActiveTab] = useState<number>(0);
+  const getActiveTabIndex = () => {
+    if (currentLane) return VERSION_TAB_NAMES.indexOf('LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion)) return VERSION_TAB_NAMES.indexOf('SNAP');
+    return VERSION_TAB_NAMES.indexOf('TAG');
+  };
+  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
 
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
@@ -133,19 +138,16 @@ function VersionMenu({
       <div className={styles.top}>
         <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
         {localVersion && (
-          <NavLink
+          <MenuLinkItem
             href={'?'}
-            className={classNames(
-              styles.versionLine,
-              styles.versionRow,
-              currentVersion === LOCAL_VERSION && styles.currentVersion
-            )}
+            isActive={() => currentVersion === LOCAL_VERSION}
+            className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>
-              <UserAvatar size={20} account={{}} className={styles.versionUserAvatar} />
+              <UserAvatar size={24} account={{}} className={styles.versionUserAvatar} />
               <span className={styles.versionName}>{LOCAL_VERSION}</span>
             </div>
-          </NavLink>
+          </MenuLinkItem>
         )}
       </div>
       <div className={classNames(multipleTabs && styles.tabs)}>

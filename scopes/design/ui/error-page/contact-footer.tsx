@@ -16,6 +16,7 @@ const styles: Record<string, CSSProperties> = {
 
 export type ContactIconsProps = HTMLAttributes<HTMLDivElement>;
 
+// TODO: get the docs domain from the community aspect and pass it here as a prop
 export function ContactIcons(props: ContactIconsProps) {
   return (
     <div style={{ ...styles.iconLine, ...props.style }} {...props}>
@@ -29,7 +30,7 @@ export function ContactIcons(props: ContactIconsProps) {
       <Link external style={styles.link} href="https://github.com/teambit/bit">
         <img alt="github" style={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
       </Link>
-      <Link external style={styles.link} href="https://harmony-docs.bit.dev/">
+      <Link external style={styles.link} href={`https://bit.dev/docs`}>
         <img alt="bit docs" style={styles.logo} src="https://static.bit.dev/bit-logo.svg" />
       </Link>
     </div>

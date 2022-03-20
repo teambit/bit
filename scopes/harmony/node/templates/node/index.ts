@@ -11,4 +11,10 @@ export const nodeTemplate: ComponentTemplate = {
   generateFiles: (context: ComponentContext) => {
     return [indexFile(context), docFile(context), mainFile(context), compositionFile(context), testFile(context)];
   },
+  config: {
+    'teambit.harmony/node': {},
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/node',
+    },
+  },
 };

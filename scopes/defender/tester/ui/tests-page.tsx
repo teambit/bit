@@ -108,12 +108,13 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     );
   }
 
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link="https://harmony-docs.bit.dev/testing/overview/"
+        link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
       />
     );
   }
