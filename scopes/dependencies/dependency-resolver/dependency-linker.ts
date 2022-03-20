@@ -619,6 +619,7 @@ function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string):
   }
 
   const [start, end] = resolvedModulePath.split('@');
+  if (!end) return path.basename(resolvedModulePath);
   const versionStr = head(end.split('/'));
   return `${start}@${versionStr}`;
 }

@@ -5,6 +5,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -75,9 +76,21 @@ export class CompilerMain {
     BuilderAspect,
     UIAspect,
     GeneratorAspect,
+    DependencyResolverAspect,
   ];
 
-  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder, ui, generator]: [
+  static async provider([
+    cli,
+    workspace,
+    envs,
+    loggerMain,
+    pubsub,
+    aspectLoader,
+    builder,
+    ui,
+    generator,
+    dependencyResolver,
+  ]: [
     CLIMain,
     Workspace,
     EnvsMain,
@@ -86,10 +99,19 @@ export class CompilerMain {
     AspectLoaderMain,
     BuilderMain,
     UiMain,
-    GeneratorMain
+    GeneratorMain,
+    DependencyResolverMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
-    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui, logger);
+    const workspaceCompiler = new WorkspaceCompiler(
+      workspace,
+      envs,
+      pubsub,
+      aspectLoader,
+      ui,
+      logger,
+      dependencyResolver
+    );
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));

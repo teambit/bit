@@ -1715,6 +1715,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
+    // TODO: add the links results to the output
+    await this.link({
+      linkTeambitBit: true,
+      legacyLink: true,
+      linkCoreAspects: false,
+      linkNestedDepsInNM: false,
+    });
+    this.consumer.componentLoader.clearComponentsCache();
     this.clearCache();
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
@@ -1723,20 +1733,23 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
+    const rootComponents = this.dependencyResolver.config.rootComponents;
+    const hasRootComponents = Boolean(rootComponents?.length);
+    if (hasRootComponents && this.dependencyResolver.config.packageManager !== 'teambit.dependencies/pnpm') {
+      throw new BitError('rootComponents are only supported by the pnpm package manager');
+    }
     const pmInstallOptions: PackageManagerInstallOptions = {
-      dedupe: options?.dedupe,
+      dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
+      rootComponents,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
-    // TODO: this make duplicate
-    // this.logger.consoleSuccess();
-    // TODO: add the links results to the output
     await this.link({
-      linkTeambitBit: true,
+      linkTeambitBit: false,
       legacyLink: true,
       linkCoreAspects: true,
       linkNestedDepsInNM: !this.isLegacy,

@@ -103,8 +103,10 @@ export class DependencyInstaller {
       });
     }
 
-    // remove node modules dir for all components dirs, since it might contain left overs from previous install
-    await this.cleanCompsNodeModules(componentDirectoryMap);
+    if (!packageManagerOptions.rootComponents?.length) {
+      // remove node modules dir for all components dirs, since it might contain left overs from previous install
+      await this.cleanCompsNodeModules(componentDirectoryMap);
+    }
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedPmOpts);

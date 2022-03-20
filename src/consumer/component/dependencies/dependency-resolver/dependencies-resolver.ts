@@ -306,6 +306,18 @@ export default class DependencyResolver {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
       }
     });
+    // The automatic dependency detector considers all found dependencies to be runtime dependencies.
+    // But this breaks proper installation of injected subdependencies that are resolved from workspace components.
+    if (this.allPackagesDependencies.packageDependencies && packages.peerDependencies) {
+      for (const peerName of Object.keys(packages.peerDependencies)) {
+        delete this.allPackagesDependencies.packageDependencies[peerName];
+      }
+    }
+    if (this.allPackagesDependencies.packageDependencies && packages.peerPackageDependencies) {
+      for (const peerName of Object.keys(packages.peerPackageDependencies)) {
+        delete this.allPackagesDependencies.packageDependencies[peerName];
+      }
+    }
   }
 
   applyOverridesOnEnvPackages() {
