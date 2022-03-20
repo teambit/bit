@@ -37,30 +37,33 @@ type RegistriesMap = {
 const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 
 async function createStoreController(
-  rootDir: string,
-  storeDir: string,
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
+  options: {
+    rootDir: string,
+    storeDir: string,
+    cacheDir: string,
+    registries: Registries,
+    proxyConfig: PackageManagerProxyConfig,
+    networkConfig: PackageManagerNetworkConfig,
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
-  const authConfig = getAuthConfig(registries);
+  const authConfig = getAuthConfig(options.registries);
   const opts: CreateStoreControllerOptions = {
-    dir: rootDir,
-    cacheDir,
-    storeDir,
+    dir: options.rootDir,
+    cacheDir: options.cacheDir,
+    storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
-    httpProxy: proxyConfig?.httpProxy,
-    httpsProxy: proxyConfig?.httpsProxy,
-    ca: proxyConfig?.ca,
-    cert: proxyConfig?.cert,
-    key: proxyConfig?.key,
-    localAddress: networkConfig?.localAddress,
-    noProxy: proxyConfig?.noProxy,
-    strictSsl: proxyConfig.strictSSL,
-    maxSockets: networkConfig.maxSockets,
-    networkConcurrency: networkConfig.networkConcurrency,
+    httpProxy: options.proxyConfig?.httpProxy,
+    httpsProxy: options.proxyConfig?.httpsProxy,
+    ca: options.proxyConfig?.ca,
+    cert: options.proxyConfig?.cert,
+    key: options.proxyConfig?.key,
+    localAddress: options.networkConfig?.localAddress,
+    noProxy: options.proxyConfig?.noProxy,
+    strictSsl: options.proxyConfig.strictSSL,
+    maxSockets: options.networkConfig.maxSockets,
+    networkConcurrency: options.networkConfig.networkConcurrency,
+    packageImportMethod: options.packageImportMethod,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -117,7 +120,7 @@ export async function getPeerDependencyIssues(
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
-  }
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
 ): Promise<PeerDependencyIssuesByProjects> {
   const projects: ProjectOptions[] = [];
   const workspacePackages = {};
@@ -134,14 +137,10 @@ export async function getPeerDependencyIssues(
     rootDir: rootManifest.rootDir,
   });
   const registriesMap = getRegistriesMap(opts.registries);
-  const storeController = await createStoreController(
-    rootManifest.rootDir,
-    opts.storeDir,
-    opts.cacheDir,
-    opts.registries,
-    opts.proxyConfig,
-    opts.networkConfig
-  );
+  const storeController = await createStoreController({
+    ...opts,
+    rootDir: rootManifest.rootDir,
+  });
   return pnpm.getPeerDependencyIssues(projects, {
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
@@ -162,7 +161,8 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>,
+  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>
+  & Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -172,14 +172,15 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(
-    rootManifest.rootDir,
+  const storeController = await createStoreController({
+    rootDir: rootManifest.rootDir,
     storeDir,
     cacheDir,
     registries,
     proxyConfig,
-    networkConfig
-  );
+    networkConfig,
+    packageImportMethod: options?.packageImportMethod,
+  });
   const opts: InstallOptions = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
