@@ -14,7 +14,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { ComponentMap, Component } from '@teambit/component';
 import fs from 'fs-extra';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import {
   Workspace,
   Project,
@@ -37,6 +37,8 @@ import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
+import YAML from 'yaml';
+import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
   [path: string]: Buffer | undefined;
@@ -85,13 +87,29 @@ export class YarnPackageManager implements PackageManager {
     // @ts-ignore
     project.setupResolutions();
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
+    if (installOptions.rootComponents) {
+      // is it needed?
+      rootWs.manifest.installConfig = {
+        hoistingLimits: 'dependencies',
+      };
+    }
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
-    const manifests = this.computeComponents(
+    let manifests = this.computeComponents(
       workspaceManifest.componentsManifestsMap,
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+    if (installOptions.rootComponents) {
+      manifests = {
+        ...(await createRootComponentsDir({
+          depResolver: this.depResolver,
+          rootDir,
+          componentDirectoryMap,
+        })),
+        ...manifests,
+      };
+    }
     await extendWithComponentsFromDir(rootDir, manifests);
 
     this.logger.debug('root manifest for installation', rootManifest);
@@ -438,6 +456,27 @@ export class YarnPackageManager implements PackageManager {
       version,
       isSemver: true,
     };
+  }
+
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const modulesDir = join(rootDir, 'node_modules');
+    relative(modulesDir, componentDir);
+    let yarnStateContent!: string;
+    try {
+      yarnStateContent = await fs.readFile(join(modulesDir, '.yarn-state.yml'), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return [];
+    }
+    const yarnState = YAML.parse(yarnStateContent) as Record<string, { locations: string[] }>;
+    const injectedDirs: string[] = [];
+    for (const [key, { locations }] of Object.entries(yarnState)) {
+      if (key.startsWith(`${packageName}@`) || key.startsWith(`${packageName}__root@`)) {
+        for (const location of locations) {
+          injectedDirs.push(location);
+        }
+      }
+    }
+    return injectedDirs;
   }
 }
 

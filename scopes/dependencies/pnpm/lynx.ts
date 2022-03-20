@@ -1,7 +1,10 @@
+import fs from 'graceful-fs';
+import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
+import { read as readModulesState } from '@pnpm/modules-yaml';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import sortPackages from '@pnpm/sort-packages';
@@ -23,11 +26,14 @@ import {
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
-import { ProjectManifest } from '@pnpm/types';
+import { PackageManifest, ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
+import { promisify } from 'util';
 import pkgsGraph from 'pkgs-graph';
 import { readConfig } from './read-config';
+
+const link = promisify(fs.link);
 
 type RegistriesMap = {
   default: string;
@@ -158,14 +164,43 @@ export async function install(
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
-  options?: {
+  options: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
+    rootComponents?: boolean;
   } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'> &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
+  if (!rootManifest.manifest.dependenciesMeta) {
+    rootManifest.manifest.dependenciesMeta = {};
+  }
+  const newManifestsByPaths: Record<string, ProjectManifest> = {};
+  const rootComponents: string[] = [];
+  if (options?.rootComponents) {
+    for (const manifest of Object.values(manifestsByPaths)) {
+      const name = manifest.name!.toString(); // eslint-disable-line
+      const compDir = path.join(rootManifest.rootDir, 'node_modules', name);
+      const id = path.relative(rootManifest.rootDir, compDir).replace(/\\/g, '/');
+      rootComponents.push(encodeURIComponent(id));
+      newManifestsByPaths[compDir] = {
+        name: `${name}__root`,
+        dependencies: {
+          [name]: `workspace:*`,
+          ...manifest.peerDependencies,
+          ...manifest['defaultPeerDependencies'], // eslint-disable-line
+        },
+        dependenciesMeta: {
+          [name]: { injected: true },
+        },
+      };
+    }
+  }
+  manifestsByPaths = {
+    ...newManifestsByPaths,
+    ...manifestsByPaths,
+  };
   const { packagesToBuild, workspacePackages } = groupPkgs({
     ...manifestsByPaths,
     [rootManifest.rootDir]: rootManifest.manifest,
@@ -193,6 +228,13 @@ export async function install(
     rawConfig: authConfig,
     ...options,
   };
+  if (rootComponents.length) {
+    opts.hooks = {
+      readPackage: readPackageHook as any,
+    };
+    opts.hoistingLimits = new Map();
+    opts.hoistingLimits.set('.@', new Set(rootComponents));
+  }
 
   const stopReporting = defaultReporter({
     context: {
@@ -209,6 +251,77 @@ export async function install(
   } finally {
     stopReporting();
   }
+  const modulesState = await readModulesState(path.join(rootManifest.rootDir, 'node_modules'));
+  if (modulesState?.injectedDeps) {
+    await linkManifestsToInjectedDeps({
+      injectedDeps: modulesState.injectedDeps,
+      manifestsByPaths,
+      rootDir: rootManifest.rootDir,
+    });
+  }
+}
+
+function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
+  if (!pkg.dependencies || pkg.name?.endsWith(`__root`)) {
+    return pkg;
+  }
+  // workspaceDir is set only for workspace packages
+  if (workspaceDir) {
+    return readWorkspacePackageHook(pkg);
+  }
+  return readDependencyPackageHook(pkg);
+}
+
+function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
+  const dependenciesMeta = pkg.dependenciesMeta ?? {};
+  for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
+    if (version.startsWith('workspace:')) {
+      // This instructs pnpm to hard link the component from the workspace, not symlink it.
+      dependenciesMeta[name] = { injected: true };
+    }
+  }
+  return {
+    ...pkg,
+    dependenciesMeta,
+  };
+}
+
+function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
+  const newDeps = {};
+  for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
+    if (!version.startsWith('workspace:')) {
+      newDeps[name] = version;
+    }
+  }
+  return {
+    ...pkg,
+    dependencies: newDeps,
+  };
+}
+
+/*
+ * The package.json files of the components are generated into node_modules/<component pkg name>/package.json
+ * This function copies the generated package.json file into all the locations of the component.
+ */
+async function linkManifestsToInjectedDeps({
+  rootDir,
+  manifestsByPaths,
+  injectedDeps,
+}: {
+  rootDir: string;
+  manifestsByPaths: Record<string, ProjectManifest>;
+  injectedDeps: Record<string, string[]>;
+}) {
+  await Promise.all(
+    Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
+      const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
+      if (!pkgName) return;
+      const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
+      if (fs.existsSync(pkgJsonPath)) {
+        await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
+      }
+    })
+  );
 }
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {

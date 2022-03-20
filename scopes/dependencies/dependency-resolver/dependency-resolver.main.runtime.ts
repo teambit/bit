@@ -220,6 +220,12 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the way packages are imported from the store.
    */
   packageImportMethod?: PackageImportMethod;
+
+  /*
+   * The list of components that should be installed in isolation from the workspace.
+   * The component's package names should be used in this list, not their component IDs.
+   */
+  rootComponents?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -460,7 +466,13 @@ export class DependencyResolverMain {
     options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
+    const concreteOpts = {
+      ...defaultCreateFromComponentsOptions,
+      ...options,
+      hasRootComponents: Boolean(
+        this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'
+      ),
+    };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
@@ -1226,6 +1238,20 @@ export class DependencyResolverMain {
       devDependencies: {},
       peerDependencies: {},
     };
+  }
+
+  /**
+   * Returns a list of target locations where that given component was hard linked to.
+   *
+   * @param rootDir - The root directory of the workspace
+   * @param compDir - Relative path to the component's directory
+   */
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    if (typeof packageManager?.getInjectedDirs === 'function') {
+      return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
+    }
+    return [];
   }
 }
 

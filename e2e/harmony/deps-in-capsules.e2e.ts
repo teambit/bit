@@ -62,11 +62,13 @@ chai.use(require('chai-string'));
       const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir);
       const nodeEnv1CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-1')) as string
+        // eslint-disable-next-line
+        capsuleDirs.find((dir) => dir.includes('node-env-1'))!
       );
       const nodeEnv2CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-2')) as string
+        // eslint-disable-next-line
+        capsuleDirs.find((dir) => dir.includes('node-env-2'))!
       );
       expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path();
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path();
