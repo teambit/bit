@@ -1093,7 +1093,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
-    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
+    const withoutWorkspace = scopeExtensionsSpecific.filter((scopeData) => {
+      const bitmap = Object.keys(bitMapExtensions || {});
+      return bitmap.includes(scopeData.extensionId?.toStringWithoutScope() || '');
+    });
+    await addAndLoadExtensions(ExtensionDataList.fromArray(withoutWorkspace), 'ModelSpecific');
+    // await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
