@@ -51,7 +51,7 @@ export default async function status(): Promise<StatusResult> {
   const newAndModified: Component[] = newComponents.concat(modifiedComponent);
   const componentsWithIssues = newAndModified.filter((component: Component) => {
     if (consumer.isLegacy && component.issues) {
-      component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+      component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
     }
     return component.issues && !component.issues.isEmpty();
   });

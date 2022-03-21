@@ -587,7 +587,7 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
-      const RelativeCompClass = IssuesClasses.relativeComponents;
+      const RelativeCompClass = IssuesClasses.RelativeComponents;
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(new RelativeCompClass().description);
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);

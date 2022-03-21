@@ -562,7 +562,7 @@ export default class Consumer {
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
       incrementBy?: number;
-      ignoreIssues: boolean | undefined;
+      ignoreIssues: string | undefined;
     } & BasicTagParams
   ): Promise<{
     taggedComponents: Component[];
@@ -596,15 +596,33 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
-  private throwForComponentIssues(components: Component[], ignoreIssues?: boolean) {
+  private throwForComponentIssues(components: Component[], ignoreIssues?: string) {
     components.forEach((component) => {
       if (this.isLegacy && component.issues) {
-        component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+        component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
     });
-    if (!ignoreIssues) {
-      const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
-      if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
+    if (ignoreIssues === '*') {
+      // ignore all issues
+      return;
+    }
+    const issuesToIgnore = ignoreIssues?.split(',').map((issue) => issue.trim());
+    issuesToIgnore?.forEach((issue) => {
+      const issueClass = IssuesClasses[issue];
+      if (!issueClass) {
+        throw new Error(
+          `unrecognized component-issue "${issue}". please specify one of the following:\n${Object.keys(
+            IssuesClasses
+          ).join('\n')}`
+        );
+      }
+      components.forEach((component) => {
+        component.issues.delete(issueClass);
+      });
+    });
+    const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+    if (!R.isEmpty(componentsWithBlockingIssues)) {
+      throw new MissingDependencies(componentsWithBlockingIssues);
     }
   }
 
@@ -703,7 +721,7 @@ export default class Consumer {
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
-      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.relativeComponentsAuthored);
+      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.RelativeComponentsAuthored);
       const hasCustomModuleResolutions = component.issues?.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks);
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
