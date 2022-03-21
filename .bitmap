@@ -713,7 +713,7 @@
     },
     "network/agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.444",
+        "version": "0.0.445",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
@@ -725,7 +725,7 @@
     },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.444",
+        "version": "0.0.445",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
