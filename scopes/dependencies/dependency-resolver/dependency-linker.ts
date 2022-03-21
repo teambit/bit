@@ -1,4 +1,4 @@
-import builtinModules from 'builtin-modules';
+import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
 import { uniq, compact, flatten, head } from 'lodash';
 import { Stats } from 'fs';
@@ -239,7 +239,7 @@ export class DependencyLinker {
           // the resolve from will resolve it from the core, so it will return something like 'events'
           // instead of the path.
           // adding a '/' at the end solve this
-          const moduleNameToResolve = builtinModules.includes(moduleName) ? `${moduleName}/` : moduleName;
+          const moduleNameToResolve = isBuiltinModule(moduleName) ? `${moduleName}/` : moduleName;
           // This is a scoped package, need to go inside
           if (dirent.name.startsWith('@')) {
             return getPackagesFoldersToLink(dirPath, dirent.name);

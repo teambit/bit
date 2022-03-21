@@ -277,7 +277,6 @@ importers:
       browserslist: 4.16.3
       buffer: 6.0.3
       bufferutil: 4.0.3
-      builtin-modules: 3.2.0
       cacache: 15.0.5
       camelcase: 6.2.0
       case-sensitive-paths-webpack-plugin: 2.3.0
@@ -381,6 +380,7 @@ importers:
       ink-spinner: 4.0.3
       inquirer: 6.5.2
       inquirer-fuzzy-path: 2.3.0
+      is-builtin-module: 3.1.0
       is-glob: 4.0.1
       is-primitive: 3.0.1
       is-relative-path: 2.0.0
@@ -802,7 +802,6 @@ importers:
       browserslist: registry.npmjs.org/browserslist/4.16.3
       buffer: registry.npmjs.org/buffer/6.0.3
       bufferutil: registry.npmjs.org/bufferutil/4.0.3
-      builtin-modules: registry.npmjs.org/builtin-modules/3.2.0
       cacache: registry.npmjs.org/cacache/15.0.5
       camelcase: registry.npmjs.org/camelcase/6.2.0
       case-sensitive-paths-webpack-plugin: registry.npmjs.org/case-sensitive-paths-webpack-plugin/2.3.0
@@ -905,6 +904,7 @@ importers:
       ink-spinner: registry.npmjs.org/ink-spinner/4.0.3_ink@3.0.8+react@17.0.2
       inquirer: registry.npmjs.org/inquirer/6.5.2
       inquirer-fuzzy-path: registry.npmjs.org/inquirer-fuzzy-path/2.3.0
+      is-builtin-module: registry.npmjs.org/is-builtin-module/3.1.0
       is-glob: registry.npmjs.org/is-glob/4.0.1
       is-primitive: registry.npmjs.org/is-primitive/3.0.1
       is-relative-path: registry.npmjs.org/is-relative-path/2.0.0
@@ -25769,6 +25769,15 @@ packages:
     name: is-buffer
     version: 2.0.5
     engines: {node: '>=4'}
+    dev: false
+
+  registry.npmjs.org/is-builtin-module/3.1.0:
+    resolution: {integrity: sha512-OV7JjAgOTfAFJmHZLvpSTb4qi0nIILDV1gWPYDnDJUTNFM5aGlRAhk4QcT8i7TuAleeEV5Fdkqn3t4mS+Q11fg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/is-builtin-module/-/is-builtin-module-3.1.0.tgz}
+    name: is-builtin-module
+    version: 3.1.0
+    engines: {node: '>=6'}
+    dependencies:
+      builtin-modules: registry.npmjs.org/builtin-modules/3.2.0
     dev: false
 
   registry.npmjs.org/is-bzip2/1.0.0:
