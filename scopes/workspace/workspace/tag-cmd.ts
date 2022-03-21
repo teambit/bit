@@ -86,7 +86,7 @@ ${WILDCARD_HELP('tag')}`;
       force = false,
       verbose = false,
       ignoreUnresolvedDependencies,
-      ignoreIssues = false,
+      ignoreIssues,
       ignoreNewestVersion = false,
       skipTests = false,
       skipAutoTag = false,
@@ -106,7 +106,7 @@ ${WILDCARD_HELP('tag')}`;
       minor?: boolean;
       major?: boolean;
       ignoreUnresolvedDependencies?: boolean;
-      ignoreIssues?: boolean;
+      ignoreIssues?: string;
       scope?: string | boolean;
       incrementBy?: number;
       disableDeployPipeline?: boolean;

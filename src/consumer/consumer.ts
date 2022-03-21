@@ -562,7 +562,7 @@ export default class Consumer {
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
       incrementBy?: number;
-      ignoreIssues: string | undefined;
+      ignoreIssues?: string;
     } & BasicTagParams
   ): Promise<{
     taggedComponents: Component[];
