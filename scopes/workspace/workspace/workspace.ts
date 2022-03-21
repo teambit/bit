@@ -1095,7 +1095,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
     const withoutWorkspace = scopeExtensionsSpecific.filter((scopeData) => {
       const bitmap = Object.keys(bitMapExtensions || {});
-      return bitmap.includes(scopeData.extensionId?.toStringWithoutScope() || '');
+      return !bitmap.includes(scopeData.extensionId?.toStringWithoutScope() || '');
     });
     await addAndLoadExtensions(ExtensionDataList.fromArray(withoutWorkspace), 'ModelSpecific');
     // await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
