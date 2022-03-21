@@ -1570,6 +1570,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
         dependencyFilterFn: depsFilterFn,
         overrides: this.dependencyResolver.config.overrides,
+        packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       };
       const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
         this.path,
@@ -1734,6 +1735,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
+      packageImportMethod: this.dependencyResolver.config.packageImportMethod,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate
