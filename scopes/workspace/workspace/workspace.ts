@@ -1031,13 +1031,21 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let variantsExtensions: ExtensionDataList | undefined;
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
-    const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
-    const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
-    const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
+    const bitMapExtensionsIds = Object.keys(bitMapExtensions || {});
+
+    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensionsWithoutBitmap = scopeExtensions.filter(
+      (ext) => !bitMapExtensionsIds.includes(ext.extensionId?.toStringWithoutVersion() || '')
+    );
+    const [specific, nonSpecific] = partition(
+      scopeExtensionsWithoutBitmap,
+      (entry) => entry.config[AspectSpecificField] === true
+    );
+    const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
@@ -1098,11 +1106,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
     if (!excludeOrigins.includes('ModelSpecific')) {
-      const withoutWorkspace = scopeExtensionsSpecific.filter((scopeData) => {
-        const bitmap = Object.keys(bitMapExtensions || {});
-        return !bitmap.includes(scopeData.extensionId?.toStringWithoutScope() || '');
-      });
-      await addAndLoadExtensions(ExtensionDataList.fromArray(withoutWorkspace), 'ModelSpecific');
+      await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
