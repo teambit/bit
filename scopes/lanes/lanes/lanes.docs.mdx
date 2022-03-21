@@ -1,3 +1,8 @@
+---
+description: Enables (version-control) branching for components
+labels: ['core aspect', 'cli', 'version control']
+---
+
 See more details about these two features here: [Lanes](https://github.com/teambit/bit/issues/1986). [Snaps](https://github.com/teambit/bit/issues/1985).
 
 The following describes the final implementation, which differs from the specification above.
@@ -14,8 +19,14 @@ The following describes the final implementation, which differs from the specifi
 - track local lane to a remote lane: `bit switch --as`
 - remove a lane `bit lane remove <name>`.
 - fetch lane objects (without the components): `bit fetch --lanes`.
-- import a lane: `bit switch <name> --remote`.
-- export current lane: `bit export`.
+- import a lane: `bit switch <name> --remote`
+
+  .
+
+- export current lane: `bit export`
+
+  .
+
 - (internal) cat lane object: `bit cat-lane <name>`.
 
 ## Remaining tasks
