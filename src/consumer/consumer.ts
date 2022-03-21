@@ -70,7 +70,7 @@ import { ILegacyWorkspaceConfig } from './config';
 import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
 import { getConsumerInfo } from './consumer-locator';
 import DirStructure from './dir-structure/dir-structure';
-import { ConsumerNotFound, MissingDependencies } from './exceptions';
+import { ConsumerNotFound, ComponentsHaveIssues } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
@@ -622,7 +622,7 @@ export default class Consumer {
     });
     const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
-      throw new MissingDependencies(componentsWithBlockingIssues);
+      throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
   }
 
