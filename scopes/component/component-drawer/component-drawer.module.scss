@@ -33,6 +33,7 @@
   opacity: 0;
   transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
   max-height: 0;
+  border-bottom: 1px solid #ededed;
 
   &.open {
     opacity: 1;
@@ -47,4 +48,9 @@
   justify-content: space-between;
   padding: 8px;
   margin: 4px 8px;
+}
+
+.componentTree {
+  overflow-y: scroll;
+  height: 100%;
 }

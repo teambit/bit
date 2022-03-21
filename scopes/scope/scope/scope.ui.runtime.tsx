@@ -15,8 +15,18 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { ComponentsDrawer, DrawerWidgetSlot, FilterWidget, TreeToggleWidget } from '@teambit/component-drawer';
-import { ComponentFilters, ComponentFiltersSlot, DeprecateFilter, EnvsFilter } from '@teambit/component-filters';
+import {
+  ComponentsDrawer,
+  DrawerWidgetSlot,
+  FilterWidget,
+  TreeToggleWidget,
+} from '@teambit/component.ui.component-drawer';
+import {
+  ComponentFilters,
+  ComponentFiltersSlot,
+  DeprecateFilter,
+  EnvsFilter,
+} from '@teambit/component.ui.component-filters';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/design.ui.tree';

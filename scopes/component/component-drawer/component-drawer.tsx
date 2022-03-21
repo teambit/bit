@@ -17,7 +17,7 @@ import {
   ComponentFiltersProvider,
   ComponentFiltersSlot,
   ComponentFilterContext,
-} from '@teambit/component-filters';
+} from '@teambit/component.ui.component-filters';
 import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
@@ -30,45 +30,37 @@ import {
 
 import styles from './component-drawer.module.scss';
 
-export type ComponentsDrawerProps = {
-  id: string;
-  name: string;
+export type ComponentsDrawerProps = DrawerType & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
-  filtersSlot?: ComponentFiltersSlot;
-  drawerWidgetSlot?: DrawerWidgetSlot;
-  treeNodeSlot?: ComponentTreeSlot;
-  tooltip?: string;
-  order?: number;
-  isHidden?: () => boolean;
-  emptyDrawerMessage?: ReactNode;
-  customTreeNodeRenderer?: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
+  emptyMessage?: ReactNode;
+  plugins?: ComponentsDrawerPlugins;
+};
+
+export type ComponentsDrawerPlugins = {
+  treeNode?: {
+    customRenderer: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
+    widgets: ComponentTreeSlot;
+  };
+  filters?: ComponentFiltersSlot;
+  drawerWidgets?: DrawerWidgetSlot;
 };
 
 export class ComponentsDrawer implements DrawerType {
   readonly id: string;
-  readonly name: string;
   readonly useComponents: () => { components: ComponentModel[]; loading?: boolean };
-  readonly tooltip?: string;
-  readonly order?: number;
-  readonly isHidden?: () => boolean;
-  readonly widgets: ReactNode[];
-  readonly treeNodeSlot?: ComponentTreeSlot;
-  readonly filtersSlot?: ComponentFiltersSlot;
-  readonly customTreeNodeRenderer?: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
-  readonly emptyDrawerMessage?: ReactNode;
+  name: ReactNode;
+  tooltip?: string;
+  order?: number;
+  isHidden?: () => boolean;
+  emptyMessage?: ReactNode;
+  widgets: ReactNode[];
+  plugins: ComponentsDrawerPlugins;
 
   constructor(props: ComponentsDrawerProps) {
-    this.id = props.id;
-    this.name = props.name;
-    this.tooltip = props.tooltip;
-    this.order = props.order;
-    this.isHidden = props.isHidden;
-    this.widgets = (props.drawerWidgetSlot && flatten(props.drawerWidgetSlot?.values())) || [];
+    Object.assign(this, props);
     this.useComponents = props.useComponents;
-    this.treeNodeSlot = props.treeNodeSlot;
-    this.emptyDrawerMessage = props.emptyDrawerMessage;
-    this.filtersSlot = props.filtersSlot;
-    this.customTreeNodeRenderer = props?.customTreeNodeRenderer;
+    this.emptyMessage = props.emptyMessage;
+    this.plugins = props.plugins || {};
   }
 
   /**
@@ -82,7 +74,7 @@ export class ComponentsDrawer implements DrawerType {
 
   Context = ({ children }) => {
     const { components, loading } = this.useComponents();
-    const filters = flatten(this.filtersSlot?.values() || []);
+    const filters = flatten(this.plugins?.filters?.values() || []);
     const combinedContexts = [
       [DrawerComponentsProvider, { components, loading }] as ComponentTuple<{
         components: ComponentModel[];
@@ -95,6 +87,37 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
+  filtersToRender = () => {
+    const { filters: filterPlugins } = this.plugins;
+    if (!filterPlugins) return null;
+
+    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
+      () =>
+        flatten(
+          filterPlugins.toArray().map(([key, filtersByKey]) => {
+            return filtersByKey.map((filter) => ({ ...filter, key }));
+          })
+        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      [filterPlugins]
+    );
+
+    return filtersWithKey;
+  };
+
+  treeToRender = ({ visibleComponents, collapsed }) => {
+    const { treeNode } = this.plugins;
+    const TreeNode =
+      treeNode?.customRenderer && useCallback(treeNode.customRenderer(treeNode.widgets), [treeNode.widgets]);
+    return (
+      <ComponentTree
+        components={visibleComponents}
+        isCollapsed={collapsed}
+        className={styles.componentTree}
+        TreeNode={TreeNode}
+      />
+    );
+  };
+
   render = () => {
     const drawerComponentContext = useContext(DrawerComponentsContext);
     let { components } = drawerComponentContext;
@@ -102,9 +125,12 @@ export class ComponentsDrawer implements DrawerType {
     const { collapsed } = useContext(ComponentTreeContext);
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const { filters, matches } = useContext(ComponentFilterContext);
-    const { customTreeNodeRenderer, emptyDrawerMessage, filtersSlot, id, treeNodeSlot } = this;
+    const { drawerWidgets, treeNode } = this.plugins;
 
     if (loading) return <FullLoader />;
+
+    const filtersToRender = this.filtersToRender();
+    const treeToRender = this.treeToRender();
 
     const allComponentModels = components.map((component) => component.model);
 
@@ -112,42 +138,23 @@ export class ComponentsDrawer implements DrawerType {
 
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 
-    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
-      () =>
-        flatten(
-          filtersSlot?.toArray().map(([key, filtersByKey]) => {
-            return filtersByKey.map((filter) => ({ ...filter, key }));
-          })
-        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-      [filtersSlot]
-    );
-
-    const filtersToRender = useMemo(
-      () =>
-        filtersWithKey.map((filter) => {
-          return (
-            <filter.render
-              key={`${filter.key}-${filter.id}`}
-              components={allComponentModels}
-              className={classNames(styles.filter)}
-            />
-          );
-        }),
-      [filters]
-    );
-
     const isVisible = visibleComponents.length > 0;
 
     const emptyDrawer = (
-      <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{emptyDrawerMessage}</span>
+      <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
     );
 
-    const TreeNode = customTreeNodeRenderer && useCallback(customTreeNodeRenderer(treeNodeSlot), [treeNodeSlot]);
-
     return (
-      <div key={id} className={styles.drawerContainer}>
+      <div key={this.id} className={styles.drawerContainer}>
         <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>{filtersToRender}</div>
-        {isVisible && <ComponentTree components={visibleComponents} isCollapsed={collapsed} TreeNode={TreeNode} />}
+        {isVisible && (
+          <ComponentTree
+            components={visibleComponents}
+            isCollapsed={collapsed}
+            TreeNode={TreeNode}
+            className={styles.componentTree}
+          />
+        )}
         {isVisible || emptyDrawer}
       </div>
     );
