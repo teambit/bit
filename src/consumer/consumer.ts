@@ -652,7 +652,7 @@ export default class Consumer {
   async snap({
     ids,
     message = '',
-    ignoreIssues = false,
+    ignoreIssues,
     force = false,
     skipTests = false,
     verbose = false,
@@ -664,7 +664,7 @@ export default class Consumer {
   }: {
     ids: BitIds;
     message?: string;
-    ignoreIssues?: boolean;
+    ignoreIssues?: string;
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;

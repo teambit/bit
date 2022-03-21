@@ -21,7 +21,7 @@ export async function snapAction(args: {
   message: string;
   force: boolean;
   verbose: boolean;
-  ignoreIssues: boolean;
+  ignoreIssues?: string;
   build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
