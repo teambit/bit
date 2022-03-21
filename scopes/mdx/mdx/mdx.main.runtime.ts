@@ -14,6 +14,7 @@ import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 import { componentTemplates } from './mdx.templates';
+import { MdxEnv } from './mdx.env';
 import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
@@ -36,13 +37,13 @@ export class MDXMain {
     return mdxCompiler;
   }
 
-  _mdxEnv: ReactEnv;
-  get mdxEnv() {
-    return this._mdxEnv;
-  }
-  private set mdxEnv(value: ReactEnv) {
-    this._mdxEnv = value;
-  }
+  // _mdxEnv: ReactEnv;
+  // get mdxEnv() {
+  //   return this._mdxEnv;
+  // }
+  // private set mdxEnv(value: ReactEnv) {
+  //   this._mdxEnv = value;
+  // }
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -90,7 +91,7 @@ export class MDXMain {
       ],
       {}
     );
-    const mdxEnv = envs.compose(react.reactEnv, [
+    const envOverrides = [
       react.overrideCompiler(mdxCompiler),
       react.overrideDependencies({
         dependencies: {
@@ -99,13 +100,14 @@ export class MDXMain {
         },
       }),
       react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
-    ]);
-    envs.registerEnv(mdxEnv);
+    ];
+
+    const mdxComposedEnv = react.compose(envOverrides, new MdxEnv()) as MdxEnv & ReactEnv;
+    envs.registerEnv(mdxComposedEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
     generator.registerComponentTemplate(componentTemplates);
 
-    mdx.mdxEnv = mdxEnv as ReactEnv;
     return mdx;
   }
 }

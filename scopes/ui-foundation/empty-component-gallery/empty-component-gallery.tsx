@@ -13,6 +13,7 @@ export type EmptyComponentGalleryProps = {
  * page to be shown when workspace/scope has no components
  */
 export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryProps) {
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   return (
     <div className={styles.emptyComponentGallery}>
       <div className={styles.title}>
@@ -23,7 +24,10 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       {children}
       <div className={styles.title}>
         <span>New to Harmony?</span> &nbsp;
-        <ExternalLink href="https://harmony-docs.bit.dev/tutorial/install-bit/" className={styles.purpleLink}>
+        <ExternalLink
+          href={`https://bit.dev/docs/getting-started/installing-bit/installing-bit`}
+          className={styles.purpleLink}
+        >
           <span className={styles.text}>Start tutorial</span>
           <Icon of="right_arrow" className={classNames(styles.icon, textSize.xxs)} />
         </ExternalLink>

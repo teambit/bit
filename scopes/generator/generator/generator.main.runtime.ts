@@ -3,6 +3,9 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { CommunityAspect } from '@teambit/community';
+import type { CommunityMain } from '@teambit/community';
+
 import { Component } from '@teambit/component';
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -117,13 +120,13 @@ export class GeneratorMain {
   /**
    * returns a specific component template.
    */
-  getComponentTemplate(name: string, aspectId?: string): ComponentTemplate | undefined {
+  getComponentTemplate(name: string, aspectId?: string): { id: string; template: ComponentTemplate } | undefined {
     const templates = this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
     });
-    return found?.template;
+    return found;
   }
 
   /**
@@ -198,8 +201,8 @@ export class GeneratorMain {
     if (!this.workspace) throw new ConsumerNotFound();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
-    const template = this.getComponentTemplate(templateName, aspectId);
-    if (!template) throw new BitError(`template "${templateName}" was not found`);
+    const templateWithId = this.getComponentTemplate(templateName, aspectId);
+    if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
@@ -209,9 +212,10 @@ export class GeneratorMain {
       this.workspace,
       componentIds,
       options,
-      template,
+      templateWithId.template,
       this.envs,
-      this.newComponentHelper
+      this.newComponentHelper,
+      templateWithId.id
     );
     return componentGenerator.generate();
   }
@@ -272,18 +276,20 @@ export class GeneratorMain {
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
+    CommunityAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community]: [
       Workspace,
       CLIMain,
       GraphqlMain,
       EnvsMain,
       AspectLoaderMain,
-      NewComponentHelperMain
+      NewComponentHelperMain,
+      CommunityMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -297,7 +303,11 @@ export class GeneratorMain {
       aspectLoader,
       newComponentHelper
     );
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
+    const commands = [
+      new CreateCmd(generator, community.getDocsDomain()),
+      new TemplatesCmd(generator),
+      new NewCmd(generator),
+    ];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);

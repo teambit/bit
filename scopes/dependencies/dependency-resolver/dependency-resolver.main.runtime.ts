@@ -58,6 +58,7 @@ import {
   SerializedVariantPolicy,
 } from './policy';
 import {
+  PackageImportMethod,
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
@@ -77,7 +78,11 @@ import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 
+/**
+ * @deprecated use BIT_CLOUD_REGISTRY instead
+ */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
+export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -198,11 +203,23 @@ export interface DependencyResolverWorkspaceConfig {
    */
   overrides?: Record<string, string>;
 
+  /**
+   * This is similar to overrides, but will only affect installation in capsules.
+   * In case overrides is configured and this not, the regular overrides will affect capsules as well.
+   * in case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.
+   */
+  capsulesOverrides?: Record<string, string>;
+
   /*
    * Defines what linker should be used for installing Node.js packages.
    * Supported values are hoisted and isolated.
    */
   nodeLinker?: 'hoisted' | 'isolated';
+
+  /*
+   * Controls the way packages are imported from the store.
+   */
+  packageImportMethod?: PackageImportMethod;
 }
 
 export interface DependencyResolverVariantConfig {
