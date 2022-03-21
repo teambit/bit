@@ -18,26 +18,21 @@ export type ComponentFilterContextType = {
   filters: ComponentFilters;
   updateFilter: (filter: ComponentFilterCriteria<any>) => void;
   setFilters: (filters: ComponentFilters) => void;
-  matches: (filters: ComponentFilters, components: ComponentModel[]) => { model: ComponentModel; isHidden?: boolean }[];
 };
 
-export const ComponentFilterContext = createContext<ComponentFilterContextType>({
-  filters: [],
-  setFilters: () => {},
-  updateFilter: () => {},
-  matches: (filters, components) => {
-    return components.map((component) => {
-      let isVisible = true;
-      filters.forEach((filter) => {
-        isVisible = filter.match(component, filter.state) && isVisible;
-      });
-      return {
-        model: component,
-        isHidden: !isVisible,
-      };
-    });
-  },
-});
+export const ComponentFilterContext = createContext<ComponentFilterContextType | undefined>(undefined);
+export function useComponentFilter<T>(
+  filter: ComponentFilterCriteria<T>
+): [ComponentFilterCriteria<T>, (s: ComponentFilterCriteria<T>) => void] | undefined {
+  const filterContext = useContext(ComponentFilterContext);
+  if (!filterContext) return filterContext;
+  const filterState = filterContext.filters.find((existingFilter) => existingFilter.id === filter.id);
+  if (!filterState) return undefined;
+  const setState = (updatedState) => {
+    filterContext.updateFilter(updatedState);
+  };
+  return [filterState, setState];
+}
 
 export const ComponentFiltersProvider = ({
   children,
@@ -46,8 +41,8 @@ export const ComponentFiltersProvider = ({
   children: ReactNode;
   filters?: ComponentFilters;
 }) => {
-  const { filters: defaultValue, matches } = useContext(ComponentFilterContext);
-  const [filtersState, setFilters] = useState<ComponentFilters>(filters || defaultValue);
+  const [filtersState, setFilters] = useState<ComponentFilters>(filters || []);
+
   return (
     <ComponentFilterContext.Provider
       value={{
@@ -56,10 +51,16 @@ export const ComponentFiltersProvider = ({
         updateFilter: (updatedFilter) => {
           setFilters(filtersState.map((filter) => (filter.id === updatedFilter.id ? updatedFilter : filter)));
         },
-        matches,
       }}
     >
       {children}
     </ComponentFilterContext.Provider>
   );
+};
+
+export const runAllFilters: (filters: ComponentFilters, components: ComponentModel[]) => ComponentModel[] = (
+  filters,
+  components
+) => {
+  return components.filter((component) => filters.every((filter) => filter.match(component, filter)));
 };

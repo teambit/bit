@@ -22,9 +22,7 @@ import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
   ComponentTreeProvider,
-  DrawerComponentsProvider,
   DrawerWidgetSlot,
-  DrawerComponentsContext,
   ComponentFilterWidgetContext,
 } from './component-drawer.context';
 
@@ -73,13 +71,8 @@ export class ComponentsDrawer implements DrawerType {
    */
 
   Context = ({ children }) => {
-    const { components, loading } = this.useComponents();
     const filters = flatten(this.plugins?.filters?.values() || []);
     const combinedContexts = [
-      [DrawerComponentsProvider, { components, loading }] as ComponentTuple<{
-        components: ComponentModel[];
-        loading: boolean;
-      }>,
       ComponentTreeProvider,
       ComponentFilterWidgetProvider,
       [ComponentFiltersProvider, { filters }] as ComponentTuple<{ filters: ComponentFilters }>,
@@ -119,12 +112,10 @@ export class ComponentsDrawer implements DrawerType {
   };
 
   render = () => {
-    const drawerComponentContext = useContext(DrawerComponentsContext);
-    let { components } = drawerComponentContext;
-    const { loading } = drawerComponentContext;
+    const { loading, components } = this.useComponents();
     const { collapsed } = useContext(ComponentTreeContext);
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
-    const { filters, matches } = useContext(ComponentFilterContext);
+    const { filters } = useContext(ComponentFilterContext);
     const { drawerWidgets, treeNode } = this.plugins;
 
     if (loading) return <FullLoader />;
@@ -134,7 +125,7 @@ export class ComponentsDrawer implements DrawerType {
 
     const allComponentModels = components.map((component) => component.model);
 
-    components = useMemo(() => matches(filters, allComponentModels), [filters]);
+    const filteredComponents = useMemo(() => matches(filters, allComponentModels), [filters]);
 
     const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
 

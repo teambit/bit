@@ -1,7 +1,6 @@
 import React, { createContext, ReactNode, useState, useContext } from 'react';
 import { SlotRegistry } from '@teambit/harmony';
 import { ComponentModel } from '@teambit/component';
-import { ComponentFilterContext } from '@teambit/component.ui.component-filters';
 
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
 export type DrawerComponentModel = { model: ComponentModel; isHidden?: boolean };
@@ -42,12 +41,12 @@ export const ComponentFilterWidgetProvider = ({ children }: { children: ReactNod
   );
 };
 
-export type DrawerComponentsContextType = {
-  components: DrawerComponentModel[];
-  loading?: boolean;
-  setLoading: (loading: boolean) => void;
-  setComponents: (components: DrawerComponentModel[]) => void;
-};
+// export type DrawerComponentsContextType = {
+//   components: DrawerComponentModel[];
+//   loading?: boolean;
+//   setLoading: (loading: boolean) => void;
+//   setComponents: (components: DrawerComponentModel[]) => void;
+// };
 
 // export const DrawerComponentsContext = createContext<DrawerComponentsContextType>({
 //   components: [],
