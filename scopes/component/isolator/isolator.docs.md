@@ -1,5 +1,5 @@
 ---
-description: Enables components to be built and executed in isolated environments
+description: Isolate components for build, debugging, development and testing.
 labels: ['isolation', 'component', 'core aspect']
 ---
 
