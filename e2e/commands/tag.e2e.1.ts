@@ -655,7 +655,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('tag component with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag component with missing dependencies with --ignore-issues "*"', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -674,7 +674,7 @@ describe('bit tag command', function () {
         helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.command.addComponent('src/b.js', { i: 'src/b' });
 
-        const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
+        const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-issues "*"');
         try {
           output = tagOne();
         } catch (err: any) {
@@ -686,7 +686,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 component(s) tagged');
       });
     });
-    describe('tag all components with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag all components with missing dependencies with --ignore-issues "*"', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -705,7 +705,7 @@ describe('bit tag command', function () {
         helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.command.addComponent('src/b.js', { i: 'src/b' });
 
-        const tagAll = () => helper.command.tagAllComponents('--ignore-unresolved-dependencies');
+        const tagAll = () => helper.command.tagAllComponents('--ignore-issues "*"');
         try {
           output = tagAll();
         } catch (err: any) {
