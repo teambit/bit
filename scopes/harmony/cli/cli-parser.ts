@@ -120,22 +120,20 @@ export class CLIParser {
 
   private parseCommandWithSubCommands(command: Command) {
     const yarnCommand = this.getYargsCommand(command);
-    // this is the original flags of the main command. later, the "builder" method is overridden to add the
-    // sub-commands, so we'll need to re-add these flags.
-    const options = yarnCommand.builder as Record<string, any>;
     const builderFunc = () => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
         yargs.command(subCommand);
       });
-      yargs.options(options);
+      // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
+      yargs.options(yarnCommand.getGlobalOptions(command));
       return yargs;
     };
     yarnCommand.builder = builderFunc;
     yargs.command(yarnCommand);
   }
 
-  private getYargsCommand(command: Command): CommandModule {
+  private getYargsCommand(command: Command): YargsAdapter {
     const yarnCommand = new YargsAdapter(command);
     yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
 
