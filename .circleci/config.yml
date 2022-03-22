@@ -154,7 +154,7 @@ jobs:
             - bit
 
   symphony_docker_build:
-    machine: true
+    machine: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
@@ -168,7 +168,7 @@ jobs:
       - run: cd bit && docker push bitcli/bit-symphony:latest
 
   docker_build:
-    machine: true
+    machine: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
@@ -179,7 +179,7 @@ jobs:
       - run: cd bit && docker push bitcli/bit:latest
 
   docker_non_root_build:
-    machine: true
+    machine: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
@@ -190,7 +190,7 @@ jobs:
       - run: cd bit && docker push bitcli/bit-non-root:latest
 
   server_docker_build:
-    machine: true
+    machine: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
