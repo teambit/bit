@@ -2,16 +2,14 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
   name = 'snap [id]';
-  description = `record component changes.
-  https://${BASE_DOCS_DOMAIN}/components/snaps
-  ${WILDCARD_HELP('snap')}`;
+  description: string;
   alias = '';
   options = [
     ['m', 'message <message>', 'log message describing the user changes'],
