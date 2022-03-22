@@ -14,7 +14,7 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { IssuesClasses } from '@teambit/component-issues';
 
-export class Tag implements Command {
+export class TagCmd implements Command {
   name = 'tag [id...]';
   group = 'development';
   shortDescription = 'record component changes and lock versions';
@@ -63,7 +63,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(private docsDomain: string) {
+  constructor(docsDomain: string) {
     this.description = `record component changes and lock versions.
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
 https://${docsDomain}/components/tags
