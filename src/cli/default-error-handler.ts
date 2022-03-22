@@ -53,7 +53,7 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
-  MissingDependencies,
+  ComponentsHaveIssues,
   NewerVersionFound,
   NothingToImport,
 } from '../consumer/exceptions';
@@ -271,7 +271,7 @@ if possible, remove the component using "bit remove" and re-import or re-create 
 to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`,
   ],
   [
-    MissingDependencies,
+    ComponentsHaveIssues,
     (err) => {
       const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;

@@ -1,13 +1,11 @@
 import chalk from 'chalk';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { snapAction } from '@teambit/legacy/dist/api/consumer';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
-
-export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
-export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
 
 export class SnapCmd implements Command {
   name = 'snap [id]';
@@ -20,12 +18,18 @@ export class SnapCmd implements Command {
     ['a', 'all', 'snap all new and modified components'],
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
+    [
+      'i',
+      'ignore-issues [issues]',
+      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -38,7 +42,7 @@ export class SnapCmd implements Command {
       all = false,
       force = false,
       verbose = false,
-      ignoreIssues = false,
+      ignoreIssues,
       build,
       skipTests = false,
       skipAutoSnap = false,
@@ -49,7 +53,7 @@ export class SnapCmd implements Command {
       all?: boolean;
       force?: boolean;
       verbose?: boolean;
-      ignoreIssues?: boolean;
+      ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;

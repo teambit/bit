@@ -341,7 +341,7 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      const RelativeCompClass = IssuesClasses.relativeComponents;
+      const RelativeCompClass = IssuesClasses.RelativeComponents;
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
       expect(output).to.have.string(new RelativeCompClass().descriptionWithSolution);
@@ -375,7 +375,7 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      const RelativeCompClass = IssuesClasses.relativeComponents;
+      const RelativeCompClass = IssuesClasses.RelativeComponents;
       expect(output).to.have.string(new RelativeCompClass().descriptionWithSolution);
     });
   });

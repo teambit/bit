@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import { merge } from '../../../api/consumer';
-import { WILDCARD_HELP } from '../../../constants';
+import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '../../../constants';
 import {
   ApplyVersionResult,
   ApplyVersionResults,
@@ -10,7 +10,6 @@ import {
 } from '../../../consumer/versions-ops/merge-version';
 import GeneralError from '../../../error/general-error';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { AUTO_SNAPPED_MSG } from './snap-cmd';
 import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
 import { Group } from '../../command-groups';
 

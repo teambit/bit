@@ -46,7 +46,7 @@ export type BasicTagParams = {
 type TagParams = {
   exactVersion: string | undefined;
   releaseType: semver.ReleaseType;
-  ignoreIssues: boolean;
+  ignoreIssues?: string;
   ignoreNewestVersion: boolean;
   ids: string[];
   all: boolean;

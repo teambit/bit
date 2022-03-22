@@ -3,7 +3,7 @@ import ComponentSpecsFailed from './component-specs-failed';
 import ConsumerAlreadyExists from './consumer-already-exists';
 import ConsumerNotFound from './consumer-not-found';
 import LoginFailed from './login-failed';
-import MissingDependencies from './missing-dependencies';
+import ComponentsHaveIssues from './components-have-issues';
 import NewerVersionFound from './newer-version-found';
 import NothingToImport from './nothing-to-import';
 
@@ -12,7 +12,7 @@ export {
   ConsumerAlreadyExists,
   NothingToImport,
   ComponentSpecsFailed,
-  MissingDependencies,
+  ComponentsHaveIssues,
   NewerVersionFound,
   LoginFailed,
   ComponentOutOfSync,

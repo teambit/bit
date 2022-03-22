@@ -127,7 +127,7 @@ describe('create extension', function () {
     });
     describe('exporting the component', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('--ignore-issues');
+        helper.command.tagAllWithoutBuild('--ignore-issues "*"');
         // the fact the export succeed, means the defaultScope from .bitmap taken into account
         // otherwise, it would have been used the workspace.jsonc defaultScope "my-scope" and fails.
         helper.command.export();
