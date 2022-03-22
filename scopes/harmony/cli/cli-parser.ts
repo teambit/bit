@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs, { CommandModule } from 'yargs';
+import yargs from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { compact } from 'lodash';
