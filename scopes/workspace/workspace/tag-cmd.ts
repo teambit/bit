@@ -12,6 +12,7 @@ import { isString } from '@teambit/legacy/dist/utils';
 import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { IssuesClasses } from '@teambit/component-issues';
 
 export class Tag implements Command {
   name = 'tag [id...]';
@@ -37,8 +38,6 @@ export class Tag implements Command {
     ['', 'pre-release [identifier]', 'EXPERIMENTAL. increment a pre-release version (e.g. 1.0.0-dev.1)'],
     ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['', 'ignore-unresolved-dependencies', 'DEPRECATED. use --ignore-issues instead'],
-    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
@@ -52,6 +51,13 @@ export class Tag implements Command {
       '',
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
+    ],
+    [
+      'i',
+      'ignore-issues [issues]',
+      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
   ] as CommandOptions;
   migration = true;
@@ -80,7 +86,7 @@ ${WILDCARD_HELP('tag')}`;
       force = false,
       verbose = false,
       ignoreUnresolvedDependencies,
-      ignoreIssues = false,
+      ignoreIssues,
       ignoreNewestVersion = false,
       skipTests = false,
       skipAutoTag = false,
@@ -100,7 +106,7 @@ ${WILDCARD_HELP('tag')}`;
       minor?: boolean;
       major?: boolean;
       ignoreUnresolvedDependencies?: boolean;
-      ignoreIssues?: boolean;
+      ignoreIssues?: string;
       scope?: string | boolean;
       incrementBy?: number;
       disableDeployPipeline?: boolean;
@@ -125,7 +131,10 @@ ${WILDCARD_HELP('tag')}`;
       );
     }
     if (typeof ignoreUnresolvedDependencies === 'boolean') {
-      ignoreIssues = ignoreUnresolvedDependencies;
+      throw new Error(`--ignore-unresolved-dependencies has been removed, please use --ignore-issues instead`);
+    }
+    if (ignoreIssues && typeof ignoreIssues === 'boolean') {
+      throw new Error(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
     if (id.length === 2) {
       const secondArg = id[1];
