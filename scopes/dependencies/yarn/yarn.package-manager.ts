@@ -83,34 +83,33 @@ export class YarnPackageManager implements PackageManager {
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: installOptions.installPeersFromEnvs,
     }).manifest;
-    if (installOptions.rootComponents?.length) {
-      const rootComponentDeps = await createRootComponentsDir(
-        this.depResolver,
-        rootDir,
-        installOptions.rootComponents!,
-        componentDirectoryMap
-      );
-      rootManifest.dependencies = {
-        ...rootManifest.dependencies,
-        ...rootComponentDeps,
-      };
-    }
 
     // @ts-ignore
     project.setupResolutions();
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
-    if (installOptions.rootComponents?.length) {
+    if (installOptions.rootComponents) {
+      // is it needed?
       rootWs.manifest.installConfig = {
         hoistingLimits: 'dependencies',
       };
     }
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
-    const manifests = this.computeComponents(
+    let manifests = this.computeComponents(
       workspaceManifest.componentsManifestsMap,
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+    if (installOptions.rootComponents) {
+      manifests = {
+        ...await createRootComponentsDir(
+          this.depResolver,
+          rootDir,
+          componentDirectoryMap
+        ),
+        ...manifests,
+      };
+    }
     await extendWithComponentsFromDir(rootDir, manifests);
 
     this.logger.debug('root manifest for installation', rootManifest);

@@ -3,24 +3,15 @@ import path from 'path';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 
 export async function createRootComponentsDir(
   depResolver: DependencyResolverMain,
   rootDir: string,
-  rootComponents: string[],
   componentDirectoryMap: ComponentMap<string>
-): Promise<Record<string, string>> {
-  const rootComponentIds = Array.from(componentDirectoryMap.hashMap.entries())
-    .filter(([, [comp]]) => {
-      const component = comp.state._consumer;
-      const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
-      return rootComponents.includes(name);
-    })
-    .map(([id]) => id);
+): Promise<Record<string, object>> {
   const pickedComponents = new Map<string, Record<string, any>>();
-  const deps = await pickComponentsAndAllDeps(depResolver, rootComponentIds, componentDirectoryMap, pickedComponents);
-  const rootComponentsDir = path.join(rootDir, '.root-components');
+  const deps = await pickComponentsAndAllDeps(depResolver, Array.from(componentDirectoryMap.hashMap.keys()), componentDirectoryMap, pickedComponents);
+  const rootComponentsDir = path.join(rootDir, 'node_modules/.bit_components/_');
   await Promise.all(
     Array.from(pickedComponents.entries()).map(async ([rootComponentDir, packageJson]) => {
       const rel = path.relative(rootDir, rootComponentDir);
@@ -30,25 +21,38 @@ export async function createRootComponentsDir(
         filter: (src) => src !== modulesDir,
         overwrite: true,
       });
-      if (rootComponents.includes(packageJson.name)) {
-        packageJson.dependencies = {
-          ...packageJson.peerDependencies,
-          ...packageJson.dependencies,
-        };
-      }
+      // if (rootComponents.includes(packageJson.name)) {
+        // packageJson.dependencies = {
+          // ...packageJson.peerDependencies,
+          // ...packageJson.dependencies,
+        // };
+      // }
       await fs.writeJson(path.join(targetDir, 'package.json'), packageJson, { spaces: 2 });
     })
   );
-  const result = {};
+  const newManifestsByPaths: Record<string, object> = {};
   for (const rootComponentDir of deps) {
     const rel = path.relative(rootDir, rootComponentDir);
     const targetDir = path.join(rootComponentsDir, rel);
     const pkgJson = pickedComponents.get(rootComponentDir);
     if (pkgJson) {
-      result[`${pkgJson.name}__root`] = `file:${path.relative(rootDir, targetDir)}`;
+      const compDir = path.join(rootDir, 'node_modules/.bit_components', pkgJson.name)
+      newManifestsByPaths[compDir] = {
+        name: pkgJson.name,
+        dependencies: {
+          [pkgJson.name]: `file:${path.relative(compDir, targetDir)}`,
+          ...pkgJson.peerDependencies,
+          ...pkgJson['defaultPeerDependencies'], // eslint-disable-line
+        },
+        // is it needed?
+        installConfig: {
+          hoistingLimits: 'dependencies',
+        },
+      };
     }
   }
-  return result;
+  console.log(newManifestsByPaths)
+  return newManifestsByPaths;
 }
 
 async function pickComponentsAndAllDeps(

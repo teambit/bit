@@ -710,7 +710,7 @@ describe('app root components', function () {
     });
   });
 
-  describe('yarn hoisted linker', function () {
+  describe.only('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.reInitLocalScopeHarmony();

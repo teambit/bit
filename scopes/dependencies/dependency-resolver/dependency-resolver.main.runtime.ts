@@ -469,7 +469,7 @@ export class DependencyResolverMain {
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
-      hasRootComponents: Boolean(this.config.rootComponents),
+      hasRootComponents: Boolean(this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'),
     };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
