@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
-import { snapAction } from '@teambit/legacy/dist/api/consumer';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
+import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
   name = 'snap [id]';
@@ -34,6 +34,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   private = true;
   migration = true;
+
+  constructor(docsDomain: string, private snapping: SnappingMain) {
+    this.description = `record component changes.
+https://${docsDomain}/components/snaps
+${WILDCARD_HELP('snap')}`;
+  }
 
   async report(
     [id]: string[],
@@ -75,7 +81,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
     }
 
-    const results = await snapAction({
+    const results = await this.snapping.snap({
       id,
       message,
       force,

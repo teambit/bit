@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import semver, { ReleaseType } from 'semver';
 import { Command, CommandOptions } from '@teambit/cli';
-import { tagAction } from '@teambit/legacy/dist/api/consumer';
 import {
   TagResults,
   NOTHING_TO_TAG_MSG,
@@ -13,6 +12,7 @@ import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/co
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { IssuesClasses } from '@teambit/component-issues';
+import { SnappingMain } from './snapping.main.runtime';
 
 export class TagCmd implements Command {
   name = 'tag [id...]';
@@ -63,7 +63,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(docsDomain: string) {
+  constructor(docsDomain: string, private snapping: SnappingMain) {
     this.description = `record component changes and lock versions.
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
 https://${docsDomain}/components/tags
@@ -198,7 +198,7 @@ ${WILDCARD_HELP('tag')}`;
       incrementBy,
     };
 
-    const results = await tagAction(params);
+    const results = await this.snapping.tag(params);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));

@@ -27,10 +27,8 @@ import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import remove from './lib/remove';
 import show from './lib/show';
-import { snapAction } from './lib/snap';
 import status from './lib/status';
 import switchAction from './lib/switch';
-import { tagAction } from './lib/tag';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
@@ -47,8 +45,6 @@ export {
   undeprecate,
   buildAll,
   listScope,
-  tagAction,
-  snapAction,
   status,
   build,
   importAction,
