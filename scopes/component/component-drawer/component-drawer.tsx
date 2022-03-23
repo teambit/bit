@@ -149,7 +149,7 @@ export function TreeToggleWidget() {
     ? 'https://static.bit.dev/bit-icons/expand.svg'
     : 'https://static.bit.dev/bit-icons/collapse.svg';
   return (
-    <div className={styles.widgetIcon}>
+    <div className={classNames(styles.widgetIcon, !collapsed && styles.open)}>
       <img src={icon} onClick={() => setCollapsed(!collapsed)} />
     </div>
   );
@@ -158,7 +158,7 @@ export function TreeToggleWidget() {
 export function FilterWidget() {
   const { filterWidgetOpen, setFilterWidget } = useContext(ComponentFilterWidgetContext);
   return (
-    <div className={classNames(styles.widgetIcon, styles.filterWidget)}>
+    <div className={classNames(styles.widgetIcon, styles.filterWidget, filterWidgetOpen && styles.open)}>
       <img src="https://static.bit.dev/bit-icons/filter.svg" onClick={() => setFilterWidget(!filterWidgetOpen)} />
     </div>
   );

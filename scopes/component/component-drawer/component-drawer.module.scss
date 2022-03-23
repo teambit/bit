@@ -12,6 +12,8 @@
   border-radius: 8px;
   align-items: center;
   display: flex;
+  margin-left: 4px;
+
   &:hover,
   &.open {
     background-color: var(--bit-border-color-lightest, #ededed);
