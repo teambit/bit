@@ -56,7 +56,7 @@ export class ComponentsDrawer implements DrawerType {
     this.useComponents = props.useComponents;
     this.emptyMessage = props.emptyMessage;
     this.plugins = props.plugins || {};
-    this.setWidgets();
+    this.setWidgets(props.plugins?.drawerWidgets);
   }
 
   Context = ({ children }) => {
@@ -112,8 +112,8 @@ export class ComponentsDrawer implements DrawerType {
     );
   };
 
-  setWidgets = () => {
-    this.widgets = flatten(this.plugins.drawerWidgets?.values());
+  setWidgets = (widgets?: DrawerWidgetSlot) => {
+    this.widgets = flatten(widgets?.values());
   };
 
   render = () => {

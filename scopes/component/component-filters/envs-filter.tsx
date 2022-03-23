@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
@@ -36,18 +36,22 @@ const getDefaultState = (components: ComponentModel[]) => {
     envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
   };
   const componentEnvSet = new Set<string>();
-  const componentsEnvsWithIcons = components
-    .filter((component) => {
-      if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
+  const componentsEnvsWithIcons = useMemo(
+    () =>
+      components
+        .filter((component) => {
+          if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
 
-      componentEnvSet.add(component.environment.id);
-      return true;
-    })
-    .map((component) => ({
-      displayName: mapToEnvDisplayName(component),
-      id: component.environment?.id as string,
-      icon: component.environment?.icon,
-    }));
+          componentEnvSet.add(component.environment.id);
+          return true;
+        })
+        .map((component) => ({
+          displayName: mapToEnvDisplayName(component),
+          id: component.environment?.id as string,
+          icon: component.environment?.icon,
+        })),
+    [components]
+  );
   componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
     defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
   });
