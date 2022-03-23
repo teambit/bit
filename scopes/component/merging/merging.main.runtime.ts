@@ -38,9 +38,9 @@ import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/cons
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { TrackLane } from '../../../src/scope/scope-json';
 
 export type ComponentStatus = {
   componentFromFS?: Component | null;
