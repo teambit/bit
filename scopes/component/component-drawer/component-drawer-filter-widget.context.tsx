@@ -1,21 +1,4 @@
 import React, { createContext, ReactNode, useState } from 'react';
-import { SlotRegistry } from '@teambit/harmony';
-
-export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
-export type ComponentTreeContextType = {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-};
-
-export const ComponentTreeContext = createContext<ComponentTreeContextType>({
-  collapsed: false,
-  setCollapsed: () => {},
-});
-
-export const ComponentTreeProvider = ({ children }: { children: ReactNode }) => {
-  const [collapsed, setCollapsed] = useState<boolean>(false);
-  return <ComponentTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</ComponentTreeContext.Provider>;
-};
 
 export type ComponentFilterWidgetContextType = {
   filterWidgetOpen: boolean;

@@ -9,26 +9,21 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentModel } from '@teambit/component';
 import { TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
-
 import flatten from 'lodash.flatten';
 import {
   ComponentFiltersProvider,
   ComponentFilterContext,
   runAllFilters,
+  ComponentFilters,
 } from '@teambit/component.ui.component-filters';
 import { SlotRegistry } from '@teambit/harmony';
-
-import {
-  ComponentFilterWidgetProvider,
-  ComponentTreeContext,
-  ComponentTreeProvider,
-  DrawerWidgetSlot,
-  ComponentFilterWidgetContext,
-} from './component-drawer.context';
+import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
+import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';
 
 import styles from './component-drawer.module.scss';
 
-export type ComponentFiltersSlot = SlotRegistry<any>;
+export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
+export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
