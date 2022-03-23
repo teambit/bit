@@ -1,13 +1,5 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 .envsFilterContainer {
-  display: flex;
-  flex-direction: row;
-  font-size: 14px;
-  justify-content: space-between;
-  padding: 8px;
-  margin: 4px 8px;
-  width: calc(100% - 32px);
-
   > div {
     line-height: 16px;
     display: flex;
