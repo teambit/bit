@@ -70,7 +70,7 @@ import { ILegacyWorkspaceConfig } from './config';
 import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
 import { getConsumerInfo } from './consumer-locator';
 import DirStructure from './dir-structure/dir-structure';
-import { ConsumerNotFound, MissingDependencies } from './exceptions';
+import { ConsumerNotFound, ComponentsHaveIssues } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
@@ -562,7 +562,7 @@ export default class Consumer {
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
       incrementBy?: number;
-      ignoreIssues: boolean | undefined;
+      ignoreIssues?: string;
     } & BasicTagParams
   ): Promise<{
     taggedComponents: Component[];
@@ -596,15 +596,33 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
-  private throwForComponentIssues(components: Component[], ignoreIssues?: boolean) {
+  private throwForComponentIssues(components: Component[], ignoreIssues?: string) {
     components.forEach((component) => {
       if (this.isLegacy && component.issues) {
-        component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+        component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
     });
-    if (!ignoreIssues) {
-      const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
-      if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
+    if (ignoreIssues === '*') {
+      // ignore all issues
+      return;
+    }
+    const issuesToIgnore = ignoreIssues?.split(',').map((issue) => issue.trim());
+    issuesToIgnore?.forEach((issue) => {
+      const issueClass = IssuesClasses[issue];
+      if (!issueClass) {
+        throw new Error(
+          `unrecognized component-issue "${issue}". please specify one of the following:\n${Object.keys(
+            IssuesClasses
+          ).join('\n')}`
+        );
+      }
+      components.forEach((component) => {
+        component.issues.delete(issueClass);
+      });
+    });
+    const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+    if (!R.isEmpty(componentsWithBlockingIssues)) {
+      throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
   }
 
@@ -634,7 +652,7 @@ export default class Consumer {
   async snap({
     ids,
     message = '',
-    ignoreIssues = false,
+    ignoreIssues,
     force = false,
     skipTests = false,
     verbose = false,
@@ -646,7 +664,7 @@ export default class Consumer {
   }: {
     ids: BitIds;
     message?: string;
-    ignoreIssues?: boolean;
+    ignoreIssues?: string;
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
@@ -703,7 +721,7 @@ export default class Consumer {
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
-      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.relativeComponentsAuthored);
+      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.RelativeComponentsAuthored);
       const hasCustomModuleResolutions = component.issues?.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks);
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
@@ -817,7 +835,7 @@ export default class Consumer {
   private stripNodeModulesFromPackagePath(requirePath: string): string {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
-    const withoutPrefix = prefix ? requirePath.substr(requirePath.indexOf(prefix) + prefix.length) : requirePath;
+    const withoutPrefix = prefix ? requirePath.slice(requirePath.indexOf(prefix) + prefix.length) : requirePath;
     if (!withoutPrefix.includes('/') && withoutPrefix.startsWith('@')) {
       throw new GeneralError(
         'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'

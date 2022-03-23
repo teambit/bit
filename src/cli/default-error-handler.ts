@@ -12,7 +12,7 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
+import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
@@ -53,7 +53,7 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
-  MissingDependencies,
+  ComponentsHaveIssues,
   NewerVersionFound,
   NothingToImport,
 } from '../consumer/exceptions';
@@ -271,7 +271,7 @@ if possible, remove the component using "bit remove" and re-import or re-create 
 to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`,
   ],
   [
-    MissingDependencies,
+    ComponentsHaveIssues,
     (err) => {
       const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
@@ -305,19 +305,19 @@ please make sure it's not absolute and doesn't contain invalid characters`,
     (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
   ],
   [
     NoComponentDir,
-    (err) => `"${err.id}" doesn't have a component directory, which is invalid on Harmony.
-please run "bit status" to get more info`,
+    (err) => `"${err.id}" doesn't have a component directory, which is invalid.
+please run "bit status" to get more info.\nLearn more at https://${BASE_DOCS_DOMAIN}/workspace/component-directory`,
   ],
   [
     MissingMainFileMultipleComponents,
     (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-point`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/components/component-main-file`,
   ],
   [
     InvalidBitMap,
@@ -485,7 +485,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     (err) =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`,
+      `authentication failed. see troubleshooting at https://${BASE_LEGACY_DOCS_DOMAIN}/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`,
   ],
   [
     ObjectsWithoutConsumer,
@@ -579,7 +579,7 @@ export function sendToAnalyticsAndSentry(err: Error) {
 
 function handleNonBitCustomErrors(err: Error): string {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (err.code === 'EACCES') {
+  if (err.code === 'EACCES' && err.path) {
     // see #1774
     return chalk.red(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

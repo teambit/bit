@@ -1,14 +1,14 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 
-import { BASE_WEB_DOMAIN } from '../../src/constants';
+import { BASE_CLOUD_DOMAIN } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import BitsrcTester, { supportTestingOnBitsrc, username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
 (supportTestingOnBitsrc ? describe : describe.skip)(
-  `export --eject functionality using ${BASE_WEB_DOMAIN}`,
+  `export --eject functionality using ${BASE_CLOUD_DOMAIN}`,
   function () {
     this.timeout(0);
     let helper: Helper;

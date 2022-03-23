@@ -151,6 +151,13 @@ export default class CommandHelper {
   unsetEnv(compId: string) {
     return this.runCmd(`bit envs unset ${compId}`);
   }
+  setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
+    const configStr = config ? `'${JSON.stringify(config)}'` : '';
+    return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);
+  }
+  unsetAspect(pattern: string, aspectId: string, flags = '') {
+    return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }

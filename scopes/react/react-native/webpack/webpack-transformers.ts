@@ -10,7 +10,6 @@ const reactNativePackagesRule = {
   },
 };
 
-
 /**
  * Transformation to apply for both preview and dev server
  * @param config

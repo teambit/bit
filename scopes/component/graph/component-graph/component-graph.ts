@@ -29,16 +29,15 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     if (!this.shouldLimitToSeedersOnly()) {
       return cycles;
     }
-    const seederIdsStr = this.getSeederIdsStr();
+    const seederIdsStr = this.seederIds.map((id) => id.toString());
     const cyclesWithSeeders = cycles.filter((cycle) => {
-      const cycleNoVersions = cycle.map((id) => id.split('@')[0]);
-      return cycleNoVersions.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
+      return cycle.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
     });
     return cyclesWithSeeders;
   }
 
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
-    const seederIdsNoVersions = this.getSeederIdsStr();
+    const seederIdsNoVersions = this.seederIds.map((id) => id.toStringWithoutVersion());
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
     for (const [compFullName, versions] of this.versionMap) {
       if (versions.allVersionNodes.length > 1) {
@@ -99,10 +98,6 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return this.seederIds.length;
   }
 
-  private getSeederIdsStr() {
-    return this.seederIds.map((id) => id.toStringWithoutVersion());
-  }
-
   _calculateVersionMap() {
     const versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }> = new Map();
     for (const node of this.nodes) {
@@ -120,9 +115,17 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           if (Object.prototype.hasOwnProperty.call(value, 'allVersionNodes')) {
             value.allVersionNodes.push(compKey);
           }
-          const currentCompVersion = this.node(compKey)?.attr.id._legacy.getVersion();
-          const latestCompVersion = this.node(value.latestVersionNode)?.attr.id._legacy.getVersion();
-          if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+          const currentComp = this.node(compKey)?.attr;
+          const latestComp = this.node(value.latestVersionNode)?.attr;
+          const isLegacy = !currentComp?.head || !latestComp?.head;
+
+          if (isLegacy) {
+            const currentCompVersion = currentComp?.id._legacy.getVersion();
+            const latestCompVersion = latestComp?.id._legacy.getVersion();
+            if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+              value.latestVersionNode = compKey;
+            }
+          } else if (new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)) {
             value.latestVersionNode = compKey;
           }
         }

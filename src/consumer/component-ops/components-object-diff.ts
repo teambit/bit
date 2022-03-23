@@ -108,7 +108,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
 }
 
 export function prettifyFieldName(field: string): string {
-  return `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
+  return `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
 }
 
 function comparator(a, b) {

@@ -14,7 +14,7 @@ import { BitId } from '../../../bit-id';
 import { Group } from '../../command-groups';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
+  `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
 )}`;
 
 export const statusFailureMsg = 'issues found';
@@ -30,7 +30,7 @@ export default class Status implements LegacyCommand {
   name = 'status';
   shortDescription = 'show the working area component(s) status';
   group: Group = 'development';
-  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
+  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
   alias = 's';
   opts = [
     ['j', 'json', 'return a json version of the component'],

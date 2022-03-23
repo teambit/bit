@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { snapAction } from '../../../api/consumer';
 import { SnapResults } from '../../../api/consumer/lib/snap';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
@@ -13,7 +13,7 @@ export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
 export default class Snap implements LegacyCommand {
   name = 'snap [id]';
   description = `record component changes.
-  https://${BASE_DOCS_DOMAIN}/docs/snap-component-version
+  https://${BASE_DOCS_DOMAIN}/components/snaps
   ${WILDCARD_HELP('snap')}`;
   alias = '';
   opts = [
@@ -21,12 +21,18 @@ export default class Snap implements LegacyCommand {
     ['a', 'all', 'snap all new and modified components'],
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-issues', 'ignore component issues (shown in "bit status" as "issues found")'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
+    [
+      'i',
+      'ignore-issues [issues]',
+      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -39,7 +45,7 @@ export default class Snap implements LegacyCommand {
       all = false,
       force = false,
       verbose = false,
-      ignoreIssues = false,
+      ignoreIssues,
       build,
       skipTests = false,
       skipAutoSnap = false,
@@ -50,7 +56,7 @@ export default class Snap implements LegacyCommand {
       all?: boolean;
       force?: boolean;
       verbose?: boolean;
-      ignoreIssues?: boolean;
+      ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
