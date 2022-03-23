@@ -999,6 +999,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
     },
+    "ui/component-drawer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-drawer"
+    },
+    "ui/component-filters": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-filters"
+    },
     "ui/component-highlighter": {
         "scope": "teambit.react",
         "version": "0.0.511",
