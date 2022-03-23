@@ -8,15 +8,14 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
-import { mergeLanes } from '@teambit/legacy/dist/consumer/lanes/merge-lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -29,6 +28,7 @@ import {
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
+import { mergeLanes } from './merge-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -50,7 +50,7 @@ export type CreateLaneOptions = {
 };
 
 export class LanesMain {
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private merging: MergingMain) {}
 
   async getLanes({
     name,
@@ -141,6 +141,7 @@ export class LanesMain {
       throw new BitError(`unable to merge a lane outside of Bit workspace`);
     }
     const mergeResults = await mergeLanes({
+      merging: this.merging,
       consumer: this.workspace.consumer,
       laneName,
       ...options,
@@ -174,16 +175,17 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect];
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect, MergingAspect];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community]: [
+  static async provider([cli, scope, workspace, graphql, community, merging]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
-    CommunityMain
+    CommunityMain,
+    MergingMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope);
+    const lanesMain = new LanesMain(workspace, scope, merging);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd();
     if (!isLegacy) {
