@@ -1,12 +1,16 @@
-import { Consumer } from '..';
-import { BitId } from '../../bit-id';
-import GeneralError from '../../error/general-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
-import { Lane } from '../../scope/models';
-import { Tmp } from '../../scope/repositories';
-import { ApplyVersionResults, MergeStrategy } from '../versions-ops/merge-version';
-import { ComponentStatus, getComponentStatus, merge } from '../versions-ops/merge-version/merge-snaps';
-import { DEFAULT_LANE } from '../../constants';
+import { BitError } from '@teambit/bit-error';
+import { BitId } from '@teambit/legacy-bit-id';
+import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import { ApplyVersionResults, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import {
+  getComponentStatus,
+  merge,
+  ComponentStatus,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-snaps';
+import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 
 export async function mergeLanes({
   consumer,
@@ -29,7 +33,7 @@ export async function mergeLanes({
 }): Promise<ApplyVersionResults> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
-    throw new GeneralError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
+    throw new BitError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
   }
   const localLaneId = consumer.getCurrentLaneId();
   const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(localLaneId);
@@ -47,7 +51,7 @@ export async function mergeLanes({
     const remoteLaneId = RemoteLaneId.from(laneId.name, remoteName);
     remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(remoteLaneId);
     if (!remoteLane.length) {
-      throw new GeneralError(
+      throw new BitError(
         `unable to switch to "${laneName}" of "${remoteName}", the remote lane was not found or not fetched locally`
       );
     }
@@ -55,7 +59,7 @@ export async function mergeLanes({
     otherLaneName = `${remoteName}/${laneId.name}`;
   } else {
     otherLane = await consumer.scope.loadLane(laneId);
-    if (!otherLane) throw new GeneralError(`unable to switch to "${laneName}", the lane was not found`);
+    if (!otherLane) throw new BitError(`unable to switch to "${laneName}", the lane was not found`);
     bitIds = otherLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     otherLaneName = laneId.name;
   }

@@ -8,14 +8,12 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
-import { mergeLanes } from '@teambit/legacy/dist/consumer/lanes/merge-lanes';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -29,6 +27,7 @@ import {
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
+import { mergeLanes } from './merge-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
