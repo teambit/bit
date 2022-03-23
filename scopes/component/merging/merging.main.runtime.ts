@@ -311,6 +311,7 @@ export class MergingMain {
       // @ts-ignore
       remote: remoteName,
       lane: laneId.name,
+      resolved: false, // could be changed later
     };
     id = componentFromFS ? componentFromFS.id : id;
     if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
