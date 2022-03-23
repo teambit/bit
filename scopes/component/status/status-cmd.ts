@@ -26,7 +26,7 @@ please make sure each component has its own directory and re-add it. alternative
 const trackDirDesc = `these components were added by an older version of Bit and therefore have "trackDir" record in the .bitmap file
 please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
-export class Status implements Command {
+export class StatusCmd implements Command {
   name = 'status';
   shortDescription = 'show the working area component(s) status';
   group = 'development';
