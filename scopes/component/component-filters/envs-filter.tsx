@@ -35,23 +35,21 @@ const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
     envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
   };
-  const componentEnvSet = new Set<string>();
-  const componentsEnvsWithIcons = useMemo(
-    () =>
-      components
-        .filter((component) => {
-          if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
+  const componentsEnvsWithIcons = useMemo(() => {
+    const componentEnvSet = new Set<string>();
+    return components
+      .filter((component) => {
+        if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
 
-          componentEnvSet.add(component.environment.id);
-          return true;
-        })
-        .map((component) => ({
-          displayName: mapToEnvDisplayName(component),
-          id: component.environment?.id as string,
-          icon: component.environment?.icon,
-        })),
-    [components]
-  );
+        componentEnvSet.add(component.environment.id);
+        return true;
+      })
+      .map((component) => ({
+        displayName: mapToEnvDisplayName(component),
+        id: component.environment?.id as string,
+        icon: component.environment?.icon,
+      }));
+  }, [components]);
   componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
     defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
   });
