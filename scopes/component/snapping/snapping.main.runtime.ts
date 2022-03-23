@@ -33,6 +33,12 @@ const HooksManagerInstance = HooksManager.getInstance();
 export class SnappingMain {
   constructor(private workspace: Workspace, private logger: Logger) {}
 
+  /**
+   * tag the given component ids or all modified/new components if "all" param is set.
+   * tag is a similar operation as a snap, which saves the changes into the local scope, but it also creates an alias
+   * with a valid semver to that version.
+   * tag can be done only on main, not on a lane.
+   */
   async tag(tagParams: TagParams): Promise<TagResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
     const { ids, all, exactVersion, force, scope, includeImported, persist, snapped, soft } = tagParams;
@@ -101,6 +107,10 @@ export class SnappingMain {
     return tagResults;
   }
 
+  /**
+   * save the local changes of a component(s) into the scope. snap can be done on main or on a lane.
+   * once a component is snapped on a lane, it becomes part of it.
+   */
   async snap({
     id, // @todo: rename to "patterns"
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.

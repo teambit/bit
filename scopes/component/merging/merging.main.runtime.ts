@@ -56,6 +56,11 @@ export class MergingMain {
     this.consumer = this.workspace?.consumer;
   }
 
+  /**
+   * merge components according to the "values" param.
+   * if the first param is a version, then merge the component ids to that version.
+   * otherwise, merge from the remote head to the local.
+   */
   async merge(
     values: string[],
     mergeStrategy: MergeStrategy,
@@ -116,7 +121,6 @@ export class MergingMain {
     );
 
     return this.mergeSnaps({
-      consumer,
       mergeStrategy,
       allComponentsStatus,
       remoteName: remoteTrackedLane ? remoteTrackedLane.remoteScope : null,
@@ -128,8 +132,10 @@ export class MergingMain {
     });
   }
 
+  /**
+   * merge multiple components according to the "allComponentsStatus".
+   */
   async mergeSnaps({
-    consumer,
     mergeStrategy,
     allComponentsStatus,
     remoteName,
@@ -139,7 +145,6 @@ export class MergingMain {
     snapMessage,
     build,
   }: {
-    consumer: Consumer;
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentStatus[];
     remoteName: string | null;
@@ -149,6 +154,7 @@ export class MergingMain {
     snapMessage: string;
     build: boolean;
   }) {
+    const consumer = this.workspace.consumer;
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
     );
@@ -187,13 +193,13 @@ export class MergingMain {
     return { components: componentsResults, failedComponents, mergeSnapResults };
   }
 
-  async getComponentStatus(
-    consumer: Consumer,
+  async getComponentMergeStatus(
     id: BitId,
     localLane: Lane | null,
     otherLaneName: string,
     existingOnWorkspaceOnly = false
   ): Promise<ComponentStatus> {
+    const consumer = this.workspace.consumer;
     const componentStatus: ComponentStatus = { id };
     const returnFailure = (msg: string) => {
       componentStatus.failureMessage = msg;
@@ -275,7 +281,7 @@ export class MergingMain {
     return { componentFromFS: component, id, mergeResults };
   }
 
-  async applyVersion({
+  private async applyVersion({
     consumer,
     componentFromFS,
     id,
@@ -396,6 +402,32 @@ export class MergingMain {
     return { id, filesStatus };
   }
 
+  private async abortMerge(consumer: Consumer, values: string[]): Promise<ApplyVersionResults> {
+    const ids = this.getIdsForUnresolved(consumer, values);
+    // @ts-ignore not clear yet what to do with other flags
+    const results = await checkoutVersion(consumer, { ids, reset: true });
+    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
+    await consumer.scope.objects.unmergedComponents.write();
+    return { abortedComponents: results.components };
+  }
+
+  private async resolveMerge(
+    consumer: Consumer,
+    values: string[],
+    snapMessage: string,
+    build: boolean
+  ): Promise<ApplyVersionResults> {
+    const ids = this.getIdsForUnresolved(consumer, values);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const { snappedComponents } = await this.snapping.snap({
+      legacyBitIds: BitIds.fromArray(ids),
+      resolveUnmerged: true,
+      build,
+      message: snapMessage,
+    });
+    return { resolvedComponents: snappedComponents };
+  }
+
   private async getAllComponentsStatus(
     bitIds: BitId[],
     localLaneId: LocalLaneId,
@@ -415,8 +447,7 @@ export class MergingMain {
             throw new GeneralError(
               `unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${remoteLaneIdStr}"`
             );
-          return this.getComponentStatus(
-            this.consumer,
+          return this.getComponentMergeStatus(
             bitId.changeVersion(remoteHead.toString()),
             localLaneObject,
             remoteLaneIdStr
@@ -445,32 +476,6 @@ export class MergingMain {
       build,
       message: snapMessage,
     });
-  }
-
-  async abortMerge(consumer: Consumer, values: string[]): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnresolved(consumer, values);
-    // @ts-ignore not clear yet what to do with other flags
-    const results = await checkoutVersion(consumer, { ids, reset: true });
-    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
-    await consumer.scope.objects.unmergedComponents.write();
-    return { abortedComponents: results.components };
-  }
-
-  async resolveMerge(
-    consumer: Consumer,
-    values: string[],
-    snapMessage: string,
-    build: boolean
-  ): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnresolved(consumer, values);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { snappedComponents } = await this.snapping.snap({
-      legacyBitIds: BitIds.fromArray(ids),
-      resolveUnmerged: true,
-      build,
-      message: snapMessage,
-    });
-    return { resolvedComponents: snappedComponents };
   }
 
   private getIdsForUnresolved(consumer: Consumer, idsStr?: string[]): BitId[] {

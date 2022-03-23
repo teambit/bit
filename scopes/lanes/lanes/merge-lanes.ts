@@ -64,7 +64,6 @@ export async function mergeLanes({
   const allComponentsStatus = await getAllComponentsStatus();
 
   return merging.mergeSnaps({
-    consumer,
     mergeStrategy,
     allComponentsStatus,
     remoteName,
@@ -79,9 +78,7 @@ export async function mergeLanes({
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map((bitId) =>
-          merging.getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly)
-        )
+        bitIds.map((bitId) => merging.getComponentMergeStatus(bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
       );
       await tmp.clear();
       return componentsStatus;
