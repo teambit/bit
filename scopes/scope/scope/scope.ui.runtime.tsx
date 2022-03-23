@@ -7,7 +7,7 @@ import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
-import React, { ComponentType, ReactNode, useContext } from 'react';
+import React, { ComponentType, ReactNode } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
@@ -16,19 +16,17 @@ import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } fro
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import {
-  ComponentsDrawer,
   DrawerWidgetSlot,
   FilterWidget,
   TreeToggleWidget,
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
-import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
-import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
-import { TreeNodeProps } from '@teambit/design.ui.tree';
+
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
+import { scopeDrawer } from './scope.ui.drawer';
 
 export type ScopeBadge = ComponentType;
 
@@ -242,57 +240,15 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  /**
-   * scope drawer instance
-   */
-  getDrawer = () => {
-    const customScopeTreeNodeRenderer = (treeNodeSlot) =>
-      function TreeNode(props: TreeNodeProps<PayloadType>) {
-        const children = props.node.children;
-
-        if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
-
-        // skip over scope node and render only children
-        if (props.node.payload instanceof ScopePayload) {
-          return (
-            <>
-              {children.map((childNode) => (
-                <TreeNode key={childNode.id} {...props} node={childNode}></TreeNode>
-              ))}
-            </>
-          );
-        }
-
-        return <NamespaceTreeNode {...props} />;
-      };
-
-    return new ComponentsDrawer({
-      order: 0,
-      id: 'scope-components-drawer',
-      name: 'COMPONENTS',
-      plugins: {
-        tree: {
-          widgets: this.sidebarSlot,
-          customRenderer: customScopeTreeNodeRenderer,
-        },
-        filters: this.drawerComponentsFiltersSlot,
-        drawerWidgets: this.drawerWidgetSlot,
-      },
-      emptyMessage: 'Scope is empty',
-      useComponents: () => {
-        const scope = useContext(ScopeContext);
-        return {
-          loading: !scope,
-          components: scope.components || [],
-        };
-      },
-    });
-  };
-
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
-    const scopeDrawer = this.getDrawer();
-    this.sidebar.registerDrawer(scopeDrawer);
+    this.sidebar.registerDrawer(
+      scopeDrawer({
+        treeWidgets: this.sidebarSlot,
+        filtersSlot: this.drawerComponentsFiltersSlot,
+        drawerWidgetSlot: this.drawerWidgetSlot,
+      })
+    );
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},

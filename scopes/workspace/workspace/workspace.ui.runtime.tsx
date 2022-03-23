@@ -8,7 +8,7 @@ import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
-import React, { useContext, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
@@ -16,7 +16,6 @@ import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
 import {
   DrawerWidgetSlot,
-  ComponentsDrawer,
   FilterWidget,
   TreeToggleWidget,
   ComponentFiltersSlot,
@@ -24,7 +23,7 @@ import {
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
-import { WorkspaceContext } from './ui/workspace/workspace-context';
+import { workspaceDrawer } from './workspace.ui.drawer';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -117,36 +116,15 @@ export class WorkspaceUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  /**
-   * workspace drawer instance
-   */
-  getDrawer = () => {
-    return new ComponentsDrawer({
-      order: 0,
-      id: 'workspace-components-drawer',
-      name: 'COMPONENTS',
-      plugins: {
-        tree: {
-          widgets: this.sidebarSlot,
-        },
-        filters: this.drawerComponentsFiltersSlot,
-        drawerWidgets: this.drawerWidgetSlot,
-      },
-      emptyMessage: 'Workspace is empty',
-      useComponents: () => {
-        const workspace = useContext(WorkspaceContext);
-        return {
-          loading: !workspace,
-          components: workspace.components || [],
-        };
-      },
-    });
-  };
-
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
-    const workspaceDrawer = this.getDrawer();
-    this.registerDrawers(workspaceDrawer);
+    this.registerDrawers(
+      workspaceDrawer({
+        treeWidgets: this.sidebarSlot,
+        drawerWidgetSlot: this.drawerWidgetSlot,
+        filtersSlot: this.drawerComponentsFiltersSlot,
+      })
+    );
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!

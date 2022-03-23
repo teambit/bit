@@ -50,15 +50,11 @@ export function useComponentFilter<T>(
   }, []);
 
   if (!filterContext || !filterFromContext) return undefined;
+  type Setter = Dispatch<SetStateAction<ComponentFilterCriteria<any>>>;
 
-  const setState: Dispatch<SetStateAction<ComponentFilterCriteria<any>>> = (updatedState) => {
-    let state: ComponentFilterCriteria<any> | undefined;
-    if (isFunction(updatedState)) {
-      state = updatedState(filterFromContext);
-    } else {
-      state = updatedState;
-    }
-    updateFilter(filterContext, state);
+  const setState: Setter = (updatedState) => {
+    const nextState = isFunction(updatedState) ? updatedState(filterFromContext) : updatedState;
+    updateFilter(filterContext, nextState);
   };
 
   return [filterFromContext, setState];

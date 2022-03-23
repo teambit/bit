@@ -4,6 +4,7 @@ export {
   FilterWidget,
   TreeToggleWidget,
   ComponentFiltersSlot,
+  DrawerWidgetSlot,
 } from './component-drawer';
 export {
   ComponentFilterWidgetContextType,
