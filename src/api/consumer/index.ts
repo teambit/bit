@@ -20,7 +20,6 @@ import isolate from './lib/isolate';
 import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
-import merge from './lib/merge';
 import migrate from './lib/migrate';
 import move from './lib/move';
 import paintGraph from './lib/paint-graph';
@@ -64,7 +63,6 @@ export {
   move,
   linkAction as link,
   checkout,
-  merge,
   diff,
   injectConf,
   migrate,
