@@ -8,7 +8,4 @@ export {
   ComponentFilterWidgetContextType,
   ComponentFilterWidgetContext,
   ComponentFilterWidgetProvider,
-  DrawerComponentsContextType,
-  DrawerComponentsContext,
-  DrawerComponentsProvider,
 } from './component-drawer.context';

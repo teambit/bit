@@ -1,4 +1,13 @@
-import React, { ComponentType, createContext, ReactNode, useContext, useState } from 'react';
+import React, {
+  ComponentType,
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+} from 'react';
 import { SlotRegistry } from '@teambit/harmony';
 import { ComponentModel } from '@teambit/component';
 
@@ -22,16 +31,27 @@ export type ComponentFilterContextType = {
 
 export const ComponentFilterContext = createContext<ComponentFilterContextType | undefined>(undefined);
 export function useComponentFilter<T>(
-  filter: ComponentFilterCriteria<T>
-): [ComponentFilterCriteria<T>, (s: ComponentFilterCriteria<T>) => void] | undefined {
+  filter: ComponentFilterCriteria<T>,
+  defaultState?: T
+): [ComponentFilterCriteria<T>, Dispatch<SetStateAction<ComponentFilterCriteria<T>>>] | undefined {
   const filterContext = useContext(ComponentFilterContext);
-  if (!filterContext) return filterContext;
-  const filterState = filterContext.filters.find((existingFilter) => existingFilter.id === filter.id);
-  if (!filterState) return undefined;
+  const filterFromContext = filterContext?.filters.find((existingFilter) => existingFilter.id === filter.id);
+
+  useEffect(() => {
+    if (filterFromContext && defaultState) {
+      const initialFilterState = { ...filterFromContext, state: defaultState };
+      filterContext?.updateFilter(initialFilterState);
+    }
+  }, []);
+
+  if (!filterContext) return undefined;
+  if (!filterFromContext) return undefined;
+
   const setState = (updatedState) => {
     filterContext.updateFilter(updatedState);
   };
-  return [filterState, setState];
+
+  return [filterFromContext, setState];
 }
 
 export const ComponentFiltersProvider = ({

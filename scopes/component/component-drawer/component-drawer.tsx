@@ -18,6 +18,7 @@ import {
   ComponentFiltersSlot,
   ComponentFilterContext,
 } from '@teambit/component.ui.component-filters';
+import { runAllFilters } from '@teambit/component.ui.component-filters/component-filters.context';
 import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
@@ -35,7 +36,7 @@ export type ComponentsDrawerProps = DrawerType & {
 };
 
 export type ComponentsDrawerPlugins = {
-  treeNode?: {
+  tree?: {
     customRenderer: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
     widgets: ComponentTreeSlot;
   };
@@ -61,15 +62,6 @@ export class ComponentsDrawer implements DrawerType {
     this.plugins = props.plugins || {};
   }
 
-  /**
-   *
-   * Compose Component Drawer Context from
-   *  1. Component Tree Widget Context
-   *  2. Component Tree Filter Widget Context
-   *  3. Component Filters Context
-   *  4. Drawer Components Context
-   */
-
   Context = ({ children }) => {
     const filters = flatten(this.plugins?.filters?.values() || []);
     const combinedContexts = [
@@ -80,11 +72,13 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  filtersToRender = () => {
+  renderFilters = () => {
     const { filters: filterPlugins } = this.plugins;
+    const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
+
     if (!filterPlugins) return null;
 
-    const filtersWithKey: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
+    const Filters: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
       () =>
         flatten(
           filterPlugins.toArray().map(([key, filtersByKey]) => {
@@ -94,42 +88,40 @@ export class ComponentsDrawer implements DrawerType {
       [filterPlugins]
     );
 
-    return filtersWithKey;
+    return <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>{Filters}</div>;
   };
 
-  treeToRender = ({ visibleComponents, collapsed }) => {
-    const { treeNode } = this.plugins;
-    const TreeNode =
-      treeNode?.customRenderer && useCallback(treeNode.customRenderer(treeNode.widgets), [treeNode.widgets]);
+  renderTree = ({ components }: { components: ComponentModel[] }) => {
+    const { collapsed } = useContext(ComponentTreeContext);
+    const { tree } = this.plugins;
+
+    const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets), [tree.widgets]);
+    const isVisible = components.length > 0;
+
     return (
-      <ComponentTree
-        components={visibleComponents}
-        isCollapsed={collapsed}
-        className={styles.componentTree}
-        TreeNode={TreeNode}
-      />
+      isVisible && (
+        <ComponentTree
+          components={components}
+          isCollapsed={collapsed}
+          className={styles.componentTree}
+          TreeNode={TreeNode}
+        />
+      )
     );
   };
 
   render = () => {
     const { loading, components } = this.useComponents();
-    const { collapsed } = useContext(ComponentTreeContext);
-    const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
-    const { filters } = useContext(ComponentFilterContext);
-    const { drawerWidgets, treeNode } = this.plugins;
+    const componentFiltersContext = useContext(ComponentFilterContext);
 
     if (loading) return <FullLoader />;
 
-    const filtersToRender = this.filtersToRender();
-    const treeToRender = this.treeToRender();
+    const filters = componentFiltersContext?.filters || [];
 
-    const allComponentModels = components.map((component) => component.model);
+    const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters]);
 
-    const filteredComponents = useMemo(() => matches(filters, allComponentModels), [filters]);
-
-    const visibleComponents = components.filter((component) => !component.isHidden).map((component) => component.model);
-
-    const isVisible = visibleComponents.length > 0;
+    const Filters = this.renderFilters();
+    const Tree = this.renderTree({ components: filteredComponents });
 
     const emptyDrawer = (
       <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
@@ -137,16 +129,9 @@ export class ComponentsDrawer implements DrawerType {
 
     return (
       <div key={this.id} className={styles.drawerContainer}>
-        <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>{filtersToRender}</div>
-        {isVisible && (
-          <ComponentTree
-            components={visibleComponents}
-            isCollapsed={collapsed}
-            TreeNode={TreeNode}
-            className={styles.componentTree}
-          />
-        )}
-        {isVisible || emptyDrawer}
+        {Filters}
+        {Tree}
+        {Tree || emptyDrawer}
       </div>
     );
   };

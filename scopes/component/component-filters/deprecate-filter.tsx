@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import React, { useContext } from 'react';
+import React from 'react';
 import { Toggle } from '@teambit/design.ui.input.toggle';
-import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
+import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './deprecate-filter.module.scss';
 
 export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;
@@ -15,15 +15,13 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
 };
 
 function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
-  const { filters, updateFilter } = useContext(ComponentFilterContext);
+  const filterContext = useComponentFilter(DeprecateFilter);
 
-  const currentFilter = filters.find((activeFilter) => activeFilter.id === DeprecateFilter.id) as
-    | DeprecateFilterCriteria
-    | undefined;
+  if (!filterContext) return null;
 
-  if (!currentFilter) return null;
+  const [filter, updateFilter] = filterContext;
 
-  const isActive = currentFilter.state;
+  const isActive = filter.state;
 
   return (
     <div className={classNames(styles.deprecateFilter, isActive && styles.active, className)}>
@@ -34,7 +32,7 @@ function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
       <div>
         <Toggle
           checked={isActive}
-          onInputChanged={() => updateFilter({ ...currentFilter, state: !currentFilter.state })}
+          onInputChanged={() => updateFilter((currentState) => ({ ...currentState, state: !isActive }))}
         />
       </div>
     </div>

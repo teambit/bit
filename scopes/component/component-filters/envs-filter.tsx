@@ -1,8 +1,8 @@
-import React, { useContext, useEffect } from 'react';
-import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
+import React from 'react';
+import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
-import { ComponentFilterContext, ComponentFilterCriteria } from './component-filters.context';
+import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
 export type EnvFilterState = {
@@ -28,15 +28,13 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-function envsFilter({
-  components,
-  className,
-}: { components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>) {
-  const { filters, updateFilter } = useContext(ComponentFilterContext);
-  const currentFilter = filters.find((activeFilter) => activeFilter.id === EnvsFilter.id) as
-    | EnvsFilterCriteria
-    | undefined;
+const mapToEnvDisplayName = (component: ComponentModel) =>
+  component.environment?.id.split('/').pop() || (component.environment?.id as string);
 
+const getDefaultState = (components: ComponentModel[]) => {
+  const defaultState = {
+    envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
+  };
   const componentEnvSet = new Set<string>();
   const componentsEnvsWithIcons = components
     .filter((component) => {
@@ -46,65 +44,77 @@ function envsFilter({
       return true;
     })
     .map((component) => ({
-      displayName: component.environment?.id.split('/').pop() || (component.environment?.id as string),
+      displayName: mapToEnvDisplayName(component),
       id: component.environment?.id as string,
       icon: component.environment?.icon,
     }));
+  componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
+    defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
+  });
+  return defaultState;
+};
 
-  // run only for the first time when the component mounts
-  useEffect(() => {
-    if (currentFilter) {
-      // set initial state of the dropdown to have all possible options checked
-      componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
-        currentFilter.state.envsState.set(componentEnvWithIcon.id, { ...componentEnvWithIcon, active: true });
-      });
-      updateFilter(currentFilter);
-    }
-  }, []);
+function envsFilter({
+  components,
+  className,
+}: { components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>) {
+  const defaultState = getDefaultState(components);
+  const filterContext = useComponentFilter(EnvsFilter, defaultState);
 
-  if (!currentFilter) return null;
+  if (!filterContext) return null;
+
+  const [currentFilter, updateFilter] = filterContext;
 
   const currentEnvsState = currentFilter.state.envsState;
 
-  const selectList = componentsEnvsWithIcons.map((filter) => {
-    return {
-      value: filter.displayName,
-      icon: filter.icon,
-      checked: Boolean(currentEnvsState.get(filter.id)?.active),
-    };
+  const selectList: ItemType[] = [];
+
+  currentFilter.state.envsState.forEach((state) => {
+    selectList.push({
+      value: state.displayName,
+      icon: state.icon,
+      checked: !!currentEnvsState.get(state.displayName)?.active,
+    });
   });
 
   const onCheck = (value: string, checked: boolean) => {
-    const matchingEnv = componentsEnvsWithIcons.find((c) => c.displayName === value);
+    // if (checked && !currentFilter.state.dropdownState) {
+    //   currentFilter.state.dropdownState = true;
+    // }
 
-    if (!matchingEnv) return;
+    updateFilter((currentState) => {
+      const currentEnvState = currentState.state.envsState.get(value);
+      if (!currentEnvState) return currentState;
 
-    const currentState = currentEnvsState.get(matchingEnv.id) || matchingEnv;
-
-    currentEnvsState.set(matchingEnv.id, { ...currentState, active: checked });
-    if (checked && !currentFilter.state.dropdownState) {
-      currentFilter.state.dropdownState = true;
-    }
-    updateFilter(currentFilter);
+      currentState.state.envsState.set(value, { ...currentEnvState, active: checked });
+      return currentState;
+    });
   };
 
   const onClear = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     event.stopPropagation();
-    currentEnvsState.forEach((value, key) => {
-      currentEnvsState.set(key, { ...value, active: false });
+
+    updateFilter((currentState) => {
+      currentState.state.envsState.forEach((value, key) => {
+        currentState.state.envsState.set(key, { ...value, active: false });
+      });
+      return currentState;
     });
-    updateFilter(currentFilter);
   };
 
   const onSubmit = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     event.stopPropagation();
-    currentFilter.state.dropdownState = false;
-    updateFilter(currentFilter);
+    updateFilter((currentState) => {
+      currentState.state.dropdownState = false;
+      return currentState;
+    });
   };
 
   const onDropdownClicked = () => {
-    currentFilter.state.dropdownState = !currentFilter.state.dropdownState;
-    updateFilter(currentFilter);
+    updateFilter((currentState) => {
+      currentState.state.dropdownState = !currentFilter.state.dropdownState;
+      return currentState;
+    });
   };
 
   return (
