@@ -55,7 +55,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       }, {})
     );
 
-    const chunkSize = this.preview.config.maxComponentsInGroup;
+    const chunkSize = this.preview.config.maxChunkSize;
 
     const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
 

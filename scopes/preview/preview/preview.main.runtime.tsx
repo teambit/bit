@@ -84,7 +84,7 @@ export type PreviewConfig = {
    * this helps mitigate large memory consumption for the build pipeline. This may increase the overall time for the generate-preview task, but reduce memory footprint.
    * default - no limit.
    */
-  maxComponentsInGroup?: number;
+  maxChunkSize?: number;
 };
 
 export type EnvPreviewConfig = {
