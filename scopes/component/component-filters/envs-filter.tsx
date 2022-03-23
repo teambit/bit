@@ -78,11 +78,11 @@ function envsFilter({
   });
 
   const onCheck = (value: string, checked: boolean) => {
-    // if (checked && !currentFilter.state.dropdownState) {
-    //   currentFilter.state.dropdownState = true;
-    // }
-
     updateFilter((currentState) => {
+      if (checked && !currentState.state.dropdownState) {
+        currentState.state.dropdownState = true;
+      }
+
       const currentEnvState = currentState.state.envsState.get(value);
       if (!currentEnvState) return currentState;
 
