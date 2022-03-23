@@ -10,7 +10,8 @@ export async function createRootComponentsDir(
   componentDirectoryMap: ComponentMap<string>
 ): Promise<Record<string, object>> {
   const pickedComponents = new Map<string, Record<string, any>>();
-  const deps = await pickComponentsAndAllDeps(depResolver, Array.from(componentDirectoryMap.hashMap.keys()), componentDirectoryMap, pickedComponents);
+  const deps = await pickComponentsAndAllDeps(depResolver,
+    Array.from(componentDirectoryMap.hashMap.keys()), componentDirectoryMap, pickedComponents);
   const rootComponentsDir = path.join(rootDir, 'node_modules/.bit_components/_');
   await Promise.all(
     Array.from(pickedComponents.entries()).map(async ([rootComponentDir, packageJson]) => {
@@ -21,12 +22,6 @@ export async function createRootComponentsDir(
         filter: (src) => src !== modulesDir,
         overwrite: true,
       });
-      // if (rootComponents.includes(packageJson.name)) {
-        // packageJson.dependencies = {
-          // ...packageJson.peerDependencies,
-          // ...packageJson.dependencies,
-        // };
-      // }
       await fs.writeJson(path.join(targetDir, 'package.json'), packageJson, { spaces: 2 });
     })
   );
@@ -51,7 +46,6 @@ export async function createRootComponentsDir(
       };
     }
   }
-  console.log(newManifestsByPaths)
   return newManifestsByPaths;
 }
 

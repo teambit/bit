@@ -136,7 +136,7 @@ export class MultiCompiler implements Compiler {
       return '';
     }
 
-    return matchedCompiler.getPreviewComponentRootPath!(component);
+    return matchedCompiler.getPreviewComponentRootPath!(component); // eslint-disable-line
   }
 
   /**
