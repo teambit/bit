@@ -10,15 +10,11 @@ import {
   MergeStrategy,
   mergeVersion,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import {
-  abortMerge,
-  mergeComponentsFromRemote,
-  resolveMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-snaps';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
+import { abortMerge, mergeComponentsFromRemote, resolveMerge } from './merge-snaps';
 
 export class MergingMain {
   constructor(private workspace: Workspace) {}

@@ -1,23 +1,21 @@
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import path from 'path';
-
-import { Consumer } from '../..';
-import { BitId, BitIds } from '../../../bit-id';
-import { COMPONENT_ORIGINS } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
-import logger from '../../../logger/logger';
-import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
-import { getDivergeData } from '../../../scope/component-ops/get-diverge-data';
-import { UnmergedComponent } from '../../../scope/lanes/unmerged-components';
-import { Lane, Version } from '../../../scope/models';
-import { Ref } from '../../../scope/objects';
-import { Tmp } from '../../../scope/repositories';
-import { pathNormalizeToLinux } from '../../../utils';
-import ManyComponentsWriter from '../../component-ops/many-components-writer';
-import Component from '../../component/consumer-component';
-import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
+import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Tmp } from '@teambit/legacy/dist/scope/repositories';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
   ApplyVersionResult,
   ApplyVersionResults,
@@ -26,8 +24,11 @@ import {
   getMergeStrategyInteractive,
   MergeOptions,
   MergeStrategy,
-} from './merge-version';
-import threeWayMerge, { MergeResultsThreeWay } from './three-way-merge';
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import threeWayMerge, {
+  MergeResultsThreeWay,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 
 export type ComponentStatus = {
   componentFromFS?: Component | null;

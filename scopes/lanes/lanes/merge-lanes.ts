@@ -3,11 +3,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ApplyVersionResults, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import {
-  getComponentStatus,
-  merge,
-  ComponentStatus,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-snaps';
+import { getComponentStatus, merge, ComponentStatus } from '@teambit/merging';
 import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
