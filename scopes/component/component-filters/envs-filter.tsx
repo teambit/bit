@@ -7,7 +7,7 @@ import styles from './envs-filter.module.scss';
 
 export type EnvFilterState = {
   envsState: Map<string, { active: boolean; icon?: string; displayName: string; id: string }>;
-  dropdownState?: boolean;
+  dropdownState: boolean;
 };
 export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
 
@@ -23,6 +23,7 @@ export const EnvsFilter: EnvsFilterCriteria = {
   },
   state: {
     envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
+    dropdownState: false,
   },
   order: 1,
   render: envsFilter,
@@ -33,6 +34,7 @@ const mapToEnvDisplayName = (component: ComponentModel) =>
 
 const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
+    dropdownState: false,
     envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
   };
   const componentsEnvsWithIcons = useMemo(() => {
