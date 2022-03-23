@@ -274,10 +274,15 @@ export class ScopeUI {
       order: 0,
       id: 'scope-components-drawer',
       name: 'COMPONENTS',
-      drawerWidgetSlot: this.drawerWidgetSlot,
-      filtersSlot: this.drawerComponentsFiltersSlot,
-      treeNodeSlot: this.sidebarSlot,
-      emptyDrawerMessage: 'Scope is empty',
+      plugins: {
+        tree: {
+          widgets: this.sidebarSlot,
+          customRenderer: customScopeTreeNodeRenderer,
+        },
+        filters: this.drawerComponentsFiltersSlot,
+        drawerWidgets: this.drawerWidgetSlot,
+      },
+      emptyMessage: 'Scope is empty',
       useComponents: () => {
         const scope = useContext(ScopeContext);
         return {
@@ -285,7 +290,6 @@ export class ScopeUI {
           components: scope.components || [],
         };
       },
-      customTreeNodeRenderer: customScopeTreeNodeRenderer,
     });
   };
 

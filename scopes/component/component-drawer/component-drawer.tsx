@@ -29,7 +29,7 @@ import {
 
 import styles from './component-drawer.module.scss';
 
-export type ComponentsDrawerProps = DrawerType & {
+export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
   emptyMessage?: ReactNode;
   plugins?: ComponentsDrawerPlugins;
@@ -37,7 +37,7 @@ export type ComponentsDrawerProps = DrawerType & {
 
 export type ComponentsDrawerPlugins = {
   tree?: {
-    customRenderer: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
+    customRenderer?: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
     widgets: ComponentTreeSlot;
   };
   filters?: ComponentFiltersSlot;

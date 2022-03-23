@@ -129,10 +129,14 @@ export class WorkspaceUI {
       order: 0,
       id: 'workspace-components-drawer',
       name: 'COMPONENTS',
-      drawerWidgetSlot: this.drawerWidgetSlot,
-      filtersSlot: this.drawerComponentsFiltersSlot,
-      treeNodeSlot: this.sidebarSlot,
-      emptyDrawerMessage: 'Workspace is empty',
+      plugins: {
+        tree: {
+          widgets: this.sidebarSlot,
+        },
+        filters: this.drawerComponentsFiltersSlot,
+        drawerWidgets: this.drawerWidgetSlot,
+      },
+      emptyMessage: 'Workspace is empty',
       useComponents: () => {
         const workspace = useContext(WorkspaceContext);
         return {
