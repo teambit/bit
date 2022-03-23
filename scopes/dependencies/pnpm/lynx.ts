@@ -156,7 +156,7 @@ export async function getPeerDependencyIssues(
   });
 }
 
-const ROOT_COMPS_DIR = 'node_modules/.root_components';
+const ROOT_COMPS_DIR = 'node_modules/.bit_components';
 
 export async function install(
   rootManifest,

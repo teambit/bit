@@ -469,7 +469,7 @@ export class DependencyResolverMain {
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
-      hasRootComponents: Boolean(this.config.rootComponents),
+      hasRootComponents: Boolean(this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'),
     };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
@@ -1244,10 +1244,10 @@ export class DependencyResolverMain {
    * @param rootDir - The root directory of the workspace
    * @param compDir - Relative path to the component's directory
    */
-  async getInjectedDirs(rootDir: string, componentDir: string): Promise<string[]> {
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     if (typeof packageManager?.getInjectedDirs === 'function') {
-      return packageManager.getInjectedDirs(rootDir, componentDir);
+      return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
     }
     return [];
   }

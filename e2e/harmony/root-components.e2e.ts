@@ -6,7 +6,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-const ROOT_COMPS_DIR = 'node_modules/.root_components';
+const ROOT_COMPS_DIR = 'node_modules/.bit_components';
 
 function rootCompDirDep(helper: Helper, rootComponentName: string, depComponentName: string) {
   return path.join(
@@ -634,6 +634,296 @@ describe('app root components', function () {
               `@${helper.scopes.remote}/comp4/index.js`,
               'react/package.json',
             ])
+          ).version
+        ).to.match(/^17\./);
+      });
+      it('should create package.json file in every variation of the component', () => {
+        let pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp3'), [
+          `@${helper.scopes.remote}/comp3`,
+          `@${helper.scopes.remote}/comp2/package.json`,
+        ]);
+        expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp2`);
+
+        pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp4'), [
+          `@${helper.scopes.remote}/comp4`,
+          `@${helper.scopes.remote}/comp2/package.json`,
+        ]);
+        expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp2`);
+
+        pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp3'), [
+          `@${helper.scopes.remote}/comp3`,
+          `@${helper.scopes.remote}/comp2`,
+          `@${helper.scopes.remote}/comp1/package.json`,
+        ]);
+        expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp1`);
+
+        pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp4'), [
+          `@${helper.scopes.remote}/comp4`,
+          `@${helper.scopes.remote}/comp2`,
+          `@${helper.scopes.remote}/comp1/package.json`,
+        ]);
+        expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp1`);
+      });
+    });
+    describe('compilation', () => {
+      before(() => {
+        helper.command.compile();
+      });
+      it('should create the dist folder in all the locations of the component', () => {
+        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
+          .exist;
+        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
+          .exist;
+        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
+          .exist;
+        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
+          .exist;
+        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.exist;
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2/dist/index.js`,
+          ])
+        ).to.exist;
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.exist;
+        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.exist;
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp4'), [
+            `@${helper.scopes.remote}/comp4`,
+            `@${helper.scopes.remote}/comp2/dist/index.js`,
+          ])
+        ).to.exist;
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp4'), [
+            `@${helper.scopes.remote}/comp4`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.exist;
+      });
+    });
+  });
+
+  describe('yarn hoisted linker', function () {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(4);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
+      helper.fs.outputFile(
+        `comp2/index.js`,
+        `const React = require("react");const comp1 = require("@${helper.scopes.remote}/comp1");`
+      );
+      helper.fs.outputFile(
+        `comp3/index.js`,
+        `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
+      );
+      helper.fs.outputFile(
+        `comp4/index.js`,
+        `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
+      );
+      helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
+        policy: {
+          peerDependencies: {
+            react: '16 || 17',
+          },
+        },
+      });
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.dependencies/dependency-resolver', {
+        policy: {
+          peerDependencies: {
+            react: '16 || 17',
+          },
+        },
+      });
+      helper.extensions.addExtensionToVariant('comp3', 'teambit.dependencies/dependency-resolver', {
+        policy: {
+          peerDependencies: {
+            react: '16',
+          },
+        },
+      });
+      helper.extensions.addExtensionToVariant('comp4', 'teambit.dependencies/dependency-resolver', {
+        policy: {
+          peerDependencies: {
+            react: '17',
+          },
+        },
+      });
+      helper.command.install();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should install root components', () => {
+      expect(rootCompDirDep(helper, 'comp3', 'comp3')).to.be.a.path();
+      expect(rootCompDirDep(helper, 'comp4', 'comp4')).to.be.a.path();
+    });
+    it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
+      expect(
+        fs.readJsonSync(
+          resolveFrom(rootCompDir(helper, 'comp4'), [
+            `@${helper.scopes.remote}/comp4`,
+            `@${helper.scopes.remote}/comp2`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^17\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(rootCompDir(helper, 'comp4'), [
+            `@${helper.scopes.remote}/comp4`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^17\./);
+    });
+    it('should install the dependencies of the root component that has react 16 in the dependencies with react 16', () => {
+      expect(
+        fs.readJsonSync(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^16\./);
+    });
+    it.skip('should install the non-root components with their default React versions', () => {
+      expect(
+        fs.readJsonSync(
+          resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp1/index.js', 'react/package.json'])
+        ).version
+      ).to.match(/^17\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp2/index.js', 'react/package.json'])
+        ).version
+      ).to.match(/^17\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp3/index.js', 'react/package.json'])
+        ).version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp4/index.js', 'react/package.json'])
+        ).version
+      ).to.match(/^17\./);
+    });
+    it('should create package.json file in every variation of the component', () => {
+      let pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp3'), [
+        `@${helper.scopes.remote}/comp3`,
+        `@${helper.scopes.remote}/comp2/package.json`,
+      ]);
+      expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp2`);
+
+      pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp4'), [
+        `@${helper.scopes.remote}/comp4`,
+        `@${helper.scopes.remote}/comp2/package.json`,
+      ]);
+      expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp2`);
+
+      pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp3'), [
+        `@${helper.scopes.remote}/comp3`,
+        `@${helper.scopes.remote}/comp2`,
+        `@${helper.scopes.remote}/comp1/package.json`,
+      ]);
+      expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp1`);
+
+      pkgJsonLoc = resolveFrom(rootCompDir(helper, 'comp4'), [
+        `@${helper.scopes.remote}/comp4`,
+        `@${helper.scopes.remote}/comp2`,
+        `@${helper.scopes.remote}/comp1/package.json`,
+      ]);
+      expect(fs.readJsonSync(pkgJsonLoc).name).to.eq(`@${helper.scopes.remote}/comp1`);
+    });
+    describe('repeat install', () => {
+      before(() => {
+        helper.command.install();
+      });
+      it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
+        expect(
+          fs.readJsonSync(
+            resolveFrom(rootCompDir(helper, 'comp4'), [
+              `@${helper.scopes.remote}/comp4`,
+              `@${helper.scopes.remote}/comp2`,
+              'react/package.json',
+            ])
+          ).version
+        ).to.match(/^17\./);
+        expect(
+          fs.readJsonSync(
+            resolveFrom(rootCompDir(helper, 'comp4'), [
+              `@${helper.scopes.remote}/comp4`,
+              `@${helper.scopes.remote}/comp2`,
+              `@${helper.scopes.remote}/comp1`,
+              'react/package.json',
+            ])
+          ).version
+        ).to.match(/^17\./);
+      });
+      it('should install the dependencies of the root component that has react 16 in the dependencies with react 16', () => {
+        expect(
+          fs.readJsonSync(
+            resolveFrom(rootCompDir(helper, 'comp3'), [
+              `@${helper.scopes.remote}/comp3`,
+              `@${helper.scopes.remote}/comp2`,
+              'react/package.json',
+            ])
+          ).version
+        ).to.match(/^16\./);
+        expect(
+          fs.readJsonSync(
+            resolveFrom(rootCompDir(helper, 'comp3'), [
+              `@${helper.scopes.remote}/comp3`,
+              `@${helper.scopes.remote}/comp2`,
+              `@${helper.scopes.remote}/comp1`,
+              'react/package.json',
+            ])
+          ).version
+        ).to.match(/^16\./);
+      });
+      it.skip('should install the non-root components with their default React versions', () => {
+        expect(
+          fs.readJsonSync(
+            resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp1/index.js', 'react/package.json'])
+          ).version
+        ).to.match(/^17\./);
+        expect(
+          fs.readJsonSync(
+            resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp2/index.js', 'react/package.json'])
+          ).version
+        ).to.match(/^17\./);
+        expect(
+          fs.readJsonSync(
+            resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp3/index.js', 'react/package.json'])
+          ).version
+        ).to.match(/^16\./);
+        expect(
+          fs.readJsonSync(
+            resolveFrom(helper.fixtures.scopes.localPath, ['@my-scope/comp4/index.js', 'react/package.json'])
           ).version
         ).to.match(/^17\./);
       });
