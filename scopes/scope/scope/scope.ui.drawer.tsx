@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
-import { SidebarSlot } from './scope.ui.runtime';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
+import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
   treeWidgets: SidebarSlot;
