@@ -303,18 +303,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
-    "component-drawer": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-drawer"
-    },
-    "component-filters": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-filters"
-    },
     "component-id": {
         "scope": "teambit.component",
         "version": "0.0.402",
@@ -1010,6 +998,18 @@
         "version": "0.0.488",
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
+    },
+    "ui/component-drawer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-drawer"
+    },
+    "ui/component-filters": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-filters"
     },
     "ui/component-highlighter": {
         "scope": "teambit.react",
