@@ -1,4 +1,8 @@
-.emptyWorkspace {
+.drawerContainer {
+  height: 100%;
+}
+
+.emptyDrawer {
   padding: 8px 8px 0 28px;
   display: block;
 }
@@ -8,6 +12,8 @@
   border-radius: 8px;
   align-items: center;
   display: flex;
+  margin-left: 4px;
+
   &:hover,
   &.open {
     background-color: var(--bit-border-color-lightest, #ededed);
@@ -25,27 +31,28 @@
   margin-right: 8px;
 }
 
-.deprecateFilter {
+.filtersContainer {
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
+  max-height: 0;
+  border-bottom: 1px solid #ededed;
+
+  &.open {
+    opacity: 1;
+    max-height: 100%;
+  }
+}
+
+.filter {
   display: flex;
   flex-direction: row;
   font-size: 14px;
   justify-content: space-between;
   padding: 8px;
   margin: 4px 8px;
+}
 
-  > div {
-    line-height: 16px;
-    display: flex;
-  }
-
-  .filterIcon {
-    img {
-      width: 16px;
-    }
-
-    .filterIconLabel {
-      margin: 0px 8px;
-      font-size: 14px;
-    }
-  }
+.componentTree {
+  overflow-y: scroll;
+  height: 100%;
 }
