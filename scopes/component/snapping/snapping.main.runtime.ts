@@ -101,36 +101,40 @@ export class SnappingMain {
     return tagResults;
   }
 
-  async snap(args: {
-    id: string;
-    message: string;
-    force: boolean;
-    verbose: boolean;
+  async snap({
+    id, // @todo: rename to "patterns"
+    legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
+    resolveUnmerged = false,
+    message = '',
+    force = false,
+    verbose = false,
+    ignoreIssues,
+    skipTests = false,
+    skipAutoSnap = false,
+    build,
+    disableTagAndSnapPipelines = false,
+    forceDeploy = false,
+  }: {
+    id?: string;
+    legacyBitIds?: BitIds;
+    resolveUnmerged?: boolean;
+    message?: string;
+    force?: boolean;
+    verbose?: boolean;
     ignoreIssues?: string;
     build: boolean;
-    skipTests: boolean;
-    skipAutoSnap: boolean;
-    disableTagAndSnapPipelines: boolean;
-    forceDeploy: boolean;
+    skipTests?: boolean;
+    skipAutoSnap?: boolean;
+    disableTagAndSnapPipelines?: boolean;
+    forceDeploy?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
-    const {
-      id,
-      message,
-      force,
-      verbose,
-      ignoreIssues,
-      skipTests,
-      skipAutoSnap,
-      build,
-      disableTagAndSnapPipelines,
-      forceDeploy,
-    } = args;
+    if (id && legacyBitIds) throw new Error(`please pass either id or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
     if (consumer.isLegacy) throw new LanesIsDisabled();
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
-    const ids = await getIdsToSnap();
+    const ids = legacyBitIds || (await getIdsToSnap());
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
@@ -155,7 +159,7 @@ export class SnappingMain {
       persist: true,
       soft: false,
       build,
-      resolveUnmerged: false,
+      resolveUnmerged,
       isSnap: true,
       disableTagAndSnapPipelines,
       forceDeploy,

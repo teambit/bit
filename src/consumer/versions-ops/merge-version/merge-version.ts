@@ -239,3 +239,22 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if (manual) return MergeOptions.manual as any;
   return null;
 }
+
+export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
+  const tab = addName ? '\t' : '';
+  return components
+    .map((component: ApplyVersionResult) => {
+      const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
+      const files = Object.keys(component.filesStatus)
+        .map((file) => {
+          const note =
+            component.filesStatus[file] === FileStatus.manual
+              ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
+              : '';
+          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
+        })
+        .join('\n');
+      return `${addName ? name : ''}\n${chalk.cyan(files)}`;
+    })
+    .join('\n\n');
+};

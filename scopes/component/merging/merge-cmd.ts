@@ -2,33 +2,13 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import {
-  ApplyVersionResult,
   ApplyVersionResults,
-  FileStatus,
   getMergeStrategy,
+  applyVersionReport,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { MergingMain } from './merging.main.runtime';
-
-export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
-  const tab = addName ? '\t' : '';
-  return components
-    .map((component: ApplyVersionResult) => {
-      const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
-      const files = Object.keys(component.filesStatus)
-        .map((file) => {
-          const note =
-            component.filesStatus[file] === FileStatus.manual
-              ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
-              : '';
-          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
-        })
-        .join('\n');
-      return `${addName ? name : ''}\n${chalk.cyan(files)}`;
-    })
-    .join('\n\n');
-};
 
 export class MergeCmd implements Command {
   name = 'merge [values...]';

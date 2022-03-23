@@ -15,6 +15,7 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -49,7 +50,7 @@ export type CreateLaneOptions = {
 };
 
 export class LanesMain {
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private merging: MergingMain) {}
 
   async getLanes({
     name,
@@ -140,6 +141,7 @@ export class LanesMain {
       throw new BitError(`unable to merge a lane outside of Bit workspace`);
     }
     const mergeResults = await mergeLanes({
+      merging: this.merging,
       consumer: this.workspace.consumer,
       laneName,
       ...options,
@@ -173,16 +175,17 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect];
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect, MergingAspect];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community]: [
+  static async provider([cli, scope, workspace, graphql, community, merging]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
-    CommunityMain
+    CommunityMain,
+    MergingMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope);
+    const lanesMain = new LanesMain(workspace, scope, merging);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd();
     if (!isLegacy) {

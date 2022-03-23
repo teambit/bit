@@ -3,12 +3,13 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ApplyVersionResults, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { getComponentStatus, merge, ComponentStatus } from '@teambit/merging';
 import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
+import { MergingMain } from '@teambit/merging';
 
 export async function mergeLanes({
+  merging,
   consumer,
   mergeStrategy,
   laneName,
@@ -18,6 +19,7 @@ export async function mergeLanes({
   existingOnWorkspaceOnly,
   build,
 }: {
+  merging: MergingMain;
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
   laneName: string;
@@ -61,7 +63,7 @@ export async function mergeLanes({
   }
   const allComponentsStatus = await getAllComponentsStatus();
 
-  return merge({
+  return merging.mergeSnaps({
     consumer,
     mergeStrategy,
     allComponentsStatus,
@@ -73,11 +75,13 @@ export async function mergeLanes({
     build,
   });
 
-  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
+  async function getAllComponentsStatus() {
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map((bitId) => getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
+        bitIds.map((bitId) =>
+          merging.getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly)
+        )
       );
       await tmp.clear();
       return componentsStatus;

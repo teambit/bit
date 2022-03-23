@@ -39,7 +39,6 @@ import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
-import Merge from './commands/public-cmds/merge-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
@@ -121,8 +120,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Latest(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Checkout(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Merge(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Diff(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
