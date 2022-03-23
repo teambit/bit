@@ -7,7 +7,6 @@ export {
 } from './component-drawer';
 export {
   DrawerWidgetSlot,
-  DrawerComponentModel,
   ComponentTreeContextType,
   ComponentTreeContext,
   ComponentTreeProvider,

@@ -8,10 +8,10 @@ import React, {
   SetStateAction,
   useEffect,
 } from 'react';
-
 import { ComponentModel } from '@teambit/component';
 
-export type ComponentFilters = ComponentFilterCriteria<any>[];
+export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
+
 export type ComponentFilterCriteria<State> = {
   id: string;
   render: ComponentType<{ components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>>;

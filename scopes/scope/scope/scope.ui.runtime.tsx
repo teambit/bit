@@ -20,13 +20,9 @@ import {
   DrawerWidgetSlot,
   FilterWidget,
   TreeToggleWidget,
-} from '@teambit/component.ui.component-drawer';
-import {
-  ComponentFilters,
   ComponentFiltersSlot,
-  DeprecateFilter,
-  EnvsFilter,
-} from '@teambit/component.ui.component-filters';
+} from '@teambit/component.ui.component-drawer';
+import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/design.ui.tree';

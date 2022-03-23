@@ -13,17 +13,13 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import {
-  ComponentFiltersSlot,
-  ComponentFilters,
-  DeprecateFilter,
-  EnvsFilter,
-} from '@teambit/component.ui.component-filters';
+import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
 import {
   DrawerWidgetSlot,
   ComponentsDrawer,
   FilterWidget,
   TreeToggleWidget,
+  ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
