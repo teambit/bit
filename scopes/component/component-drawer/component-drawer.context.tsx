@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useState, useContext } from 'react';
+import React, { createContext, ReactNode, useState } from 'react';
 import { SlotRegistry } from '@teambit/harmony';
 
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
@@ -8,13 +8,12 @@ export type ComponentTreeContextType = {
 };
 
 export const ComponentTreeContext = createContext<ComponentTreeContextType>({
-  collapsed: true,
+  collapsed: false,
   setCollapsed: () => {},
 });
 
 export const ComponentTreeProvider = ({ children }: { children: ReactNode }) => {
-  const { collapsed: defaultValue } = useContext(ComponentTreeContext);
-  const [collapsed, setCollapsed] = useState<boolean>(defaultValue);
+  const [collapsed, setCollapsed] = useState<boolean>(false);
   return <ComponentTreeContext.Provider value={{ collapsed, setCollapsed }}>{children}</ComponentTreeContext.Provider>;
 };
 
@@ -29,8 +28,7 @@ export const ComponentFilterWidgetContext = createContext<ComponentFilterWidgetC
 });
 
 export const ComponentFilterWidgetProvider = ({ children }: { children: ReactNode }) => {
-  const { filterWidgetOpen: defaultValue } = useContext(ComponentFilterWidgetContext);
-  const [filterWidgetOpen, setFilterWidget] = useState<boolean>(defaultValue);
+  const [filterWidgetOpen, setFilterWidget] = useState<boolean>(false);
   return (
     <ComponentFilterWidgetContext.Provider value={{ filterWidgetOpen, setFilterWidget }}>
       {children}
