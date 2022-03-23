@@ -71,8 +71,6 @@
 .drawerContent {
   flex: 1 1;
   transition: max-height 300ms ease-in-out;
-  overflow-x: hidden;
-  overflow-y: hidden;
   max-height: 0;
 
   &.open {

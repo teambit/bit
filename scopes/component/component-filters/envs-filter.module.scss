@@ -3,6 +3,7 @@
   > div {
     line-height: 16px;
     display: flex;
+    // otherwise when the dropdown is open it clashes with the content of the tree
     z-index: $nav-z-index + 2;
   }
 
