@@ -49,8 +49,7 @@ export function useComponentFilter<T>(
     }
   }, []);
 
-  if (!filterContext) return undefined;
-  if (!filterFromContext) return undefined;
+  if (!filterContext || !filterFromContext) return undefined;
 
   const setState: Dispatch<SetStateAction<ComponentFilterCriteria<any>>> = (updatedState) => {
     let state: ComponentFilterCriteria<any> | undefined;
