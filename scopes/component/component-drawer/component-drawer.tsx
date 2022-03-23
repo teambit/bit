@@ -12,13 +12,13 @@ import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 
 import flatten from 'lodash.flatten';
 import {
-  ComponentFilterCriteria,
   ComponentFilters,
   ComponentFiltersProvider,
-  ComponentFiltersSlot,
   ComponentFilterContext,
 } from '@teambit/component.ui.component-filters';
 import { runAllFilters } from '@teambit/component.ui.component-filters/component-filters.context';
+import { SlotRegistry } from '@teambit/harmony';
+
 import {
   ComponentFilterWidgetProvider,
   ComponentTreeContext,
@@ -28,6 +28,8 @@ import {
 } from './component-drawer.context';
 
 import styles from './component-drawer.module.scss';
+
+export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
@@ -73,12 +75,13 @@ export class ComponentsDrawer implements DrawerType {
   };
 
   renderFilters = () => {
-    const { filters: filterPlugins } = this.plugins;
+    if (!this.plugins.filters) return null;
+    const filterPlugins = this.plugins.filters;
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
 
     if (!filterPlugins) return null;
 
-    const Filters: (ComponentFilterCriteria<any> & { key: string })[] = useMemo(
+    const Filters = useMemo(
       () =>
         flatten(
           filterPlugins.toArray().map(([key, filtersByKey]) => {

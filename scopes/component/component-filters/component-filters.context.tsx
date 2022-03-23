@@ -8,11 +8,10 @@ import React, {
   SetStateAction,
   useEffect,
 } from 'react';
-import { SlotRegistry } from '@teambit/harmony';
+
 import { ComponentModel } from '@teambit/component';
 
-export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
-
+export type ComponentFilters = ComponentFilterCriteria<any>[];
 export type ComponentFilterCriteria<State> = {
   id: string;
   render: ComponentType<{ components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>>;
@@ -20,8 +19,6 @@ export type ComponentFilterCriteria<State> = {
   state: State;
   order?: number;
 };
-
-export type ComponentFilters = ComponentFilterCriteria<any>[];
 
 export type ComponentFilterContextType = {
   filters: ComponentFilters;

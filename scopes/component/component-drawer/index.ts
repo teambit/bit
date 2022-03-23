@@ -1,4 +1,10 @@
-export { ComponentsDrawer, ComponentsDrawerProps, FilterWidget, TreeToggleWidget } from './component-drawer';
+export {
+  ComponentsDrawer,
+  ComponentsDrawerProps,
+  FilterWidget,
+  TreeToggleWidget,
+  ComponentFiltersSlot,
+} from './component-drawer';
 export {
   DrawerWidgetSlot,
   DrawerComponentModel,
