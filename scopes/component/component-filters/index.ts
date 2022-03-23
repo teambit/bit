@@ -1,4 +1,9 @@
-export { DeprecateFilter, DeprecateFilterCriteria } from './deprecate-filter';
-export { ComponentFiltersProvider, ComponentFilterContext } from './component-filters.context';
-export type { ComponentFilterCriteria, ComponentFilters } from './component-filters.context';
-export { EnvsFilterCriteria, EnvsFilter } from './envs-filter';
+export {
+  ComponentFiltersProvider,
+  ComponentFilterContext,
+  ComponentFilterCriteria,
+  ComponentFilters,
+  runAllFilters,
+} from './component-filters.context';
+export { DeprecateFilter } from './deprecate-filter';
+export { EnvsFilter } from './envs-filter';

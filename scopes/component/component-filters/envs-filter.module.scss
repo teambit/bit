@@ -17,7 +17,7 @@
   .filterIcon {
     img {
       width: 16px;
-      color: var(--bit-text-color-light, #707279);
+      filter: invert(44%) sepia(7%) saturate(560%) hue-rotate(187deg) brightness(96%) contrast(91%);
     }
 
     .filterIconLabel {

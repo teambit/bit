@@ -13,8 +13,8 @@ export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
 
 export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
-  match: (component, state) => {
-    const { envsState } = state;
+  match: (component, filter) => {
+    const { envsState } = filter;
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
@@ -110,7 +110,8 @@ function envsFilter({
     });
   };
 
-  const onDropdownClicked = () => {
+  const onDropdownClicked = (event) => {
+    event.stopPropagation();
     updateFilter((currentState) => {
       currentState.state.dropdownState = !currentFilter.state.dropdownState;
       return currentState;

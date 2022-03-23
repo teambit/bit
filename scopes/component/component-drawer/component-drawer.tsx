@@ -12,11 +12,10 @@ import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 
 import flatten from 'lodash.flatten';
 import {
-  ComponentFilters,
   ComponentFiltersProvider,
   ComponentFilterContext,
+  runAllFilters,
 } from '@teambit/component.ui.component-filters';
-import { runAllFilters } from '@teambit/component.ui.component-filters/component-filters.context';
 import { SlotRegistry } from '@teambit/harmony';
 
 import {
@@ -29,7 +28,7 @@ import {
 
 import styles from './component-drawer.module.scss';
 
-export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
+export type ComponentFiltersSlot = SlotRegistry<any>;
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
@@ -62,6 +61,7 @@ export class ComponentsDrawer implements DrawerType {
     this.useComponents = props.useComponents;
     this.emptyMessage = props.emptyMessage;
     this.plugins = props.plugins || {};
+    this.setWidgets();
   }
 
   Context = ({ children }) => {
@@ -69,29 +69,35 @@ export class ComponentsDrawer implements DrawerType {
     const combinedContexts = [
       ComponentTreeProvider,
       ComponentFilterWidgetProvider,
-      [ComponentFiltersProvider, { filters }] as ComponentTuple<{ filters: ComponentFilters }>,
+      [ComponentFiltersProvider, { filters }] as ComponentTuple<{ filters: any }>,
     ];
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  renderFilters = () => {
+  renderFilters = ({ components }: { components: ComponentModel[] }) => {
     if (!this.plugins.filters) return null;
     const filterPlugins = this.plugins.filters;
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
 
     if (!filterPlugins) return null;
 
-    const Filters = useMemo(
+    const filters = useMemo(
       () =>
         flatten(
           filterPlugins.toArray().map(([key, filtersByKey]) => {
-            return filtersByKey.map((filter) => ({ ...filter, key }));
+            return filtersByKey.map((filter) => ({ ...filter, key: `${key}-${filter.id}` }));
           })
         ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
       [filterPlugins]
     );
 
-    return <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>{Filters}</div>;
+    return (
+      <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>
+        {filters.map((filter) => (
+          <filter.render key={filter.key} components={components} className={styles.filter} />
+        ))}
+      </div>
+    );
   };
 
   renderTree = ({ components }: { components: ComponentModel[] }) => {
@@ -100,17 +106,19 @@ export class ComponentsDrawer implements DrawerType {
 
     const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets), [tree.widgets]);
     const isVisible = components.length > 0;
-
+    if (!isVisible) return null;
     return (
-      isVisible && (
-        <ComponentTree
-          components={components}
-          isCollapsed={collapsed}
-          className={styles.componentTree}
-          TreeNode={TreeNode}
-        />
-      )
+      <ComponentTree
+        components={components}
+        isCollapsed={collapsed}
+        className={styles.componentTree}
+        TreeNode={TreeNode}
+      />
     );
+  };
+
+  setWidgets = () => {
+    this.widgets = flatten(this.plugins.drawerWidgets?.values());
   };
 
   render = () => {
@@ -123,7 +131,7 @@ export class ComponentsDrawer implements DrawerType {
 
     const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters]);
 
-    const Filters = this.renderFilters();
+    const Filters = this.renderFilters({ components });
     const Tree = this.renderTree({ components: filteredComponents });
 
     const emptyDrawer = (

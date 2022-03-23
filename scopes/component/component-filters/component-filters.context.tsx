@@ -9,6 +9,7 @@ import React, {
   useEffect,
 } from 'react';
 import { ComponentModel } from '@teambit/component';
+import { isFunction } from 'lodash';
 
 export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
 
@@ -22,11 +23,18 @@ export type ComponentFilterCriteria<State> = {
 
 export type ComponentFilterContextType = {
   filters: ComponentFilters;
-  updateFilter: (filter: ComponentFilterCriteria<any>) => void;
-  setFilters: (filters: ComponentFilters) => void;
+  setFilters: React.Dispatch<React.SetStateAction<ComponentFilters>>;
 };
 
 export const ComponentFilterContext = createContext<ComponentFilterContextType | undefined>(undefined);
+const updateFilter = (filterContext: ComponentFilterContextType, updatedFilter: ComponentFilterCriteria<any>) => {
+  filterContext.setFilters((currentFilters) => {
+    return currentFilters.map((currentFilter) => {
+      if (currentFilter.id === updatedFilter?.id) return updatedFilter;
+      return currentFilter;
+    });
+  });
+};
 export function useComponentFilter<T>(
   filter: ComponentFilterCriteria<T>,
   defaultState?: T
@@ -37,15 +45,21 @@ export function useComponentFilter<T>(
   useEffect(() => {
     if (filterFromContext && defaultState) {
       const initialFilterState = { ...filterFromContext, state: defaultState };
-      filterContext?.updateFilter(initialFilterState);
+      updateFilter(filterContext as ComponentFilterContextType, initialFilterState);
     }
   }, []);
 
   if (!filterContext) return undefined;
   if (!filterFromContext) return undefined;
 
-  const setState = (updatedState) => {
-    filterContext.updateFilter(updatedState);
+  const setState: Dispatch<SetStateAction<ComponentFilterCriteria<any>>> = (updatedState) => {
+    let state: ComponentFilterCriteria<any> | undefined;
+    if (isFunction(updatedState)) {
+      state = updatedState(filterFromContext);
+    } else {
+      state = updatedState;
+    }
+    updateFilter(filterContext, state);
   };
 
   return [filterFromContext, setState];
@@ -65,9 +79,6 @@ export const ComponentFiltersProvider = ({
       value={{
         filters: filtersState,
         setFilters,
-        updateFilter: (updatedFilter) => {
-          setFilters(filtersState.map((filter) => (filter.id === updatedFilter.id ? updatedFilter : filter)));
-        },
       }}
     >
       {children}
@@ -79,5 +90,5 @@ export const runAllFilters: (filters: ComponentFilters, components: ComponentMod
   filters,
   components
 ) => {
-  return components.filter((component) => filters.every((filter) => filter.match(component, filter)));
+  return components.filter((component) => filters.every((filter) => filter.match(component, filter.state)));
 };
