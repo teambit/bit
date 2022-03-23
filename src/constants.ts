@@ -495,6 +495,11 @@ export const DEFAULT_LANE = 'main';
 
 export const PREVIOUS_DEFAULT_LANE = 'master';
 
+export const statusInvalidComponentsMsg = 'invalid components';
+export const statusFailureMsg = 'issues found';
+export const statusWorkspaceIsCleanMsg =
+  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
+
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
