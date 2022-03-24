@@ -1,22 +1,17 @@
 import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
-import { snapAction } from '../../../api/consumer';
-import { SnapResults } from '../../../api/consumer/lib/snap';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
+import { Command, CommandOptions } from '@teambit/cli';
+import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
+import { BitError } from '@teambit/bit-error';
+import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
+import { SnappingMain } from './snapping.main.runtime';
 
-export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
-export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
-
-export default class Snap implements LegacyCommand {
+export class SnapCmd implements Command {
   name = 'snap [id]';
-  description = `record component changes.
-  https://${BASE_DOCS_DOMAIN}/components/snaps
-  ${WILDCARD_HELP('snap')}`;
+  description: string;
   alias = '';
-  opts = [
+  options = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all', 'snap all new and modified components'],
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
@@ -38,7 +33,13 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   private = true;
   migration = true;
 
-  action(
+  constructor(docsDomain: string, private snapping: SnappingMain) {
+    this.description = `record component changes.
+https://${docsDomain}/components/snaps
+${WILDCARD_HELP('snap')}`;
+  }
+
+  async report(
     [id]: string[],
     {
       message = '',
@@ -63,22 +64,22 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
     }
-  ): Promise<any> {
+  ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (!id && !all) {
-      throw new GeneralError('missing [id]. to snap all components, please use --all flag');
+      throw new BitError('missing [id]. to snap all components, please use --all flag');
     }
     if (id && all) {
-      throw new GeneralError(
+      throw new BitError(
         'you can use either a specific component [id] to snap a particular component or --all flag to snap them all'
       );
     }
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new GeneralError('you can use either force-deploy or disable-snap-pipeline, but not both');
+      throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
     }
 
-    return snapAction({
+    const results = await this.snapping.snap({
       id,
       message,
       force,
@@ -90,9 +91,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagAndSnapPipelines,
       forceDeploy,
     });
-  }
 
-  report(results: SnapResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName }: SnapResults = results;
     const changedComponents = snappedComponents.filter(

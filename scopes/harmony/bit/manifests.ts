@@ -79,6 +79,8 @@ import { MochaAspect } from '@teambit/mocha';
 import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
 import { CommunityAspect } from '@teambit/community';
 import { CloudAspect } from '@teambit/cloud';
+import { SnappingAspect } from '@teambit/snapping';
+import { MergingAspect } from '@teambit/merging';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -162,6 +164,8 @@ export const manifestsMap = {
   [DiagnosticAspect.id]: DiagnosticAspect,
   [CommunityAspect.id]: CommunityAspect,
   [CloudAspect.id]: CloudAspect,
+  [SnappingAspect.id]: SnappingAspect,
+  [MergingAspect.id]: MergingAspect,
 };
 
 export function isCoreAspect(id: string) {

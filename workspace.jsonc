@@ -109,6 +109,7 @@
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
+        "@teambit/design.inputs.selectors.multi-select": "0.0.16",
         "@teambit/design.ui.brand.logo": "1.95.0",
         "@teambit/design.ui.icon-button": "1.0.10",
         "@teambit/design.ui.input.toggle": "1.0.12",
@@ -371,7 +372,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.238",
+        "@teambit/legacy": "1.0.239",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -445,7 +446,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.238"
+            "@teambit/legacy": "1.0.239"
           }
         }
       },
@@ -704,7 +705,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.238"
+            "@teambit/legacy": "1.0.239"
           }
         }
       }
@@ -761,7 +762,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.238",
+            "@teambit/legacy": "1.0.239",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -869,7 +870,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.238"
+            "@teambit/legacy": "1.0.239"
           }
         }
       }
