@@ -99,7 +99,6 @@ import GitNotFound from '../utils/git/exceptions/git-not-found';
 import { paintSpecsResults } from './chalk-box';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
-import componentIssuesTemplate from './templates/component-issues-template';
 import newerVersionTemplate from './templates/newer-version-template';
 
 const reportIssueToGithubMsg =
