@@ -1,5 +1,13 @@
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
+import {
+  ComponentView,
+  NamespaceTreeNode,
+  PayloadType,
+  ScopePayload,
+  ScopeTreeNode,
+} from '@teambit/ui-foundation.ui.side-bar';
+import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { WorkspaceContext } from './ui/workspace/workspace-context';
 import { SidebarWidgetSlot } from './workspace.ui.runtime';
 
@@ -17,6 +25,16 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
     plugins: {
       tree: {
         widgets: treeWidgets,
+        customRenderer: (treeNodeSlot) =>
+          function TreeNode(props: TreeNodeProps<PayloadType>) {
+            const children = props.node.children;
+
+            if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />; // non collapse
+
+            if (props.node.payload instanceof ScopePayload) return <ScopeTreeNode {...props} />;
+
+            return <NamespaceTreeNode {...props} />;
+          },
       },
       filters: filtersSlot,
       drawerWidgets: drawerWidgetSlot,

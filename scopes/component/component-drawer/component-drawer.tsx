@@ -70,26 +70,29 @@ export class ComponentsDrawer implements DrawerType {
   };
 
   renderFilters = ({ components }: { components: ComponentModel[] }) => {
-    if (!this.plugins.filters) return null;
-    const filterPlugins = this.plugins.filters;
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
-
-    if (!filterPlugins) return null;
+    const filterPlugins = this.plugins.filters;
 
     const filters = useMemo(
       () =>
-        flatten(
-          filterPlugins.toArray().map(([key, filtersByKey]) => {
-            return filtersByKey.map((filter) => ({ ...filter, key: `${key}-${filter.id}` }));
-          })
-        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+        (filterPlugins &&
+          flatten(
+            filterPlugins.toArray().map(([key, filtersByKey]) => {
+              return filtersByKey.map((filter) => ({ ...filter, key: `${key}-${filter.id}` }));
+            })
+          ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
+        [],
       [filterPlugins]
     );
 
     return (
       <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>
         {filters.map((filter) => (
-          <filter.render key={filter.key} components={components} className={styles.filter} />
+          <filter.render
+            key={filter.key}
+            components={components}
+            className={classNames(styles.filter, filterWidgetOpen && styles.open)}
+          />
         ))}
       </div>
     );
@@ -101,14 +104,13 @@ export class ComponentsDrawer implements DrawerType {
 
     const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets), [tree.widgets]);
     const isVisible = components.length > 0;
+
     if (!isVisible) return null;
+
     return (
-      <ComponentTree
-        components={components}
-        isCollapsed={collapsed}
-        className={styles.componentTree}
-        TreeNode={TreeNode}
-      />
+      <div className={styles.drawerTreeContainer}>
+        <ComponentTree components={components} isCollapsed={collapsed} TreeNode={TreeNode} />
+      </div>
     );
   };
 
@@ -137,7 +139,7 @@ export class ComponentsDrawer implements DrawerType {
       <div key={this.id} className={styles.drawerContainer}>
         {Filters}
         {Tree}
-        {Tree || emptyDrawer}
+        {filteredComponents.length === 0 && emptyDrawer}
       </div>
     );
   };
