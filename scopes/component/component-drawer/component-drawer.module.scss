@@ -1,5 +1,7 @@
 .drawerContainer {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .emptyDrawer {
@@ -55,7 +57,7 @@
   }
 }
 
-.componentTree {
-  overflow-y: scroll;
+.drawerTreeContainer {
   height: 100%;
+  overflow-y: scroll;
 }
