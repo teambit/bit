@@ -74,7 +74,7 @@ export class ComponentsDrawer implements DrawerType {
     const filterPlugins = this.plugins.filters;
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
 
-    if (!filterPlugins) return null;
+    if (!filterPlugins || !filterWidgetOpen) return null;
 
     const filters = useMemo(
       () =>
@@ -101,7 +101,9 @@ export class ComponentsDrawer implements DrawerType {
 
     const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets), [tree.widgets]);
     const isVisible = components.length > 0;
+
     if (!isVisible) return null;
+
     return (
       <ComponentTree
         components={components}
