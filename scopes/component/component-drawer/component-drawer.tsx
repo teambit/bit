@@ -108,12 +108,9 @@ export class ComponentsDrawer implements DrawerType {
     if (!isVisible) return null;
 
     return (
-      <ComponentTree
-        components={components}
-        isCollapsed={collapsed}
-        className={styles.componentTree}
-        TreeNode={TreeNode}
-      />
+      <div className={styles.drawerTreeContainer}>
+        <ComponentTree components={components} isCollapsed={collapsed} TreeNode={TreeNode} />
+      </div>
     );
   };
 
@@ -142,7 +139,7 @@ export class ComponentsDrawer implements DrawerType {
       <div key={this.id} className={styles.drawerContainer}>
         {Filters}
         {Tree}
-        {Tree || emptyDrawer}
+        {filteredComponents.length === 0 && emptyDrawer}
       </div>
     );
   };
