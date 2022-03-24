@@ -1,4 +1,4 @@
 ---
-description: Displays a component's dependency graph using a visual diagram
+description: An API for the component dependency graph
 labels: ['dependency', 'graph', 'component', 'bit']
 ---
