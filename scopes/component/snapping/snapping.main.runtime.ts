@@ -24,6 +24,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -32,7 +33,7 @@ import { ComponentsHaveIssues } from './components-have-issues';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export class SnappingMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(private workspace: Workspace, private logger: Logger, private issues: IssuesMain) {}
 
   /**
    * tag the given component ids or all modified/new components if "all" param is set.
@@ -256,8 +257,10 @@ export class SnappingMain {
       // ignore all issues
       return;
     }
-    const issuesToIgnore = ignoreIssues?.split(',').map((issue) => issue.trim());
-    issuesToIgnore?.forEach((issue) => {
+    const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
+    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnore();
+    const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
+    issuesToIgnore.forEach((issue) => {
       const issueClass = IssuesClasses[issue];
       if (!issueClass) {
         throw new Error(
@@ -342,11 +345,17 @@ export class SnappingMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect, IssuesAspect];
   static runtime = MainRuntime;
-  static async provider([workspace, cli, community, loggerMain]: [Workspace, CLIMain, CommunityMain, LoggerMain]) {
+  static async provider([workspace, cli, community, loggerMain, issues]: [
+    Workspace,
+    CLIMain,
+    CommunityMain,
+    LoggerMain,
+    IssuesMain
+  ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
-    const snapping = new SnappingMain(workspace, logger);
+    const snapping = new SnappingMain(workspace, logger, issues);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping);
     cli.register(tagCmd, snapCmd);
