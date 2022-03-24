@@ -1,6 +1,6 @@
 ---
 displayName: GlobalConfig
-description: Reads and writes to Bit's global config
+description: Allows to globally configure Bit on a OS user profile.
 labels: ['aspect', 'config']
 ---
 
