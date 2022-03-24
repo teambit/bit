@@ -156,8 +156,6 @@ export async function getPeerDependencyIssues(
   });
 }
 
-const ROOT_COMPS_DIR = 'node_modules/.bit_components';
-
 export async function install(
   rootManifest,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -166,7 +164,7 @@ export async function install(
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
-  options?: {
+  options: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
     rootComponents?: boolean;
@@ -183,10 +181,11 @@ export async function install(
   if (options?.rootComponents) {
     for (const manifest of Object.values(manifestsByPaths)) {
       const name = manifest.name!.toString(); // eslint-disable-line
-      const id = `${ROOT_COMPS_DIR}/${name}`;
+      const compDir = path.join(options.rootComponentsDir, name);
+      const id = path.relative(rootManifest.rootDir, compDir).replace(/\\/g, '/');
       rootComponents.push(encodeURIComponent(id));
-      newManifestsByPaths[path.join(rootManifest.rootDir, id)] = {
-        name: id,
+      newManifestsByPaths[compDir] = {
+        name: `${name}__root`,
         dependencies: {
           [name]: `workspace:*`,
           ...manifest.peerDependencies,
@@ -263,7 +262,7 @@ export async function install(
 }
 
 function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
-  if (!pkg.dependencies || pkg.name?.startsWith(`${ROOT_COMPS_DIR}/`)) {
+  if (!pkg.dependencies || pkg.name?.endsWith(`__root`)) {
     return pkg;
   }
   // workspaceDir is set only for workspace packages
@@ -316,8 +315,8 @@ async function linkManifestsToInjectedDeps({
   await Promise.all(
     Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
       const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
-      if (!pkgName) return
-      const pkgDir = path.join(rootDir, 'node_modules', pkgName)
+      if (!pkgName) return;
+      const pkgDir = path.join(rootDir, 'node_modules', pkgName);
       if (fs.existsSync(pkgDir)) {
         const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
         await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));

@@ -4,19 +4,29 @@ import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency
 import { ComponentMap } from '@teambit/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 
-export async function createRootComponentsDir(
-  depResolver: DependencyResolverMain,
-  rootDir: string,
-  componentDirectoryMap: ComponentMap<string>
-): Promise<Record<string, object>> {
+export async function createRootComponentsDir({
+  depResolver,
+  rootDir,
+  componentDirectoryMap,
+  rootComponentsDir,
+}: {
+  depResolver: DependencyResolverMain;
+  rootDir: string;
+  componentDirectoryMap: ComponentMap<string>;
+  rootComponentsDir: string;
+}): Promise<Record<string, object>> {
   const pickedComponents = new Map<string, Record<string, any>>();
-  const deps = await pickComponentsAndAllDeps(depResolver,
-    Array.from(componentDirectoryMap.hashMap.keys()), componentDirectoryMap, pickedComponents);
-  const rootComponentsDir = path.join(rootDir, 'node_modules/.bit_components/_');
+  const deps = await pickComponentsAndAllDeps(
+    depResolver,
+    Array.from(componentDirectoryMap.hashMap.keys()),
+    componentDirectoryMap,
+    pickedComponents
+  );
+  const copiesDir = path.join(rootComponentsDir, '_');
   await Promise.all(
     Array.from(pickedComponents.entries()).map(async ([rootComponentDir, packageJson]) => {
       const rel = path.relative(rootDir, rootComponentDir);
-      const targetDir = path.join(rootComponentsDir, rel);
+      const targetDir = path.join(copiesDir, rel);
       const modulesDir = path.join(rootComponentDir, 'node_modules');
       await fs.copy(rootComponentDir, targetDir, {
         filter: (src) => src !== modulesDir,
@@ -28,10 +38,10 @@ export async function createRootComponentsDir(
   const newManifestsByPaths: Record<string, object> = {};
   for (const rootComponentDir of deps) {
     const rel = path.relative(rootDir, rootComponentDir);
-    const targetDir = path.join(rootComponentsDir, rel);
+    const targetDir = path.join(copiesDir, rel);
     const pkgJson = pickedComponents.get(rootComponentDir);
     if (pkgJson) {
-      const compDir = path.join(rootDir, 'node_modules/.bit_components', pkgJson.name)
+      const compDir = path.join(rootComponentsDir, pkgJson.name);
       newManifestsByPaths[compDir] = {
         name: pkgJson.name,
         dependencies: {

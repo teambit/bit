@@ -134,6 +134,7 @@ export class PnpmPackageManager implements PackageManager {
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         rootComponents: installOptions.rootComponents,
+        rootComponentsDir: this.pkg.getRootComponentsPath(),
       },
       this.logger
     );

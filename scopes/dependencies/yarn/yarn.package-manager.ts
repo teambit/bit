@@ -102,11 +102,12 @@ export class YarnPackageManager implements PackageManager {
     );
     if (installOptions.rootComponents) {
       manifests = {
-        ...await createRootComponentsDir(
-          this.depResolver,
+        ...(await createRootComponentsDir({
+          depResolver: this.depResolver,
           rootDir,
-          componentDirectoryMap
-        ),
+          componentDirectoryMap,
+          rootComponentsDir: this.pkg.getRootComponentsPath(),
+        })),
         ...manifests,
       };
     }

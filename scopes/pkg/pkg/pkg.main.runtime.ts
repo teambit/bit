@@ -182,6 +182,13 @@ export class PkgMain implements CloneConfig {
     return componentIdToPackageName(component.state._consumer);
   }
 
+  /*
+   * Returns the location of the root components
+   */
+  getRootComponentsPath() {
+    return join(this.workspace.path, 'node_modules/.bit_components');
+  }
+
   /**
    * returns the package path in the /node_modules/ folder
    */
