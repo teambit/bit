@@ -49,9 +49,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     //   )
     // );
 
+    const origComponents = context.capsuleNetwork.originalSeedersCapsules.map((capsule) => capsule.component);
+
     const entriesArr = await Promise.all(
-      context.capsuleNetwork.seedersCapsules.map((capsule) => {
-        return this.computeComponentEntry(previewDefs, capsule.component, context);
+      origComponents.map((component) => {
+        return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
 

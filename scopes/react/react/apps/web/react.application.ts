@@ -60,7 +60,9 @@ export class ReactApp implements Application {
         // filename: ''.html`,
       },
     ];
-    Object.assign(context, { html: htmlConfig });
+    Object.assign(context, {
+      html: htmlConfig,
+    });
     const bundler = await this.getBundler(context);
     await bundler.run();
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
@@ -89,6 +91,10 @@ export class ReactApp implements Application {
       ],
       entry: [],
       rootPath: '/',
+      metaData: {
+        initiator: `building app: ${context.name}`,
+        envId: context.id,
+      },
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
