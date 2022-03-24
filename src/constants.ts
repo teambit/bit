@@ -504,6 +504,9 @@ export const statusWorkspaceIsCleanMsg =
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
+export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
+export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
+
 export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 

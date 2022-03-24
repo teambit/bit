@@ -4,8 +4,11 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { switchAction } from '@teambit/legacy/dist/api/consumer';
 import { SwitchProps } from '@teambit/legacy/dist/consumer/lanes/switch-lanes';
 import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { applyVersionReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge-cmd';
+import {
+  MergeOptions,
+  MergeStrategy,
+  applyVersionReport,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitError } from '@teambit/bit-error';
 
 export class SwitchCmd implements Command {
