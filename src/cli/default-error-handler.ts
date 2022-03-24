@@ -53,7 +53,6 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
-  ComponentsHaveIssues,
   NewerVersionFound,
   NothingToImport,
 } from '../consumer/exceptions';
@@ -269,13 +268,6 @@ Original Error: ${err.message}`,
 if it is originated from another git branch, go back to that branch to continue working on the component.
 if possible, remove the component using "bit remove" and re-import or re-create it.
 to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`,
-  ],
-  [
-    ComponentsHaveIssues,
-    (err) => {
-      const missingDepsColored = componentIssuesTemplate(err.components);
-      return `error: issues found with the following component dependencies\n${missingDepsColored}`;
-    },
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [

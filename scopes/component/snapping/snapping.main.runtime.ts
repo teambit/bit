@@ -14,7 +14,7 @@ import HooksManager from '@teambit/legacy/dist/hooks';
 import { TagParams, TagResults } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
-import { ConsumerNotFound, ComponentsHaveIssues } from '@teambit/legacy/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import tagModelComponent from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
 import { LanesIsDisabled } from '@teambit/legacy/dist/consumer/lanes/exceptions/lanes-is-disabled';
@@ -27,6 +27,7 @@ import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/except
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
+import { ComponentsHaveIssues } from './components-have-issues';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
