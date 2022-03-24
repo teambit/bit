@@ -74,7 +74,7 @@ export class ComponentsDrawer implements DrawerType {
     const filterPlugins = this.plugins.filters;
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
 
-    if (!filterPlugins || !filterWidgetOpen) return null;
+    if (!filterWidgetOpen || !filterPlugins) return null;
 
     const filters = useMemo(
       () =>
