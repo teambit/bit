@@ -1,48 +1,25 @@
 import chalk from 'chalk';
-
-import { merge } from '../../../api/consumer';
-import { WILDCARD_HELP } from '../../../constants';
+import { Command, CommandOptions } from '@teambit/cli';
+import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import {
-  ApplyVersionResult,
   ApplyVersionResults,
-  FileStatus,
   getMergeStrategy,
-} from '../../../consumer/versions-ops/merge-version';
-import GeneralError from '../../../error/general-error';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { AUTO_SNAPPED_MSG } from './snap-cmd';
-import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
-import { Group } from '../../command-groups';
+  applyVersionReport,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { BitError } from '@teambit/bit-error';
+import { MergingMain } from './merging.main.runtime';
 
-export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
-  const tab = addName ? '\t' : '';
-  return components
-    .map((component: ApplyVersionResult) => {
-      const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
-      const files = Object.keys(component.filesStatus)
-        .map((file) => {
-          const note =
-            component.filesStatus[file] === FileStatus.manual
-              ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
-              : '';
-          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
-        })
-        .join('\n');
-      return `${addName ? name : ''}\n${chalk.cyan(files)}`;
-    })
-    .join('\n\n');
-};
-
-export default class Merge implements LegacyCommand {
+export class MergeCmd implements Command {
   name = 'merge [values...]';
   shortDescription = 'merge changes of different component versions';
-  group: Group = 'development';
+  group = 'development';
   description = `merge changes of different component versions
   \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
   \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
-  opts = [
+  options = [
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
@@ -54,7 +31,9 @@ export default class Merge implements LegacyCommand {
   ] as CommandOptions;
   loader = true;
 
-  action(
+  constructor(private merging: MergingMain) {}
+
+  async report(
     [values = []]: [string[]],
     {
       ours = false,
@@ -75,22 +54,27 @@ export default class Merge implements LegacyCommand {
       noSnap?: boolean;
       message: string;
     }
-  ): Promise<ApplyVersionResults> {
+  ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
-    if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');
-    return merge(values, mergeStrategy as any, abort, resolve, noSnap, message, build);
-  }
-
-  report({
-    components,
-    failedComponents,
-    version,
-    resolvedComponents,
-    abortedComponents,
-    mergeSnapResults,
-  }: ApplyVersionResults): string {
+    if (abort && resolve) throw new BitError('unable to use "abort" and "resolve" flags together');
+    if (noSnap && message) throw new BitError('unable to use "noSnap" and "message" flags together');
+    const {
+      components,
+      failedComponents,
+      version,
+      resolvedComponents,
+      abortedComponents,
+      mergeSnapResults,
+    }: ApplyVersionResults = await this.merging.merge(
+      values,
+      mergeStrategy as any,
+      abort,
+      resolve,
+      noSnap,
+      message,
+      build
+    );
     if (resolvedComponents) {
       const title = 'successfully resolved component(s)\n';
       const componentsStr = resolvedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');

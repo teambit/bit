@@ -1,6 +1,6 @@
 import AbstractError from '../../error/abstract-error';
 
-export default class MissingDependencies extends AbstractError {
+export default class ComponentsHaveIssues extends AbstractError {
   components: Record<string, any>;
   constructor(components: Record<string, any>) {
     super();
