@@ -48,7 +48,7 @@ export class SnappingMain {
     const isAll = Boolean(all || scope || idsHasWildcard);
     const validExactVersion = validateVersion(exactVersion);
     const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
-    HooksManagerInstance.triggerHook(preHook, tagParams);
+    HooksManagerInstance?.triggerHook(preHook, tagParams);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     loader.start('determine components to tag...');
@@ -98,7 +98,7 @@ export class SnappingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tagResults.newComponents = newComponents;
     const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
-    HooksManagerInstance.triggerHook(postHook, tagResults);
+    HooksManagerInstance?.triggerHook(postHook, tagResults);
     Analytics.setExtraData(
       'num_components',
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -364,3 +364,5 @@ export class SnappingMain {
 }
 
 SnappingAspect.addRuntime(SnappingMain);
+
+export default SnappingMain;
