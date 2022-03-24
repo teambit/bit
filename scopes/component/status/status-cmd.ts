@@ -1,100 +1,101 @@
 import chalk from 'chalk';
 import R from 'ramda';
-
-import { status } from '../../../api/consumer';
-import { StatusResult } from '../../../api/consumer/lib/status';
-import Component from '../../../consumer/component';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { immutableUnshift } from '../../../utils';
-import { formatBitString, formatNewBit } from '../../chalk-box';
-import { getInvalidComponentLabel, formatIssues } from '../../templates/component-issues-template';
-import { ModelComponent } from '../../../scope/models';
-import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
-import { BitId } from '../../../bit-id';
-import { Group } from '../../command-groups';
+import { Command, CommandOptions } from '@teambit/cli';
+import { BitId } from '@teambit/legacy-bit-id';
+import Component from '@teambit/legacy/dist/consumer/component';
+import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
+import { getInvalidComponentLabel, formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import {
+  BASE_DOCS_DOMAIN,
+  IMPORT_PENDING_MSG,
+  statusFailureMsg,
+  statusInvalidComponentsMsg,
+  statusWorkspaceIsCleanMsg,
+} from '@teambit/legacy/dist/constants';
+import { StatusMain, StatusResult } from './status.main.runtime';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
 )}`;
 
-export const statusFailureMsg = 'issues found';
-export const statusInvalidComponentsMsg = 'invalid components';
-export const statusWorkspaceIsCleanMsg =
-  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
-export const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
+const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
 please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 const trackDirDesc = `these components were added by an older version of Bit and therefore have "trackDir" record in the .bitmap file
 please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
-export default class Status implements LegacyCommand {
+export class StatusCmd implements Command {
   name = 'status';
   shortDescription = 'show the working area component(s) status';
-  group: Group = 'development';
+  group = 'development';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
   alias = 's';
-  opts = [
+  options = [
     ['j', 'json', 'return a json version of the component'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
   migration = true;
-  json = false;
 
-  // eslint-disable-next-line no-empty-pattern
-  async action([], { json, strict }: { json?: boolean; strict?: boolean }): Promise<any> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.json = json;
-    const results = await status();
-    const exitCode = results.componentsWithIssues.length && strict ? 1 : 0;
+  constructor(private status: StatusMain) {}
 
+  async json() {
+    const {
+      newComponents,
+      modifiedComponent,
+      stagedComponents,
+      componentsWithIssues,
+      importPendingComponents,
+      autoTagPendingComponents,
+      invalidComponents,
+      outdatedComponents,
+      mergePendingComponents,
+      componentsDuringMergeState,
+      componentsWithIndividualFiles,
+      componentsWithTrackDirs,
+      softTaggedComponents,
+      snappedComponents,
+    }: StatusResult = await this.status.status();
     return {
-      data: results,
-      __code: exitCode,
+      newComponents,
+      modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
+      stagedComponents: stagedComponents.map((c) => c.id()),
+      componentsWithIssues: componentsWithIssues.map((c) => ({
+        id: c.id.toString(),
+        issues: c.issues?.toObject(),
+      })),
+      importPendingComponents: importPendingComponents.map((id) => id.toString()),
+      autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
+      invalidComponents,
+      outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
+      mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
+      componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
+      componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
+      componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
+      softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
+      snappedComponents: snappedComponents.map((s) => s.toString()),
     };
   }
 
-  report({
-    newComponents,
-    modifiedComponent,
-    stagedComponents,
-    componentsWithIssues,
-    importPendingComponents,
-    autoTagPendingComponents,
-    invalidComponents,
-    outdatedComponents,
-    mergePendingComponents,
-    componentsDuringMergeState,
-    componentsWithIndividualFiles,
-    componentsWithTrackDirs,
-    softTaggedComponents,
-    snappedComponents,
-    laneName,
-  }: StatusResult): string {
-    if (this.json) {
-      return JSON.stringify(
-        {
-          newComponents,
-          modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
-          stagedComponents: stagedComponents.map((c) => c.id()),
-          componentsWithIssues: componentsWithIssues.map((c) => ({
-            id: c.id.toString(),
-            issues: c.issues?.toObject(),
-          })),
-          importPendingComponents: importPendingComponents.map((id) => id.toString()),
-          autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
-          invalidComponents,
-          outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
-          mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
-          componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
-          componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
-          componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
-          softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
-          snappedComponents: snappedComponents.map((s) => s.toString()),
-        },
-        null,
-        2
-      );
-    }
+  async report(_args, { strict }: { strict?: boolean }) {
+    const {
+      newComponents,
+      modifiedComponent,
+      stagedComponents,
+      componentsWithIssues,
+      importPendingComponents,
+      autoTagPendingComponents,
+      invalidComponents,
+      outdatedComponents,
+      mergePendingComponents,
+      componentsDuringMergeState,
+      componentsWithIndividualFiles,
+      componentsWithTrackDirs,
+      softTaggedComponents,
+      snappedComponents,
+      laneName,
+    }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
@@ -260,6 +261,13 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
-    return (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
+    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
+
+    const exitCode = componentsWithIssues.length && strict ? 1 : 0;
+
+    return {
+      data: results,
+      code: exitCode,
+    };
   }
 }
