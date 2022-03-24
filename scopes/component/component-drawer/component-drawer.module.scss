@@ -44,12 +44,15 @@
 }
 
 .filter {
-  display: flex;
-  flex-direction: row;
-  font-size: 14px;
-  justify-content: space-between;
-  padding: 8px;
-  margin: 4px 8px;
+  display: none;
+  &.open {
+    display: flex;
+    flex-direction: row;
+    font-size: 14px;
+    justify-content: space-between;
+    padding: 8px;
+    margin: 4px 8px;
+  }
 }
 
 .componentTree {
