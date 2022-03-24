@@ -2,8 +2,13 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE, IS_WINDOWS, LANE_REMOTE_DELIMITER, AUTO_SNAPPED_MSG } from '../../src/constants';
+import {
+  DEFAULT_LANE,
+  IS_WINDOWS,
+  LANE_REMOTE_DELIMITER,
+  statusWorkspaceIsCleanMsg,
+  AUTO_SNAPPED_MSG,
+} from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
