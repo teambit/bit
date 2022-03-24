@@ -1,20 +1,30 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { IssuesMain } from './issues.main.runtime';
 
 export class ComponentIssuesCmd implements Command {
   name = 'component-issues';
   description = 'list available component-issues';
   alias = '';
-  options = [] as CommandOptions;
+  options = [['j', 'json', 'json format']] as CommandOptions;
   loader = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain) {
-    this.description = `record component changes.
-https://${docsDomain}/components/snaps
-${WILDCARD_HELP('snap')}`;
-  }
+  constructor(private issues: IssuesMain) {}
 
   async report() {
-    const;
+    const results = await this.json();
+    return results
+      .map(
+        (result) => `${chalk.bold(result.name)}
+${result.description}
+Possible solution: ${result.solution}
+Is Tag/Snap blocker: ${result.isTagBlocker ? 'yes' : 'no'}
+`
+      )
+      .join('\n');
+  }
+
+  async json() {
+    return this.issues.listIssues();
   }
 }
