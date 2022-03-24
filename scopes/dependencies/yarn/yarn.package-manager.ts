@@ -106,7 +106,6 @@ export class YarnPackageManager implements PackageManager {
           depResolver: this.depResolver,
           rootDir,
           componentDirectoryMap,
-          rootComponentsDir: this.pkg.getRootComponentsPath(),
         })),
         ...manifests,
       };

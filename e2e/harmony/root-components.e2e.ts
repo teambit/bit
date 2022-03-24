@@ -6,7 +6,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-const ROOT_COMPS_DIR = 'node_modules/.bit_components';
+const ROOT_COMPS_DIR = 'node_modules';
 
 function rootCompDirDep(helper: Helper, rootComponentName: string, depComponentName: string) {
   return path.join(
@@ -1140,16 +1140,12 @@ Env2Aspect.addRuntime(EnvMain);
     it('should install the right version of react to custom environment components', () => {
       expect(
         fs.readJsonSync(
-          resolveFrom(rootCompDirDep(helper, 'custom-react.env1', 'custom-react.env1'), [
-            'react/package.json',
-          ])
+          resolveFrom(rootCompDirDep(helper, 'custom-react.env1', 'custom-react.env1'), ['react/package.json'])
         ).version
       ).to.match(/^17\./);
       expect(
         fs.readJsonSync(
-          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env1'), [
-            'react/package.json',
-          ])
+          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env1'), ['react/package.json'])
         ).version
       ).to.match(/^17\./);
     });

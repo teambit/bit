@@ -181,7 +181,7 @@ export async function install(
   if (options?.rootComponents) {
     for (const manifest of Object.values(manifestsByPaths)) {
       const name = manifest.name!.toString(); // eslint-disable-line
-      const compDir = path.join(options.rootComponentsDir, name);
+      const compDir = path.join(rootManifest.rootDir, 'node_modules', name);
       const id = path.relative(rootManifest.rootDir, compDir).replace(/\\/g, '/');
       rootComponents.push(encodeURIComponent(id));
       newManifestsByPaths[compDir] = {

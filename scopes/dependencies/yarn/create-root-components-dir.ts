@@ -8,12 +8,10 @@ export async function createRootComponentsDir({
   depResolver,
   rootDir,
   componentDirectoryMap,
-  rootComponentsDir,
 }: {
   depResolver: DependencyResolverMain;
   rootDir: string;
   componentDirectoryMap: ComponentMap<string>;
-  rootComponentsDir: string;
 }): Promise<Record<string, object>> {
   const pickedComponents = new Map<string, Record<string, any>>();
   const deps = await pickComponentsAndAllDeps(
@@ -22,7 +20,7 @@ export async function createRootComponentsDir({
     componentDirectoryMap,
     pickedComponents
   );
-  const copiesDir = path.join(rootComponentsDir, '_');
+  const copiesDir = path.join(rootDir, 'node_modules/.bit_components');
   await Promise.all(
     Array.from(pickedComponents.entries()).map(async ([rootComponentDir, packageJson]) => {
       const rel = path.relative(rootDir, rootComponentDir);
@@ -41,7 +39,7 @@ export async function createRootComponentsDir({
     const targetDir = path.join(copiesDir, rel);
     const pkgJson = pickedComponents.get(rootComponentDir);
     if (pkgJson) {
-      const compDir = path.join(rootComponentsDir, pkgJson.name);
+      const compDir = path.join(rootDir, 'node_modules', pkgJson.name);
       newManifestsByPaths[compDir] = {
         name: pkgJson.name,
         dependencies: {
