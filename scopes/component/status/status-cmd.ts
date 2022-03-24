@@ -2,8 +2,6 @@ import chalk from 'chalk';
 import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
-import { status } from '@teambit/legacy/dist/api/consumer';
-import { StatusResult } from '@teambit/legacy/dist/api/consumer/lib/status';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
@@ -16,6 +14,7 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
+import { StatusMain, StatusResult } from './status.main.runtime';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
@@ -39,6 +38,8 @@ export class StatusCmd implements Command {
   loader = true;
   migration = true;
 
+  constructor(private status: StatusMain) {}
+
   async json() {
     const {
       newComponents,
@@ -55,7 +56,7 @@ export class StatusCmd implements Command {
       componentsWithTrackDirs,
       softTaggedComponents,
       snappedComponents,
-    }: StatusResult = await status();
+    }: StatusResult = await this.status.status();
     return {
       newComponents,
       modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
@@ -94,7 +95,7 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       laneName,
-    }: StatusResult = await status();
+    }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
