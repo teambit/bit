@@ -53,7 +53,7 @@ export class WorkspaceManifestFactory {
       optsWithDefaults.hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
-    if (options.dedupe) {
+    if (options.dedupe && !options.hasRootComponents) {
       dedupedDependencies = dedupeDependencies(rootPolicy, componentDependenciesMap);
     } else {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();

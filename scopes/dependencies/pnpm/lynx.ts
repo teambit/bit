@@ -316,9 +316,8 @@ async function linkManifestsToInjectedDeps({
     Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
       const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
       if (!pkgName) return;
-      const pkgDir = path.join(rootDir, 'node_modules', pkgName);
-      if (fs.existsSync(pkgDir)) {
-        const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
+      const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
+      if (fs.existsSync(pkgJsonPath)) {
         await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
       }
     })

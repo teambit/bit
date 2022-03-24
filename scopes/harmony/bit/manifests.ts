@@ -5,6 +5,7 @@ import { BundlerAspect } from '@teambit/bundler';
 import { CacheAspect } from '@teambit/cache';
 import { CLIAspect } from '@teambit/cli';
 import { CompilerAspect } from '@teambit/compiler';
+import { CapsulesSyncerAspect } from '@teambit/capsules-syncer';
 import { ComponentAspect } from '@teambit/component';
 import { CompositionsAspect } from '@teambit/compositions';
 import { ConfigAspect } from '@teambit/config';
@@ -93,6 +94,7 @@ export const manifestsMap = {
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
+  [CapsulesSyncerAspect.id]: CapsulesSyncerAspect,
   [LinterAspect.id]: LinterAspect,
   [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
