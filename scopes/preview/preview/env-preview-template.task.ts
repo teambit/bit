@@ -98,6 +98,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       entry: [],
       externalizePeer: false,
       development: context.dev,
+      metaData: {
+        initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
+        envId: context.id,
+      },
     });
     const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;

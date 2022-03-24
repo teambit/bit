@@ -144,6 +144,17 @@ export type Chunking = {
    */
   splitChunks: boolean;
 };
+
+export type MetaData = {
+  /**
+   * Who initiate the bundling process
+   */
+  initiator?: string;
+  /**
+   * Env id (used usually to calculate the config)
+   */
+  envId?: string;
+};
 export interface BundlerContext extends BuildContext {
   /**
    * targets for bundling.
@@ -189,4 +200,9 @@ export interface BundlerContext extends BuildContext {
     fileName: string;
     exposes: { [key: string]: string };
   };
+
+  /**
+   * Additional info that can be used by the bundler for different stuff like logging info
+   */
+  metaData?: MetaData;
 }
