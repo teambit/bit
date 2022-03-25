@@ -124,9 +124,9 @@ export class SnappingMain {
     else if (patch) releaseType = 'patch';
     else if (preRelease) releaseType = 'prerelease';
 
+    const exactVersion = getVersion();
     all = Boolean(all);
     snapped = Boolean(snapped);
-    const exactVersion = getVersion();
     preRelease = typeof preRelease === 'string' ? preRelease : '';
 
     if (!this.workspace) throw new ConsumerNotFound();
