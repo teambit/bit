@@ -50,6 +50,7 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         getLaneByName(name: String): LanesData
         getCurrentLaneName: String
         getDiff(values: [String], options: DiffOptions): GetDiffResult
+        getLaneComponents(name: String): [Component]
       }
 
       type Query {
@@ -92,6 +93,10 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
             ...getDiffResults,
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
+        },
+        getLaneComponents: async (lanes: LanesMain, { name }: { name: string }) => {
+          const laneComponents = await lanes.getLaneComponentModels(name);
+          return laneComponents;
         },
       },
       Query: {

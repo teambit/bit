@@ -11,4 +11,4 @@ export {
   LanesQueryResult,
   LanesHost,
 } from './lanes-context';
-export { useLanesQuery } from './lanes-query';
+export { useLanesQuery, useLaneComponentsQuery } from './lanes-query';

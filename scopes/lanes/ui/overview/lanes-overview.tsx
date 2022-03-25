@@ -1,5 +1,5 @@
 import React, { useMemo, ComponentType } from 'react';
-import { LaneDetails, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneDetails, useLanesContext, useLaneComponentsQuery, LaneModel } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
@@ -15,8 +15,9 @@ export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 export type LanesOverviewProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
+  host: string;
 };
-export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
+export function LanesOverview({ routeSlot, overviewSlot, host }: LanesOverviewProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -26,6 +27,28 @@ export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return (
+    <LaneOverviewWithPreview
+      currentLane={currentLane}
+      host={host}
+      overviewItems={overviewItems}
+      routeSlot={routeSlot}
+    />
+  );
+}
+
+type LaneOverviewWithPreviewProps = {
+  host: string;
+  currentLane: LaneModel;
+  overviewItems: LaneOverviewLine[];
+  routeSlot: RouteSlot;
+};
+
+function LaneOverviewWithPreview({ host, currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
+  const { loading, components } = useLaneComponentsQuery(currentLane, host);
+
+  if (loading) return null;
+
+  return (
     <div className={styles.container}>
       <LaneDetails
         laneName={currentLane.id}
@@ -33,7 +56,7 @@ export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
         componentCount={currentLane.components.length}
       ></LaneDetails>
       <ComponentGrid>
-        {currentLane.components.map((component, index) => {
+        {components?.map((component, index) => {
           return <WorkspaceComponentCard key={index} component={component.model} componentUrl={component.url} />;
         })}
       </ComponentGrid>

@@ -11,6 +11,7 @@ export {
   LanesQueryResult,
   useLanesQuery,
   LanesHost,
+  useLaneComponentsQuery,
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {
