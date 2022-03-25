@@ -63,7 +63,7 @@ export class StatusMain {
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     if (!this.workspace.isLegacy) {
       const newAndModified = await this.getComponentsByConsumerComponents(newAndModifiedLegacy);
-      await this.addCyclicIssue(newAndModified);
+      await this.insights.addInsightsAsComponentIssues(newAndModified);
     }
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
       if (consumer.isLegacy && component.issues) {
@@ -107,19 +107,6 @@ export class StatusMain {
     return pMapSeries(consumerComponents, async (consumerComponent) => {
       const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
       return this.workspace.get(componentId, undefined, consumerComponent);
-    });
-  }
-
-  private async addCyclicIssue(components: Component[]) {
-    const results = await this.insights.runInsights(['cyclic dependencies'], { renderData: false });
-    const circleResult = results[0];
-    if (!circleResult.data.length) {
-      return; // no circulars
-    }
-    const allIds = uniq(circleResult.data.flat());
-    const componentsWithCircular = components.filter((component) => allIds.includes(component.id.toString()));
-    componentsWithCircular.forEach((component) => {
-      component.state.issues.getOrCreate(IssuesClasses.CircularDependencies).data = true;
     });
   }
 

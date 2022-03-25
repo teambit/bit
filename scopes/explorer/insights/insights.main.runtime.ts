@@ -1,5 +1,7 @@
 import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
 import { GraphAspect, GraphBuilder } from '@teambit/graph';
+import pMapSeries from 'p-map-series';
+import { Component } from '@teambit/component';
 import { InsightsAspect } from './insights.aspect';
 import getCoreInsights from './core-insights-getter';
 import { Insight, InsightResult } from './insight';
@@ -22,8 +24,17 @@ export class InsightsMain {
     return results;
   }
 
-  async listInsights() {
+  listInsights() {
     return this.insightManager.listInsights();
+  }
+
+  async addInsightsAsComponentIssues(components: Component[], insightNames: string[] = this.listInsights()) {
+    const insights = insightNames.map((name) => this.insightManager.getByName(name));
+    await pMapSeries(insights, async (insight) => {
+      if (insight && insight.addAsComponentIssue) {
+        await insight.addAsComponentIssue(components);
+      }
+    });
   }
 
   static slots = [];

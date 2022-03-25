@@ -23,6 +23,7 @@ import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
@@ -31,7 +32,7 @@ import { TagCmd } from './tag-cmd';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export class SnappingMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(private workspace: Workspace, private logger: Logger, private insights: InsightsMain) {}
 
   /**
    * tag the given component ids or all modified/new components if "all" param is set.
@@ -341,11 +342,17 @@ export class SnappingMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect, InsightsAspect];
   static runtime = MainRuntime;
-  static async provider([workspace, cli, community, loggerMain]: [Workspace, CLIMain, CommunityMain, LoggerMain]) {
+  static async provider([workspace, cli, community, loggerMain, insights]: [
+    Workspace,
+    CLIMain,
+    CommunityMain,
+    LoggerMain,
+    InsightsMain
+  ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
-    const snapping = new SnappingMain(workspace, logger);
+    const snapping = new SnappingMain(workspace, logger, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping);
     cli.register(tagCmd, snapCmd);
