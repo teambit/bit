@@ -21,7 +21,7 @@ describe('Snapping aspect', () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
-      await fs.writeFile(path.join(workspacePath, 'comp1/index.js'), 'import !');
+      await fs.writeFile(path.join(workspacePath, 'comp1/index.js'), 'import a from "non-exist"');
       snapping = await loadAspect(SnappingAspect, workspacePath);
     });
     it('tag should throw an ComponentsHaveIssues error', async () => {
@@ -33,7 +33,9 @@ describe('Snapping aspect', () => {
       }
     });
     it('should not throw an error if the config was set to ignore ComponentsHaveIssues error', async () => {
-      await setWorkspaceConfig(workspaceData.workspacePath, IssuesAspect.id, { ignoreIssues: ['ParseErrors'] });
+      await setWorkspaceConfig(workspaceData.workspacePath, IssuesAspect.id, {
+        ignoreIssues: ['MissingPackagesDependenciesOnFs'],
+      });
       snapping = await loadAspect(SnappingAspect, workspaceData.workspacePath);
       // @ts-ignore
       const results = await snapping.tag({ ids: ['comp1'] });
