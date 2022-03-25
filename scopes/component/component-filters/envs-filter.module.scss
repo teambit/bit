@@ -25,6 +25,10 @@
 
 .envFilterDropdown {
   width: 100%;
+  > * {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
   label > div {
     width: 90%;
   }
@@ -32,6 +36,5 @@
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    width: 60%;
   }
 }

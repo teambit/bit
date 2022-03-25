@@ -30,7 +30,7 @@ export const EnvsFilter: EnvsFilterCriteria = {
 };
 
 const mapToEnvDisplayName = (component: ComponentModel) =>
-  component.environment?.id.split('/').pop() || (component.environment?.id as string);
+  component.environment?.id.split('/')?.pop()?.split('@').shift() || (component.environment?.id as string);
 
 const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
@@ -41,9 +41,10 @@ const getDefaultState = (components: ComponentModel[]) => {
     const componentEnvSet = new Set<string>();
     return components
       .filter((component) => {
-        if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
+        const displayName = mapToEnvDisplayName(component);
+        if (!component.environment?.id || componentEnvSet.has(displayName)) return false;
 
-        componentEnvSet.add(component.environment.id);
+        componentEnvSet.add(displayName);
         return true;
       })
       .map((component) => ({
