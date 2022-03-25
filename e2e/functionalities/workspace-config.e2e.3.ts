@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
-import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
+import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX, statusFailureMsg } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
