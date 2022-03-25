@@ -4,7 +4,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
-import { LaneData, LaneComponentData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
