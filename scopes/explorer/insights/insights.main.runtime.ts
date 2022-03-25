@@ -11,7 +11,7 @@ export type InsightDeps = [GraphBuilder, CLIMain];
 export class InsightsMain {
   constructor(private insightManager: InsightManager) {}
 
-  async runInsights([names]: [string[]], opts: RunInsightOptions) {
+  async runInsights(names: string[], opts: RunInsightOptions) {
     if (names) {
       let results: InsightResult[] = [];
       const namesArr = typeof names === 'string' ? [names] : names;

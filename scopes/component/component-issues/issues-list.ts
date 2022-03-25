@@ -15,6 +15,7 @@ import { UntrackedDependencies } from './untracked-dependencies';
 import { LegacyInsideHarmony } from './legacy-inside-harmony';
 import { MultipleEnvs } from './multiple-envs';
 import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src';
+import { CircularDependencies } from './circular-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -33,6 +34,7 @@ export const IssuesClasses = {
   CustomModuleResolutionUsed,
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
+  CircularDependencies,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

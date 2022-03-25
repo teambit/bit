@@ -5,36 +5,39 @@ import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import Component from '@teambit/legacy/dist/consumer/component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import ComponentsList, { DivergedComponent } from '@teambit/legacy/dist/consumer/component/components-list';
 import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-
+import { InsightsAspect, InsightsMain } from '@teambit/insights';
+import pMapSeries from 'p-map-series';
+import { Component } from '@teambit/component';
+import { uniq } from 'lodash';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
 export type StatusResult = {
-  newComponents: Component[];
-  modifiedComponent: Component[];
+  newComponents: ConsumerComponent[];
+  modifiedComponent: ConsumerComponent[];
   stagedComponents: ModelComponent[];
-  componentsWithIssues: Component[];
+  componentsWithIssues: ConsumerComponent[];
   importPendingComponents: BitId[];
   autoTagPendingComponents: BitId[];
   invalidComponents: InvalidComponent[];
-  outdatedComponents: Component[];
+  outdatedComponents: ConsumerComponent[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
-  componentsWithIndividualFiles: Component[];
-  componentsWithTrackDirs: Component[];
+  componentsWithIndividualFiles: ConsumerComponent[];
+  componentsWithTrackDirs: ConsumerComponent[];
   softTaggedComponents: BitId[];
   snappedComponents: BitId[];
   laneName: string | null; // null if default
 };
 
 export class StatusMain {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private insights: InsightsMain) {}
 
   async status(): Promise<StatusResult> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -42,8 +45,8 @@ export class StatusMain {
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
-    const newComponents: Component[] = (await componentsList.listNewComponents(true)) as Component[];
-    const modifiedComponent = (await componentsList.listModifiedComponents(true)) as Component[];
+    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true)) as ConsumerComponent[];
+    const modifiedComponent = (await componentsList.listModifiedComponents(true)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
@@ -57,8 +60,10 @@ export class StatusMain {
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const newAndModified: Component[] = newComponents.concat(modifiedComponent);
-    const componentsWithIssues = newAndModified.filter((component: Component) => {
+    const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
+    const newAndModified = await this.getComponentsByConsumerComponents(newAndModifiedLegacy);
+    await this.addCyclicIssue(newAndModified);
+    const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
       if (consumer.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
@@ -96,11 +101,31 @@ export class StatusMain {
     };
   }
 
+  private async getComponentsByConsumerComponents(consumerComponents: ConsumerComponent[]): Promise<Component[]> {
+    return pMapSeries(consumerComponents, async (consumerComponent) => {
+      const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
+      return this.workspace.get(componentId, undefined, consumerComponent);
+    });
+  }
+
+  private async addCyclicIssue(components: Component[]) {
+    const results = await this.insights.runInsights(['cyclic dependencies'], { renderData: false });
+    const circleResult = results[0];
+    if (!circleResult.data.length) {
+      return; // no circulars
+    }
+    const allIds = uniq(circleResult.data.flat());
+    const componentsWithCircular = components.filter((component) => allIds.includes(component.id.toString()));
+    componentsWithCircular.forEach((component) => {
+      component.state.issues.getOrCreate(IssuesClasses.CircularDependencies).data = true;
+    });
+  }
+
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const statusMain = new StatusMain(workspace);
+  static async provider([cli, workspace, insights]: [CLIMain, Workspace, InsightsMain]) {
+    const statusMain = new StatusMain(workspace, insights);
     cli.register(new StatusCmd(statusMain));
     return statusMain;
   }

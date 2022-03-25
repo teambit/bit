@@ -14,16 +14,16 @@ export default class InsightsCmd implements Command {
   ] as CommandOptions;
   constructor(private insights: InsightsMain) {}
 
-  async report(names: [string[]], options: { list: boolean }): Promise<string> {
+  async report([names]: [string[]], options: { list: boolean }): Promise<string> {
     if (options.list) {
-      const results = await this.json(names, options);
+      const results = await this.json([names], options);
       return JSON.stringify(results, null, 2);
     }
     const results = await this.insights.runInsights(names, { renderData: true });
     return template(results);
   }
 
-  async json(names: [string[]], { list }: { list: boolean }) {
+  async json([names]: [string[]], { list }: { list: boolean }) {
     if (list) {
       const results = this.insights.listInsights();
       return results;
