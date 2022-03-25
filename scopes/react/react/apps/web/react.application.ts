@@ -1,3 +1,4 @@
+import { Console } from '@teambit/capsule';
 import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
@@ -19,9 +20,9 @@ export class ReactApp implements Application {
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers?: WebpackConfigTransformer[],
-    readonly deploy?: (context: ReactDeployContext) => Promise<void>
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>,
+    readonly favicon?: string
   ) {}
-
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
   async run(context: AppContext): Promise<number> {
@@ -31,6 +32,7 @@ export class ReactApp implements Application {
       await this.devServer.listen(port);
       return port;
     }
+    console.log(this.favicon, 'run');
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
@@ -52,19 +54,24 @@ export class ReactApp implements Application {
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
+    console.log(this.favicon, 'build favicon');
+    debugger;
     const htmlConfig: BundlerHtmlConfig[] = [
       {
         title: context.name,
         templateContent: html(context.name),
         minify: false,
+        favicon: this.favicon,
         // filename: ''.html`,
       },
     ];
     Object.assign(context, {
       html: htmlConfig,
     });
+    debugger;
     const bundler = await this.getBundler(context);
     await bundler.run();
+    debugger;
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
   }
 
