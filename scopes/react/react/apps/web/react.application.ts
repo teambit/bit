@@ -1,4 +1,3 @@
-import { Console } from '@teambit/capsule';
 import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
@@ -32,7 +31,6 @@ export class ReactApp implements Application {
       await this.devServer.listen(port);
       return port;
     }
-    console.log(this.favicon, 'run');
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
@@ -54,8 +52,6 @@ export class ReactApp implements Application {
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
-    console.log(this.favicon, 'build favicon');
-    debugger;
     const htmlConfig: BundlerHtmlConfig[] = [
       {
         title: context.name,
@@ -68,10 +64,8 @@ export class ReactApp implements Application {
     Object.assign(context, {
       html: htmlConfig,
     });
-    debugger;
     const bundler = await this.getBundler(context);
     await bundler.run();
-    debugger;
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
   }
 
