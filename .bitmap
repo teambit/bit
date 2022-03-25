@@ -876,7 +876,7 @@
         "rootDir": "scopes/component/snapping"
     },
     "status": {
-        "scope": "",
+        "scope": "teambit.component",
         "version": "0.0.1",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
