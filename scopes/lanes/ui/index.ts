@@ -27,3 +27,4 @@ export {
   LaneOverviewLineSlot,
 } from './overview';
 export { CurrentLaneFromUrl } from './current-lane';
+export { UseLaneMenu } from './menu';
