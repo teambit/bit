@@ -148,7 +148,8 @@ export function configFactory(
       new HtmlWebpackPlugin({
         templateContent: html(title || 'Component preview'),
         filename: 'index.html',
-        favicon: resolveWorkspacePath('public/favicon.ico'),
+        // TODO has to be the capsule or the workspace dir of the component
+        // favicon: resolveWorkspacePath('public/favicon.ico'),
       }),
 
       new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
