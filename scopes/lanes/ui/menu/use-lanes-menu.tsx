@@ -5,8 +5,8 @@ import { ExpandableTabContent } from '@teambit/ui-foundation.ui.use-box.tab-cont
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
-import styles from './use-lanes-menu.module.scss';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import styles from './use-lanes-menu.module.scss';
 
 export type LaneImportContentProps = {
   currentLane: LaneModel;
