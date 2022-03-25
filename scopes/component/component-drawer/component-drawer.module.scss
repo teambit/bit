@@ -1,5 +1,7 @@
 .drawerContainer {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .emptyDrawer {
@@ -44,15 +46,18 @@
 }
 
 .filter {
-  display: flex;
-  flex-direction: row;
-  font-size: 14px;
-  justify-content: space-between;
-  padding: 8px;
-  margin: 4px 8px;
+  display: none;
+  &.open {
+    display: flex;
+    flex-direction: row;
+    font-size: 14px;
+    justify-content: space-between;
+    padding: 8px;
+    margin: 4px 8px;
+  }
 }
 
-.componentTree {
-  overflow-y: scroll;
+.drawerTreeContainer {
   height: 100%;
+  overflow-y: scroll;
 }
