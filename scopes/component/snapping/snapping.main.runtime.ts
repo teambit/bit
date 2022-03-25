@@ -1,17 +1,19 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { isString } from '@teambit/legacy/dist/utils';
+import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import R from 'ramda';
-import semver from 'semver';
+import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
-import { TagParams, TagResults } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import { TagResults, BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -21,6 +23,7 @@ import { LanesIsDisabled } from '@teambit/legacy/dist/consumer/lanes/exceptions/
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { BitError } from '@teambit/bit-error';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
@@ -41,14 +44,95 @@ export class SnappingMain {
    * with a valid semver to that version.
    * tag can be done only on main, not on a lane.
    */
-  async tag(tagParams: TagParams): Promise<TagResults | null> {
+  // eslint-disable-next-line complexity
+  async tag({
+    ids = [],
+    message = '',
+    ver,
+    all = false,
+    editor = '',
+    snapped = false,
+    patch,
+    minor,
+    major,
+    preRelease,
+    force = false,
+    verbose = false,
+    ignoreIssues,
+    ignoreNewestVersion = false,
+    skipTests = false,
+    skipAutoTag = false,
+    scope,
+    build,
+    soft = false,
+    persist = false,
+    forceDeploy = false,
+    incrementBy = 1,
+    disableTagAndSnapPipelines = false,
+  }: {
+    ids?: string[];
+    all?: boolean | string;
+    snapped?: boolean | string;
+    ver?: string;
+    patch?: boolean;
+    minor?: boolean;
+    major?: boolean;
+    ignoreIssues?: string;
+    scope?: string | boolean;
+    incrementBy?: number;
+  } & Partial<BasicTagParams>): Promise<TagResults | null> {
+    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    if (soft) build = false;
+    function getVersion(): string | undefined {
+      if (scope && isString(scope)) return scope;
+      if (all && isString(all)) return all;
+      if (snapped && isString(snapped)) return snapped;
+      return ver;
+    }
+
+    if (!ids.length && !all && !snapped && !scope && !persist) {
+      throw new BitError('missing [id]. to tag all components, please use --all flag');
+    }
+    if (ids.length && all) {
+      throw new BitError(
+        'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
+      );
+    }
+    if (disableTagAndSnapPipelines && forceDeploy) {
+      throw new BitError('you can use either force-deploy or disable-tag-pipeline, but not both');
+    }
+    if (all && persist) {
+      throw new BitError('you can use either --all or --persist, but not both');
+    }
+    if (editor && persist) {
+      throw new BitError('you can use either --editor or --persist, but not both');
+    }
+    if (editor && message) {
+      throw new BitError('you can use either --editor or --message, but not both');
+    }
+
+    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
+    if (releaseFlags.length > 1) {
+      throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
+    }
+
+    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
+    const includeImported = Boolean(scope && all);
+
+    if (major) releaseType = 'major';
+    else if (minor) releaseType = 'minor';
+    else if (patch) releaseType = 'patch';
+    else if (preRelease) releaseType = 'prerelease';
+
+    all = Boolean(all);
+    snapped = Boolean(snapped);
+    const exactVersion = getVersion();
+    preRelease = typeof preRelease === 'string' ? preRelease : '';
+
     if (!this.workspace) throw new ConsumerNotFound();
-    const { ids, all, exactVersion, force, scope, includeImported, persist, snapped, soft } = tagParams;
     const idsHasWildcard = hasWildcard(ids);
     const isAll = Boolean(all || scope || idsHasWildcard);
     const validExactVersion = validateVersion(exactVersion);
-    const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
-    HooksManagerInstance?.triggerHook(preHook, tagParams);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     loader.start('determine components to tag...');
@@ -67,7 +151,7 @@ export class SnappingMain {
     const legacyBitIds = BitIds.fromArray(bitIds);
 
     if (this.workspace.isLegacy) {
-      tagParams.persist = true;
+      persist = true;
     }
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(legacyBitIds)}`);
@@ -75,23 +159,37 @@ export class SnappingMain {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this.loadComponentsForTag(legacyBitIds);
-    this.throwForComponentIssues(components, tagParams.ignoreIssues);
+    this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
     }
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
-      ...tagParams,
-      exactVersion: validExactVersion,
-      ids: legacyBitIds,
       consumerComponents: components,
+      ids: legacyBitIds,
       scope: this.workspace.scope.legacyScope,
+      message,
+      editor,
+      exactVersion: validExactVersion,
+      releaseType,
+      preRelease,
+      force,
       consumer: this.workspace.consumer,
+      ignoreNewestVersion,
+      skipTests,
+      verbose,
+      skipAutoTag,
+      soft,
+      build,
+      persist,
+      resolveUnmerged: false,
+      disableTagAndSnapPipelines,
+      forceDeploy,
+      incrementBy,
     });
 
-    const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
-
+    const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tagResults.warnings = warnings;
 
