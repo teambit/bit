@@ -11,7 +11,7 @@ import ComponentsList, { DivergedComponent } from '@teambit/legacy/dist/consumer
 import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
@@ -34,7 +34,7 @@ export type StatusResult = {
 };
 
 export class StatusMain {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private issues: IssuesMain) {}
 
   async status(): Promise<StatusResult> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -58,7 +58,9 @@ export class StatusMain {
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModified: Component[] = newComponents.concat(modifiedComponent);
+    const issuesToIgnore = this.issues.getIssuesToIgnore();
     const componentsWithIssues = newAndModified.filter((component: Component) => {
+      issuesToIgnore.forEach((issueToIgnore) => component.issues.delete(IssuesClasses[issueToIgnore]));
       if (consumer.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
@@ -97,10 +99,10 @@ export class StatusMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, IssuesAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const statusMain = new StatusMain(workspace);
+  static async provider([cli, workspace, issues]: [CLIMain, Workspace, IssuesMain]) {
+    const statusMain = new StatusMain(workspace, issues);
     cli.register(new StatusCmd(statusMain));
     return statusMain;
   }

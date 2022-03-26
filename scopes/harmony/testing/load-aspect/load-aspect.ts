@@ -23,6 +23,10 @@ function getPackageName(aspect: any, id: ComponentID) {
   // return `@${owner}/${replaceAll(name, '/', '.')}`;
 }
 
+/**
+ * to make this work, export the main also as default (e.g. `export default LanesMain;`).
+ * otherwise, it'll show an error "TypeError: Cannot read property 'runtime' of undefined".
+ */
 export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), runtime = 'main'): Promise<T> {
   clearGlobalsIfNeeded();
   const config = await getConfig(cwd);
