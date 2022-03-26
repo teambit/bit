@@ -35,7 +35,7 @@ export class CreateCmd implements Command {
       .map((result) => {
         return `${chalk.bold(result.id.toString())}
     location: ${result.dir}
-    env:      ${result.envId}
+    env:      ${result.envId} (set by ${result.envSetBy})
 `;
       })
       .join('\n');
