@@ -14,7 +14,7 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import pMapSeries from 'p-map-series';
 import { Component } from '@teambit/component';
-import { uniq } from 'lodash';
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
@@ -37,7 +37,7 @@ export type StatusResult = {
 };
 
 export class StatusMain {
-  constructor(private workspace: Workspace, private insights: InsightsMain) {}
+  constructor(private workspace: Workspace, private issues: IssuesMain, private insights: InsightsMain) {}
 
   async status(): Promise<StatusResult> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -65,7 +65,9 @@ export class StatusMain {
       const newAndModified = await this.getComponentsByConsumerComponents(newAndModifiedLegacy);
       await this.insights.addInsightsAsComponentIssues(newAndModified);
     }
+    const issuesToIgnore = this.issues.getIssuesToIgnore();
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
+      issuesToIgnore.forEach((issueToIgnore) => component.issues.delete(IssuesClasses[issueToIgnore]));
       if (consumer.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
@@ -111,10 +113,10 @@ export class StatusMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights]: [CLIMain, Workspace, InsightsMain]) {
-    const statusMain = new StatusMain(workspace, insights);
+  static async provider([cli, workspace, insights, issues]: [CLIMain, Workspace, InsightsMain, IssuesMain]) {
+    const statusMain = new StatusMain(workspace, issues, insights);
     cli.register(new StatusCmd(statusMain));
     return statusMain;
   }

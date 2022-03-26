@@ -519,6 +519,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/isolator"
     },
+    "issues": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/issues"
+    },
     "jest": {
         "scope": "teambit.defender",
         "version": "0.0.689",
@@ -876,7 +883,7 @@
         "rootDir": "scopes/component/snapping"
     },
     "status": {
-        "scope": "",
+        "scope": "teambit.component",
         "version": "0.0.1",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
