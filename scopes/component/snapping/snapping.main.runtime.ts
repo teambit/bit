@@ -364,7 +364,7 @@ export class SnappingMain {
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnore();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    if (!this.workspace.isLegacy) {
+    if (!this.workspace.isLegacy && !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
       const components = await this.workspace.getManyByLegacy(legacyComponents);
       await this.insights.addInsightsAsComponentIssues(components);
     }

@@ -61,11 +61,11 @@ export class StatusMain {
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
-    if (!this.workspace.isLegacy) {
+    const issuesToIgnore = this.issues.getIssuesToIgnore();
+    if (!this.workspace.isLegacy && !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
       await this.insights.addInsightsAsComponentIssues(newAndModified);
     }
-    const issuesToIgnore = this.issues.getIssuesToIgnore();
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
       issuesToIgnore.forEach((issueToIgnore) => component.issues.delete(IssuesClasses[issueToIgnore]));
       if (consumer.isLegacy && component.issues) {
