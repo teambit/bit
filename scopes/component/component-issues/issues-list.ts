@@ -88,6 +88,10 @@ export class IssuesList {
     return this.issues;
   }
 
+  getAllIssueNames(): string[] {
+    return this.issues.map((issue) => issue.constructor.name);
+  }
+
   createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {
     const newIssue = new IssueClass();
     this.add(newIssue);
@@ -104,6 +108,10 @@ export class IssuesList {
 
   shouldBlockTagging(): boolean {
     return this.issues.some((issue) => issue.isTagBlocker);
+  }
+
+  filterNonTagBlocking(): IssuesList {
+    return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
   }
 
   serialize() {
