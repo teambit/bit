@@ -146,14 +146,22 @@ describe('create extension', function () {
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
-    it('should set the env according to the config from the env', () => {
+    it('should set the env according to the variant', () => {
+      const show = helper.command.showComponentParsedHarmony('my-aspect');
+      const env = show.find((item) => item.title === 'env');
+      expect(env.json).to.equal('teambit.react/react');
+    });
+  });
+  describe('with env defined inside the aspect-template when there is no variant', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.create('aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should set the env according to the template env', () => {
       const show = helper.command.showComponentParsedHarmony('my-aspect');
       const env = show.find((item) => item.title === 'env');
       expect(env.json).to.equal('teambit.harmony/aspect');
-    });
-    it('should remove the one from the variants', () => {
-      const show = helper.command.showComponent('my-aspect');
-      expect(show).to.not.include('teambit.react/react');
     });
   });
 });
