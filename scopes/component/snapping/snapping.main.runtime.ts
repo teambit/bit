@@ -24,7 +24,7 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
@@ -165,7 +165,7 @@ export class SnappingMain {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this.loadComponentsForTag(legacyBitIds);
-    this.throwForComponentIssues(components, ignoreIssues);
+    await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -255,7 +255,7 @@ export class SnappingMain {
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     const components = await this.loadComponentsForTag(ids);
-    this.throwForComponentIssues(components, ignoreIssues);
+    await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -308,7 +308,7 @@ export class SnappingMain {
     }
   }
 
-  private async loadComponentsForTag(ids: BitIds): Promise<Component[]> {
+  private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     if (this.workspace.isLegacy) {
       return components;
@@ -351,8 +351,8 @@ export class SnappingMain {
     return reloadedComponents;
   }
 
-  private throwForComponentIssues(components: Component[], ignoreIssues?: string) {
-    components.forEach((component) => {
+  private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
+    legacyComponents.forEach((component) => {
       if (this.workspace.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
@@ -364,6 +364,10 @@ export class SnappingMain {
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnore();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
+    if (!this.workspace.isLegacy) {
+      const components = await this.workspace.getManyByLegacy(legacyComponents);
+      await this.insights.addInsightsAsComponentIssues(components);
+    }
     issuesToIgnore.forEach((issue) => {
       const issueClass = IssuesClasses[issue];
       if (!issueClass) {
@@ -373,11 +377,11 @@ export class SnappingMain {
           ).join('\n')}`
         );
       }
-      components.forEach((component) => {
+      legacyComponents.forEach((component) => {
         component.issues.delete(issueClass);
       });
     });
-    const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+    const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }

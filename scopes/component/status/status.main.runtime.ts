@@ -62,7 +62,7 @@ export class StatusMain {
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     if (!this.workspace.isLegacy) {
-      const newAndModified = await this.getComponentsByConsumerComponents(newAndModifiedLegacy);
+      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
       await this.insights.addInsightsAsComponentIssues(newAndModified);
     }
     const issuesToIgnore = this.issues.getIssuesToIgnore();
@@ -103,13 +103,6 @@ export class StatusMain {
       snappedComponents,
       laneName,
     };
-  }
-
-  private async getComponentsByConsumerComponents(consumerComponents: ConsumerComponent[]): Promise<Component[]> {
-    return pMapSeries(consumerComponents, async (consumerComponent) => {
-      const componentId = await this.workspace.resolveComponentId(consumerComponent.id);
-      return this.workspace.get(componentId, undefined, consumerComponent);
-    });
   }
 
   static slots = [];
