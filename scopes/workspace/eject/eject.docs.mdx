@@ -1,11 +1,9 @@
 ---
-description: Removes components from the workspace and installs their packages.
+description: Replaces a Workspace component with an external dependency
 labels: ['aspect', 'cli']
 ---
 
-## Eject Feature Description
-
-one of the common scenarios of using `bit eject` is to make a quick change to an external (component) dependency. The component needs to be imported first and once it's changed and exported, there is no need to keep it in the current workspace. Without `eject`, the next steps would be: 1) remove the component from the workspace by `bit remove` and 2) installing the component by `bit install`.
+One of the common scenarios of using `bit eject` is to make a quick change to an external (component) dependency. The component needs to be imported first and once it's changed and exported, there is no need to keep it in the current workspace. Without `eject`, the next steps would be: 1) remove the component from the workspace by `bit remove` and 2) installing the component by `bit install`.
 
 `bit eject` combines the commands above to one command.
 
