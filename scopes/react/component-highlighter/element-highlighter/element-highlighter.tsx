@@ -7,8 +7,11 @@ import { excludeHighlighterAtt } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** target element to highlight */
-  target: HighlightTarget;
+  /** element to show the highlight at */
+  targetElement: HTMLElement;
+  /** components with metadata to show in the label */
+  components?: (ComponentMetaHolder | string)[];
+
   /** default location of the label */
   placement?: Placement;
   /** customize styles */
@@ -19,13 +22,6 @@ export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivEle
 
 export { Placement };
 
-export type HighlightTarget = {
-  /** element to show the highlight at */
-  element: HTMLElement;
-  /** components with metadata to show in the label */
-  components?: ComponentMetaHolder[];
-};
-
 export type HighlightClasses = {
   container?: string;
   frame?: string;
@@ -33,9 +29,10 @@ export type HighlightClasses = {
 };
 
 export function ElementHighlighter({
-  target,
+  targetElement,
+  components,
   placement = 'top',
-  watchMotion = true,
+  watchMotion,
   className,
   classes,
   ...props
@@ -43,19 +40,19 @@ export function ElementHighlighter({
   return (
     <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, styles.container, className)}>
       <Frame
-        targetRef={target.element}
+        targetElement={targetElement}
         className={classnames(styles.frame, classes?.frame)}
         watchMotion={watchMotion}
       />
 
-      {target.components && (
+      {components && (
         <LabelContainer
           className={styles.label}
-          targetRef={target.element}
+          targetElement={targetElement}
           placement={placement}
           watchMotion={watchMotion}
         >
-          <Label components={target.components} className={classes?.label} />
+          <Label components={components} className={classes?.label} />
         </LabelContainer>
       )}
     </div>

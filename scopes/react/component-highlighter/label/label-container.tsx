@@ -1,12 +1,16 @@
-import React, { useMemo, useState } from 'react';
-import { usePopper } from 'react-popper';
-import type { Placement, Modifier } from '@popperjs/core';
-import '@popperjs/core';
-
-import { useAnimationFrame } from '../use-animation-frame';
+import React, { useLayoutEffect, useEffect } from 'react';
+import compact from 'lodash.compact';
+import {
+  useFloating,
+  offset as offsetMiddleware,
+  flip as flipMiddleware,
+  shift,
+  autoUpdate,
+} from '@floating-ui/react-dom';
+import type { Placement } from '@floating-ui/react-dom';
 
 export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  targetRef: HTMLElement | null;
+  targetElement: HTMLElement | null;
   offset?: [number, number];
   placement?: Placement;
   flip?: boolean;
@@ -18,29 +22,44 @@ export type { Placement };
 
 // TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
 export function LabelContainer({
-  targetRef,
+  targetElement,
   offset,
   placement,
   flip = true,
   watchMotion,
   className,
+  style,
   ...rest
 }: LabelContainerProps) {
-  const [sourceRef, setSourceRef] = useState<HTMLDivElement | null>(null);
-
-  const modifiers = useMemo<Partial<Modifier<any, any>>[]>(
-    () => [{ name: 'offset', options: { offset } }],
-    [flip, offset]
-  );
-
-  const { styles, attributes, update } = usePopper(targetRef, sourceRef, {
-    modifiers,
+  const { x, y, strategy, floating, reference, refs, update } = useFloating({
     placement,
+    middleware: compact([
+      offsetMiddleware(offset && { mainAxis: offset[0], crossAxis: offset[1] }),
+      flip && flipMiddleware(),
+      shift({ rootBoundary: 'viewport' }),
+    ]),
   });
 
-  useAnimationFrame(!!watchMotion && update);
+  useLayoutEffect(() => {
+    reference(targetElement);
+  }, [targetElement, reference]);
 
-  if (!targetRef) return null;
+  // automatically update on scroll, resize, etc.
+  // `watchMotion` will trigger continuous updates using animation frame
+  useEffect(() => {
+    if (!refs.reference.current || !refs.floating.current) return () => {};
 
-  return <div {...rest} ref={setSourceRef} className={className} style={styles.popper} {...attributes.popper} />;
+    return autoUpdate(refs.reference.current, refs.floating.current, update, { animationFrame: !!watchMotion });
+  }, [refs.reference.current, refs.floating.current, update, watchMotion]);
+
+  if (!targetElement) return null;
+
+  return (
+    <div
+      {...rest}
+      ref={floating}
+      className={className}
+      style={{ ...style, position: strategy, top: y ?? '', left: x ?? '' }}
+    />
+  );
 }

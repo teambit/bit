@@ -2,10 +2,14 @@ import React, { useState, useEffect, useMemo, useRef, createRef, CSSProperties }
 import classnames from 'classnames';
 import { v4 } from 'uuid';
 
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+
 import { useHoverHighlighter } from '../hover-highlighter';
-import { ElementHighlighter, HighlightTarget, Placement, HighlightClasses } from '../element-highlighter';
+import { ElementHighlighter, Placement, HighlightClasses } from '../element-highlighter';
 import { useChildrenHighlighter } from '../children-highlighter';
 import type { MatchRule, ComponentMatchRule } from '../rule-matcher';
+
+type HighlightTarget = { element: HTMLElement; components: ComponentMetaHolder[] };
 
 export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
   /** stop all highlighting and drop listeners */
@@ -119,7 +123,8 @@ export function HybridHighlighter({
       {Object.entries(targets).map(([key, target]) => (
         <ElementHighlighter
           key={key}
-          target={target}
+          targetElement={target.element}
+          components={target.components}
           classes={classes}
           style={highlightStyle}
           placement={placement}

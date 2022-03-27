@@ -2,6 +2,7 @@ $border: 2;
 $padding: 4;
 
 .overlayBorder {
+  box-sizing: border-box;
   border: $border * 1px solid var(--bit-highlighter-color, #eebcc9);
 
   border-radius: 11px;
@@ -12,5 +13,5 @@ $padding: 4;
 }
 
 :export {
-  offset: -$border - $padding;
+  offset: $border + $padding;
 }
