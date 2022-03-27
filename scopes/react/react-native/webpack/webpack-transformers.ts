@@ -6,7 +6,7 @@ const reactNativePackagesRule = {
   loader: require.resolve('babel-loader'),
   options: {
     cacheDirectory: false,
-    presets: ['@babel/preset-env', '@babel/preset-react'],
+    presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
   },
 };
 
