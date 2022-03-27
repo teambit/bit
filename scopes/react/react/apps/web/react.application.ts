@@ -118,6 +118,7 @@ export class ReactApp implements Application {
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
+      favicon: this.favicon,
     });
   }
 }

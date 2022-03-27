@@ -26,7 +26,8 @@ export function configFactory(
   publicRoot: string,
   publicPath: string,
   pubsub: PubsubMain,
-  title?: string
+  title?: string,
+  favicon?: string
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
@@ -149,9 +150,8 @@ export function configFactory(
         templateContent: html(title || 'Component preview'),
         filename: 'index.html',
         // TODO has to be the capsule or the workspace dir of the component
-        // favicon: resolveWorkspacePath('public/favicon.ico'),
+        favicon,
       }),
-
       new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
 
       new WebpackBitReporterPlugin({
