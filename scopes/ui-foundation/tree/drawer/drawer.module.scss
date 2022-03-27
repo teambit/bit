@@ -71,12 +71,10 @@
 .drawerContent {
   flex: 1 1;
   transition: max-height 300ms ease-in-out;
-  overflow-x: hidden;
-  overflow-y: auto;
   max-height: 0;
 
   &.open {
-    max-height: 100%;
+    max-height: calc(100% - 32px);
   }
 }
 

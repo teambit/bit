@@ -20,4 +20,9 @@ export interface DevServerContext extends ExecutionContext {
    * title of the page.
    */
   title?: string;
+
+  /**
+   * favicon of the page.
+   */
+  favicon?: string;
 }

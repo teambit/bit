@@ -3,10 +3,13 @@ import chalk from 'chalk';
 import { checkout } from '../../../api/consumer';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
-import { ApplyVersionResults, getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
+import {
+  ApplyVersionResults,
+  getMergeStrategy,
+  applyVersionReport,
+} from '../../../consumer/versions-ops/merge-version';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { applyVersionReport } from './merge-cmd';
 
 export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';

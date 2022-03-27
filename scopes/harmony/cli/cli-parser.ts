@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs, { CommandModule } from 'yargs';
+import yargs from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { compact } from 'lodash';
@@ -120,17 +120,20 @@ export class CLIParser {
 
   private parseCommandWithSubCommands(command: Command) {
     const yarnCommand = this.getYargsCommand(command);
-    yarnCommand.builder = () => {
+    const builderFunc = () => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
         yargs.command(subCommand);
       });
+      // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
+      yargs.options(yarnCommand.getGlobalOptions(command));
       return yargs;
     };
+    yarnCommand.builder = builderFunc;
     yargs.command(yarnCommand);
   }
 
-  private getYargsCommand(command: Command): CommandModule {
+  private getYargsCommand(command: Command): YargsAdapter {
     const yarnCommand = new YargsAdapter(command);
     yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
 

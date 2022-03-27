@@ -19,9 +19,9 @@ export class ReactApp implements Application {
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers?: WebpackConfigTransformer[],
-    readonly deploy?: (context: ReactDeployContext) => Promise<void>
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>,
+    readonly favicon?: string
   ) {}
-
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
   async run(context: AppContext): Promise<number> {
@@ -57,10 +57,13 @@ export class ReactApp implements Application {
         title: context.name,
         templateContent: html(context.name),
         minify: false,
+        favicon: this.favicon,
         // filename: ''.html`,
       },
     ];
-    Object.assign(context, { html: htmlConfig });
+    Object.assign(context, {
+      html: htmlConfig,
+    });
     const bundler = await this.getBundler(context);
     await bundler.run();
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
@@ -89,6 +92,10 @@ export class ReactApp implements Application {
       ],
       entry: [],
       rootPath: '/',
+      metaData: {
+        initiator: `building app: ${context.name}`,
+        envId: context.id,
+      },
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
@@ -111,6 +118,7 @@ export class ReactApp implements Application {
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
+      favicon: this.favicon,
     });
   }
 }

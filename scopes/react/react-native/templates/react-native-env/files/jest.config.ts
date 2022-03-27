@@ -1,7 +1,7 @@
 export function jestConfigFile() {
   return `
   // Override the Jest config to ignore transpiling from specific folders
-  // See the base Jest config: https://bit.dev/teambit/react/react-native/~code/jest/jest.config.js
+  // See the base Jest config: https://bit.cloud/teambit/react/react-native/~code/jest/jest.config.js
 
   // const reactNativeJestConfig = require('@teambit/react-native/jest/jest.config');
   // uncomment the line below and install the package if you want to use this function
