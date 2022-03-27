@@ -78,14 +78,16 @@ export function CodeTabTree({
         isOpen={openDrawerList.includes('FILES')}
         onToggle={() => handleDrawerToggle('FILES')}
         name="FILES"
+        contentClass={styles.codeDrawerContent}
         className={classNames(styles.codeTabDrawer)}
-      >
+        >
         <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
       </DrawerUI>
       <DrawerUI
         isOpen={openDrawerList.includes('DEPENDENCIES')}
         onToggle={() => handleDrawerToggle('DEPENDENCIES')}
         className={classNames(styles.codeTabDrawer)}
+        contentClass={styles.codeDrawerContent}
         name="DEPENDENCIES"
       >
         <DependencyTree dependenciesArray={dependencies} />

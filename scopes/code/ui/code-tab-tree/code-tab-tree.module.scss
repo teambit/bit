@@ -7,14 +7,15 @@
 }
 
 .codeTabDrawer {
+  // drawer name
   > div:first-child {
     border: none;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
-  > div:last-child {
-    overflow-y: auto;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
+}
+
+.codeDrawerContent {
+  overflow-y: auto;
 }
 
 .drawerIcon {
