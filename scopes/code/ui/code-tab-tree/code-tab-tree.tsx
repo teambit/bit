@@ -80,7 +80,7 @@ export function CodeTabTree({
         name="FILES"
         contentClass={styles.codeDrawerContent}
         className={classNames(styles.codeTabDrawer)}
-        >
+      >
         <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
       </DrawerUI>
       <DrawerUI
