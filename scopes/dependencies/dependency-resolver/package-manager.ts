@@ -7,7 +7,7 @@ import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
 
-export type PackageImportMethod = 'auto' | 'hardlink' | 'copy' | 'clone'
+export type PackageImportMethod = 'auto' | 'hardlink' | 'copy' | 'clone';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
