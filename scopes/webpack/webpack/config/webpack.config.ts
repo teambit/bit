@@ -18,6 +18,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
     truthyEntries = {};
   }
+
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
@@ -107,6 +108,7 @@ function getAssetManifestPlugin() {
 function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {
   return configs.map((config) => generateHtmlPlugin(config));
 }
+
 function generateHtmlPlugin(config: BundlerHtmlConfig) {
   const baseConfig = {
     filename: config.filename,
@@ -116,6 +118,7 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
     minify: config.minify,
     cache: false,
     chunksSortMode: 'auto' as const,
+    favicon: config.favicon,
   };
   if (baseConfig.chunks && baseConfig.chunks.length) {
     // Make sure the order is that the preview root coming after the preview def
