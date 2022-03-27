@@ -12,8 +12,6 @@ import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consum
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
-import pMapSeries from 'p-map-series';
-import { Component } from '@teambit/component';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
