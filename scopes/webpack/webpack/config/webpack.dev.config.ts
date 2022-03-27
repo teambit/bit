@@ -149,7 +149,6 @@ export function configFactory(
       new HtmlWebpackPlugin({
         templateContent: html(title || 'Component preview'),
         filename: 'index.html',
-        // TODO has to be the capsule or the workspace dir of the component
         favicon,
       }),
       new webpack.ProvidePlugin(fallbacksProvidePluginConfig),

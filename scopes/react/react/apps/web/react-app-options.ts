@@ -53,7 +53,7 @@ export type ReactAppOptions = {
   portRange?: number[];
 
   /**
-   * favicon for the app.
+   * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
    */
   favicon?: string;
 };
