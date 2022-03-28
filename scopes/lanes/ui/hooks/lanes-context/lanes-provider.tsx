@@ -8,7 +8,7 @@ export type LanesProviderProps = {
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
-  const { lanes, checkedoutLane } = useLanesQuery();
+  const { lanes, currentLane } = useLanesQuery();
 
   const model = useMemo(
     () =>
@@ -17,11 +17,11 @@ export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
         viewedLane: lanes?.find((lane) => {
           return viewedLaneId === lane.id;
         }),
-        checkedoutLane: lanes?.find((lane) => {
-          return checkedoutLane === lane.name;
+        currentLane: lanes?.find((lane) => {
+          return currentLane === lane.name;
         }),
       }),
-    [lanes, viewedLaneId, checkedoutLane]
+    [lanes, viewedLaneId, currentLane]
   );
 
   return <LanesContext.Provider value={model}>{children}</LanesContext.Provider>;

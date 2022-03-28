@@ -53,7 +53,7 @@ export type LaneModel = {
 export type LanesModelProps = {
   lanes?: LaneModel[];
   viewedLane?: LaneModel;
-  checkedoutLane?: LaneModel;
+  currentLane?: LaneModel;
 };
 /**
  * Represents the entire Lanes State in a Workspace/Scope
@@ -163,9 +163,9 @@ export class LanesModel {
     return lanes;
   }
 
-  constructor({ lanes, viewedLane, checkedoutLane }: LanesModelProps) {
+  constructor({ lanes, viewedLane, currentLane }: LanesModelProps) {
     this.viewedLane = viewedLane;
-    this.checkedoutLane = checkedoutLane;
+    this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.lanesByScope = LanesModel.groupByScope(this.lanes);
     const { byHash, byId } = LanesModel.groupByComponentHashAndId(this.lanes);
@@ -178,7 +178,7 @@ export class LanesModel {
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   readonly viewedLane?: LaneModel;
-  readonly checkedoutLane?: LaneModel;
+  readonly currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
   isInCurrentLane = (componentId: ComponentID) =>

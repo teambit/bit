@@ -18,8 +18,8 @@ export type LaneImportContentProps = {
 export function UseLaneMenu() {
   const lanesContext = useLanesContext();
   if (!lanesContext?.viewedLane) return null;
-  const { viewedLane, checkedoutLane } = lanesContext;
-  const switchedOutToCurrentLane = viewedLane.id === checkedoutLane?.id;
+  const { viewedLane, currentLane } = lanesContext;
+  const switchedOutToCurrentLane = viewedLane.id === currentLane?.id;
   const Menu = (
     <div className={styles.lanesMenu}>
       <div className={styles.top}>

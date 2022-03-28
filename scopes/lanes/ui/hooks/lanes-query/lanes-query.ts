@@ -24,7 +24,7 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanesQuery(): { lanes?: LaneModel[]; checkedoutLane?: string } & Omit<
+export function useLanesQuery(): { lanes?: LaneModel[]; currentLane?: string } & Omit<
   QueryResult<LanesQueryResult>,
   'data'
 > {
@@ -34,6 +34,6 @@ export function useLanesQuery(): { lanes?: LaneModel[]; checkedoutLane?: string 
     ...rest,
     loading: rest.loading || !!loading,
     lanes: data && LanesModel.from(data, scope),
-    checkedoutLane: data?.lanes?.getCurrentLaneName,
+    currentLane: data?.lanes?.getCurrentLaneName,
   };
 }
