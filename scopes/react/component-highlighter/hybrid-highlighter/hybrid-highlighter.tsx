@@ -23,7 +23,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
   /** debounces element hover selection.
    * A higher value will reduce element lookups as well as "keep" the highlight on the current element for longer.
    * Initial selection (when no element is currently selected) will always happen immediately to improve the user experience.
-   * @default 80ms
+   * @default 40ms
    */
   debounceSelection?: number;
   /** continually update frame position to match moving elements */
@@ -49,7 +49,7 @@ export interface HybridHighlighterProps extends React.HTMLAttributes<HTMLDivElem
 export function HybridHighlighter({
   disabled,
   mode = 'hover',
-  debounceSelection = 80,
+  debounceSelection = 40,
   watchMotion = true,
   placement,
   rule,
