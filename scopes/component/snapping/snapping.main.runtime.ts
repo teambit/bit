@@ -148,7 +148,7 @@ export class SnappingMain {
     );
     if (R.isEmpty(bitIds)) return null;
 
-    const legacyBitIds = BitIds.fromArray(bitIds);
+    const legacyBitIds = BitIds.uniqFromArray(bitIds);
 
     if (this.workspace.isLegacy) {
       persist = true;
