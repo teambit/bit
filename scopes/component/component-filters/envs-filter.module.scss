@@ -8,6 +8,14 @@
   }
 
   .filterIcon {
+    display: flex;
+    padding: 8px;
+
+    &:hover {
+      background: var(--bit-bg-heavy, #f6f6f6);
+      cursor: pointer;
+    }
+
     img {
       width: 16px;
       filter: invert(44%) sepia(7%) saturate(560%) hue-rotate(187deg) brightness(96%) contrast(91%);
@@ -17,14 +25,22 @@
       margin: 0px 8px;
       font-size: 14px;
     }
+
+    .dropdownArrow {
+      display: flex;
+    }
   }
 }
+
 .envFilterDropdownContainer {
   width: 100%;
 }
 
 .envFilterDropdown {
   width: 100%;
+  > div:first-child > div:first-child {
+    padding: 0px;
+  }
   > * {
     padding-left: 16px;
     padding-right: 16px;

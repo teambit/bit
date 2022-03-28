@@ -1,4 +1,4 @@
-import React, { useMemo, MutableRefObject, useEffect, useRef, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
@@ -82,7 +82,11 @@ function envsFilter({
     });
   });
 
-  const onCheck = (value: string, checked: boolean) => {
+  const onCheck = (value: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+
+    const checked = e.target.checked;
+
     updateFilter((currentState) => {
       if (checked && !currentState.state.dropdownState) {
         currentState.state.dropdownState = true;
@@ -115,14 +119,6 @@ function envsFilter({
     });
   };
 
-  const onDropdownClicked = (event) => {
-    event.stopPropagation();
-    updateFilter((currentState) => {
-      currentState.state.dropdownState = !currentFilter.state.dropdownState;
-      return currentState;
-    });
-  };
-
   const onOutsideClicked = () => {
     updateFilter((currentState) => {
       currentState.state.dropdownState = false;
@@ -130,22 +126,17 @@ function envsFilter({
     });
   };
 
-  const envRef = useRef<HTMLDivElement>(null);
-  useOutsideClick(envRef, onOutsideClicked);
-
   return (
-    <div ref={envRef} className={classNames(styles.envsFilterContainer, className)}>
-      <div className={styles.filterIcon}>
-        <img src="https://static.bit.dev/bit-icons/env.svg" />
-      </div>
+    <div className={classNames(styles.envsFilterContainer, className)}>
       <MultiSelect
         itemsList={selectList}
-        placeholderText={'Environments'}
+        placeholder={<EnvsPlaceholder updateFilter={updateFilter} />}
         onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
+        clickPlaceholderToggles={true}
+        onClickOutside={onOutsideClicked}
         open={currentFilter.state.dropdownState}
-        onClick={onDropdownClicked}
         dropdownBorder={false}
         className={styles.envFilterDropdownContainer}
         dropClass={styles.envFilterDropdown}
@@ -154,32 +145,22 @@ function envsFilter({
   );
 }
 
-/**
- * TODO: Find a spot for this.
- * From: https://github.com/imbhargav5/rooks/blob/main/src/hooks/useOutsideClick.ts
- * Checks if a click happened outside a Ref
- *
- * @param ref Ref whose outside click needs to be listened to
- * @param handler Callback to fire on outside click
- */
-function useOutsideClick(ref: MutableRefObject<HTMLElement | null>, handler: (e: MouseEvent) => any): void {
-  const savedHandler = useRef(handler);
-
-  const memoizedCallback = useCallback((e: MouseEvent) => {
-    if (ref && ref.current && !ref.current.contains(e.target as Element)) {
-      savedHandler.current(e);
-    }
-  }, []);
-
-  useEffect(() => {
-    savedHandler.current = handler;
+const onPlaceholderClicked = (updateFilter: React.Dispatch<React.SetStateAction<EnvsFilterCriteria>>) => (event) => {
+  event.stopPropagation();
+  updateFilter((currentState) => {
+    currentState.state.dropdownState = !currentState.state.dropdownState;
+    return currentState;
   });
+};
 
-  useEffect(() => {
-    document.addEventListener('click', memoizedCallback, true);
-
-    return () => {
-      document.removeEventListener('click', memoizedCallback, true);
-    };
-  }, [ref, handler]);
+function EnvsPlaceholder({ updateFilter }: { updateFilter: React.Dispatch<React.SetStateAction<EnvsFilterCriteria>> }) {
+  return (
+    <div className={styles.filterIcon} onClick={onPlaceholderClicked(updateFilter)}>
+      <img src="https://static.bit.dev/bit-icons/env.svg" />
+      <span className={styles.filterIconLabel}>Environments</span>
+      <div className={styles.dropdownArrow}>
+        <img src="https://static.bit.dev/bit-icons/fat-arrow-down.svg" />
+      </div>
+    </div>
+  );
 }
