@@ -81,7 +81,7 @@ function envsFilter({
       value: state.displayName,
       icon: state.icon,
       checked: !!currentEnvsState.get(state.displayName)?.active,
-      element: <EnvsDropdownItem displayName={state.displayName} id={state.id} icon={state.icon} />,
+      element: <EnvsDropdownItem {...state} />,
     });
   });
 
