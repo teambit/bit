@@ -11,7 +11,7 @@ import {
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
-  CurrentLaneFromUrl,
+  ViewedLaneFromUrl,
   LaneOverviewLineSlot,
   LaneOverviewLine,
   UseLaneMenu,
@@ -95,7 +95,7 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <CurrentLaneFromUrl>{children}</CurrentLaneFromUrl>;
+    return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
   };
 
   registerRoute(route: RouteProps) {

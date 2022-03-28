@@ -52,7 +52,7 @@ export type LaneModel = {
  */
 export type LanesModelProps = {
   lanes?: LaneModel[];
-  currentLane?: LaneModel;
+  viewedLane?: LaneModel;
   checkedoutLane?: LaneModel;
 };
 /**
@@ -163,8 +163,8 @@ export class LanesModel {
     return lanes;
   }
 
-  constructor({ lanes, currentLane, checkedoutLane }: LanesModelProps) {
-    this.currentLane = currentLane;
+  constructor({ lanes, viewedLane, checkedoutLane }: LanesModelProps) {
+    this.viewedLane = viewedLane;
     this.checkedoutLane = checkedoutLane;
     this.lanes = lanes || [];
     this.lanesByScope = LanesModel.groupByScope(this.lanes);
@@ -177,12 +177,12 @@ export class LanesModel {
   readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
-  readonly currentLane?: LaneModel;
+  readonly viewedLane?: LaneModel;
   readonly checkedoutLane?: LaneModel;
   readonly lanes: LaneModel[];
 
   isInCurrentLane = (componentId: ComponentID) =>
-    this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
+    this.viewedLane?.components.some((comp) => comp.model.id.name === componentId.name);
 
   getLaneComponentUrlByVersion = (version?: string) => {
     if (!version) return '';

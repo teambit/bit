@@ -17,7 +17,7 @@ type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.currentLane;
+  const currentLane = lanesContext?.viewedLane;
   const { logs } = component;
 
   if (!logs) return null;

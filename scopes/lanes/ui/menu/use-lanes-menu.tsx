@@ -1,11 +1,13 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { ExpandableTabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { ExpandableTabContent, TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
+import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+
 import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import { Link } from '@teambit/base-ui.routing.link';
 import styles from './use-lanes-menu.module.scss';
 
 export type LaneImportContentProps = {
@@ -15,26 +17,21 @@ export type LaneImportContentProps = {
 
 export function UseLaneMenu() {
   const lanesContext = useLanesContext();
-  if (!lanesContext?.currentLane) return null;
-  const { currentLane, checkedoutLane } = lanesContext;
-  const switchedOutToCurrentLane = currentLane.id === checkedoutLane?.id;
+  if (!lanesContext?.viewedLane) return null;
+  const { viewedLane, checkedoutLane } = lanesContext;
+  const switchedOutToCurrentLane = viewedLane.id === checkedoutLane?.id;
   const Menu = (
     <div className={styles.lanesMenu}>
       <div className={styles.top}>
         <div className={styles.title}>
-          <Icon of="terminal" />
-          <Ellipsis>{`Bulk import from ${currentLane.name}`}</Ellipsis>
+          <Icon className={styles.titleIcon} of="terminal" />
+          <Ellipsis className={styles.titleText}>{`Bulk import from ${viewedLane.name}`}</Ellipsis>
         </div>
       </div>
       <ExpandableTabContent
-        content={<LaneImportContent currentLane={currentLane} switchedOutToCurrentLane={switchedOutToCurrentLane} />}
-        drawerTitle={
-          <div className={styles.drawerTitle}>
-            <Icon of="download" />
-            <span>Install Bit on your computer</span>
-          </div>
-        }
-        drawerContent={<BitInfo />}
+        content={<LaneImportContent currentLane={viewedLane} switchedOutToCurrentLane={switchedOutToCurrentLane} />}
+        drawerTitle={<div className={styles.drawerTitle}>Learn more about Lanes</div>}
+        drawerContent={<LaneInfo />}
       />
     </div>
   );
@@ -46,15 +43,33 @@ function LaneImportContent({ switchedOutToCurrentLane, currentLane }: LaneImport
   if (switchedOutToCurrentLane) {
     return (
       <div className={styles.importContent}>
-        <div>Import everything from {currentLane.name}</div>
-        <CopyBox>{`bit merge`}</CopyBox>
+        <div className={styles.importContentLabel}>Import everything from {currentLane.name}</div>
+        <CopyBox className={styles.importContentCmd}>{`bit merge`}</CopyBox>
       </div>
     );
   }
   return (
     <div className={styles.importContent}>
-      <div>Switch and Import everything from {currentLane.name}</div>
-      <CopyBox>{`bit switch ${currentLane.name} --get-all`}</CopyBox>
+      <div className={styles.importContentLabel}>Switch and Import everything from {currentLane.name}</div>
+      <CopyBox className={styles.importContentCmd}>{`bit switch ${currentLane.name} --get-all`}</CopyBox>
+    </div>
+  );
+}
+
+type LaneInfoProps = {} & React.HTMLAttributes<HTMLDivElement>;
+
+function LaneInfo({ ...rest }: LaneInfoProps) {
+  return (
+    <div {...rest}>
+      <TabContent
+        className={styles.moreInfo}
+        bottom={
+          <Link external href={'https://bit.dev/docs/lanes/lanes-overview'} className={linkStyles}>
+            <Icon of="information-sign" />
+            <span>Getting Started with Lanes</span>
+          </Link>
+        }
+      ></TabContent>
     </div>
   );
 }

@@ -26,5 +26,5 @@ export {
   LaneOverviewLine,
   LaneOverviewLineSlot,
 } from './overview';
-export { CurrentLaneFromUrl } from './current-lane';
+export { ViewedLaneFromUrl, ViewedLaneFromUrlProps } from './viewed-lane';
 export { UseLaneMenu } from './menu';
