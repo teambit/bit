@@ -60,7 +60,11 @@ export class StatusMain {
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     const issuesToIgnore = this.issues.getIssuesToIgnore();
-    if (!this.workspace.isLegacy && !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+    if (
+      !this.workspace.isLegacy &&
+      newAndModifiedLegacy.length &&
+      !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)
+    ) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
       await this.insights.addInsightsAsComponentIssues(newAndModified);
     }
