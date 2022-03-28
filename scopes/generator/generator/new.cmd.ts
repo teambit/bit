@@ -38,11 +38,7 @@ export class NewCmd implements Command {
 
   async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
     options.skipGit = options.skipGit ?? options.standalone;
-    const results = await this.generator.generateWorkspaceTemplate(
-      workspaceName,
-      templateName,
-      options
-    );
+    const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
     return chalk.white(
       `${chalk.green(`
 
