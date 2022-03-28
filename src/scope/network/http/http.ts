@@ -498,18 +498,16 @@ export class Http implements Network {
   async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
     const LIST_LANES = gql`
       query Lanes {
-        lanes {
-          getLanes {
-            name
-            components {
-              id {
-                name
-                scope
-              }
-              head
+        getLanes {
+          name
+          components {
+            id {
+              name
+              scope
             }
-            isMerged
+            head
           }
+          isMerged
         }
       }
     `;
@@ -518,7 +516,7 @@ export class Http implements Network {
       mergeData,
     });
 
-    return res.lanes.getLanes;
+    return res.getLanes;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
