@@ -1,14 +1,6 @@
-import { componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import React, { useState, createRef, useEffect, CSSProperties } from 'react';
 import { ElementHighlighter } from './element-highlighter';
-
-const mockTarget = [
-  {
-    [componentMetaField]: {
-      id: 'teambit.design/ui/icon-button@1.6.2',
-    },
-  },
-];
+import { MockTarget } from '../mock-component';
 
 type HighlightedElementProps = {
   style?: CSSProperties;
@@ -28,7 +20,7 @@ export const HighlightedElement = ({ style, targetStyle, watchMotion, className 
 
       <ElementHighlighter
         targetRef={targetRef}
-        components={mockTarget}
+        components={[MockTarget]}
         style={style}
         watchMotion={watchMotion}
         placement="bottom"
@@ -84,7 +76,7 @@ export const ElementOnTheEdge = () => {
         This element is on the edge of the document, making the highlighter overflow. <br />
         It should instead shrink to fit inside the document.
       </div>
-      <ElementHighlighter targetRef={targetRef} components={mockTarget} watchMotion />
+      <ElementHighlighter targetRef={targetRef} components={[MockTarget]} watchMotion />
     </div>
   );
 };
