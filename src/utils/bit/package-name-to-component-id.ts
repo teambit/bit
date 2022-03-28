@@ -122,7 +122,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
 function getComponentName(packageName: string, bindingPrefix: string): string {
   // temp fix to support old components before the migration has been running
   const prefix = bindingPrefix === 'bit' ? '@bit/' : `${bindingPrefix}/`;
-  return packageName.substr(packageName.indexOf(prefix) + prefix.length);
+  return packageName.slice(packageName.indexOf(prefix) + prefix.length);
 }
 
 // happens before export when defaultScope is not set

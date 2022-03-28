@@ -52,7 +52,7 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
             onToggle={() => handleDrawerToggle(drawer.id)}
             key={drawer.id}
             name={drawer.name}
-            Widget={drawer.widget}
+            Widgets={drawer.widgets}
             Context={drawer.Context}
           >
             <drawer.render />

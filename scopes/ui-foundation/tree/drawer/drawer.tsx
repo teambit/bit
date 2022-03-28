@@ -8,8 +8,9 @@ export type DrawerProps = {
   name: ReactNode;
   isOpen: boolean;
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
-  Widget?: ReactNode;
+  Widgets?: ReactNode[];
   Context?: ComponentType<any>;
+  contentClass?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function DrawerUI({
@@ -18,12 +19,14 @@ export function DrawerUI({
   className,
   isOpen,
   onToggle,
-  Widget,
+  Widgets,
   Context = Noop,
+  contentClass,
   ...rest
 }: DrawerProps) {
   // consider passing the entire drawer type instead of passing each parameter
   if (!name) return null;
+
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
       <Context>
@@ -32,10 +35,9 @@ export function DrawerUI({
             <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
             <span>{name}</span>
           </div>
-          {Widget}
+          {Widgets}
         </div>
-
-        <div className={classNames(styles.drawerContent, isOpen && styles.open)}>{children}</div>
+        <div className={classNames(styles.drawerContent, contentClass, isOpen && styles.open)}>{children}</div>
       </Context>
     </div>
   );

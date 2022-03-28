@@ -1,6 +1,6 @@
 ---
 displayName: GlobalConfig
-description: Get, Set, Delete, List against bit's global config
+description: Allows to globally configure Bit on a OS user profile.
 labels: ['aspect', 'config']
 ---
 

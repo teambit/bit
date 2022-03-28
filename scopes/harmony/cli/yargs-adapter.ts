@@ -53,7 +53,7 @@ export class YargsAdapter implements CommandModule {
     return { ...option, ...globalOptions };
   }
 
-  private getGlobalOptions(command: Command): Record<string, any> {
+  getGlobalOptions(command: Command): Record<string, any> {
     const globalOptions: Record<string, any> = {};
     if (command.remoteOp) {
       globalOptions[TOKEN_FLAG] = {

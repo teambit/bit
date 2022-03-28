@@ -130,6 +130,7 @@ export class PnpmPackageManager implements PackageManager {
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
+        packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
       },
       this.logger
     );
@@ -158,6 +159,7 @@ export class PnpmPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions
     );
+    const { config } = await this.readConfig();
     return lynx.getPeerDependencyIssues(rootManifest, componentsManifests, {
       storeDir,
       cacheDir,
@@ -165,6 +167,7 @@ export class PnpmPackageManager implements PackageManager {
       registries,
       networkConfig,
       overrides: installOptions.overrides,
+      packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
     });
   }
 

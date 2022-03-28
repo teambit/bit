@@ -52,6 +52,20 @@ export class BitMap {
     return true; // changes have been made
   }
 
+  removeEntireConfig(id: ComponentID): boolean {
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    if (!bitMapEntry.config) return false;
+    delete bitMapEntry.config;
+    this.legacyBitMap.markAsChanged();
+    return true;
+  }
+
+  setEntireConfig(id: ComponentID, config: Record<string, any>) {
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    bitMapEntry.config = config;
+    this.legacyBitMap.markAsChanged();
+  }
+
   /**
    * write .bitmap object to the filesystem
    */

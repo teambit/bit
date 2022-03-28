@@ -52,7 +52,7 @@ export default class Remote implements LegacyCommand {
   name = 'remote';
   shortDescription = 'manage set of tracked bit scope(s)';
   group: Group = 'collaborate';
-  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/bit-server#working-with-remote-scopes`;
+  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/scope/remote-scopes`;
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
   migration = true;

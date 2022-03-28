@@ -12,14 +12,15 @@ export const reactComponent: ComponentTemplate = {
     return [indexFile(context), componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },
   config: {
+    'teambit.react/react': {},
     'teambit.envs/envs': {
       env: 'teambit.react/react',
     },
-  }
+  },
 };
 
 export const deprecatedReactComponent: ComponentTemplate = {
   ...reactComponent,
   name: 'react-component',
-  hidden: true
+  hidden: true,
 };

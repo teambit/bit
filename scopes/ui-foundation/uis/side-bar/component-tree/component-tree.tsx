@@ -14,9 +14,14 @@ type ComponentTreeProps = {
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
   isCollapsed?: boolean;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
-export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeNodeRenderer }: ComponentTreeProps) {
+export function ComponentTree({
+  components,
+  isCollapsed,
+  className,
+  TreeNode = DefaultTreeNodeRenderer,
+}: ComponentTreeProps) {
   const { pathname } = useLocation();
 
   const activeComponent = useMemo(() => {
@@ -41,7 +46,7 @@ export function ComponentTree({ components, isCollapsed, TreeNode = DefaultTreeN
 
   return (
     <TreeContextProvider>
-      <div style={indentStyle(1)}>
+      <div style={indentStyle(1)} className={className}>
         <Tree TreeNode={TreeNode} activePath={activeComponent} tree={rootNode} isCollapsed={isCollapsed} />
       </div>
     </TreeContextProvider>

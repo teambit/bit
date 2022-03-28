@@ -43,6 +43,13 @@ export interface ComponentContext {
   componentId: ComponentID;
 }
 
+export interface ConfigContext {
+  /**
+   * Aspect id of the aspect that register the template itself
+   */
+  aspectId: string;
+}
+
 export type ComponentConfig = { [aspectName: string]: any };
 
 export interface ComponentTemplate {
@@ -73,5 +80,5 @@ export interface ComponentTemplate {
    *    "env": "teambit.harmony/aspect"
    * },
    */
-  config?: ComponentConfig;
+  config?: ComponentConfig | ((context: ConfigContext) => ComponentConfig);
 }

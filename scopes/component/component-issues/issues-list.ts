@@ -8,8 +8,8 @@ import { MissingDists } from './missing-dists';
 import { MissingLinks } from './missing-links';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
 import { ParseErrors } from './parse-errors';
-import { relativeComponents } from './relative-components';
-import { relativeComponentsAuthored } from './relative-components-authored';
+import { RelativeComponents } from './relative-components';
+import { RelativeComponentsAuthored } from './relative-components-authored';
 import { ResolveErrors } from './resolve-errors';
 import { UntrackedDependencies } from './untracked-dependencies';
 import { LegacyInsideHarmony } from './legacy-inside-harmony';
@@ -21,8 +21,8 @@ export const IssuesClasses = {
   MissingComponents,
   UntrackedDependencies,
   ResolveErrors,
-  relativeComponents,
-  relativeComponentsAuthored,
+  RelativeComponents,
+  RelativeComponentsAuthored,
   ParseErrors,
   MissingLinks,
   MissingDists,
@@ -60,6 +60,10 @@ export class IssuesList {
       ...issue.toObject(),
       data: issue.dataToString().trim(),
     }));
+  }
+
+  getHarmonyIssues() {
+    return this.issues.filter((issue) => !issue.isLegacyIssue);
   }
 
   add(issue: ComponentIssue) {
