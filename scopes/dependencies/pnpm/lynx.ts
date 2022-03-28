@@ -38,12 +38,12 @@ const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 
 async function createStoreController(
   options: {
-    rootDir: string,
-    storeDir: string,
-    cacheDir: string,
-    registries: Registries,
-    proxyConfig: PackageManagerProxyConfig,
-    networkConfig: PackageManagerNetworkConfig,
+    rootDir: string;
+    storeDir: string;
+    cacheDir: string;
+    registries: Registries;
+    proxyConfig: PackageManagerProxyConfig;
+    networkConfig: PackageManagerNetworkConfig;
   } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
   const authConfig = getAuthConfig(options.registries);
@@ -161,8 +161,8 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>
-  & Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
+  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'> &
+    Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
