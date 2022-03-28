@@ -6,7 +6,7 @@ import type { Coords } from '@floating-ui/react-dom';
 import classStyles from './frame.module.scss';
 
 /** frame padding around the target */
-const MARGIN_FROM_TARGET = +classStyles.offset;
+const MARGIN_FROM_TARGET = +classStyles.offset || 6; // setting fallback `0`, for tests
 /** min. distance from the edge of the screen. Kept for syncing */
 const MARGIN_FROM_DOC_EDGE = 0;
 
