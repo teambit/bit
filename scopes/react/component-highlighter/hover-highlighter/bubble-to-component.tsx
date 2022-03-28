@@ -33,7 +33,7 @@ export function bubbleToComponent(
     const primeComponent = current?.components.slice(-1).pop();
     const parentPrimeComponent = parent?.components.slice(-1).pop();
 
-    if (primeComponent !== parentPrimeComponent) return current;
+    if (primeComponent?.[componentMetaField].id !== parentPrimeComponent?.[componentMetaField].id) return current;
 
     current = parent;
   }
