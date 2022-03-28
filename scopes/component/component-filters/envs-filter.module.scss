@@ -38,19 +38,17 @@
 
 .envFilterDropdown {
   width: 100%;
-  > div:first-child > div:first-child {
-    padding: 0px;
-  }
-  > * {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  label > div {
-    width: 90%;
-  }
-  label > div > div:first-child {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
+}
+
+.envDropdownItem {
+  padding-left: 8px;
+  display: flex;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+}
+
+.envDropdownItemLabel,
+.envDropdownItemIcon {
+  display: flex;
+  justify-content: space-between;
 }

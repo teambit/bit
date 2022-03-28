@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -79,6 +81,7 @@ function envsFilter({
       value: state.displayName,
       icon: state.icon,
       checked: !!currentEnvsState.get(state.displayName)?.active,
+      element: <EnvsDropdownItem {...state} />,
     });
   });
 
@@ -162,5 +165,25 @@ function EnvsPlaceholder({ updateFilter }: { updateFilter: React.Dispatch<React.
         <img src="https://static.bit.dev/bit-icons/fat-arrow-down.svg" />
       </div>
     </div>
+  );
+}
+
+function EnvsDropdownItem({
+  displayName,
+  id,
+  icon,
+}: {
+  active: boolean;
+  icon?: string;
+  displayName: string;
+  id: string;
+}) {
+  return (
+    <Tooltip placement="right" content={id}>
+      <div className={styles.envDropdownItem}>
+        <Ellipsis>{`${displayName}`}</Ellipsis>
+        <img className={styles.envDropdownItemIcon} src={icon}></img>
+      </div>
+    </Tooltip>
   );
 }
