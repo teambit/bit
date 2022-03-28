@@ -34,6 +34,20 @@ export function Frame({
   const { x, y, strategy, reference, floating, update, refs } = useFloating({
     placement: 'bottom-start',
     middleware: [
+      // replace dimensions from previous iterations with the target's size
+      // this is only the measured size, and does not yet the applied size
+      {
+        name: 'align-to-target',
+        fn({ rects }) {
+          rects.floating = {
+            ...rects.floating,
+            width: rects.reference.width + 2 * MARGIN_FROM_TARGET,
+            height: rects.reference.height + 2 * MARGIN_FROM_TARGET,
+          };
+
+          return {};
+        },
+      },
       // reposition x,y, to the top of the reference
       offset((options) => -options.reference.height),
       // offset the frame by its extra padding
