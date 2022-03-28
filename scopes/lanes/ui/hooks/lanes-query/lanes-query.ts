@@ -6,42 +6,38 @@ import { ComponentID, ComponentModel } from '@teambit/component';
 
 const GET_LANES = gql`
   {
-    lanes {
-      getLanes {
-        name
-        remote
-        isMerged
-        components {
-          id {
-            name
-            scope
-            version
-          }
-          head
+    getLanes {
+      name
+      remote
+      isMerged
+      components {
+        id {
+          name
+          scope
+          version
         }
+        head
       }
-      getCurrentLaneName
     }
+    getCurrentLaneName
   }
 `;
 
 const GET_LANE_COMPONENTS = gql`
   query LaneComponent($name: String) {
-    lanes {
-      getLaneComponents(name: $name) {
-        id {
-          name
-          version
-          scope
-        }
-        compositions {
-          filepath
-          identifier
-          displayName
-        }
-        preview {
-          includesEnvTemplate
-        }
+    getLaneComponents(name: $name) {
+      id {
+        name
+        version
+        scope
+      }
+      compositions {
+        filepath
+        identifier
+        displayName
+      }
+      preview {
+        includesEnvTemplate
       }
     }
   }
@@ -68,7 +64,7 @@ export function useLaneComponentsQuery(
     variables: { name: lane.name },
   });
 
-  const components: Array<LaneComponentModel> = data?.lanes?.getLaneComponents.map((component) => {
+  const components: Array<LaneComponentModel> = data?.getLaneComponents.map((component) => {
     const id = component && ComponentID.fromObject(component.id);
 
     return {

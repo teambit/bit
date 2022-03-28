@@ -26,10 +26,9 @@ export type LaneQueryResult = {
  * Represents All Lanes and Current Lane in Scope/Workspace
  */
 export type LanesQueryResult = {
-  lanes?: {
-    getLanes?: LaneQueryResult[];
-  };
+  getLanes?: LaneQueryResult[];
 };
+
 export type LanesHost = 'workspace' | 'scope';
 /**
  * Represents a Component on a Lane. Extends ComponentModel and adds a Lane Component URL
@@ -156,7 +155,7 @@ export class LanesModel {
   }
 
   static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LaneModel[] {
-    const lanesResult = lanesData.lanes?.getLanes || [];
+    const lanesResult = lanesData?.getLanes || [];
     const lanes = lanesResult.map((result) => LanesModel.mapToLaneModel(result, currentScope));
     return lanes;
   }
