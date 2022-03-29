@@ -18,25 +18,21 @@ type HighlightedElementProps = {
 };
 
 export const HighlightedElement = ({ style, targetStyle, watchMotion, className }: HighlightedElementProps) => {
-  const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
-
-  useEffect(() => setTargetElement(targetRef.current || undefined), [targetRef.current]);
 
   return (
     <div className={className} style={{ padding: '16px 16px 40px 16px', width: 300, fontFamily: 'sans-serif' }}>
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
-      {targetElement && (
-        <ElementHighlighter
-          targetElement={targetElement}
-          components={mockTarget}
-          style={style}
-          watchMotion={watchMotion}
-          placement="bottom"
-        />
-      )}
+
+      <ElementHighlighter
+        targetRef={targetRef}
+        components={mockTarget}
+        style={style}
+        watchMotion={watchMotion}
+        placement="bottom"
+      />
     </div>
   );
 };
@@ -80,10 +76,7 @@ export const MovingElement = () => {
 };
 
 export const ElementOnTheEdge = () => {
-  const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
-
-  useEffect(() => setTargetElement(targetRef.current || undefined), [targetRef.current]);
 
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
@@ -91,7 +84,7 @@ export const ElementOnTheEdge = () => {
         This element is on the edge of the document, making the highlighter overflow. <br />
         It should instead shrink to fit inside the document.
       </div>
-      {targetElement && <ElementHighlighter targetElement={targetElement} components={mockTarget} watchMotion />}
+      <ElementHighlighter targetRef={targetRef} components={mockTarget} watchMotion />
     </div>
   );
 };

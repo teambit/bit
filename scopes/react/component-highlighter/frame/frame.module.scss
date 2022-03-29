@@ -12,6 +12,12 @@ $padding: 4;
   user-select: none;
 }
 
+.hidden {
+  // the frame's size is ignored anyways,
+  // and so we can use 'display: none' and not 'visibility: hidden'
+  display: none;
+}
+
 :export {
   offset: $border + $padding;
 }

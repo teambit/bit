@@ -1,4 +1,5 @@
-import React, { useLayoutEffect, useEffect } from 'react';
+import React, { useLayoutEffect, useEffect, RefObject } from 'react';
+import classnames from 'classnames';
 import compact from 'lodash.compact';
 import {
   useFloating,
@@ -8,9 +9,10 @@ import {
   autoUpdate,
 } from '@floating-ui/react-dom';
 import type { Placement } from '@floating-ui/react-dom';
+import styles from './label.module.scss';
 
 export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  targetElement: HTMLElement | null;
+  targetRef: RefObject<HTMLElement | null>;
   offset?: [number, number];
   placement?: Placement;
   flip?: boolean;
@@ -20,9 +22,8 @@ export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement
 
 export type { Placement };
 
-// TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
 export function LabelContainer({
-  targetElement,
+  targetRef,
   offset,
   placement,
   flip = true,
@@ -34,15 +35,15 @@ export function LabelContainer({
   const { x, y, strategy, floating, reference, refs, update } = useFloating({
     placement,
     middleware: compact([
-      offsetMiddleware(offset && { mainAxis: offset[0], crossAxis: offset[1] }),
+      offset && offsetMiddleware({ mainAxis: offset[0], crossAxis: offset[1] }),
       flip && flipMiddleware(),
       shift({ rootBoundary: 'viewport' }),
     ]),
   });
 
   useLayoutEffect(() => {
-    reference(targetElement);
-  }, [targetElement, reference]);
+    reference(targetRef.current);
+  }, [targetRef.current, reference]);
 
   // automatically update on scroll, resize, etc.
   // `watchMotion` will trigger continuous updates using animation frame
@@ -52,13 +53,13 @@ export function LabelContainer({
     return autoUpdate(refs.reference.current, refs.floating.current, update, { animationFrame: !!watchMotion });
   }, [refs.reference.current, refs.floating.current, update, watchMotion]);
 
-  if (!targetElement) return null;
+  const isReady = x !== null;
 
   return (
     <div
       {...rest}
       ref={floating}
-      className={className}
+      className={classnames(className, !isReady && styles.hidden)}
       style={{ ...style, position: strategy, top: y ?? '', left: x ?? '' }}
     />
   );

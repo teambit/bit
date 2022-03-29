@@ -1,17 +1,22 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, RefObject } from 'react';
 import classnames from 'classnames';
 import { useFloating, autoUpdate, offset, size, shift } from '@floating-ui/react-dom';
 import type { Coords } from '@floating-ui/react-dom';
 
-import classStyles from './frame.module.scss';
+import styles from './frame.module.scss';
 
 /** frame padding around the target */
-const MARGIN_FROM_TARGET = +classStyles.offset || 6; // setting fallback `0`, for tests
-/** min. distance from the edge of the screen. Kept for syncing */
+const MARGIN_FROM_TARGET = +styles.offset || 6; // setting fallback 6, for tests
+/** min. distance from the edge of the screen. */
 const MARGIN_FROM_DOC_EDGE = 0;
 
 export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
-  targetElement: HTMLElement | null;
+  /** apply the frame to this element  */
+  targetRef: RefObject<HTMLElement | null>;
+  /**
+   * the specific flavor of the frame.
+   * @default "redBorderClass"
+   */
   stylesClass?: string;
   /** continually update frame position to match moving elements */
   watchMotion?: boolean;
@@ -21,13 +26,7 @@ export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
 // x - width - horizontal (cross axis)
 // y - height - vertical (main axis)
 
-export function Frame({
-  targetElement,
-  watchMotion,
-  className,
-  stylesClass = classStyles.overlayBorder,
-  style,
-}: FrameProps) {
+export function Frame({ targetRef, watchMotion, className, stylesClass = styles.overlayBorder, style }: FrameProps) {
   const dimensionRef = useRef({ width: 0, height: 0 });
   const shiftRef = useRef<Coords | undefined>();
 
@@ -35,7 +34,7 @@ export function Frame({
     placement: 'bottom-start',
     middleware: [
       // replace dimensions from previous iterations with the target's size
-      // this is only the measured size, and does not yet the applied size
+      // this is only the measured size, not yet the applied size
       {
         name: 'align-to-target',
         fn({ rects }) {
@@ -83,8 +82,8 @@ export function Frame({
 
   // set target as floating reference
   useLayoutEffect(() => {
-    reference(targetElement);
-  }, [targetElement]);
+    reference(targetRef.current);
+  }, [targetRef.current]);
 
   // automatically update on scroll, resize, etc.
   // `watchMotion` will trigger continuous updates using animation frame
@@ -94,12 +93,12 @@ export function Frame({
     return autoUpdate(refs.reference.current, refs.floating.current, update, { animationFrame: watchMotion });
   }, [refs.reference.current, refs.floating.current, update, watchMotion]);
 
-  if (!targetElement) return null;
+  const isReady = x !== null;
 
   return (
     <div
       ref={floating}
-      className={classnames(className, stylesClass)}
+      className={classnames(className, stylesClass, !isReady && styles.hidden)}
       style={{
         ...style,
         ...dimensionRef.current,
