@@ -95,12 +95,22 @@ export class NodeMain {
    * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
    */
   useTypescript(modifiers?: UseTypescriptModifiers, tsModule?: any) {
-    const devTransformersFromModifiers = modifiers?.devConfig || [];
-    const devTransformers = [this.tsAspect.getCjsTransformer(), ...devTransformersFromModifiers];
-    const buildTransformersFromModifiers = modifiers?.buildConfig || [];
-    const buildTransformers = [this.tsAspect.getCjsTransformer(), ...buildTransformersFromModifiers];
-    const finalModifiers: UseTypescriptModifiers = { devConfig: devTransformers, buildConfig: buildTransformers };
-    this.react.useTypescript.call(this.react, finalModifiers, tsModule);
+    const overrides: any = {};
+    const devTransformers = modifiers?.devConfig;
+    if (devTransformers) {
+      overrides.getCompiler = () => this.nodeEnv.getCompiler(devTransformers, tsModule);
+    }
+    const buildTransformers = modifiers?.buildConfig;
+    if (buildTransformers) {
+      const buildPipeModifiers = {
+        tsModifier: {
+          transformers: buildTransformers,
+          module: tsModule,
+        },
+      };
+      overrides.getBuildPipe = () => this.nodeEnv.getBuildPipe(buildPipeModifiers);
+    }
+    return this.envs.override(overrides);
   }
 
   /**
@@ -155,7 +165,7 @@ export class NodeMain {
         buildConfig: [tsAspect.getCjsTransformer()],
       }),
     ]);
-    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect), reactCjs);
+    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect, react), reactCjs);
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
