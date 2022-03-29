@@ -14,9 +14,8 @@ module.exports = {
   // ],
   testEnvironment: require.resolve('jest-environment-jsdom'),
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': require.resolve('./transformer'),
-    '^.+\\.css$': require.resolve('./css-transform.js'),
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./file-transform.js'),
+    '^.+\\.css$': require.resolve('./transformers/css-transform.js'),
+    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./transformers/file-transform.js'),
     // '^(?!.*\\.(svg|png|jpg|jpeg|gif|webp|woff|ttf|woff2)$)': require.resolve('./file-transform.js'),
   },
   transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$', '^.+\\.module\\.(css|sass|scss)$'],
