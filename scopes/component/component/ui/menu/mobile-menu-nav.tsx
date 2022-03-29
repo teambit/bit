@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import { Switch, Route, useRouteMatch } from 'react-router-dom';
 import classnames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
@@ -21,7 +21,7 @@ export function MobileMenuNav({
   const { url } = useRouteMatch();
   const plugins = navigationSlot.toArray().sort(sortFn);
   const widgets = widgetSlot.toArray().sort(sortFn);
-  const totalSlots = [...plugins, ...widgets];
+  const totalSlots = useMemo(() => [...plugins, ...widgets], [plugins, widgets]);
 
   return (
     <Dropdown
