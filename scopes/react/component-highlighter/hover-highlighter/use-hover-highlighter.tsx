@@ -4,14 +4,15 @@ import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react'
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
 import {
   componentMetaField,
+  ComponentMetaHolder,
   hasComponentMeta,
   ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import { excludeHighlighterSelector } from '../ignore-highlighter';
-import { HighlightTarget } from '../element-highlighter';
 import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
+type HighlightTarget = { element: HTMLElement; components: ComponentMetaHolder[] };
 export type useHoverHighlighterOptions = {
   debounceDuration: number;
   scopeClass: string;
