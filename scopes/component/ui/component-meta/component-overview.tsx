@@ -24,7 +24,6 @@ export type ComponentOverviewProps = {
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
   componentDescriptor?: ComponentDescriptor;
-  cannotBeConsumed?: boolean;
 } & SectionProps;
 
 export function ComponentOverview({
@@ -35,7 +34,6 @@ export function ComponentOverview({
   packageName,
   elementsUrl,
   componentDescriptor,
-  cannotBeConsumed,
   ...rest
 }: ComponentOverviewProps) {
   let finalElementsUrl = elementsUrl;
@@ -59,10 +57,8 @@ export function ComponentOverview({
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
-        {!cannotBeConsumed && <ConsumableLink title="Package name" link={packageName}></ConsumableLink>}
-        {!cannotBeConsumed && finalElementsUrl && (
-          <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>
-        )}
+        {<ConsumableLink title="Package name" link={packageName}></ConsumableLink>}
+        {finalElementsUrl && <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>}
       </div>
       <Separator isPresentational />
     </Section>

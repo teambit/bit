@@ -7,7 +7,6 @@ import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import flatten from 'lodash.flatten';
 import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 export type NavPlugin = {
   props: NavLinkProps;

@@ -17,10 +17,9 @@ export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
   titleBadges?: TitleBadgeSlot;
-  cannotBeConsumed?: boolean;
 };
 
-export function Overview({ titleBadges, cannotBeConsumed }: OverviewProps) {
+export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
@@ -61,7 +60,6 @@ export function Overview({ titleBadges, cannotBeConsumed }: OverviewProps) {
           packageName={component.packageName}
           titleBadges={badges}
           componentDescriptor={componentDescriptor}
-          cannotBeConsumed={cannotBeConsumed}
         />
         <ComponentPreview
           component={component}
