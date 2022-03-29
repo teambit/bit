@@ -22,3 +22,9 @@
     transform: rotate(-180deg);
   }
 }
+
+.hidden {
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}

@@ -21,9 +21,9 @@ export class WebpackBundler implements Bundler {
 
     private logger: Logger,
 
-    private metaData: BundlerContextMetaData | undefined,
+    private webpack,
 
-    private webpack
+    private metaData: BundlerContextMetaData | undefined
   ) {}
 
   async run(): Promise<BundlerResult[]> {
