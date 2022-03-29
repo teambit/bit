@@ -80,7 +80,7 @@ export class DocsMain {
     let docFiles;
 
     if (this.lanes.isLaneReadme(component)) {
-      const devFiles = this.devFiles.computeCustomDevFiles(component, ['**/index.*']);
+      const devFiles = this.devFiles.computeDevFilesForPattern(component, ['**/index.*']);
       docFiles = devFiles.get(component.id.name);
     } else {
       const devFiles = this.devFiles.getDevFiles(component);
