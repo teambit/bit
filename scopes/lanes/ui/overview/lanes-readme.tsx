@@ -1,17 +1,16 @@
 import React from 'react';
 import { ReactRouter } from '@teambit/react-router';
 import { LanesProvider, LaneComponentModel, useLanesContext, LaneModel, LaneDetails } from '@teambit/lanes.ui.lanes';
-import { ComponentProvider, useComponent } from '@teambit/component';
+import { ComponentProvider, useComponent, ComponentDescriptorProvider } from '@teambit/component';
 import { Overview } from '@teambit/docs';
 import { Carousel } from '@teambit/design.content.carousel';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { H5 } from '@teambit/documenter.ui.heading';
-import { ComponentDescriptorProvider } from '@teambit/component';
 import { Separator } from '@teambit/design.ui.separator';
+import { EmptyLane } from './empty-lane-overview';
 
 import styles from './lanes-readme.module.scss';
-import { EmptyLane } from './empty-lane-overview';
 
 export type LaneReadmeProps = {
   host: string;
