@@ -99,7 +99,7 @@ export class WebpackMain {
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
-    return new WebpackBundler(context.targets, configs, this.logger, context.metaData, webpack);
+    return new WebpackBundler(context.targets, configs, this.logger, webpack, context.metaData);
   }
 
   private createConfigs(
