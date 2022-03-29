@@ -10,6 +10,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
+import { AspectList } from '@teambit/component';
 import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
@@ -18,7 +19,6 @@ import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
 import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
-import { AspectList } from '@teambit/component';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
