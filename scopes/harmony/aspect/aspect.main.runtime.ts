@@ -18,6 +18,7 @@ import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
 import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
+import { AspectList } from '@teambit/component';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -107,12 +108,32 @@ export class AspectMain {
     return componentIds;
   }
 
-  async getAspectsOfComponent(id: string | ComponentID) {
+  /**
+   * returns all aspects info of a component, include the config and the data.
+   */
+  async getAspectsOfComponent(id: string | ComponentID): Promise<AspectList> {
+    if (typeof id === 'string') {
+      id = await this.workspace.resolveComponentId(id);
+    }
+    const component = await this.workspace.get(id);
+    return component.state.aspects;
+  }
+
+  /**
+   * helps debugging why/how an aspect was set to a component
+   */
+  async getAspectsOfComponentForDebugging(id: string | ComponentID) {
     if (typeof id === 'string') {
       id = await this.workspace.resolveComponentId(id);
     }
     const componentFromScope = await this.workspace.scope.get(id);
-    return this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
+    const component = await this.workspace.get(id);
+    return {
+      aspects: component.state.aspects,
+      extensions,
+      beforeMerge,
+    };
   }
 
   async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
