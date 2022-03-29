@@ -1,17 +1,17 @@
 import React from 'react';
-
+import classnames from 'classnames';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
-export function MenuNav({ navigationSlot }: { navigationSlot: OrderedNavigationSlot }) {
+export function MenuNav({ navigationSlot, className }: { navigationSlot: OrderedNavigationSlot; className?: string }) {
   const plugins = navigationSlot.toArray().sort(sortFn);
 
   return (
-    <nav className={styles.navigation}>
-      {plugins.map(([id, menuItem]) => (
-        <TopBarNav key={id} {...menuItem.props} />
-      ))}
+    <nav className={classnames(styles.navigation, styles.desktopNav, className)}>
+      {plugins.map(([id, menuItem]) => {
+        return <TopBarNav key={id} {...menuItem.props} />;
+      })}
     </nav>
   );
 }

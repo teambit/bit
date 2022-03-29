@@ -9,5 +9,5 @@ $topbarHeight: 56px;
   background: #ededed;
   box-sizing: border-box;
   font-size: var(--bit-p-xs, 14px);
-  z-index: $nav-z-index;
+  z-index: $nav-z-index + 1;
 }

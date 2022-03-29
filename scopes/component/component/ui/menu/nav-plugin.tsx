@@ -5,8 +5,12 @@ import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from '../../ui';
 
+export type NavPluginProps = {
+  simpleText?: string;
+} & NavLinkProps;
+
 export type NavPlugin = {
-  props: NavLinkProps;
+  props: NavPluginProps;
   order?: number;
 };
 

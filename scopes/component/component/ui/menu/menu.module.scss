@@ -1,3 +1,5 @@
+@import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+
 .topBar {
   display: flex;
   justify-content: space-between;
@@ -13,7 +15,6 @@
 }
 
 .navigation {
-  display: flex;
   list-style: none;
   height: 100%;
   padding-left: 28px;
@@ -21,10 +22,27 @@
     padding-left: 6px;
   }
 
-  > li {
+  li {
     display: block;
     margin-right: 16px;
     height: 100%;
+  }
+
+  // show desktop nav on larger res
+  &.desktopNav {
+    display: flex;
+    @media screen and (max-width: $br-lg) {
+      display: none;
+    }
+  }
+
+  // show mobile nav on smaller res
+  &.mobileNav {
+    align-items: center;
+    display: none;
+    @media screen and (max-width: $br-lg) {
+      display: flex;
+    }
   }
 }
 
