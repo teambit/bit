@@ -3,15 +3,17 @@ import getXPath from 'get-xpath';
 import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import {
   componentMetaField,
+  ComponentMetaHolder,
   hasComponentMeta,
   ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import { HighlightTarget } from '../element-highlighter';
 import { excludeHighlighterSelector } from '../ignore-highlighter';
 import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
+type HighlighterTarget = Record<string, { element: HTMLElement; components: ComponentMetaHolder[] }>;
+
 export type ChildrenHighlighterOptions = {
-  onChange: (highlighterTargets: Record<string, HighlightTarget>) => void;
+  onChange: (highlighterTargets: HighlighterTarget) => void;
   disabled?: boolean;
   scopeRef: RefObject<HTMLElement>;
   scopeClass?: string;
@@ -32,7 +34,7 @@ export function useChildrenHighlighter({
   componentRule,
 }: ChildrenHighlighterOptions) {
   useEffect(() => {
-    const nextTargets: Record<string, HighlightTarget> = {};
+    const nextTargets: HighlighterTarget = {};
     const scopeElement = scopeRef.current;
     if (!scopeElement || disabled) return;
 
