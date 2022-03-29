@@ -97,7 +97,7 @@ export interface Compiler extends CompilerOptions {
   build(context: BuildContext): Promise<BuiltTaskResult>;
 
   /**
-   * return the dist dir of the compiled files
+   * return the dist dir of the compiled files (relative path from the component root dir)
    */
   getDistDir(): string;
 

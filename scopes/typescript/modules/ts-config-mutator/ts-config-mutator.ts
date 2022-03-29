@@ -66,11 +66,17 @@ export class TypescriptConfigMutator {
     return this;
   }
 
+  /**
+   * Set ts compiler target option - https://www.typescriptlang.org/tsconfig#target
+   */
   setTarget(target: Target): TypescriptConfigMutator {
     this.raw.tsconfig.compilerOptions.target = target;
     return this;
   }
 
+  /**
+   * Set ts compiler module option - https://www.typescriptlang.org/tsconfig#module
+   */
   setModule(module: string): TypescriptConfigMutator {
     this.raw.tsconfig.compilerOptions.module = module;
     return this;
