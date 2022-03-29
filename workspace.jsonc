@@ -99,6 +99,7 @@
         "@teambit/bit.content.what-is-bit": "1.95.0",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
+        "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
