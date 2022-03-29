@@ -4,6 +4,9 @@ import { RouteProps } from 'react-router-dom';
 export interface Section {
   route: RouteProps;
   navigationLink: NavLinkProps;
-  simpleText?: string;
+  /**
+   * text to be used in the mobile res dropdown
+   */
+  displayName?: string;
   order?: number;
 }

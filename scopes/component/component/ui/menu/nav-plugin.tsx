@@ -6,7 +6,7 @@ import { LaneModel } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from '../../ui';
 
 export type NavPluginProps = {
-  simpleText?: string;
+  displayName?: string;
 } & NavLinkProps;
 
 export type NavPlugin = {

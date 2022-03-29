@@ -19,9 +19,7 @@ export function MobileMenuNav({
   className?: string;
 }) {
   const { url } = useRouteMatch();
-  const plugins = navigationSlot.toArray().sort(sortFn);
-  const widgets = widgetSlot.toArray().sort(sortFn);
-  const totalSlots = useMemo(() => [...plugins, ...widgets], [plugins, widgets]);
+  const totalSlots = useMemo(() => [...navigationSlot.toArray().sort(sortFn), ...widgetSlot.toArray().sort(sortFn)], [navigationSlot, widgetSlot]);
 
   return (
     <Dropdown
@@ -40,7 +38,7 @@ export function MobileMenuNav({
               className={mobileStyles.mobileMenuLink}
               activeClassName={mobileStyles.active}
             >
-              {typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.simpleText}
+              {typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.displayName}
             </TopBarNav>
           );
         })}
@@ -70,7 +68,7 @@ function Placeholder({ slots, baseUrl = '', ...rest }: PlaceholderProps) {
           const path = extendPath(baseUrl, menuItem?.props?.href);
           return (
             <Route key={id} exact path={path}>
-              {typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.simpleText}
+              {typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName}
             </Route>
           );
         })}

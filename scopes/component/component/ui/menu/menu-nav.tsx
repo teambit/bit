@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
-export function MenuNav({ navigationSlot, className }: { navigationSlot: OrderedNavigationSlot; className?: string }) {
-  const plugins = navigationSlot.toArray().sort(sortFn);
+export type MenuNavProps = {
+  navigationSlot: OrderedNavigationSlot;
+} & React.HTMLAttributes<HTMLElement>;
+
+export function MenuNav({ navigationSlot, className }: MenuNavProps) {
+  const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
 
   return (
     <nav className={classnames(styles.navigation, styles.desktopNav, className)}>
