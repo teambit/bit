@@ -18,8 +18,8 @@
   list-style: none;
   height: 100%;
   padding-left: 28px;
-  @media screen and (max-width: 768px) {
-    padding-left: 6px;
+  @media screen and (max-width: $br-md) {
+    padding-left: 0;
   }
 
   li {
@@ -42,6 +42,7 @@
     display: none;
     @media screen and (max-width: $br-lg) {
       display: flex;
+      margin-right: 8px;
     }
   }
 }
@@ -56,6 +57,11 @@
       margin-right: 16px;
     }
   }
+  @media screen and (max-width: $br-lg) {
+    > * {
+      margin-right: 8px;
+    }
+  }
   .widgets {
     height: 100%;
     margin-right: 20px;
@@ -68,6 +74,9 @@
           margin-right: 0;
         }
       }
+    }
+    @media screen and (max-width: $br-lg) {
+      display: none; 
     }
   }
   .widget {

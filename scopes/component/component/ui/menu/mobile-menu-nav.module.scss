@@ -34,6 +34,7 @@
     bottom: 0;
     left: 0;
     right: 0;
+    padding: 0;
     z-index: $modal-z-index;
     .close {
       align-self: self-end;
@@ -57,6 +58,9 @@
   cursor: pointer;
   transition: background-color 300ms ease-in-out;
   border: 1px solid var(--bit-border-color, #babec9);
+  > span {
+    padding-left: 8px;
+  }
   &:hover {
     background-color: var(--bit-bg-heavy, #f6f6f6);
   }
