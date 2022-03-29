@@ -297,7 +297,7 @@ export class ReactMain {
    * override the compiler tasks inside the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipeWithoutCompiler();
 
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
@@ -409,7 +409,8 @@ export class ReactMain {
       tester,
       config,
       eslint,
-      prettier
+      prettier,
+      CompilerAspect.id
     );
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));

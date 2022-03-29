@@ -112,7 +112,9 @@ export class ReactEnv
 
     private eslint: ESLintMain,
 
-    private prettier: PrettierMain
+    private prettier: PrettierMain,
+
+    private compilerAspectId: string
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -405,10 +407,23 @@ export class ReactEnv
     return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
-  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    // const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+  getBuildPipeWithoutCompiler(): BuildTask[] {
+    const pipeWithoutCompiler = this.getBuildPipe().filter((task) => task.aspectId !== this.compilerAspectId);
+    return pipeWithoutCompiler;
+  }
+
+  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+    return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompiler = this.getTsCjsCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.getCjsCompilerTask(transformers, tsModule);
   }
 
   async __getDescriptor() {
