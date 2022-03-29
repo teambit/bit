@@ -34,11 +34,7 @@ export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
 
   return (
     <div className={styles.container}>
-      <LaneDetails
-        laneName={currentLane.id}
-        description={''}
-        componentCount={currentLane.components.length}
-      ></LaneDetails>
+      <LaneDetails laneName={currentLane.id} componentCount={currentLane.components.length}></LaneDetails>
       <ComponentGrid>
         {currentLane.components.map((component, index) => {
           return <WorkspaceComponentCard key={index} component={component.model} componentUrl={component.url} />;

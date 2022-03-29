@@ -7,26 +7,30 @@ import styles from './lane-details.module.scss';
 
 export type LaneDetailsProps = {
   laneName: string;
-  icon?: string;
   description?: string;
-  componentCount: number;
+  componentCount?: number;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function LaneDetails({ icon, description, componentCount, className, laneName, ...rest }: LaneDetailsProps) {
+export function LaneDetails({ description, componentCount, className, laneName, ...rest }: LaneDetailsProps) {
   return (
     <div {...rest} className={classNames(styles.laneTitle, className)}>
       <div className={styles.titleRow}>
-        <ScopeTitle scopeName={laneName} icon={icon} />
+        <ScopeTitle
+          scopeName={laneName}
+          icon={'https://static.bit.dev/bit-icons/lane.svg'}
+          backgroundIconColor={'unset'}
+          iconClassName={styles.laneIcon}
+        />
       </div>
       <Subtitle>{description}</Subtitle>
-      <div className={classNames(styles.pillsContainer, className)}>
-        {componentCount && (
+      {componentCount && (
+        <div className={classNames(styles.pillsContainer, className)}>
           <PillLabel>
             <span className={styles.componentCount}>{componentCount}</span>
             <span>Components</span>
           </PillLabel>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

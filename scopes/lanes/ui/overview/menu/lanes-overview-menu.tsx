@@ -7,10 +7,12 @@ import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import flatten from 'lodash.flatten';
 import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 export type NavPlugin = {
   props: NavLinkProps;
   order?: number;
+  hide?: () => boolean;
 };
 
 export type LanesOrderedNavigationSlot = SlotRegistry<NavPlugin[]>;
@@ -64,9 +66,11 @@ function MenuNav({ navigationSlot }: { navigationSlot: LanesOrderedNavigationSlo
 
   return (
     <nav className={styles.navigation}>
-      {plugins.map((menuItem, index) => (
-        <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />
-      ))}
+      {plugins.map((menuItem, index) => {
+        const hidden = menuItem.hide?.();
+        if (hidden) return null;
+        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
+      })}
     </nav>
   );
 }

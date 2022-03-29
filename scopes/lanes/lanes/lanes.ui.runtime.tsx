@@ -16,6 +16,7 @@ import {
   LaneOverviewLine,
   LaneReadme,
   NavPlugin,
+  useLanesContext,
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
@@ -81,6 +82,10 @@ export class LanesUI {
           children: 'README',
         },
         order: 1,
+        hide: () => {
+          const lanesContext = useLanesContext();
+          return !lanesContext?.currentLane?.readmeComponent;
+        },
       },
       {
         props: {

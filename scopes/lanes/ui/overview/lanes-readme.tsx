@@ -1,13 +1,19 @@
 import React from 'react';
-import { LanesProvider, LaneComponentModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { ReactRouter } from '@teambit/react-router';
+import { LanesProvider, LaneComponentModel, useLanesContext, LaneModel, LaneDetails } from '@teambit/lanes.ui.lanes';
 import { ComponentProvider, useComponent } from '@teambit/component';
 import { Overview } from '@teambit/docs';
+import { Carousel } from '@teambit/design.content.carousel';
+import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
+import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
+import { H5 } from '@teambit/documenter.ui.heading';
+
 import styles from './lanes-readme.module.scss';
-import { EmptyLane } from './empty-lane-overview';
 
 export type LaneReadmeProps = {
   host: string;
   readmeComponent: LaneComponentModel;
+  currentLane: LaneModel;
 };
 
 export type LaneReadmeWrapperProps = {
@@ -16,29 +22,49 @@ export type LaneReadmeWrapperProps = {
 
 export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
   const lanesContext = useLanesContext();
-  const readmeComponent = lanesContext?.currentLane?.readmeComponent;
+  const currentLane = lanesContext?.currentLane;
+  const readmeComponent = currentLane?.readmeComponent;
 
-  if (!readmeComponent)
-    return (
-      <EmptyLane
-        message={'Run bit lane readme-add to add an existing lane component as a readme component'}
-        name={lanesContext?.currentLane?.name as string}
-        title={'Add Readme Component to'}
-      />
-    );
+  if (readmeComponent) {
+    return <LaneReadme host={host} readmeComponent={readmeComponent} currentLane={currentLane} />;
+  }
 
-  return <LaneReadme host={host} readmeComponent={readmeComponent} />;
+  if (currentLane) {
+    return <ReactRouter.Redirect to={`${currentLane.url}/~gallery`} />;
+  }
+
+  return null;
 }
 
-function LaneReadme({ host, readmeComponent }: LaneReadmeProps) {
+function LaneReadme({ host, readmeComponent, currentLane }: LaneReadmeProps) {
   const { component } = useComponent(host, readmeComponent.model.id);
-  if (!component) return null;
+
+  if (!component) {
+    return null;
+  }
+
+  const laneComponents = currentLane.components;
 
   return (
     <LanesProvider currentLaneId={undefined}>
       <ComponentProvider component={component}>
         <div className={styles.readmeContainer}>
+          <LaneDetails className={styles.laneId} laneName={currentLane.id}></LaneDetails>
           <Overview cannotBeConsumed={true} />
+          <H5 className={styles.carouselTitle}>Components</H5>
+          <Carousel animation={true} className={styles.laneCarousel}>
+            {laneComponents.map((laneComponent) => (
+              <ComponentCard
+                key={laneComponent.model.id.fullName}
+                id={laneComponent.model.id.fullName}
+                href={laneComponent.url}
+                envIcon={laneComponent.model.environment?.icon}
+                description={laneComponent.model.description}
+                version={laneComponent.model.version === 'new' ? undefined : laneComponent.model.version}
+                preview={<PreviewPlaceholder component={component} shouldShowPreview={true} />}
+              />
+            ))}
+          </Carousel>
         </div>
       </ComponentProvider>
     </LanesProvider>
