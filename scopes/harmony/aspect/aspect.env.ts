@@ -32,8 +32,10 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
     return targetConf;
   }
 
+  // TODO: should probably use the transformer from the main runtime?
+  // TODO: this doesn't seems to work as expected, the getTsConfig is not a transformer and the react env API expect a transformers array not an object
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
-    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
+    return this.reactEnv.getTsCjsCompiler(this.getTsConfig(tsConfig));
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
