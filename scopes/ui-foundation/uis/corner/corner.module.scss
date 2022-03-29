@@ -34,7 +34,7 @@ $topbarHeight: 56px;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding: 0 8px;
-      @media screen and (max-width: $br-md) {
+      @media screen and (max-width: $br-sm) {
         display: none;
       }
     }
