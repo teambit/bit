@@ -26,7 +26,9 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { SnapCmd } from './snap-cmd';
@@ -165,6 +167,7 @@ export class SnappingMain {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this.loadComponentsForTag(legacyBitIds);
+    await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
@@ -385,6 +388,30 @@ export class SnappingMain {
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
+  }
+
+  private async throwForLegacyDependenciesInsideHarmony(components: ConsumerComponent[]) {
+    if (this.workspace.isLegacy) {
+      return;
+    }
+    const throwForComponent = async (component: ConsumerComponent) => {
+      const dependenciesIds = component.getAllDependenciesIds();
+      const legacyScope = this.workspace.scope.legacyScope;
+      await Promise.all(
+        dependenciesIds.map(async (depId) => {
+          if (!depId.hasVersion()) return;
+          const modelComp = await legacyScope.getModelComponentIfExist(depId);
+          if (!modelComp) return;
+          const version = await modelComp.loadVersion(depId.version as string, legacyScope.objects);
+          if (version.isLegacy) {
+            throw new Error(
+              `unable tagging "${component.id.toString()}", its dependency "${depId.toString()}" is legacy`
+            );
+          }
+        })
+      );
+    };
+    await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
   }
 
   private async getComponentsToTag(
