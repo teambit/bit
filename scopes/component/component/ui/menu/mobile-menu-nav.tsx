@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, { useMemo } from 'react';
 import { Switch, Route, useRouteMatch } from 'react-router-dom';
 import classnames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
@@ -57,14 +57,19 @@ function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]
   return (first ?? 0) - (second ?? 0);
 }
 
-function Placeholder({ slots, baseUrl, ...rest }) {
+type PlaceholderProps = {
+  slots: [string, NavPlugin][];
+  baseUrl?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+function Placeholder({ slots, baseUrl = '', ...rest }: PlaceholderProps) {
   return (
     <div {...rest} className={mobileStyles.placeholder}>
       <Switch>
-        {slots.map(([id, menuItem]) => {
+        {slots?.map(([id, menuItem]) => {
           const path = extendPath(baseUrl, menuItem?.props?.href);
           return (
-            <Route exact path={path}>
+            <Route key={id} exact path={path}>
               {typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.simpleText}
             </Route>
           );
