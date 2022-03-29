@@ -11,6 +11,7 @@ export class AspectSection implements Section {
   navigationLink = {
     href: '~aspect',
     children: <MenuWidgetIcon icon="configuration" tooltipContent="Configuration" />,
+    displayName: 'Configuration',
   };
   order = 50;
 }
