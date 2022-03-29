@@ -19,7 +19,10 @@ export function MobileMenuNav({
   className?: string;
 }) {
   const { url } = useRouteMatch();
-  const totalSlots = useMemo(() => [...navigationSlot.toArray().sort(sortFn), ...widgetSlot.toArray().sort(sortFn)], [navigationSlot, widgetSlot]);
+  const totalSlots = useMemo(
+    () => [...navigationSlot.toArray().sort(sortFn), ...widgetSlot.toArray().sort(sortFn)],
+    [navigationSlot, widgetSlot]
+  );
 
   return (
     <Dropdown
