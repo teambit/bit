@@ -1,3 +1,4 @@
+import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
 import { uniq, compact, flatten, head } from 'lodash';
 import { Stats } from 'fs';
@@ -234,13 +235,18 @@ export class DependencyLinker {
         .map((dirent) => {
           const dirPath = path.join(dir, dirent.name);
           const moduleName = parent ? `${parent}/${dirent.name}` : dirent.name;
+          // If we have a folder with a name of built in module (like events)
+          // the resolve from will resolve it from the core, so it will return something like 'events'
+          // instead of the path.
+          // adding a '/' at the end solve this
+          const moduleNameToResolve = isBuiltinModule(moduleName) ? `${moduleName}/` : moduleName;
           // This is a scoped package, need to go inside
           if (dirent.name.startsWith('@')) {
             return getPackagesFoldersToLink(dirPath, dirent.name);
           }
 
           if (dirent.isSymbolicLink()) {
-            const resolvedModuleFrom = resolveModuleFromDir(dir, moduleName);
+            const resolvedModuleFrom = resolveModuleFromDir(dir, moduleNameToResolve);
             if (!resolvedModuleFrom) {
               return {
                 moduleName,

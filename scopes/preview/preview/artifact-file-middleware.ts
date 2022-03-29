@@ -13,7 +13,9 @@ export type PreviewUrlParams = {
   filePath?: string;
 };
 
-export function getArtifactFileMiddleware(logger: Logger) {
+export type GetCacheControlFunc = (filePath: string, contents: string, mimeType?: string | null) => string | undefined;
+
+export function getArtifactFileMiddleware(logger: Logger, getCacheControlFunc?: GetCacheControlFunc) {
   return async (req: Request<PreviewUrlParams>, res: Response) => {
     try {
       // @ts-ignore
@@ -32,6 +34,12 @@ export function getArtifactFileMiddleware(logger: Logger) {
       const str = `${file.cwd}/${file.path}`;
       const contentType = mime.getType(str);
       if (contentType) res.set('Content-Type', contentType);
+      if (getCacheControlFunc) {
+        const cacheControl = getCacheControlFunc(str, contents, contentType);
+        if (cacheControl) {
+          res.set('Cache-control', cacheControl);
+        }
+      }
       return res.send(contents);
     } catch (e: any) {
       logger.error('failed getting preview', e);

@@ -29,7 +29,7 @@ export function EmptyComponentGallery({
       <img src="https://static.bit.dev/harmony/no-components.svg" />
       {children}
       <div className={styles.title}>
-        <span>New to Harmony?</span> &nbsp;
+        <span>New to Bit?</span> &nbsp;
         <ExternalLink
           href={`https://bit.dev/docs/getting-started/installing-bit/installing-bit`}
           className={styles.purpleLink}
@@ -53,7 +53,7 @@ function IconLine() {
       <ExternalLink href="https://github.com/teambit/bit">
         <img alt="github-logo" className={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
       </ExternalLink>
-      <ExternalLink href="https://bit.dev/support">
+      <ExternalLink href="https://bit.cloud/support">
         <img alt="support" className={styles.logo} src="https://static.bit.dev/harmony/support.svg" />
       </ExternalLink>
     </div>

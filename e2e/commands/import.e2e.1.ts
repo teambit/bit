@@ -4,11 +4,9 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { IS_WINDOWS } from '../../src/constants';
+import { IS_WINDOWS, statusFailureMsg } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 

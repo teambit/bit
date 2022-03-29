@@ -2,6 +2,8 @@ import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { remove } from 'lodash';
+import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderSPAPlugin } from './plugins';
@@ -19,9 +21,9 @@ export class ReactApp implements Application {
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers?: WebpackConfigTransformer[],
-    readonly deploy?: (context: ReactDeployContext) => Promise<void>
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>,
+    readonly favicon?: string
   ) {}
-
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
   async run(context: AppContext): Promise<number> {
@@ -57,10 +59,13 @@ export class ReactApp implements Application {
         title: context.name,
         templateContent: html(context.name),
         minify: false,
+        favicon: this.favicon,
         // filename: ''.html`,
       },
     ];
-    Object.assign(context, { html: htmlConfig });
+    Object.assign(context, {
+      html: htmlConfig,
+    });
     const bundler = await this.getBundler(context);
     await bundler.run();
     return { publicDir: `${this.getPublicDir()}/${this.dir}` };
@@ -89,11 +94,30 @@ export class ReactApp implements Application {
       ],
       entry: [],
       rootPath: '/',
+      metaData: {
+        initiator: `building app: ${context.name}`,
+        envId: context.id,
+      },
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
       if (this.prerenderRoutes) config.addPlugin(prerenderSPAPlugin(this.prerenderRoutes, staticDir));
+      if (config.raw.optimization?.minimizer) {
+        remove(config.raw.optimization?.minimizer, (minimizer) => {
+          return minimizer.constructor.name === 'TerserPlugin';
+        });
+        config.raw.optimization?.minimizer.push(
+          new TerserPlugin({
+            minify: TerserPlugin.esbuildMinify,
+            // `terserOptions` options will be passed to `esbuild`
+            // Link to options - https://esbuild.github.io/api/#minify
+            terserOptions: {
+              minify: true,
+            },
+          })
+        );
+      }
       return config;
     };
     const transformers = [defaultTransformer, ...(this.transformers ?? [])];
@@ -111,6 +135,7 @@ export class ReactApp implements Application {
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
+      favicon: this.favicon,
     });
   }
 }

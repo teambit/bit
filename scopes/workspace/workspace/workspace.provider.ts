@@ -33,7 +33,6 @@ import { Watcher, WatchOptions } from './watch/watcher';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { Tag } from './tag-cmd';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
@@ -211,7 +210,6 @@ export default async function provideWorkspace(
     cli.unregister('link');
     commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
   }
-  commands.push(new Tag(community.getDocsDomain()));
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);

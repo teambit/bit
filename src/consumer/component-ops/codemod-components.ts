@@ -22,7 +22,7 @@ export async function changeCodeFromRelativeToModulePaths(
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map((component) => {
@@ -42,7 +42,7 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   if (componentsWithRelativeIssues.length) {
     const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
@@ -60,10 +60,10 @@ async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Comp
 function codemodComponent(consumer: Consumer, component: Component): { files: SourceFile[]; warnings?: string[] } {
   const issues = component.issues;
   const files: SourceFile[] = [];
-  if (!issues || !issues.getIssue(IssuesClasses.relativeComponentsAuthored)) return { files };
+  if (!issues || !issues.getIssue(IssuesClasses.RelativeComponentsAuthored)) return { files };
   const warnings: string[] = [];
   component.files.forEach((file: SourceFile) => {
-    const relativeInstances = issues.getIssue(IssuesClasses.relativeComponentsAuthored)?.data[
+    const relativeInstances = issues.getIssue(IssuesClasses.RelativeComponentsAuthored)?.data[
       pathNormalizeToLinux(file.relative)
     ];
     if (!relativeInstances) return;
