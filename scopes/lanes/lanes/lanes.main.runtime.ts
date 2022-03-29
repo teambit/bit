@@ -20,7 +20,7 @@ import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { LanesAspect } from './lanes.aspect';
+import { Component } from '@teambit/component';
 import {
   LaneCmd,
   LaneCreateCmd,
@@ -34,6 +34,7 @@ import {
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
+import { LanesAspect } from './lanes.aspect';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -164,6 +165,13 @@ export class LanesMain {
   public getDiff(values: string[], diffOptions: DiffOptions = {}) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
     return laneDiffGenerator.generate(values, diffOptions);
+  }
+
+  public isLaneReadme(component: Component) {
+    const lanesConfig = component.state.aspects.get(LanesAspect.id)?.config;
+    if (!lanesConfig) return false;
+
+    return Object.keys(lanesConfig).some((lane) => lanesConfig[lane].readme);
   }
 
   async removeLaneReadme(laneName?: string): Promise<{ result: boolean; message?: string }> {

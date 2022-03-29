@@ -13,10 +13,15 @@ export type EmptyComponentGalleryProps = {
 /**
  * page to be shown when workspace/scope has no components
  */
-export function EmptyComponentGallery({ name, children, title = 'Export components to' }: EmptyComponentGalleryProps) {
+export function EmptyComponentGallery({
+  name,
+  children,
+  title = 'Export components to',
+  className,
+}: EmptyComponentGalleryProps) {
   // TODO: get the docs domain from the community aspect and pass it here as a prop
   return (
-    <div className={styles.emptyComponentGallery}>
+    <div className={classNames(styles.emptyComponentGallery, className)}>
       <div className={styles.title}>
         <span>{title}</span>&nbsp;
         <span>{name}</span>

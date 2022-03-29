@@ -2,7 +2,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import ComponentAspect, { Component, ComponentMap } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -12,6 +12,7 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
+import { LanesMain, LanesAspect } from '@teambit/lanes';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { docsSchema } from './docs.graphql';
@@ -54,6 +55,8 @@ export class DocsMain {
 
     private workspace: Workspace,
 
+    private lanes: LanesMain,
+
     private logger: Logger,
 
     private devFiles: DevFilesMain,
@@ -73,8 +76,17 @@ export class DocsMain {
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    const devFiles = this.devFiles.computeDevFiles(component);
-    const docFiles = devFiles.get(DocsAspect.id);
+    // check if the component is a readme
+    let docFiles;
+
+    if (this.lanes.isLaneReadme(component)) {
+      const devFiles = this.devFiles.computeCustomDevFiles(component, ['**/index.*']);
+      docFiles = devFiles.get(component.id.name);
+    } else {
+      const devFiles = this.devFiles.getDevFiles(component);
+      docFiles = devFiles.get(DocsAspect.id);
+    }
+
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
 
@@ -152,7 +164,7 @@ export class DocsMain {
     CompilerAspect,
     LoggerAspect,
     DevFilesAspect,
-    ComponentAspect,
+    LanesAspect,
   ];
 
   static defaultConfig = {
@@ -160,14 +172,15 @@ export class DocsMain {
   };
 
   static async provider(
-    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles]: [
+    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, lanes]: [
       PreviewMain,
       GraphqlMain,
       Workspace,
       PkgMain,
       CompilerMain,
       LoggerMain,
-      DevFilesMain
+      DevFilesMain,
+      LanesMain
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]
@@ -183,6 +196,8 @@ export class DocsMain {
       compiler,
 
       workspace,
+
+      lanes,
 
       logger,
 

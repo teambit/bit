@@ -117,6 +117,14 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
+  computeCustomDevFiles(component: Component, patterns: string[]): DevFiles {
+    return new DevFiles({
+      [component.id.name]: component.state.filesystem.byGlob(patterns).map((file) => {
+        return file.relative;
+      }),
+    });
+  }
+
   static slots = [Slot.withType<DevPatterns>()];
 
   static defaultConfig = {
