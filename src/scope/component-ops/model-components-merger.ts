@@ -27,7 +27,9 @@ export class ModelComponentMerger {
   async merge(): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     logger.debug(`model-component-merger.merge component ${this.incomingComponent.id()}`);
     this.throwComponentNeedsUpdateIfNeeded();
-    const locallyChanged = await this.existingComponent.isLocallyChanged();
+    const locallyChanged = this.isImport
+      ? await this.existingComponent.isLocallyChanged()
+      : this.existingComponent.isLocallyChangedRegardlessOfLanes();
     this.throwMergeConflictIfNeeded(locallyChanged);
     this.replaceTagHashIfDifferentOnIncoming();
     this.moveTagToOrphanedIfNotExistOnOrigin();
