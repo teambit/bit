@@ -11,10 +11,7 @@ export const ShowWhenHovering = () => {
         <div>
           <br />
           <div>
-            <IconButton onClick={() => setDisabled((x) => !x)}>
-              Hover here
-              <IconButton onClick={() => setDisabled((x) => !x)}>Hover here</IconButton>
-            </IconButton>
+            <IconButton onClick={() => setDisabled((x) => !x)}>Hover here</IconButton>
           </div>
           <div>
             {disabled ? 'X' : '✓'} highlighter is {disabled ? 'disabled' : 'enabled'}
