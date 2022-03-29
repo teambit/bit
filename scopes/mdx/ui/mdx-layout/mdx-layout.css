@@ -18,6 +18,7 @@
 
 .admonition-icon {
   display: inline-flex;
+  padding-top: 1px;
   margin-right: 4px;
 }
 
