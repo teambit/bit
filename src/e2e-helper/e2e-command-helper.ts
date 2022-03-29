@@ -8,8 +8,7 @@ import tar from 'tar';
 
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
+import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -150,6 +149,13 @@ export default class CommandHelper {
   }
   unsetEnv(compId: string) {
     return this.runCmd(`bit envs unset ${compId}`);
+  }
+  setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
+    const configStr = config ? `'${JSON.stringify(config)}'` : '';
+    return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);
+  }
+  unsetAspect(pattern: string, aspectId: string, flags = '') {
+    return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
   }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);

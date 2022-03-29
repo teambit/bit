@@ -12,23 +12,24 @@ export class NodeEnvUI {
 
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const nodeEnvUI = new NodeEnvUI();
-
+    // TODO: pass the docs url into here after fetch it from the community aspect
     testerUi.registerEmptyState(() => {
       return (
         <EmptyBox
           title="This component doesn’t have any tests."
           linkText="Learn how to add tests to your node components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
+          link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
         />
       );
     });
 
+    // TODO: pass the docs url into here after fetch it from the community aspect
     compositionsUI.registerEmptyState(() => {
       return (
         <EmptyBox
           title="This component doesn’t have any compositions."
           linkText="Learn how to add compositions to your node components"
-          link="https://harmony-docs.bit.dev/compositions/overview/"
+          link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
         />
       );
     });

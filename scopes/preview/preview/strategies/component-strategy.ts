@@ -2,7 +2,7 @@ import { join, resolve, basename, dirname } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
-import { flatten, isEmpty } from 'lodash';
+import { flatten, isEmpty, chunk } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import type { Capsule } from '@teambit/isolator';
@@ -24,6 +24,11 @@ export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
 
 export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
 export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
+
+type ComponentEntry = {
+  component: Component;
+  entries: Object;
+};
 /**
  * bundles all components in a given env into the same bundle.
  */
@@ -44,17 +49,34 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     //   )
     // );
 
+    const origComponents = context.capsuleNetwork.originalSeedersCapsules.map((capsule) => capsule.component);
+
     const entriesArr = await Promise.all(
-      context.capsuleNetwork.seedersCapsules.map((capsule) => {
-        return this.computeComponentEntry(previewDefs, capsule.component, context);
+      origComponents.map((component) => {
+        return this.computeComponentEntry(previewDefs, component, context);
       }, {})
     );
 
-    const entries: BundlerEntryMap = entriesArr.reduce((entriesMap, entry) => {
-      // entriesMap[entry.library.name] = entry;
-      Object.assign(entriesMap, entry);
-      return entriesMap;
-    }, {});
+    const chunkSize = this.preview.config.maxChunkSize;
+
+    const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
+
+    const targets = chunks.map((currentChunk) => {
+      const entries: BundlerEntryMap = {};
+      const components: Component[] = [];
+      currentChunk.forEach((entry) => {
+        Object.assign(entries, entry.entries);
+        components.push(entry.component);
+      });
+
+      return {
+        entries,
+        components,
+        outputPath,
+      };
+    });
+
+    return targets;
     // const entries = entriesArr.reduce((entriesMap, entry) => {
     //   entriesMap[entry.library.name] = entry;
     //   return entriesMap;
@@ -83,19 +105,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     //     },
     //   };
     // }));
-
-    return [
-      {
-        // entries: await this.computePaths(outputPath, previewDefs, context),
-        entries,
-        components: context.components,
-        outputPath,
-        // modules,
-      },
-    ];
   }
 
-  async computeComponentEntry(previewDefs: PreviewDefinition[], component: Component, context: ComputeTargetsContext) {
+  async computeComponentEntry(
+    previewDefs: PreviewDefinition[],
+    component: Component,
+    context: ComputeTargetsContext
+  ): Promise<ComponentEntry> {
     const path = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
     const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
@@ -134,7 +150,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         },
       };
     }
-    return entries;
+    return { component, entries };
   }
 
   private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
@@ -253,8 +269,19 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   }
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
-    const result = results[0];
+    const componentsResults = flatten(
+      await Promise.all(results.map((result) => this.computeTargetResult(context, result)))
+    );
 
+    const artifacts = this.getArtifactDef();
+
+    return {
+      componentsResults,
+      artifacts,
+    };
+  }
+
+  async computeTargetResult(context: BundlerContext, result: BundlerResult) {
     if (isEmpty(result.errors)) {
       // In case there are errors files will not be emitted so trying to copy them will fail anyway
       this.copyAssetsToCapsules(context, result);
@@ -272,12 +299,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       };
     });
 
-    const artifacts = this.getArtifactDef();
-
-    return {
-      componentsResults,
-      artifacts,
-    };
+    return componentsResults;
   }
 
   private getArtifactDef() {

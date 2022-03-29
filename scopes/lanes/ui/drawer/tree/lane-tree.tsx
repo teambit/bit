@@ -5,6 +5,7 @@ import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LaneTreeNode } from './lane-tree-node';
+import styles from './lane-tree.module.scss';
 
 export type LaneTreeProps = {
   isCollapsed?: boolean;
@@ -19,7 +20,7 @@ export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
 
   return (
     <TreeContextProvider selected={lanesContext?.currentLane?.id}>
-      <div style={indentStyle(1)}>
+      <div className={styles.laneTreeContainer} style={indentStyle(1)}>
         <Tree TreeNode={LaneTreeNodeRenderer} activePath={activeLaneName} tree={tree} isCollapsed={isCollapsed} />
       </div>
     </TreeContextProvider>

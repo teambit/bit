@@ -30,7 +30,7 @@ export class LanesDrawer implements DrawerType {
   order = LanesModel.drawer.order;
   id = LanesModel.drawer.id;
   name = LanesModel.drawer.name;
-  widget = (<Widget />);
+  widgets = [<Widget key={`${LanesModel.drawer.id}-widget`} />];
 
   constructor(private props: LanesDrawerProps) {}
 

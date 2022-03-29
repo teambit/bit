@@ -15,24 +15,18 @@ export const reactComponentJS: ComponentTemplate = {
       content: `export { ${Name} } from './${name}';
 `,
     };
-
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
+  },
+  config: {
+    'teambit.react/react': {},
+    'teambit.envs/envs': {
+      env: 'teambit.react/react',
+    },
   },
 };
 
 export const deprecatedReactComponentJS: ComponentTemplate = {
+  ...reactComponentJS,
   name: 'react-component-js',
-  description: 'a basic react component in js',
   hidden: true,
-
-  generateFiles: (context: ComponentContext) => {
-    const { name, namePascalCase: Name } = context;
-    const indexFile = {
-      relativePath: 'index.js',
-      content: `export { ${Name} } from './${name}';
-`,
-    };
-
-    return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
-  },
 };

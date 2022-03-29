@@ -6,6 +6,8 @@ import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { Bundler, BundlerContext } from '@teambit/bundler';
+import { WebpackConfigTransformer } from '@teambit/webpack';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -32,6 +34,10 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
 
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
     return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
+  }
+
+  async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    return this.reactEnv.createTemplateWebpackBundler(context, transformers);
   }
 
   getPackageJsonProps(): PackageJsonProps {

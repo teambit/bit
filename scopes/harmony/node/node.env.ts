@@ -2,6 +2,8 @@ import { DependenciesEnv, PackageEnv } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TypescriptMain } from '@teambit/typescript';
 
+export const NodeEnvType = 'node';
+
 export class NodeEnv implements DependenciesEnv, PackageEnv {
   constructor(protected tsAspect: TypescriptMain) {}
 
@@ -27,5 +29,11 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   getPackageJsonProps() {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  async __getDescriptor() {
+    return {
+      type: NodeEnvType,
+    };
   }
 }

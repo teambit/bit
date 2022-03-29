@@ -1306,10 +1306,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsIssues(originFile, componentId: BitId) {
-    (this.issues.getOrCreate(IssuesClasses.relativeComponents).data[originFile] ||= []).push(componentId);
+    (this.issues.getOrCreate(IssuesClasses.RelativeComponents).data[originFile] ||= []).push(componentId);
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
-    (this.issues.getOrCreate(IssuesClasses.relativeComponentsAuthored).data[originFile] ||= []).push({
+    (this.issues.getOrCreate(IssuesClasses.RelativeComponentsAuthored).data[originFile] ||= []).push({
       importSource,
       componentId,
       relativePath,

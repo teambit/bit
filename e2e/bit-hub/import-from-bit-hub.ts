@@ -2,14 +2,14 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { BASE_WEB_DOMAIN } from '../../src/constants';
+import { BASE_CLOUD_DOMAIN } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import BitsrcTester, { supportTestingOnBitsrc, username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
-(supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_WEB_DOMAIN}`, function () {
+(supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_CLOUD_DOMAIN}`, function () {
   this.timeout(0);
   let helper: Helper;
   let bitsrcTester;

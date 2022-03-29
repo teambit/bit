@@ -99,6 +99,13 @@ export class MDXMain {
         },
       }),
       react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
+      envs.override({
+        __getDescriptor: async () => {
+          return {
+            type: 'mdx',
+          };
+        },
+      }),
     ]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));

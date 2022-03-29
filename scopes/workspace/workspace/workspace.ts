@@ -440,8 +440,8 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id);
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
@@ -700,14 +700,19 @@ export class Workspace implements ComponentFactory {
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
-    const component = await this.scope.get(componentId);
-    const aspects = component?.state.aspects
-      ? await this.resolveScopeAspectListIds(component?.state.aspects)
-      : await this.createAspectList(new ExtensionDataList());
-
+    const component = await this.get(componentId);
+    const componentFromScope = await this.scope.get(id);
+    const { extensions } = await this.componentExtensions(component.id, componentFromScope, [
+      'WorkspaceDefault',
+      'WorkspaceVariants',
+    ]);
+    const aspects = await this.createAspectList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
     await componentConfigFile.write({ override: options.override });
+    // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
+    this.bitMap.removeEntireConfig(id);
+    await this.bitMap.write();
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
@@ -1015,7 +1020,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async componentExtensions(
     componentId: ComponentID,
-    componentFromScope?: Component
+    componentFromScope?: Component,
+    excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
@@ -1025,19 +1031,18 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let variantsExtensions: ExtensionDataList | undefined;
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
+
+    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapExtensions = bitMapEntry?.config;
+
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
-    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
-    const bitMapExtensions = bitMapEntry?.config;
-
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
-      // do not merge from scope data when there is component config file
-      // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
@@ -1056,6 +1061,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
+    const loadedExtensionIds: string[] = [];
     const removedExtensionIds: string[] = [];
 
     const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
@@ -1064,14 +1070,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
+      const extsWithoutLoaded = ExtensionDataList.fromArray(
+        extsWithoutRemoved.filter(
+          (ext) => !loadedExtensionIds.includes(ext.extensionId?.toStringWithoutVersion() || '')
+        )
+      );
+      const selfInMergedExtensions = extsWithoutLoaded.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
         true,
         true
       );
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
-        ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
-        : extsWithoutRemoved;
+        ? extsWithoutLoaded.remove(selfInMergedExtensions.extensionId)
+        : extsWithoutLoaded;
       await this.loadExtensions(extsWithoutSelf, componentId);
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
@@ -1080,37 +1091,43 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       if (envIsCurrentlySet) envWasFoundPreviously = true;
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
+
+      loadedExtensionIds.push(
+        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
+      );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (bitMapExtensions) {
+    if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
-    if (configFileExtensions) {
+    if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
-    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
+    if (!excludeOrigins.includes('ModelSpecific')) {
+      await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
+    }
     let continuePropagating = componentConfigFile?.propagate ?? true;
-    if (variantsExtensions && continuePropagating) {
-      // Put it in the start to make sure the config file is stronger
+    if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
       const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
       await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
-      // Put it in the start to make sure the config file is stronger
+    if (
+      wsDefaultExtensions &&
+      continuePropagating &&
+      !isDefaultExtension &&
+      !excludeOrigins.includes('WorkspaceDefault')
+    ) {
       await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
-
-    // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
-    if (mergeFromScope && continuePropagating) {
+    if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
@@ -1288,8 +1305,9 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       const component = await this.get(id);
       const data = this.envs.getEnvData(component);
       const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
-
-      if (!isUsingAspectEnv && idsWithoutCore.includes(component.id.toString())) {
+      const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
+      const isValidAspect = isUsingAspectEnv || isUsingEnvEnv;
+      if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
         const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
         if (data.id === DEFAULT_ENV) {
           // when cloning a project, or when the node-modules dir is deleted, nothing works and all
@@ -1300,7 +1318,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
           throw err;
         }
       }
-      return isUsingAspectEnv;
+      return isValidAspect;
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
@@ -1563,6 +1581,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
         dependencyFilterFn: depsFilterFn,
         overrides: this.dependencyResolver.config.overrides,
+        packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       };
       const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
         this.path,
@@ -1727,6 +1746,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
+      packageImportMethod: this.dependencyResolver.config.packageImportMethod,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate

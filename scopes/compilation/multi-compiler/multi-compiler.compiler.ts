@@ -9,6 +9,7 @@ import {
 } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
+import { Component } from '@teambit/component';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;
@@ -129,6 +130,18 @@ export class MultiCompiler implements Compiler {
 
   private firstMatchedCompiler(filePath: string): Compiler | undefined {
     return this.compilers.find((compiler) => compiler.isFileSupported(filePath));
+  }
+
+  getPreviewComponentRootPath(component: Component): string {
+    const matchedCompiler = this.compilers.find(
+      (compiler) => typeof compiler.getPreviewComponentRootPath !== 'undefined'
+    );
+    if (!matchedCompiler) {
+      return '';
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return matchedCompiler.getPreviewComponentRootPath!(component);
   }
 
   /**

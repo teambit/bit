@@ -19,6 +19,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { CommunityMain } from '@teambit/community';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
@@ -32,7 +33,6 @@ import { Watcher, WatchOptions } from './watch/watcher';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { Tag } from './tag-cmd';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
@@ -52,7 +52,8 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain
+  EnvsMain,
+  CommunityMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -81,6 +82,7 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
+    community,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
@@ -206,9 +208,8 @@ export default async function provideWorkspace(
     cli.unregister('watch');
     commands.push(new WatchCommand(pubsub, logger, watcher));
     cli.unregister('link');
-    commands.push(new LinkCommand(workspace, logger));
+    commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
   }
-  commands.push(new Tag());
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
