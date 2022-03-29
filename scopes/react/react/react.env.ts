@@ -123,12 +123,22 @@ export class ReactEnv
     return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
+  getCjsJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.cjs.config');
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+  }
+
+  getEsmJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.esm.config');
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+  }
+
   /**
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+    // return this.getEsmJestTester(jestConfigPath, jestModulePath);
+    return this.getCjsJestTester(jestConfigPath, jestModulePath);
   }
 
   private getTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
@@ -156,7 +166,8 @@ export class ReactEnv
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.getTsEsmCompiler('dev', transformers, tsModule);
+    // return this.getTsEsmCompiler('dev', transformers, tsModule);
+    return this.getTsCjsCompiler('dev', transformers, tsModule);
   }
 
   /**
@@ -336,11 +347,16 @@ export class ReactEnv
    */
   getPackageJsonProps(): PackageJsonProps {
     // React compile by default to esm, so uses type module
-    return this.tsAspect.getEsmPackageJsonProps();
+    // return this.getEsmPackageJsonProps();
+    return this.getCjsPackageJsonProps();
   }
 
   getCjsPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  getEsmPackageJsonProps(): PackageJsonProps {
+    return this.tsAspect.getEsmPackageJsonProps();
   }
 
   getNpmIgnore() {
@@ -390,7 +406,8 @@ export class ReactEnv
   }
 
   private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+    // const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+    const tsCompiler = this.getTsCjsCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
