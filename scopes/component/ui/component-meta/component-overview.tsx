@@ -57,7 +57,7 @@ export function ComponentOverview({
         </div>
         {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
-        {<ConsumableLink title="Package name" link={packageName}></ConsumableLink>}
+        <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
         {finalElementsUrl && <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>}
       </div>
       <Separator isPresentational />
