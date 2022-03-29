@@ -25,8 +25,8 @@ export function MobileMenuNav({
 
   return (
     <Dropdown
-      placeholder=""
-      PlaceholderComponent={() => <Placeholder slots={totalSlots} baseUrl={url} />}
+      // @ts-ignore - mismatch between @types/react
+      placeholder={<Placeholder slots={totalSlots} baseUrl={url} />}
       className={classnames(styles.navigation, styles.mobileNav, className)}
       dropClass={mobileStyles.mobileMenu}
     >
