@@ -4,7 +4,6 @@ import { ComponentID, ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { Descriptor } from '@teambit/envs';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -21,7 +20,8 @@ export const EnvsFilter: EnvsFilterCriteria = {
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
-    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(component.environment?.id) >= 0);
+    const envId = ComponentID.fromString(component.environment?.id as string).toStringWithoutVersion();
+    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(envId) >= 0);
     return matches;
   },
   state: {
@@ -32,8 +32,6 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-const mapToEnvDisplayName = (componentDescriptor: Descriptor) => ComponentID.fromString(componentDescriptor.id).name;
-
 const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
     dropdownState: false,
@@ -43,18 +41,24 @@ const getDefaultState = (components: ComponentModel[]) => {
     const componentEnvSet = new Set<string>();
     return components
       .filter((component) => {
-        if (!component.environment) return false;
-        const displayName = mapToEnvDisplayName(component.environment);
+        const envId = component.environment && ComponentID.tryFromString(component.environment.id);
+        if (!envId) return false;
+
+        const displayName = envId.name;
+
         if (componentEnvSet.has(displayName)) return false;
 
         componentEnvSet.add(displayName);
         return true;
       })
-      .map((component) => ({
-        displayName: mapToEnvDisplayName(component.environment as Descriptor),
-        id: ComponentID.fromString(component.environment?.id as string).toStringWithoutVersion(),
-        icon: component.environment?.icon,
-      }));
+      .map((component) => {
+        const envId = ComponentID.fromString(component.environment?.id as string);
+        return {
+          displayName: envId.name,
+          id: envId.toStringWithoutVersion(),
+          icon: component.environment?.icon,
+        };
+      });
   }, [components]);
   componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
     defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
@@ -168,7 +172,7 @@ function EnvsDropdownItem({
   return (
     <Tooltip placement="right" content={id}>
       <div className={styles.envDropdownItem}>
-        <Ellipsis>{`${displayName}`}</Ellipsis>
+        <Ellipsis>{displayName}</Ellipsis>
         <img className={styles.envDropdownItemIcon} src={icon}></img>
       </div>
     </Tooltip>
