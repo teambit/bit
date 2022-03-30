@@ -619,8 +619,8 @@ jobs:
       # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
-      - run: cd bit && bit install --skip-import
-      - run: cd bit && bit compile
+      - run: cd bit && bbit install --skip-import
+      - run: cd bit && bbit compile
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:

@@ -108,8 +108,8 @@
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
+        "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.inputs.dropdown": "0.0.7",
-        "@teambit/design.inputs.selectors.multi-select": "0.0.16",
         "@teambit/design.ui.brand.logo": "1.95.0",
         "@teambit/design.ui.icon-button": "1.0.10",
         "@teambit/design.ui.input.toggle": "1.0.12",
@@ -403,7 +403,9 @@
     ]
   },
   "teambit.component/issues": {
-    "ignoreIssues": ["CircularDependencies"]
+    "ignoreIssues": [
+      "CircularDependencies"
+    ]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
@@ -879,4 +881,3 @@
     }
   }
 }
-
