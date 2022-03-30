@@ -24,7 +24,7 @@ const GET_LANES = gql`
 `;
 
 const GET_LANE_COMPONENTS = gql`
-  query LaneComponent($name: String) {
+  query LaneComponent($name: String, $extensionId: String) {
     getLaneComponents(name: $name) {
       id {
         name
@@ -39,6 +39,9 @@ const GET_LANE_COMPONENTS = gql`
       preview {
         includesEnvTemplate
       }
+    }
+    getHost(id: $extensionId) {
+      id
     }
   }
 `;
@@ -61,11 +64,11 @@ export function useLaneComponentsQuery(
   components?: Array<ComponentModel>;
 } & Omit<QueryResult<LanesQueryResult>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
-    variables: { name: lane.name },
+    variables: { name: lane.name, extensionId: host },
   });
 
-  const components: Array<LaneComponentModel> = data?.getLaneComponents.map((component) =>
-    ComponentModel.from({ ...component, host })
+  const components: Array<ComponentModel> = data?.getLaneComponents.map((component) =>
+    ComponentModel.from({ ...component, host: data.getHost.id })
   );
 
   return {
