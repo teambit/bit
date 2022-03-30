@@ -90,22 +90,23 @@ export class LanesModel {
     }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, isMerged } = laneData;
+    const { id: name, remote, isMerged, components } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
 
-    const components = laneData.components.map((component) => {
-      const componentModel = ComponentModel.from({ ...component, host });
-      return componentModel;
-    });
+    const componentModels =
+      components?.map((component) => {
+        const componentModel = ComponentModel.from({ ...component, host });
+        return componentModel;
+      }) || [];
 
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
-      components,
+      components: componentModels,
     };
   }
 
@@ -144,7 +145,7 @@ export class LanesModel {
   }
 
   static from({ data, host, scope }: { data: LanesQueryResult; host: string; scope?: ScopeModel }): LanesModel {
-    const lanes = data?.lanes?.map((result) => LanesModel.mapToLaneModel(result, host, scope)) || [];
+    const lanes = data?.lanes?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
     const currentLane =
       data?.lanes && data.lanes[0].currentLane
         ? LanesModel.mapToLaneModel(data.lanes[0].currentLane, host, scope)
