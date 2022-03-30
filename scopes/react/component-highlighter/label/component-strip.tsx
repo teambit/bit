@@ -3,6 +3,7 @@ import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { ComponentID } from '@teambit/component-id';
 import { ScopeUrl } from '@teambit/component.modules.component-url';
 import {
+  ComponentMeta,
   componentMetaField,
   ComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
@@ -10,13 +11,13 @@ import styles from './component-strip.module.scss';
 import { calcComponentLink } from './links';
 
 interface ComponentStripProps extends React.HTMLAttributes<HTMLDivElement> {
-  component: ComponentMetaHolder;
+  component: ComponentMetaHolder | string;
 }
 export const ComponentStrip = forwardRef(function ComponentStrip(
   { component, children }: ComponentStripProps,
   ref: ForwardedRef<HTMLDivElement>
 ) {
-  const { id, homepage, exported } = component[componentMetaField];
+  const { id, homepage, exported } = extractMetadata(component);
 
   const parsedId = useMemo(() => ComponentID.tryFromString(id), [id]);
   const componentLink = homepage || calcComponentLink(parsedId, exported);
@@ -43,4 +44,12 @@ function LabelBlock({ link, children }: { link?: string; children: ReactNode }) 
       {children}
     </Comp>
   );
+}
+
+function extractMetadata(metadata: string | ComponentMetaHolder): ComponentMeta {
+  if (typeof metadata === 'string') {
+    return { id: metadata, exported: true };
+  }
+
+  return metadata[componentMetaField];
 }

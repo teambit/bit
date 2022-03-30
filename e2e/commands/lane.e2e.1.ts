@@ -1189,6 +1189,12 @@ describe('bit lane command', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(2);
         });
+        it('bit import should not reset the component to the remote-state but should keep the merged data', () => {
+          helper.command.import();
+          const status = helper.command.statusJson();
+          expect(status.outdatedComponents).to.have.lengthOf(0);
+          expect(status.stagedComponents).to.have.lengthOf(2);
+        });
         describe('tagging the components', () => {
           before(() => {
             helper.command.tagScope();

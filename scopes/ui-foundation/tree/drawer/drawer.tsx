@@ -10,6 +10,7 @@ export type DrawerProps = {
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
   Widgets?: ReactNode[];
   Context?: ComponentType<any>;
+  contentClass?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function DrawerUI({
@@ -20,6 +21,7 @@ export function DrawerUI({
   onToggle,
   Widgets,
   Context = Noop,
+  contentClass,
   ...rest
 }: DrawerProps) {
   // consider passing the entire drawer type instead of passing each parameter
@@ -35,7 +37,7 @@ export function DrawerUI({
           </div>
           {Widgets}
         </div>
-        <div className={classNames(styles.drawerContent, isOpen && styles.open)}>{children}</div>
+        <div className={classNames(styles.drawerContent, contentClass, isOpen && styles.open)}>{children}</div>
       </Context>
     </div>
   );

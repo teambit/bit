@@ -7,7 +7,7 @@ import { ComponentStrip } from './component-strip';
 import { OtherComponentsPopper } from './other-components';
 
 export interface LabelProps extends React.HTMLAttributes<HTMLDivElement> {
-  components: ComponentMetaHolder[];
+  components: (ComponentMetaHolder | string)[];
 }
 
 export function Label({ components, ...props }: LabelProps) {

@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import semver, { ReleaseType } from 'semver';
 import { Command, CommandOptions } from '@teambit/cli';
 import {
   TagResults,
@@ -7,10 +6,7 @@ import {
   AUTO_TAGGED_MSG,
   BasicTagParams,
 } from '@teambit/legacy/dist/api/consumer/lib/tag';
-import { isString } from '@teambit/legacy/dist/utils';
-import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import { SnappingMain } from './snapping.main.runtime';
 
@@ -70,7 +66,6 @@ https://${docsDomain}/components/tags
 ${WILDCARD_HELP('tag')}`;
   }
 
-  // eslint-disable-next-line complexity
   async report(
     [id = []]: [string[]],
     {
@@ -113,75 +108,21 @@ ${WILDCARD_HELP('tag')}`;
       disableTagPipeline?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    if (soft) build = false;
-    function getVersion(): string | undefined {
-      if (scope && isString(scope)) return scope;
-      if (all && isString(all)) return all;
-      if (snapped && isString(snapped)) return snapped;
-      return ver;
-    }
-
-    if (!id.length && !all && !snapped && !scope && !persist) {
-      throw new GeneralError('missing [id]. to tag all components, please use --all flag');
-    }
-    if (id.length && all) {
-      throw new GeneralError(
-        'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
-      );
-    }
     if (typeof ignoreUnresolvedDependencies === 'boolean') {
       throw new Error(`--ignore-unresolved-dependencies has been removed, please use --ignore-issues instead`);
     }
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
       throw new Error(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
-    if (id.length === 2) {
-      const secondArg = id[1];
-      // previously, the synopsis of this command was `bit tag [id] [version]`, show a descriptive
-      // error when users still use it.
-      if (semver.valid(secondArg)) {
-        throw new GeneralError(
-          `seems like you entered a version as the second arg, this is not supported anymore, please use "@" sign or --ver flag instead`
-        );
-      }
-    }
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
-    if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new GeneralError('you can use either force-deploy or disable-tag-pipeline, but not both');
-    }
-    if (all && persist) {
-      throw new GeneralError('you can use either --all or --persist, but not both');
-    }
-    if (editor && persist) {
-      throw new GeneralError('you can use either --editor or --persist, but not both');
-    }
-    if (editor && message) {
-      throw new GeneralError('you can use either --editor or --message, but not both');
-    }
-
-    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
-    if (releaseFlags.length > 1) {
-      throw new GeneralError('you can use only one of the following - patch, minor, major, pre-release');
-    }
-
-    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-    const includeImported = Boolean(scope && all);
-
-    if (major) releaseType = 'major';
-    else if (minor) releaseType = 'minor';
-    else if (patch) releaseType = 'patch';
-    else if (preRelease) releaseType = 'prerelease';
 
     const params = {
       ids: id,
-      all: Boolean(all),
-      snapped: Boolean(snapped),
+      all,
+      snapped,
       editor,
       message,
-      exactVersion: getVersion(),
-      releaseType,
-      preRelease: typeof preRelease === 'string' ? preRelease : '',
+      preRelease,
       force,
       verbose,
       ignoreIssues,
@@ -192,10 +133,13 @@ ${WILDCARD_HELP('tag')}`;
       soft,
       persist,
       scope,
-      includeImported,
       disableTagAndSnapPipelines,
       forceDeploy,
       incrementBy,
+      ver,
+      patch,
+      minor,
+      major,
     };
 
     const results = await this.snapping.tag(params);

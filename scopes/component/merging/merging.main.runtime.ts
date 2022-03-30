@@ -396,7 +396,11 @@ export class MergingMain {
     } else {
       // this is main
       const modelComponent = await consumer.scope.getModelComponent(id);
-      if (!consumer.isLegacy) modelComponent.setHead(remoteHead);
+      if (!consumer.isLegacy) {
+        modelComponent.setHead(remoteHead);
+        // mark it as local, otherwise, when importing this component from a remote, it'll override it.
+        modelComponent.markVersionAsLocal(remoteHead.toString());
+      }
       consumer.scope.objects.add(modelComponent);
     }
 

@@ -13,6 +13,7 @@ import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent } from '../use-component';
 import { MenuNav } from './menu-nav';
+import { MobileMenuNav } from './mobile-menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 
@@ -46,6 +47,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
     <div className={classnames(styles.topBar, className)}>
       <div className={styles.leftSide}>
         <MenuNav navigationSlot={navigationSlot} />
+        <MobileMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
       </div>
       <div className={styles.rightSide}>
         <div className={styles.widgets}>
