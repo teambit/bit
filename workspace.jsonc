@@ -99,6 +99,7 @@
         "@teambit/bit.content.what-is-bit": "1.95.0",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
+        "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
@@ -107,6 +108,7 @@
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
+        "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.16",
         "@teambit/design.ui.brand.logo": "1.95.0",
         "@teambit/design.ui.icon-button": "1.0.10",
@@ -152,6 +154,7 @@
         "@teambit/evangelist.input.input": "1.0.2",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
+        "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/harmony": "0.2.11",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
@@ -226,7 +229,6 @@
         "camelcase": "6.2.0",
         "case-sensitive-paths-webpack-plugin": "2.3.0",
         "classnames": "2.2.6",
-        "cleargraph": "7.0.0",
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "command-exists": "1.2.9",
@@ -369,7 +371,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.241",
+        "@teambit/legacy": "1.0.242",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -399,6 +401,9 @@
     "aspects": [
       "teambit.harmony/aspect"
     ]
+  },
+  "teambit.component/issues": {
+    "ignoreIssues": ["CircularDependencies"]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
@@ -443,7 +448,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.241"
+            "@teambit/legacy": "1.0.242"
           }
         }
       },
@@ -702,7 +707,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.241"
+            "@teambit/legacy": "1.0.242"
           }
         }
       }
@@ -759,7 +764,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.241",
+            "@teambit/legacy": "1.0.242",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -877,10 +882,11 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.241"
+            "@teambit/legacy": "1.0.242"
           }
         }
       }
     }
   }
 }
+

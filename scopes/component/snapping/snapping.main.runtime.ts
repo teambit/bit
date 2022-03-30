@@ -24,8 +24,11 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import pMap from 'p-map';
+import { InsightsAspect, InsightsMain } from '@teambit/insights';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { SnapCmd } from './snap-cmd';
@@ -36,7 +39,12 @@ import { ComponentsHaveIssues } from './components-have-issues';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export class SnappingMain {
-  constructor(private workspace: Workspace, private logger: Logger, private issues: IssuesMain) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    private issues: IssuesMain,
+    private insights: InsightsMain
+  ) {}
 
   /**
    * tag the given component ids or all modified/new components if "all" param is set.
@@ -159,7 +167,8 @@ export class SnappingMain {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this.loadComponentsForTag(legacyBitIds);
-    this.throwForComponentIssues(components, ignoreIssues);
+    await this.throwForLegacyDependenciesInsideHarmony(components);
+    await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -249,7 +258,8 @@ export class SnappingMain {
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     const components = await this.loadComponentsForTag(ids);
-    this.throwForComponentIssues(components, ignoreIssues);
+    await this.throwForLegacyDependenciesInsideHarmony(components);
+    await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -302,7 +312,7 @@ export class SnappingMain {
     }
   }
 
-  private async loadComponentsForTag(ids: BitIds): Promise<Component[]> {
+  private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     if (this.workspace.isLegacy) {
       return components;
@@ -345,8 +355,8 @@ export class SnappingMain {
     return reloadedComponents;
   }
 
-  private throwForComponentIssues(components: Component[], ignoreIssues?: string) {
-    components.forEach((component) => {
+  private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
+    legacyComponents.forEach((component) => {
       if (this.workspace.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }
@@ -358,6 +368,10 @@ export class SnappingMain {
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnore();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
+    if (!this.workspace.isLegacy && !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+      const components = await this.workspace.getManyByLegacy(legacyComponents);
+      await this.insights.addInsightsAsComponentIssues(components);
+    }
     issuesToIgnore.forEach((issue) => {
       const issueClass = IssuesClasses[issue];
       if (!issueClass) {
@@ -367,14 +381,38 @@ export class SnappingMain {
           ).join('\n')}`
         );
       }
-      components.forEach((component) => {
+      legacyComponents.forEach((component) => {
         component.issues.delete(issueClass);
       });
     });
-    const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+    const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
+  }
+
+  private async throwForLegacyDependenciesInsideHarmony(components: ConsumerComponent[]) {
+    if (this.workspace.isLegacy) {
+      return;
+    }
+    const throwForComponent = async (component: ConsumerComponent) => {
+      const dependenciesIds = component.getAllDependenciesIds();
+      const legacyScope = this.workspace.scope.legacyScope;
+      await Promise.all(
+        dependenciesIds.map(async (depId) => {
+          if (!depId.hasVersion()) return;
+          const modelComp = await legacyScope.getModelComponentIfExist(depId);
+          if (!modelComp) return;
+          const version = await modelComp.loadVersion(depId.version as string, legacyScope.objects);
+          if (version.isLegacy) {
+            throw new Error(
+              `unable tagging "${component.id.toString()}", its dependency "${depId.toString()}" is legacy`
+            );
+          }
+        })
+      );
+    };
+    await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
   }
 
   private async getComponentsToTag(
@@ -443,17 +481,18 @@ export class SnappingMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect, IssuesAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect, IssuesAspect, InsightsAspect];
   static runtime = MainRuntime;
-  static async provider([workspace, cli, community, loggerMain, issues]: [
+  static async provider([workspace, cli, community, loggerMain, issues, insights]: [
     Workspace,
     CLIMain,
     CommunityMain,
     LoggerMain,
-    IssuesMain
+    IssuesMain,
+    InsightsMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
-    const snapping = new SnappingMain(workspace, logger, issues);
+    const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping);
     cli.register(tagCmd, snapCmd);
