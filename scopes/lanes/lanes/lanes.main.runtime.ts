@@ -20,6 +20,7 @@ import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Component } from '@teambit/component';
 import { MergingMain, MergingAspect } from '@teambit/merging';
+import { DocsMain } from '@teambit/docs';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -273,7 +274,8 @@ export class LanesMain {
     Workspace,
     GraphqlMain,
     CommunityMain,
-    MergingMain
+    MergingMain,
+    DocsMain
   ]) {
     const lanesMain = new LanesMain(workspace, scope, merging);
     const isLegacy = workspace && workspace.consumer.isLegacy;

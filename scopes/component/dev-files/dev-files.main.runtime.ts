@@ -47,7 +47,7 @@ export class DevFilesMain {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.calculateEnv(component);
-    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
+    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
     const patternSlot = this.devPatternSlot.toArray();
     const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
@@ -117,7 +117,7 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
-  computeDevFilesForPattern(component: Component, patterns: string[]): DevFiles {
+  computeCustomDevFiles(component: Component, patterns: string[]): DevFiles {
     return new DevFiles({
       [component.id.name]: component.state.filesystem.byGlob(patterns).map((file) => {
         return file.relative;

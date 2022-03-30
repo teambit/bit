@@ -12,7 +12,7 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
-import { LanesMain, LanesAspect } from '@teambit/lanes';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { docsSchema } from './docs.graphql';
@@ -55,11 +55,11 @@ export class DocsMain {
 
     private workspace: Workspace,
 
-    private lanes: LanesMain,
-
     private logger: Logger,
 
     private devFiles: DevFilesMain,
+
+    private envs: EnvsMain,
 
     private docPropSlot: DocPropSlot,
 
@@ -76,17 +76,10 @@ export class DocsMain {
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    // check if the component is a readme
-    let docFiles;
-
-    if (this.lanes.isLaneReadme(component)) {
-      const devFiles = this.devFiles.computeDevFilesForPattern(component, ['**/index.*']);
-      docFiles = devFiles.get(component.id.name);
-    } else {
-      const devFiles = this.devFiles.getDevFiles(component);
-      docFiles = devFiles.get(DocsAspect.id);
-    }
-
+    const devFiles = this.devFiles.getDevFiles(component);
+    const componentEnv = this.envs.getEnv(component).env;
+    const useEnvDocPattern = componentEnv.overrideDocsDevPatterns;
+    const docFiles = useEnvDocPattern ? devFiles.get(componentEnv.id) : devFiles.get(DocsAspect.id);
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
 
@@ -164,7 +157,7 @@ export class DocsMain {
     CompilerAspect,
     LoggerAspect,
     DevFilesAspect,
-    LanesAspect,
+    EnvsAspect,
   ];
 
   static defaultConfig = {
@@ -172,7 +165,7 @@ export class DocsMain {
   };
 
   static async provider(
-    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, lanes]: [
+    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles, envs]: [
       PreviewMain,
       GraphqlMain,
       Workspace,
@@ -180,7 +173,7 @@ export class DocsMain {
       CompilerMain,
       LoggerMain,
       DevFilesMain,
-      LanesMain
+      EnvsMain
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]
@@ -197,11 +190,11 @@ export class DocsMain {
 
       workspace,
 
-      lanes,
-
       logger,
 
       devFiles,
+
+      envs,
 
       docPropSlot,
 
