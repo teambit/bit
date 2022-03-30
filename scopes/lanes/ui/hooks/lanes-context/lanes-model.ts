@@ -30,20 +30,16 @@ export type LanesQueryResult = {
 };
 
 export type LanesHost = 'workspace' | 'scope';
-/**
- * Represents a Component on a Lane. Extends ComponentModel and adds a Lane Component URL
- */
-export type LaneComponentModel = { model: ComponentModel; url: string };
+// export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope
  */
 export type LaneModel = {
   id: string;
   scope: string;
-  url: string;
   name: string;
   isMerged: boolean | null;
-  components: LaneComponentModel[];
+  components: ComponentModel[];
 };
 /**
  * Props to instantiate a LanesModel
@@ -105,17 +101,14 @@ export class LanesModel {
         packageName: '',
         description: '',
       });
-      const laneComponentUrl = LanesModel.getLaneComponentUrl(componentModel.id, laneId);
-      return { model: componentModel, url: laneComponentUrl };
+      return componentModel;
     });
 
-    const laneUrl = LanesModel.getLaneUrl(laneId);
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
-      url: laneUrl,
       components,
     };
   }
@@ -135,16 +128,16 @@ export class LanesModel {
   }
 
   static groupByComponentHashAndId(lanes: LaneModel[]): {
-    byHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+    byHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
     byId: Map<string, LaneModel[]>;
   } {
-    const byHash = new Map<string, { lane: LaneModel; component: LaneComponentModel }>();
+    const byHash = new Map<string, { lane: LaneModel; component: ComponentModel }>();
     const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        const id = component.model.id.fullName;
-        const version = component.model.id.version as string;
+        const id = component.id.fullName;
+        const version = component.id.version as string;
         byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
@@ -170,20 +163,20 @@ export class LanesModel {
   }
 
   readonly lanesByScope: Map<string, LaneModel[]>;
-  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   readonly currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
   isInCurrentLane = (componentId: ComponentID) =>
-    this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
+    this.currentLane?.components.some((comp) => comp.id.name === componentId.name);
 
   getLaneComponentUrlByVersion = (version?: string) => {
     if (!version) return '';
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return '';
-    return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);
+    return LanesModel.getLaneComponentUrl(componentAndLane.component.id, componentAndLane.lane.id);
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);

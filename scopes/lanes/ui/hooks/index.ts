@@ -5,7 +5,6 @@ export {
   LanesProviderProps,
   LanesModel,
   LaneModel,
-  LaneComponentModel,
   LaneComponentQueryResult,
   LaneQueryResult,
   LanesQueryResult,

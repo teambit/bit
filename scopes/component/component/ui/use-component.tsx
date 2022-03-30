@@ -28,8 +28,9 @@ export function useComponent(host: string, id?: ComponentID): Component {
   if (!targetId) throw new TypeError('useComponent received no component id');
   const currentLane = lanesContext?.currentLane;
   // when on a lane, always fetch all the logs starting from the 'head' version
-  const logHead = lanesContext?.currentLane?.components.find((component) => component.model.id.fullName === targetId)
-    ?.model.id.version;
+  const logHead = lanesContext?.currentLane?.components.find((component) => component.id.fullName === targetId)?.id
+    .version;
+
   const logFilters = currentLane
     ? {
         log: {

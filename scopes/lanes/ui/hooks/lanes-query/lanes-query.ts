@@ -1,8 +1,8 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
-import { LaneModel, LanesModel, LanesQueryResult, LaneComponentModel } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel, LanesQueryResult } from '@teambit/lanes.ui.lanes';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
-import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentModel } from '@teambit/component';
 
 const GET_LANES = gql`
   {
@@ -58,20 +58,15 @@ export function useLaneComponentsQuery(
   lane: LaneModel,
   host: string
 ): {
-  components?: Array<LaneComponentModel>;
+  components?: Array<ComponentModel>;
 } & Omit<QueryResult<LanesQueryResult>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { name: lane.name },
   });
 
-  const components: Array<LaneComponentModel> = data?.getLaneComponents.map((component) => {
-    const id = component && ComponentID.fromObject(component.id);
-
-    return {
-      model: ComponentModel.from({ ...component, host }),
-      url: LanesModel.getLaneComponentUrl(id, lane.id),
-    };
-  });
+  const components: Array<LaneComponentModel> = data?.getLaneComponents.map((component) =>
+    ComponentModel.from({ ...component, host })
+  );
 
   return {
     ...rest,

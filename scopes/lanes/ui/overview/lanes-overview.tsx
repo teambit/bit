@@ -1,5 +1,5 @@
 import React, { useMemo, ComponentType } from 'react';
-import { LaneDetails, useLanesContext, useLaneComponentsQuery, LaneModel } from '@teambit/lanes.ui.lanes';
+import { LaneDetails, useLanesContext, useLaneComponentsQuery, LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
@@ -57,7 +57,13 @@ function LaneOverviewWithPreview({ host, currentLane, overviewItems, routeSlot }
       ></LaneDetails>
       <ComponentGrid>
         {components?.map((component, index) => {
-          return <WorkspaceComponentCard key={index} component={component.model} componentUrl={component.url} />;
+          return (
+            <WorkspaceComponentCard
+              key={index}
+              component={component}
+              componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+            />
+          );
         })}
       </ComponentGrid>
       {routeSlot && <SlotSubRouter slot={routeSlot} />}
