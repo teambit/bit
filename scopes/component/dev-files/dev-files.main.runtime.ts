@@ -49,9 +49,11 @@ export class DevFilesMain {
     const envDef = this.envs.calculateEnv(component);
     const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
+    // filter any pattern that starts with "-" from any aspect
+
     const patternSlot = this.devPatternSlot.toArray();
     const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
-      const [aspectId, patterns] = current;
+      const [aspectId, patterns] = current; // pattern can be a func
       if (!acc[aspectId]) acc[aspectId] = [];
       // if (component.state.aspects.get(aspectId)) acc[aspectId] = acc[aspectId].concat(patterns);
       acc[aspectId] = acc[aspectId].concat(patterns);
@@ -117,14 +119,6 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
-  computeCustomDevFiles(component: Component, patterns: string[]): DevFiles {
-    return new DevFiles({
-      [component.id.name]: component.state.filesystem.byGlob(patterns).map((file) => {
-        return file.relative;
-      }),
-    });
-  }
-
   static slots = [Slot.withType<DevPatterns>()];
 
   static defaultConfig = {
@@ -154,6 +148,10 @@ export class DevFilesMain {
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
         // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
+        // TODO: verify when the component is not in the cache
+        /**
+         *
+         */
         const component = await workspace.get(componentId, false, consumerComponent, true, false);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = devFiles.computeDevFiles(component);
