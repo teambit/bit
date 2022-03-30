@@ -403,7 +403,9 @@
     ]
   },
   "teambit.component/issues": {
-    "ignoreIssues": ["CircularDependencies"]
+    "ignoreIssues": [
+      "CircularDependencies"
+    ]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
@@ -879,4 +881,3 @@
     }
   }
 }
-
