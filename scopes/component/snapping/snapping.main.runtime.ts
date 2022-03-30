@@ -258,6 +258,7 @@ export class SnappingMain {
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     const components = await this.loadComponentsForTag(ids);
+    await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
