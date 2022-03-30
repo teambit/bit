@@ -8,6 +8,14 @@
   }
 
   .filterIcon {
+    display: flex;
+    padding: 8px;
+
+    &:hover {
+      background: var(--bit-bg-heavy, #f6f6f6);
+      cursor: pointer;
+    }
+
     img {
       width: 16px;
       filter: invert(44%) sepia(7%) saturate(560%) hue-rotate(187deg) brightness(96%) contrast(91%);
@@ -17,21 +25,30 @@
       margin: 0px 8px;
       font-size: 14px;
     }
+
+    .dropdownArrow {
+      display: flex;
+    }
   }
 }
+
 .envFilterDropdownContainer {
   width: 100%;
 }
 
 .envFilterDropdown {
   width: 100%;
-  label > div {
-    width: 90%;
-  }
-  label > div > div:first-child {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-    width: 60%;
-  }
+}
+
+.envDropdownItem {
+  padding-left: 8px;
+  display: flex;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+}
+
+.envDropdownItemLabel,
+.envDropdownItemIcon {
+  display: flex;
+  justify-content: space-between;
 }
