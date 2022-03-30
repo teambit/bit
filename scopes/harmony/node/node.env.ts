@@ -46,7 +46,8 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    return this.reactAspect.reactEnv.getCjsJestTester(jestConfigPath, jestModulePath);
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.reactAspect.reactEnv.getCjsJestTester(config, jestModulePath);
   }
 
   getPreviewConfig() {

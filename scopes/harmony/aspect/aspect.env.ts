@@ -8,6 +8,7 @@ import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+import { Tester } from '@teambit/tester';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -36,6 +37,14 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
   // TODO: this doesn't seems to work as expected, the getTsConfig is not a transformer and the react env API expect a transformers array not an object
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
     return this.reactEnv.getTsCjsCompiler(this.getTsConfig(tsConfig));
+  }
+
+  /**
+   * returns a component tester.
+   */
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
+    const config = jestConfigPath || require.resolve('@teambit/node/jest/jest.config');
+    return this.reactEnv.getCjsJestTester(config, jestModulePath);
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {

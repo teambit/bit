@@ -835,6 +835,15 @@
         }
       }
     },
+    "scopes/harmony/node": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "jest-environment-node": "27.5.1"
+          }
+        }
+      }
+    },
     "scopes/harmony/aspect": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
@@ -847,7 +856,8 @@
             "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
             "@babel/preset-react": "7.13.13",
-            "@babel/preset-typescript": "7.12.7"
+            "@babel/preset-typescript": "7.12.7",
+            "jest-environment-node": "27.5.1"
           }
         }
       }
