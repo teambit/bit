@@ -849,6 +849,15 @@
         }
       }
     },
+    "scopes/mdx/mdx": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "@babel/helper-plugin-test-runner": "7.16.7"
+          }
+        }
+      }
+    },
     "scopes/harmony/aspect": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
