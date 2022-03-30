@@ -88,10 +88,10 @@ const GET_LANE_COMPONENTS = gql`
   ${laneComponentFields}
 `;
 
-export function useLanesQuery(host: string): { lanes?: LaneModel[] } & Omit<QueryResult<LanesQueryResult>, 'data'> {
+export function useLanesQuery(host: string): { lanes?: LanesModel } & Omit<QueryResult<LanesQueryResult>, 'data'> {
   const { data, ...rest } = useDataQuery<LanesQueryResult>(GET_LANES, { variables: { extensionId: host } });
   const { scope, loading } = useScopeQuery();
-  const lanes = data && LanesModel.from(data, host, scope);
+  const lanes = data && LanesModel.from({ data, host, scope });
   return {
     ...rest,
     loading: rest.loading || !!loading,

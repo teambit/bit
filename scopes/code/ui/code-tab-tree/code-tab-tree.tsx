@@ -50,8 +50,8 @@ export function CodeTabTree({
       const { selected } = useContext(TreeContext);
       const lanesContext = useLanesContext();
 
-      const currentLaneUrl = lanesContext?.currentLane
-        ? `${LanesModel.getLaneUrl(lanesContext?.currentLane.id)}${LanesModel.baseLaneComponentRoute}`
+      const currentLaneUrl = lanesContext?.viewedLane
+        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
         : '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
       const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
@@ -78,6 +78,7 @@ export function CodeTabTree({
         isOpen={openDrawerList.includes('FILES')}
         onToggle={() => handleDrawerToggle('FILES')}
         name="FILES"
+        contentClass={styles.codeDrawerContent}
         className={classNames(styles.codeTabDrawer)}
       >
         <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
@@ -86,6 +87,7 @@ export function CodeTabTree({
         isOpen={openDrawerList.includes('DEPENDENCIES')}
         onToggle={() => handleDrawerToggle('DEPENDENCIES')}
         className={classNames(styles.codeTabDrawer)}
+        contentClass={styles.codeDrawerContent}
         name="DEPENDENCIES"
       >
         <DependencyTree dependenciesArray={dependencies} />

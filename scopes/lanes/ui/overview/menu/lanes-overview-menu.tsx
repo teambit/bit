@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import React from 'react';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
+import { Menu, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
 
@@ -22,7 +23,7 @@ export type LanesOverviewMenuProps = {
   /**
    * right side menu item slot
    */
-  widgetSlot?: LanesOrderedNavigationSlot;
+  widgetSlot?: MenuWidgetSlot;
   host: string;
   /**
    * main dropdown item slot
@@ -34,7 +35,7 @@ export type LanesOverviewMenuProps = {
  * Note: Currently it has been copied from menu.tsx (scope/component/component/ui/menu)
  * Once tab-link component is ready update it
  */
-export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMenuProps) {
+export function LanesOverviewMenu({ navigationSlot, widgetSlot, className }: LanesOverviewMenuProps) {
   //   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
 
   return (
@@ -42,12 +43,11 @@ export function LanesOverviewMenu({ navigationSlot, className }: LanesOverviewMe
       <div className={styles.leftSide}>
         <MenuNav navigationSlot={navigationSlot} />
       </div>
-      {/* <div className={styles.rightSide}>
+      <div className={styles.rightSide}>
         <div className={styles.widgets}>
-          <MenuNav navigationSlot={widgetSlot} />
+          <Menu widgetSlot={widgetSlot} />
         </div>
-        <MainDropdown menuItems={mainMenuItems} />
-      </div> */}
+      </div>
     </div>
   );
 }

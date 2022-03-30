@@ -61,4 +61,7 @@ This is an <b>important</b> message
 This is an <b>info</b> message
 :::
 
+:::info This is a long message title. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec gravida dui vel dignissim facilisis.
+:::
+
 <br />

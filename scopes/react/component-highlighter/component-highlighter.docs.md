@@ -34,23 +34,12 @@ You can also use it manually, to have more control:
 import { ElementHighlighter } from '@teambit/react.ui.component-highlighter';
 
 function ManualHighlight() {
-  const [element, setElement] = useState<HTMLElement | undefined>(undefined);
-
-  useEffect(() => setElement(document.getElementById('to-highlight')), [targetRef.current]);
-
-  const target = targetElement && {
-    element: targetElement,
-    id: 'teambit.design/ui/icon-button',
-
-    // explicit overrides:
-    link: 'https://bit.dev/teambit/design/ui/icon-button',
-    scopeLink: 'https://bit.dev/teambit/design',
-  };
+  const targetRef = createRef<HTMLElement | undefined>(null);
 
   return (
     <div>
-      <div id="to-highlight">highlight target</div>
-      {target && <ElementHighlighter target={target} />}
+      <div ref={targetRef}>highlight target</div>
+      <ElementHighlighter targetRef={targetRef} components={['teambit.design/ui/icon-button']} />
     </div>
   );
 }

@@ -23,7 +23,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
-  const currentLane = lanesModel?.currentLane;
+  const currentLane = lanesModel?.viewedLane;
 
   const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
   const showHeaderOutsideIframe =

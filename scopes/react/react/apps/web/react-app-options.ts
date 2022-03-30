@@ -51,4 +51,9 @@ export type ReactAppOptions = {
    * ranges of ports to use to run the app server.
    */
   portRange?: number[];
+
+  /**
+   * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
+   */
+  favicon?: string;
 };

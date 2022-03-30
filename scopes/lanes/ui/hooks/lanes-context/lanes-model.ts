@@ -19,6 +19,7 @@ export type LaneQueryResult = {
   remote?: string;
   isMerged: boolean;
   components: ComponentModelProps[];
+  currentLane?: LaneQueryResult;
 };
 /**
  * GQL (lanes)
@@ -46,6 +47,7 @@ export type LaneModel = {
  */
 export type LanesModelProps = {
   lanes?: LaneModel[];
+  viewedLane?: LaneModel;
   currentLane?: LaneModel;
 };
 /**
@@ -141,12 +143,17 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from(lanesData: LanesQueryResult, host: string, currentScope?: ScopeModel): LaneModel[] {
-    const lanes = lanesData?.lanes?.map((result) => LanesModel.mapToLaneModel(result, host, currentScope)) || [];
-    return lanes;
+  static from({ data, host, scope }: { data: LanesQueryResult; host: string; scope?: ScopeModel }): LanesModel {
+    const lanes = data?.lanes?.map((result) => LanesModel.mapToLaneModel(result, host, scope)) || [];
+    const currentLane =
+      data?.lanes && data.lanes[0].currentLane
+        ? LanesModel.mapToLaneModel(data.lanes[0].currentLane, host, scope)
+        : undefined;
+    return new LanesModel({ lanes, currentLane });
   }
 
-  constructor({ lanes, currentLane }: LanesModelProps) {
+  constructor({ lanes, viewedLane, currentLane }: LanesModelProps) {
+    this.viewedLane = viewedLane;
     this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.lanesByScope = LanesModel.groupByScope(this.lanes);
@@ -159,11 +166,12 @@ export class LanesModel {
   readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
-  readonly currentLane?: LaneModel;
+  viewedLane?: LaneModel;
+  currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
-  isInCurrentLane = (componentId: ComponentID) =>
-    this.currentLane?.components.some((comp) => comp.id.name === componentId.name);
+  isInViewedLane = (componentId: ComponentID) =>
+    this.viewedLane?.components.some((comp) => comp.id.name === componentId.name);
 
   getLaneComponentUrlByVersion = (version?: string) => {
     if (!version) return '';
@@ -173,4 +181,7 @@ export class LanesModel {
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
+  setViewedLane = (viewedLaneId?: string) => {
+    this.viewedLane = this.lanes.find((lane) => lane.id === viewedLaneId);
+  };
 }
