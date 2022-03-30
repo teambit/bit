@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
-import { ComponentModel } from '@teambit/component';
+import { ComponentID, ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+import { Descriptor } from '@teambit/envs';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -31,8 +32,7 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-const mapToEnvDisplayName = (component: ComponentModel) =>
-  component.environment?.id.split('/')?.pop()?.split('@').shift() || (component.environment?.id as string);
+const mapToEnvDisplayName = (componentDescriptor: Descriptor) => ComponentID.fromString(componentDescriptor.id).name;
 
 const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
@@ -43,15 +43,16 @@ const getDefaultState = (components: ComponentModel[]) => {
     const componentEnvSet = new Set<string>();
     return components
       .filter((component) => {
-        const displayName = mapToEnvDisplayName(component);
-        if (!component.environment?.id || componentEnvSet.has(displayName)) return false;
+        if (!component.environment) return false;
+        const displayName = mapToEnvDisplayName(component.environment);
+        if (componentEnvSet.has(displayName)) return false;
 
         componentEnvSet.add(displayName);
         return true;
       })
       .map((component) => ({
-        displayName: mapToEnvDisplayName(component),
-        id: component.environment?.id as string,
+        displayName: mapToEnvDisplayName(component.environment as Descriptor),
+        id: ComponentID.fromString(component.environment?.id as string).toStringWithoutVersion(),
         icon: component.environment?.icon,
       }));
   }, [components]);
@@ -86,8 +87,6 @@ function envsFilter({
   });
 
   const onCheck = (value: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-
     const checked = e.target.checked;
 
     updateFilter((currentState) => {
@@ -103,9 +102,7 @@ function envsFilter({
     });
   };
 
-  const onClear = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    event.stopPropagation();
-
+  const onClear = () => {
     updateFilter((currentState) => {
       currentState.state.envsState.forEach((value, key) => {
         currentState.state.envsState.set(key, { ...value, active: false });
@@ -114,17 +111,16 @@ function envsFilter({
     });
   };
 
-  const onSubmit = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    event.stopPropagation();
+  const onSubmit = () => {
     updateFilter((currentState) => {
       currentState.state.dropdownState = false;
       return currentState;
     });
   };
 
-  const onOutsideClicked = () => {
+  const onDropdownToggled = (event, open) => {
     updateFilter((currentState) => {
-      currentState.state.dropdownState = false;
+      currentState.state.dropdownState = open;
       return currentState;
     });
   };
@@ -133,12 +129,11 @@ function envsFilter({
     <div className={classNames(styles.envsFilterContainer, className)}>
       <MultiSelect
         itemsList={selectList}
-        placeholder={<EnvsPlaceholder updateFilter={updateFilter} />}
+        placeholder={<EnvsPlaceholder />}
         onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
-        clickPlaceholderToggles={true}
-        onClickOutside={onOutsideClicked}
+        onChange={onDropdownToggled}
         open={currentFilter.state.dropdownState}
         dropdownBorder={false}
         className={styles.envFilterDropdownContainer}
@@ -148,17 +143,9 @@ function envsFilter({
   );
 }
 
-const onPlaceholderClicked = (updateFilter: React.Dispatch<React.SetStateAction<EnvsFilterCriteria>>) => (event) => {
-  event.stopPropagation();
-  updateFilter((currentState) => {
-    currentState.state.dropdownState = !currentState.state.dropdownState;
-    return currentState;
-  });
-};
-
-function EnvsPlaceholder({ updateFilter }: { updateFilter: React.Dispatch<React.SetStateAction<EnvsFilterCriteria>> }) {
+function EnvsPlaceholder() {
   return (
-    <div className={styles.filterIcon} onClick={onPlaceholderClicked(updateFilter)}>
+    <div className={styles.filterIcon}>
       <img src="https://static.bit.dev/bit-icons/env.svg" />
       <span className={styles.filterIconLabel}>Environments</span>
       <div className={styles.dropdownArrow}>
