@@ -8,7 +8,7 @@ export { ChildrenHighlighter } from './children-highlighter';
 export type { ChildrenHighlighterProps } from './children-highlighter';
 
 export { ElementHighlighter } from './element-highlighter';
-export type { ElementHighlighterProps, HighlightTarget, Placement, HighlightClasses } from './element-highlighter';
+export type { ElementHighlighterProps, Placement, HighlightClasses } from './element-highlighter';
 
 export {
   ExcludeHighlighter,

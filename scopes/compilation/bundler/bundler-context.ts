@@ -135,6 +135,12 @@ export type HtmlConfig = {
    * Controls if and in what ways the output should be minified
    */
   minify?: boolean;
+
+  /**
+   * The favicon for the html page
+   */
+  favicon?:string; 
+
   // TODO: consider add chunksSortMode if there are more needs
 };
 

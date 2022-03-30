@@ -37,7 +37,7 @@
   opacity: 0;
   transition: max-height 300ms ease-in-out, opacity 250ms ease-in-out;
   max-height: 0;
-  border-bottom: 1px solid #ededed;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 
   &.open {
     opacity: 1;
@@ -58,5 +58,5 @@
 
 .drawerTreeContainer {
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 }

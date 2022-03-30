@@ -15,6 +15,7 @@ import { UntrackedDependencies } from './untracked-dependencies';
 import { LegacyInsideHarmony } from './legacy-inside-harmony';
 import { MultipleEnvs } from './multiple-envs';
 import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src';
+import { CircularDependencies } from './circular-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -33,6 +34,7 @@ export const IssuesClasses = {
   CustomModuleResolutionUsed,
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
+  CircularDependencies,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
@@ -86,6 +88,10 @@ export class IssuesList {
     return this.issues;
   }
 
+  getAllIssueNames(): string[] {
+    return this.issues.map((issue) => issue.constructor.name);
+  }
+
   createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {
     const newIssue = new IssueClass();
     this.add(newIssue);
@@ -102,6 +108,10 @@ export class IssuesList {
 
   shouldBlockTagging(): boolean {
     return this.issues.some((issue) => issue.isTagBlocker);
+  }
+
+  filterNonTagBlocking(): IssuesList {
+    return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
   }
 
   serialize() {

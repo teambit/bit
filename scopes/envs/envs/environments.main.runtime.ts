@@ -317,6 +317,13 @@ export class EnvsMain {
     return this.getEnvsNotFromEnvsConfig(component);
   }
 
+  /**
+   * whether a component has an env configured (either by variant or .bitmap).
+   */
+  hasEnvConfigured(component: Component): boolean {
+    return Boolean(this.getAllEnvsConfiguredOnComponent(component).length);
+  }
+
   getAllRegisteredEnvs(): string[] {
     return this.envSlot.toArray().map((envData) => envData[0]);
   }

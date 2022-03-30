@@ -1,16 +1,6 @@
-import { componentMetaField } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import React, { useState, createRef, useEffect, CSSProperties } from 'react';
-import { ElementHighlighter, HighlightTarget } from './element-highlighter';
-
-const mockTarget: Partial<HighlightTarget> = {
-  components: [
-    {
-      [componentMetaField]: {
-        id: 'teambit.design/ui/icon-button@1.6.2',
-      },
-    },
-  ],
-};
+import { ElementHighlighter } from './element-highlighter';
+import { MockTarget } from '../mock-component';
 
 type HighlightedElementProps = {
   style?: CSSProperties;
@@ -20,18 +10,21 @@ type HighlightedElementProps = {
 };
 
 export const HighlightedElement = ({ style, targetStyle, watchMotion, className }: HighlightedElementProps) => {
-  const [targetElement, setTargetElement] = useState<HTMLElement | undefined>(undefined);
   const targetRef = createRef<HTMLDivElement>();
-
-  useEffect(() => setTargetElement(targetRef.current || undefined), [targetRef.current]);
-  const target = targetElement && { ...mockTarget, element: targetElement };
 
   return (
     <div className={className} style={{ padding: '16px 16px 40px 16px', width: 300, fontFamily: 'sans-serif' }}>
       <div ref={targetRef} style={{ width: 100, ...targetStyle }}>
         highlight target
       </div>
-      {target && <ElementHighlighter target={target} style={style} watchMotion={watchMotion} placement="bottom" />}
+
+      <ElementHighlighter
+        targetRef={targetRef}
+        components={[MockTarget]}
+        style={style}
+        watchMotion={watchMotion}
+        placement="bottom"
+      />
     </div>
   );
 };
@@ -60,13 +53,30 @@ export const Sizes = () => {
   );
 };
 
+const fps = 30;
+const frameInterval = 1000 / fps;
+
 export const MovingElement = () => {
   const [margin, setMargin] = useState(0);
 
   useEffect(() => {
-    const intervalId = setInterval(() => setMargin((x) => (x + 1) % 100), 80);
+    const intervalId = setInterval(() => setMargin((x) => (x + 1) % 100), frameInterval);
     return () => clearInterval(intervalId);
   }, []);
 
-  return <HighlightedElement targetStyle={{ marginLeft: margin }} />;
+  return <HighlightedElement targetStyle={{ marginLeft: margin }} watchMotion />;
+};
+
+export const ElementOnTheEdge = () => {
+  const targetRef = createRef<HTMLDivElement>();
+
+  return (
+    <div style={{ fontFamily: 'sans-serif' }}>
+      <div ref={targetRef} style={{ width: '100%', border: '1px solid black', boxSizing: 'border-box' }}>
+        This element is on the edge of the document, making the highlighter overflow. <br />
+        It should instead shrink to fit inside the document.
+      </div>
+      <ElementHighlighter targetRef={targetRef} components={[MockTarget]} watchMotion />
+    </div>
+  );
 };

@@ -60,6 +60,12 @@ export class BitMap {
     return true;
   }
 
+  setEntireConfig(id: ComponentID, config: Record<string, any>) {
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    bitMapEntry.config = config;
+    this.legacyBitMap.markAsChanged();
+  }
+
   /**
    * write .bitmap object to the filesystem
    */
