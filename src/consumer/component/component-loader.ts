@@ -186,20 +186,31 @@ export default class ComponentLoader {
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
 
+    const loadDependencies = async () => {
+      await this.invalidateDependenciesCacheIfNeeded();
+      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+        cacheResolvedDependencies: this.cacheResolvedDependencies,
+        cacheProjectAst: this.cacheProjectAst,
+        useDependenciesCache: component.issues.isEmpty(),
+      });
+      await dependenciesLoader.load();
+      updateDependenciesVersions(this.consumer, component);
+    };
+
+    const runOnComponentLoadEvent = async () => {
+      return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
+        component = await subscriber(component);
+      });
+    };
+
     try {
-      await this.loadDependencies(component);
-      await this.runOnComponentLoadEvent(component);
+      await loadDependencies();
+      await runOnComponentLoadEvent();
     } catch (err: any) {
       return handleError(err);
     }
 
     return component;
-  }
-
-  private async runOnComponentLoadEvent(component: Component) {
-    return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
-      component = await subscriber(component);
-    });
   }
 
   private async runOnComponentIssuesCalcEvent(component: Component) {
@@ -209,17 +220,6 @@ export default class ComponentLoader {
         component.issues.add(issue);
       });
     });
-  }
-
-  private async loadDependencies(component: Component) {
-    await this.invalidateDependenciesCacheIfNeeded();
-    const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
-      cacheResolvedDependencies: this.cacheResolvedDependencies,
-      cacheProjectAst: this.cacheProjectAst,
-      useDependenciesCache: component.issues.isEmpty(),
-    });
-    await dependenciesLoader.load();
-    updateDependenciesVersions(this.consumer, component);
   }
 
   private async _handleOutOfSyncScenarios(component: Component) {
