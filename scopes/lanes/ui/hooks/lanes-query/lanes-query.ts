@@ -24,13 +24,16 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanesQuery(): { lanes?: LaneModel[] } & Omit<QueryResult<LanesQueryResult>, 'data'> {
+export function useLanesQuery(): { lanes?: LaneModel[]; currentLane?: string } & Omit<
+  QueryResult<LanesQueryResult>,
+  'data'
+> {
   const { data, ...rest } = useDataQuery<LanesQueryResult>(GET_LANES);
   const { scope, loading } = useScopeQuery();
-  const lanes = data && LanesModel.from(data, scope);
   return {
     ...rest,
     loading: rest.loading || !!loading,
-    lanes,
+    lanes: data && LanesModel.from(data, scope),
+    currentLane: data?.lanes?.getCurrentLaneName,
   };
 }

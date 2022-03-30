@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
-import { ComponentModel } from '@teambit/component';
+import { ComponentID, ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -18,7 +20,8 @@ export const EnvsFilter: EnvsFilterCriteria = {
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
-    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(component.environment?.id) >= 0);
+    const envId = ComponentID.fromString(component.environment?.id as string).toStringWithoutVersion();
+    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(envId) >= 0);
     return matches;
   },
   state: {
@@ -29,9 +32,6 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-const mapToEnvDisplayName = (component: ComponentModel) =>
-  component.environment?.id.split('/').pop() || (component.environment?.id as string);
-
 const getDefaultState = (components: ComponentModel[]) => {
   const defaultState = {
     dropdownState: false,
@@ -41,16 +41,24 @@ const getDefaultState = (components: ComponentModel[]) => {
     const componentEnvSet = new Set<string>();
     return components
       .filter((component) => {
-        if (!component.environment?.id || componentEnvSet.has(component.environment.id)) return false;
+        const envId = component.environment && ComponentID.tryFromString(component.environment.id);
+        if (!envId) return false;
 
-        componentEnvSet.add(component.environment.id);
+        const displayName = envId.name;
+
+        if (componentEnvSet.has(displayName)) return false;
+
+        componentEnvSet.add(displayName);
         return true;
       })
-      .map((component) => ({
-        displayName: mapToEnvDisplayName(component),
-        id: component.environment?.id as string,
-        icon: component.environment?.icon,
-      }));
+      .map((component) => {
+        const envId = ComponentID.fromString(component.environment?.id as string);
+        return {
+          displayName: envId.name,
+          id: envId.toStringWithoutVersion(),
+          icon: component.environment?.icon,
+        };
+      });
   }, [components]);
   componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
     defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
@@ -78,10 +86,13 @@ function envsFilter({
       value: state.displayName,
       icon: state.icon,
       checked: !!currentEnvsState.get(state.displayName)?.active,
+      element: <EnvsDropdownItem {...state} />,
     });
   });
 
-  const onCheck = (value: string, checked: boolean) => {
+  const onCheck = (value: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+
     updateFilter((currentState) => {
       if (checked && !currentState.state.dropdownState) {
         currentState.state.dropdownState = true;
@@ -95,9 +106,7 @@ function envsFilter({
     });
   };
 
-  const onClear = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    event.stopPropagation();
-
+  const onClear = () => {
     updateFilter((currentState) => {
       currentState.state.envsState.forEach((value, key) => {
         currentState.state.envsState.set(key, { ...value, active: false });
@@ -106,39 +115,66 @@ function envsFilter({
     });
   };
 
-  const onSubmit = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    event.stopPropagation();
+  const onSubmit = () => {
     updateFilter((currentState) => {
       currentState.state.dropdownState = false;
       return currentState;
     });
   };
 
-  const onDropdownClicked = (event) => {
-    event.stopPropagation();
+  const onDropdownToggled = (event, open) => {
     updateFilter((currentState) => {
-      currentState.state.dropdownState = !currentFilter.state.dropdownState;
+      currentState.state.dropdownState = open;
       return currentState;
     });
   };
 
   return (
     <div className={classNames(styles.envsFilterContainer, className)}>
-      <div className={styles.filterIcon}>
-        <img src="https://static.bit.dev/bit-icons/env.svg" />
-      </div>
       <MultiSelect
         itemsList={selectList}
-        placeholderText={'Environments'}
+        placeholder={<EnvsPlaceholder />}
         onSubmit={onSubmit}
         onCheck={onCheck}
         onClear={onClear}
+        onChange={onDropdownToggled}
         open={currentFilter.state.dropdownState}
-        onClick={onDropdownClicked}
         dropdownBorder={false}
         className={styles.envFilterDropdownContainer}
         dropClass={styles.envFilterDropdown}
       />
     </div>
+  );
+}
+
+function EnvsPlaceholder() {
+  return (
+    <div className={styles.filterIcon}>
+      <img src="https://static.bit.dev/bit-icons/env.svg" />
+      <span className={styles.filterIconLabel}>Environments</span>
+      <div className={styles.dropdownArrow}>
+        <img src="https://static.bit.dev/bit-icons/fat-arrow-down.svg" />
+      </div>
+    </div>
+  );
+}
+
+function EnvsDropdownItem({
+  displayName,
+  id,
+  icon,
+}: {
+  active: boolean;
+  icon?: string;
+  displayName: string;
+  id: string;
+}) {
+  return (
+    <Tooltip placement="right" content={id}>
+      <div className={styles.envDropdownItem}>
+        <Ellipsis>{displayName}</Ellipsis>
+        <img className={styles.envDropdownItemIcon} src={icon}></img>
+      </div>
+    </Tooltip>
   );
 }

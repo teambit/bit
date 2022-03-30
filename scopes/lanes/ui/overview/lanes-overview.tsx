@@ -20,7 +20,7 @@ export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
-  const currentLane = lanesContext?.currentLane;
+  const currentLane = lanesContext?.viewedLane;
 
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
