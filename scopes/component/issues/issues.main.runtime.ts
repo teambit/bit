@@ -1,4 +1,3 @@
-import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
