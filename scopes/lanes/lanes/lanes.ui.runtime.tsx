@@ -95,7 +95,7 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
+    return <ViewedLaneFromUrl host={this.host}>{children}</ViewedLaneFromUrl>;
   };
 
   registerRoute(route: RouteProps) {
