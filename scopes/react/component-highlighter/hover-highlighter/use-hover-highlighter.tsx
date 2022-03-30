@@ -1,16 +1,11 @@
 import React, { useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
-import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
-import {
-  componentMetaField,
-  ComponentMetaHolder,
-  hasComponentMeta,
-  ReactComponentMetaHolder,
-} from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 import { excludeHighlighterSelector } from '../ignore-highlighter';
-import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
+import { MatchRule, ComponentMatchRule } from '../rule-matcher';
+import { bubbleToComponent } from './bubble-to-component';
 
 type HighlightTarget = { element: HTMLElement; components: ComponentMetaHolder[] };
 export type useHoverHighlighterOptions = {
@@ -64,7 +59,7 @@ function useHoverHandler({
     // skip DOM trees having 'data-ignore-component-highlight'
     if (element.closest(`.${scopeClass} ${excludeHighlighterSelector}`)) return;
 
-    const result = bubbleToBitComponent(element, rule, componentRule);
+    const result = bubbleToComponent(element, { elementRule: rule, componentRule });
     if (!result) return;
 
     onChange({
@@ -81,31 +76,4 @@ function useHoverHandler({
   }, [disabled, handleElement]);
 
   return { handleElement };
-}
-
-/** go up the dom tree until reaching a react bit component */
-function bubbleToBitComponent(
-  element: HTMLElement | null,
-  elementRule?: MatchRule,
-  componentRule?: ComponentMatchRule
-) {
-  for (let current = element; current; current = current.parentElement) {
-    current = toRootElement(current);
-    if (!current) return undefined;
-    if (ruleMatcher(current, elementRule)) {
-      const components = domToReacts(current);
-
-      const relevantComponents = components.filter(
-        (x) => hasComponentMeta(x) && componentRuleMatcher({ meta: x[componentMetaField] }, componentRule)
-      ) as ReactComponentMetaHolder[];
-
-      if (relevantComponents.length < 1) return undefined;
-      return {
-        element: current,
-        components: relevantComponents,
-      };
-    }
-  }
-
-  return undefined;
 }
