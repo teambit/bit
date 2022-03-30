@@ -1,22 +1,11 @@
 import { Schema } from '@teambit/graphql';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMain: LanesMain): Schema {
   return {
     typeDefs: gql`
-      type CompLaneData {
-        id: ComponentID!
-        head: String!
-      }
-
-      type LanesData {
-        name: String!
-        components: [CompLaneData]
-        isMerged: Boolean
-        remote: String
-      }
-
       type FileDiff {
         filePath: String!
         diffOutput: String
@@ -45,62 +34,46 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         color: Boolean
       }
 
-      type Lanes {
-        getLanes: [LanesData]
-        getLaneByName(name: String): LanesData
-        getCurrentLaneName: String
-        getDiff(values: [String], options: DiffOptions): GetDiffResult
-        getLaneComponents(name: String): [Component]
+      type Lane {
+        id: String!
+        isMerged: Boolean
+        remote: String
+        components: [Component!]!
+        currentLane: Lane
+        diff(toLaneId: String!, options: DiffOptions): GetDiffResult
       }
 
       type Query {
-        getLanes: [LanesData]
-        getLaneByName(name: String): LanesData
-        getCurrentLaneName: String
-        getLaneDiff(values: [String], options: DiffOptions): GetDiffResult
-        getLaneComponents(name: String): [Component]
+        lanes(id: String): [Lane!]!
       }
     `,
     resolvers: {
-      Query: {
-        getLanes: async () => {
-          const lanesResults = await lanesMain.getLanes({});
-          return lanesResults.map((lane) => ({
-            name: lane.name,
-            components: lane.components.map((component) => ({
-              ...component,
-              /**
-               * make sure the BitId has the version mapped,
-               * otherwise graphql will cache the lane component response across different lanesMain with the same component id
-               */
-              id: { ...component.id, version: component.head },
-            })),
-            isMerged: Boolean(lane.isMerged),
-            remote: lane.remote,
-          }));
+      Lane: {
+        id: (lane: LaneData) => lane.name,
+        isMerged: (lane: LaneData) => lane.isMerged,
+        remote: (lane: LaneData) => lane.remote,
+        currentLane: async () => {
+          const currentLaneId = lanesMain.getCurrentLane();
+          if (!currentLaneId) return undefined;
+          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
+          return currentLane;
         },
-        getLaneByName: async (_, { name }: { name: string }) => {
-          const lanesResults = await lanesMain.getLanes({ name });
-          const laneResult = lanesResults[0];
-          return {
-            name: laneResult.name,
-            components: laneResult.components,
-            isMerged: Boolean(laneResult.isMerged),
-          };
+        components: async (lane: LaneData) => {
+          const laneComponents = await lanesMain.getLaneComponentModels(lane.name);
+          return laneComponents;
         },
-        getCurrentLaneName: () => {
-          return lanesMain.getCurrentLane();
-        },
-        getLaneDiff: async (_, { values, options }: { values: string[]; options: { color?: boolean } }) => {
-          const getDiffResults = await lanesMain.getDiff(values, options);
+        diff: async (fromLane: LaneData, { toLaneId, options }: { toLaneId: string; options: { color?: boolean } }) => {
+          const getDiffResults = await lanesMain.getDiff([fromLane.name, toLaneId], options);
           return {
             ...getDiffResults,
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
         },
-        getLaneComponents: async (_, { name }: { name: string }) => {
-          const laneComponents = await lanesMain.getLaneComponentModels(name);
-          return laneComponents;
+      },
+      Query: {
+        lanes: async (_, { id }: { id?: string }) => {
+          const lanes = await lanesMain.getLanes({ name: id });
+          return lanes;
         },
       },
     },

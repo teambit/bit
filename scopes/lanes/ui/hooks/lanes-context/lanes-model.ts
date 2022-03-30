@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathToRegexp } from 'path-to-regexp';
@@ -15,10 +15,10 @@ export type LaneComponentQueryResult = {
  * Return type of each Lane in a Scope/Workspace
  */
 export type LaneQueryResult = {
-  name: string;
+  id: string;
   remote?: string;
   isMerged: boolean;
-  components: LaneComponentQueryResult[];
+  components: ComponentModelProps[];
 };
 /**
  * GQL (lanes)
@@ -26,7 +26,7 @@ export type LaneQueryResult = {
  * Represents All Lanes and Current Lane in Scope/Workspace
  */
 export type LanesQueryResult = {
-  getLanes?: LaneQueryResult[];
+  lanes?: LaneQueryResult[];
 };
 
 export type LanesHost = 'workspace' | 'scope';
@@ -87,20 +87,14 @@ export class LanesModel {
       componentId.version
     }`;
 
-  static mapToLaneModel(laneData: LaneQueryResult, currentScope?: ScopeModel): LaneModel {
-    const { name, remote, isMerged } = laneData;
+  static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
+    const { id: name, remote, isMerged } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
 
     const components = laneData.components.map((component) => {
-      const componentModel = ComponentModel.from({
-        id: { ...component.id, version: component.head, scope: component.id.scope || laneScope },
-        displayName: component.id.name,
-        compositions: [],
-        packageName: '',
-        description: '',
-      });
+      const componentModel = ComponentModel.from({ ...component, host });
       return componentModel;
     });
 
@@ -147,9 +141,8 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LaneModel[] {
-    const lanesResult = lanesData?.getLanes || [];
-    const lanes = lanesResult.map((result) => LanesModel.mapToLaneModel(result, currentScope));
+  static from(lanesData: LanesQueryResult, host: string, currentScope?: ScopeModel): LaneModel[] {
+    const lanes = lanesData?.lanes?.map((result) => LanesModel.mapToLaneModel(result, host, currentScope)) || [];
     return lanes;
   }
 
