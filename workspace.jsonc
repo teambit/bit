@@ -402,6 +402,9 @@
       "teambit.harmony/aspect"
     ]
   },
+  "teambit.component/issues": {
+    "ignoreIssues": ["CircularDependencies"]
+  },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
@@ -876,3 +879,4 @@
     }
   }
 }
+
