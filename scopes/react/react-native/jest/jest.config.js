@@ -1,6 +1,6 @@
 const { generateNodeModulesPattern } = require('@teambit/dependencies.modules.packages-excluder');
 
-const packagesToExclude = ['@react-native', 'react-native', 'react-native-button'];
+const packagesToExclude = ['@react-native', 'react-native', 'react-native-'];
 
 module.exports = {
   preset: 'react-native',
