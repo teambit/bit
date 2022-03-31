@@ -722,6 +722,8 @@ jobs:
     steps:
       - run: mkdir esbuild-arm
 
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       # - run: brew install wget
       # - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
       # - save_cache:
@@ -729,19 +731,10 @@ jobs:
       #     paths:
       #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
 
-      # - run: rm esbuild-arm/*
-      - run: ls -la esbuild-arm
       - restore_cache:
           key: esbuild-0.14.29-darwin-arm64-v1
-      - run: ls -la esbuild-arm
-
 
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
-      - run: cd esbuild-arm && ls -la
-      - run: mkdir try
-      - run: mkdir try/node_modules
-      - run: cp -r esbuild-arm/node_modules/* try/node_modules
-      - run: ls -la try/node_modules
 
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
@@ -780,11 +773,11 @@ jobs:
       - run:
           name: create macos-arm64
           command: mkdir macos-arm64
-      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
       - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
       - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
+      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
