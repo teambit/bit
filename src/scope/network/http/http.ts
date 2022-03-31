@@ -499,7 +499,7 @@ export class Http implements Network {
     const LIST_LANES = gql`
       query Lanes {
         lanes {
-          name
+          id
           components {
             id {
               name
