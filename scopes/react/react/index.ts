@@ -7,4 +7,3 @@ export type { ReactAppOptions, ReactDeployContext } from './apps/web';
 // export * as styleRegexps from '@teambit/modules.style-regexps';
 
 export { ReactAspect, ReactAspect as default } from './react.aspect';
-export { cjsConfig as jestCjsConfig, esmConfig as jestEsmConfig } from './jest';
