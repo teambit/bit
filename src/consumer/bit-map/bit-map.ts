@@ -398,6 +398,11 @@ export default class BitMap {
     return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
   }
 
+  isIdAvailableOnCurrentLane(id: BitId): boolean {
+    const allIdsOfCurrentLane = this.getAllIdsAvailableOnLane();
+    return allIdsOfCurrentLane.hasWithoutScopeAndVersion(id);
+  }
+
   /**
    * get existing bitmap bit-id by bit-id.
    * throw an exception if not found
