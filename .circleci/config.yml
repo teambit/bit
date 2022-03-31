@@ -720,22 +720,6 @@ jobs:
   bundle_version_macos:
     <<: *mac_defaults
     steps:
-      - run: mkdir esbuild-arm
-
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      # - run: brew install wget
-      # - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-      # - save_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      #     paths:
-      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
-
-      - restore_cache:
-          key: esbuild-0.14.29-darwin-arm64-v1
-
-      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
-
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
@@ -770,6 +754,18 @@ jobs:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
 
+      - run: mkdir esbuild-arm
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+      # - run: brew install wget
+      # - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      # - save_cache:
+      #     key: esbuild-0.14.29-darwin-arm64-v1
+      #     paths:
+      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+      - restore_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: create macos-arm64
           command: mkdir macos-arm64
