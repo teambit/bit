@@ -25,7 +25,7 @@ export class CapsulesSyncerTask implements BuildTask {
         relCompDir,
         componentIdToPackageName(capsule.component.state._consumer)
       );
-      hardLinkDirectory(capsule.path,
+      return hardLinkDirectory(capsule.path,
         injectedDirs.map((injectedDir) =>
           path.join(context.capsuleNetwork.capsulesRootDir, injectedDir)
         )
@@ -38,31 +38,28 @@ export class CapsulesSyncerTask implements BuildTask {
   }
 }
 
-function hardLinkDirectory(src: string, destDirs: string[]) {
+async function hardLinkDirectory(src: string, destDirs: string[]) {
   const files = fs.readdirSync(src);
-  for (const file of files) {
-    if (file !== 'node_modules') {
-      const srcFile = path.join(src, file);
-      if (fs.lstatSync(srcFile).isDirectory()) {
-        for (const dest of destDirs) {
-          const destFile = path.join(dest, file);
-          try {
-            fs.mkdirSync(destFile);
-          } catch (err: any) {
-            if (err.code !== 'EEXIST') throw err;
-          }
-          hardLinkDirectory(srcFile, [destFile]);
+  await Promise.all(files.map((file) => {
+    if (file === 'node_modules') return;
+    const srcFile = path.join(src, file);
+    if ((await fs.lstat(srcFile)).isDirectory()) {
+      return Promise.all(destDirs.map((destDir) => {
+        const destFile = path.join(destDir, file);
+        try {
+          await fs.mkdir(destFile);
+        } catch (err: any) {
+          if (err.code !== 'EEXIST') throw err;
         }
-      } else {
-        for (const dest of destDirs) {
-          const destFile = path.join(dest, file);
-          try {
-            fs.linkSync(srcFile, destFile);
-          } catch (err: any) {
-            if (err.code !== 'EEXIST') throw err;
-          }
-        }
-      }
+        return hardLinkDirectory(srcFile, [destFile]);
+      }));
     }
-  }
-}
+    return Promise.all(destDirs.map((destDir) => {
+      const destFile = path.join(destDir, file);
+      try {
+        return fs.link(srcFile, destFile);
+      } catch (err: any) {
+        if (err.code !== 'EEXIST') throw err;
+      }
+    }));
+  })
