@@ -3,7 +3,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import { IssuesClasses } from '../../scopes/component/component-issues';
 
-import { IS_WINDOWS } from '../../src/constants';
+import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { UNABLE_TO_LOAD_EXTENSION } from '../../scopes/harmony/aspect-loader/constants';
@@ -148,6 +148,73 @@ describe('custom env', function () {
         it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
       });
     });
+    describe('set up the env using bit env set without a version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', envId);
+      });
+      it('should save it with the latest version in root', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.1`);
+      });
+    });
+    describe('set up the env using bit env set with a version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', `${envId}@0.0.1`);
+      });
+      it('should save it with a version in root but without version in envs/envs', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config[Extensions.envs].env).equal(envId);
+      });
+    });
+    describe('set up the env using bit create --env with a version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.create('aspect', 'comp1', `--env ${envId}@0.0.1`);
+      });
+      it('should save it with a version in root but without version in envs/envs', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config[Extensions.envs].env).equal(envId);
+      });
+    });
+    describe('set up the env and then unset it', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', `${envId}@0.0.1`);
+        helper.command.unsetEnv('comp1');
+      });
+      it('should remove the env not only from envs/envs but also from root', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config).to.not.have.property(Extensions.envs);
+      });
+    });
+    describe('set up the env and then replace it with another env without mentioning the version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', `${envId}@0.0.1`);
+        helper.command.replaceEnv(envId, `${envId}@0.0.2`);
+      });
+      it('should save it with a version in root but without version in envs/envs', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.2`);
+        expect(bitMap.comp1.config[Extensions.envs].env).equal(envId);
+      });
+    });
+
     describe('missing modules in the env capsule', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
