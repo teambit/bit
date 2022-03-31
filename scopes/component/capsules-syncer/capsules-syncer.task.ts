@@ -40,11 +40,11 @@ export class CapsulesSyncerTask implements BuildTask {
 
 async function hardLinkDirectory(src: string, destDirs: string[]) {
   const files = fs.readdirSync(src);
-  await Promise.all(files.map((file) => {
+  await Promise.all(files.map(async (file) => {
     if (file === 'node_modules') return;
     const srcFile = path.join(src, file);
     if ((await fs.lstat(srcFile)).isDirectory()) {
-      return Promise.all(destDirs.map((destDir) => {
+      return Promise.all(destDirs.map(async (destDir) => {
         const destFile = path.join(destDir, file);
         try {
           await fs.mkdir(destFile);
@@ -54,12 +54,13 @@ async function hardLinkDirectory(src: string, destDirs: string[]) {
         return hardLinkDirectory(srcFile, [destFile]);
       }));
     }
-    return Promise.all(destDirs.map((destDir) => {
+    return Promise.all(destDirs.map(async (destDir) => {
       const destFile = path.join(destDir, file);
       try {
-        return fs.link(srcFile, destFile);
+        await fs.link(srcFile, destFile);
       } catch (err: any) {
         if (err.code !== 'EEXIST') throw err;
       }
     }));
-  })
+  }))
+}
