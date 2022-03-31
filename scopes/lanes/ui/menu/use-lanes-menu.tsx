@@ -4,8 +4,7 @@ import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { ExpandableTabContent, TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
-
-import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesHost, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link } from '@teambit/base-ui.routing.link';
 import styles from './use-lanes-menu.module.scss';
@@ -13,9 +12,10 @@ import styles from './use-lanes-menu.module.scss';
 export type LaneImportContentProps = {
   currentLane: LaneModel;
   switchedOutToCurrentLane: boolean;
+  host: LanesHost;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function UseLaneMenu() {
+export function UseLaneMenu({ host }: { host: LanesHost }) {
   const lanesContext = useLanesContext();
   if (!lanesContext?.viewedLane) return null;
   const { viewedLane, currentLane } = lanesContext;
@@ -29,7 +29,9 @@ export function UseLaneMenu() {
         </div>
       </div>
       <ExpandableTabContent
-        content={<LaneImportContent currentLane={viewedLane} switchedOutToCurrentLane={switchedOutToCurrentLane} />}
+        content={
+          <LaneImportContent host={host} currentLane={viewedLane} switchedOutToCurrentLane={switchedOutToCurrentLane} />
+        }
         drawerTitle={<div className={styles.drawerTitle}>Learn more about Lanes</div>}
         drawerContent={<LaneInfo />}
       />
@@ -39,11 +41,12 @@ export function UseLaneMenu() {
   return <UseBoxDropdown position="bottom-end" className={styles.useBox} Menu={Menu} />;
 }
 
-function LaneImportContent({ switchedOutToCurrentLane, currentLane }: LaneImportContentProps) {
+function LaneImportContent({ host, currentLane, switchedOutToCurrentLane }: LaneImportContentProps) {
+  const laneId = host === 'workspace' ? currentLane.name : currentLane.id;
   if (switchedOutToCurrentLane) {
     return (
       <div className={styles.importContent}>
-        <div className={styles.importContentLabel}>Import everything from {currentLane.name}</div>
+        <div className={styles.importContentLabel}>Import all components from {laneId}</div>
         <CopyBox className={styles.importContentCmd}>{`bit merge`}</CopyBox>
       </div>
     );
