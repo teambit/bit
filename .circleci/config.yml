@@ -723,6 +723,18 @@ jobs:
       - run: brew install wget
       - run: mkdir esbuild-arm
       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      - save_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+          paths:
+            - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+
+      - run: rm esbuild-arm/*
+      - run: ls -la esbuild-arm
+      - restore_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+      - run: ls -la esbuild-arm
+
+
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run: cd esbuild-arm && ls -la
       - run: mkdir try
@@ -769,7 +781,6 @@ jobs:
           command: mkdir macos-arm64
       - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
       - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
       - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
