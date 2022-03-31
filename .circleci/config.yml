@@ -776,8 +776,6 @@ jobs:
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
       - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
-      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
