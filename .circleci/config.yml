@@ -861,15 +861,15 @@ jobs:
       - run:
           name: Configure gcloud auth
           command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      # - run:
-      #     name: Upload tar file (Linux)
-      #     command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      # - run:
-      #     name: Upload tar file (Windows)
-      #     command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      # - run:
-      #     name: Upload tar file (OSX)
-      #     command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (Linux)
+          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (Windows)
+          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (OSX)
+          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
           name: Upload tar file (OSX-arm64)
           command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
@@ -1705,8 +1705,8 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  bvm_bundle_debug:
-    jobs:
+  # bvm_bundle_debug:
+  #   jobs:
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1715,13 +1715,13 @@ workflows:
       #     filters:
       #       branches:
       #         only: bvm-build-from-bit-dev-registry1
-      - bundle_version_macos:
-          filters:
-            branches:
-              only: esbuild-darwin-arm64
-      - harmony_publish_to_gcloud:
-          filters:
-            branches:
-              only: esbuild-darwin-arm64
-          requires:
-            - bundle_version_macos
+      # - bundle_version_macos:
+      #     filters:
+      #       branches:
+      #         only: bvm-build-from-bit-dev-registry1
+      # - harmony_publish_to_gcloud:
+      #     filters:
+      #       branches:
+      #         only: bvm-build-from-bit-dev-registry1
+      #     requires:
+      #       - bundle_version_macos
