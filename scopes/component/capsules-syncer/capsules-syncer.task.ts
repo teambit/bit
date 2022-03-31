@@ -46,7 +46,11 @@ function hardLinkDirectory(src: string, destDirs: string[]) {
       if (fs.lstatSync(srcFile).isDirectory()) {
         for (const dest of destDirs) {
           const destFile = path.join(dest, file);
-          fs.mkdirSync(destFile);
+          try {
+            fs.mkdirSync(destFile);
+          } catch (err: any) {
+            if (err.code !== 'EEXIST') throw err;
+          }
           hardLinkDirectory(srcFile, [destFile]);
         }
       } else {
