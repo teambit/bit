@@ -17,9 +17,9 @@ const GET_LANES = gql`
           version
         }
       }
-      currentLane {
-        id
-      }
+    }
+    currentLane {
+      id
     }
     getHost(id: $extensionId) {
       id
@@ -76,9 +76,6 @@ const GET_LANE_COMPONENTS = gql`
       isMerged
       components {
         ...componentFields
-      }
-      currentLane {
-        id
       }
     }
     getHost(id: $extensionId) {

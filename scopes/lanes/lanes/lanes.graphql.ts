@@ -39,12 +39,12 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         isMerged: Boolean
         remote: String
         components: [Component!]!
-        currentLane: Lane
         diff(toLaneId: String!, options: DiffOptions): GetDiffResult
       }
 
       type Query {
         lanes(id: String): [Lane!]!
+        currentLane: Lane
       }
     `,
     resolvers: {
@@ -52,12 +52,6 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         id: (lane: LaneData) => lane.name,
         isMerged: (lane: LaneData) => lane.isMerged,
         remote: (lane: LaneData) => lane.remote,
-        currentLane: async () => {
-          const currentLaneId = lanesMain.getCurrentLane();
-          if (!currentLaneId) return undefined;
-          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
-          return currentLane;
-        },
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMain.getLaneComponentModels(lane.name);
           return laneComponents;
@@ -74,6 +68,12 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         lanes: async (_, { id }: { id?: string }) => {
           const lanes = await lanesMain.getLanes({ name: id });
           return lanes;
+        },
+        currentLane: async () => {
+          const currentLaneId = lanesMain.getCurrentLane();
+          if (!currentLaneId) return undefined;
+          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
+          return currentLane;
         },
       },
     },

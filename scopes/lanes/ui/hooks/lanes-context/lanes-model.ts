@@ -19,7 +19,6 @@ export type LaneQueryResult = {
   remote?: string;
   isMerged: boolean;
   components: ComponentModelProps[];
-  currentLane?: LaneQueryResult;
 };
 /**
  * GQL (lanes)
@@ -28,6 +27,7 @@ export type LaneQueryResult = {
  */
 export type LanesQueryResult = {
   lanes?: LaneQueryResult[];
+  currentLane?: LaneQueryResult;
 };
 
 export type LanesHost = 'workspace' | 'scope';
@@ -146,10 +146,7 @@ export class LanesModel {
 
   static from({ data, host, scope }: { data: LanesQueryResult; host: string; scope?: ScopeModel }): LanesModel {
     const lanes = data?.lanes?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
-    const currentLane =
-      data?.lanes && data.lanes[0].currentLane
-        ? LanesModel.mapToLaneModel(data.lanes[0].currentLane, host, scope)
-        : undefined;
+    const currentLane = data.currentLane ? LanesModel.mapToLaneModel(data.currentLane, host, scope) : undefined;
     return new LanesModel({ lanes, currentLane });
   }
 
