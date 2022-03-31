@@ -753,12 +753,42 @@ jobs:
       - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+
+      - run: mkdir esbuild-arm
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+      # - run: brew install wget
+      # - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      # - save_cache:
+      #     key: esbuild-0.14.29-darwin-arm64-v1
+      #     paths:
+      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+      - restore_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
+      - run:
+          name: create macos-arm64
+          command: mkdir macos-arm64
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
+      - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run:
+          name: compress bit arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to macos-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+
+
       - persist_to_workspace:
           root: .
           paths:
             - macos
+            - macos-arm64
       - store_artifacts:
           path: macos
+      - store_artifacts:
+          path: macos-arm64
 
   bundle_version_windows:
     <<: *windows_defaults
@@ -836,6 +866,9 @@ jobs:
       - run:
           name: Upload tar file (OSX)
           command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
 
 
   bit_export:
@@ -1678,8 +1711,13 @@ workflows:
       #     filters:
       #       branches:
       #         only: bvm-build-from-bit-dev-registry1
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
-
+      # - bundle_version_macos:
+      #     filters:
+      #       branches:
+      #         only: bvm-build-from-bit-dev-registry1
+      # - harmony_publish_to_gcloud:
+      #     filters:
+      #       branches:
+      #         only: bvm-build-from-bit-dev-registry1
+      #     requires:
+      #       - bundle_version_macos
