@@ -506,7 +506,6 @@ export class Http implements Network {
               scope
               version
             }
-            head
           }
           isMerged
         }
