@@ -596,6 +596,25 @@ describe('bit lane command', function () {
         );
       });
     });
+    describe('merging a lane into main when main is empty', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev');
+      });
+      it('should not throw an error that head is empty', () => {
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('the component should be available on main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
   });
   describe('tagging on a lane', () => {
     let output;
