@@ -720,6 +720,15 @@ jobs:
   bundle_version_macos:
     <<: *mac_defaults
     steps:
+      - run: mkdir esbuild-arm
+      - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
+      - run: cd esbuild-arm && ls -la
+      - run: mkdir try
+      - run: mkdir try/node_modules
+      - run: cp -r esbuild-arm/node_modules/* try/node_modules
+      - run: ls -la try/node_modules
+
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
@@ -753,10 +762,29 @@ jobs:
       - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+
+      - run:
+          name: create macos-arm64
+          command: mkdir macos-arm64
+      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
+      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
+      - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run: ls -la bit-${BIT_VERSION}/node_modules/esbuild
+      - run:
+          name: compress bit arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to macos-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+
+
       - persist_to_workspace:
           root: .
           paths:
             - macos
+            - macos-arm64
       - store_artifacts:
           path: macos
 
@@ -1668,8 +1696,8 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
+  bvm_bundle_debug:
+    jobs:
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1678,8 +1706,8 @@ workflows:
       #     filters:
       #       branches:
       #         only: bvm-build-from-bit-dev-registry1
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: esbuild-darwin-arm64
 
