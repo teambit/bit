@@ -4,21 +4,24 @@ import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
   children: ReactNode;
-  currentLaneId?: string;
+  viewedLaneId?: string;
 };
 
-export function LanesProvider({ children, currentLaneId }: LanesProviderProps) {
-  const { lanes } = useLanesQuery();
+export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
+  const { lanes, currentLane } = useLanesQuery();
 
   const model = useMemo(
     () =>
       new LanesModel({
         lanes,
+        viewedLane: lanes?.find((lane) => {
+          return viewedLaneId === lane.id;
+        }),
         currentLane: lanes?.find((lane) => {
-          return currentLaneId === lane.id;
+          return currentLane === lane.name;
         }),
       }),
-    [lanes, currentLaneId]
+    [lanes, viewedLaneId, currentLane]
   );
 
   return <LanesContext.Provider value={model}>{children}</LanesContext.Provider>;
