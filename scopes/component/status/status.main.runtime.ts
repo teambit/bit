@@ -59,17 +59,15 @@ export class StatusMain {
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
-    const issuesToIgnore = this.issues.getIssuesToIgnore();
-    if (
-      !this.workspace.isLegacy &&
-      newAndModifiedLegacy.length &&
-      !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)
-    ) {
+    const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+    if (!this.workspace.isLegacy && newAndModifiedLegacy.length) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
-      await this.insights.addInsightsAsComponentIssues(newAndModified);
+      if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+        await this.insights.addInsightsAsComponentIssues(newAndModified);
+      }
+      this.issues.removeIgnoredIssuesFromComponents(newAndModified);
     }
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
-      issuesToIgnore.forEach((issueToIgnore) => component.issues.delete(IssuesClasses[issueToIgnore]));
       if (consumer.isLegacy && component.issues) {
         component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
       }

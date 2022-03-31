@@ -1,8 +1,9 @@
-import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import { ComponentIssuesCmd } from './issues-cmd';
 import { IssuesAspect } from './issues.aspect';
+import { NonExistIssueError } from './non-exist-issue-error';
 
 export type IssuesConfig = {
   ignoreIssues: string[];
@@ -11,17 +12,26 @@ export type IssuesConfig = {
 export class IssuesMain {
   constructor(private config: IssuesConfig) {}
 
-  getIssuesToIgnore(): string[] {
-    const allIssues = this.listIssues().map((issue) => issue.name);
+  getIssuesToIgnoreGlobally(): string[] {
     const issuesToIgnore = this.config.ignoreIssues || [];
-    issuesToIgnore.forEach((issueToIgnore) => {
-      if (!allIssues.includes(issueToIgnore)) {
-        throw new BitError(
-          `fatal: a non-existing component-issue "${issueToIgnore}" was configured for ${IssuesAspect.id} aspect`
-        );
+    this.validateIssueNames(issuesToIgnore);
+    return issuesToIgnore;
+  }
+
+  getIssuesToIgnorePerComponent(component: Component): string[] {
+    const issuesToIgnore = component.state.aspects.get(IssuesAspect.id)?.config.ignoreIssues;
+    if (!issuesToIgnore) return [];
+    this.validateIssueNames(issuesToIgnore);
+    return issuesToIgnore;
+  }
+
+  private validateIssueNames(issues: string[]) {
+    const allIssues = this.listIssues().map((issue) => issue.name);
+    issues.forEach((issue) => {
+      if (!allIssues.includes(issue)) {
+        throw new NonExistIssueError(issue);
       }
     });
-    return issuesToIgnore;
   }
 
   listIssues() {
@@ -35,6 +45,17 @@ export class IssuesMain {
         solution: issueInstance.solution,
         isTagBlocker: issueInstance.isTagBlocker,
       };
+    });
+  }
+
+  removeIgnoredIssuesFromComponents(components: Component[]) {
+    const issuesToIgnoreGlobally = this.getIssuesToIgnoreGlobally();
+    components.forEach((component) => {
+      const issuesToIgnoreForThisComp = this.getIssuesToIgnorePerComponent(component);
+      const issuesToIgnore = [...issuesToIgnoreGlobally, ...issuesToIgnoreForThisComp];
+      issuesToIgnore.forEach((issueToIgnore) => {
+        component.state.issues.delete(IssuesClasses[issueToIgnore]);
+      });
     });
   }
 
