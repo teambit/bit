@@ -597,6 +597,7 @@ describe('bit lane command', function () {
       });
     });
     describe('merging a lane into main when main is empty', () => {
+      let mergeOutput: string;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
@@ -604,9 +605,14 @@ describe('bit lane command', function () {
         helper.command.createLane('dev');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev');
       });
       it('should not throw an error that head is empty', () => {
-        expect(() => helper.command.mergeLane('dev')).to.not.throw();
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('the component should be available on main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
       });
     });
   });

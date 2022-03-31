@@ -680,6 +680,10 @@ export default class BitMap {
           // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
           componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
         }
+        if (!this.workspaceLane && componentMap.onLanesOnly) {
+          // happens when merging from another lane to main and main is empty
+          componentMap.onLanesOnly = false;
+        }
         componentMap.id = componentId;
         return componentMap;
       }
