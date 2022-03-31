@@ -793,6 +793,8 @@ jobs:
             - macos-arm64
       - store_artifacts:
           path: macos
+      - store_artifacts:
+          path: macos-arm64
 
   bundle_version_windows:
     <<: *windows_defaults
@@ -858,9 +860,9 @@ jobs:
       - run:
           name: Setup bit version environment variables
           command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
-      # - run:
-      #     name: Configure gcloud auth
-      #     command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
       # - run:
       #     name: Upload tar file (Linux)
       #     command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
