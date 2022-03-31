@@ -858,18 +858,21 @@ jobs:
       - run:
           name: Setup bit version environment variables
           command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      # - run:
+      #     name: Configure gcloud auth
+      #     command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      # - run:
+      #     name: Upload tar file (Linux)
+      #     command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (Windows)
+      #     command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (OSX)
+      #     command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: Configure gcloud auth
-          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      - run:
-          name: Upload tar file (Linux)
-          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (Windows)
-          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (OSX)
-          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
 
 
   bit_export:
@@ -1716,4 +1719,9 @@ workflows:
           filters:
             branches:
               only: esbuild-darwin-arm64
-
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: esbuild-darwin-arm64
+          requires:
+            - bundle_version_macos
