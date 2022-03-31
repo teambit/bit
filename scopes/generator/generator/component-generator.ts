@@ -101,7 +101,7 @@ export class ComponentGenerator {
       if (Object.keys(config).length === 0) config = undefined;
     }
 
-    const configWithEnv = this.addEnvIfProvidedByFlag(config);
+    const configWithEnv = await this.addEnvIfProvidedByFlag(config);
     if (configWithEnv) this.workspace.bitMap.setEntireConfig(component.id, configWithEnv);
 
     const getEnvData = () => {
