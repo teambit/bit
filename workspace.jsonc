@@ -402,12 +402,9 @@
       "teambit.harmony/aspect"
     ]
   },
-  // ImportNonMainFiles is temporary here until https://github.com/teambit/bit/pull/5626 is merged, once it's merged, we should remove it
-  // as it's already configured for node aspect specific
   "teambit.component/issues": {
     "ignoreIssues": [
-      "CircularDependencies",
-      "ImportNonMainFiles"
+      "CircularDependencies"
     ]
   },
   "teambit.workspace/variants": {
