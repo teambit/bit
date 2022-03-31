@@ -17,7 +17,7 @@
           "@babel/preset-react": "7.13.13",
           "@typescript-eslint/parser": "4.30.0",
           "@typescript-eslint/eslint-plugin": "4.30.0",
-          "esbuild": "0.14.28",
+          "esbuild": "0.14.29",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
           "eslint-plugin-react-hooks": "4.2.0",
