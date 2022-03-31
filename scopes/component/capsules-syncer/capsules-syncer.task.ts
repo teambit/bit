@@ -44,7 +44,7 @@ async function hardLinkDirectory(src: string, destDirs: string[]) {
     if (file === 'node_modules') return;
     const srcFile = path.join(src, file);
     if ((await fs.lstat(srcFile)).isDirectory()) {
-      return Promise.all(destDirs.map(async (destDir) => {
+      await Promise.all(destDirs.map(async (destDir) => {
         const destFile = path.join(destDir, file);
         try {
           await fs.mkdir(destFile);
@@ -53,8 +53,9 @@ async function hardLinkDirectory(src: string, destDirs: string[]) {
         }
         return hardLinkDirectory(srcFile, [destFile]);
       }));
+      return;
     }
-    return Promise.all(destDirs.map(async (destDir) => {
+    await Promise.all(destDirs.map(async (destDir) => {
       const destFile = path.join(destDir, file);
       try {
         await fs.link(srcFile, destFile);
