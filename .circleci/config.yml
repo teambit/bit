@@ -720,7 +720,7 @@ jobs:
   bundle_version_macos:
     <<: *mac_defaults
     steps:
-      - run: apt-get install wget
+      - run: yum install wget
       - run: mkdir esbuild-arm
       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
