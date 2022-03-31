@@ -366,25 +366,16 @@ export class SnappingMain {
       return;
     }
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
-    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnore();
+    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    if (!this.workspace.isLegacy && !issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+    if (!this.workspace.isLegacy) {
       const components = await this.workspace.getManyByLegacy(legacyComponents);
-      await this.insights.addInsightsAsComponentIssues(components);
-    }
-    issuesToIgnore.forEach((issue) => {
-      const issueClass = IssuesClasses[issue];
-      if (!issueClass) {
-        throw new Error(
-          `unrecognized component-issue "${issue}". please specify one of the following:\n${Object.keys(
-            IssuesClasses
-          ).join('\n')}`
-        );
+      if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+        await this.insights.addInsightsAsComponentIssues(components);
       }
-      legacyComponents.forEach((component) => {
-        component.issues.delete(issueClass);
-      });
-    });
+      this.issues.removeIgnoredIssuesFromComponents(components);
+    }
+
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);

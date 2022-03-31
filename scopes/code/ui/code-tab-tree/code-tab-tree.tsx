@@ -50,8 +50,8 @@ export function CodeTabTree({
       const { selected } = useContext(TreeContext);
       const lanesContext = useLanesContext();
 
-      const currentLaneUrl = lanesContext?.currentLane
-        ? `${lanesContext?.currentLane?.url}${LanesModel.baseLaneComponentRoute}`
+      const currentLaneUrl = lanesContext?.viewedLane
+        ? `${lanesContext?.viewedLane?.url}${LanesModel.baseLaneComponentRoute}`
         : '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
       const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
