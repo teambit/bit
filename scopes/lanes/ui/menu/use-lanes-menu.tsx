@@ -53,10 +53,8 @@ function LaneImportContent({ host, currentLane, switchedOutToCurrentLane }: Lane
   }
   return (
     <div className={styles.importContent}>
-      <div className={styles.importContentLabel}>Fetch {laneId} and add it to your workspace</div>
-      <CopyBox className={styles.importContentCmd}>{`bit fetch ${laneId} --lanes`}</CopyBox>
-      <div className={styles.importContentLabel}>Switch to {laneId} and import all components</div>
-      <CopyBox className={styles.importContentCmd}>{`bit switch ${laneId} --get-all`}</CopyBox>
+      <div className={styles.importContentLabel}>Switch and Import all components from {laneId}</div>
+      <CopyBox className={styles.importContentCmd}>{`bit lane import ${laneId}`}</CopyBox>
     </div>
   );
 }
