@@ -77,7 +77,10 @@ function VersionRelatedDropdowns({
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+    return (logs || [])
+      .filter((log) => !log.tag)
+      .map((snap) => ({ ...snap, version: snap.hash }))
+      .reverse();
   }, [logs]);
 
   const tags = useMemo(() => {
