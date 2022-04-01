@@ -1,24 +1,23 @@
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { MainRuntime } from '@teambit/cli';
 import MDXAspect, { MdxEnv, MDXMain } from '@teambit/mdx';
-import { Component } from '@teambit/component';
-import { ReactEnv } from '@teambit/react';
+import DocsAspect, { DocsMain } from '@teambit/docs';
 
 import { ReadmeAspect } from './readme.aspect';
 import { ReadmeEnv } from './readme.env';
 
 export class ReadmeMain {
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, MDXAspect];
-  constructor(protected env: ReadmeEnv & MdxEnv) {}
+  static dependencies = [EnvsAspect, MDXAspect, DocsAspect];
+  constructor(protected env: ReadmeEnv & MdxEnv, private docs: DocsMain) {}
   icon() {
     // TODO: Add icon for aspect
     return 'https://static.bit.dev/extensions-icons/default.svg';
   }
-  static async provider([envs, mdx]: [EnvsMain, MDXMain]) {
-    const readmeEnv = envs.merge<ReadmeEnv, MdxEnv>(new ReadmeEnv(), mdx.mdxEnv);
+  static async provider([envs, mdx, docs]: [EnvsMain, MDXMain, DocsMain]) {
+    const readmeEnv = envs.merge<ReadmeEnv, MdxEnv>(new ReadmeEnv(docs), mdx.mdxEnv);
     envs.registerEnv(readmeEnv);
-    const readme = new ReadmeMain(readmeEnv);
+    const readme = new ReadmeMain(readmeEnv, docs);
     return readme;
   }
 }

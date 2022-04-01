@@ -1,17 +1,19 @@
 import { Component } from '@teambit/component';
 import { Environment } from '@teambit/envs';
+import { DocsMain } from '@teambit/docs';
 
 export const ReadmeEnvType = 'readme';
 
 export class ReadmeEnv implements Environment {
-  private removeDocsDevPatterns() {
-    this.getDocs.getPattern().map((pattern) => `-${pattern}`);
+  constructor(private docs: DocsMain) {}
+  private removeDocsDevPatterns(): string[] {
+    return this.docs.getPatterns().map((pattern) => `!${pattern}`);
   }
-  getDevFilesPatterns(component) {
-    return this.getDocsDevPatterns(component);
+  getDocsDevPatterns(component: Component): string[] {
+    return this.getDevPatterns(component).concat(this.removeDocsDevPatterns());
   }
-  getDocsDevPatterns(component: Component) {
-    return [component.mainFile, 'index.*'];
+  getDevPatterns(component: Component): string[] {
+    return [component.mainFile.path, 'index.*'];
   }
   async __getDescriptor() {
     return {

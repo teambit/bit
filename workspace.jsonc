@@ -646,6 +646,9 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
+    "scopes/readme": {
+      "defaultScope": "teambit.mdx"
+    },
     "scopes/community": {
       "defaultScope": "teambit.community"
     },

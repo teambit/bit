@@ -844,6 +844,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
+    "readme": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/readme/readme"
+    },
     "renaming": {
         "scope": "teambit.component",
         "version": "0.0.97",
@@ -911,6 +917,12 @@
         "version": "0.0.483",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
+    },
+    "test-mdx": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "components/test-mdx"
     },
     "tester": {
         "scope": "teambit.defender",

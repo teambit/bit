@@ -98,6 +98,7 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
+  [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
   [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,

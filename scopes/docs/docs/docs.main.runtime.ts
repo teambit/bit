@@ -77,9 +77,7 @@ export class DocsMain {
 
   getDocsFiles(component: Component): AbstractVinyl[] {
     const devFiles = this.devFiles.getDevFiles(component);
-    const componentEnv = this.envs.getEnv(component).env;
-    const useEnvDocPattern = componentEnv.overrideDocsDevPatterns;
-    const docFiles = useEnvDocPattern ? devFiles.get(componentEnv.id) : devFiles.get(DocsAspect.id);
+    const docFiles = devFiles.get(DocsAspect.id);
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
 
@@ -137,6 +135,13 @@ export class DocsMain {
     return this.patterns;
   }
 
+  getDevPatternToRegister() {
+    return (component: Component) => {
+      const componentEnv = this.envs.calculateEnv(component).env;
+      const componentEnvDocsDevPatterns: string[] = componentEnv.getDocsDevPatterns?.(component) || [];
+      return this.getPatterns().concat(componentEnvDocsDevPatterns);
+    };
+  }
   /**
    * register a new doc reader. this allows to support further
    * documentation file formats.
@@ -201,7 +206,7 @@ export class DocsMain {
       docReaderSlot
     );
     docs.registerDocReader(new DefaultDocReader(pkg, compiler, workspace));
-    devFiles.registerDevPattern(config.patterns);
+    devFiles.registerDevPattern(docs.getDevPatternToRegister().bind(docs));
 
     if (workspace) {
       workspace.onComponentLoad(async (component) => {

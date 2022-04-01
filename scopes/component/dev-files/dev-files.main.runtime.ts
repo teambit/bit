@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { flatten } from 'lodash';
+import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -13,9 +13,9 @@ import { DevFilesFragment } from './dev-files.fragment';
 import { devFilesSchema } from './dev-files.graphql';
 
 /**
- * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
+ * dev pattern is a list of strings or a function that returns a list of strings. an example to a pattern can be "[*.spec.ts]"
  */
-export type DevPatterns = string[];
+export type DevPatterns = ((component: Component) => string[]) | string[];
 
 /**
  * slot for dev file patterns.
@@ -50,13 +50,18 @@ export class DevFilesMain {
     const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
     // filter any pattern that starts with "-" from any aspect
-
+    const getPatterns = (devPatterns: DevPatterns) => {
+      if (isFunction(devPatterns)) {
+        return devPatterns(component);
+      }
+      return devPatterns;
+    };
     const patternSlot = this.devPatternSlot.toArray();
     const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
       const [aspectId, patterns] = current; // pattern can be a func
       if (!acc[aspectId]) acc[aspectId] = [];
       // if (component.state.aspects.get(aspectId)) acc[aspectId] = acc[aspectId].concat(patterns);
-      acc[aspectId] = acc[aspectId].concat(patterns);
+      acc[aspectId] = acc[aspectId].concat(getPatterns(patterns));
       return acc;
     }, {});
 
