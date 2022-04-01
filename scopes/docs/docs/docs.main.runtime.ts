@@ -4,7 +4,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Component, ComponentMap } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
-import type { Environment } from '@teambit/envs';
+import type { EnvDefinition, Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
@@ -135,12 +135,13 @@ export class DocsMain {
     return this.patterns;
   }
 
+  getComponentDevPatterns(component: Component, env: Environment) {
+    const componentEnvDocsDevPatterns: string[] = env?.getDocsDevPatterns?.(component) || [];
+    return this.getPatterns().concat(componentEnvDocsDevPatterns);
+  }
+
   getDevPatternToRegister() {
-    return (component: Component) => {
-      const componentEnv = this.envs.calculateEnv(component).env;
-      const componentEnvDocsDevPatterns: string[] = componentEnv.getDocsDevPatterns?.(component) || [];
-      return this.getPatterns().concat(componentEnvDocsDevPatterns);
-    };
+    return this.getComponentDevPatterns.bind(this);
   }
   /**
    * register a new doc reader. this allows to support further
@@ -206,7 +207,7 @@ export class DocsMain {
       docReaderSlot
     );
     docs.registerDocReader(new DefaultDocReader(pkg, compiler, workspace));
-    devFiles.registerDevPattern(docs.getDevPatternToRegister().bind(docs));
+    devFiles.registerDevPattern(docs.getDevPatternToRegister());
 
     if (workspace) {
       workspace.onComponentLoad(async (component) => {

@@ -13,7 +13,7 @@ export class ReadmeEnv implements Environment {
     return this.getDevPatterns(component).concat(this.removeDocsDevPatterns());
   }
   getDevPatterns(component: Component): string[] {
-    return [component.mainFile.path, 'index.*'];
+    return component.mainFile.path ? [component.mainFile.path, 'index.*'] : ['index.*'];
   }
   async __getDescriptor() {
     return {
