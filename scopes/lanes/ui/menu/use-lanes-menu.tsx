@@ -50,8 +50,8 @@ function LaneImportContent({ switchedOutToCurrentLane, currentLane }: LaneImport
   }
   return (
     <div className={styles.importContent}>
-      <div className={styles.importContentLabel}>Switch and Import everything from {currentLane.name}</div>
-      <CopyBox className={styles.importContentCmd}>{`bit switch ${currentLane.name} --get-all`}</CopyBox>
+      <div className={styles.importContentLabel}>Switch and Import all components from {laneId}</div>
+      <CopyBox className={styles.importContentCmd}>{`bit lane import ${laneId}`}</CopyBox>
     </div>
   );
 }
