@@ -37,7 +37,8 @@ export function LabelContainer({
     middleware: compact([
       offset && offsetMiddleware({ mainAxis: offset[0], crossAxis: offset[1] }),
       flip && flipMiddleware(),
-      shift({ rootBoundary: 'viewport' }),
+      // enabling 'shift' for 'crossAxis' will make floating-ui push the label _inside_, when it has nowhere to go
+      shift({ rootBoundary: 'document', mainAxis: true, crossAxis: true }),
     ]),
   });
 
@@ -60,7 +61,8 @@ export function LabelContainer({
       {...rest}
       ref={floating}
       className={classnames(className, !isReady && styles.hidden)}
-      style={{ ...style, position: strategy, top: y ?? '', left: x ?? '' }}
+      // starting at pos [0,0] will ensure the label doesn't increase the document size.
+      style={{ ...style, position: strategy, top: y ?? 0, left: x ?? 0 }}
     />
   );
 }
