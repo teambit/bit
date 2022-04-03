@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { sync as resolveSync } from 'resolve';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -1272,6 +1273,75 @@ Env2Aspect.addRuntime(EnvMain);
     });
   });
 });
+
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
+  'package manager rc file is read from the workspace directory when installation is in a capsule',
+  function () {
+    this.timeout(0);
+    let scope!: string
+    let helper: Helper;
+    let envId1;
+    let envName1;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      envName1 = helper.env.setCustomEnv('node-env-1');
+      envId1 = `${helper.scopes.remote}/${envName1}`;
+      helper.command.install('lodash.get');
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      scope = helper.scopes.remote.replace('.', '/');
+    });
+    describe('using Yarn', () => {
+      let scopeAspectsCapsulesRootDir!: string
+      before(() => {
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
+        helper.capsules.removeScopeAspectCapsules();
+        helper.command.status(); // populate capsules.
+        scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      });
+      it('should link build side-effects to all instances of the component in the capsule directory', () => {
+        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.exist
+      });
+    });
+    describe('using pnpm', () => {
+      let scopeAspectsCapsulesRootDir!: string
+      before(() => {
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
+        helper.capsules.removeScopeAspectCapsules();
+        helper.command.status(); // populate capsules.
+        scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      });
+      it('should link build side-effects to all instances of the component in the capsule directory', () => {
+        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.exist
+      });
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+  }
+);
 
 function resolveFrom(fromDir: string, moduleIds: string[]) {
   if (moduleIds.length === 0) return fromDir;
