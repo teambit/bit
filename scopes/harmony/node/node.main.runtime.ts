@@ -159,7 +159,7 @@ export class NodeMain {
     TypescriptMain
   ]) {
     const logger = loggerAspect.createLogger(NodeAspect.id);
-    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect, react), react);
+    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect, react), react.reactEnv);
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
