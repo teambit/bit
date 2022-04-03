@@ -93,7 +93,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private async runBundlerForGroups(context: BuildContext, groups: TargetsGroupMap): Promise<BuiltTaskResult> {
-    const bundlerContext: BundlerContext = Object.assign(cloneDeep(context), {
+    const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [],
       entry: [],
       externalizePeer: false,
