@@ -46,7 +46,7 @@ export function calculatePipelineOrder(
   envs: EnvDefinition[],
   pipeNameOnEnv = 'getBuildPipe',
   tasks: string[] = [],
-  skipTests = false
+  skipTasks?: string[],
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -71,13 +71,16 @@ export function calculatePipelineOrder(
 
   const tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
+
   if (tasks.length) {
     return new TasksQueue(
       ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
     );
   }
-  if (skipTests) {
-    return new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
+  if (skipTasks) {
+    return new TasksQueue(
+      ...tasksQueue.filter(({ task }) => !skipTasks.includes(task.name) && !skipTasks.includes(task.aspectId))
+    );
   }
   return tasksQueue;
 }

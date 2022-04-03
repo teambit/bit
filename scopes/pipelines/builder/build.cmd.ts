@@ -12,7 +12,8 @@ type BuildOpts = {
   install: boolean;
   cachePackagesOnCapsulesRoot: boolean;
   reuseCapsules: boolean;
-  tasks: string;
+  tasks?: string;
+  skipTasks?: string;
   listTasks?: string;
 };
 
@@ -32,6 +33,7 @@ export class BuilderCmd implements Command {
       `build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.
 specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
     ],
+    ['', 'skip-tasks <string>', 'SOME DESCRIPTION TODO'],
     ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
     [
       '',
@@ -51,6 +53,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       cachePackagesOnCapsulesRoot = false,
       reuseCapsules = false,
       tasks,
+      skipTasks,
       listTasks,
     }: BuildOpts
   ): Promise<string> {
@@ -68,6 +71,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     }
     this.logger.consoleSuccess(`found ${components.length} components to build`);
 
+    if (!!tasks && !!skipTasks) {
+      // TODO
+      throw new Error('cannot run build with both execute both --tasks and --skip-tasks');
+    }
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
@@ -82,7 +90,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       },
       {
         dev,
-        tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
+        tasks: tasks ? tasks.split(',').map((task) => task.trim()) : undefined,
+        skipTasks: skipTasks ? skipTasks.split(',').map((skippedTask) => skippedTask.trim()) : undefined,
       }
     );
     longProcessLogger.end();

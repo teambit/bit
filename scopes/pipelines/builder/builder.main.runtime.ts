@@ -91,7 +91,7 @@ export class BuilderMain {
     const envsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
-      { skipTests: options.skipTests }
+      { skipTasks: options.skipTests ? ['TestComponents'] : undefined }
     );
     if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
@@ -227,7 +227,7 @@ export class BuilderMain {
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
       originalSeeders: ids,
-      ...(builderOptions || {}),
+      ...builderOptions,
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
