@@ -34,7 +34,7 @@ Architectural pains that stem from monolithic development no longer exist; Scala
 
 Bit comes with native support and best-practice dev environments for most web technologies such as TS, React, and Node, and can be easily extended to support just about anything.
 
-It provides features such as [Workspace](https://bit.dev/docs/workspace/workspace-overview), [Components](https://bit.dev/docs/components/component-overview), [Dev Envrionemnts](https://bit.dev/docs/envs/envs-overview/), [Scopes](https://bit.dev/docs/scope/scope-overview), and [Dependencies](https://bit.dev/docs/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
+It provides features such as [Workspace](https://bit.dev/docs/workspace/workspace-overview), [Components](https://bit.dev/docs/components/component-overview), [Dev Environments](https://bit.dev/docs/envs/envs-overview/), [Scopes](https://bit.dev/docs/scope/scope-overview), and [Dependencies](https://bit.dev/docs/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
 
 Bit is developed with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
 
