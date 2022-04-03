@@ -11,6 +11,7 @@ import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import { SwitchCmd } from './switch.cmd';
 
 type LaneOptions = {
   details?: boolean;
@@ -324,6 +325,22 @@ export class LaneRemoveCmd implements Command {
     }
     const laneResults = await this.lanes.removeLanes(names, { remote, force });
     return chalk.green(`successfully removed the following lane(s): ${chalk.bold(laneResults.join(', '))}`);
+  }
+}
+
+export class LaneImportCmd implements Command {
+  name = 'import <lane>';
+  description = `import a remote lane to your workspace`;
+  alias = '';
+  options = [];
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private switchCmd: SwitchCmd) {}
+
+  async report([lane]: [string]): Promise<string> {
+    return this.switchCmd.report([lane], { getAll: true });
   }
 }
 

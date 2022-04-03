@@ -20,6 +20,7 @@ import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
   LaneCreateCmd,
+  LaneImportCmd,
   LaneListCmd,
   LaneMergeCmd,
   LaneRemoveCmd,
@@ -199,6 +200,7 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
+        new LaneImportCmd(switchCmd),
       ];
       cli.register(laneCmd, switchCmd);
       graphql.register(lanesSchema(lanesMain));

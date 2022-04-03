@@ -797,10 +797,15 @@ export class Workspace implements ComponentFactory {
     return newAndModified;
   }
 
-  async getComponentsUsingEnv(env: string, throwIfNotFound = false): Promise<Component[]> {
+  async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
     const allComps = await this.list();
     const allEnvs = await this.envs.createEnvironment(allComps);
-    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => runtimeEnv.id === env);
+    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => {
+      if (runtimeEnv.id === env) return true;
+      if (!ignoreVersion) return false;
+      const envWithoutVersion = runtimeEnv.id.split('@')[0];
+      return env === envWithoutVersion;
+    });
     if (!foundEnv && throwIfNotFound) {
       const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
       throw new BitError(`unable to find components that using "${env}" env.
@@ -1192,6 +1197,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     } else {
       this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
     }
+  }
+
+  async getAspectIdFromConfig(
+    componentId: ComponentID,
+    aspectIdStr: string,
+    ignoreAspectVersion = false
+  ): Promise<string | undefined> {
+    const aspectId = await this.resolveComponentId(aspectIdStr);
+    const componentConfigFile = await this.componentConfigFile(componentId);
+    if (componentConfigFile) {
+      const aspectEntry = componentConfigFile.aspects.find(aspectId, ignoreAspectVersion);
+      return aspectEntry?.id.toString();
+    }
+    return this.bitMap.getAspectIdFromConfig(componentId, aspectId, ignoreAspectVersion);
   }
 
   async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
@@ -2072,17 +2091,41 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * overrides in workspace.jsonc.
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
-    const envIdStr = envId.toString();
-    const existsOnWorkspace = await this.hasId(envId);
+    const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.addSpecificComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+        await this.addSpecificComponentConfig(componentId, envStrWithPossiblyVersion);
         await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
       })
     );
     await this.bitMap.write();
+  }
+
+  /**
+   * helpful when a user provides an env-string to be set and this env has no version.
+   * in the workspace config, a custom-env needs to be set with a version unless it's part of the workspace.
+   * (inside envs/envs it's set without a version).
+   */
+  async resolveEnvIdWithPotentialVersionForConfig(envId: ComponentID): Promise<string> {
+    const isCore = this.aspectLoader.isCoreAspect(envId.toStringWithoutVersion());
+    const existsOnWorkspace = await this.hasId(envId);
+    if (isCore || existsOnWorkspace) {
+      // the env needs to be without version
+      return envId.toStringWithoutVersion();
+    }
+    // the env must include a version
+    if (envId.hasVersion()) {
+      return envId.toString();
+    }
+    const extensions = this.harmony.get<ConfigMain>('teambit.harmony/config').extensions;
+    const found = extensions?.findExtension(envId.toString(), true);
+    if (found && found.extensionId?.version) {
+      return found.extensionId.toString();
+    }
+    const comps = await this.importAndGetMany([envId]);
+    return comps[0].id.toString();
   }
 
   /**
@@ -2099,7 +2142,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           unchanged.push(id);
           return;
         }
-        await this.removeSpecificComponentConfig(id, currentEnv, false);
+        const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, false);
         await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
         changed.push(id);
       })

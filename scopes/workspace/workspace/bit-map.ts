@@ -5,6 +5,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
+import { BitError } from '@teambit/bit-error';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -81,6 +82,33 @@ export class BitMap {
     { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  }
+
+  getAspectIdFromConfig(
+    componentId: ComponentID,
+    aspectId: ComponentID,
+    ignoreAspectVersion = false
+  ): string | undefined {
+    const bitMapEntry = this.getBitmapEntry(componentId);
+    const config = bitMapEntry.config;
+    if (!config) {
+      return undefined;
+    }
+    if (config[aspectId.toString()]) {
+      return aspectId.toString();
+    }
+    if (!ignoreAspectVersion) {
+      return undefined;
+    }
+    const allVersions = Object.keys(config).filter((id) => id.startsWith(`${aspectId.toStringWithoutVersion()}@`));
+    if (allVersions.length > 1) {
+      throw new BitError(
+        `error: the same aspect ${
+          aspectId.toStringWithoutVersion
+        } configured multiple times for "${componentId.toString()}"\n${allVersions.join('\n')}`
+      );
+    }
+    return allVersions.length === 1 ? allVersions[0] : undefined;
   }
 
   /**
