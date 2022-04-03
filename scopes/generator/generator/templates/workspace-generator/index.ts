@@ -11,7 +11,7 @@ import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 export const workspaceGeneratorTemplate: ComponentTemplate = {
   name: 'workspace-generator',
   description:
-    'create your own workspace generator - \nDocs: https://harmony-docs.bit.dev/extending-bit/creating-a-custom-workspace-generator',
+    'create your own workspace generator - \nDocs: https://bit.dev/docs/dev-services-overview/generator/generate-workspace',
   generateFiles: (context: ComponentContext) => {
     return [
       {
