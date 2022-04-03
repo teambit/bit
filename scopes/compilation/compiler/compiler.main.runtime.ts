@@ -70,6 +70,11 @@ export class CompilerMain {
     return compilerInstance.getDistDir();
   }
 
+  /**
+   * Check if the dist folder (in the component package under node_modules) exist
+   * @param component
+   * @returns
+   */
   isDistDirExists(component: Component): boolean {
     const packageDir = this.workspace.getComponentPackagePath(component);
     const distDir = this.getRelativeDistFolder(component);

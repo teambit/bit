@@ -103,14 +103,32 @@ export class TypescriptMain {
     return this.initTsserverClient(this.workspace.path, options, files);
   }
 
+  /**
+   * Create a compiler instance and run the cjs transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   createCjsCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
     return this.createCompiler(options, [this.getCjsTransformer(), ...transformers], tsModule);
   }
 
+  /**
+   * Create a compiler instance and run the esm transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   createEsmCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
     return this.createCompiler(options, [this.getEsmTransformer(), ...transformers], tsModule);
   }
 
+  /**
+   * Create a transformer that change the ts module to CommonJS
+   * @returns
+   */
   getCjsTransformer(): TsConfigTransformer {
     const cjsTransformer = (config: TypescriptConfigMutator) => {
       config.setModule('CommonJS');
@@ -119,6 +137,10 @@ export class TypescriptMain {
     return cjsTransformer;
   }
 
+  /**
+   * Create a transformer that change the ts module to ES2020
+   * @returns
+   */
   getEsmTransformer(): TsConfigTransformer {
     const esmTransformer = (config: TypescriptConfigMutator) => {
       config.setModule('ES2020');
@@ -145,6 +167,10 @@ export class TypescriptMain {
     };
   }
 
+  /**
+   * add type: module to the package.json props and the default props
+   * :TODO @gilad why do we need this DSL? can't I just get the args here.
+   */
   getEsmPackageJsonProps(): PackageJsonProps {
     return {
       // main: 'dist-esm/{main}.js',

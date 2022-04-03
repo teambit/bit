@@ -125,11 +125,23 @@ export class ReactEnv
     return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
+  /**
+   * Get a jest tester instance with react config and cjs configs
+   * @param jestConfigPath
+   * @param jestModulePath
+   * @returns
+   */
   getCjsJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.cjs.config');
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
+  /**
+   * Get a jest tester instance with react config and esm configs
+   * @param jestConfigPath
+   * @param jestModulePath
+   * @returns
+   */
   getEsmJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.esm.config');
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
@@ -157,11 +169,25 @@ export class ReactEnv
     };
   }
 
+  /**
+   * Get a compiler instance with react config and set it to cjs module
+   * @param mode
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompileOptions = this.getTsCompilerOptions(mode);
     return this.tsAspect.createCjsCompiler(tsCompileOptions, transformers, tsModule);
   }
 
+  /**
+   * Get a compiler instance with react config and set it to esm module
+   * @param mode
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompileOptions = this.getTsCompilerOptions(mode);
     return this.tsAspect.createEsmCompiler(tsCompileOptions, transformers, tsModule);
@@ -353,10 +379,18 @@ export class ReactEnv
     return this.getCjsPackageJsonProps();
   }
 
+  /**
+   * Get the default package.json props for a cjs component
+   * @returns
+   */
   getCjsPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getCjsPackageJsonProps();
   }
 
+  /**
+   * Get the default package.json props for an esm component
+   * @returns
+   */
   getEsmPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getEsmPackageJsonProps();
   }
@@ -407,16 +441,33 @@ export class ReactEnv
     return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
+  /**
+   * Get the react build pipeline without the compilation task.
+   * This help in cases you want to only replace the compilation task with something else
+   * @returns
+   */
   getBuildPipeWithoutCompiler(): BuildTask[] {
     const pipeWithoutCompiler = this.getBuildPipe().filter((task) => task.aspectId !== this.compilerAspectId);
     return pipeWithoutCompiler;
   }
 
+  /**
+   * Get a compiler task with react config and set to esm module
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
+  /**
+   * Get a compiler task with react config and set to cjs module
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
   getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompiler = this.getTsCjsCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
