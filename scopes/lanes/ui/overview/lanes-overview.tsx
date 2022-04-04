@@ -15,9 +15,8 @@ export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 export type LanesOverviewProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
-  host: string;
 };
-export function LanesOverview({ routeSlot, overviewSlot, host }: LanesOverviewProps) {
+export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -26,25 +25,17 @@ export function LanesOverview({ routeSlot, overviewSlot, host }: LanesOverviewPr
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
-  return (
-    <LaneOverviewWithPreview
-      currentLane={currentLane}
-      host={host}
-      overviewItems={overviewItems}
-      routeSlot={routeSlot}
-    />
-  );
+  return <LaneOverviewWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
 }
 
 type LaneOverviewWithPreviewProps = {
-  host: string;
   currentLane: LaneModel;
   overviewItems: LaneOverviewLine[];
   routeSlot: RouteSlot;
 };
 
-function LaneOverviewWithPreview({ host, currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
-  const { loading, components } = useLaneComponentsQuery(currentLane, host);
+function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
+  const { loading, components } = useLaneComponentsQuery(currentLane);
 
   if (loading) return null;
 

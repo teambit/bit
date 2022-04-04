@@ -63,7 +63,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.host} />,
+        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
     ]);
     this.hostAspect.registerMenuRoutes([
@@ -73,7 +73,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverviewMenu navigationSlot={this.navSlot} host={this.host} widgetSlot={this.menuWidgetSlot} />,
+        children: <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />,
       },
     ]);
   }
@@ -95,7 +95,7 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <ViewedLaneFromUrl host={this.host}>{children}</ViewedLaneFromUrl>;
+    return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
   };
 
   registerRoute(route: RouteProps) {

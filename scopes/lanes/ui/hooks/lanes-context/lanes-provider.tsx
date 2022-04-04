@@ -8,8 +8,8 @@ export type LanesProviderProps = {
   host: string;
 };
 
-export function LanesProvider({ children, viewedLaneId, host }: LanesProviderProps) {
-  const { lanes } = useLanesQuery(host);
+export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
+  const { lanes } = useLanesQuery();
 
   const model = useMemo(() => {
     lanes?.setViewedLane(viewedLaneId);

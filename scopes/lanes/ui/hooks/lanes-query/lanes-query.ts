@@ -65,7 +65,6 @@ const laneComponentFields = gql`
       id
       icon
     }
-
     preview {
       includesEnvTemplate
     }
@@ -91,10 +90,10 @@ const GET_LANE_COMPONENTS = gql`
   ${laneComponentFields}
 `;
 
-export function useLanesQuery(host: string): { lanes?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
-  const { data, ...rest } = useDataQuery<LanesQuery>(GET_LANES, { variables: { extensionId: host } });
+export function useLanesQuery(): { lanes?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+  const { data, ...rest } = useDataQuery(GET_LANES);
   const { scope, loading } = useScopeQuery();
-  const lanes = data && LanesModel.from({ data, host, scope });
+  const lanes = data && LanesModel.from({ data, host: data?.getHost?.id, scope });
   return {
     ...rest,
     loading: rest.loading || !!loading,
@@ -102,14 +101,11 @@ export function useLanesQuery(host: string): { lanes?: LanesModel } & Omit<Query
   };
 }
 
-export function useLaneComponentsQuery(
-  lane: LaneModel,
-  host: string
-): {
+export function useLaneComponentsQuery(lane: LaneModel): {
   components?: Array<ComponentModel>;
 } & Omit<QueryResult<LanesQuery>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
-    variables: { ids: [lane.name], extensionId: host },
+    variables: { ids: [lane.name] },
   });
 
   const components: Array<ComponentModel> = data?.lanes.list[0].components.map((component) =>
