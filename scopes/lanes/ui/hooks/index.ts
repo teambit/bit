@@ -9,5 +9,6 @@ export {
   LaneQueryResult,
   LanesQueryResult,
   LanesHost,
+  LanesQuery,
 } from './lanes-context';
 export { useLanesQuery, useLaneComponentsQuery } from './lanes-query';

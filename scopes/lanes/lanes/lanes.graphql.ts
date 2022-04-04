@@ -1,9 +1,11 @@
 import { Schema } from '@teambit/graphql';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
+import { flatten, slice } from 'lodash';
+
 import { LanesMain } from './lanes.main.runtime';
 
-export function lanesSchema(lanesMain: LanesMain): Schema {
+export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
     typeDefs: gql`
       type FileDiff {
@@ -38,43 +40,85 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         id: String!
         isMerged: Boolean
         remote: String
-        components: [Component!]!
-        diff(toLaneId: String!, options: DiffOptions): GetDiffResult
+        components(offset: Int, limit: Int): [Component!]!
+      }
+
+      # Lane API
+      type Lanes {
+        id: String!
+        list(ids: [String!], offset: Int, limit: Int): [Lane!]!
+        diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
+        current: Lane
       }
 
       type Query {
-        lanes(id: String): [Lane!]!
-        currentLane: Lane
+        lanes: Lanes
+      }
+
+      extend type Workspace {
+        lanes: Lanes
+      }
+
+      extend type Scope {
+        lanes: Lanes
       }
     `,
     resolvers: {
-      Lane: {
-        id: (lane: LaneData) => lane.name,
-        isMerged: (lane: LaneData) => lane.isMerged,
-        remote: (lane: LaneData) => lane.remote,
-        components: async (lane: LaneData) => {
-          const laneComponents = await lanesMain.getLaneComponentModels(lane.name);
-          return laneComponents;
+      Workspace: {
+        lanes: () => lanesMainRuntime,
+      },
+      Scope: {
+        lanes: () => lanesMainRuntime,
+      },
+      Lanes: {
+        // need this for Apollo InMemory Caching
+        id: () => 'lanes',
+        list: async (
+          lanesMain: LanesMain,
+          { ids, limit, offset }: { ids?: string[]; offset?: number; limit?: number }
+        ) => {
+          let lanes: LaneData[] = [];
+
+          if (!ids || ids.length === 0) {
+            lanes = await lanesMain.getLanes({});
+          } else {
+            lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: id }))));
+          }
+
+          if (limit || offset) {
+            lanes = slice(lanes, offset, limit && limit + (offset || 0));
+          }
+
+          return lanes;
         },
-        diff: async (fromLane: LaneData, { toLaneId, options }: { toLaneId: string; options: { color?: boolean } }) => {
-          const getDiffResults = await lanesMain.getDiff([fromLane.name, toLaneId], options);
+        current: async (lanesMain: LanesMain) => {
+          const currentLaneId = lanesMain.getCurrentLane();
+          if (!currentLaneId) return undefined;
+          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
+          return currentLane;
+        },
+        diff: async (
+          lanesMain: LanesMain,
+          { from, to, options }: { to: string; from: string; options: { color?: boolean } }
+        ) => {
+          const getDiffResults = await lanesMain.getDiff([from, to], options);
           return {
             ...getDiffResults,
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
         },
       },
+      Lane: {
+        id: (lane: LaneData) => lane.name,
+        isMerged: (lane: LaneData) => lane.isMerged,
+        remote: (lane: LaneData) => lane.remote,
+        components: async (lane: LaneData) => {
+          const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane.name);
+          return laneComponents;
+        },
+      },
       Query: {
-        lanes: async (_, { id }: { id?: string }) => {
-          const lanes = await lanesMain.getLanes({ name: id });
-          return lanes;
-        },
-        currentLane: async () => {
-          const currentLaneId = lanesMain.getCurrentLane();
-          if (!currentLaneId) return undefined;
-          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
-          return currentLane;
-        },
+        lanes: () => lanesMainRuntime,
       },
     },
   };

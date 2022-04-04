@@ -1,6 +1,6 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
-import { LaneModel, LanesModel, LanesQueryResult } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.lanes';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { ComponentModel } from '@teambit/component';
 
@@ -8,18 +8,21 @@ const GET_LANES = gql`
   query Lanes($extensionId: String) {
     lanes {
       id
-      remote
-      isMerged
-      components {
-        id {
-          name
-          scope
-          version
+      list {
+        id
+        remote
+        isMerged
+        components {
+          id {
+            name
+            scope
+            version
+          }
         }
       }
-    }
-    currentLane {
-      id
+      current {
+        id
+      }
     }
     getHost(id: $extensionId) {
       id
@@ -69,13 +72,16 @@ const laneComponentFields = gql`
   }
 `;
 const GET_LANE_COMPONENTS = gql`
-  query LaneComponent($id: String, $extensionId: String) {
-    lanes(id: $id) {
+  query LaneComponent($ids: [String!], $extensionId: String) {
+    lanes {
       id
-      remote
-      isMerged
-      components {
-        ...componentFields
+      list(ids: $ids) {
+        id
+        remote
+        isMerged
+        components {
+          ...componentFields
+        }
       }
     }
     getHost(id: $extensionId) {
@@ -85,8 +91,8 @@ const GET_LANE_COMPONENTS = gql`
   ${laneComponentFields}
 `;
 
-export function useLanesQuery(host: string): { lanes?: LanesModel } & Omit<QueryResult<LanesQueryResult>, 'data'> {
-  const { data, ...rest } = useDataQuery<LanesQueryResult>(GET_LANES, { variables: { extensionId: host } });
+export function useLanesQuery(host: string): { lanes?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+  const { data, ...rest } = useDataQuery<LanesQuery>(GET_LANES, { variables: { extensionId: host } });
   const { scope, loading } = useScopeQuery();
   const lanes = data && LanesModel.from({ data, host, scope });
   return {
@@ -101,12 +107,12 @@ export function useLaneComponentsQuery(
   host: string
 ): {
   components?: Array<ComponentModel>;
-} & Omit<QueryResult<LanesQueryResult>, 'data'> {
+} & Omit<QueryResult<LanesQuery>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
-    variables: { id: lane.name, extensionId: host },
+    variables: { ids: [lane.name], extensionId: host },
   });
 
-  const components: Array<ComponentModel> = data?.lanes[0].components.map((component) =>
+  const components: Array<ComponentModel> = data?.lanes.list[0].components.map((component) =>
     ComponentModel.from({ ...component, host: data.getHost.id })
   );
 

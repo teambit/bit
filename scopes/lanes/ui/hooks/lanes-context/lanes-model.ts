@@ -11,7 +11,9 @@ export type LaneComponentQueryResult = {
   head: string;
 };
 /**
- * GQL (lanes/getLanes)
+ * GQL
+ *  lanes/list
+ *  lanes/current
  * Return type of each Lane in a Scope/Workspace
  */
 export type LaneQueryResult = {
@@ -21,13 +23,20 @@ export type LaneQueryResult = {
   components: ComponentModelProps[];
 };
 /**
+ * GQL
+ * Return type of the lanes query
+ */
+export type LanesQueryResult = {
+  list?: LaneQueryResult[];
+  current?: LaneQueryResult;
+};
+/**
  * GQL (lanes)
  * Return type of the entire /lanes query.
  * Represents All Lanes and Current Lane in Scope/Workspace
  */
-export type LanesQueryResult = {
-  lanes?: LaneQueryResult[];
-  currentLane?: LaneQueryResult;
+export type LanesQuery = {
+  lanes?: LanesQueryResult;
 };
 
 export type LanesHost = 'workspace' | 'scope';
@@ -144,9 +153,9 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from({ data, host, scope }: { data: LanesQueryResult; host: string; scope?: ScopeModel }): LanesModel {
-    const lanes = data?.lanes?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
-    const currentLane = data.currentLane ? LanesModel.mapToLaneModel(data.currentLane, host, scope) : undefined;
+  static from({ data, host, scope }: { data: LanesQuery; host: string; scope?: ScopeModel }): LanesModel {
+    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
+    const currentLane = data.lanes?.current ? LanesModel.mapToLaneModel(data.lanes.current, host, scope) : undefined;
     return new LanesModel({ lanes, currentLane });
   }
 

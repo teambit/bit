@@ -7,4 +7,5 @@ export {
   LaneQueryResult,
   LanesQueryResult,
   LanesHost,
+  LanesQuery,
 } from './lanes-model';
