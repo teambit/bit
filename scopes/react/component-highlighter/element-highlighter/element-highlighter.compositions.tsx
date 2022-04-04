@@ -80,3 +80,27 @@ export const ElementOnTheEdge = () => {
     </div>
   );
 };
+
+export const FullscreenElement = () => {
+  const targetRef = createRef<HTMLDivElement>();
+
+  return (
+    <div style={{ fontFamily: 'sans-serif' }}>
+      <div
+        ref={targetRef}
+        style={{
+          height: '100vh',
+          width: '100%',
+          background: '#bceed4',
+        }}
+      >
+        This element will cover the entire document,
+        <br />
+        pushing the highlighter to the edge of the window.
+        <br />
+        The highlighter should remain inside and expand no further than the document.
+      </div>
+      <ElementHighlighter targetRef={targetRef} components={[MockTarget]} watchMotion />
+    </div>
+  );
+};

@@ -103,8 +103,9 @@ export function Frame({ targetRef, watchMotion, className, stylesClass = styles.
         ...style,
         ...dimensionRef.current,
         position: strategy,
-        top: y ?? '',
-        left: x ?? '',
+        // starting at pos [0,0] will ensure the label doesn't increase the document size.
+        top: y ?? 0,
+        left: x ?? 0,
       }}
     />
   );
