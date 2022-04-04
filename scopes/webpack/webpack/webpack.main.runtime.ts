@@ -92,14 +92,15 @@ export class WebpackMain {
   createBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
-    initialConfigs?: webpack.Configuration[]
+    initialConfigs?: webpack.Configuration[],
+    webpackInstance?: any
   ) {
     const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
     // eslint-disable-next-line max-len
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
-    return new WebpackBundler(context.targets, configs, this.logger, webpack, context.metaData);
+    return new WebpackBundler(context.targets, configs, this.logger, webpackInstance || webpack, context.metaData);
   }
 
   private createConfigs(
