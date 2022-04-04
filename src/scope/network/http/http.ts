@@ -499,15 +499,17 @@ export class Http implements Network {
     const LIST_LANES = gql`
       query Lanes {
         lanes {
-          id
-          components {
-            id {
-              name
-              scope
-              version
+          list {
+            id
+            components {
+              id {
+                name
+                scope
+                version
+              }
             }
+            isMerged
           }
-          isMerged
         }
       }
     `;
