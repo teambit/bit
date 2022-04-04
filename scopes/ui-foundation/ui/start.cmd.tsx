@@ -2,9 +2,9 @@ import React from 'react';
 import openBrowser from 'react-dev-utils/openBrowser';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
+import { BitError } from '@teambit/bit-error';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
-import { BitError } from '@teambit/bit-error';
 
 type StartArgs = [uiName: string, userPattern: string];
 type StartFlags = {
