@@ -118,7 +118,7 @@ importers:
       '@teambit/design.inputs.dropdown': 0.0.7
       '@teambit/design.inputs.selectors.multi-select': 0.0.20
       '@teambit/design.ui.brand.logo': 1.95.0
-      '@teambit/design.ui.icon-button': 1.0.10
+      '@teambit/design.ui.icon-button': 1.0.16
       '@teambit/design.ui.input.toggle': 1.0.12
       '@teambit/docs.content.docs-overview': 1.95.9
       '@teambit/documenter.code.react-playground': 4.0.1
@@ -153,7 +153,7 @@ importers:
       '@teambit/documenter.ui.table.td': 4.1.1
       '@teambit/documenter.ui.table.tr': 4.1.1
       '@teambit/documenter.ui.ul': 4.1.1
-      '@teambit/evangelist.elements.button': 1.0.3
+      '@teambit/evangelist.elements.button': 1.0.6
       '@teambit/evangelist.elements.heading': 1.0.2
       '@teambit/evangelist.elements.icon': 1.0.2
       '@teambit/evangelist.elements.image': 1.0.2
@@ -701,7 +701,7 @@ importers:
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_react-dom@17.0.2+react@17.0.2
       '@teambit/design.inputs.dropdown': registry.npmjs.org/@teambit/design.inputs.dropdown/0.0.7_react-dom@17.0.2+react@17.0.2
       '@teambit/design.inputs.selectors.multi-select': registry.npmjs.org/@teambit/design.inputs.selectors.multi-select/0.0.20_react-dom@17.0.2+react@17.0.2
-      '@teambit/design.ui.icon-button': registry.npmjs.org/@teambit/design.ui.icon-button/1.0.10_react-dom@17.0.2+react@17.0.2
+      '@teambit/design.ui.icon-button': registry.npmjs.org/@teambit/design.ui.icon-button/1.0.16_react-dom@17.0.2+react@17.0.2
       '@teambit/design.ui.input.toggle': registry.npmjs.org/@teambit/design.ui.input.toggle/1.0.12_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.code.react-playground': registry.npmjs.org/@teambit/documenter.code.react-playground/4.0.1_884042120800d1af00337a57c001a17f
       '@teambit/documenter.content.documentation-links': registry.npmjs.org/@teambit/documenter.content.documentation-links/4.1.3_react-dom@17.0.2+react@17.0.2
@@ -733,7 +733,7 @@ importers:
       '@teambit/documenter.ui.table.td': registry.npmjs.org/@teambit/documenter.ui.table.td/4.1.1_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.ui.table.tr': registry.npmjs.org/@teambit/documenter.ui.table.tr/4.1.1_react-dom@17.0.2+react@17.0.2
       '@teambit/documenter.ui.ul': registry.npmjs.org/@teambit/documenter.ui.ul/4.1.1_react-dom@17.0.2+react@17.0.2
-      '@teambit/evangelist.elements.button': registry.npmjs.org/@teambit/evangelist.elements.button/1.0.3_react-dom@17.0.2+react@17.0.2
+      '@teambit/evangelist.elements.button': registry.npmjs.org/@teambit/evangelist.elements.button/1.0.6_react-dom@17.0.2+react@17.0.2
       '@teambit/evangelist.elements.heading': registry.npmjs.org/@teambit/evangelist.elements.heading/1.0.2_react-dom@17.0.2+react@17.0.2
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2_react-dom@17.0.2+react@17.0.2
       '@teambit/evangelist.elements.image': registry.npmjs.org/@teambit/evangelist.elements.image/1.0.2_react-dom@17.0.2+react@17.0.2
@@ -10124,27 +10124,11 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
-  registry.npmjs.org/@teambit/base-ui.input.button/1.0.1_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-7OFAXvVS5Md17ilTkH71C8JspGN+/aUwxRzM4j0k/uGuq17Q/oSzG6KEQPjSsDSRKuVXkHN5+Rc7l8iMRWkqrA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.button/-/base-ui.input.button-1.0.1.tgz}
-    id: registry.npmjs.org/@teambit/base-ui.input.button/1.0.1
+  registry.npmjs.org/@teambit/base-ui.input.button/1.0.5_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-uItTjoLLZ3C+k3+Am++NhdfK/azGCsYyIVgGJV6nHN1+t+cDSe5ylzOwrH9nKmUvmNva3WqhnrlmZwER9qPifA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.button/-/base-ui.input.button-1.0.5.tgz}
+    id: registry.npmjs.org/@teambit/base-ui.input.button/1.0.5
     name: '@teambit/base-ui.input.button'
-    version: 1.0.1
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.elements.dots-loader': registry.npmjs.org/@teambit/base-ui.elements.dots-loader/1.0.1_react-dom@17.0.2+react@17.0.2
-      classnames: registry.npmjs.org/classnames/2.3.1
-      core-js: registry.npmjs.org/core-js/3.21.1
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  registry.npmjs.org/@teambit/base-ui.input.button/1.0.3_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-Za3A9Nl2FfCcN09jAzYyUqwyvT6WFQba9+6yIH64+hfcjFAFTrenP0zmGxUxGGSPKZzthyjmCNFRmoZOZdUllQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.button/-/base-ui.input.button-1.0.3.tgz}
-    id: registry.npmjs.org/@teambit/base-ui.input.button/1.0.3
-    name: '@teambit/base-ui.input.button'
-    version: 1.0.3
+    version: 1.0.5
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -11418,19 +11402,19 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: true
 
-  registry.npmjs.org/@teambit/design.ui.icon-button/1.0.10_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-PB6AbLsssH87zEbu9yIgSrckG/MMlFaCiM4L3n5VHd3UU7zRr3jCde/Q1JmXSpD1AKSJlYdSQAt7bezNBU9i0A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.icon-button/-/design.ui.icon-button-1.0.10.tgz}
-    id: registry.npmjs.org/@teambit/design.ui.icon-button/1.0.10
+  registry.npmjs.org/@teambit/design.ui.icon-button/1.0.16_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-ArQuW8jRREzlux5Nsph72vfj65BkC/vfAL8+0uqgxehZ+Or9GgC0tXHZPj6Ai55AmzQsqEDIUP6zGun6g1ftKA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.icon-button/-/design.ui.icon-button-1.0.16.tgz}
+    id: registry.npmjs.org/@teambit/design.ui.icon-button/1.0.16
     name: '@teambit/design.ui.icon-button'
-    version: 1.0.10
+    version: 1.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.elements.icon': registry.npmjs.org/@teambit/base-ui.elements.icon/1.0.0_react-dom@17.0.2+react@17.0.2
-      '@teambit/base-ui.input.button': registry.npmjs.org/@teambit/base-ui.input.button/1.0.3_react-dom@17.0.2+react@17.0.2
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.13.0
+      '@teambit/base-ui.input.button': registry.npmjs.org/@teambit/base-ui.input.button/1.0.5_react-dom@17.0.2+react@17.0.2
+      classnames: registry.npmjs.org/classnames/2.3.1
+      core-js: registry.npmjs.org/core-js/3.21.1
       react: registry.npmjs.org/react/17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
@@ -12562,18 +12546,18 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
-  registry.npmjs.org/@teambit/evangelist.elements.button/1.0.3_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-xtyT7PBlfXbdiyfd6UHKzutCCoA2nRUmGBWd2A1RfAFpDLwvdu6iCXmXPH1Lf5+Or9G2Y6oZudUQ2uVOGomrCQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/evangelist.elements.button/-/evangelist.elements.button-1.0.3.tgz}
-    id: registry.npmjs.org/@teambit/evangelist.elements.button/1.0.3
+  registry.npmjs.org/@teambit/evangelist.elements.button/1.0.6_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-fb6DekJSHbSK+1GLIiCfqSqADe1dcF4IHDRfDE+6ybE/wgBANxWkKCzjFYHxAHYTYh1xIrPKhLowpODWuKrYNw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/evangelist.elements.button/-/evangelist.elements.button-1.0.6.tgz}
+    id: registry.npmjs.org/@teambit/evangelist.elements.button/1.0.6
     name: '@teambit/evangelist.elements.button'
-    version: 1.0.3
+    version: 1.0.6
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.input.button': registry.npmjs.org/@teambit/base-ui.input.button/1.0.1_react-dom@17.0.2+react@17.0.2
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.13.0
+      '@teambit/base-ui.input.button': registry.npmjs.org/@teambit/base-ui.input.button/1.0.5_react-dom@17.0.2+react@17.0.2
+      classnames: registry.npmjs.org/classnames/2.3.1
+      core-js: registry.npmjs.org/core-js/3.21.1
       react: registry.npmjs.org/react/17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
