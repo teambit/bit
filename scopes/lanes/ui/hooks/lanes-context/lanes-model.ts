@@ -153,12 +153,24 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from({ data, host, scope }: { data: LanesQuery; host: string; scope?: ScopeModel }): LanesModel {
+  static from({
+    data,
+    host,
+    scope,
+    viewedLaneId,
+  }: {
+    data: LanesQuery;
+    host: string;
+    scope?: ScopeModel;
+    viewedLaneId?: string;
+  }): LanesModel {
     const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
     const currentLane = data.lanes?.current?.id
       ? lanes.find((lane) => lane.name === data.lanes?.current?.id)
       : undefined;
-    return new LanesModel({ lanes, currentLane });
+    const lanesModel = new LanesModel({ lanes, currentLane });
+    lanesModel.setViewedLane(viewedLaneId);
+    return lanesModel;
   }
 
   constructor({ lanes, viewedLane, currentLane }: LanesModelProps) {

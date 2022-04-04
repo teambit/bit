@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from 'react';
+import React, { ReactNode } from 'react';
 import { useLanesQuery } from '@teambit/lanes.ui.lanes';
 import { LanesContext } from './lanes-context';
 
@@ -8,12 +8,6 @@ export type LanesProviderProps = {
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
-  const { lanes } = useLanesQuery();
-
-  const model = useMemo(() => {
-    lanes?.setViewedLane(viewedLaneId);
-    return lanes;
-  }, [lanes, viewedLaneId]);
-
-  return <LanesContext.Provider value={model}>{children}</LanesContext.Provider>;
+  const { lanes } = useLanesQuery(viewedLaneId);
+  return <LanesContext.Provider value={lanes}>{children}</LanesContext.Provider>;
 }
