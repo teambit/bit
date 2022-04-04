@@ -495,7 +495,7 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
+  async listLanes(): Promise<LaneData[]> {
     const LIST_LANES = gql`
       query Lanes {
         lanes {
@@ -514,11 +514,9 @@ export class Http implements Network {
       }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, Verb.READ, {
-      mergeData,
-    });
+    const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
 
-    return res.lanes;
+    return res;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

@@ -28,10 +28,10 @@ import { HttpHelper } from '../http-helper';
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
     });
-    it('lane list -r should show the remote lanes', () => {
+    it.only('lane list -r should show the remote lanes', () => {
       const output = helper.command.showRemoteLanesParsed();
       expect(output.lanes).to.have.lengthOf(1);
-      expect(output.lanes.list[0].id).to.have.string('dev');
+      expect(output.lanes[0].name).to.have.string('dev');
     });
     it('bit import on a local lane tracked to a valid remote scope should not throw an error', () => {
       helper.command.createLane('test');

@@ -54,22 +54,8 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type Query {
         lanes: Lanes
       }
-
-      extend type Workspace {
-        lanes: Lanes
-      }
-
-      extend type Scope {
-        lanes: Lanes
-      }
     `,
     resolvers: {
-      Workspace: {
-        lanes: () => lanesMainRuntime,
-      },
-      Scope: {
-        lanes: () => lanesMainRuntime,
-      },
       Lanes: {
         // need this for Apollo InMemory Caching
         id: () => 'lanes',
