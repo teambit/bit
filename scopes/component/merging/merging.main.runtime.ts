@@ -245,7 +245,7 @@ export class MergingMain {
       localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
     const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
 
-    const otherLaneHead = new Ref(version);
+    const otherLaneHead = modelComponent.getRef(version);
     const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
