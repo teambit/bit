@@ -1699,7 +1699,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { all: boolean }) {
+  async updateDependencies(options: { all: boolean, compatibleOnly: boolean }) {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -1707,6 +1707,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       rootDir: this.path,
       variantPoliciesByPatterns,
       componentPoliciesById,
+      compatibleOnly: options.compatibleOnly,
     });
     let outdatedPkgsToUpdate!: OutdatedPkg[];
     if (options.all) {

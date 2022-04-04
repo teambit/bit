@@ -1,4 +1,3 @@
-import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
@@ -269,10 +268,9 @@ export async function resolveRemoteVersion(
       alias: parsedPackage.name,
       pref: parsedPackage.version,
     };
-    const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
-    const version = isValidRange ? parsedPackage.version : val.manifest.version;
+    const version = val.manifest.version;
 
     return {
       packageName: val.manifest.name,

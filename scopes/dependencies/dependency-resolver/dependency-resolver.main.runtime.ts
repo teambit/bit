@@ -1037,17 +1037,19 @@ export class DependencyResolverMain {
     rootDir,
     variantPoliciesByPatterns,
     componentPoliciesById,
+    compatibleOnly,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
+    compatibleOnly: boolean;
   }): Promise<OutdatedPkg[]> {
     const allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
       componentPoliciesById,
     });
-    return this.getOutdatedPkgs(rootDir, allPkgs);
+    return this.getOutdatedPkgs(rootDir, allPkgs, { compatibleOnly });
   }
 
   /**
@@ -1055,7 +1057,8 @@ export class DependencyResolverMain {
    */
   async getOutdatedPkgs<T>(
     rootDir: string,
-    pkgs: Array<{ name: string; currentRange: string } & T>
+    pkgs: Array<{ name: string; currentRange: string } & T>,
+    opts: { compatibleOnly: boolean }
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
@@ -1068,7 +1071,7 @@ export class DependencyResolverMain {
     const outdatedPkgs = (
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await resolve(`${pkg.name}@latest`);
+          const latestVersion = await resolve(`${pkg.name}@${opts.compatibleOnly ? pkg.currentRange : 'latest'}`);
           return {
             ...pkg,
             latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,

@@ -212,6 +212,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
   );
   it('should return outdated dependencies', async () => {
     const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
+      compatibleOnly: false,
       rootDir: '',
       variantPoliciesByPatterns: {
         '{variant1/*}': {
