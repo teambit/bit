@@ -500,7 +500,7 @@ export class Http implements Network {
       query Lanes {
         lanes {
           list {
-            id
+            name: id
             components {
               id {
                 name
