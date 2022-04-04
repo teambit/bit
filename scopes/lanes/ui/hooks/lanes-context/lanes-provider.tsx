@@ -5,7 +5,6 @@ import { LanesContext } from './lanes-context';
 export type LanesProviderProps = {
   children: ReactNode;
   viewedLaneId?: string;
-  host: string;
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {

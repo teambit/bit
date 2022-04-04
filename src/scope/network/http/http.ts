@@ -516,7 +516,7 @@ export class Http implements Network {
 
     const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
 
-    return res;
+    return res.lanes.list;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
