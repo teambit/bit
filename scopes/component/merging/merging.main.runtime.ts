@@ -246,6 +246,9 @@ export class MergingMain {
     const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
 
     const otherLaneHead = modelComponent.getRef(version);
+    if (!otherLaneHead) {
+      throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
+    }
     const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
