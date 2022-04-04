@@ -850,6 +850,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/readme/readme"
     },
+    "readme-component": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "test",
+        "config": {
+            "teambit.mdx/readme": {},
+            "teambit.envs/envs": {
+                "env": "teambit.mdx/readme"
+            }
+        }
+    },
     "renaming": {
         "scope": "teambit.component",
         "version": "0.0.97",
@@ -917,12 +929,6 @@
         "version": "0.0.483",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
-    },
-    "test-mdx": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "components/test-mdx"
     },
     "tester": {
         "scope": "teambit.defender",

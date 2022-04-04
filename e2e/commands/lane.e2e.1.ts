@@ -97,6 +97,15 @@ describe('bit lane command', function () {
       helper.command.snapComponentWithoutBuild('comp2');
       expect(() => helper.command.exportLane()).throws();
     });
+    describe('deleting the lane readme', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
+        helper.command.switchLocalLane('main');
+      });
+      it('should allow deleting the lane readme on a successful merge', () => {
+        helper.command.mergeLane('dev', '--delete-readme');
+      });
+    });
   });
   describe('creating a new lane without any component', () => {
     let output;

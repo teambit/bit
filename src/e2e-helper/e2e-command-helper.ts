@@ -127,10 +127,10 @@ export default class CommandHelper {
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
   addLaneReadme(id: string, laneName = '') {
-    return this.runCmd(`bit lane readme-add ${id} ${laneName}`);
+    return this.runCmd(`bit lane add-readme ${id} ${laneName}`);
   }
   removeLaneReadme(laneName = '') {
-    return this.runCmd(`bit lane readme-remove ${laneName}`);
+    return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
   sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);

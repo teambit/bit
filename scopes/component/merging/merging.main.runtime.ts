@@ -47,6 +47,7 @@ export type ComponentStatus = {
   componentFromModel?: Version;
   id: BitId;
   failureMessage?: string;
+  unchangedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
 };
 
@@ -201,8 +202,9 @@ export class MergingMain {
   ): Promise<ComponentStatus> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentStatus = { id };
-    const returnFailure = (msg: string) => {
+    const returnFailure = (msg: string, unchangedLegitimately = false) => {
       componentStatus.failureMessage = msg;
+      componentStatus.unchangedLegitimately = unchangedLegitimately;
       return componentStatus;
     };
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
@@ -228,10 +230,11 @@ export class MergingMain {
       return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
     }
     const currentlyUsedVersion = existingBitMapId.version;
+    console.log('🚀 ~ file: merging.main.runtime.ts ~ line 233 ~ MergingMain ~ existingBitMapId', existingBitMapId);
     if (currentlyUsedVersion === version) {
       // @todo: maybe this check is not needed as we check for diverge later on
       if (localLane || modelComponent.hasHead()) {
-        return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
+        return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`, true);
       }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -252,7 +255,7 @@ export class MergingMain {
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
         // do nothing!
-        return returnFailure(`component ${component.id.toString()} is ahead, nothing to merge`);
+        return returnFailure(`component ${component.id.toString()} is ahead, nothing to merge`, true);
       }
       if (divergeData.isRemoteAhead()) {
         // just override with the model data
@@ -264,7 +267,7 @@ export class MergingMain {
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return returnFailure(`component ${component.id.toString()} is already merged`);
+      return returnFailure(`component ${component.id.toString()} is already merged`, true);
     }
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);

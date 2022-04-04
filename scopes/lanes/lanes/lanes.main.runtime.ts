@@ -49,6 +49,7 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
+  deleteReadme: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -153,6 +154,7 @@ export class LanesMain {
       laneName,
       ...options,
     });
+
     await this.workspace.consumer.onDestroy();
 
     return mergeResults;
@@ -201,18 +203,18 @@ export class LanesMain {
     }
 
     const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
-    const existingLaneConfig = this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
+    const existingLaneConfig =
+      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
     if (existingLaneConfig !== '-') {
       delete existingLaneConfig[lane.name];
-      this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
-      this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { ...existingLaneConfig });
+      // this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+      await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, existingLaneConfig);
     } else {
       // this should not happen but is it still possible to set the config as "-"
-      this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+      await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
     }
-    await this.workspace.bitMap.write();
-
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
 
@@ -227,7 +229,8 @@ export class LanesMain {
 
     const currentLaneName = this.getCurrentLane();
 
-    const readmeComponentBitId = new BitId(readmeComponentId);
+    const readmeComponentBitId = readmeComponentId._legacy;
+
     const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
     const scope: Scope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
@@ -239,17 +242,20 @@ export class LanesMain {
     lane.setReadmeComponent(readmeComponentBitId);
     await scope.lanes.saveLane(lane);
 
-    const existingLaneConfig = this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
+    // const existingLaneConfig = this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
+    const existingLaneConfig =
+      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
     if (existingLaneConfig !== '-') {
-      this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, {
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
         ...existingLaneConfig,
         [lane.name]: { readme: true },
       });
     } else {
       // this should not happen but is it still possible to set the config as "-"
-      this.workspace.bitMap.addComponentConfig(readmeComponentId, LanesAspect.id, { [lane.name]: { readme: true } });
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
+        [lane.name]: { readme: true },
+      });
     }
-    await this.workspace.bitMap.write();
     return { result: true };
   }
 
