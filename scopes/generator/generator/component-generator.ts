@@ -101,7 +101,7 @@ export class ComponentGenerator {
       if (Object.keys(config).length === 0) config = undefined;
     }
 
-    const configWithEnv = this.addEnvIfProvidedByFlag(config);
+    const configWithEnv = await this.addEnvIfProvidedByFlag(config);
     if (configWithEnv) this.workspace.bitMap.setEntireConfig(component.id, configWithEnv);
 
     const getEnvData = () => {
@@ -134,7 +134,7 @@ export class ComponentGenerator {
     };
   }
 
-  private addEnvIfProvidedByFlag(config?: ComponentConfig): ComponentConfig | undefined {
+  private async addEnvIfProvidedByFlag(config?: ComponentConfig): Promise<ComponentConfig | undefined> {
     const userEnv = this.options.env; // env entered by the user when running `bit create --env`
     const templateEnv = config?.[EnvsAspect.id]?.env;
     if (!userEnv || userEnv === templateEnv) {
@@ -145,9 +145,11 @@ export class ComponentGenerator {
       // the component template has an env and the user wants a different env.
       delete config[templateEnv];
     }
-    config[userEnv] = {};
+    const userEnvId = await this.workspace.resolveComponentId(userEnv);
+    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    config[userEnvIdWithPotentialVersion] = {};
     config[EnvsAspect.id] = config[EnvsAspect.id] || {};
-    config[EnvsAspect.id].env = userEnv;
+    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
     return config;
   }
 
