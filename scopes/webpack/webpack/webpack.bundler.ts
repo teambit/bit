@@ -23,7 +23,7 @@ export class WebpackBundler implements Bundler {
 
     private webpack,
 
-    private metaData: BundlerContextMetaData | undefined
+    private metaData?: BundlerContextMetaData | undefined
   ) {}
 
   async run(): Promise<BundlerResult[]> {
