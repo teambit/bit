@@ -222,9 +222,13 @@ export class BuilderMain {
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const network = await this.isolator.isolateComponents(ids, isolateOptions);
+    const network = await this.isolator.isolateComponents(ids, isolateOptions, this.scope.legacyScope);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
-    const builderServiceOptions = { seedersOnly: isolateOptions?.seedersOnly, ...(builderOptions || {}) };
+    const builderServiceOptions = {
+      seedersOnly: isolateOptions?.seedersOnly,
+      originalSeeders: ids,
+      ...(builderOptions || {}),
+    };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
   }

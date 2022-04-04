@@ -45,6 +45,10 @@ export class PreviewTask implements BuildTask {
       publicPath: this.getPreviewDirectory(context),
       rootPath: url,
       development: context.dev,
+      metaData: {
+        initiator: `${PREVIEW_TASK_NAME} task`,
+        envId: context.id,
+      },
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext, []);

@@ -28,8 +28,12 @@ export class ScopeComponentLoader {
     const legacyId = id._legacy;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     // import if missing
-    if (!modelComponent && importIfMissing && id._legacy.hasScope()
-    && !this.importedComponentsCache.get(id.toString())) {
+    if (
+      !modelComponent &&
+      importIfMissing &&
+      id._legacy.hasScope() &&
+      !this.importedComponentsCache.get(id.toString())
+    ) {
       await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
@@ -128,8 +132,9 @@ export class ScopeComponentLoader {
 
   private getTagMap(modelComponent: ModelComponent): TagMap {
     const tagMap = new TagMap();
-    Object.keys(modelComponent.versionsIncludeOrphaned).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versionsIncludeOrphaned[versionStr].toString(), new SemVer(versionStr));
+    const allVersions = modelComponent.versionsIncludeOrphaned;
+    Object.keys(allVersions).forEach((versionStr: string) => {
+      const tag = new Tag(allVersions[versionStr].toString(), new SemVer(versionStr));
       tagMap.set(tag.version, tag);
     });
     return tagMap;
@@ -154,7 +159,9 @@ export class ScopeComponentLoader {
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
       new Config(version.mainFile, consumerComponent.extensions),
-      this.scope.componentExtension.createAspectList(consumerComponent.extensions, this.scope.name),
+      // todo: see the comment of this "createAspectListFromLegacy" method. the aspect ids may be incorrect.
+      // find a better way to get the ids correctly.
+      this.scope.componentExtension.createAspectListFromLegacy(consumerComponent.extensions, this.scope.name),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       consumerComponent

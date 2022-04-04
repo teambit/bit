@@ -1,9 +1,10 @@
 import { BitError } from '@teambit/bit-error';
-import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap } from '@teambit/bundler';
+import type { Bundler, BundlerResult, Asset, Target, EntriesAssetsMap, BundlerContextMetaData } from '@teambit/bundler';
 import type { Logger } from '@teambit/logger';
-import { isEmpty } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
+import { sep } from 'path';
 
 type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
@@ -20,22 +21,31 @@ export class WebpackBundler implements Bundler {
 
     private logger: Logger,
 
-    private webpack
+    private webpack,
+
+    private metaData?: BundlerContextMetaData | undefined
   ) {}
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
     const compilers = this.configs.map((config: any) => this.webpack(config));
+    const initiator = this.metaData?.initiator;
+    const envId = this.metaData?.envId;
+    const initiatorMessage = initiator ? `process initiated by: ${initiator}.` : '';
+    const envIdMessage = envId ? `config created by env: ${envId}.` : '';
+
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
-      longProcessLogger.logProgress(components.map((component) => component.id.toString()).join(', '));
+      const componentsLengthMessage = `running on ${components.length} components`;
+      const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
+      const ids = components.map((component) => component.id.toString()).join(', ');
+      longProcessLogger.logProgress(`${fullMessage}`);
+      this.logger.debug(`${fullMessage}\ncomponents ids: ${ids}`);
       return new Promise((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
-          // console.log('err webpack', err);
-
           if (err) {
             this.logger.error('get error from webpack compiler, full error:', err);
 
@@ -45,10 +55,9 @@ export class WebpackBundler implements Bundler {
             });
           }
           if (!stats) throw new BitError('unknown build error');
-          const info = stats.toJson();
+          // const info = stats.toJson();
 
-          // console.log(JSON.stringify(info, null, 2));
-
+          const info = stats.toJson({ all: false, entrypoints: true, warnings: true, errors: true, assets: true });
           const assetsMap = this.getAssets(info);
           const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
 
@@ -56,7 +65,7 @@ export class WebpackBundler implements Bundler {
             assets: Object.values(assetsMap),
             assetsByChunkName: info.assetsByChunkName,
             entriesAssetsMap,
-            errors: info.errors,
+            errors: this.getErrors(info),
             outputPath: stats.compilation.outputOptions.path,
             components,
             warnings: info.warnings,
@@ -68,6 +77,21 @@ export class WebpackBundler implements Bundler {
     });
     longProcessLogger.end();
     return componentOutput as BundlerResult[];
+  }
+
+  private getErrors(stats: StatsCompilation): Error[] {
+    if (!stats.errors) return [];
+    const fieldsToShow = ['message', 'moduleId', 'moduleName', 'moduleIdentifier', 'loc'];
+    return stats.errors.map((webpackError) => {
+      const lines = fieldsToShow.map((fieldName) => {
+        if (webpackError[fieldName]) {
+          return `${fieldName}: ${webpackError[fieldName]}`;
+        }
+        return undefined;
+      });
+      const errorMessage = compact(lines).join('\n');
+      return new BitError(errorMessage);
+    });
   }
 
   private getAssets(stats: StatsCompilation): AssetsMap {
@@ -120,17 +144,10 @@ export class WebpackBundler implements Bundler {
   }
 
   private getComponents(outputPath: string) {
-    const splitPath = outputPath.split('/');
-    splitPath.pop();
-    const path = splitPath.join('/');
-    const target = this.targets.find((targetCandidate) => {
-      return path === targetCandidate.outputPath;
-    });
+    const path = outputPath.substring(0, outputPath.lastIndexOf(sep));
+    const target = this.targets.find((targetCandidate) => path === targetCandidate.outputPath);
 
-    if (!target) {
-      throw new Error(`Could not find component id for path "${path}"`);
-    }
-
+    if (!target) throw new Error(`Could not find component id for path "${path}"`);
     return target.components;
   }
 }

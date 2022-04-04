@@ -378,4 +378,9 @@ describe('tag components on Harmony', function () {
       expect(taskIds.length).to.equal(taskIdsUniq.length);
     });
   });
+  describe('component with issues', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+    });
+  });
 });

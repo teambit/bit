@@ -1,6 +1,8 @@
 import { DependenciesEnv } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 
+export const NodeEnvType = 'node';
+
 export class NodeEnv implements DependenciesEnv {
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
@@ -15,10 +17,16 @@ export class NodeEnv implements DependenciesEnv {
     };
   }
 
-  getPreviewConfig(){
+  getPreviewConfig() {
     return {
-      // strategyName: 'component',
-      splitComponentBundle: false
-    }
+      strategyName: 'component',
+      splitComponentBundle: false,
+    };
+  }
+
+  async __getDescriptor() {
+    return {
+      type: NodeEnvType,
+    };
   }
 }

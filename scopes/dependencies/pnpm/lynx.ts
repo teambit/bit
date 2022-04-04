@@ -4,6 +4,7 @@ import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
+import sortPackages from '@pnpm/sort-packages';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -12,12 +13,20 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
-import { MutatedProject, mutateModules, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import {
+  MutatedProject,
+  mutateModules,
+  InstallOptions,
+  PeerDependencyIssuesByProjects,
+  ProjectOptions,
+} from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
+import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
+import pkgsGraph from 'pkgs-graph';
 import { readConfig } from './read-config';
 
 type RegistriesMap = {
@@ -28,30 +37,33 @@ type RegistriesMap = {
 const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 
 async function createStoreController(
-  rootDir: string,
-  storeDir: string,
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
+  options: {
+    rootDir: string;
+    storeDir: string;
+    cacheDir: string;
+    registries: Registries;
+    proxyConfig: PackageManagerProxyConfig;
+    networkConfig: PackageManagerNetworkConfig;
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
-  const authConfig = getAuthConfig(registries);
+  const authConfig = getAuthConfig(options.registries);
   const opts: CreateStoreControllerOptions = {
-    dir: rootDir,
-    cacheDir,
-    storeDir,
+    dir: options.rootDir,
+    cacheDir: options.cacheDir,
+    storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
-    httpProxy: proxyConfig?.httpProxy,
-    httpsProxy: proxyConfig?.httpsProxy,
-    ca: proxyConfig?.ca,
-    cert: proxyConfig?.cert,
-    key: proxyConfig?.key,
-    localAddress: networkConfig?.localAddress,
-    noProxy: proxyConfig?.noProxy,
-    strictSsl: proxyConfig.strictSSL,
-    maxSockets: networkConfig.maxSockets,
-    networkConcurrency: networkConfig.networkConcurrency,
+    httpProxy: options.proxyConfig?.httpProxy,
+    httpsProxy: options.proxyConfig?.httpsProxy,
+    ca: options.proxyConfig?.ca,
+    cert: options.proxyConfig?.cert,
+    key: options.proxyConfig?.key,
+    localAddress: options.networkConfig?.localAddress,
+    noProxy: options.proxyConfig?.noProxy,
+    strictSsl: options.proxyConfig.strictSSL,
+    maxSockets: options.networkConfig.maxSockets,
+    networkConcurrency: options.networkConfig.networkConcurrency,
+    packageImportMethod: options.packageImportMethod,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -96,7 +108,10 @@ async function generateResolverAndFetcher(
 }
 
 export async function getPeerDependencyIssues(
-  rootManifest,
+  rootManifest: {
+    rootDir: string;
+    manifest: ProjectManifest;
+  },
   manifestsByPaths: Record<string, any>,
   opts: {
     storeDir: string;
@@ -105,7 +120,7 @@ export async function getPeerDependencyIssues(
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
-  }
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
 ): Promise<PeerDependencyIssuesByProjects> {
   const projects: ProjectOptions[] = [];
   const workspacePackages = {};
@@ -122,14 +137,10 @@ export async function getPeerDependencyIssues(
     rootDir: rootManifest.rootDir,
   });
   const registriesMap = getRegistriesMap(opts.registries);
-  const storeController = await createStoreController(
-    rootManifest.rootDir,
-    opts.storeDir,
-    opts.cacheDir,
-    opts.registries,
-    opts.proxyConfig,
-    opts.networkConfig
-  );
+  const storeController = await createStoreController({
+    ...opts,
+    rootDir: rootManifest.rootDir,
+  });
   return pnpm.getPeerDependencyIssues(projects, {
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
@@ -141,7 +152,7 @@ export async function getPeerDependencyIssues(
 
 export async function install(
   rootManifest,
-  manifestsByPaths,
+  manifestsByPaths: Record<string, ProjectManifest>,
   storeDir: string,
   cacheDir: string,
   registries: Registries,
@@ -150,53 +161,26 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'>,
+  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'> &
+    Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
-  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
-  const workspacePackages = {}; // @pnpm/core will use this to link packages to each other
-
-  // This will create local link by pnpm to a component exists in the ws.
-  // it will later deleted by the link process
-  // we keep it here to better support case like this:
-  // compA@1.0.0 uses compB@1.0.0
-  // I have compB@2.0.0 in my workspace
-  // now I install compA@1.0.0
-  // compA is hoisted to the root and install B@1.0.0 hoisted to the root as well
-  // now we will make link to B@2.0.0 and A will break
-  // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
-  // then when overriding the link, A will still works
-  // This is the rational behind not deleting this completely, but need further check that it really works
-
-  // eslint-disable-next-line
-  for (const rootDir in manifestsByPaths) {
-    const manifest = manifestsByPaths[rootDir];
-    packagesToBuild.push({
-      buildIndex: 0, // workspace components should be installed before the root
-      manifest,
-      rootDir,
-      mutation: 'install',
-    });
-    workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
-    workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
-  }
-  packagesToBuild.push({
-    buildIndex: 1, // install the root package after the workspace components were installed
-    manifest: rootManifest.manifest,
-    mutation: 'install',
-    rootDir: rootManifest.rootDir,
+  const { packagesToBuild, workspacePackages } = groupPkgs({
+    ...manifestsByPaths,
+    [rootManifest.rootDir]: rootManifest.manifest,
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(
-    rootManifest.rootDir,
+  const storeController = await createStoreController({
+    rootDir: rootManifest.rootDir,
     storeDir,
     cacheDir,
     registries,
     proxyConfig,
-    networkConfig
-  );
+    networkConfig,
+    packageImportMethod: options?.packageImportMethod,
+  });
   const opts: InstallOptions = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
@@ -204,6 +188,7 @@ export async function install(
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
+    pruneLockfileImporters: true,
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,
@@ -224,6 +209,43 @@ export async function install(
   } finally {
     stopReporting();
   }
+}
+
+function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
+  const pkgs = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({ dir, manifest }));
+  const { graph } = pkgsGraph(pkgs);
+  const chunks = sortPackages(graph as any);
+
+  // This will create local link by pnpm to a component exists in the ws.
+  // it will later deleted by the link process
+  // we keep it here to better support case like this:
+  // compA@1.0.0 uses compB@1.0.0
+  // I have compB@2.0.0 in my workspace
+  // now I install compA@1.0.0
+  // compA is hoisted to the root and install B@1.0.0 hoisted to the root as well
+  // now we will make link to B@2.0.0 and A will break
+  // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
+  // then when overriding the link, A will still works
+  // This is the rational behind not deleting this completely, but need further check that it really works
+  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
+  const workspacePackages = {}; // @pnpm/core will use this to link packages to each other
+
+  chunks.forEach((dirs, buildIndex) => {
+    for (const rootDir of dirs) {
+      const manifest = manifestsByPaths[rootDir];
+      packagesToBuild.push({
+        buildIndex,
+        manifest,
+        rootDir,
+        mutation: 'install',
+      });
+      if (manifest.name) {
+        workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
+        workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
+      }
+    }
+  });
+  return { packagesToBuild, workspacePackages };
 }
 
 export async function resolveRemoteVersion(

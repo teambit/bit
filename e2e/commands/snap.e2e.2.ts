@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
-import { HASH_SIZE } from '../../src/constants';
+import { HASH_SIZE, AUTO_SNAPPED_MSG } from '../../src/constants';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';

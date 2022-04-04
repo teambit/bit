@@ -5,7 +5,7 @@ import { Import } from './import';
 
 const methods = [
   {
-    Title: <img style={{ width: '30px' }} src="http://static.bit.dev/brands/logo-npm-new.svg" />,
+    Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
     Component: (
       <Install
         config={`npm config set @teambit:registry' https://node.bit.dev`}

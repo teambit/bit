@@ -587,8 +587,8 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
-      const RelativeCompClass = IssuesClasses.relativeComponents;
-      expect(output).to.have.string('error: issues found with the following component dependencies');
+      const RelativeCompClass = IssuesClasses.RelativeComponents;
+      expect(output).to.have.string('error: issues found with the following components');
       expect(output).to.have.string(new RelativeCompClass().description);
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
@@ -629,7 +629,7 @@ describe('bit tag command', function () {
 
       // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
-        expect(output).to.have.string('error: issues found with the following component dependencies');
+        expect(output).to.have.string('error: issues found with the following components');
       });
 
       it('Should print the components name with missing dependencies', () => {
@@ -655,7 +655,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('tag component with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag component with missing dependencies with --ignore-issues "*"', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -674,7 +674,7 @@ describe('bit tag command', function () {
         helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.command.addComponent('src/b.js', { i: 'src/b' });
 
-        const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
+        const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-issues "*"');
         try {
           output = tagOne();
         } catch (err: any) {
@@ -686,7 +686,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 component(s) tagged');
       });
     });
-    describe('tag all components with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag all components with missing dependencies with --ignore-issues "*"', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -705,7 +705,7 @@ describe('bit tag command', function () {
         helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.command.addComponent('src/b.js', { i: 'src/b' });
 
-        const tagAll = () => helper.command.tagAllComponents('--ignore-unresolved-dependencies');
+        const tagAll = () => helper.command.tagAllComponents('--ignore-issues "*"');
         try {
           output = tagAll();
         } catch (err: any) {
@@ -813,7 +813,7 @@ describe('bit tag command', function () {
         errMsg = err.message;
       }
       const output = helper.command.listLocalScope();
-      expect(errMsg).to.have.string('error: issues found with the following component dependencies');
+      expect(errMsg).to.have.string('error: issues found with the following components');
       expect(output).to.not.have.string('bar/foo');
     });
     it('Should throw error that all files were removed', () => {

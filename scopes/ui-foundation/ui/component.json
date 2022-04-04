@@ -27,13 +27,13 @@
           "@teambit/legacy": "-"
         },
         "devDependencies": {
-          "@types/mocha": "5.2.7",
+          "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
           "@types/postcss-normalize": "9.0.1",
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.219"
+          "@teambit/legacy": "1.0.243"
         }
       }
     }

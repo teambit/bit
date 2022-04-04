@@ -1,11 +1,16 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { compact } from 'lodash';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
+import { AspectList } from '@teambit/component';
 import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
@@ -13,7 +18,7 @@ import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
-import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd } from './aspect.cmd';
+import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -43,6 +48,10 @@ export class AspectMain {
       })
     );
     return results;
+  }
+
+  get babelConfig() {
+    return babelConfig;
   }
 
   private async getAspectNamesForComponent(id: ComponentID): Promise<AspectSource[]> {
@@ -77,9 +86,11 @@ export class AspectMain {
     config: Record<string, any> = {}
   ): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.addComponentConfig(componentId, aspectId, config);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;
@@ -87,20 +98,82 @@ export class AspectMain {
 
   async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    componentIds.forEach((componentId) => {
-      this.workspace.bitMap.removeComponentConfig(componentId, aspectId, true);
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.workspace.removeSpecificComponentConfig(componentId, aspectId, true);
+      })
+    );
     await this.workspace.bitMap.write();
 
     return componentIds;
   }
 
-  async getAspectsOfComponent(id: string | ComponentID) {
+  /**
+   * returns all aspects info of a component, include the config and the data.
+   */
+  async getAspectsOfComponent(id: string | ComponentID): Promise<AspectList> {
+    if (typeof id === 'string') {
+      id = await this.workspace.resolveComponentId(id);
+    }
+    const component = await this.workspace.get(id);
+    return component.state.aspects;
+  }
+
+  /**
+   * helps debugging why/how an aspect was set to a component
+   */
+  async getAspectsOfComponentForDebugging(id: string | ComponentID) {
     if (typeof id === 'string') {
       id = await this.workspace.resolveComponentId(id);
     }
     const componentFromScope = await this.workspace.scope.get(id);
-    return this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
+    const component = await this.workspace.get(id);
+    return {
+      aspects: component.state.aspects,
+      extensions,
+      beforeMerge,
+    };
+  }
+
+  async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
+    let aspectCompId = await this.workspace.resolveComponentId(aspectId);
+    if (!aspectCompId.hasVersion()) {
+      try {
+        const fromRemote = await this.workspace.scope.getRemoteComponent(aspectCompId);
+        aspectCompId = aspectCompId.changeVersion(fromRemote.id.version);
+      } catch (err) {
+        throw new BitError(
+          `unable to find ${aspectId} in the remote. if this is a local aspect, please provide a version with your aspect (${aspectId}) to update to`
+        );
+      }
+    }
+    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
+    const allComps = await this.workspace.getMany(allCompIds);
+    const updatedComponentIds = await Promise.all(
+      allComps.map(async (comp) => {
+        const aspect = comp.state.aspects.get(aspectCompId.toStringWithoutVersion());
+        if (!aspect) return undefined;
+        if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
+        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), true);
+        await this.workspace.addSpecificComponentConfig(comp.id, aspectCompId.toString(), aspect.config);
+        return comp.id;
+      })
+    );
+    await this.workspace.bitMap.write();
+    return compact(updatedComponentIds);
+  }
+
+  /**
+   * override the dependency configuration of the component environment.
+   */
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
+    return this.envs.override({
+      getDependencies: async () => {
+        const reactDeps = await this.aspectEnv.getDependencies();
+        return mergeDeepLeft(dependencyPolicy, reactDeps);
+      },
+    });
   }
 
   static runtime = MainRuntime;
@@ -172,6 +245,7 @@ export class AspectMain {
       new GetAspectCmd(aspectMain),
       new SetAspectCmd(aspectMain),
       new UnsetAspectCmd(aspectMain),
+      new UpdateAspectCmd(aspectMain),
     ];
     cli.register(aspectCmd);
 

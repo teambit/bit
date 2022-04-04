@@ -2,9 +2,13 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE, IS_WINDOWS, LANE_REMOTE_DELIMITER } from '../../src/constants';
+import {
+  DEFAULT_LANE,
+  IS_WINDOWS,
+  LANE_REMOTE_DELIMITER,
+  statusWorkspaceIsCleanMsg,
+  AUTO_SNAPPED_MSG,
+} from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -590,6 +594,25 @@ describe('bit lane command', function () {
         expect(mergeOutput).to.not.have.string(
           'component comp1 is on the lane but its objects were not found, please re-import the lane'
         );
+      });
+    });
+    describe('merging a lane into main when main is empty', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev');
+      });
+      it('should not throw an error that head is empty', () => {
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('the component should be available on main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
       });
     });
   });
@@ -1183,6 +1206,12 @@ describe('bit lane command', function () {
         });
         it('should show the merged components as staged', () => {
           const status = helper.command.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(2);
+        });
+        it('bit import should not reset the component to the remote-state but should keep the merged data', () => {
+          helper.command.import();
+          const status = helper.command.statusJson();
+          expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.stagedComponents).to.have.lengthOf(2);
         });
         describe('tagging the components', () => {

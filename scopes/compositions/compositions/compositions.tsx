@@ -164,12 +164,13 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
       ></StatusMessageCard>
     );
 
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   if (component.compositions.length === 0) {
     return (
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link="https://harmony-docs.bit.dev/compositions/overview/"
+        link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
       />
     );
   }

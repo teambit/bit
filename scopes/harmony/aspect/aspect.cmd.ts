@@ -53,6 +53,27 @@ ${PATTERN_HELP('aspect set')}`;
   }
 }
 
+export class UpdateAspectCmd implements Command {
+  name = 'update <aspect-id> [pattern]';
+  description = 'update a version of an aspect';
+  extendedDescription = `default to all components using the aspect, unless "pattern" is provided.
+${PATTERN_HELP('aspect update <aspect-id>')}
+examples:
+"bit aspect update scope.org/aspect '**/ui/**'" - update "ui" components that use scope.org/aspect to the latest version
+"bit aspect update scope.org/aspect@2.0.0"      - updates all components using scope.org/aspect to version 2.0.0.`;
+
+  options = [];
+  group = 'development';
+
+  constructor(private aspect: AspectMain) {}
+
+  async report([aspectId, pattern]: [string, string]) {
+    const results = await this.aspect.updateAspectsToComponents(aspectId, pattern);
+    if (!results.length) return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
+    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+  }
+}
+
 export class UnsetAspectCmd implements Command {
   name = 'unset <pattern> <aspect-id>';
   description = `unset an aspect from component(s).`;
@@ -81,8 +102,6 @@ export class GetAspectCmd implements Command {
   constructor(private aspect: AspectMain) {}
 
   async report([componentName]: [string], { debug }: { debug: boolean }) {
-    const { extensions: mergedExtensions, beforeMerge } = await this.aspect.getAspectsOfComponent(componentName);
-
     const extensionsDetailsToString = (extensions: ExtensionDataList) =>
       extensions
         .map((e) => {
@@ -95,6 +114,11 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
         .join('\n');
 
     if (debug) {
+      const {
+        aspects,
+        extensions: mergedExtensions,
+        beforeMerge,
+      } = await this.aspect.getAspectsOfComponentForDebugging(componentName);
       const beforeMergeOutput = beforeMerge
         .map(({ origin, extensions, extraData }) => {
           const title = chalk.green.bold(`Origin: ${origin}`);
@@ -104,18 +128,20 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
         })
         .join('\n\n');
 
-      const afterMergeTitle = chalk.green.bold('Final - after merging all origins');
+      const afterMergeTitle = chalk.green.bold('After merging the origins above');
       const afterMergeOutput = `${afterMergeTitle}\n${extensionsDetailsToString(mergedExtensions)}`;
 
-      return `${beforeMergeOutput}\n\n\n${afterMergeOutput}`;
-    }
+      const afterFinalMergeTitle = chalk.green.bold('Final - After merging the origin above and the loaded data');
+      const afterFinalMergeOutput = `${afterFinalMergeTitle}\n${extensionsDetailsToString(aspects.toLegacy())}`;
 
-    return extensionsDetailsToString(mergedExtensions);
+      return `${beforeMergeOutput}\n\n${afterMergeOutput}\n\n\n${afterFinalMergeOutput}`;
+    }
+    const aspects = await this.aspect.getAspectsOfComponent(componentName);
+    const extensionDataList = aspects.toLegacy();
+    return extensionsDetailsToString(extensionDataList);
   }
 
   async json([componentName]: [string], { debug }: { debug: boolean }) {
-    const { extensions: mergedExtensions, beforeMerge } = await this.aspect.getAspectsOfComponent(componentName);
-
     const extensionsDetailsToObject = (extensions: ExtensionDataList) =>
       extensions.reduce((acc, current) => {
         const { name, data, config, extensionId } = current.toComponentObject();
@@ -129,6 +155,11 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
       }, {});
 
     if (debug) {
+      const {
+        aspects,
+        extensions: mergedExtensions,
+        beforeMerge,
+      } = await this.aspect.getAspectsOfComponentForDebugging(componentName);
       const jsonObj: Record<string, any> = {};
       beforeMerge.forEach(({ origin, extensions, extraData }) => {
         jsonObj[origin] = {
@@ -137,11 +168,14 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
         };
       });
 
-      jsonObj.FinalAfterMerge = { extensions: extensionsDetailsToObject(mergedExtensions) };
+      jsonObj.AfterMerge = { extensions: extensionsDetailsToObject(mergedExtensions) };
+      jsonObj.FinalAfterMergeIncludeLoad = { extensions: extensionsDetailsToObject(aspects.toLegacy()) };
       return jsonObj;
     }
 
-    return extensionsDetailsToObject(mergedExtensions);
+    const aspects = await this.aspect.getAspectsOfComponent(componentName);
+
+    return extensionsDetailsToObject(aspects.toLegacy());
   }
 }
 

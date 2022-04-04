@@ -8,14 +8,22 @@ import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
+import {
+  DrawerWidgetSlot,
+  FilterWidget,
+  TreeToggleWidget,
+  ComponentFiltersSlot,
+} from '@teambit/component.ui.component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
+import { workspaceDrawer } from './workspace.ui.drawer';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -47,6 +55,10 @@ export class WorkspaceUI {
      */
     private sidebarItemSlot: SidebarItemSlot,
 
+    private drawerWidgetSlot: DrawerWidgetSlot,
+
+    private drawerComponentsFiltersSlot: ComponentFiltersSlot,
+
     private commandBarUI: CommandBarUI,
 
     reactRouterUI: ReactRouterUI
@@ -59,8 +71,13 @@ export class WorkspaceUI {
   /**
    * register a route to the workspace.
    */
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoutes(routes: RouteProps[]) {
+    this.routeSlot.register(routes);
+    return this;
+  }
+
+  registerDrawers(...drawers: DrawerType[]) {
+    this.sidebar.registerDrawer(...drawers);
     return this;
   }
 
@@ -73,6 +90,11 @@ export class WorkspaceUI {
     this.menuItemSlot.register(menuItems);
   };
 
+  registerMenuRoutes = (routes: RouteProps[]) => {
+    this.menuSlot.register(routes);
+    return this;
+  };
+
   setComponents = (components: ComponentModel[]) => {
     this.componentSearcher.update(components);
   };
@@ -83,8 +105,27 @@ export class WorkspaceUI {
 
   componentSearcher: ComponentSearcher;
 
+  /**
+   * register component filters
+   */
+  registerDrawerComponentFilters = (filters: ComponentFilters) => {
+    this.drawerComponentsFiltersSlot.register(filters);
+  };
+
+  registerDrawerWidgets = (widgets: ReactNode[]) => {
+    this.drawerWidgetSlot.register(widgets);
+  };
+
   uiRoot(): UIRoot {
     this.commandBarUI.addSearcher(this.componentSearcher);
+    this.registerDrawers(
+      workspaceDrawer({
+        treeWidgets: this.sidebarSlot,
+        drawerWidgetSlot: this.drawerWidgetSlot,
+        filtersSlot: this.drawerComponentsFiltersSlot,
+      })
+    );
+
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
@@ -144,6 +185,8 @@ export class WorkspaceUI {
     Slot.withType<ComponentTreeNode>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<SidebarItemSlot>(),
+    Slot.withType<DrawerWidgetSlot>(),
+    Slot.withType<ComponentFiltersSlot>(),
   ];
 
   static async provider(
@@ -157,17 +200,18 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot]: [
+    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot, drawerWidgetSlot, drawerComponentsFiltersSlot]: [
       RouteSlot,
       RouteSlot,
       MenuItemSlot,
       SidebarWidgetSlot,
-      SidebarItemSlot
+      SidebarItemSlot,
+      DrawerWidgetSlot,
+      ComponentFiltersSlot
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
-    sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
     graphUI.registerComponentWidget(new ComponentTreeWidget().widget);
 
     const workspaceUI = new WorkspaceUI(
@@ -178,9 +222,17 @@ export class WorkspaceUI {
       sidebar,
       sidebarSlot,
       sidebarItemSlot,
+      drawerWidgetSlot,
+      drawerComponentsFiltersSlot,
       commandBarUI,
       reactRouterUI
     );
+
+    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    workspaceUI.registerDrawerWidgets([
+      <FilterWidget key={'workspace-filter-widget'} />,
+      <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
+    ]);
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
@@ -190,7 +242,7 @@ export class WorkspaceUI {
       </MenuLinkItem>
     ));
 
-    workspaceUI.menuSlot.register([
+    workspaceUI.registerMenuRoutes([
       {
         exact: true,
         path: '/',
@@ -202,10 +254,13 @@ export class WorkspaceUI {
       },
     ]);
 
-    workspaceUI.routeSlot.register({
-      path: workspaceUI.componentUi.routePath,
-      children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
-    });
+    workspaceUI.registerRoutes([
+      {
+        path: workspaceUI.componentUi.routePath,
+        children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
+      },
+    ]);
+
     return workspaceUI;
   }
 }

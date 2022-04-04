@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
+import { EOL } from 'os';
 import * as path from 'path';
 
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
@@ -331,7 +332,7 @@ describe('bit checkout command', function () {
       });
       it('should rewrite the file according to the used version', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
-        expect(fileContent).to.be.equal(`${barFooV1}\n`);
+        expect(fileContent).to.be.equal(`${barFooV1}${EOL}`);
       });
       it('should update bitmap with the used version', () => {
         const bitMap = helper.bitMap.read();

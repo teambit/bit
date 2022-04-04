@@ -14,6 +14,7 @@ import {
   DependencyList,
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
+  PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -60,6 +61,7 @@ export type IsolateComponentsInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 type CreateGraphOptions = {
@@ -130,6 +132,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  packageManagerConfigRootDir?: string;
 };
 
 type CapsulePackageJsonData = {
@@ -179,7 +183,6 @@ export class IsolatorMain {
     legacyScope?: LegacyScope
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
-    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(
       `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
@@ -191,8 +194,6 @@ export class IsolatorMain {
       : await this.createGraph(seeders, createGraphOpts);
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
   }
 
@@ -289,13 +290,15 @@ export class IsolatorMain {
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
+      packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
     };
 
-    const packageManagerInstallOptions = {
+    const packageManagerInstallOptions: PackageManagerInstallOptions = {
       dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
+      overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
     };
     await installer.install(
       capsulesDir,
@@ -343,14 +346,28 @@ export class IsolatorMain {
   }
 
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
-    const legacyComponents = components.map((component) => component.state._consumer.clone());
-    if (legacyScope) await importMultipleDistsArtifacts(legacyScope, legacyComponents);
+    const modifiedComps: Component[] = [];
+    const unmodifiedComps: Component[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const isModified = await component.isModified();
+        if (isModified) modifiedComps.push(component);
+        else unmodifiedComps.push(component);
+      })
+    );
+    const legacyUnmodifiedComps = unmodifiedComps.map((component) => component.state._consumer.clone());
+    const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
+    const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
+    if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
+        if (await component.isModified()) {
+          delete params.scope;
+        }
         const componentWriter = new ComponentWriter(params);
         await componentWriter.populateComponentsFilesToWrite();
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });

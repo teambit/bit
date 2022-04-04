@@ -14,7 +14,7 @@ export default class List implements LegacyCommand {
   name = 'list [remote-scope]';
   shortDescription = 'list components on a workspace, local scope or a remote scope.';
   group: Group = 'discover';
-  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
+  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/reference/cli-reference#list`;
   alias = 'ls';
   opts = [
     ['i', 'ids', 'show only component ids unformatted'],
@@ -84,7 +84,7 @@ export default class List implements LegacyCommand {
     raw?: boolean;
     json?: boolean;
     outdated?: boolean;
-  }): string {
+  }) {
     function decideHeaderSentence() {
       if (json) return '';
       if (!scope) return `found ${listScopeResults.length} components\n`;
@@ -92,7 +92,7 @@ export default class List implements LegacyCommand {
     }
 
     if (R.isEmpty(listScopeResults)) {
-      return chalk.white(json ? '[]' : `${decideHeaderSentence()}`);
+      return json ? JSON.stringify([]) : chalk.white(decideHeaderSentence());
     }
 
     if (ids) return JSON.stringify(listScopeResults.map((result) => result.id.toString()));

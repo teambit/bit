@@ -18,7 +18,7 @@
 
 .admonition-icon {
   display: inline-flex;
-  align-self: center;
+  padding-top: 1px;
   margin-right: 4px;
 }
 
@@ -27,6 +27,9 @@
   width: 18px;
   height: 22px;
   stroke-width: 0;
+
+  stroke: currentColor;
+  fill: currentColor;
 }
 
 .admonition-content > :last-child {
@@ -44,23 +47,16 @@
   display: flex;
 }
 
-.admonition .admonition-icon svg {
-  stroke: var(--bit-accent-primary-color, #6c5ce7);
-  fill: var(--bit-accent-primary-color, #6c5ce7);
-}
-
 .admonition-caution {
-  background-color: rgba(230, 126, 34, 0.1);
-  border-left: 8px solid #e67e22;
+  background-color: var(--bit-accent-hunger-bg, #fff5dd);
+  border-left: 8px solid var(--bit-accent-hunger-color, #ffc640);
+
+  /* background-color: rgba(230, 126, 34, 0.1); */
+  /* border-left: 8px solid #e67e22; */
 }
 
 .admonition-caution h5 {
-  color: #e67e22;
-}
-
-.admonition-caution .admonition-icon svg {
-  stroke: #e67e22;
-  fill: #e67e22;
+  color: var(--bit-accent-hunger-color, #ffc640);
 }
 
 .admonition-tip {
@@ -72,11 +68,6 @@
   color: var(--bit-accent-success-color, #37b26c);
 }
 
-.admonition-tip .admonition-icon svg {
-  stroke: var(--bit-accent-success-color, #37b26c);
-  fill: var(--bit-accent-success-color, #37b26c);
-}
-
 .admonition-warning {
   background-color: var(--bit-accent-impulsive-bg, #fdeff2);
   border-left: 8px solid var(--bit-accent-impulsive-color, #e62e5c);
@@ -84,11 +75,6 @@
 
 .admonition-warning h5 {
   color: var(--bit-accent-impulsive-color, #e62e5c);
-}
-
-.admonition-warning .admonition-icon svg {
-  stroke: var(--bit-accent-impulsive-color, #e62e5c);
-  fill: var(--bit-accent-impulsive-color, #e62e5c);
 }
 
 .admonition-important {
@@ -100,21 +86,11 @@
   color: var(--bit-accent-process-color, #0984e3);
 }
 
-.admonition-important .admonition-icon svg {
-  stroke: var(--bit-accent-process-color, #0984e3);
-  fill: var(--bit-accent-process-color, #0984e3);
-}
-
 .admonition-note {
   background-color: var(--bit-accent-hunger-bg, #fff5dd);
   border-left: 8px solid var(--bit-accent-hunger-color, #ffc640);
 }
 
 .admonition-note h5 {
-  color: var(--bit-accent-hunger-bg, #ffc640);
-}
-
-.admonition-note .admonition-icon svg {
-  stroke: var(--bit-accent-hunger-color, #ffc640);
-  fill: var(--bit-accent-hunger-color, #ffc640);
+  color: var(--bit-accent-hunger-color, #ffc640);
 }

@@ -22,3 +22,11 @@
     transform: rotate(-180deg);
   }
 }
+
+.hidden {
+  // label size is needed for position calculations,
+  // so it can't be removed by `display: none`
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}

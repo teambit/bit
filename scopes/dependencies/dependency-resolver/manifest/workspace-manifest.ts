@@ -5,7 +5,6 @@ import { ComponentsManifestsMap } from '../types';
 import { Manifest, ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
-  includeDir?: boolean;
   installPeersFromEnvs?: boolean;
 }
 
@@ -35,12 +34,13 @@ export class WorkspaceManifest extends Manifest {
       manifest.dependencies = manifest.dependencies || {};
       Object.assign(manifest.dependencies, peersManifest);
     }
-    if (options.includeDir) {
-      return {
-        rootDir: this.dir,
-        manifest,
-      };
-    }
     return manifest;
+  }
+
+  toJsonWithDir(options: WorkspaceManifestToJsonOptions = {}): { rootDir: string; manifest: Record<string, any> } {
+    return {
+      manifest: this.toJson(options),
+      rootDir: this.rootDir,
+    };
   }
 }

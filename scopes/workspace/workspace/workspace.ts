@@ -66,7 +66,7 @@ import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -440,8 +440,8 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id);
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
@@ -478,7 +478,12 @@ export class Workspace implements ComponentFactory {
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const componentIds = await this.resolveMultipleComponentIds(ids);
     const components = await this.getMany(componentIds);
-    const network = await this.isolator.isolateComponents(components.map((c) => c.id));
+    const network = await this.isolator.isolateComponents(
+      components.map((c) => c.id),
+      {
+        packageManagerConfigRootDir: this.path,
+      }
+    );
     const resolvedComponents = components.map((component) => {
       const capsule = network.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
@@ -488,12 +493,13 @@ export class Workspace implements ComponentFactory {
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
-    const entiresP = extensionDataList.map(async (entry) => {
-      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
-    });
-
+    const entiresP = extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry));
     const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
+  private async extensionDataEntryToAspectEntry(dataEntry: ExtensionDataEntry): Promise<AspectEntry> {
+    return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
   /**
@@ -528,7 +534,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()]);
+        await this.loadAspects([component.id.toString()], undefined, component.id);
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -688,21 +694,33 @@ export class Workspace implements ComponentFactory {
     return ExtensionDataList.fromConfigObject(this.config.extensions);
   }
 
+  async ejectMultipleConfigs(ids: ComponentID[], options: EjectConfOptions): Promise<EjectConfResult[]> {
+    return Promise.all(ids.map((id) => this.ejectConfig(id, options)));
+  }
+
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
-    const component = await this.scope.get(componentId);
-    const aspects = component?.state.aspects
-      ? await this.resolveScopeAspectListIds(component?.state.aspects)
-      : await this.createAspectList(new ExtensionDataList());
-
+    const component = await this.get(componentId);
+    const componentFromScope = await this.scope.get(id);
+    const { extensions } = await this.componentExtensions(component.id, componentFromScope, [
+      'WorkspaceDefault',
+      'WorkspaceVariants',
+    ]);
+    const aspects = await this.createAspectList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
-    await componentConfigFile.write(componentDir, { override: options.override });
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
+    await componentConfigFile.write({ override: options.override });
+    // remove config from the .bitmap as it's not needed anymore. it is replaced by the component.json
+    this.bitMap.removeEntireConfig(id);
+    await this.bitMap.write();
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
   }
 
+  /**
+   * see component-aspect, createAspectListFromLegacy() method for a context why this is needed.
+   */
   private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
     const resolvedList = await aspectListFromScope.pmap(async (entry) => {
       if (entry.id.scope !== this.scope.name) {
@@ -736,17 +754,23 @@ export class Workspace implements ComponentFactory {
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
    * it supports negate (!) character to exclude ids.
    */
-  async idsByPattern(pattern: string): Promise<ComponentID[]> {
+  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
     if (!pattern.includes('*') && !pattern.includes(',')) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      return [id];
+      if (this.exists(id)) return [id];
+      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the workspace`);
+      return [];
     }
     const ids = await this.listIds();
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
-    return ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    if (throwForNoMatch && !idsFiltered.length) {
+      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+    }
+    return idsFiltered;
   }
 
   /**
@@ -771,6 +795,23 @@ export class Workspace implements ComponentFactory {
       newAndModified.push(...dependents);
     }
     return newAndModified;
+  }
+
+  async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
+    const allComps = await this.list();
+    const allEnvs = await this.envs.createEnvironment(allComps);
+    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => {
+      if (runtimeEnv.id === env) return true;
+      if (!ignoreVersion) return false;
+      const envWithoutVersion = runtimeEnv.id.split('@')[0];
+      return env === envWithoutVersion;
+    });
+    if (!foundEnv && throwIfNotFound) {
+      const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
+      throw new BitError(`unable to find components that using "${env}" env.
+the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
+    }
+    return foundEnv?.components || [];
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
@@ -984,7 +1025,8 @@ export class Workspace implements ComponentFactory {
    */
   async componentExtensions(
     componentId: ComponentID,
-    componentFromScope?: Component
+    componentFromScope?: Component,
+    excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
@@ -994,19 +1036,18 @@ export class Workspace implements ComponentFactory {
     let variantsExtensions: ExtensionDataList | undefined;
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
+
+    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapExtensions = bitMapEntry?.config;
+
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
-    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
-    const bitMapExtensions = bitMapEntry?.config;
-
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.aspects.toLegacy();
-      // do not merge from scope data when there is component config file
-      // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
@@ -1025,6 +1066,7 @@ export class Workspace implements ComponentFactory {
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
+    const loadedExtensionIds: string[] = [];
     const removedExtensionIds: string[] = [];
 
     const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
@@ -1033,15 +1075,20 @@ export class Workspace implements ComponentFactory {
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
+      const extsWithoutLoaded = ExtensionDataList.fromArray(
+        extsWithoutRemoved.filter(
+          (ext) => !loadedExtensionIds.includes(ext.extensionId?.toStringWithoutVersion() || '')
+        )
+      );
+      const selfInMergedExtensions = extsWithoutLoaded.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
         true,
         true
       );
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
-        ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
-        : extsWithoutRemoved;
-      await this.loadExtensions(extsWithoutSelf);
+        ? extsWithoutLoaded.remove(selfInMergedExtensions.extensionId)
+        : extsWithoutLoaded;
+      await this.loadExtensions(extsWithoutSelf, componentId);
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
         envWasFoundPreviously
@@ -1049,37 +1096,43 @@ export class Workspace implements ComponentFactory {
       if (envIsCurrentlySet) envWasFoundPreviously = true;
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
+
+      loadedExtensionIds.push(
+        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
+      );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (bitMapExtensions) {
+    if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addAndLoadExtensions(extensionDataList, 'BitmapFile');
     }
-    if (configFileExtensions) {
+    if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
-    await addAndLoadExtensions(scopeExtensionsSpecific, 'ModelSpecific');
+    if (!excludeOrigins.includes('ModelSpecific')) {
+      await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
+    }
     let continuePropagating = componentConfigFile?.propagate ?? true;
-    if (variantsExtensions && continuePropagating) {
-      // Put it in the start to make sure the config file is stronger
+    if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
       const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
       await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
-      // Put it in the start to make sure the config file is stronger
+    if (
+      wsDefaultExtensions &&
+      continuePropagating &&
+      !isDefaultExtension &&
+      !excludeOrigins.includes('WorkspaceDefault')
+    ) {
       await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
-
-    // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
-    if (mergeFromScope && continuePropagating) {
+    if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
@@ -1093,6 +1146,17 @@ export class Workspace implements ComponentFactory {
       extensions,
       beforeMerge: extensionsToMerge,
     };
+  }
+
+  async isModified(component: Component): Promise<boolean> {
+    const head = component.head;
+    if (!head) {
+      return true; // it's a new component
+    }
+    const consumerComp = component.state._consumer as ConsumerComponent;
+    if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
+    const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
+    return componentStatus.modified === true;
   }
 
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
@@ -1124,6 +1188,48 @@ export class Workspace implements ComponentFactory {
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
+  }
+
+  async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.addComponentConfig(id, aspectId, config);
+    }
+  }
+
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
+      await componentConfigFile.write({ override: true });
+    } else {
+      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+    }
+  }
+
+  async getAspectIdFromConfig(
+    componentId: ComponentID,
+    aspectIdStr: string,
+    ignoreAspectVersion = false
+  ): Promise<string | undefined> {
+    const aspectId = await this.resolveComponentId(aspectIdStr);
+    const componentConfigFile = await this.componentConfigFile(componentId);
+    if (componentConfigFile) {
+      const aspectEntry = componentConfigFile.aspects.find(aspectId, ignoreAspectVersion);
+      return aspectEntry?.id.toString();
+    }
+    return this.bitMap.getAspectIdFromConfig(componentId, aspectId, ignoreAspectVersion);
+  }
+
+  async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
+    const componentConfigFile = await this.componentConfigFile(id);
+    if (componentConfigFile) {
+      return componentConfigFile.aspects.get(aspectId)?.config;
+    }
+    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
   }
 
   /**
@@ -1213,8 +1319,10 @@ export class Workspace implements ComponentFactory {
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
-    this.logger.debug(`loading ${ids.length} aspects`);
+  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+ids: ${ids.join(', ')}
+needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -1227,8 +1335,9 @@ export class Workspace implements ComponentFactory {
       const component = await this.get(id);
       const data = this.envs.getEnvData(component);
       const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
-
-      if (!isUsingAspectEnv && idsWithoutCore.includes(component.id.toString())) {
+      const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
+      const isValidAspect = isUsingAspectEnv || isUsingEnvEnv;
+      if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
         const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
         if (data.id === DEFAULT_ENV) {
           // when cloning a project, or when the node-modules dir is deleted, nothing works and all
@@ -1239,7 +1348,7 @@ export class Workspace implements ComponentFactory {
           throw err;
         }
       }
-      return isUsingAspectEnv;
+      return isValidAspect;
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
@@ -1259,14 +1368,29 @@ export class Workspace implements ComponentFactory {
         return index;
       })
     );
+    const workspaceManifestsIds = compact(workspaceManifests.map((m) => m.id));
+    // We are grouping the scope aspects by whether they are envs of something of the list or not
+    // if yes, we want to load them first
+    // the rest we will load together with the workspace aspects
+    const scopeIdsGrouped = await this.scope.groupAspectIdsByEnvOfTheList(scopeIds);
+    const scopeEnvsManifestsIds =
+      scopeIdsGrouped.envs && scopeIdsGrouped.envs.length
+        ? await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError)
+        : [];
+    const scopeOtherManifests =
+      scopeIdsGrouped.other && scopeIdsGrouped.other.length
+        ? await this.scope.getManifestsGraphRecursively(
+            scopeIdsGrouped.other,
+            compact(workspaceManifestsIds),
+            throwOnError,
+            {
+              packageManagerConfigRootDir: this.path,
+            }
+          )
+        : [];
+    const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
-    const manifestsIds = workspaceManifests.map((m) => m.id);
-
-    const scopeManifests = await this.scope.getManifestsGraphRecursively(scopeIds, compact(manifestsIds), throwOnError);
-
-    const allManifests = [...scopeManifests, ...workspaceManifests];
-    await this.aspectLoader.loadExtensionsByManifests(allManifests, throwOnError);
-
+    await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
       return workspaceComps[index];
@@ -1279,7 +1403,7 @@ export class Workspace implements ComponentFactory {
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
 
-    return compact(allManifests.map((manifest) => manifest.id));
+    return compact(scopeEnvsManifestsIds.concat(scopeOtherManifestsIds).concat(workspaceManifestsIds));
   }
 
   /**
@@ -1384,7 +1508,11 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
+  async loadExtensions(
+    extensions: ExtensionDataList,
+    originatedFrom?: ComponentID,
+    throwOnError = false
+  ): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -1399,7 +1527,7 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError);
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom);
   }
 
   /**
@@ -1483,6 +1611,7 @@ export class Workspace implements ComponentFactory {
         copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
         dependencyFilterFn: depsFilterFn,
         overrides: this.dependencyResolver.config.overrides,
+        packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       };
       const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
         this.path,
@@ -1623,8 +1752,7 @@ export class Workspace implements ComponentFactory {
   private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
     await Promise.all(
       Array.from(componentConfigFiles).map(async (componentConfigFile) => {
-        const componentDir = this.componentDir(componentConfigFile.componentId, { ignoreVersion: true });
-        await componentConfigFile.write(componentDir, { override: true });
+        await componentConfigFile.write({ override: true });
       })
     );
   }
@@ -1648,6 +1776,7 @@ export class Workspace implements ComponentFactory {
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
+      packageImportMethod: this.dependencyResolver.config.packageImportMethod,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate
@@ -1973,15 +2102,41 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * overrides in workspace.jsonc.
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
-    const envIdStr = envId.toString();
-    const existsOnWorkspace = await this.hasId(envId);
+    const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
-    componentIds.forEach((componentId) => {
-      this.bitMap.addComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
-      this.bitMap.addComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
-    });
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        await this.addSpecificComponentConfig(componentId, envStrWithPossiblyVersion);
+        await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
+      })
+    );
     await this.bitMap.write();
+  }
+
+  /**
+   * helpful when a user provides an env-string to be set and this env has no version.
+   * in the workspace config, a custom-env needs to be set with a version unless it's part of the workspace.
+   * (inside envs/envs it's set without a version).
+   */
+  async resolveEnvIdWithPotentialVersionForConfig(envId: ComponentID): Promise<string> {
+    const isCore = this.aspectLoader.isCoreAspect(envId.toStringWithoutVersion());
+    const existsOnWorkspace = await this.hasId(envId);
+    if (isCore || existsOnWorkspace) {
+      // the env needs to be without version
+      return envId.toStringWithoutVersion();
+    }
+    // the env must include a version
+    if (envId.hasVersion()) {
+      return envId.toString();
+    }
+    const extensions = this.harmony.get<ConfigMain>('teambit.harmony/config').extensions;
+    const found = extensions?.findExtension(envId.toString(), true);
+    if (found && found.extensionId?.version) {
+      return found.extensionId.toString();
+    }
+    const comps = await this.importAndGetMany([envId]);
+    return comps[0].id.toString();
   }
 
   /**
@@ -1990,18 +2145,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async unsetEnvFromComponents(ids: ComponentID[]): Promise<{ changed: ComponentID[]; unchanged: ComponentID[] }> {
     const changed: ComponentID[] = [];
     const unchanged: ComponentID[] = [];
-    ids.forEach((id) => {
-      const bitMapEntry = this.bitMap.getBitmapEntry(id);
-      const envsAspect = bitMapEntry.config?.[EnvsAspect.id];
-      const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
-      if (!currentEnv) {
-        unchanged.push(id);
-        return;
-      }
-      this.bitMap.removeComponentConfig(id, currentEnv, false);
-      this.bitMap.removeComponentConfig(id, EnvsAspect.id, false);
-      changed.push(id);
-    });
+    await Promise.all(
+      ids.map(async (id) => {
+        const envsAspect = await this.getSpecificComponentConfig(id, EnvsAspect.id);
+        const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
+        if (!currentEnv) {
+          unchanged.push(id);
+          return;
+        }
+        const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, false);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
+        changed.push(id);
+      })
+    );
     await this.bitMap.write();
     return { changed, unchanged };
   }

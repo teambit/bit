@@ -22,9 +22,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
           pass
           failed
           pending
-          error {
-            failureMessage
-          }
+          errorStr
           tests {
             ancestor
             duration
@@ -39,7 +37,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
 `;
 
 const GET_COMPONENT = gql`
-  query($id: String!) {
+  query ($id: String!) {
     getHost {
       id # for GQL caching
       getTests(id: $id) {
@@ -51,9 +49,7 @@ const GET_COMPONENT = gql`
             pass
             failed
             pending
-            error {
-              failureMessage
-            }
+            errorStr
             tests {
               ancestor
               duration
@@ -112,12 +108,13 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     );
   }
 
+  // TODO: get the docs domain from the community aspect and pass it here as a prop
   if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link="https://harmony-docs.bit.dev/testing/overview/"
+        link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
       />
     );
   }

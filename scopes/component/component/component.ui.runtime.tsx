@@ -118,7 +118,7 @@ export class ComponentUI {
     },
   ];
 
-  private bitMethod: ConsumePlugin = (comp) => {
+  private bitMethod: ConsumePlugin = (comp, options) => {
     const version = comp.version === comp.latest ? '' : `@${comp.version}`;
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
@@ -127,6 +127,7 @@ export class ComponentUI {
           componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
           packageName={`${comp.packageName}${version}`}
           componentName={comp.id.name}
+          showInstallMethod={!options?.currentLane}
         />
       ),
       order: 0,

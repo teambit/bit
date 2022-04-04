@@ -4,6 +4,7 @@ import webpack, { Configuration } from 'webpack';
 import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
+import { sep } from 'path';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WebpackAssetsManifest from 'webpack-assets-manifest';
@@ -17,6 +18,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
     truthyEntries = {};
   }
+
   const dev = Boolean(context.development);
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
@@ -41,7 +43,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
     output: {
       // The build folder.
-      path: `${target.outputPath}/public`,
+      path: `${target.outputPath}${sep}public`,
     },
     stats: {
       errorDetails: true,
@@ -106,6 +108,7 @@ function getAssetManifestPlugin() {
 function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {
   return configs.map((config) => generateHtmlPlugin(config));
 }
+
 function generateHtmlPlugin(config: BundlerHtmlConfig) {
   const baseConfig = {
     filename: config.filename,
@@ -115,6 +118,7 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
     minify: config.minify,
     cache: false,
     chunksSortMode: 'auto' as const,
+    favicon: config.favicon,
   };
   if (baseConfig.chunks && baseConfig.chunks.length) {
     // Make sure the order is that the preview root coming after the preview def

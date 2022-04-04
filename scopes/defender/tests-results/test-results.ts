@@ -15,7 +15,16 @@ export class TestResult {
     /*  error message */
     public error?: string,
 
-    /*  failure message */
-    public failure?: string
+    /**
+     * failure as an Error object or a string. Use `this.failure` to get it always as a string
+     */
+    public failureErrOrStr?: Error | string
   ) {}
+
+  /*  failure message */
+  get failure(): string | undefined {
+    if (!this.failureErrOrStr) return undefined;
+    if (typeof this.failureErrOrStr === 'string') return this.failureErrOrStr;
+    return this.failureErrOrStr?.message;
+  }
 }

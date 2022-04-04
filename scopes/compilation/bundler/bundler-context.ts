@@ -135,6 +135,12 @@ export type HtmlConfig = {
    * Controls if and in what ways the output should be minified
    */
   minify?: boolean;
+
+  /**
+   * The favicon for the html page
+   */
+  favicon?:string; 
+
   // TODO: consider add chunksSortMode if there are more needs
 };
 
@@ -143,6 +149,17 @@ export type Chunking = {
    * include all types of chunks (async / non-async) in splitting
    */
   splitChunks: boolean;
+};
+
+export type MetaData = {
+  /**
+   * Who initiate the bundling process
+   */
+  initiator?: string;
+  /**
+   * Env id (used usually to calculate the config)
+   */
+  envId?: string;
 };
 export interface BundlerContext extends BuildContext {
   /**
@@ -189,4 +206,9 @@ export interface BundlerContext extends BuildContext {
     fileName: string;
     exposes: { [key: string]: string };
   };
+
+  /**
+   * Additional info that can be used by the bundler for different stuff like logging info
+   */
+  metaData?: MetaData;
 }

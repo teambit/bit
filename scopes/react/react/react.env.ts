@@ -204,7 +204,7 @@ export class ReactEnv
 
   private writeFileMap(components: Component[], local?: boolean) {
     const fileMap = this.getFileMap(components, local);
-    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    const path = join(tmpdir(), `${Math.random().toString(36).slice(2, 11)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
   }
@@ -232,7 +232,7 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const peers = this.getAllHostDeps();
+    const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
@@ -244,33 +244,62 @@ export class ReactEnv
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    // const fileMapPath = this.writeFileMap(context.components);
-    const peers = this.getAllHostDeps();
+    return this.createComponentsWebpackBundler(context, transformers);
+  }
 
+  async createComponentsWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
-    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
 
-    return this.webpack.createBundler(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+  async createTemplateWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDependencies();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      return merged;
+    };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
+
+  private async createWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    return this.webpack.createBundler(context, transformers);
   }
 
   /**
    * Get the peers configured by the env on the components + the host deps configured by the env
    */
-  private getAllHostDeps() {
-    const hostDeps = this.getHostDependencies();
-    const peers = Object.keys(this.getDependencies().peerDependencies).concat(hostDeps);
+  getAllHostDependencies() {
+    const envComponentPeers = Object.keys(this.getDependencies().peerDependencies || {}) || [];
+    const additionalHostDeps = this.getAdditionalHostDependencies() || [];
+    const peers = envComponentPeers.concat(additionalHostDeps);
     return peers;
   }
 
-  getHostDependencies(): string[] {
+  getAdditionalHostDependencies(): string[] {
     return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
@@ -292,7 +321,7 @@ export class ReactEnv
 
   getPreviewConfig() {
     return {
-      // strategyName: 'component',
+      strategyName: 'component',
       splitComponentBundle: true,
     };
   }

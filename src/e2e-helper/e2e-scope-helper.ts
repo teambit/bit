@@ -2,6 +2,8 @@
 
 import fs from 'fs-extra';
 import * as path from 'path';
+import * as yaml from 'yaml';
+import * as ini from 'ini';
 import { IS_WINDOWS } from '../constants';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { generateRandomStr } from '../utils';
@@ -69,14 +71,36 @@ export default class ScopeHelper {
     this.cleanLocalScope();
     this.initLocalScope();
   }
-  reInitLocalScopeHarmony(opts?: { registry: string }) {
+  reInitLocalScopeHarmony(opts?: { registry?: string; initGit?: boolean; yarnRCConfig?: any; npmrcConfig?: any }) {
     this.cleanLocalScope();
+    if (opts?.initGit) this.command.runCmd('git init');
     this.initHarmonyWorkspace();
     if (opts?.registry) {
-      this.fs.writeFile('.npmrc', `registry=${opts.registry}`);
-      this.fs.writeFile('.yarnrc.yml', 'unsafeHttpWhitelist: [localhost]');
+      this._writeNpmrc({
+        registry: opts.registry,
+        ...opts.npmrcConfig,
+      });
+      this._writeYarnRC({
+        unsafeHttpWhitelist: ['localhost'],
+        ...opts?.yarnRCConfig,
+      });
+    } else {
+      if (opts?.yarnRCConfig) {
+        this._writeYarnRC(opts.yarnRCConfig);
+      }
+      if (opts?.npmrcConfig) {
+        this._writeNpmrc(opts.npmrcConfig);
+      }
     }
   }
+  private _writeYarnRC(yarnRCConfig: any) {
+    this.fs.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
+  }
+
+  private _writeNpmrc(config: any) {
+    this.fs.writeFile('.npmrc', ini.stringify(config));
+  }
+
   newLocalScopeHarmony(templateName: string, flags?: string) {
     fs.removeSync(this.scopes.localPath);
     this.command.new(templateName, flags, this.scopes.local, this.scopes.e2eDir);
@@ -117,8 +141,8 @@ export default class ScopeHelper {
     this.reInitRemoteScope();
     this.addRemoteScope();
   }
-  setNewLocalAndRemoteScopesHarmony() {
-    this.reInitLocalScopeHarmony();
+  setNewLocalAndRemoteScopesHarmony(opts?: { yarnRCConfig?: any }) {
+    this.reInitLocalScopeHarmony(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();
   }

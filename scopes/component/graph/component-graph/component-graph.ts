@@ -1,23 +1,23 @@
 import { Component, ComponentID } from '@teambit/component';
-import { Graph } from 'cleargraph';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 
 import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
-type Node = { id: string; node: Component };
-type Edge = { sourceId: string; targetId: string; edge: Dependency };
+type ComponentNode = Node<Component>;
+type DependencyEdge = Edge<Dependency>;
 
 export class ComponentGraph extends Graph<Component, Dependency> {
   versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
   seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
-  constructor(nodes: Node[] = [], edges: Edge[] = []) {
+  constructor(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
     this.versionMap = new Map();
   }
 
-  protected create(nodes: Node[] = [], edges: Edge[] = []): this {
+  protected create(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []): this {
     return new ComponentGraph(nodes, edges) as this;
   }
 
@@ -29,16 +29,15 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     if (!this.shouldLimitToSeedersOnly()) {
       return cycles;
     }
-    const seederIdsStr = this.getSeederIdsStr();
+    const seederIdsStr = this.seederIds.map((id) => id.toString());
     const cyclesWithSeeders = cycles.filter((cycle) => {
-      const cycleNoVersions = cycle.map((id) => id.split('@')[0]);
-      return cycleNoVersions.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
+      return cycle.some((cycleIdStr) => seederIdsStr.includes(cycleIdStr));
     });
     return cyclesWithSeeders;
   }
 
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
-    const seederIdsNoVersions = this.getSeederIdsStr();
+    const seederIdsNoVersions = this.seederIds.map((id) => id.toStringWithoutVersion());
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
     for (const [compFullName, versions] of this.versionMap) {
       if (versions.allVersionNodes.length > 1) {
@@ -68,39 +67,17 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   buildFromCleargraph(graph: Graph<Component, Dependency>): ComponentGraph {
-    // TODO: once cleargraph constructor and graph.nodes are consistent we should just use this line
-    // this.create(graph.nodes, graph.edges)
-
-    const newGraph = new ComponentGraph();
-    const newGraphNodes: Node[] = graph.nodes.map((node) => {
-      return {
-        id: node.id,
-        node: node.attr,
-      };
-    });
-    const newGraphEdges: Edge[] = graph.edges.map((edge) => {
-      return {
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-        edge: edge.attr,
-      };
-    });
-    newGraph.setNodes(newGraphNodes);
-    newGraph.setEdges(newGraphEdges);
-
-    return newGraph;
+    return this.create(graph.nodes, graph.edges);
   }
 
   runtimeOnly(componentIds: string[]) {
-    return this.successorsSubgraph(componentIds, (edge) => edge.attr.type === 'runtime');
+    return this.successorsSubgraph(componentIds, {
+      edgeFilter: (edge: DependencyEdge) => edge.attr.type === 'runtime',
+    });
   }
 
   private shouldLimitToSeedersOnly() {
     return this.seederIds.length;
-  }
-
-  private getSeederIdsStr() {
-    return this.seederIds.map((id) => id.toStringWithoutVersion());
   }
 
   _calculateVersionMap() {
@@ -120,9 +97,17 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           if (Object.prototype.hasOwnProperty.call(value, 'allVersionNodes')) {
             value.allVersionNodes.push(compKey);
           }
-          const currentCompVersion = this.node(compKey)?.attr.id._legacy.getVersion();
-          const latestCompVersion = this.node(value.latestVersionNode)?.attr.id._legacy.getVersion();
-          if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+          const currentComp = this.node(compKey)?.attr;
+          const latestComp = this.node(value.latestVersionNode)?.attr;
+          const isLegacy = !currentComp?.head || !latestComp?.head;
+
+          if (isLegacy) {
+            const currentCompVersion = currentComp?.id._legacy.getVersion();
+            const latestCompVersion = latestComp?.id._legacy.getVersion();
+            if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
+              value.latestVersionNode = compKey;
+            }
+          } else if (new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)) {
             value.latestVersionNode = compKey;
           }
         }

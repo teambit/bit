@@ -260,7 +260,7 @@ export default class OverridesDependencies {
   /**
    * it is possible that a user added the component into the overrides as a package.
    * e.g. `@bit/david.utils.is-string` instead of `@bit/david.utils/is-string`
-   * or, if not using bit.dev, `@bit/utils.is-string` instead of `@bit/utils/is-string`
+   * or, if not using bit.cloud, `@bit/utils.is-string` instead of `@bit/utils/is-string`
    */
   _getComponentIdFromLegacyPackageName(idStr: string): string[] {
     const idSplitByDot = idStr.split('.');
@@ -268,10 +268,10 @@ export default class OverridesDependencies {
     if (numberOfDots === 0) return []; // nothing to do. it wasn't entered as a package
     const localScopeComponent = idSplitByDot.join('/'); // convert all dots to slashes
     if (numberOfDots === 1) {
-      // it can't be from bit.dev, it must be locally
+      // it can't be from bit.cloud, it must be locally
       return [localScopeComponent];
     }
-    // there are two dots or more. it can be from bit.dev and it can be locally
+    // there are two dots or more. it can be from bit.cloud and it can be locally
     // for a remoteScopeComponent, leave the first dot and convert only the rest to a slash
     const remoteScopeComponent = `${R.head(idSplitByDot)}.${R.tail(idSplitByDot).join('/')}`;
     return [localScopeComponent, remoteScopeComponent];

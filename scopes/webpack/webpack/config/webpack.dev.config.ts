@@ -26,7 +26,8 @@ export function configFactory(
   publicRoot: string,
   publicPath: string,
   pubsub: PubsubMain,
-  title?: string
+  title?: string,
+  favicon?: string
 ): WebpackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
@@ -108,11 +109,13 @@ export function configFactory(
         overlay: false,
       },
 
-      onBeforeSetupMiddleware({ app, server }) {
+      onBeforeSetupMiddleware(wds) {
+        const { app } = wds;
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        app.use(evalSourceMapMiddleware(server));
+        // @ts-ignore - @types/WDS mismatch - 3.11.6 vs 4.0.3
+        app.use(evalSourceMapMiddleware(wds));
         // This lets us open files from the runtime error overlay.
         app.use(errorOverlayMiddleware());
       },
@@ -146,8 +149,8 @@ export function configFactory(
       new HtmlWebpackPlugin({
         templateContent: html(title || 'Component preview'),
         filename: 'index.html',
+        favicon,
       }),
-
       new webpack.ProvidePlugin(fallbacksProvidePluginConfig),
 
       new WebpackBitReporterPlugin({

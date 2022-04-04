@@ -1,0 +1,38 @@
+.top {
+  padding: 16px 24px;
+  color: var(--bit-text-color, #414141);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  font-size: var(--bit-p-xs, 14px);
+  font-weight: bold;
+}
+
+.titleIcon,
+.titleText {
+  color: var(--bit-text-color-heavy, #2b2b2b);
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.importContentLabel,
+.importContentCmd {
+  margin: 12px 0;
+}
+
+.drawerTitle {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.useBox {
+  --bit-drawer-margin: 14px;
+}
+
+.lanesMenu {
+  background-color: var(--bit-bg-color, #ffffff);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}

@@ -40,12 +40,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         pending: Int
         duration: Int
         slow: Boolean
-        error: TestError
-      }
-
-      type TestError {
-        failureMessage: String
-        error: String
+        errorStr: String
       }
 
       type Tests {
