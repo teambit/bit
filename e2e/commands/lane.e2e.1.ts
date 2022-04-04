@@ -581,6 +581,22 @@ describe('bit lane command', function () {
         expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
       });
     });
+    describe('merging main into local lane when main has tagged versions', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1, undefined, 'v2');
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
+      });
+    });
     describe('merging main lane with no snapped components', () => {
       let mergeOutput: string;
       before(() => {
