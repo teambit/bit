@@ -370,7 +370,6 @@ export class IsolatorMain {
         }
         const componentWriter = new ComponentWriter(params);
         await componentWriter.populateComponentsFilesToWrite();
-        component.state._consumer.dataToPersist.toConsole();
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
