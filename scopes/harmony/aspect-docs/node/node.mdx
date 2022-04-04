@@ -199,7 +199,7 @@ export class NodeExtension {
 
   static async provider([envs, node]: [EnvsMain, NodeMain]) {
     const newNodeEnv = node.compose([
-      node.overrideTsConfig(tsconfig)
+      node.overrideBuildTsConfig(tsconfig)
     ]);
 }
 // ...
