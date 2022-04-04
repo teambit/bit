@@ -155,7 +155,9 @@ export class LanesModel {
 
   static from({ data, host, scope }: { data: LanesQuery; host: string; scope?: ScopeModel }): LanesModel {
     const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
-    const currentLane = data.lanes?.current ? LanesModel.mapToLaneModel(data.lanes.current, host, scope) : undefined;
+    const currentLane = data.lanes?.current?.id
+      ? lanes.find((lane) => lane.name === data.lanes?.current?.id)
+      : undefined;
     return new LanesModel({ lanes, currentLane });
   }
 
