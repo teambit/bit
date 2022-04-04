@@ -389,6 +389,10 @@ export class UiMain {
     return uis.find(([, root]) => root.priority);
   }
 
+  isHostAvailable(): boolean {
+    return Boolean(this.componentExtension.getHost());
+  }
+
   getUiName(uiRootName?: string): string | undefined {
     const [, ui] = this.getUi(uiRootName) || [];
     if (!ui) return undefined;
