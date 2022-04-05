@@ -38,6 +38,10 @@ export class TypescriptCompiler implements Compiler {
     return this.stringifyTsconfig(this.options.tsconfig);
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   /**
    * compile one file on the workspace
    */

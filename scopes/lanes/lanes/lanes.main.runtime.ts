@@ -16,6 +16,7 @@ import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { MergingMain, MergingAspect } from '@teambit/merging';
+import { Component } from '@teambit/component';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -150,6 +151,22 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
 
     return mergeResults;
+  }
+
+  async getLaneComponentModels(name: string): Promise<Component[]> {
+    if (!name) return [];
+
+    const [lane] = await this.getLanes({ name });
+    const laneComponents = lane.components;
+    const host = this.workspace || this.scope;
+    const laneComponentIds = await Promise.all(
+      laneComponents.map((laneComponent) => {
+        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
+        return host.resolveComponentId(legacyIdWithVersion);
+      })
+    );
+    const components = await host.getMany(laneComponentIds);
+    return components;
   }
 
   /**

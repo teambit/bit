@@ -139,7 +139,7 @@ export type HtmlConfig = {
   /**
    * The favicon for the html page
    */
-  favicon?:string; 
+  favicon?: string;
 
   // TODO: consider add chunksSortMode if there are more needs
 };

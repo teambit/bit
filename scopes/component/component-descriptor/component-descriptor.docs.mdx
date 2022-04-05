@@ -4,14 +4,10 @@ labels: ['module', 'components', 'component graph']
 ---
 
 import { ObjectFormatter } from '@teambit/code.ui.object-formatter';
-import {
-  descriptorMock,
-  plainsApectObject,
-} from './component-descriptor.mocks';
+import { descriptorMock, plainsApectObject } from './component-descriptor.mocks';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentDescriptor } from './component-descriptor';
 import { AspectList } from './aspect-list';
-
 
 `Component descriptor` is the bit.dev API for a Bit Component.
 It provides a simple API for inspecting and interacting with Bit components programmatically
@@ -35,9 +31,7 @@ Fetching `id` and `scope`.
 ```ts live
 () => {
   const componentId = descriptorMock.id;
-  return (
-    <ObjectFormatter style={{ width: '100vw' }} data={componentId} depth={10} />
-  );
+  return <ObjectFormatter style={{ width: '100vw' }} data={componentId} depth={10} />;
 };
 ```
 
@@ -113,9 +107,7 @@ For example, the component's _docs aspect_.
         <div key={docProp.name} style={{ display: 'flex' }}>
           <div style={{ marginRight: 10 }}>{docProp.name}: </div>
           <div>
-            {Array.isArray(docProp.value)
-              ? docProp.value.map((x, i) => <div key={i}>{x}</div>)
-              : docProp.value}
+            {Array.isArray(docProp.value) ? docProp.value.map((x, i) => <div key={i}>{x}</div>) : docProp.value}
           </div>
         </div>
       ))}

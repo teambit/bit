@@ -6,7 +6,7 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneModel } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
@@ -28,7 +28,7 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
 
   return (
     <NavLink
-      href={lane.url}
+      href={LanesModel.getLaneUrl(lane.id)}
       className={classNames(indentClass, clickable, styles.lane)}
       activeClassName={styles.active}
       onClick={handleClick}
