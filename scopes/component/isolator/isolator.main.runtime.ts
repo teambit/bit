@@ -346,14 +346,28 @@ export class IsolatorMain {
   }
 
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
-    const legacyComponents = components.map((component) => component.state._consumer.clone());
-    if (legacyScope) await importMultipleDistsArtifacts(legacyScope, legacyComponents);
+    const modifiedComps: Component[] = [];
+    const unmodifiedComps: Component[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const isModified = await component.isModified();
+        if (isModified) modifiedComps.push(component);
+        else unmodifiedComps.push(component);
+      })
+    );
+    const legacyUnmodifiedComps = unmodifiedComps.map((component) => component.state._consumer.clone());
+    const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
+    const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
+    if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
+        if (await component.isModified()) {
+          delete params.scope;
+        }
         const componentWriter = new ComponentWriter(params);
         await componentWriter.populateComponentsFilesToWrite();
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });

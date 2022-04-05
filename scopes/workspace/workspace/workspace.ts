@@ -1148,6 +1148,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     };
   }
 
+  async isModified(component: Component): Promise<boolean> {
+    const head = component.head;
+    if (!head) {
+      return true; // it's a new component
+    }
+    const consumerComp = component.state._consumer as ConsumerComponent;
+    if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
+    const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
+    return componentStatus.modified === true;
+  }
+
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
