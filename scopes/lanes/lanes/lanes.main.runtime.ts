@@ -15,7 +15,6 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
-import { BitId } from '@teambit/legacy-bit-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { MergingMain, MergingAspect } from '@teambit/merging';
