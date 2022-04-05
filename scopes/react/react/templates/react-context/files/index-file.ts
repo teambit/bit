@@ -11,4 +11,4 @@ export { ${Name}Provider } from './${name}-context-provider';
 export type { ${Name}ProviderProps } from './${name}-context-provider';
 `,
   };
-}
+};

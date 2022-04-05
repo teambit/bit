@@ -113,7 +113,7 @@ chai.use(require('chai-fs'));
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;

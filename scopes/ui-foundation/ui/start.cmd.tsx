@@ -2,6 +2,7 @@ import React from 'react';
 import openBrowser from 'react-dev-utils/openBrowser';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
+import { BitError } from '@teambit/bit-error';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
@@ -60,6 +61,11 @@ export class StartCmd implements Command {
     { dev, port, rebuild, verbose, noBrowser, skipCompilation }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
+    if (!this.ui.isHostAvailable()) {
+      throw new BitError(
+        `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
+      );
+    }
     const appName = this.ui.getUiName(uiRootName);
     await this.ui.invokePreStart({ skipCompilation });
     const uiServer = this.ui.createRuntime({

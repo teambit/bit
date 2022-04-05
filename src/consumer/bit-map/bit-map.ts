@@ -398,6 +398,11 @@ export default class BitMap {
     return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
   }
 
+  isIdAvailableOnCurrentLane(id: BitId): boolean {
+    const allIdsOfCurrentLane = this.getAllIdsAvailableOnLane();
+    return allIdsOfCurrentLane.hasWithoutScopeAndVersion(id);
+  }
+
   /**
    * get existing bitmap bit-id by bit-id.
    * throw an exception if not found
@@ -674,6 +679,10 @@ export default class BitMap {
           // this is to make sure the version of the lane is not written to the .bitmap file.
           // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
           componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
+        }
+        if (!this.workspaceLane && componentMap.onLanesOnly) {
+          // happens when merging from another lane to main and main is empty
+          componentMap.onLanesOnly = false;
         }
         componentMap.id = componentId;
         return componentMap;

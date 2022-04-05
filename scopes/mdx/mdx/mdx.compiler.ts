@@ -25,6 +25,10 @@ export class MDXCompiler implements Compiler {
     return JSON.stringify(this.config, null, 2);
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const afterMdxCompile = mdxCompileSync(fileContent, {
       filepath: options.filePath,
@@ -57,27 +61,21 @@ export class MDXCompiler implements Compiler {
 
       const errors = srcFiles.map((srcFile) => {
         try {
-          const afterMdxCompile = mdxCompileSync(srcFile.contents.toString('utf-8'));
-          const afterBabelCompile = babelTranspileFileContent(
-            afterMdxCompile.contents,
-            {
-              rootDir: capsule.path,
-              filePath: this.replaceFileExtToJs(srcFile.relative),
-            },
-            this.config.babelTransformOptions || {}
-          );
-          if (!afterBabelCompile) {
+          const transpiled = this.transpileFile(srcFile.contents.toString('utf-8'), {
+            filePath: this.replaceFileExtToJs(srcFile.relative),
+            componentDir: capsule.path,
+          });
+
+          if (!transpiled) {
             return undefined;
           }
+
           outputFileSync(
-            join(capsule.path, this.getDistPathBySrcPath(afterBabelCompile[0].outputPath)),
-            afterBabelCompile[0].outputText
+            join(capsule.path, this.getDistPathBySrcPath(transpiled[0].outputPath)),
+            transpiled[0].outputText
           );
-          if (afterBabelCompile.length > 1) {
-            outputFileSync(
-              join(capsule.path, this.distDir, afterBabelCompile[1].outputPath),
-              afterBabelCompile[1].outputText
-            );
+          if (transpiled.length > 1) {
+            outputFileSync(join(capsule.path, this.distDir, transpiled[1].outputPath), transpiled[1].outputText);
           }
           return undefined;
         } catch (err: any) {

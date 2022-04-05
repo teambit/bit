@@ -5,12 +5,13 @@ export {
   LanesProviderProps,
   LanesModel,
   LaneModel,
-  LaneComponentModel,
   LaneComponentQueryResult,
   LaneQueryResult,
   LanesQueryResult,
   useLanesQuery,
   LanesHost,
+  useLaneComponentsQuery,
+  LanesQuery,
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {
@@ -29,4 +30,5 @@ export {
   LaneReadmeProps,
   NavPlugin,
 } from './overview';
-export { CurrentLaneFromUrl } from './current-lane';
+export { ViewedLaneFromUrl, ViewedLaneFromUrlProps } from './viewed-lane';
+export { UseLaneMenu } from './menu';

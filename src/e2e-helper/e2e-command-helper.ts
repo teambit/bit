@@ -156,6 +156,9 @@ export default class CommandHelper {
   unsetEnv(compId: string) {
     return this.runCmd(`bit envs unset ${compId}`);
   }
+  replaceEnv(oldEnv: string, newEnv: string) {
+    return this.runCmd(`bit envs replace ${oldEnv} ${newEnv}`);
+  }
   setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
     const configStr = config ? `'${JSON.stringify(config)}'` : '';
     return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);

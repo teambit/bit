@@ -1,1 +1,1 @@
-export { useLanesQuery } from './lanes-query';
+export { useLanesQuery, useLaneComponentsQuery } from './lanes-query';

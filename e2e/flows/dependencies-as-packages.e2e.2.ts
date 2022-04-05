@@ -321,6 +321,7 @@ chai.use(require('chai-fs'));
           helper.command.compile();
         });
         it('should throw an error and prevent tagging the component', () => {
+          helper.general.runWithTryCatch('bit status'); // for some reason, it shows error about "env was not configured" first.
           expect(() => helper.command.tagAllComponents()).to.throw('unable tagging');
         });
       });

@@ -72,12 +72,15 @@ function VersionRelatedDropdowns({
   const location = useLocation();
   const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.currentLane;
+  const currentLane = lanesContext?.viewedLane;
   const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+    return (logs || [])
+      .filter((log) => !log.tag)
+      .map((snap) => ({ ...snap, version: snap.hash }))
+      .reverse();
   }, [logs]);
 
   const tags = useMemo(() => {

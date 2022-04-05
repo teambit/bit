@@ -1,4 +1,7 @@
+import { Component } from '@teambit/component';
+import { IssuesClasses } from '@teambit/component-issues';
 import { GraphBuilder } from '@teambit/graph';
+import { uniq } from 'lodash';
 import { Insight, InsightResult, RawResult } from '../insight';
 
 export const INSIGHT_NAME = 'cyclic dependencies';
@@ -62,5 +65,17 @@ export default class FindCycles implements Insight {
       result.message = bareResult.message;
     }
     return result;
+  }
+
+  async addAsComponentIssue(components: Component[]) {
+    const result = await this.runInsight();
+    if (!result.data.length) {
+      return; // no circulars
+    }
+    const allIds = uniq(result.data.flat());
+    const componentsWithCircular = components.filter((component) => allIds.includes(component.id.toString()));
+    componentsWithCircular.forEach((component) => {
+      component.state.issues.getOrCreate(IssuesClasses.CircularDependencies).data = true;
+    });
   }
 }

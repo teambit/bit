@@ -323,10 +323,10 @@ export class PreviewMain {
       const templatePath = await previewDef.renderTemplatePath?.(context);
 
       const map = await previewDef.getModuleMap(components);
-      const environment = context.envRuntime.env;
       const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
-      const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
+        const environment = this.envs.getEnv(component).env;
+        const compilerInstance = environment.getCompiler?.();
         const modulePath =
           compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
         return files.map((file) => {

@@ -18,13 +18,14 @@ import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { Component } from '@teambit/component';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { DocsMain } from '@teambit/docs';
+import { Component } from '@teambit/component';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
   LaneCreateCmd,
+  LaneImportCmd,
   LaneListCmd,
   LaneMergeCmd,
   LaneRemoveCmd,
@@ -158,6 +159,36 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
 
     return mergeResults;
+  }
+
+  async getLaneComponentModels(name: string): Promise<Component[]> {
+    if (!name) return [];
+
+    const [lane] = await this.getLanes({ name });
+    const laneComponents = lane.components;
+    const host = this.workspace || this.scope;
+    const laneComponentIds = await Promise.all(
+      laneComponents.map((laneComponent) => {
+        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
+        return host.resolveComponentId(legacyIdWithVersion);
+      })
+    );
+    const components = await host.getMany(laneComponentIds);
+    return components;
+  }
+
+  async getLaneReadmeComponent(name: string): Promise<Component | undefined> {
+    if (!name) return undefined;
+
+    const [lane] = await this.getLanes({ name });
+    const laneReadmeComponent = lane.readmeComponent;
+    if (!laneReadmeComponent) return undefined;
+    const host = this.workspace || this.scope;
+    const laneReadmeComponentId = await host.resolveComponentId(
+      laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
+    );
+    const readmeComponent = await host.get(laneReadmeComponentId);
+    return readmeComponent;
   }
 
   /**
@@ -299,6 +330,7 @@ export class LanesMain {
         new LaneDiffCmd(workspace, scope),
         new LaneReadmeAddCmd(lanesMain),
         new LaneReadmeRemoveCmd(lanesMain),
+        new LaneImportCmd(switchCmd),
       ];
       cli.register(laneCmd, switchCmd);
       graphql.register(lanesSchema(lanesMain));

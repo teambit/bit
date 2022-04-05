@@ -26,6 +26,7 @@ export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } 
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context/component-provider';
 export { useComponent } from './ui/use-component';
+export { componentFields, componentIdFields, componentOverviewFields } from './ui';
 export { ConsumePlugin } from './ui/menu';
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';

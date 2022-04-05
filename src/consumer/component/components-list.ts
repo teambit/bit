@@ -90,7 +90,6 @@ export default class ComponentsList {
    * changed in the file system
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
-   * @return {Promise<string[]>}
    */
   async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
@@ -228,7 +227,6 @@ export default class ComponentsList {
    * Components that are registered in bit.map but have never been tagged
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
-   * @return {Promise.<string[] | Component[]>}
    * @memberof ComponentsList
    */
   async listNewComponents(load = false): Promise<BitIds | Component[]> {
