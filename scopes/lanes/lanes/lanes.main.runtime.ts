@@ -170,6 +170,22 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
+  async getLaneComponentModels(name: string): Promise<Component[]> {
+    if (!name) return [];
+
+    const [lane] = await this.getLanes({ name });
+    const laneComponents = lane.components;
+    const host = this.workspace || this.scope;
+    const laneComponentIds = await Promise.all(
+      laneComponents.map((laneComponent) => {
+        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
+        return host.resolveComponentId(legacyIdWithVersion);
+      })
+    );
+    const components = await host.getMany(laneComponentIds);
+    return components;
+  }
+
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
     const consumer = this.workspace?.consumer;
     let bitIds: BitId[] = [];
