@@ -3,7 +3,7 @@ import { SchemaNode } from '../schema-node';
 type Primitive = string | number | boolean | null | undefined;
 export type StaticProperties = Map<string, Primitive>;
 
-export class Export {
+export class Export implements SchemaNode {
   constructor(
     /**
      * named export identifier of the module export.
@@ -24,4 +24,8 @@ export class Export {
      */
     readonly staticProperties?: StaticProperties
   ) {}
+
+  toObject() {
+    return {};
+  }
 }

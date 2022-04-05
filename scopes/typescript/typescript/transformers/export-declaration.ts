@@ -36,8 +36,8 @@ export class ExportDeclaration implements SchemaTransformer {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const exports = await Promise.all(
         exportClause.elements.map(async (element) => {
-          // const sig = await context.visitDefinition(element.name);
-          await context.visitDefinition(element.name);
+          const sig = await context.visitDefinition(element.name);
+          // const app = await context.visitDefinition(element.name);
           return element.name;
         })
       );

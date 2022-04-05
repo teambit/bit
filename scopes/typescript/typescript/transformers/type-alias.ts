@@ -1,6 +1,6 @@
 import ts, { Node, TypeAliasDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
-import { ExportIdentifier } from '../export-identifier';
+// import { ExportIdentifier } from '../export-identifier';
 
 export class TypeAliasTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -8,10 +8,14 @@ export class TypeAliasTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: TypeAliasDeclaration) {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    // return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    return [];
   }
 
-  async transform() {
+  async transform(node: Node) {
+    const typeAlias = node as TypeAliasDeclaration;
+    typeAlias.typeParameters;
+    typeAlias.
     return {};
   }
 }

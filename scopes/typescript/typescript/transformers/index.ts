@@ -3,3 +3,4 @@ export { FunctionDeclaration } from './function-declaration';
 export { VariableStatementTransformer } from './variable-statement';
 export { SourceFileTransformer } from './source-file-transformer';
 export { TypeAliasTransformer } from './type-alias';
+export { ClassDecelerationTransformer } from './class-deceleration';

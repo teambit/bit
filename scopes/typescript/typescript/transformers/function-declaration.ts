@@ -49,6 +49,6 @@ export class FunctionDeclaration implements SchemaTransformer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
 
-    return new FunctionSchema(name || '', [], returnType);
+    return new FunctionSchema(name || '', args, returnType);
   }
 }

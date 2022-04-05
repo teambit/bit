@@ -25,6 +25,7 @@ import {
   FunctionDeclaration,
   VariableStatementTransformer,
   SourceFileTransformer,
+  ClassDecelerationTransformer
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -171,6 +172,7 @@ export class TypescriptMain {
       new VariableStatementTransformer(),
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
+      new ClassDecelerationTransformer()
     ]);
 
     if (workspace) {

@@ -28,6 +28,14 @@ export class TypeRefSchema implements SchemaNode {
     readonly node?: SchemaNode
   ) {}
 
+  toObject(): Record<string, any> {
+    return {
+      name: this.name,
+      componentId: this.componentId,
+      packageName: this.packageName
+    };
+  }
+
   static from(plainSchema: PlainTypeRefSchema) {
     return new TypeRefSchema(
       plainSchema.name,

@@ -20,4 +20,12 @@ export class FunctionSchema implements SchemaNode {
   serialize() {}
 
   toJsonSchema() {}
+
+  toObject(): Record<string, any> {
+    return {
+      name: this.name,
+      args: this.args,
+      returnType: this.returnType.toObject()
+    };
+  }
 }
