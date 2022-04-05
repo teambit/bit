@@ -14,6 +14,7 @@ import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consume
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
+import { Component } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
