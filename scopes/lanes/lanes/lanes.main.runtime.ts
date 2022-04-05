@@ -15,6 +15,7 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -73,15 +74,16 @@ export class LanesMain {
       const lanes = await remoteObj.listLanes(name, showMergeData);
       return lanes;
     }
+
     if (name === DEFAULT_LANE) {
-      const defaultLane = this.getLaneDataOfDefaultLane();
+      const defaultLane = await this.getLaneDataOfDefaultLane();
       return defaultLane ? [defaultLane] : [];
     }
 
     const lanes = await this.scope.legacyScope.lanes.getLanesData(this.scope.legacyScope, name, showMergeData);
 
     if (showDefaultLane) {
-      const defaultLane = this.getLaneDataOfDefaultLane();
+      const defaultLane = await this.getLaneDataOfDefaultLane();
       if (defaultLane) lanes.push(defaultLane);
     }
 
@@ -168,10 +170,16 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
-  private getLaneDataOfDefaultLane(): LaneData | null {
+  private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
     const consumer = this.workspace?.consumer;
-    if (!consumer) return null;
-    const bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    let bitIds: BitId[] = [];
+    if (!consumer) {
+      const scopeComponents = await this.scope.list();
+      bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id._legacy);
+    } else {
+      bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    }
+
     return {
       name: DEFAULT_LANE,
       remote: null,
