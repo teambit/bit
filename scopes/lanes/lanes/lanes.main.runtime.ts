@@ -247,6 +247,7 @@ export class LanesMain {
     }
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
+    await this.workspace.bitMap.write();
 
     return { result: true };
   }
@@ -286,6 +287,7 @@ export class LanesMain {
         [lane.name]: { readme: true },
       });
     }
+    await this.workspace.bitMap.write();
     return { result: true };
   }
 

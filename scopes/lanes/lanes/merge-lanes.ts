@@ -64,7 +64,6 @@ export async function mergeLanes({
     bitIds = otherLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     otherLaneName = laneId.name;
   }
-  console.log('🚀 ~ file: merge-lanes.ts ~ line 65 ~ bitIds', bitIds);
 
   const allComponentsStatus = await getAllComponentsStatus();
 
@@ -86,7 +85,6 @@ export async function mergeLanes({
     (result.failedComponents.length === 0 ||
       result.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately))
   ) {
-    console.log('🚀 ~ file: merge-lanes.ts ~ line 89 ~ readmeComponentId', result);
     const readmeComponentId = [
       otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),
     ];
