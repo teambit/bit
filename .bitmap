@@ -632,7 +632,13 @@
         "scope": "teambit.react",
         "version": "0.0.489",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/dom-to-react"
+        "rootDir": "scopes/react/dom-to-react",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "modules/fetch-html-from-url": {
         "scope": "teambit.html",

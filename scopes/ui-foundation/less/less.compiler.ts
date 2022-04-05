@@ -3,7 +3,26 @@ import { render, version } from 'less';
 import { Compiler } from '@teambit/compiler';
 
 export class LessCompiler implements Compiler {
+  distDir = 'dist';
+  shouldCopyNonSupportedFiles = false;
+
   constructor(readonly id: string, readonly displayName = 'Less') {}
+
+  getDistPathBySrcPath(srcPath: string): string {
+    return srcPath.replace('.scss', '.css');
+  }
+
+  isFileSupported(filePath: string): boolean {
+    return filePath.endsWith('.less');
+  }
+
+  version(): string {
+    return version.join('.');
+  }
+
+  getDistDir() {
+    return this.distDir;
+  }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {
     const results = await Promise.all(
@@ -38,19 +57,4 @@ export class LessCompiler implements Compiler {
       componentsResults: results,
     };
   }
-
-  getDistPathBySrcPath(srcPath: string): string {
-    return srcPath.replace('.scss', '.css');
-  }
-
-  isFileSupported(filePath: string): boolean {
-    return filePath.endsWith('.less');
-  }
-
-  version(): string {
-    return version.join('.');
-  }
-
-  distDir = 'dist';
-  shouldCopyNonSupportedFiles = false;
 }

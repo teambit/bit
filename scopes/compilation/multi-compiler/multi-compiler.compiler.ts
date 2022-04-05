@@ -31,6 +31,10 @@ export class MultiCompiler implements Compiler {
     readonly options: MultiCompilerOptions = {}
   ) {}
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   getArtifactDefinition() {
     return [
       {
