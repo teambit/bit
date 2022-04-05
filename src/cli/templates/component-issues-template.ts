@@ -28,15 +28,6 @@ export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
 }
 
-export default function componentIssuesTemplate(components: ConsumerComponent[]) {
-  function format(missingComponent) {
-    return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatIssues(missingComponent)}`;
-  }
-
-  const result = `\n${components.map(format).join('\n')}`;
-  return result;
-}
-
 export function formatIssues(compWithIssues: ConsumerComponent) {
   return `       ${compWithIssues.issues?.outputForCLI()}\n`;
 }

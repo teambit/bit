@@ -6,7 +6,7 @@ import { ComponentStrip } from './component-strip';
 import styles from './label.module.scss';
 
 export type OtherComponentsProps = {
-  components: ComponentMetaHolder[];
+  components: (ComponentMetaHolder | string)[];
   start?: number;
   end?: number;
 } & TippyProps;
