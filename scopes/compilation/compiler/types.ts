@@ -99,7 +99,7 @@ export interface Compiler extends CompilerOptions {
   /**
    * return the dist dir of the compiled files (relative path from the component root dir)
    */
-  getDistDir(): string;
+  getDistDir?(): string;
 
   /**
    * given a source file, return its parallel in the dists. e.g. "index.ts" => "dist/index.js"
