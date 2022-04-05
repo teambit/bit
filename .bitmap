@@ -630,7 +630,7 @@
     },
     "modules/dom-to-react": {
         "scope": "teambit.react",
-        "version": "0.0.489",
+        "version": "0.1.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/dom-to-react",
         "config": {
@@ -1046,7 +1046,7 @@
     },
     "ui/component-highlighter": {
         "scope": "teambit.react",
-        "version": "0.0.514",
+        "version": "0.1.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/component-highlighter"
     },
@@ -1316,7 +1316,7 @@
     },
     "ui/hover-selector": {
         "scope": "teambit.react",
-        "version": "0.0.165",
+        "version": "0.1.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/hover-selector"
     },

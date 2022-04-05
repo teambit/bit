@@ -5,7 +5,7 @@ import { ChildrenHighlighterPreview } from './children-highlighter.composition';
 it('should not throw when rendering the children-highlighter', () => {
   const { getByText } = render(<ChildrenHighlighterPreview />);
 
-  const rendered = getByText('hover here');
+  const rendered = getByText('target #1');
 
   expect(rendered).toBeInstanceOf(HTMLElement);
 });

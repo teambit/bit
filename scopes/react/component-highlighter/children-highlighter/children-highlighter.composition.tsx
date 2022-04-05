@@ -1,19 +1,20 @@
 import React from 'react';
 // import { EnterpriseOffering } from '@teambit/evangelist.pages.enterprise-offering';
 import { MockedComponentWithMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import { IconButton } from '@teambit/design.ui.icon-button';
 import { ExcludeHighlighter } from '../ignore-highlighter';
 import { ChildrenHighlighter } from './children-highlighter';
+import { MockTarget } from '../mock-component';
 
 export const ChildrenHighlighterPreview = () => {
   return (
     // highlighter runs in compositions, therefor should not have our font
     <ChildrenHighlighter style={{ padding: 40, minWidth: 200, fontFamily: 'sans-serif' }}>
-      <MockedComponentWithMeta>hover here</MockedComponentWithMeta>
+      <MockedComponentWithMeta>target #1</MockedComponentWithMeta>
       <br />
       <br />
       <br />
-      <IconButton>this will be highlighted with dropdown</IconButton>
+      <br />
+      <MockedComponentWithMeta>target #2</MockedComponentWithMeta>
     </ChildrenHighlighter>
   );
 };
@@ -87,7 +88,7 @@ export const ChildrenHighlighterWithComponentRule = () => {
       <br />
       <br />
       <br />
-      <IconButton>this will be highlighted</IconButton>
+      <MockTarget>this will be highlighted</MockTarget>
     </ChildrenHighlighter>
   );
 };

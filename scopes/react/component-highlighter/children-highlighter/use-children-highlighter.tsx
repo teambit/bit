@@ -1,4 +1,4 @@
-import { useEffect, RefObject } from 'react';
+import { useEffect, RefObject, HtmlHTMLAttributes } from 'react';
 import getXPath from 'get-xpath';
 import { domToReacts, toRootElement } from '@teambit/react.modules.dom-to-react';
 import {
@@ -7,7 +7,7 @@ import {
   hasComponentMeta,
   ReactComponentMetaHolder,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import { excludeHighlighterSelector } from '../ignore-highlighter';
+import { excludeHighlighterSelector, skipHighlighterSelector } from '../ignore-highlighter';
 import { ruleMatcher, MatchRule, ComponentMatchRule, componentRuleMatcher } from '../rule-matcher';
 
 type HighlighterTarget = Record<string, { element: HTMLElement; components: ComponentMetaHolder[] }>;
@@ -72,5 +72,8 @@ function targetsSelector(
    */
   scopeSelector = ':scope'
 ) {
-  return `:not(${scopeSelector} ${excludeHighlighterSelector}, ${scopeSelector} ${excludeHighlighterSelector} *)`;
+  const excludedSelector = `${scopeSelector} ${excludeHighlighterSelector}, ${scopeSelector} ${excludeHighlighterSelector} *`;
+  const skippedSelector = `${scopeSelector} ${skipHighlighterSelector}, ${scopeSelector} ${skipHighlighterSelector} *`;
+
+  return `:not(${excludedSelector}, ${skippedSelector})`;
 }

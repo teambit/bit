@@ -7,6 +7,7 @@ import {
   flip as flipMiddleware,
   shift,
   autoUpdate,
+  hide,
 } from '@floating-ui/react-dom';
 import type { Placement } from '@floating-ui/react-dom';
 import styles from './label.module.scss';
@@ -32,13 +33,14 @@ export function LabelContainer({
   style,
   ...rest
 }: LabelContainerProps) {
-  const { x, y, strategy, floating, reference, refs, update } = useFloating({
+  const { x, y, strategy, floating, reference, refs, update, middlewareData } = useFloating({
     placement,
     middleware: compact([
       offset && offsetMiddleware({ mainAxis: offset[0], crossAxis: offset[1] }),
       flip && flipMiddleware(),
       // enabling 'shift' for 'crossAxis' will make floating-ui push the label _inside_, when it has nowhere to go
       shift({ rootBoundary: 'document', mainAxis: true, crossAxis: true }),
+      hide({ strategy: 'referenceHidden' }),
     ]),
   });
 
@@ -54,7 +56,7 @@ export function LabelContainer({
     return autoUpdate(refs.reference.current, refs.floating.current, update, { animationFrame: !!watchMotion });
   }, [refs.reference.current, refs.floating.current, update, watchMotion]);
 
-  const isReady = x !== null;
+  const isReady = !middlewareData.hide?.referenceHidden;
 
   return (
     <div

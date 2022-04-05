@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import { Frame } from '../frame';
 import { Label, LabelContainer, Placement } from '../label';
-import { excludeHighlighterAtt } from '../ignore-highlighter';
+import { skipHighlighterAttr } from '../ignore-highlighter';
 import styles from './element-highlighter.module.scss';
 
 export interface ElementHighlighterProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -38,7 +38,7 @@ export function ElementHighlighter({
   ...props
 }: ElementHighlighterProps) {
   return (
-    <div {...props} {...excludeHighlighterAtt} className={classnames(classes?.container, styles.container, className)}>
+    <div {...props} {...skipHighlighterAttr} className={classnames(classes?.container, styles.container, className)}>
       <Frame targetRef={targetRef} className={classnames(styles.frame, classes?.frame)} watchMotion={watchMotion} />
 
       {components && (

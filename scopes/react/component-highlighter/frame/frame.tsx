@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, RefObject } from 'react';
 import classnames from 'classnames';
-import { useFloating, autoUpdate, offset, size, shift } from '@floating-ui/react-dom';
+import { useFloating, autoUpdate, offset, size, detectOverflow, hide } from '@floating-ui/react-dom';
 import type { Coords } from '@floating-ui/react-dom';
 
 import styles from './frame.module.scss';
@@ -9,6 +9,8 @@ import styles from './frame.module.scss';
 const MARGIN_FROM_TARGET = +styles.offset || 6; // setting fallback 6, for tests
 /** min. distance from the edge of the screen. */
 const MARGIN_FROM_DOC_EDGE = 0;
+
+const overflowParameters = { rootBoundary: 'document', padding: MARGIN_FROM_DOC_EDGE } as const;
 
 export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
   /** apply the frame to this element  */
@@ -30,7 +32,7 @@ export function Frame({ targetRef, watchMotion, className, stylesClass = styles.
   const dimensionRef = useRef({ width: 0, height: 0 });
   const shiftRef = useRef<Coords | undefined>();
 
-  const { x, y, strategy, reference, floating, update, refs } = useFloating({
+  const { x, y, strategy, reference, floating, update, refs, middlewareData } = useFloating({
     placement: 'bottom-start',
     middleware: [
       // replace dimensions from previous iterations with the target's size
@@ -51,14 +53,26 @@ export function Frame({ targetRef, watchMotion, className, stylesClass = styles.
       offset((options) => -options.reference.height),
       // offset the frame by its extra padding
       offset(() => ({ mainAxis: -MARGIN_FROM_TARGET, crossAxis: -MARGIN_FROM_TARGET })),
-      // push the frame inside the screen
-      shift({ rootBoundary: 'document', padding: MARGIN_FROM_DOC_EDGE, mainAxis: true, crossAxis: true }),
-      // read "shift" for the size-apply() method (because it doesn't forward middlewareData)
+      // pushes the frame into the document. Similar to shift(), but only pushes when coods are negative
       {
-        name: 'read-shift',
-        fn({ middlewareData }) {
-          shiftRef.current = middlewareData.shift;
-          return {};
+        name: 'shiftPositive',
+        fn: async (args) => {
+          const overflow = await detectOverflow(args, overflowParameters);
+
+          const nextCoords = {
+            x: overflow.left > 0 ? args.x + overflow.left : args.x,
+            y: overflow.top > 0 ? args.y + overflow.top : args.y,
+          };
+          const shiftAmount = {
+            x: nextCoords.x - args.x,
+            y: nextCoords.y - args.y,
+          };
+
+          shiftRef.current = shiftAmount;
+          return {
+            ...nextCoords,
+            data: shiftAmount,
+          };
         },
       },
       // size also applies overflow detection via width and height
@@ -74,9 +88,11 @@ export function Frame({ targetRef, watchMotion, className, stylesClass = styles.
             width: Math.min(referenceRect.width + paddingX, width),
             height: Math.min(referenceRect.height + paddingY, height),
           };
+
           Object.assign(refs.floating.current?.style, dimensionRef.current);
         },
       }),
+      hide({ strategy: 'referenceHidden' }),
     ],
   });
 
@@ -93,7 +109,8 @@ export function Frame({ targetRef, watchMotion, className, stylesClass = styles.
     return autoUpdate(refs.reference.current, refs.floating.current, update, { animationFrame: watchMotion });
   }, [refs.reference.current, refs.floating.current, update, watchMotion]);
 
-  const isReady = x !== null;
+  // could check if x !== null
+  const isReady = !middlewareData.hide?.referenceHidden;
 
   return (
     <div

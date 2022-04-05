@@ -67,20 +67,6 @@ export const MovingElement = () => {
   return <HighlightedElement targetStyle={{ marginLeft: margin }} watchMotion />;
 };
 
-export const ElementOnTheEdge = () => {
-  const targetRef = createRef<HTMLDivElement>();
-
-  return (
-    <div style={{ fontFamily: 'sans-serif' }}>
-      <div ref={targetRef} style={{ width: '100%', border: '1px solid black', boxSizing: 'border-box' }}>
-        This element is on the edge of the document, making the highlighter overflow. <br />
-        It should instead shrink to fit inside the document.
-      </div>
-      <ElementHighlighter targetRef={targetRef} components={[MockTarget]} watchMotion />
-    </div>
-  );
-};
-
 export const FullscreenElement = () => {
   const targetRef = createRef<HTMLDivElement>();
 
@@ -104,3 +90,41 @@ export const FullscreenElement = () => {
     </div>
   );
 };
+
+const edgeStyles = { position: 'absolute', background: 'cyan', padding: 30 } as const;
+const centerStyles = {
+  top: { top: -30, left: '50%', transform: 'translate(-50%,0)' },
+  right: { right: -30, top: '50%', transform: 'translate(0, -50%)' },
+  bottom: { bottom: -30, left: '50%', transform: 'translate(-50%,0)' },
+  left: { left: -30, top: '50%', transform: 'translate(0, -50%)' },
+};
+
+export function OffscreenElements() {
+  const target01 = createRef<HTMLDivElement>();
+  const target02 = createRef<HTMLDivElement>();
+  const target03 = createRef<HTMLDivElement>();
+  const target04 = createRef<HTMLDivElement>();
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', height: '100%' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <div ref={target01} style={{ ...edgeStyles, ...centerStyles.top }}>
+          top
+        </div>
+        <div ref={target02} style={{ ...edgeStyles, ...centerStyles.right }}>
+          right
+        </div>
+        <div ref={target03} style={{ ...edgeStyles, ...centerStyles.bottom }}>
+          bottom
+        </div>
+        <div ref={target04} style={{ ...edgeStyles, ...centerStyles.left }}>
+          left
+        </div>
+        <ElementHighlighter targetRef={target01} components={[MockTarget]} watchMotion />
+        <ElementHighlighter targetRef={target02} components={[MockTarget]} watchMotion />
+        <ElementHighlighter targetRef={target03} components={[MockTarget]} watchMotion />
+        <ElementHighlighter targetRef={target04} components={[MockTarget]} watchMotion />
+      </div>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useHoverSelection } from '@teambit/react.ui.hover-selector';
 import { ComponentMetaHolder } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
-import { excludeHighlighterSelector } from '../ignore-highlighter';
+import { excludeHighlighterSelector, skipHighlighterSelector } from '../ignore-highlighter';
 import { MatchRule, ComponentMatchRule } from '../rule-matcher';
 import { bubbleToComponent } from './bubble-to-component';
 
@@ -56,8 +56,14 @@ function useHoverHandler({
       return;
     }
 
-    // skip DOM trees having 'data-ignore-component-highlight'
-    if (element.closest(`.${scopeClass} ${excludeHighlighterSelector}`)) return;
+    // clear when ancestor has 'data-ignore-component-highlight'
+    if (element.closest(`.${scopeClass} ${excludeHighlighterSelector}`)) {
+      onChange(undefined);
+      return;
+    }
+
+    // skip DOM trees having 'data-skip-component-highlight'
+    if (element.closest(`.${scopeClass} ${skipHighlighterSelector}`)) return;
 
     const result = bubbleToComponent(element, { elementRule: rule, componentRule });
     if (!result) return;

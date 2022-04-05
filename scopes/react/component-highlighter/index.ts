@@ -13,8 +13,9 @@ export type { ElementHighlighterProps, Placement, HighlightClasses } from './ele
 export {
   ExcludeHighlighter,
   excludeHighlighterAtt,
-  excludeHighlighterSelector,
   excludeHighlighterAttrName,
+  skipHighlighterAttr,
+  skipHighlighterAttrName,
 } from './ignore-highlighter';
 
 export type { MatchRule } from './rule-matcher';
