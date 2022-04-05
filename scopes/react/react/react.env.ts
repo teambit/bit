@@ -131,7 +131,7 @@ export class ReactEnv
    * @param jestModulePath
    * @returns
    */
-  getCjsJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
+  getCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.cjs.config');
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
@@ -142,7 +142,7 @@ export class ReactEnv
    * @param jestModulePath
    * @returns
    */
-  getEsmJestTester(jestConfigPath: string, jestModulePath?: string): Tester {
+  getEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.esm.config');
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
