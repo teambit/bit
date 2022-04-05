@@ -628,18 +628,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/diff"
     },
-    "modules/dom-to-react": {
-        "scope": "teambit.react",
-        "version": "0.0.489",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/dom-to-react",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "modules/fetch-html-from-url": {
         "scope": "teambit.html",
         "version": "0.0.96",
@@ -1044,12 +1032,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-filters"
     },
-    "ui/component-highlighter": {
-        "scope": "teambit.react",
-        "version": "0.0.514",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/component-highlighter"
-    },
     "ui/component-meta": {
         "scope": "teambit.component",
         "version": "0.0.24",
@@ -1313,12 +1295,6 @@
         "version": "0.0.179",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
-    },
-    "ui/hover-selector": {
-        "scope": "teambit.react",
-        "version": "0.0.165",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/hover-selector"
     },
     "ui/input/option-button": {
         "scope": "teambit.design",
