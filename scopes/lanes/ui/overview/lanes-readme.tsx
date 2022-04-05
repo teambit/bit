@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReactRouter } from '@teambit/react-router';
-import { LanesProvider, LaneComponentModel, useLanesContext, LaneModel, LaneDetails } from '@teambit/lanes.ui.lanes';
-import { ComponentProvider, useComponent, ComponentDescriptorProvider } from '@teambit/component';
+import { LanesProvider, useLanesContext, LaneModel, LaneDetails, LanesModel } from '@teambit/lanes.ui.lanes';
+import { ComponentProvider, useComponent, ComponentDescriptorProvider, ComponentModel } from '@teambit/component';
 import { Overview } from '@teambit/docs';
 import { Carousel } from '@teambit/design.content.carousel';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
@@ -14,7 +14,7 @@ import styles from './lanes-readme.module.scss';
 
 export type LaneReadmeProps = {
   host: string;
-  readmeComponent: LaneComponentModel;
+  readmeComponent: ComponentModel;
   currentLane: LaneModel;
 };
 
@@ -32,14 +32,14 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
   }
 
   if (currentLane) {
-    return <ReactRouter.Redirect to={`${currentLane.url}/~gallery`} />;
+    return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(currentLane.id)}/~gallery`} />;
   }
 
   return null;
 }
 
 function LaneReadme({ host, readmeComponent, currentLane }: LaneReadmeProps) {
-  const { component, componentDescriptor } = useComponent(host, readmeComponent.model.id);
+  const { component, componentDescriptor } = useComponent(host, readmeComponent.id);
 
   if (!component) {
     return null;
@@ -57,7 +57,7 @@ function LaneReadme({ host, readmeComponent, currentLane }: LaneReadmeProps) {
   );
 
   return (
-    <LanesProvider currentLaneId={undefined}>
+    <LanesProvider viewedLaneId={undefined}>
       <ComponentProvider component={component}>
         <ComponentDescriptorProvider componentDescriptor={componentDescriptor}>
           <div className={styles.readmeContainer}>
@@ -71,12 +71,12 @@ function LaneReadme({ host, readmeComponent, currentLane }: LaneReadmeProps) {
               <Carousel animation={true} className={styles.laneCarousel}>
                 {laneComponents.map((laneComponent) => (
                   <ComponentCard
-                    key={laneComponent.model.id.fullName}
-                    id={laneComponent.model.id.fullName}
-                    href={laneComponent.url}
-                    envIcon={laneComponent.model.environment?.icon}
-                    description={laneComponent.model.description}
-                    version={laneComponent.model.version === 'new' ? undefined : laneComponent.model.version}
+                    key={laneComponent.id.fullName}
+                    id={laneComponent.id.fullName}
+                    href={LanesModel.getLaneComponentUrl(laneComponent.id, currentLane.id)}
+                    envIcon={laneComponent.environment?.icon}
+                    description={laneComponent.description}
+                    version={laneComponent.version === 'new' ? undefined : laneComponent.version}
                     preview={<PreviewPlaceholder component={component} shouldShowPreview={true} />}
                   />
                 ))}
