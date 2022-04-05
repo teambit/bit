@@ -135,9 +135,15 @@ export class DocsMain {
     return this.patterns;
   }
 
-  getComponentDevPatterns(component: Component, env: Environment) {
-    const componentEnvDocsDevPatterns: string[] = env?.getDocsDevPatterns?.(component) || [];
-    return this.getPatterns().concat(componentEnvDocsDevPatterns);
+  getComponentDevPatterns(component: Component) {
+    const env = this.envs.calculateEnv(component).env;
+    const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
+    const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
+    console.log(
+      '🚀 ~ file: docs.main.runtime.ts ~ line 142 ~ DocsMain ~ getComponentDevPatterns ~ componentPattern',
+      componentPatterns
+    );
+    return componentPatterns;
   }
 
   getDevPatternToRegister() {

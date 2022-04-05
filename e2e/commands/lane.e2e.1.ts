@@ -103,7 +103,8 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('should allow deleting the lane readme on a successful merge', () => {
-        helper.command.mergeLane('dev', '--delete-readme');
+        const cmd = () => helper.command.mergeLane('dev', '--delete-readme');
+        expect(cmd).to.not.throw();
       });
     });
   });

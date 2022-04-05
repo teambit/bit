@@ -12,8 +12,8 @@ export class ReadmeEnv implements Environment {
   getDocsDevPatterns(component: Component): string[] {
     return this.getDevPatterns(component).concat(this.removeDocsDevPatterns());
   }
-  getDevPatterns(component: Component): string[] {
-    return component.mainFile.path ? [component.mainFile.path, 'index.*'] : ['index.*'];
+  getDevPatterns(component?: Component): string[] {
+    return component && component.mainFile.relative ? [component.mainFile.relative] : ['index.*'];
   }
   async __getDescriptor() {
     return {
