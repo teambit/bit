@@ -378,7 +378,7 @@ export class LaneReadmeRemoveCmd implements Command {
 
     if (result) {
       return chalk.green(
-        `the readme component has been successfully from the lane ${laneName || this.lanes.getCurrentLane()}`
+        `the readme component has been successfully removed from the lane ${laneName || this.lanes.getCurrentLane()}`
       );
     }
 
