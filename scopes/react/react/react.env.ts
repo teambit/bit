@@ -132,7 +132,9 @@ export class ReactEnv
    * @returns
    */
   getCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.cjs.config');
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    const config = jestConfigPath || defaultConfig;
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
@@ -143,7 +145,9 @@ export class ReactEnv
    * @returns
    */
   getEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.esm.config');
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const defaultConfig = join(pathToSource, './jest/jest.esm.config.js');
+    const config = jestConfigPath || defaultConfig;
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
