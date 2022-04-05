@@ -1390,7 +1390,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return graphFromFsBuilder.buildGraph(ids);
   }
 
-  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    excludeCore = false
+  ): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -1437,7 +1441,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
-    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    const afterExclusion = excludeCore ? allDefs.filter((def) => {
+      const isCore = coreAspectDefs.find(coreId => def.getId === coreId.getId);
+      const isTarget = idsToResolve.includes(def.getId || '');
+      if (isTarget) return true;
+      return (isCore && isTarget);
+    }) : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);

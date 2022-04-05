@@ -124,7 +124,7 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
-  private renderContext = ({ children }: { children: ReactNode }) => {
+  readonly renderContext = ({ children }: { children: ReactNode }) => {
     return <CommandBarContext.Provider value={this}>{children}</CommandBarContext.Provider>;
   };
 
@@ -142,10 +142,12 @@ export class CommandBarUI {
 
   constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
     this.addSearcher(this.commandSearcher);
-    pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
-      const keyboardEvent = new KeyboardEvent(e.type, e.data);
-      document.dispatchEvent(keyboardEvent);
-    });
+    if (pubSub) {
+      pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
+        const keyboardEvent = new KeyboardEvent(e.type, e.data);
+        document.dispatchEvent(keyboardEvent);
+      });
+    }
   }
 
   static dependencies = [UIAspect, PubsubAspect];
@@ -165,10 +167,12 @@ export class CommandBarUI {
       keybinding: openCommandBarKeybinding,
     });
 
-    uiUi.registerHudItem(commandBar.getCommandBar());
-    uiUi.registerRenderHooks({
-      reactContext: commandBar.renderContext,
-    });
+    if (uiUi) {
+      uiUi.registerHudItem(commandBar.getCommandBar());
+      uiUi.registerRenderHooks({
+        reactContext: commandBar.renderContext,
+      });  
+    }
 
     return commandBar;
   }
