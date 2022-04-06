@@ -86,7 +86,7 @@ export async function mergeLanes({
   let deleteResults = {};
 
   if (deleteReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-    await consumer.onDestroy();
+    await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
 
     const readmeComponentId = [
       otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),
