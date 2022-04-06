@@ -156,7 +156,7 @@ export class LanesMain {
       ...options,
     });
     await this.workspace.consumer.onDestroy();
-    await this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
+    this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
     return mergeResults;
   }
 
