@@ -36,6 +36,8 @@ export default class LaneId {
 }
 
 export class RemoteLaneId extends LaneId {
+  readonly name: string;
+  readonly scope: string;
   constructor({ name, scope }: { name: string; scope: string }) {
     if (!scope) throw new TypeError('RemoteLaneId expects to get scope');
     super({ name, scope });
