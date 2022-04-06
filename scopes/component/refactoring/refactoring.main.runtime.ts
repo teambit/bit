@@ -10,14 +10,18 @@ import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 export class RefactoringMain {
   constructor(private componentMain: ComponentMain, private pkg: PkgMain) {}
 
-  async refactorDependencyName(components: Component[], oldId: ComponentID, newId: ComponentID): Promise<Component[]> {
-    const host = this.componentMain.getHost();
-    const oldComponent = await host.get(oldId);
-    if (!oldComponent) throw new Error(`unable to find the old-component: "${oldId.toString()}"`);
-    const newComponent = await host.get(newId);
-    if (!newComponent) throw new Error(`unable to find the new-component: "${newId.toString()}"`);
-    const oldPackageName = this.pkg.getPackageName(oldComponent);
-    const newPackageName = this.pkg.getPackageName(newComponent);
+  /**
+   * refactor the dependency name of a component.
+   * oldId and newId can be either a component-id or a package-name.
+   * this method changes the source code of the component, but doesn't write to the filesystem.
+   */
+  async refactorDependencyName(
+    components: Component[],
+    oldId: ComponentID | string,
+    newId: ComponentID | string
+  ): Promise<Component[]> {
+    const oldPackageName = await this.getPackageNameByUnknownId(oldId);
+    const newPackageName = await this.getPackageNameByUnknownId(newId);
     if (oldPackageName === newPackageName) {
       throw new BitError(`refactoring: the old package-name and the new package-name are the same: ${oldPackageName}`);
     }
@@ -28,6 +32,36 @@ export class RefactoringMain {
       })
     );
     return compact(results);
+  }
+
+  private async getPackageNameByUnknownId(id: ComponentID | string): Promise<string> {
+    if (id instanceof ComponentID) {
+      return this.getPackageNameByComponentID(id);
+    }
+    if (typeof id !== 'string') {
+      throw new Error(`getPackageNameByUnknownId expects id to be either string or ComponentID, got ${typeof id}`);
+    }
+    try {
+      const host = this.componentMain.getHost();
+      const componentID = await host.resolveComponentId(id);
+      return await this.getPackageNameByComponentID(componentID);
+    } catch (err) {
+      if (!this.isValidPackageName(id)) {
+        throw new BitError(`refactoring: the id "${id}" is neither a valid package-name nor a valid component-id`);
+      }
+      return id; // assume this is the package name
+    }
+  }
+
+  private async getPackageNameByComponentID(id: ComponentID) {
+    const host = this.componentMain.getHost();
+    const comp = await host.get(id);
+    if (!comp) throw new Error(`unable to find a component: "${id.toString()}"`);
+    return this.pkg.getPackageName(comp);
+  }
+
+  private isValidPackageName(name: string): boolean {
+    return name.length > 0 && name.length <= 214 && !name.includes('/') && !name.includes('\\') && !name.includes('..');
   }
 
   private async replaceString(comp: Component, oldString: string, newString: string): Promise<boolean> {

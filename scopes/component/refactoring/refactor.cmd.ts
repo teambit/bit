@@ -11,15 +11,14 @@ export class DependencyNameRefactorCmd implements Command {
   options = [] as CommandOptions;
   group = 'development';
   // extendedDescription = `${PATTERN_HELP('refactor dependency-name')}`;
+  extendedDescription = `the "<old-id>" and "<new-id>" arguments can be either a component-id or a package-name.`;
 
   constructor(private refactoringMain: RefactoringMain, private componentMain: ComponentMain) {}
 
   async report([oldId, newId]: [string, string]) {
     const host = this.componentMain.getHost();
-    const oldComponentId = await host.resolveComponentId(oldId);
-    const newComponentId = await host.resolveComponentId(newId);
     const allComps = await host.list();
-    const changed = await this.refactoringMain.refactorDependencyName(allComps, oldComponentId, newComponentId);
+    const changed = await this.refactoringMain.refactorDependencyName(allComps, oldId, newId);
     return `the following components have been changed:\n${changed.map((c) => c.id.toString()).join('\n')}`;
   }
 }
