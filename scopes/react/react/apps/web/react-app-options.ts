@@ -36,10 +36,13 @@ export type ReactAppOptions = {
 
   /**
    * decide whether to prerender your app. accepts an array of routes. if none, prerender would not apply.
-   * e.g ['/plugins', '/learn', '/docs/quick-start]
+   *  e.g ['/plugins', '/learn', '/docs/quick-start]
+   * You can also pass a configuration for the proxy, please refer here: https://github.com/webpack/docs/wiki/webpack-dev-server#proxy
+   *
    */
   prerender?: {
     routes?: string[];
+    server?: { proxy: { [key: string]: { target: string; pathRewrite: { [key: string]: string } } } };
   };
 
   /**

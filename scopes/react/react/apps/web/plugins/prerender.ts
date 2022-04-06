@@ -1,13 +1,17 @@
 import { join } from 'path';
 import PrerenderSPAPlugin from '@dreysolano/prerender-spa-plugin';
+import { ReactAppOptions } from '../react-app-options';
 
-export const prerenderSPAPlugin = (prerenderRoutes: string[], staticDir: string) => {
+export const prerenderSPAPlugin = (prerender: ReactAppOptions['prerender'], staticDir: string) => {
   return new PrerenderSPAPlugin({
     staticDir,
-    routes: prerenderRoutes,
+    routes: prerender?.routes,
     postProcess(renderedRoute: any) {
       renderedRoute.outputPath = join(staticDir, `${renderedRoute.originalRoute}.html`);
       return renderedRoute;
+    },
+    server: {
+      ...prerender?.server,
     },
   });
 };
