@@ -4,7 +4,7 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
@@ -97,7 +97,7 @@ export class HtmlMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.htmlEnv.getDependencies()),
     });

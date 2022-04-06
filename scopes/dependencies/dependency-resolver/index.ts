@@ -49,6 +49,9 @@ export {
   VariantPolicy,
   VariantPolicyFactory,
   SerializedVariantPolicy,
+  EnvPolicyConfigObject,
+  EnvPolicy,
+  PeersAutoDetectPolicy,
 } from './policy';
 export {
   CoreAspectLinkResult,
@@ -59,7 +62,8 @@ export {
   NestedNMDepsLinksResult,
   LinkToDirResult,
 } from './dependency-linker';
-export { InstallOptions } from './dependency-installer';
+export { InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource } from './policy/variant-policy/variant-policy';
 export { OutdatedPkg } from './get-all-policy-pkgs';
+export { extendWithComponentsFromDir } from './extend-with-components-from-dir';

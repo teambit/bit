@@ -6,7 +6,7 @@ import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config`);
+    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/config/bit-config`);
   }
   return Config.load().then((config) => {
     config.set(key, val);
@@ -143,5 +143,5 @@ function invalidateCache() {
 }
 
 function toEnvVariableName(configName: string): string {
-  return `${ENV_VARIABLE_CONFIG_PREFIX}${configName.replace(/\./, '_').toUpperCase()}`;
+  return `${ENV_VARIABLE_CONFIG_PREFIX}${configName.replace(/\./g, '_').toUpperCase()}`;
 }

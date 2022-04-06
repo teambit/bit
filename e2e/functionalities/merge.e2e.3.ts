@@ -106,8 +106,8 @@ describe('merge functionality', function () {
           expect(fileContent).to.have.string('=======');
         });
         it('should label the conflicts segments according to the versions', () => {
-          expect(fileContent).to.have.string('<<<<<<< 0.0.2'); // current-change
-          expect(fileContent).to.have.string('>>>>>>> 0.0.1 modified'); // incoming-change
+          expect(fileContent).to.have.string('<<<<<<< 0.0.1 modified'); // current-change
+          expect(fileContent).to.have.string('>>>>>>> 0.0.2'); // incoming-change
         });
         it('should show the component as modified', () => {
           const statusOutput = helper.command.runCmd('bit status');

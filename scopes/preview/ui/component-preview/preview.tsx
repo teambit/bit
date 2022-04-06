@@ -1,8 +1,9 @@
-import React, { createRef, IframeHTMLAttributes } from 'react';
+import React, { IframeHTMLAttributes } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
 
 import { toPreviewUrl } from './urls';
+import useIframeContentHeight from './use-iframe-content-height';
 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -24,25 +25,33 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   queryParams?: string | string[];
 
   /**
-   * enable/disable hot reload for the composition preview.
+   * establish a pubsub connection to the iframe,
+   * allowing sending and receiving messages
    */
-  hotReload?: boolean;
+  pubsub?: boolean;
+
+  /**
+   * is preview being rendered in full height and should fit view height to content.
+   */
+  fullContentHeight?: boolean;
 }
 
 /**
  * renders a preview of a component.
  */
-// TODO - Kutner fix unused var - 'hotReload' should be used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ComponentPreview({ component, previewName, queryParams, hotReload, ...rest }: ComponentPreviewProps) {
-  const ref = createRef<HTMLIFrameElement>();
-  usePubSubIframe(ref);
+export function ComponentPreview({
+  component,
+  previewName,
+  queryParams,
+  pubsub = true,
+  fullContentHeight = false,
+  ...rest
+}: ComponentPreviewProps) {
+  const [iframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
+  usePubSubIframe(pubsub ? iframeRef : undefined);
 
   const url = toPreviewUrl(component, previewName, queryParams);
-
-  return <iframe {...rest} ref={ref} src={url} />;
+  return (
+    <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
+  );
 }
-
-ComponentPreview.defaultProps = {
-  hotReload: true,
-};

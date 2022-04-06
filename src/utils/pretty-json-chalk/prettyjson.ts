@@ -259,8 +259,8 @@ function renderString(data, options, indentation) {
     } else {
       beginingOfJson = data.indexOf('[');
     }
-    output += `${data.substr(0, beginingOfJson)}\n`;
-    data = data.substr(beginingOfJson);
+    output += `${data.substring(0, beginingOfJson)}\n`;
+    data = data.slice(beginingOfJson);
   }
 
   try {

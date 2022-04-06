@@ -1,5 +1,6 @@
 import parsePackageName from 'parse-package-name';
 import {
+  extendWithComponentsFromDir,
   WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
@@ -69,13 +70,16 @@ export class YarnPackageManager implements PackageManager {
 
     const rootDirPath = npath.toPortablePath(rootDir);
     const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
-    const config = await this.computeConfiguration(rootDirPath, cacheDir, installOptions.nodeLinker);
+    const config = await this.computeConfiguration(rootDirPath, cacheDir, {
+      nodeLinker: installOptions.nodeLinker,
+      packageManagerConfigRootDir: installOptions.packageManagerConfigRootDir,
+    });
 
     const project = new Project(rootDirPath, { configuration: config });
 
-    const rootManifest = workspaceManifest.toJson({
-      includeDir: true,
+    const rootManifest = workspaceManifest.toJsonWithDir({
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: installOptions.installPeersFromEnvs,
     }).manifest;
 
     // @ts-ignore
@@ -88,6 +92,7 @@ export class YarnPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+    await extendWithComponentsFromDir(rootDir, manifests);
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
@@ -301,18 +306,27 @@ export class YarnPackageManager implements PackageManager {
   private async computeConfiguration(
     rootDirPath: PortablePath,
     cacheFolder: string,
-    nodeLinker?: 'hoisted' | 'isolated'
+    options: {
+      nodeLinker?: 'hoisted' | 'isolated';
+      packageManagerConfigRootDir?: string;
+    }
   ): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const pluginConfig = getPluginConfiguration();
-    const config = await Configuration.find(rootDirPath, pluginConfig);
+    let startingCwd: PortablePath;
+    if (options.packageManagerConfigRootDir) {
+      startingCwd = npath.toPortablePath(options.packageManagerConfigRootDir);
+    } else {
+      startingCwd = rootDirPath;
+    }
+    const config = await Configuration.find(startingCwd, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
     const defaultRegistry = registries.defaultRegistry;
     const defaultAuthProp = this.getAuthProp(defaultRegistry);
 
     const data = {
-      nodeLinker: nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
+      nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
       pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
@@ -394,7 +408,9 @@ export class YarnPackageManager implements PackageManager {
     let range = 'npm:*';
     const rootDirPath = npath.toPortablePath(options.rootDir);
     const cacheDir = this.getCacheFolder(options.cacheRootDir);
-    const config = await this.computeConfiguration(rootDirPath, cacheDir);
+    const config = await this.computeConfiguration(rootDirPath, cacheDir, {
+      packageManagerConfigRootDir: options.packageManagerConfigRootDir,
+    });
 
     const project = new Project(rootDirPath, { configuration: config });
     const report = new LightReport({ configuration: config, stdout: process.stdout });

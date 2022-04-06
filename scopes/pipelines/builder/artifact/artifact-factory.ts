@@ -15,7 +15,7 @@ export const DEFAULT_CONTEXT = 'component';
 export type ArtifactMap = ComponentMap<ArtifactList>;
 
 export class ArtifactFactory {
-  private resolvePaths(root: string, def: ArtifactDefinition): string[] {
+  resolvePaths(root: string, def: ArtifactDefinition): string[] {
     const patternsFlattened = flatten(def.globPatterns);
     const paths = globby.sync(patternsFlattened, { cwd: root });
     return paths;
@@ -43,8 +43,9 @@ export class ArtifactFactory {
     task: BuildTask
   ): Artifact | undefined {
     const storageResolver = this.getStorageResolver(def);
-    const rootDir = this.getArtifactContextPath(context, component, def);
-    const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
+    const contextPath = this.getArtifactContextPath(context, component, def);
+    const rootDir = this.getRootDir(contextPath, def);
+    const paths = this.resolvePaths(rootDir, def);
     if (!paths || !paths.length) {
       return undefined;
     }
@@ -64,7 +65,7 @@ export class ArtifactFactory {
     });
   }
 
-  private getRootDir(rootDir: string, def: ArtifactDefinition) {
+  getRootDir(rootDir: string, def: ArtifactDefinition) {
     if (!def.rootDir) return rootDir;
     return join(rootDir, def.rootDir);
   }

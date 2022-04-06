@@ -47,7 +47,7 @@ export class BuildPipe {
   private failedTasks: BuildTask[] = [];
   private failedDependencyTask: BuildTask | undefined;
   private longProcessLogger: LongProcessLogger;
-  private taskResults: TaskResults[];
+  private taskResults: TaskResults[] = [];
   constructor(
     /**
      * array of services to apply on the components.
@@ -56,15 +56,18 @@ export class BuildPipe {
     readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
     readonly artifactFactory: ArtifactFactory,
-    previousTaskResults?: TaskResults[]
-  ) {
-    this.taskResults = previousTaskResults || [];
+    private previousTaskResults?: TaskResults[]
+  ) {}
+
+  get allTasksResults(): TaskResults[] {
+    return [...(this.previousTaskResults || []), ...(this.taskResults || [])];
   }
 
   /**
    * execute a pipeline of build tasks.
    */
   async execute(): Promise<TaskResultsList> {
+    this.addSignalListener();
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
     await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
@@ -73,6 +76,19 @@ export class BuildPipe {
     await this.executePostBuild(tasksResultsList);
 
     return tasksResultsList;
+  }
+
+  /**
+   * for some reason, some tasks (such as typescript compilation) ignore ctrl+C. this fixes it.
+   */
+  private addSignalListener() {
+    process.on('SIGTERM', () => {
+      process.exit();
+    });
+
+    process.on('SIGINT', () => {
+      process.exit();
+    });
   }
 
   private async executePreBuild() {
@@ -133,7 +149,7 @@ export class BuildPipe {
   private updateFailedDependencyTask(task: BuildTask) {
     if (!this.failedDependencyTask && this.failedTasks.length && task.dependencies) {
       task.dependencies.forEach((dependency) => {
-        const { aspectId, name } = BuildTaskHelper.deserializeId(dependency);
+        const { aspectId, name } = BuildTaskHelper.deserializeIdAllowEmptyName(dependency);
         this.failedDependencyTask = this.failedTasks.find((failedTask) => {
           if (name && name !== failedTask.name) return false;
           return aspectId === failedTask.aspectId;
@@ -152,7 +168,7 @@ export class BuildPipe {
   private getBuildContext(envId: string) {
     const buildContext = this.envsBuildContext[envId];
     if (!buildContext) throw new Error(`unable to find buildContext for ${envId}`);
-    buildContext.previousTasksResults = this.taskResults;
+    buildContext.previousTasksResults = this.allTasksResults;
     return buildContext;
   }
 

@@ -1,4 +1,6 @@
 import * as babel from '@babel/core';
+import multimatch from 'multimatch';
+import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
@@ -20,6 +22,7 @@ export class BabelCompiler implements Compiler {
   distGlobPatterns: string[];
   shouldCopyNonSupportedFiles: boolean;
   artifactName: string;
+  supportedFilesGlobPatterns: string[] | null;
   constructor(
     readonly id: string,
     private logger: Logger,
@@ -32,6 +35,9 @@ export class BabelCompiler implements Compiler {
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
+    this.supportedFilesGlobPatterns = options.supportedFilesGlobPatterns
+      ? flatten(options.supportedFilesGlobPatterns)
+      : null;
   }
 
   displayName = 'Babel';
@@ -39,6 +45,10 @@ export class BabelCompiler implements Compiler {
 
   version() {
     return this.babelModule.version;
+  }
+
+  getDistDir() {
+    return this.distDir;
   }
 
   /**
@@ -92,32 +102,34 @@ export class BabelCompiler implements Compiler {
     await fs.ensureDir(path.join(capsule.path, this.distDir));
     await Promise.all(
       sourceFiles.map(async (filePath) => {
-        const absoluteFilePath = path.join(capsule.path, filePath);
-        this.options.babelTransformOptions ||= {};
-        this.options.babelTransformOptions.sourceFileName = path.basename(filePath);
-        this.options.babelTransformOptions.filename = path.basename(filePath);
-        try {
-          const result = await transpileFilePathAsync(
-            absoluteFilePath,
-            this.options.babelTransformOptions || {},
-            this.babelModule
-          );
-          if (!result || !result.length) {
-            this.logger.debug(
-              `getting an empty response from Babel for the file ${filePath}. it might be configured to be ignored`
+        if (this.isFileSupported(filePath)) {
+          const absoluteFilePath = path.join(capsule.path, filePath);
+          this.options.babelTransformOptions ||= {};
+          this.options.babelTransformOptions.sourceFileName = path.basename(filePath);
+          this.options.babelTransformOptions.filename = path.basename(filePath);
+          try {
+            const result = await transpileFilePathAsync(
+              absoluteFilePath,
+              this.options.babelTransformOptions || {},
+              this.babelModule
             );
-            return;
+            if (!result || !result.length) {
+              this.logger.debug(
+                `getting an empty response from Babel for the file ${filePath}. it might be configured to be ignored`
+              );
+              return;
+            }
+            // Make sure to get only the relative path of the dist because we want to add the dist dir.
+            // If we use the result outputPath we will get an absolute path here
+            const distPath = this.replaceFileExtToJs(filePath);
+            const distPathMap = `${distPath}.map`;
+            await fs.outputFile(path.join(capsule.path, this.distDir, distPath), result[0].outputText);
+            if (result.length > 1) {
+              await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
+            }
+          } catch (err: any) {
+            componentResult.errors?.push(err);
           }
-          // Make sure to get only the relative path of the dist because we want to add the dist dir.
-          // If we use the result outputPath we will get an absolute path here
-          const distPath = this.replaceFileExtToJs(filePath);
-          const distPathMap = `${distPath}.map`;
-          await fs.outputFile(path.join(capsule.path, this.distDir, distPath), result[0].outputText);
-          if (result.length > 1) {
-            await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
-          }
-        } catch (err: any) {
-          componentResult.errors?.push(err);
         }
       })
     );
@@ -146,6 +158,9 @@ export class BabelCompiler implements Compiler {
    * whether babel is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
+    if (this.supportedFilesGlobPatterns) {
+      return isFileSupported(filePath) && !!multimatch(filePath, this.supportedFilesGlobPatterns).length;
+    }
     return isFileSupported(filePath);
   }
 

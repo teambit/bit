@@ -117,10 +117,10 @@ export class LaneDiffGenerator {
         if (currentLane.isDefault()) {
           throw new Error(`you are currently on the default branch, to run diff between lanes, please specify them`);
         }
-        return { toLaneName: currentLane.name };
+        return { toLaneName: currentLane.name, fromLaneName: DEFAULT_LANE };
       }
       if (values.length === 1) {
-        const fromLaneName = currentLane.isDefault() ? undefined : currentLane.name;
+        const fromLaneName = currentLane.isDefault() ? DEFAULT_LANE : currentLane.name;
         return { fromLaneName, toLaneName: values[0] };
       }
       return { fromLaneName: values[0], toLaneName: values[1] };
@@ -129,7 +129,7 @@ export class LaneDiffGenerator {
     if (values.length < 1) {
       throw new Error(`expect "values" to include at least one arg - the lane name`);
     }
-    const fromLaneName = values.length === 2 ? values[0] : undefined;
+    const fromLaneName = values.length === 2 ? values[0] : DEFAULT_LANE;
     const toLaneName = values.length === 2 ? values[1] : values[0];
     return { fromLaneName, toLaneName };
   }

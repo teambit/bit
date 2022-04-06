@@ -6,8 +6,8 @@ import { TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
 
 export type PipelineReport = {
-  taskId: string;
-  taskName?: string;
+  taskId: string; // task aspect-id
+  taskName: string;
   taskDescription?: string;
   startTime?: number;
   endTime?: number;

@@ -5,7 +5,7 @@ import { Capsule } from '@teambit/isolator';
 
 export async function writeNpmIgnore(capsule: Capsule, envs: EnvsMain): Promise<void> {
   const env = envs.getEnv(capsule.component).env as PackageEnv;
-  const npmIgnoreEntries = env.getNpmIgnore?.();
+  const npmIgnoreEntries = env.getNpmIgnore?.({ component: capsule.component, capsule });
   if (!npmIgnoreEntries || !npmIgnoreEntries.length) {
     return;
   }

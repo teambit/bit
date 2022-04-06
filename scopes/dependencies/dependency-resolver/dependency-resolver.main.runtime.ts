@@ -4,7 +4,7 @@ import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambi
 import type { ConfigMain } from '@teambit/config';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -58,6 +58,7 @@ import {
   SerializedVariantPolicy,
 } from './policy';
 import {
+  PackageImportMethod,
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
@@ -75,8 +76,13 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
+import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
 
+/**
+ * @deprecated use BIT_CLOUD_REGISTRY instead
+ */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
+export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -197,11 +203,23 @@ export interface DependencyResolverWorkspaceConfig {
    */
   overrides?: Record<string, string>;
 
+  /**
+   * This is similar to overrides, but will only affect installation in capsules.
+   * In case overrides is configured and this not, the regular overrides will affect capsules as well.
+   * in case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.
+   */
+  capsulesOverrides?: Record<string, string>;
+
   /*
    * Defines what linker should be used for installing Node.js packages.
    * Supported values are hoisted and isolated.
    */
   nodeLinker?: 'hoisted' | 'isolated';
+
+  /*
+   * Controls the way packages are imported from the store.
+   */
+  packageImportMethod?: PackageImportMethod;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -827,6 +845,27 @@ export class DependencyResolverMain {
     return this.rootPolicyRegistry.register(policy);
   }
 
+  async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
+    const env = this.envs.getEnv(component).env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  private async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
+    if (env.getDependencies && typeof env.getDependencies === 'function') {
+      const policiesFromEnvConfig = await env.getDependencies();
+      if (policiesFromEnvConfig) {
+        const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(policiesFromEnvConfig);
+        return allPoliciesFromEnv;
+      }
+    }
+    return new EnvPolicyFactory().getEmpty();
+  }
+
   /**
    * Merge the dependencies provided by:
    * 1. envs configured in the component - via dependencies method
@@ -836,16 +875,10 @@ export class DependencyResolverMain {
    */
   async mergeVariantPolicies(configuredExtensions: ExtensionDataList): Promise<VariantPolicy> {
     const variantPolicyFactory = new VariantPolicyFactory();
-    let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
-    if (env.getDependencies && typeof env.getDependencies === 'function') {
-      const policiesFromEnvConfig = await env.getDependencies();
-      if (policiesFromEnvConfig) {
-        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig, 'env');
-      }
-    }
+    const policiesFromEnv: VariantPolicy = (await this.getComponentEnvPolicyFromExtension(configuredExtensions))
+      ?.variantPolicy;
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
@@ -982,6 +1015,9 @@ export class DependencyResolverMain {
       });
     };
     if (manifest.dependencies) {
+      // TODO: add a way to access it properly with harmony (currently it's readonly)
+      // @ts-ignore
+      manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
     // TODO: add a function to get all runtimes and not access private member
@@ -990,10 +1026,14 @@ export class DependencyResolverMain {
       // @ts-ignore
       await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
+          // TODO: add a way to access it properly with harmony (currently it's readonly)
+          // @ts-ignore
+          runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
         }
       });
     }
+
     return manifest;
   }
 
@@ -1006,7 +1046,7 @@ export class DependencyResolverMain {
     componentPoliciesById,
   }: {
     rootDir: string;
-    variantPoliciesByPatterns: Record<string, any>;
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
   }): Promise<OutdatedPkg[]> {
     const allPkgs = getAllPolicyPkgs({
@@ -1170,6 +1210,10 @@ export class DependencyResolverMain {
     DependencyResolver.registerWorkspacePolicyGetter(() => {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
+    });
+    DependencyResolver.registerHarmonyEnvPeersPolicyGetter(async (configuredExtensions: ExtensionDataList) => {
+      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
+      return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));

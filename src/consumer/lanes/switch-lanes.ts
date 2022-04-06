@@ -11,12 +11,16 @@ import { LaneComponent } from '../../scope/models/lane';
 import { Tmp } from '../../scope/repositories';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
-import { applyVersion, CheckoutProps, ComponentStatus, deleteFilesIfNeeded } from '../versions-ops/checkout-version';
+import {
+  applyVersion,
+  CheckoutProps,
+  ComponentStatus,
+  deleteFilesIfNeeded,
+  markFilesToBeRemovedIfNeeded,
+} from '../versions-ops/checkout-version';
 import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
-import { pathNormalizeToLinux } from '../../utils/path';
-import { FileStatus } from '../versions-ops/merge-version/merge-version';
 
 export type SwitchProps = {
   laneName: string;
@@ -56,26 +60,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
-    const bitId = next.id.toString();
-    if (!accum[bitId]) accum[bitId] = next;
-    return accum;
-  }, {});
-
-  componentsResults.forEach((componentResult) => {
-    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const bitId = componentResult.applyVersionResult.id.toString();
-    const succeededComponent = succeededComponentsByBitId[bitId];
-    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
-
-    filePathsFromFS.forEach((file) => {
-      const filename = pathNormalizeToLinux(file.relative);
-      if (!existingFilePathsFromModel[filename]) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingFilePathsFromModel[filename] = FileStatus.removed;
-      }
-    });
-  });
+  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
   await saveLanesData();
 
@@ -138,12 +123,6 @@ async function saveCheckedOutLaneInfo(
     if (opts.remoteLaneScope) {
       consumer.bitMap.setRemoteLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
       // add versions to lane
-    } else {
-      const trackData = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
-      if (!trackData) {
-        return; // the lane was never exported
-      }
-      consumer.bitMap.setRemoteLane(RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope));
     }
   };
   const throwIfLaneExists = async () => {
@@ -153,6 +132,7 @@ async function saveCheckedOutLaneInfo(
 the lane already exists. please switch to the lane and merge`);
     }
   };
+
   if (opts.remoteLaneScope) {
     await throwIfLaneExists();
     await createNewLane(consumer, opts.localLaneName as string, opts.laneComponents);
@@ -199,8 +179,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
     }
-    // @ts-ignore
-    return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+  }
+  if (!existingBitMapId.hasVersion()) {
+    // happens when switching from main to a lane and a component was snapped on the lane.
+    // in the .bitmap file, the version is "latest" or empty. so we just need to write the component according to the
+    // model. we don't care about the componentFromFS
+    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
@@ -226,16 +211,16 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
       );
     }
 
-    const currentComponent: Version = await modelComponent.loadVersion(
+    const otherComponent: Version = await modelComponent.loadVersion(
       existingBitMapId.version as string, // we are here because the head is same as main. so, existingBitMapId.version must be set
       consumer.scope.objects
     );
     mergeResults = await threeWayMerge({
       consumer,
-      otherComponent: component,
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      currentLabel: version,
+      otherComponent,
+      otherLabel: version,
+      currentComponent: component,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
   }

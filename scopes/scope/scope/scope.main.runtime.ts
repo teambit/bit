@@ -44,7 +44,7 @@ import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-sc
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { Compiler } from '@teambit/compiler';
-import { compact, uniq, slice, uniqBy, difference } from 'lodash';
+import { compact, uniq, slice, uniqBy, difference, groupBy } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -224,6 +224,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   clearCache() {
+    this.logger.debug('clearing the components and the legacy cache');
     this.componentLoader.clearCache();
     this.legacyScope.objects.clearCache();
   }
@@ -359,7 +360,35 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+ids: ${ids.join(', ')}
+needed-for: ${neededFor?.toString() || '<unknown>'}`);
+    const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    return envsManifestsIds.concat(otherManifestsIds);
+  }
+
+  /**
+   * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
+   * @param ids
+   */
+  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs: string[]; other: string[] }> {
+    const components = await this.getNonLoadedAspects(ids);
+    const envsIds = uniq(
+      components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId))
+    );
+    const grouped = groupBy(ids, (id) => {
+      if (envsIds.includes(id)) return 'envs';
+      return 'other';
+    });
+    return grouped as { envs: string[]; other: string[] };
+  }
+
+  private async getManifestsAndLoadAspects(ids: string[], throwOnError = false): Promise<string[]> {
     const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     return compact(scopeManifests.map((manifest) => manifest.id));
@@ -368,7 +397,10 @@ export class ScopeMain implements ComponentFactory {
   async getManifestsGraphRecursively(
     ids: string[],
     visited: string[] = [],
-    throwOnError = false
+    throwOnError = false,
+    opts: {
+      packageManagerConfigRootDir?: string;
+    } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
@@ -377,7 +409,7 @@ export class ScopeMain implements ComponentFactory {
     }
     const components = await this.getNonLoadedAspects(nonVisitedId);
     visited.push(...nonVisitedId);
-    const manifests = await this.requireAspects(components, throwOnError);
+    const manifests = await this.requireAspects(components, throwOnError, opts);
     const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
       depsToLoad.push(...(manifest.dependencies || []));
@@ -425,17 +457,24 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async getResolvedAspects(components: Component[], { skipIfExists = true } = {}): Promise<RequireableComponent[]> {
-    if (!components.length) return [];
+  async getResolvedAspects(
+    components: Component[],
+    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
+  ): Promise<RequireableComponent[]> {
+    if (!components || !components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
         baseDir: this.getAspectCapsulePath(),
-        skipIfExists,
+        skipIfExists: opts?.skipIfExists ?? true,
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: {
+          copyPeerToRuntimeOnRoot: true,
+          dedupe: false,
+          packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
+        },
       },
       this.legacyScope
     );
@@ -507,8 +546,12 @@ export class ScopeMain implements ComponentFactory {
     return undefined;
   }
 
-  async requireAspects(components: Component[], throwOnError = false): Promise<Array<ExtensionManifest | Aspect>> {
-    const requireableExtensions = await this.getResolvedAspects(components);
+  async requireAspects(
+    components: Component[],
+    throwOnError = false,
+    opts: { packageManagerConfigRootDir?: string } = {}
+  ): Promise<Array<ExtensionManifest | Aspect>> {
+    const requireableExtensions = await this.getResolvedAspects(components, opts);
     if (!requireableExtensions) {
       return [];
     }
@@ -576,9 +619,9 @@ export class ScopeMain implements ComponentFactory {
         // for some reason this needs to be false, otherwise tagging components in some workspaces
         // result in error during Preview task:
         // "No matching version found for <some-component-on-the-workspace>"
-        seedersOnly: false,
+        seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
         host: this,
       },
       this.legacyScope
@@ -614,7 +657,6 @@ export class ScopeMain implements ComponentFactory {
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
-
     return defs;
   }
 
@@ -688,8 +730,12 @@ export class ScopeMain implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
-    const componentsIds = await this.listIds(includeCache);
+  async list(
+    filter?: { offset: number; limit: number },
+    includeCache = false,
+    includeFromLanes = false
+  ): Promise<Component[]> {
+    const componentsIds = await this.listIds(includeCache, includeFromLanes);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
@@ -709,12 +755,14 @@ export class ScopeMain implements ComponentFactory {
    * get ids of all scope components.
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
-  async listIds(includeCache = false): Promise<ComponentID[]> {
+  async listIds(includeCache = false, includeFromLanes = false): Promise<ComponentID[]> {
     const allModelComponents = await this.legacyScope.list();
-    const modelComponentsToList = includeCache
-      ? allModelComponents
-      : allModelComponents.filter((modelComponent) => this.exists(modelComponent));
-
+    const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
+      const cacheFilter = includeCache ? true : this.exists(modelComponent);
+      const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
+      return cacheFilter && lanesFilter;
+    };
+    const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
     const ids = modelComponentsToList.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );
@@ -787,8 +835,8 @@ export class ScopeMain implements ComponentFactory {
     return this.componentLoader.getSnap(id, hash);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id._legacy);
+  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
+    return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
   }
 
   /**
@@ -861,14 +909,18 @@ export class ScopeMain implements ComponentFactory {
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true);
+    await this.loadAspects(aspectIds, true, id);
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true);
+    await this.loadAspects(aspectIds, true, component.id);
+  }
+
+  async isModified(): Promise<boolean> {
+    return false;
   }
 
   /**

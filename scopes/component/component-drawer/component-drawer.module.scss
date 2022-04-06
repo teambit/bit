@@ -1,0 +1,62 @@
+.drawerContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyDrawer {
+  padding: 8px 8px 0 28px;
+  display: block;
+}
+
+.widgetIcon {
+  padding: 4px;
+  border-radius: 8px;
+  align-items: center;
+  display: flex;
+  margin-left: 4px;
+
+  &:hover,
+  &.open {
+    background-color: var(--bit-border-color-lightest, #ededed);
+  }
+  img {
+    width: 16px;
+  }
+  &:active img,
+  &.open img {
+    filter: invert(38%) sepia(33%) saturate(7140%) hue-rotate(234deg) brightness(96%) contrast(87%);
+  }
+}
+
+.filterWidgetIcon {
+  margin-right: 8px;
+}
+
+.filtersContainer {
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 250ms ease-in-out;
+  max-height: 0;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+
+  &.open {
+    opacity: 1;
+    max-height: 100%;
+  }
+}
+
+.filter {
+  display: none;
+  &.open {
+    display: flex;
+    flex-direction: row;
+    font-size: 14px;
+    justify-content: space-between;
+    margin: 4px 8px;
+  }
+}
+
+.drawerTreeContainer {
+  height: 100%;
+  overflow-y: auto;
+}

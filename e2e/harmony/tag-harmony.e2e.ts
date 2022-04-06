@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
+import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -361,6 +362,25 @@ describe('tag components on Harmony', function () {
       it('should use the data in the .bitmap file and tag as a pre-release version', () => {
         expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
       });
+    });
+  });
+  describe('builder data saved in the model', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+    });
+    it('should not save the build data twice', () => {
+      const comp1 = helper.command.catComponent('comp1@latest');
+      const builderExt = helper.general.getExtension(comp1, Extensions.builder);
+      const taskIds = builderExt.data.pipeline.map((p) => `${p.taskId}:${p.taskName}`);
+      const taskIdsUniq = uniq(taskIds);
+      expect(taskIds.length).to.equal(taskIdsUniq.length);
+    });
+  });
+  describe('component with issues', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
     });
   });
 });

@@ -1,0 +1,54 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+.envsFilterContainer {
+  > div {
+    line-height: 16px;
+    display: flex;
+    // otherwise when the dropdown is open it clashes with the content of the tree
+    z-index: $nav-z-index + 2;
+  }
+
+  .filterIcon {
+    display: flex;
+    padding: 8px;
+
+    &:hover {
+      background: var(--bit-bg-heavy, #f6f6f6);
+      cursor: pointer;
+    }
+
+    img {
+      width: 16px;
+      filter: invert(44%) sepia(7%) saturate(560%) hue-rotate(187deg) brightness(96%) contrast(91%);
+    }
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 14px;
+    }
+
+    .dropdownArrow {
+      display: flex;
+    }
+  }
+}
+
+.envFilterDropdownContainer {
+  width: 100%;
+}
+
+.envFilterDropdown {
+  width: 100%;
+}
+
+.envDropdownItem {
+  padding-left: 8px;
+  display: flex;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+}
+
+.envDropdownItemLabel,
+.envDropdownItemIcon {
+  display: flex;
+  justify-content: space-between;
+}

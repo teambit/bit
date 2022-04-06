@@ -1,4 +1,4 @@
-import { clone, merge } from 'lodash';
+import { cloneDeep, merge } from 'lodash';
 import { CompilerOptions } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 
@@ -8,7 +8,7 @@ export class TypescriptConfigMutator {
   constructor(public raw: TypeScriptCompilerOptions) {}
 
   clone(): TypescriptConfigMutator {
-    return new TypescriptConfigMutator(clone(this.raw));
+    return new TypescriptConfigMutator(cloneDeep(this.raw));
   }
 
   // TODO: move to a shared place, as all compilers mutators will need it
@@ -25,15 +25,6 @@ export class TypescriptConfigMutator {
    */
   setArtifactName(artifactName: string) {
     this.raw.artifactName = artifactName;
-    return this;
-  }
-
-  // TODO: move to a shared place, as all compilers mutators will need it
-  /**
-   * relative path of the dist directory inside the capsule. e.g. "dist".
-   */
-  setDistDir(distDir: string) {
-    this.raw.distDir = distDir;
     return this;
   }
 
@@ -75,8 +66,39 @@ export class TypescriptConfigMutator {
     return this;
   }
 
+  /**
+   * Set ts compiler target option - https://www.typescriptlang.org/tsconfig#target
+   */
   setTarget(target: Target): TypescriptConfigMutator {
     this.raw.tsconfig.compilerOptions.target = target;
+    return this;
+  }
+
+  /**
+   * Set ts compiler module option - https://www.typescriptlang.org/tsconfig#module
+   */
+  setModule(module: string): TypescriptConfigMutator {
+    this.raw.tsconfig.compilerOptions.module = module;
+    return this;
+  }
+
+  /**
+   * This will change the dist dir for all relevant places:
+   * 1. the dist dir of the compiler instance
+   * 2. add exclude for the dist dir in the tsconfig
+   * 3. set the outDir of the tsconfig
+   * @param distDir
+   * @returns
+   */
+  setDistDir(distDir: string): TypescriptConfigMutator {
+    this.raw.distDir = distDir;
+    this.addExclude([distDir]);
+    this.setOutDir(distDir);
+    return this;
+  }
+
+  setOutDir(outDir: string): TypescriptConfigMutator {
+    this.raw.tsconfig.compilerOptions.outDir = outDir;
     return this;
   }
 

@@ -1,16 +1,17 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
+import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { mergeReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge-cmd';
+import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import { SwitchCmd } from './switch.cmd';
 
 type LaneOptions = {
   details?: boolean;
@@ -46,6 +47,7 @@ export class LaneListCmd implements Command {
       remote,
       merged,
       notMerged,
+      showDefaultLane: true,
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
@@ -316,7 +318,7 @@ export class LaneRemoveCmd implements Command {
   ): Promise<string> {
     if (!silent) {
       const removePromptResult = await removePrompt();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
       }
@@ -326,11 +328,26 @@ export class LaneRemoveCmd implements Command {
   }
 }
 
+export class LaneImportCmd implements Command {
+  name = 'import <lane>';
+  description = `import a remote lane to your workspace`;
+  alias = '';
+  options = [];
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private switchCmd: SwitchCmd) {}
+
+  async report([lane]: [string]): Promise<string> {
+    return this.switchCmd.report([lane], { getAll: true });
+  }
+}
+
 export class LaneCmd implements Command {
   name = 'lane [name]';
   shortDescription = 'show lanes details';
-  description = `show lanes details
-https://${BASE_DOCS_DOMAIN}/docs/lanes`;
+  description: string;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -346,7 +363,10 @@ https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   skipWorkspace = true;
   commands: Command[] = [];
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain, docsDomain: string) {
+    this.description = `show lanes details
+https://${docsDomain}/components/lanes`;
+  }
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);

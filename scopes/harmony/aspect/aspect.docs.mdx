@@ -1,0 +1,39 @@
+---
+description: A development environment for (Bit) Aspect components
+labels: ['core aspect', 'env', 'environment']
+---
+
+## Overview
+
+Aspects can be configured on a component is various ways, some more general and some more specific. Once a component is loaded, Bit calculates all the sources and comes up with the final list of aspects. Each aspect has its config and data.
+Config is what the user entered, Data is a result of the aspect process.
+
+## Debugging aspects
+
+To help understanding why a component has these specific aspects, `bit aspect get --debug` shows each one of the sources, from the more specific one to the general one. At the end, it shows the merged result of all sources.
+The various sources are as follows:
+
+```
+'BitmapFile'
+'Model'
+'WorkspaceVariants'
+'ComponentJsonFile'
+'WorkspaceDefault'
+```
+
+Since the list of all the config+data can be very long and hard to follow, the flag `--json` is very helpful.
+This with help of [fx](https://github.com/antonmedv/fx), it's easy to extract the data needed.
+
+If for example, we're interested in one source only, we can run the following:
+
+```
+bit aspect get ui/text --debug --json | fx .BitmapFile
+```
+
+It's possible to run any arbitrary javascript code with fx, so for example, if you want to debug just one specific aspect, and see its config/data per each one of the source, you can do something like this:
+
+```
+bit aspect get ui/text --debug --json | fx 'Object.keys(this).map(origin => ({ origin, value: this[origin].extensions["teambit.pkg/pkg"] }))'
+```
+
+Another data shown with the `--debug` flag is the rules in the workspace.jsonc#variants applied to this component. It shows the list of these rules sorted with the data about the specifity.

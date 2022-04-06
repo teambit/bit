@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { Consumer } from '..';
-import { individualFilesDesc } from '../../cli/commands/public-cmds/status-cmd';
 import { COMPONENT_ORIGINS, WORKSPACE_JSONC } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
@@ -72,7 +71,10 @@ before starting the migration, please re-init the workspace as harmony by follow
   }
   private printResults(results: MigrateResult) {
     if (results.individualFiles.length) {
-      logger.console(chalk.red(individualFilesDesc));
+      logger.console(
+        chalk.red(`these components were added as individual files and not as directories, which are invalid in Harmony
+      please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`)
+      );
       logger.console(results.individualFiles.join('\n'));
     }
     if (results.changedToRootDir.length) {

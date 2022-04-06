@@ -18,7 +18,7 @@ describe('custom aspects', function () {
   // in the scope, not in the workspace.
   // previously, aspects from workspace were loaded first and as a result, this main-aspect wasn't loaded, causing
   // my-env load to fail.
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('workspace aspects using external aspects', () => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('workspace aspects using external aspects with deps', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
@@ -75,6 +75,40 @@ describe('custom aspects', function () {
       it('should load the env correctly and use it for the consuming component', async () => {
         const envId = helper.env.getComponentEnv('comp1');
         expect(envId).to.equal(`${helper.scopes.remote}/my-env`);
+      });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('simple case of using an external aspect', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    describe('bit use', () => {
+      before(() => {
+        const aspectId = `${helper.scopes.remote}/my-aspect`;
+        helper.command.use(aspectId);
+      });
+      it('should save the aspect in the workspace.jsonc with a version', () => {
+        const workspaceJson = helper.bitJsonc.read();
+        expect(workspaceJson).to.have.property(`${helper.scopes.remote}/my-aspect@0.0.1`);
       });
     });
   });

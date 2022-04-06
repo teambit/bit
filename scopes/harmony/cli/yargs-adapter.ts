@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { Arguments, CommandBuilder, CommandModule } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
@@ -15,7 +14,7 @@ export class YargsAdapter implements CommandModule {
   builder: CommandBuilder;
   constructor(private commanderCommand: Command) {
     this.command = commanderCommand.name;
-    this.describe = chalk.yellow(commanderCommand.description as string);
+    this.describe = commanderCommand.description;
     this.aliases = commanderCommand.alias;
     this.builder = this.optionsToBuilder(commanderCommand);
   }
@@ -54,7 +53,7 @@ export class YargsAdapter implements CommandModule {
     return { ...option, ...globalOptions };
   }
 
-  private getGlobalOptions(command: Command): Record<string, any> {
+  getGlobalOptions(command: Command): Record<string, any> {
     const globalOptions: Record<string, any> = {};
     if (command.remoteOp) {
       globalOptions[TOKEN_FLAG] = {

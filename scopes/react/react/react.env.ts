@@ -2,8 +2,8 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { BuildTask } from '@teambit/builder';
-import { merge } from 'lodash';
+import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
 import {
@@ -19,7 +19,7 @@ import {
   PipeServiceModifiersMap,
 } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
-import { PkgMain } from '@teambit/pkg';
+import { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
@@ -51,8 +51,9 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
-export const AspectEnvType = 'react';
+export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
@@ -80,7 +81,7 @@ export class ReactEnv
     /**
      * typescript extension.
      */
-    private tsAspect: TypescriptMain,
+    protected tsAspect: TypescriptMain,
 
     /**
      * compiler extension.
@@ -111,7 +112,9 @@ export class ReactEnv
 
     private eslint: ESLintMain,
 
-    private prettier: PrettierMain
+    private prettier: PrettierMain,
+
+    private compilerAspectId: string
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -123,15 +126,41 @@ export class ReactEnv
   }
 
   /**
-   * returns a component tester.
+   * Get a jest tester instance with react config and cjs configs
+   * @param jestConfigPath
+   * @param jestModulePath
+   * @returns
    */
-  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.config');
+  getCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    const config = jestConfigPath || defaultConfig;
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
 
+  /**
+   * Get a jest tester instance with react config and esm configs
+   * @param jestConfigPath
+   * @param jestModulePath
+   * @returns
+   */
+  getEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const defaultConfig = join(pathToSource, './jest/jest.esm.config.js');
+    const config = jestConfigPath || defaultConfig;
+    return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+  }
+
+  /**
+   * returns a component tester.
+   */
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
+    // return this.getEsmJestTester(jestConfigPath, jestModulePath);
+    return this.getCjsJestTester(jestConfigPath, jestModulePath);
+  }
+
   private getTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
-    const tsconfig = mode === 'dev' ? defaultTsConfig : buildTsConfig;
+    const tsconfig = mode === 'dev' ? cloneDeep(defaultTsConfig) : cloneDeep(buildTsConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     const compileJs = true;
     const compileJsx = true;
@@ -144,13 +173,33 @@ export class ReactEnv
     };
   }
 
-  private getTsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+  /**
+   * Get a compiler instance with react config and set it to cjs module
+   * @param mode
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
     const tsCompileOptions = this.getTsCompilerOptions(mode);
-    return this.tsAspect.createCompiler(tsCompileOptions, transformers, tsModule);
+    return this.tsAspect.createCjsCompiler(tsCompileOptions, transformers, tsModule);
+  }
+
+  /**
+   * Get a compiler instance with react config and set it to esm module
+   * @param mode
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompileOptions = this.getTsCompilerOptions(mode);
+    return this.tsAspect.createEsmCompiler(tsCompileOptions, transformers, tsModule);
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.getTsCompiler('dev', transformers, tsModule);
+    // return this.getTsEsmCompiler('dev', transformers, tsModule);
+    return this.getTsCjsCompiler('dev', transformers, tsModule);
   }
 
   /**
@@ -203,7 +252,7 @@ export class ReactEnv
 
   private writeFileMap(components: Component[], local?: boolean) {
     const fileMap = this.getFileMap(components, local);
-    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    const path = join(tmpdir(), `${Math.random().toString(36).slice(2, 11)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
   }
@@ -231,28 +280,75 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
+    const peers = this.getAllHostDependencies();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    // const fileMapPath = this.writeFileMap(context.components);
-    const baseConfig = basePreviewConfigFactory(true);
-    const baseProdConfig = basePreviewProdConfigFactory();
-    // const componentProdConfig = componentPreviewProdConfigFactory(fileMapPath);
+    return this.createComponentsWebpackBundler(context, transformers);
+  }
+
+  async createComponentsWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDependencies();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
 
-    return this.webpack.createPreviewBundler(context, [defaultTransformer, ...transformers]);
+  async createTemplateWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    const peers = this.getAllHostDependencies();
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const baseConfig = basePreviewConfigFactory(!context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      return merged;
+    };
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    return this.createWebpackBundler(context, mergedTransformers);
+  }
+
+  private async createWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
+    return this.webpack.createBundler(context, transformers);
+  }
+
+  /**
+   * Get the peers configured by the env on the components + the host deps configured by the env
+   */
+  getAllHostDependencies() {
+    const envComponentPeers = Object.keys(this.getDependencies().peerDependencies || {}) || [];
+    const additionalHostDeps = this.getAdditionalHostDependencies() || [];
+    const peers = envComponentPeers.concat(additionalHostDeps);
+    return peers;
+  }
+
+  getAdditionalHostDependencies(): string[] {
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
   }
 
   /**
@@ -271,11 +367,43 @@ export class ReactEnv
     return require.resolve('./mount');
   }
 
+  getPreviewConfig() {
+    return {
+      strategyName: 'component',
+      splitComponentBundle: true,
+    };
+  }
+
   /**
    * define the package json properties to add to each component.
    */
-  getPackageJsonProps() {
-    return this.tsAspect.getPackageJsonProps();
+  getPackageJsonProps(): PackageJsonProps {
+    // React compile by default to esm, so uses type module
+    // return this.getEsmPackageJsonProps();
+    return this.getCjsPackageJsonProps();
+  }
+
+  /**
+   * Get the default package.json props for a cjs component
+   * @returns
+   */
+  getCjsPackageJsonProps(): PackageJsonProps {
+    return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  /**
+   * Get the default package.json props for an esm component
+   * @returns
+   */
+  getEsmPackageJsonProps(): PackageJsonProps {
+    return this.tsAspect.getEsmPackageJsonProps();
+  }
+
+  getNpmIgnore() {
+    // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
+    // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
+    // d.ts files. (changing the "types" prop in the package.json file doesn't help).
+    return [`${CAPSULE_ARTIFACTS_DIR}/`];
   }
 
   /**
@@ -297,7 +425,6 @@ export class ReactEnv
         '@types/react': '^17.0.8',
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
-        // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.12.18',
         '@types/testing-library__jest-dom': '5.9.5',
@@ -318,14 +445,45 @@ export class ReactEnv
     return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
-  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsCompiler('build', transformers, tsModule);
+  /**
+   * Get the react build pipeline without the compilation task.
+   * This help in cases you want to only replace the compilation task with something else
+   * @returns
+   */
+  getBuildPipeWithoutCompiler(): BuildTask[] {
+    const pipeWithoutCompiler = this.getBuildPipe().filter((task) => task.aspectId !== this.compilerAspectId);
+    return pipeWithoutCompiler;
+  }
+
+  /**
+   * Get a compiler task with react config and set to esm module
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  /**
+   * Get a compiler task with react config and set to cjs module
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompiler = this.getTsCjsCompiler('build', transformers, tsModule);
+    return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.getCjsCompilerTask(transformers, tsModule);
   }
 
   async __getDescriptor() {
     return {
-      type: AspectEnvType,
+      type: ReactEnvType,
     };
   }
 }

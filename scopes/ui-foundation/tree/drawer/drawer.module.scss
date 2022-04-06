@@ -2,10 +2,11 @@
   max-height: 100%;
   overflow: hidden;
   min-height: 32px;
-
   display: flex;
   flex-direction: column;
+  border-bottom: 1px solid #ededed;
 }
+
 .drawerName {
   font-size: var(--bit-p-xxs, 12px);
   height: 32px;
@@ -18,7 +19,6 @@
   font-weight: bold;
   padding: 0 8px;
 
-  border-bottom: 1px solid #ededed;
   transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
     border-color: var(--bit-bg-heavy, #f6f6f6);
@@ -39,7 +39,7 @@
       transform: rotate(-0.25turn);
     }
   }
-  > div {
+  > :first-child {
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -71,11 +71,15 @@
 .drawerContent {
   flex: 1 1;
   transition: max-height 300ms ease-in-out;
-  overflow-x: hidden;
-  overflow-y: auto;
-
   max-height: 0;
+
   &.open {
-    max-height: 100%;
+    max-height: calc(100% - 32px);
   }
+}
+
+.drawerFilters {
+  display: flex;
+  border-bottom: 1px solid #ededed;
+  flex-direction: column;
 }

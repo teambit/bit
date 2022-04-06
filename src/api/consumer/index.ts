@@ -17,20 +17,16 @@ import init from './lib/init';
 import injectConf from './lib/inject-conf';
 import installAction from './lib/install';
 import isolate from './lib/isolate';
-import link from './lib/link';
+import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
-import merge from './lib/merge';
 import migrate from './lib/migrate';
 import move from './lib/move';
 import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import remove from './lib/remove';
 import show from './lib/show';
-import { snapAction } from './lib/snap';
-import status from './lib/status';
 import switchAction from './lib/switch';
-import { tagAction } from './lib/tag';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
@@ -47,9 +43,6 @@ export {
   undeprecate,
   buildAll,
   listScope,
-  tagAction,
-  snapAction,
-  status,
   build,
   importAction,
   installAction,
@@ -66,9 +59,8 @@ export {
   untrack,
   unTagAction,
   move,
-  link,
+  linkAction as link,
   checkout,
-  merge,
   diff,
   injectConf,
   migrate,

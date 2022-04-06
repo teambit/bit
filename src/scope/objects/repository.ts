@@ -115,18 +115,19 @@ export default class Repository {
       return cached;
     }
     let fileContentsRaw: Buffer;
+    const objectPath = this.objectPath(ref);
     try {
-      fileContentsRaw = await fs.readFile(this.objectPath(ref));
+      fileContentsRaw = await fs.readFile(objectPath);
     } catch (err: any) {
       if (err.code !== 'ENOENT') {
-        logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+        logger.error(`Failed reading a ref file ${objectPath}. Error: ${err.message}`);
         throw err;
       }
-      logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
+      logger.trace(`Failed finding a ref file ${objectPath}.`);
       if (throws) {
         // if we just `throw err` we loose the stack trace.
         // see https://stackoverflow.com/questions/68022123/no-stack-in-fs-promises-readfile-enoent-error
-        const msg = `fatal: failed finding an object file ${this.objectPath(ref)} in the filesystem at ${err.path}`;
+        const msg = `fatal: failed finding an object file ${objectPath} in the filesystem at ${err.path}`;
         throw Object.assign(err, { stack: new Error(msg).stack });
       }
       // @ts-ignore @todo: fix! it should return BitObject | null.
@@ -134,7 +135,7 @@ export default class Repository {
     }
     const size = fileContentsRaw.byteLength;
     const fileContents = await this.onRead(fileContentsRaw);
-    const parsedObject = await BitObject.parseObject(fileContents);
+    const parsedObject = await BitObject.parseObject(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory

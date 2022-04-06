@@ -69,7 +69,7 @@ export default class FixtureHelper {
   }
 
   tagComponentBarFoo() {
-    return this.command.tagComponent('bar/foo');
+    return this.command.tagWithoutBuild('bar/foo');
   }
   getFixturesDir() {
     return path.join(__dirname, '../../e2e/fixtures');
@@ -160,18 +160,22 @@ export default class FixtureHelper {
    *
    * @returns the expected output in case "node app.js" is running
    */
-  populateComponents(numOfComponents = 3, rewire = true, additionalStr = '', compile = true): string {
-    const getImp = (index) => {
-      if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
-      const nextComp = `comp${index + 1}`;
-      return `const ${nextComp} = require('../${nextComp}');
-module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
-    };
+  populateComponents(numOfComponents = 3, rewire = true, additionalStr = '', compile = true, esm = false): string {
     for (let i = 1; i <= numOfComponents; i += 1) {
-      this.fs.outputFile(path.join(`comp${i}`, `index.js`), getImp(i));
+      let content;
+      if (!esm) {
+        content = this.getCjsImplForPopulate(numOfComponents, i, additionalStr);
+      } else {
+        content = this.getEsmImplForPopulate(numOfComponents, i, additionalStr);
+      }
+      this.fs.outputFile(path.join(`comp${i}`, `index.js`), content);
       this.command.addComponent(`comp${i}`);
     }
-    this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
+    let appContent = "const comp1 = require('./comp1');\nconsole.log(comp1())";
+    if (esm) {
+      appContent = "import comp1 from './comp1';\nconsole.log(comp1())";
+    }
+    this.fs.outputFile('app.js', appContent);
     if (rewire) {
       this.command.linkAndRewire();
     }
@@ -180,6 +184,23 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       .fill(null)
       .map((val, key) => `comp${key + 1}${additionalStr}`)
       .join(' and ');
+  }
+
+  private getCjsImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
+    if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
+    const nextComp = `comp${index + 1}`;
+    return `const ${nextComp} = require('../${nextComp}');
+module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
+  }
+
+  private getEsmImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
+    if (index === numOfComponents)
+      return `export default function(){
+return 'comp${index}${additionalStr}';
+}`;
+    const nextComp = `comp${index + 1}`;
+    return `import ${nextComp} from '../${nextComp}';
+module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
   }
 
   /**

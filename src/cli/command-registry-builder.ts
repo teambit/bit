@@ -24,7 +24,6 @@ import Migrate from './commands/private-cmds/migrate-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
-import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
@@ -38,17 +37,13 @@ import Isolate from './commands/public-cmds/isolate-cmd';
 import Link from './commands/public-cmds/link-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
-import Log from './commands/public-cmds/log-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
-import Merge from './commands/public-cmds/merge-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Show from './commands/public-cmds/show-cmd';
-import Snap from './commands/public-cmds/snap-cmd';
-import Status from './commands/public-cmds/status-cmd';
 import Test from './commands/public-cmds/test-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
@@ -67,15 +62,10 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Isolate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Snap(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Import(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Status(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new List(),
       new Config(),
-      new ClearCache(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remote(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -87,8 +77,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Dependencies(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Log(),
       new ScopeLog(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Test(),
@@ -129,8 +117,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Latest(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Checkout(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Merge(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Diff(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -6,7 +6,7 @@ import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { ElementsMain } from './elements.main.runtime';
 import { computeTargets } from './compute-targets';
 import { computeResults } from './compute-results';
-import ElementsAspect from '.';
+import { ElementsAspect } from '.';
 
 export type ElementsWrapperContext = {
   mainFilePath: string;

@@ -11,9 +11,11 @@ chai.use(assertArrays);
 describe('extensions config diff', function () {
   this.timeout(0);
   let helper: Helper;
+  let beforeEject: string;
   before(() => {
     helper = new Helper();
     helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.bitJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFooAsDir();
@@ -24,6 +26,7 @@ describe('extensions config diff', function () {
     helper.command.install();
     helper.command.compile();
     helper.command.tagAllComponents();
+    beforeEject = helper.scopeHelper.cloneLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -32,7 +35,7 @@ describe('extensions config diff', function () {
     let output;
     describe('add new extension', () => {
       before(() => {
-        reEjectAndCheckStatusBefore(helper);
+        reEjectAndCheckStatusBefore(helper, 'bar/foo@0.0.1');
         helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
       });
       it('should make the component modified', () => {
@@ -49,9 +52,14 @@ describe('extensions config diff', function () {
         expect(output).to.have.string('+++ Ext4@0.0.1 configuration (0.0.1 modified)');
         expect(output).to.have.string('+ "key": "val-component-json"');
       });
+      it('bit diff should not show internal config fields', () => {
+        output = helper.command.diff();
+        expect(output).to.not.have.string('__specific');
+      });
     });
     describe('remove extension', () => {
       before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeEject);
         reEjectAndCheckStatusBefore(helper);
         helper.componentJson.removeExtension('my-scope/ext3@0.0.1');
       });
@@ -109,8 +117,8 @@ describe('extensions config diff', function () {
   });
 });
 
-function reEjectAndCheckStatusBefore(helper) {
+function reEjectAndCheckStatusBefore(helper, fullId = 'bar/foo') {
   helper.command.ejectConf('bar/foo', { override: '' });
-  const output = helper.command.statusComponentIsModified('bar/foo');
+  const output = helper.command.statusComponentIsModified(fullId);
   expect(output).to.be.false;
 }

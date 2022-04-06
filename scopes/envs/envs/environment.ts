@@ -8,8 +8,11 @@ import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
-import type { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { ElementsWrapperContext } from '@teambit/elements';
+import type { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
+import { EnvPreviewConfig } from '@teambit/preview';
 
 export type EnvDescriptor = {
   type: string;
@@ -53,9 +56,38 @@ export interface DependenciesEnv extends Environment {
    * Returns the list of dependencies
    * Required for any task
    */
-  getDependencies?: () => VariantPolicyConfigObject | Promise<VariantPolicyConfigObject>;
+  getDependencies?: () => EnvPolicyConfigObject | Promise<EnvPolicyConfigObject>;
+
+  /**
+   * Returns a list of additional host dependencies
+   * this list will be provided as globals on the window after bit preview bundle
+   * by default bit will merge this list with the peers from the getDependencies function
+   * If you want full control use the getHostDependencies function
+   */
+  getAdditionalHostDependencies?: () => string[] | Promise<string[]>;
+
+  /**
+   * Returns a list of host dependencies
+   * this list will be provided as globals on the window after bit preview bundle
+   * If this is provided, bit won't merge getAdditionalHostDependencies and the peers from getDependencies
+   * but give you full control over the list
+   *
+   * The reason we provided both options is the following:
+   * in most cases when you override the deps from you env, you want bit to take your peers
+   * however, if we only provide the getHostDependencies, during the env composition, you will get the peers of the
+   * original env. which doesn't contain your peers.
+   * In that case you might think that we only need the first option of getAdditionalHostDependencies + getDependencies peers
+   * but there are cases when you want a peer to your component, but you don't want it as part of the bundle.
+   * such an example is react-native env which adds react-native as peer, but you don't want it in the bundle as it's not web compatible
+   * so you want full control over it
+   */
+  getHostDependencies?: () => string[] | Promise<string[]>;
 }
 
+export type GetNpmIgnoreContext = {
+  capsule: Capsule;
+  component: Component;
+};
 export interface PackageEnv extends Environment {
   /**
    * define the package json properties to add to each component.
@@ -66,7 +98,7 @@ export interface PackageEnv extends Environment {
   /**
    * return `.npmignore` entries to be written before packing the component
    */
-  getNpmIgnore?: () => string[];
+  getNpmIgnore?: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
 }
 
 export interface LinterEnv extends Environment {
@@ -103,6 +135,18 @@ export interface PreviewEnv extends Environment {
    * Required for `bit build` & `bit start`
    */
   getBundler?: (context: BundlerContext, transformers: any[]) => Promise<Bundler>;
+
+  /**
+   * Returns preview config like the strategy name to use when bundling the components for the preview
+   */
+  getPreviewConfig?: () => EnvPreviewConfig;
+
+  /**
+   * Returns a bundler for the env template.
+   * this bundler will be used to bundle the docs/compositions (or other preview) apps
+   * Required for `bit build` & `bit tag`
+   */
+  getTemplateBundler?: (context: BundlerContext, transformers?: any[]) => Promise<Bundler>;
 }
 
 export interface ElementsEnv extends Environment {

@@ -26,6 +26,7 @@ import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
+import { ExtensionDataList } from '../../../config';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -66,6 +67,8 @@ type WorkspacePolicyGetter = () => {
   peerDependencies?: Record<string, string>;
 };
 
+type HarmonyEnvPeersPolicyGetter = (configuredExtensions: ExtensionDataList) => Promise<{ [name: string]: string }>;
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -90,6 +93,11 @@ export default class DependencyResolver {
   static getWorkspacePolicy: WorkspacePolicyGetter;
   static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
     this.getWorkspacePolicy = func;
+  }
+
+  static getHarmonyEnvPeersPolicy: HarmonyEnvPeersPolicyGetter;
+  static registerHarmonyEnvPeersPolicyGetter(func: HarmonyEnvPeersPolicyGetter) {
+    this.getHarmonyEnvPeersPolicy = func;
   }
 
   static getDepResolverAspectName: () => string;
@@ -171,7 +179,7 @@ export default class DependencyResolver {
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
     const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
-    this.populateDependencies(allFiles, devFiles);
+    await this.populateDependencies(allFiles, devFiles);
     return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
       manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
       manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
@@ -198,7 +206,7 @@ export default class DependencyResolver {
    * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
    * and marked as ignored in the consumer or component config file.
    */
-  populateDependencies(files: string[], testsFiles: string[]) {
+  async populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file) => {
       const fileType: FileType = {
         isTestFile: testsFiles.includes(file),
@@ -222,6 +230,7 @@ export default class DependencyResolver {
     this.populatePeerPackageDependencies();
     if (!this.consumer.isLegacy) {
       this.applyWorkspacePolicy();
+      await this.applyAutoDetectedPeersFromEnv();
     }
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
@@ -902,7 +911,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
+    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds?.();
     if (!coreAspects) {
       return;
     }
@@ -1170,6 +1179,28 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
 
+  async applyAutoDetectedPeersFromEnv(): Promise<void> {
+    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicy(this.component.extensions);
+    if (!envPolicy || !Object.keys(envPolicy).length) {
+      return;
+    }
+    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    // we are not iterate component deps since they are resolved from what actually installed
+    // the policy used for installation only in that case
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+      R.forEachObjIndexed((_pkgVal, pkgName) => {
+        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
+        if (peerVersionFromEnvPolicy) {
+          delete this.allPackagesDependencies[field][pkgName];
+          peerDeps[pkgName] = peerVersionFromEnvPolicy;
+        }
+      }, this.allPackagesDependencies[field]);
+    });
+    // TODO: handle component deps once we support peers between components
+    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+  }
+
   /**
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
@@ -1275,10 +1306,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsIssues(originFile, componentId: BitId) {
-    (this.issues.getOrCreate(IssuesClasses.relativeComponents).data[originFile] ||= []).push(componentId);
+    (this.issues.getOrCreate(IssuesClasses.RelativeComponents).data[originFile] ||= []).push(componentId);
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
-    (this.issues.getOrCreate(IssuesClasses.relativeComponentsAuthored).data[originFile] ||= []).push({
+    (this.issues.getOrCreate(IssuesClasses.RelativeComponentsAuthored).data[originFile] ||= []).push({
       importSource,
       componentId,
       relativePath,

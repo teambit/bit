@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
+import classNames from 'classnames';
 import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
-import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
+import { DrawerType, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
 
@@ -10,7 +11,9 @@ export type SideBarProps = {
    * slot of registered drawers.
    */
   drawerSlot: DrawerSlot;
-
+  /**
+   * slot of registered items to the main section at the top.
+   */
   itemSlot?: SidebarItemSlot;
 } & React.HTMLAttributes<HTMLDivElement>;
 
@@ -18,7 +21,11 @@ export type SideBarProps = {
  * side bar component.
  */
 export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
-  const [openDrawerList, onToggleDrawer] = useState([drawerSlot.toArray()[0][0]]);
+  const drawers = flatten(drawerSlot.values())
+    .filter((drawer) => !drawer?.isHidden?.())
+    .sort(sortFn);
+
+  const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
   const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {
@@ -33,14 +40,20 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   return (
     <div {...rest} className={styles.sidebar}>
       <MenuSection items={items} />
-      {drawerSlot.toArray().map(([id, drawer]) => {
+      {drawers.map((drawer) => {
         if (!drawer || !drawer.name) return null;
+        // consider passing collapse all as a prop so each drawer collapses itself
+        const isOpen = openDrawerList.includes(drawer.id);
+
         return (
           <DrawerUI
-            isOpen={openDrawerList.includes(id)}
-            onToggle={() => handleDrawerToggle(id)}
-            key={id}
+            className={classNames(styles.sidebarDrawer, isOpen && styles.open)}
+            isOpen={isOpen}
+            onToggle={() => handleDrawerToggle(drawer.id)}
+            key={drawer.id}
             name={drawer.name}
+            Widgets={drawer.widgets}
+            Context={drawer.Context}
           >
             <drawer.render />
           </DrawerUI>
@@ -48,4 +61,11 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
       })}
     </div>
   );
+}
+function sortFn(first: DrawerType, second: DrawerType) {
+  // 0  - equal
+  // <0 - first < second
+  // >0 - first > second
+
+  return (first.order ?? 0) - (second.order ?? 0);
 }

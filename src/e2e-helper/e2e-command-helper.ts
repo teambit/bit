@@ -8,8 +8,7 @@ import tar from 'tar';
 
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
+import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -44,16 +43,19 @@ export default class CommandHelper {
     cmd: string,
     cwd: string = this.scopes.localPath,
     stdio: StdioOptions = 'pipe',
-    overrideFeatures?: string
+    overrideFeatures?: string,
+    getStderrAsPartOfTheOutput = false // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
   ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
-    cmd = featuresTogglePrefix + cmd;
-    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
+    const cmdWithFeatures = featuresTogglePrefix + cmd;
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
+    const cmdOutput = getStderrAsPartOfTheOutput
+      ? childProcess.spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio }).output.toString()
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -145,6 +147,19 @@ export default class CommandHelper {
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }
+  unsetEnv(compId: string) {
+    return this.runCmd(`bit envs unset ${compId}`);
+  }
+  replaceEnv(oldEnv: string, newEnv: string) {
+    return this.runCmd(`bit envs replace ${oldEnv} ${newEnv}`);
+  }
+  setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
+    const configStr = config ? `'${JSON.stringify(config)}'` : '';
+    return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);
+  }
+  unsetAspect(pattern: string, aspectId: string, flags = '') {
+    return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
+  }
   untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
@@ -162,6 +177,9 @@ export default class CommandHelper {
   }
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
+  }
+  use(aspectId: string, flags = '') {
+    return this.runCmd(`bit use ${aspectId} ${flags}`);
   }
   dependencies(values = '') {
     return this.runCmd(`bit dependencies ${values}`);
@@ -268,8 +286,12 @@ export default class CommandHelper {
     const comp = this.catComponent(id, cwd);
     return comp.head;
   }
-  getHeadOfLane(laneName: string, componentName: string) {
-    const lane = this.catLane(laneName);
+  getHeadShort(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
+    return comp.head.substring(0, 9);
+  }
+  getHeadOfLane(laneName: string, componentName: string, cwd = this.scopes.localPath) {
+    const lane = this.catLane(laneName, cwd);
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
@@ -404,8 +426,8 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  build(id = '') {
-    return this.runCmd(`bit build ${id}`);
+  build(id = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit build ${id}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -413,6 +435,10 @@ export default class CommandHelper {
       .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit build ${id} ${value}`, cwd);
+  }
+
+  test(flags = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   testComponent(id = '', flags = '') {
@@ -523,9 +549,8 @@ export default class CommandHelper {
   }
   switchRemoteLane(lane: string, flags?: string, getAll = true) {
     const getAllFlag = getAll ? '--get-all' : '';
-    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
+    return this.runCmd(`bit switch ${this.scopes.remote}/${lane} ${getAllFlag} ${flags || ''}`);
   }
-
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
@@ -545,8 +570,8 @@ export default class CommandHelper {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }
-  log(id: string) {
-    return this.runCmd(`bit log ${id}`);
+  log(id: string, flags = '') {
+    return this.runCmd(`bit log ${id} ${flags}`);
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);

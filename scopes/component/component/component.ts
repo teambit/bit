@@ -5,6 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 
+import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
@@ -99,10 +100,33 @@ export class Component {
       return this.tags.getLatest();
     } catch (err: any) {
       if (err instanceof CouldNotFindLatest) {
-        return this.head.toString();
+        return this.head.hash;
       }
       throw err;
     }
+  }
+
+  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
+    const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
+
+    if (!filter) return allLogs;
+
+    const { type, limit, offset, sort } = filter;
+
+    const typeFilter = (snap) => {
+      if (type === 'tag') return snap.tag;
+      if (type === 'snap') return !snap.tag;
+      return true;
+    };
+
+    let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
+    if (limit) {
+      filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
+    }
+
+    if (sort && sort === 'asc') return filteredLogs;
+
+    return filteredLogs.reverse();
   }
 
   stringify(): string {
@@ -144,9 +168,7 @@ export class Component {
    * determines whether this component is modified in the workspace.
    */
   isModified(): Promise<boolean> {
-    if (!this.head) return Promise.resolve(true);
-    return Promise.resolve(this.state.isModified);
-    // return Promise.resolve(this.state.hash !== this.head.hash);
+    return this.factory.isModified(this);
   }
 
   /**

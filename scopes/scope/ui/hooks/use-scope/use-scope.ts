@@ -28,19 +28,22 @@ const SCOPE = gql`
         deprecation {
           isDeprecate
         }
+        preview {
+          includesEnvTemplate
+        }
       }
     }
   }
 `;
 
-export function useScopeQuery(): { scope?: ScopeModel } {
+export function useScopeQuery(): { scope?: ScopeModel; loading?: boolean } {
   const { data, loading } = useDataQuery(SCOPE);
 
   if (!data || loading) {
-    return {};
+    return { loading };
   }
 
   const scope = ScopeModel.from(data);
 
-  return { scope };
+  return { scope, loading };
 }

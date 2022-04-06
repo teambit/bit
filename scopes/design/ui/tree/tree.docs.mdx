@@ -1,0 +1,177 @@
+---
+description: 'A tree layout'
+labels: ['react', 'ui', 'tree']
+---
+
+import { useState, useEffect } from 'react';
+import { CollapsingNode } from './collapsing-node';
+import { Tree } from './tree';
+import { indentStyle, indentClass } from './indent';
+import { DefaultTreeNode } from './recursive-tree';
+import { useTree } from './tree-context';
+
+A UI component for creating a tree layout.
+
+### Create the data tree object
+
+It accepts a `tree` data object.
+
+```js
+type TreeNode<Payload = any> = {
+  id: string,
+  children?: TreeNode<Payload>[],
+  payload?: Payload,
+};
+```
+
+:::note
+If you need extra information about each node, and don't wish to pass it through context, you can attach a `payload` to each node. You can then use this information in the TreeNode renderer to add special behavior.
+:::
+
+### Create the node to render the nodes based on the data tree
+
+The tree accepts a `TreeNode` component, which calculates and renders each node in the tree.
+
+```tsx
+const TreeNode = (props) => {
+  if (!props.node.children) return <div className={indentClass}>{props.node.id}</div>;
+  return <Folder {...props} />;
+};
+
+return <Tree tree={basicTreeMock} TreeNode={TreeNode} />;
+```
+
+### To create the collapsing folder effect
+
+The tree also exposes a `CollapsingNode` component which is used to create the animated open/close effect for a node which contains children.
+
+### Indent your tree
+
+To achive the indentation of the nodes in the tree, use the `indentClass` and `indentStyle` modules.
+
+Use the `indentStyle` function to provide the indentation value. Pass the `depth` parameter in each node to set the `--indent-depth` css variable with the correct indentation value.
+
+Then use the `indentClass` to provide each node with the class that uses the `--indent-depth`.
+
+### Tree context and the `useTree` hook
+
+The tree also has a few props available via the tree context. You can update these from outside the tree.
+
+`isCollapsed` and `setIsCollapsed` allow you to collapse/expand all the nodes in the tree.
+`activePath` and `setActivePath` allow you to track the active node in the tree.
+
+To access these values from your custom tree node components you can use the `useTree` hook to access these values.
+
+```tsx live
+() => {
+
+  const basicTreeMock = {
+  id: '',
+  children: [
+    {
+      id: 'level0',
+      children: [
+        {
+          id: 'level1',
+          children: [
+            {
+              id: 'level2',
+              children: [
+                {
+                  id: 'level3.1',
+                },
+                {
+                  id: 'level3.2',
+                },
+                {
+                  id: 'level3.3',
+                },
+              ],
+            },
+            { id: 'level2.1' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'level00',
+      children: [
+        {
+          id: 'level01',
+          children: [
+            {
+              id: 'level02',
+              children: [
+                {
+                  id: 'level03.1',
+                },
+                {
+                  id: 'level03.2',
+                },
+                {
+                  id: 'level03.3',
+                },
+              ],
+            },
+            { id: 'level02.1' },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+  const Folder = ({ node, depth, ...rest }) => {
+    const {isCollapsed} = useTree()
+    const [open, setOpen] = useState(true);
+    useEffect(() => {
+      setOpen(!isCollapsed);
+    }, [isCollapsed]);
+
+    const Title = ({ node, depth }) => {
+      const openStyles = open ? {transform: "rotateZ(90deg)"} : '';
+
+      return (
+        <div
+          style={{...indentStyle(depth), cursor: 'pointer'}}
+          className={indentClass}
+          onClick={() => setOpen(!open)}
+        >
+          <span style={{display: "inline-block", ...openStyles}}>></span>
+          {node.id}
+        </div>
+      );
+    };
+    return (
+      <CollapsingNode
+        {...rest}
+        title={<Title node={node} depth={depth} />}
+        isOpen={open}
+        node={node}
+        depth={depth}
+      />
+    );
+  };
+
+
+  const TreeNode = (props) => {
+    if (!props.node.children)
+      return <div style={indentStyle(props.depth)} className={indentClass}>{props.node.id}</div>;
+    return <Folder {...props} />;
+  };
+
+  const RenderTree = () => {
+    const [isCollapsedAll, setIsCollapsedAll ] = useState(false);
+    return (
+      <div style={{width: 200}}>
+        <button onClick={() => setIsCollapsedAll(!isCollapsedAll)}>{isCollapsedAll ? 'expand': 'collapse'} all</button>
+        <Tree tree={basicTreeMock} TreeNode={TreeNode} setIsCollapsed={setIsCollapsedAll} isCollapsed={isCollapsedAll} />
+      </div>
+      )
+
+  }
+
+  return <RenderTree />
+
+};
+```

@@ -20,6 +20,7 @@ export default class Lanes {
     return (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
   }
 
+  /** dont use it outside of Lanes. Use scope.loadLane instead */
   async loadLane(id: LaneId): Promise<Lane | null> {
     if (id.isDefault()) return null; // main lane is not saved
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);

@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
-import { HASH_SIZE } from '../../src/constants';
+import { HASH_SIZE, AUTO_SNAPPED_MSG } from '../../src/constants';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -412,11 +411,11 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${secondSnap} (${helper.scopes.remote}/main)`);
-          expect(content).to.have.string(fixtures.fooFixtureV2);
-          expect(content).to.have.string('=======');
+          expect(content).to.have.string(`<<<<<<< ${localHead} (local)`);
           expect(content).to.have.string(fixtures.fooFixtureV3);
-          expect(content).to.have.string(`>>>>>>> ${localHead} (local)`);
+          expect(content).to.have.string('=======');
+          expect(content).to.have.string(fixtures.fooFixtureV2);
+          expect(content).to.have.string(`>>>>>>> ${secondSnap} (${helper.scopes.remote}/main)`);
         });
         it('should not change bitmap version', () => {
           helper.bitMap.expectToHaveIdHarmony('bar/foo', localHead, helper.scopes.remote);

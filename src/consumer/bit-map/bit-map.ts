@@ -398,6 +398,11 @@ export default class BitMap {
     return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
   }
 
+  isIdAvailableOnCurrentLane(id: BitId): boolean {
+    const allIdsOfCurrentLane = this.getAllIdsAvailableOnLane();
+    return allIdsOfCurrentLane.hasWithoutScopeAndVersion(id);
+  }
+
   /**
    * get existing bitmap bit-id by bit-id.
    * throw an exception if not found
@@ -407,7 +412,7 @@ export default class BitMap {
     bitId: BitId,
     { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): BitId {
-    if (!(bitId instanceof BitId)) {
+    if (bitId.constructor.name !== BitId.name) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
     const allIds = this.getAllBitIdsFromAllLanes();
@@ -598,7 +603,14 @@ export default class BitMap {
         if (matches && matches.length === 1) {
           return matches[0].id;
         }
+        if (this.updatedIds[idWithoutScope]) {
+          return this.updatedIds[idWithoutScope].id;
+        }
       }
+    }
+
+    if (this.updatedIds[id]) {
+      return this.updatedIds[id].id;
     }
 
     if (shouldThrow) {
@@ -667,6 +679,10 @@ export default class BitMap {
           // this is to make sure the version of the lane is not written to the .bitmap file.
           // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
           componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
+        }
+        if (!this.workspaceLane && componentMap.onLanesOnly) {
+          // happens when merging from another lane to main and main is empty
+          componentMap.onLanesOnly = false;
         }
         componentMap.id = componentId;
         return componentMap;

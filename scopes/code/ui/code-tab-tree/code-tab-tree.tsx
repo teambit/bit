@@ -10,6 +10,7 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
+import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './code-tab-tree.module.scss';
 
@@ -47,8 +48,13 @@ export function CodeTabTree({
       const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
+      const lanesContext = useLanesContext();
+
+      const currentLaneUrl = lanesContext?.viewedLane
+        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
+        : '';
       const version = urlParams.version ? `?version=${urlParams.version}` : '';
-      const href = `/${urlParams.componentId}/~code/${props.node.id}${version}`;
+      const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
@@ -72,6 +78,7 @@ export function CodeTabTree({
         isOpen={openDrawerList.includes('FILES')}
         onToggle={() => handleDrawerToggle('FILES')}
         name="FILES"
+        contentClass={styles.codeDrawerContent}
         className={classNames(styles.codeTabDrawer)}
       >
         <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
@@ -80,6 +87,7 @@ export function CodeTabTree({
         isOpen={openDrawerList.includes('DEPENDENCIES')}
         onToggle={() => handleDrawerToggle('DEPENDENCIES')}
         className={classNames(styles.codeTabDrawer)}
+        contentClass={styles.codeDrawerContent}
         name="DEPENDENCIES"
       >
         <DependencyTree dependenciesArray={dependencies} />

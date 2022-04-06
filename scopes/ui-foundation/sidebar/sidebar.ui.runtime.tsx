@@ -15,7 +15,7 @@ export type SidebarItem = ComponentType;
 
 export type SidebarItemSlot = SlotRegistry<SidebarItem[]>;
 
-export type DrawerSlot = SlotRegistry<DrawerType>;
+export type DrawerSlot = SlotRegistry<DrawerType[]>;
 
 export class SidebarUI {
   constructor(private drawerSlot: DrawerSlot) {}
@@ -23,7 +23,7 @@ export class SidebarUI {
   /**
    * register a new drawer into the component sidebar.
    */
-  registerDrawer(drawer: DrawerType) {
+  registerDrawer(...drawer: DrawerType[]) {
     this.drawerSlot.register(drawer);
     return this;
   }

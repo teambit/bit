@@ -26,7 +26,6 @@ import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
-import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
@@ -390,6 +389,10 @@ export class UiMain {
     return uis.find(([, root]) => root.priority);
   }
 
+  isHostAvailable(): boolean {
+    return Boolean(this.componentExtension.getHost());
+  }
+
   getUiName(uiRootName?: string): string | undefined {
     const [, ui] = this.getUi(uiRootName) || [];
     if (!ui) return undefined;
@@ -500,11 +503,6 @@ export class UiMain {
 
   get publicUrl() {
     return this.config.publicUrl;
-  }
-
-  private async openBrowser(url: string) {
-    const openBrowser = new OpenBrowser(this.logger);
-    openBrowser.open(url);
   }
 
   static defaultConfig: UIConfig = {

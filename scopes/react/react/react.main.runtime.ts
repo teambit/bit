@@ -21,7 +21,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
@@ -30,7 +30,7 @@ import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/esli
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
-import { ReactAppType } from './apps/web/react.app-type';
+import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates, workspaceTemplates } from './react.templates';
 
@@ -297,7 +297,7 @@ export class ReactMain {
    * override the compiler tasks inside the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipeWithoutCompiler();
 
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
@@ -307,7 +307,7 @@ export class ReactMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: async () => {
         const reactDeps = await this.reactEnv.getDependencies();
@@ -339,8 +339,8 @@ export class ReactMain {
     return this.envs.override({
       getPackageJsonProps: () => {
         return {
-          ...props,
           ...this.reactEnv.getPackageJsonProps(),
+          ...props,
         };
       },
     });
@@ -409,7 +409,8 @@ export class ReactMain {
       tester,
       config,
       eslint,
-      prettier
+      prettier,
+      CompilerAspect.id
     );
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));

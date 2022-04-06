@@ -4,8 +4,11 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { switchAction } from '@teambit/legacy/dist/api/consumer';
 import { SwitchProps } from '@teambit/legacy/dist/consumer/lanes/switch-lanes';
 import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { applyVersionReport } from '@teambit/legacy/dist/cli/commands/public-cmds/merge-cmd';
+import {
+  MergeOptions,
+  MergeStrategy,
+  applyVersionReport,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitError } from '@teambit/bit-error';
 
 export class SwitchCmd implements Command {
@@ -14,8 +17,11 @@ export class SwitchCmd implements Command {
   private = true;
   alias = '';
   options = [
-    ['r', 'remote <scope>', 'fetch remote lane objects and switch to a local lane tracked to the remote'],
-    ['n', 'as <as>', 'relevant when --remote flag is used. name a local lane differently than the remote lane'],
+    [
+      'n',
+      'as <as>',
+      'relevant when the specified lane is a remote late. name a local lane differently than the remote lane',
+    ],
     [
       'm',
       'merge [strategy]',
@@ -30,14 +36,12 @@ export class SwitchCmd implements Command {
   async report(
     [lane]: [string],
     {
-      remote,
       as,
       merge,
       getAll = false,
       verbose = false,
       json = false,
     }: {
-      remote?: string;
       as?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
@@ -54,9 +58,9 @@ export class SwitchCmd implements Command {
       }
       mergeStrategy = merge;
     }
+
     const switchProps: SwitchProps = {
       laneName: lane,
-      remoteScope: remote,
       existingOnWorkspaceOnly: !getAll,
       newLaneName: as,
     };

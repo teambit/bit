@@ -1,21 +1,25 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import { compact } from 'lodash';
 import R from 'ramda';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
-import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import {
+  ImportOptions,
+  ImportDetails,
+  ImportStatus,
+} from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
+import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
   name = 'import [ids...]';
   shortDescription = 'import components into your current working area';
   group = 'collaborate';
-  description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
-  ${WILDCARD_HELP('import')}`;
+  description: string;
   alias = '';
   options = [
     ['p', 'path <path>', 'import components into a specific directory'],
@@ -29,11 +33,8 @@ export default class ImportCmd implements Command {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
-    [
-      '',
-      'skip-npm-install',
-      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)',
-    ],
+    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       'm',
       'merge [strategy]',
@@ -57,7 +58,11 @@ export default class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: Importer) {}
+  constructor(private importer: Importer, private docsDomain: string) {
+    this.description = `import components into your current workspace.
+https://${docsDomain}/components/importing-components
+${WILDCARD_HELP('import')}`;
+  }
 
   async report(
     [ids = []]: [string[]],
@@ -70,6 +75,7 @@ export default class ImportCmd implements Command {
       json = false,
       conf,
       skipNpmInstall = false,
+      skipDependencyInstallation = false,
       merge,
       skipLane = false,
       dependencies = false,
@@ -84,6 +90,7 @@ export default class ImportCmd implements Command {
       json?: boolean;
       conf?: string;
       skipNpmInstall?: boolean;
+      skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
       skipLane?: boolean;
       dependencies?: boolean;
@@ -96,6 +103,13 @@ export default class ImportCmd implements Command {
     }
     if (override && merge) {
       throw new GeneralError('you cant use --override and --merge flags combined');
+    }
+    if (skipNpmInstall) {
+      // eslint-disable-next-line no-console
+      console.log(
+        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
+      );
+      skipDependencyInstallation = true;
     }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
@@ -115,7 +129,7 @@ export default class ImportCmd implements Command {
       objectsOnly: objects,
       override,
       writeConfig: Boolean(conf),
-      installNpmPackages: !skipNpmInstall,
+      installNpmPackages: !skipDependencyInstallation,
       skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
@@ -130,26 +144,29 @@ export default class ImportCmd implements Command {
     let dependenciesOutput;
 
     if (importResults.dependencies && !R.isEmpty(importResults.dependencies)) {
-      const components = importResults.dependencies.map(R.prop('component'));
+      const components = importResults.dependencies.map((d) => d.component);
       const peerDependencies = R.flatten(
         importResults.dependencies.map(R.prop('dependencies')),
         importResults.dependencies.map(R.prop('devDependencies'))
       );
 
-      const title =
+      const titlePrefix =
         components.length === 1
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
+
+      let upToDateCount = 0;
       const componentDependencies = components.map((component) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        if (details.status === 'up to date') {
+          upToDateCount += 1;
+        }
         return formatPlainComponentItemWithVersions(component, details);
       });
-      const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
-
+      const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
+      const title = `${titlePrefix}${upToDateStr}`;
+      const componentDependenciesOutput = [chalk.green(title), ...compact(componentDependencies)].join('\n');
       const peerDependenciesOutput =
         peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies
           ? immutableUnshift(
@@ -168,4 +185,39 @@ export default class ImportCmd implements Command {
 
     return getImportOutput();
   }
+}
+
+function formatPlainComponentItemWithVersions(component: ConsumerComponent, importDetails: ImportDetails) {
+  const status: ImportStatus = importDetails.status;
+  const id = component.id.toStringWithoutVersion();
+  const getVersionsOutput = () => {
+    if (!importDetails.versions.length) return '';
+    if (importDetails.latestVersion) {
+      return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
+    }
+    return `new versions: ${importDetails.versions.join(', ')}`;
+  };
+  const versions = getVersionsOutput();
+  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const getConflictMessage = () => {
+    if (!importDetails.filesStatus) return '';
+    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
+    if (!conflictedFiles.length) return '';
+    return `(the following files were saved with conflicts ${conflictedFiles
+      .map((file) => chalk.bold(file))
+      .join(', ')}) `;
+  };
+  const conflictMessage = getConflictMessage();
+  const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const missingDeps = importDetails.missingDeps.length
+    ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
+    : '';
+  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage) {
+    return undefined;
+  }
+  return `- ${chalk.green(status)} ${chalk.cyan(
+    id
+  )} ${versions}${usedVersion} ${conflictMessage}${deprecated} ${missingDeps}`;
 }

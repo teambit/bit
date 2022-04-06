@@ -1,6 +1,15 @@
 export { DevServer } from './dev-server';
-export { BundlerContext, Target, DevServerContext } from './dev-server-context';
-export { Bundler, BundlerResult, BundlerMode } from './bundler';
+export { DevServerContext } from './dev-server-context';
+export {
+  BundlerContext,
+  Target,
+  ModuleTarget,
+  HtmlConfig as BundlerHtmlConfig,
+  EntryMap as BundlerEntryMap,
+  Entry as BundlerEntry,
+  MetaData as BundlerContextMetaData,
+} from './bundler-context';
+export { Bundler, BundlerResult, BundlerMode, Asset, ChunksAssetsMap, EntriesAssetsMap, EntryAssets } from './bundler';
 export type { BundlerMain } from './bundler.main.runtime';
 export { BundlerAspect } from './bundler.aspect';
 export { ComponentDir } from './get-entry';

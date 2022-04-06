@@ -88,6 +88,8 @@ export default async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
+  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
+
   const componentsWithDependencies = componentsResults
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
@@ -132,6 +134,7 @@ async function getComponentStatus(
   checkoutProps: CheckoutProps
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
+  const repo = consumer.scope.objects;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
   const returnFailure = (msg: string, unchangedLegitimately = false) => {
@@ -142,27 +145,29 @@ async function getComponentStatus(
   if (!componentModel) {
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  const unmerged = repo.unmergedComponents.getEntry(component.name);
   if (!reset && unmerged && unmerged.resolved === false) {
     return returnFailure(
       `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
     );
   }
-  const getNewVersion = (): string => {
+  const getNewVersion = async (): Promise<string> => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
-    // $FlowFixMe if !reset the version is defined
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return latestVersion ? componentModel.latest() : version;
+    // @ts-ignore if !reset the version is defined
+    return latestVersion ? componentModel.latestIncludeRemote(repo) : version;
   };
-  const newVersion = getNewVersion();
+  const newVersion = await getNewVersion();
   if (version && !latestVersion) {
-    const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+    const hasVersion = await componentModel.hasVersion(version, repo);
     if (!hasVersion)
       return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
+  if (!currentlyUsedVersion) {
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} is new`);
+  }
   if (version && currentlyUsedVersion === version) {
     // it won't be relevant for 'reset' as it doesn't have a version
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
@@ -173,21 +178,32 @@ async function getComponentStatus(
       true
     );
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
+  const isModified = await consumer.isComponentModified(currentVersionObject, component);
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
+  // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
+  // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
+  // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
+  // 0.0.2+modification. in other words, it won't make any change.
+  // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
+  // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
+  // to be added to 0.0.1
+  // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
+  const baseVersion = currentlyUsedVersion;
+  const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  if (version) {
-    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
+  // if the component is not modified, no need to try merge the files, they will be written later on according to the
+  // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
+  if (version && isModified) {
+    const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
     mergeResults = await threeWayMerge({
       consumer,
-      otherComponent: component,
-      otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent,
-      currentLabel: newVersion,
+      otherComponent,
+      otherLabel: newVersion,
+      currentComponent: component,
+      currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
     });
   }
@@ -336,6 +352,36 @@ export function applyModifiedVersion(
   });
 
   return { filesStatus, modifiedFiles };
+}
+
+/**
+ * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
+ * this function only mark them as such. later `deleteFilesIfNeeded()` will delete them
+ */
+export function markFilesToBeRemovedIfNeeded(
+  succeededComponents: ComponentStatus[],
+  componentsResults: ApplyVersionWithComps[]
+) {
+  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
+    const bitId = next.id.toString();
+    if (!accum[bitId]) accum[bitId] = next;
+    return accum;
+  }, {});
+
+  componentsResults.forEach((componentResult) => {
+    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
+    const bitId = componentResult.applyVersionResult.id.toString();
+    const succeededComponent = succeededComponentsByBitId[bitId];
+    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
+
+    filePathsFromFS.forEach((file) => {
+      const filename = pathNormalizeToLinux(file.relative);
+      if (!existingFilePathsFromModel[filename]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        existingFilePathsFromModel[filename] = FileStatus.removed;
+      }
+    });
+  });
 }
 
 /**

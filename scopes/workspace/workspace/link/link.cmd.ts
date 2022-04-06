@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
@@ -20,7 +19,7 @@ type LinkCommandOpts = {
 export class LinkCommand implements Command {
   name = 'link [ids...]';
   alias = '';
-  description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
+  description: string;
   shortDescription = 'link components and core aspects';
   group = 'development';
   private = false;
@@ -45,8 +44,12 @@ export class LinkCommand implements Command {
     /**
      * logger extension.
      */
-    private logger: Logger
-  ) {}
+    private logger: Logger,
+
+    private docsDomain: string
+  ) {
+    this.description = `generate symlinks to resolve module paths for imported components.\nhttps://${this.docsDomain}/workspace/component-links`;
+  }
 
   async report([ids]: [string[]], opts: LinkCommandOpts) {
     const startTime = Date.now();

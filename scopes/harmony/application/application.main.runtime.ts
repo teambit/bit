@@ -1,9 +1,10 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten } from 'lodash';
+import { flatten, cloneDeep } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
 import { ApplicationType } from './application-type';
@@ -47,7 +48,9 @@ export class ApplicationMain {
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
     private appService: AppService,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private workspace: Workspace,
+    private logger: Logger
   ) {}
 
   /**
@@ -126,12 +129,22 @@ export class ApplicationMain {
     };
   }
 
-  async runApp(appName: string, options: Partial<ServeAppOptions> = {}) {
+  async runApp(appName: string, options: Partial<ServeAppOptions> & { skipWatch?: boolean } = {}) {
     const app = this.getAppOrThrow(appName);
     this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
     const port = await app.run(context);
+    if (!options.skipWatch) {
+      this.workspace.watcher
+        .watchAll({
+          preCompile: false,
+        })
+        .catch((err) => {
+          // don't throw an error, we don't want to break the "run" process
+          this.logger.error(`compilation failed`, err);
+        });
+    }
     return { app, port };
   }
 
@@ -159,14 +172,22 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    return Object.assign({}, context, {
+    return Object.assign(cloneDeep(context), {
       appName,
       appComponent: component,
     });
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect, AspectLoaderAspect];
+  static dependencies = [
+    CLIAspect,
+    LoggerAspect,
+    BuilderAspect,
+    EnvsAspect,
+    ComponentAspect,
+    AspectLoaderAspect,
+    WorkspaceAspect,
+  ];
 
   static slots = [
     Slot.withType<ApplicationType<unknown>[]>(),
@@ -175,13 +196,14 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
       EnvsMain,
       ComponentMain,
-      AspectLoaderMain
+      AspectLoaderMain,
+      Workspace
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
@@ -195,7 +217,9 @@ export class ApplicationMain {
       envs,
       component,
       appService,
-      aspectLoader
+      aspectLoader,
+      workspace,
+      logger
     );
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application)];

@@ -21,6 +21,7 @@ import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopeJsonHelper from './e2e-scope-json-helper';
 import ScopesData, { ScopesOptions } from './e2e-scopes';
+import CapsulesHelper from './e2e-capsules-helper';
 
 export type HelperOptions = {
   scopesOptions?: ScopesOptions;
@@ -44,6 +45,7 @@ export default class Helper {
   packageJson: PackageJsonHelper;
   scopeHelper: ScopeHelper;
   git: GitHelper;
+  capsules: CapsulesHelper;
   constructor(helperOptions?: HelperOptions) {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
@@ -78,6 +80,7 @@ export default class Helper {
     );
     this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures, this.extensions);
     this.general = new GeneralHelper(this.scopes, this.npm, this.command);
+    this.capsules = new CapsulesHelper(this.command);
   }
 }
 

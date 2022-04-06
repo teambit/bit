@@ -1,7 +1,7 @@
 import { Bundler, DevServer } from '@teambit/bundler';
-import { DeployContext } from '@teambit/application';
-import { Capsule } from '@teambit/isolator';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+
+import { ReactDeployContext } from './deploy-context';
 
 export type ReactAppOptions = {
   /**
@@ -45,10 +45,15 @@ export type ReactAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: (context: DeployContext, Capsule: Capsule) => Promise<void>;
+  deploy?: (context: ReactDeployContext) => Promise<void>;
 
   /**
    * ranges of ports to use to run the app server.
    */
   portRange?: number[];
+
+  /**
+   * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
+   */
+  favicon?: string;
 };

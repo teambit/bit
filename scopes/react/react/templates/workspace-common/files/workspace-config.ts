@@ -3,7 +3,7 @@ import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@tea
 import { parse, assign } from 'comment-json';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
-  const scope = defaultScope || 'company.scope';
+  const scope = defaultScope || 'my-org.my-scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = scope;
@@ -27,37 +27,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
   };
 
   const variants = {
-    'teambit.workspace/variants': parse(`{
-      /**
-       * configures all components with namespaces 'ui', 'blocks', 'pages' and 'themes'
-       * to use the default React development environment.
-       *
-      */
-      "{ui/**}, {blocks/**}, {pages/**}, {themes/**}": {
-        "teambit.react/react": {}
-      },
-  
-      /**
-       * configures components with namespaces 'entities', 'modules' and 'functions' to use the 
-       * default NodeJS dev environment.
-      */
-      "{entities/**}, {modules/**}, {functions/**}": {
-        "teambit.harmony/node": {}
-      },
-      /**
-       * configures components with namespace 'content' to use the MDX dev environment.
-      */
-      "{content/**}": {
-        "teambit.mdx/mdx": {}
-      },
-  
-      /**
-       * configures components with namespaces 'envs' and 'aspects' to use the default Aspect development environment.
-      */
-      "{envs/**}, {aspects/**}": {
-        "teambit.harmony/aspect": {}
-      }
-    }`),
+    'teambit.workspace/variants': parse(`{}`),
   };
 
   const configMerged = assign(configParsed, variants);

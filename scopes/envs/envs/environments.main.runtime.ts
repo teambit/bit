@@ -91,6 +91,18 @@ export class EnvsMain {
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
+  getCoreEnvsIds(): string[] {
+    return [
+      'teambit.harmony/aspect',
+      'teambit.react/react',
+      'teambit.harmony/node',
+      'teambit.react/react-native',
+      'teambit.html/html',
+      'teambit.mdx/mdx',
+      'teambit.envs/env',
+    ];
+  }
+
   /**
    * compose a new environment from a list of environment transformers.
    */
@@ -207,6 +219,19 @@ export class EnvsMain {
   }
 
   /**
+   * get the env of the given component.
+   * This will try to use the regular getEnv but fallback to the calculate env (in case you are using it during on load)
+   * This is safe to be used on onLoad as well
+   */
+  getOrCalculateEnv(component: Component): EnvDefinition {
+    try {
+      return this.getEnv(component);
+    } catch (err) {
+      return this.calculateEnv(component);
+    }
+  }
+
+  /**
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
@@ -303,6 +328,17 @@ export class EnvsMain {
     }
 
     return this.getEnvsNotFromEnvsConfig(component);
+  }
+
+  /**
+   * whether a component has an env configured (either by variant or .bitmap).
+   */
+  hasEnvConfigured(component: Component): boolean {
+    return Boolean(this.getAllEnvsConfiguredOnComponent(component).length);
+  }
+
+  getAllRegisteredEnvs(): string[] {
+    return this.envSlot.toArray().map((envData) => envData[0]);
   }
 
   /**
@@ -413,7 +449,7 @@ export class EnvsMain {
     return envsAspect?.config.env;
   }
 
-  private getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
+  getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
     const envDef =
       this.getEnvDefinitionByStringId(id.toString()) ||
       this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
@@ -428,6 +464,19 @@ export class EnvsMain {
     return undefined;
   }
 
+  getEnvFromComponent(envComponent: Component) {
+    const env = this.getEnvDefinitionById(envComponent.id);
+    return env;
+  }
+
+  /**
+   * Return the env definition of teambit.envs/env
+   */
+  getEnvsEnvDefinition(): EnvDefinition {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.getEnvDefinitionByStringId('teambit.envs/env')!;
+  }
+
   private printWarningIfFirstTime(envId: string, message: string) {
     if (!this.alreadyShownWarning[envId]) {
       this.alreadyShownWarning[envId] = true;
@@ -440,6 +489,18 @@ export class EnvsMain {
    */
   isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
+  }
+
+  isUsingAspectEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'aspect';
+  }
+
+  isUsingEnvEnv(component: Component): boolean {
+    const data = this.getEnvData(component);
+    if (!data) return false;
+    return data.type === 'env';
   }
 
   /**

@@ -57,7 +57,7 @@ export interface ComponentFactory {
 
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
-  getLogs(id: ComponentID): Promise<ComponentLog[]>;
+  getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
   /**
    * returns a specific state of a component by hash or semver.
@@ -73,7 +73,7 @@ export interface ComponentFactory {
    * load aspects.
    * returns the loaded aspect ids including the loaded versions.
    */
-  loadAspects: (ids: string[], throwOnError: boolean) => Promise<string[]>;
+  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: ComponentID) => Promise<string[]>;
 
   /**
    * Resolve dirs for aspects
@@ -99,6 +99,13 @@ export interface ComponentFactory {
    * @param componentId
    */
   hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
+
+  /**
+   * whether a component is not the same as its head.
+   * for a new component, it'll return "true" as it has no head yet.
+   * this is relevant for component from the workspace, where it can be locally changed. on the scope it's always false
+   */
+  isModified(component: Component): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

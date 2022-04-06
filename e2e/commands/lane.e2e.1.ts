@@ -2,9 +2,13 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE, IS_WINDOWS, LANE_REMOTE_DELIMITER } from '../../src/constants';
+import {
+  DEFAULT_LANE,
+  IS_WINDOWS,
+  LANE_REMOTE_DELIMITER,
+  statusWorkspaceIsCleanMsg,
+  AUTO_SNAPPED_MSG,
+} from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -31,6 +35,7 @@ describe('bit lane command', function () {
     });
     it('bit lane should show the active lane', () => {
       expect(output).to.have.string('current lane - dev');
+      expect(output).to.have.string('main');
     });
   });
   describe('create a snap on main then on a new lane', () => {
@@ -39,10 +44,10 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
@@ -60,6 +65,11 @@ describe('bit lane command', function () {
       expect(log).to.have.string(mainSnap);
       expect(log).to.have.string(devSnap);
     });
+    it('bit log --parents should show the parents', () => {
+      const log = helper.command.log('bar/foo', '--parents');
+      const mainSnap = helper.command.getHeadShort('bar/foo');
+      expect(log).to.have.string(`Parent(s): ${mainSnap}`);
+    });
     describe('bit lane with --details flag', () => {
       let output: string;
       before(() => {
@@ -67,6 +77,41 @@ describe('bit lane command', function () {
       });
       it('should show all lanes and mark the current one', () => {
         expect(output).to.have.string('current lane - dev');
+      });
+    });
+    describe('exporting the lane', () => {
+      before(() => {
+        helper.command.exportLane();
+      });
+      it('should export components on that lane', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+      it('bit status should show a clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('should change .bitmap to have the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+      });
+      it('bit lane --remote should show the exported lane', () => {
+        const remoteLanes = helper.command.showRemoteLanesParsed();
+        expect(remoteLanes.lanes).to.have.lengthOf(1);
+        expect(remoteLanes.lanes[0].name).to.equal('dev');
+      });
+      describe('bit lane diff on the scope', () => {
+        let diffOutput: string;
+        before(() => {
+          diffOutput = helper.command.diffLane('dev', true);
+        });
+        it('should show the diff correctly', () => {
+          expect(diffOutput).to.have.string('--- foo.js (main)');
+          expect(diffOutput).to.have.string('+++ foo.js (dev)');
+
+          expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
+          expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+        });
       });
     });
     describe('bit lane diff on the workspace', () => {
@@ -141,41 +186,6 @@ describe('bit lane command', function () {
       it('should not show the id field as it is redundant', () => {
         expect(diffOutput).to.not.have.string('--- Id');
         expect(diffOutput).to.not.have.string('+++ Id');
-      });
-    });
-    describe('exporting the lane', () => {
-      before(() => {
-        helper.command.exportLane();
-      });
-      it('should export components on that lane', () => {
-        const list = helper.command.listRemoteScopeParsed();
-        expect(list).to.have.lengthOf(1);
-      });
-      it('bit status should show a clean state', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
-      });
-      it('should change .bitmap to have the remote lane', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
-      });
-      it('bit lane --remote should show the exported lane', () => {
-        const remoteLanes = helper.command.showRemoteLanesParsed();
-        expect(remoteLanes.lanes).to.have.lengthOf(1);
-        expect(remoteLanes.lanes[0].name).to.equal('dev');
-      });
-      describe('bit lane diff on the scope', () => {
-        let diffOutput: string;
-        before(() => {
-          diffOutput = helper.command.diffLane('dev', true);
-        });
-        it('should show the diff correctly', () => {
-          expect(diffOutput).to.have.string('--- foo.js (main)');
-          expect(diffOutput).to.have.string('+++ foo.js (dev)');
-
-          expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-          expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
-        });
       });
     });
   });
@@ -284,7 +294,6 @@ describe('bit lane command', function () {
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.fetchRemoteLane('dev');
         beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
         helper.command.switchRemoteLane('dev');
       });
@@ -356,9 +365,27 @@ describe('bit lane command', function () {
           expect(output).to.have.string('not found');
         });
       });
+      describe('switching to a local lane', () => {
+        before(() => {
+          helper.command.createLane('int');
+          helper.command.switchLocalLane('main');
+          helper.command.switchLocalLane('int');
+        });
+        it('should not save the local lane in bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap[LANE_KEY]).to.not.deep.equal({ name: 'int', scope: helper.scopes.remote });
+        });
+        it('should have the last exported lane in bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        });
+        it('should not throw an error on bit install', () => {
+          expect(() => helper.command.install()).not.to.throw();
+        });
+      });
     });
   });
-  describe(`switching lanes with deleted files`, () => {
+  describe('switching lanes with deleted files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -374,6 +401,55 @@ describe('bit lane command', function () {
     });
     it('should delete the comp1/comp1.spec.js file', () => {
       expect(path.join(helper.scopes.localPath, 'comp1/comp1.spec.js')).to.not.be.a.path();
+    });
+  });
+  describe('switching lanes and importing in a new scope from remote scope', () => {
+    let mainScope;
+    let laneScope;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+
+      mainScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane('dev');
+      laneScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp2/index.js');
+      helper.command.addComponent('comp2/');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('dev');
+      helper.fs.outputFile('comp1/comp.model.js');
+      helper.fs.outputFile('comp2/comp.model.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('should import the latest from main when on main', () => {
+      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.command.import(`${helper.scopes.remote}/*`);
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(2);
+      expect(result[0].currentVersion).to.have.string('0.0.1');
+      expect(result[1].currentVersion).to.have.string('0.0.1');
+    });
+    it('should only import comp2 from the lane when on a lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScope);
+      helper.command.importComponent('comp2');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp2');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
+    });
+    it('should only import comp1 from the lane when on a lane', () => {
+      helper.scopeHelper.getClonedLocalScope(laneScope);
+      helper.command.importComponent('comp1');
+      const result = helper.command.listParsed();
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].id).to.have.string('comp1');
+      expect(result[0].currentVersion).to.not.have.string('0.0.1');
     });
   });
   describe('merging lanes', () => {
@@ -489,6 +565,70 @@ describe('bit lane command', function () {
           expect(merged).to.have.string('dev');
           expect(merged).to.not.have.string('All lanes are merged');
         });
+      });
+    });
+    describe('merging main into local lane', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1);
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
+      });
+    });
+    describe('merging main into local lane when main has tagged versions', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1, undefined, 'v2');
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
+      });
+    });
+    describe('merging main lane with no snapped components', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it('should not throw an error about missing objects', () => {
+        expect(mergeOutput).to.not.have.string(
+          'component comp1 is on the lane but its objects were not found, please re-import the lane'
+        );
+      });
+    });
+    describe('merging a lane into main when main is empty', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev');
+      });
+      it('should not throw an error that head is empty', () => {
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('the component should be available on main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
       });
     });
   });
@@ -615,6 +755,41 @@ describe('bit lane command', function () {
   describe('main => lane-a => labe-b, so laneB branched from laneA all exported', () => {
     describe('then cloned to another project and checked out to lane-a', () => {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
+    });
+  });
+  describe('main => lane => main => lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.switchLocalLane('main');
+    });
+    // previously it errored with "error: version "latest" of component comp1 was not found."
+    it('should be able to switch back to the lane with no error', () => {
+      expect(() => helper.command.switchLocalLane('dev')).to.not.throw();
+    });
+  });
+  describe('exporting a lane to a different scope than the component scope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane('dev');
+      helper.command.trackLane('dev', scopeName);
+      helper.fs.outputFile('comp1/comp1.spec.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit import in a new workspace should not throw an error', () => {
+      expect(() => helper.command.importComponent('comp1')).not.to.throw();
     });
   });
   describe('importing a component when checked out to a lane', () => {
@@ -1049,6 +1224,12 @@ describe('bit lane command', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(2);
         });
+        it('bit import should not reset the component to the remote-state but should keep the merged data', () => {
+          helper.command.import();
+          const status = helper.command.statusJson();
+          expect(status.outdatedComponents).to.have.lengthOf(0);
+          expect(status.stagedComponents).to.have.lengthOf(2);
+        });
         describe('tagging the components', () => {
           before(() => {
             helper.command.tagScope();
@@ -1215,10 +1396,13 @@ describe('bit lane command', function () {
         helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
+        // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
+        helper.command.switchRemoteLane('dev');
       });
-      // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
-      it('should not throw an error', () => {
-        expect(() => helper.command.switchRemoteLane('dev')).to.not.throw();
+      // previous error was trying to get the Ref of the remote-scope according to the component-scope
+      // resulting in zero data from the ref file and assuming all versions are staged
+      it('should not show the component as staged', () => {
+        helper.command.expectStatusToBeClean();
       });
     });
   });
@@ -1329,6 +1513,82 @@ describe('bit lane command', function () {
       const list = helper.command.listParsed();
       expect(list[0].localVersion).to.equal('0.0.1');
       expect(list[0].currentVersion).to.equal('0.0.1');
+    });
+  });
+  describe('update components from remote lane', () => {
+    let afterFirstExport: string;
+    let remoteAfterSecondExport: string;
+    let beforeSecondExport: string;
+    let remoteBeforeSecondExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      beforeSecondExport = helper.scopeHelper.cloneLocalScope();
+      remoteBeforeSecondExport = helper.scopeHelper.cloneRemoteScope();
+      helper.command.export();
+      remoteAfterSecondExport = helper.scopeHelper.cloneRemoteScope();
+    });
+    describe('running "bit import" when the local is behind', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+        helper.command.import();
+      });
+      it('bit import should not only bring the components but also merge the lane object', () => {
+        const headOnLocalLane = helper.command.getHeadOfLane('dev', 'comp1');
+        const headOnRemoteLane = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+        expect(headOnLocalLane).to.equal(headOnRemoteLane);
+      });
+      it('bit status should show the components as pending-updates', () => {
+        const status = helper.command.statusJson();
+        expect(status.outdatedComponents).to.have.lengthOf(1);
+      });
+      it('bit checkout latest --all should update them all to the latest version', () => {
+        helper.command.checkout('latest --all');
+        helper.command.expectStatusToBeClean();
+      });
+    });
+    describe('running "bit import" when the remote is behind', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeSecondExport);
+        helper.scopeHelper.getClonedRemoteScope(remoteBeforeSecondExport);
+        helper.command.import();
+      });
+      it('bit import should not change the heads with the older snaps', () => {
+        const headOnLocalLane = helper.command.getHeadOfLane('dev', 'comp1');
+        const headOnRemoteLane = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+        expect(headOnLocalLane).to.not.equal(headOnRemoteLane);
+      });
+      it('bit status should still show the components as staged', () => {
+        const status = helper.command.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+    });
+    describe('running "bit import" when the remote and the local have diverged', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+        // it's imported, otherwise the auto-import brings the second snap from the remote
+        helper.scopeHelper.getClonedRemoteScope(remoteBeforeSecondExport);
+        helper.fixtures.populateComponents(1, undefined, 'v3');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.scopeHelper.getClonedRemoteScope(remoteAfterSecondExport);
+        helper.command.import();
+      });
+      it('bit import should not change the heads with the older snaps', () => {
+        const headOnLocalLane = helper.command.getHeadOfLane('dev', 'comp1');
+        const headOnRemoteLane = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+        expect(headOnLocalLane).to.not.equal(headOnRemoteLane);
+      });
+      it('bit status should show the components as pending-merge', () => {
+        const status = helper.command.statusJson();
+        expect(status.mergePendingComponents).to.have.lengthOf(1);
+      });
     });
   });
 });

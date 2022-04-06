@@ -19,6 +19,7 @@ const moduleFileExtensions = [
   'mjs',
   'web.js',
   'js',
+  'cjs',
   'web.ts',
   'ts',
   'web.tsx',
@@ -57,6 +58,8 @@ export default function (isEnvProduction = false): Configuration {
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   return {
+    // TODO: make the dev tool according to shouldUseSourceMap and isEnvProduction
+    // devtool: 'inline-source-map',
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support
@@ -72,12 +75,8 @@ export default function (isEnvProduction = false): Configuration {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
-        react: require.resolve('react'),
-        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
-        'react-dom/server': require.resolve('react-dom/server'),
-        'react-dom': require.resolve('react-dom'),
-        '@mdx-js/react': require.resolve('@mdx-js/react'),
 
+        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -298,6 +297,9 @@ export default function (isEnvProduction = false): Configuration {
                   maxSize: imageInlineSizeLimit,
                 },
               },
+              generator: {
+                filename: 'static/images/[hash][ext][query]',
+              },
             },
             {
               // loads svg as both inlineUrl and react component, like:
@@ -320,6 +322,14 @@ export default function (isEnvProduction = false): Configuration {
                 },
               ],
             },
+            {
+              test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+              type: 'asset',
+              generator: {
+                filename: 'static/fonts/[hash][ext][query]',
+              },
+            },
+
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
             // In production, they would get copied to the `build` folder.
@@ -330,7 +340,10 @@ export default function (isEnvProduction = false): Configuration {
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
+              exclude: [/\.(js|mjs|cjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
+              generator: {
+                filename: 'static/[hash][ext][query]',
+              },
               type: 'asset',
             },
             // ** STOP ** Are you adding a new loader?

@@ -1,4 +1,4 @@
-import { Graph } from 'cleargraph';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
@@ -55,12 +55,6 @@ export function calculatePipelineOrder(
   });
   const pipelineEnvs: PipelineEnv[] = [];
   envs.forEach((envDefinition) => {
-    if (envDefinition.env.getPipe) {
-      // @todo: remove once this confusion is over
-      throw new Error(
-        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${envDefinition.id}" to "getBuildPipe()"`
-      );
-    }
     const pipeline = getPipelineForEnv(taskSlot, envDefinition.env, pipeNameOnEnv);
     pipelineEnvs.push({ env: envDefinition, pipeline });
   });
@@ -113,7 +107,7 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
   if (!task.dependencies || !task.dependencies.length) return;
   const taskId = BuildTaskHelper.serializeId(task);
   task.dependencies.forEach((dependency) => {
-    const { aspectId, name } = BuildTaskHelper.deserializeId(dependency);
+    const { aspectId, name } = BuildTaskHelper.deserializeIdAllowEmptyName(dependency);
     const dependencyTasks = pipeline.filter((pipelineTask) => {
       if (pipelineTask.aspectId !== aspectId) return false;
       return name ? name === pipelineTask.name : true;
@@ -133,9 +127,9 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
       if (!graphLocation) throw new Error(`unable to find graph for location ${location}`);
       const dependencyId = BuildTaskHelper.serializeId(dependencyTask);
       const graph = graphLocation.graph;
-      graph.setNode(taskId, taskId);
-      graph.setNode(dependencyId, dependencyId);
-      graph.setEdge(dependencyId, taskId, 'dependency');
+      graph.setNode(new Node(taskId, taskId));
+      graph.setNode(new Node(dependencyId, dependencyId));
+      graph.setEdge(new Edge(dependencyId, taskId, 'dependency'));
     });
   });
 }

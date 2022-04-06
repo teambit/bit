@@ -1,4 +1,4 @@
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
@@ -8,10 +8,11 @@ import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain, UseWebpackModifiers } from '@teambit/react';
+import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
 import { componentTemplates, workspaceTemplates } from './react-native.templates';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
+import { ReactNativeEnv } from './react-native.env';
 
 const jestConfig = require.resolve('./jest/jest.config');
 
@@ -19,7 +20,7 @@ export class ReactNativeMain {
   constructor(
     private react: ReactMain,
 
-    readonly reactNativeEnv: Environment,
+    readonly reactNativeEnv: ReactNativeEnv,
 
     private envs: EnvsMain
   ) {}
@@ -95,9 +96,9 @@ export class ReactNativeMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
+  overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies?.()),
+      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies()),
     });
   }
 
@@ -115,41 +116,16 @@ export class ReactNativeMain {
       previewConfig: [previewConfigTransformer],
       devServerConfig: [devServerConfigTransformer],
     };
-    const reactNativeEnv = react.compose([
-      react.useWebpack(webpackModifiers),
-      react.overrideJestConfig(jestConfig),
-      react.overrideDependencies(getReactNativeDeps()),
-    ]);
-    envs.registerEnv(reactNativeEnv);
+
+    const reactNativeComposedEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
+      new ReactNativeEnv(react),
+      react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
+    );
+    envs.registerEnv(reactNativeComposedEnv);
     generator.registerComponentTemplate(componentTemplates);
     generator.registerWorkspaceTemplate(workspaceTemplates);
-    return new ReactNativeMain(react, reactNativeEnv, envs);
+    return new ReactNativeMain(react, reactNativeComposedEnv, envs);
   }
 }
 
 ReactNativeAspect.addRuntime(ReactNativeMain);
-
-function getReactNativeDeps() {
-  return {
-    dependencies: {
-      react: '-',
-      'react-dom': '-',
-      'react-native': '-',
-    },
-    devDependencies: {
-      react: '-',
-      'react-dom': '-',
-      'react-native': '-',
-      '@types/jest': '^26.0.0',
-      '@types/react': '^17.0.8',
-      '@types/react-dom': '^17.0.5',
-      '@types/react-native': '^0.64.1',
-    },
-    peerDependencies: {
-      react: '^16.8.0 || ^17.0.0',
-      'react-dom': '^16.8.0 || ^17.0.0',
-      'react-native': '^0.64.1',
-      'react-native-web': '^0.16.0',
-    },
-  };
-}

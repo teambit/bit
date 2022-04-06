@@ -8,9 +8,11 @@ export type RenameOptions = {
 };
 
 export class RenameCmd implements Command {
-  name = 'rename <source-id> <target-id>';
+  name = 'rename <source-name> <target-name>';
   description =
     'EXPERIMENTAL. rename component. if tagged/exported, create a new component and deprecate the source-component';
+  extendedDescription = `the "<target-name>" should include the component-name only, without the scope-name.
+to assign a default-scope to this component, please use "--scope" flag`;
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';

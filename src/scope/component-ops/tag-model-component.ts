@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { isNilOrEmpty, compact } from 'ramda-adjunct';
-import pMap from 'p-map';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -24,7 +23,7 @@ import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
@@ -182,6 +181,7 @@ export default async function tagModelComponent({
   ids,
   scope,
   message,
+  editor,
   exactVersion,
   releaseType,
   preRelease,
@@ -233,6 +233,9 @@ export default async function tagModelComponent({
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = BitIds.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+
+  const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
+  const messagePerId = editor ? await messagesFromEditorFetcher.getMessagesFromEditor(scope.tmp, editor) : [];
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
@@ -308,14 +311,13 @@ export default async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
 
-  await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
+  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
-    await throwForLegacyDependenciesInsideHarmony(consumer, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
@@ -368,29 +370,6 @@ export async function addFlattenedDependenciesToComponents(scope: Scope, compone
   loader.stop();
 }
 
-async function throwForLegacyDependenciesInsideHarmony(consumer: Consumer, components: Component[]) {
-  if (consumer.isLegacy) {
-    return;
-  }
-  const throwForComponent = async (component: Component) => {
-    const dependenciesIds = component.getAllDependenciesIds();
-    await Promise.all(
-      dependenciesIds.map(async (depId) => {
-        if (!depId.hasVersion()) return;
-        const modelComp = await consumer.scope.getModelComponentIfExist(depId);
-        if (!modelComp) return;
-        const version = await modelComp.loadVersion(depId.version as string, consumer.scope.objects);
-        if (version.isLegacy) {
-          throw new Error(
-            `unable tagging "${component.id.toString()}", its dependency "${depId.toString()}" is legacy`
-          );
-        }
-      })
-    );
-  };
-  await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
-}
-
 function addSpecsResultsToComponents(components: Component[], testsResults): void {
   components.forEach((component) => {
     const testResult = testsResults.find((result) => {
@@ -405,16 +384,18 @@ async function addLogToComponents(
   components: Component[],
   autoTagComps: Component[],
   persist: boolean,
-  message: string
+  message: string,
+  messagePerComponent: MessagePerComponent[]
 ) {
   const username = await globalConfig.get(CFG_USER_NAME_KEY);
   const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
   const getLog = (component: Component): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
+    const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
     return {
       username: nextVersion?.username || username,
       email: nextVersion?.email || email,
-      message: nextVersion?.message || message,
+      message: nextVersion?.message || msgFromEditor || message,
       date: Date.now().toString(),
     };
   };
@@ -424,7 +405,12 @@ async function addLogToComponents(
   });
   autoTagComps.forEach((autoTagComp) => {
     autoTagComp.log = getLog(autoTagComp);
-    autoTagComp.log.message = `${autoTagComp.log.message} (bump dependencies versions)`;
+    const defaultMsg = 'bump dependencies versions';
+    if (message) {
+      autoTagComp.log.message += ` (${defaultMsg})`;
+    } else if (!autoTagComp.log.message) {
+      autoTagComp.log.message = defaultMsg;
+    }
   });
 }
 

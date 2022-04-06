@@ -12,6 +12,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
+import { EnvAspect } from '@teambit/env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -28,6 +29,7 @@ import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
+import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -69,7 +71,18 @@ import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
+import { ComponentLogAspect } from '@teambit/component-log';
+import { ClearCacheAspect } from '@teambit/clear-cache';
+import { DiagnosticAspect } from '@teambit/diagnostic';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import { MochaAspect } from '@teambit/mocha';
+import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
+import { CommunityAspect } from '@teambit/community';
+import { CloudAspect } from '@teambit/cloud';
+import { StatusAspect } from '@teambit/status';
+import { SnappingAspect } from '@teambit/snapping';
+import { MergingAspect } from '@teambit/merging';
+import { IssuesAspect } from '@teambit/issues';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -85,6 +98,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
+  [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
@@ -95,6 +109,7 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
+  [EnvAspect.id]: EnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -144,6 +159,17 @@ export const manifestsMap = {
   [ForkingAspect.id]: ForkingAspect,
   [RenamingAspect.id]: RenamingAspect,
   [NewComponentHelperAspect.id]: NewComponentHelperAspect,
+  [ComponentLogAspect.id]: ComponentLogAspect,
+  [ClearCacheAspect.id]: ClearCacheAspect,
+  [MochaAspect.id]: MochaAspect,
+  [BitCustomAspectAspect.id]: BitCustomAspectAspect,
+  [DiagnosticAspect.id]: DiagnosticAspect,
+  [StatusAspect.id]: StatusAspect,
+  [CommunityAspect.id]: CommunityAspect,
+  [CloudAspect.id]: CloudAspect,
+  [SnappingAspect.id]: SnappingAspect,
+  [MergingAspect.id]: MergingAspect,
+  [IssuesAspect.id]: IssuesAspect,
 };
 
 export function isCoreAspect(id: string) {
