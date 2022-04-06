@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import Mousetrap from 'mousetrap';
 
@@ -136,8 +136,19 @@ export class CommandBarUI {
   /**
    * generate the ui for command bar
    */
-  getCommandBar = () => {
-    return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
+  private CommandBar = () => {
+    const [visible, setVisibility] = useState(false);
+    this.setVisibility = setVisibility;
+
+    return (
+      <CommandBar
+        key="CommandBarUI"
+        searcher={this.search}
+        placeholder="Search anything or type > to only search commands"
+        visible={visible}
+        setVisibility={setVisibility}
+      />
+    );
   };
 
   constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
@@ -165,7 +176,7 @@ export class CommandBarUI {
       keybinding: openCommandBarKeybinding,
     });
 
-    uiUi.registerHudItem(commandBar.getCommandBar());
+    uiUi.registerHudItem(<commandBar.CommandBar />);
     uiUi.registerRenderHooks({
       reactContext: commandBar.renderContext,
     });

@@ -1,36 +1,47 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import type { CommandBarUI } from '../../command-bar.ui.runtime';
 import { CommanderSearchResult } from '../../types';
 import { AutoCompleteInput } from '../autocomplete-input';
 import { CommandBarItem } from '../command-bar-item';
 import styles from './command-bar.module.scss';
 
 export type CommandBarProps = {
-  search: (term: string, limit?: number) => CommanderSearchResult[];
-  commander: CommandBarUI;
+  searcher: (term: string, limit?: number) => CommanderSearchResult[];
+  visible?: boolean;
+  setVisibility?: (nextVisible: boolean) => void;
+  placeholder?: string;
 } & CardProps;
 
-const MIN_IDX = 0;
-
-export function CommandBar({ search, commander, elevation = 'high', className, ...rest }: CommandBarProps) {
+export function CommandBar({
+  elevation = 'high',
+  className,
+  visible = true,
+  searcher,
+  setVisibility,
+  placeholder = 'Search anything',
+  ...rest
+}: CommandBarProps) {
   const [term, setTerm] = useState('');
-  const options = useMemo(() => search(term), [term, search]);
-  const [activeIdx, setActive] = useState(MIN_IDX);
-  const increment = useCallback(() => setActive((x) => Math.min(x + 1, options.length - 1)), [options.length]);
-  const decrement = useCallback(() => setActive((x) => Math.max(x - 1, MIN_IDX)), []);
-  const [visible, setVisibility] = useState(false);
+  useEffect(() => setTerm(''), [visible]); // reset on visibility change
+  const results = useMemo(() => searcher(term), [term, searcher]);
 
-  commander.setVisibility = setVisibility;
+  const idxNav = use1dNav(results.length);
+  useEffect(() => idxNav.reset(), [results]); // reset on results change
 
-  const handleEnter = useCallback(() => {
-    setVisibility(false);
-    options[activeIdx]?.handler();
-  }, [options, activeIdx]);
+  const handleEnter = () => {
+    setVisibility?.(false);
 
-  useEffect(() => setTerm(''), [visible]);
-  useEffect(() => setActive(MIN_IDX), [options]);
+    const current = results[idxNav.activeIdx];
+    current?.handler();
+  };
+
+  const keyHandlers = {
+    ArrowDown: idxNav.increment,
+    ArrowUp: idxNav.decrement,
+    Enter: handleEnter,
+    Escape: () => setVisibility?.(false),
+  };
 
   return (
     <Card
@@ -41,21 +52,18 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
       <AutoCompleteInput
         value={term}
         focus={visible}
+        keyHandlers={keyHandlers}
         className={styles.input}
-        placeholder="Search anything or type > to only search commands"
+        placeholder={placeholder}
         onChange={(e) => setTerm(e.target.value)}
-        onDown={increment}
-        onUp={decrement}
-        onEnter={handleEnter}
-        onEscape={() => setVisibility(false)}
-        onBlur={() => setVisibility(false)}
+        onBlur={() => setVisibility?.(false)}
       />
       <div className={styles.results}>
-        {options.map((x, idx) => (
+        {results.map((x, idx) => (
           <CommandBarItem
             key={idx} // use index instead of id to avoid duplicate keys
             entry={x}
-            active={idx === activeIdx}
+            active={idx === idxNav.activeIdx}
             // mouseDown happens before blur, which closes the command bar
             onMouseDown={x.handler}
           />
@@ -63,4 +71,20 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
       </div>
     </Card>
   );
+}
+
+const MIN_IDX = 0;
+function use1dNav(length: number, startIdx = 0) {
+  const [activeIdx, setActive] = useState(startIdx);
+
+  const increment = useCallback(() => setActive((x) => Math.min(x + 1, length - 1)), [length]);
+  const decrement = useCallback(() => setActive((x) => Math.max(x - 1, MIN_IDX)), []);
+  const reset = useCallback(() => setActive(startIdx), [startIdx]);
+
+  return {
+    activeIdx,
+    increment,
+    decrement,
+    reset,
+  };
 }
