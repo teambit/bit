@@ -10,6 +10,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
+import { AspectList } from '@teambit/component';
 import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
@@ -107,12 +108,32 @@ export class AspectMain {
     return componentIds;
   }
 
-  async getAspectsOfComponent(id: string | ComponentID) {
+  /**
+   * returns all aspects info of a component, include the config and the data.
+   */
+  async getAspectsOfComponent(id: string | ComponentID): Promise<AspectList> {
+    if (typeof id === 'string') {
+      id = await this.workspace.resolveComponentId(id);
+    }
+    const component = await this.workspace.get(id);
+    return component.state.aspects;
+  }
+
+  /**
+   * helps debugging why/how an aspect was set to a component
+   */
+  async getAspectsOfComponentForDebugging(id: string | ComponentID) {
     if (typeof id === 'string') {
       id = await this.workspace.resolveComponentId(id);
     }
     const componentFromScope = await this.workspace.scope.get(id);
-    return this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
+    const component = await this.workspace.get(id);
+    return {
+      aspects: component.state.aspects,
+      extensions,
+      beforeMerge,
+    };
   }
 
   async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
@@ -198,11 +219,11 @@ export class AspectMain {
         .setShouldCopyNonSupportedFiles(false);
       return config;
     };
-    const tsCompiler = react.env.getCompiler([transformer]);
+    const tsCompiler = react.env.getCjsCompilerTask([transformer]);
 
     const compilerTasksOverride = react.overrideCompilerTasks([
       compiler.createTask('BabelCompiler', babelCompiler),
-      compiler.createTask('TypescriptCompiler', tsCompiler),
+      tsCompiler,
     ]);
 
     const aspectEnv = react.compose(

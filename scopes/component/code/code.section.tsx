@@ -12,6 +12,7 @@ export class CodeSection implements Section {
   navigationLink = {
     href: '~code',
     children: <MenuWidgetIcon icon="Code" tooltipContent="Code" />,
+    displayName: 'Code',
   };
   order = 30;
 }

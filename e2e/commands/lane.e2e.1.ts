@@ -581,6 +581,22 @@ describe('bit lane command', function () {
         expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
       });
     });
+    describe('merging main into local lane when main has tagged versions', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1, undefined, 'v2');
+        helper.command.snapAllComponentsWithoutBuild();
+        mergeOutput = helper.command.mergeLane('main');
+      });
+      it("should not throw an error that main lane doesn't exist", () => {
+        expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
+      });
+    });
     describe('merging main lane with no snapped components', () => {
       let mergeOutput: string;
       before(() => {
@@ -594,6 +610,25 @@ describe('bit lane command', function () {
         expect(mergeOutput).to.not.have.string(
           'component comp1 is on the lane but its objects were not found, please re-import the lane'
         );
+      });
+    });
+    describe('merging a lane into main when main is empty', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.createLane('dev');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev');
+      });
+      it('should not throw an error that head is empty', () => {
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('the component should be available on main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
       });
     });
   });
@@ -1187,6 +1222,12 @@ describe('bit lane command', function () {
         });
         it('should show the merged components as staged', () => {
           const status = helper.command.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(2);
+        });
+        it('bit import should not reset the component to the remote-state but should keep the merged data', () => {
+          helper.command.import();
+          const status = helper.command.statusJson();
+          expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.stagedComponents).to.have.lengthOf(2);
         });
         describe('tagging the components', () => {

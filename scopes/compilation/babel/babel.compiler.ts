@@ -47,6 +47,10 @@ export class BabelCompiler implements Compiler {
     return this.babelModule.version;
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   /**
    * compile one file on the workspace
    */

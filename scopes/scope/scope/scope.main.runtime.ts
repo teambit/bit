@@ -919,6 +919,10 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     await this.loadAspects(aspectIds, true, component.id);
   }
 
+  async isModified(): Promise<boolean> {
+    return false;
+  }
+
   /**
    * declare the slots of scope extension.
    */
