@@ -9,7 +9,7 @@ import styles from './command-bar.module.scss';
 export type CommandBarProps = {
   searcher: (term: string, limit?: number) => CommanderSearchResult[];
   visible?: boolean;
-  setVisibility?: (nextVisible: boolean) => void;
+  onVisibilityChange?: (nextVisible: boolean) => void;
   placeholder?: string;
 } & CardProps;
 
@@ -18,7 +18,7 @@ export function CommandBar({
   className,
   visible = true,
   searcher,
-  setVisibility,
+  onVisibilityChange: setVisibility,
   placeholder = 'Search anything',
   ...rest
 }: CommandBarProps) {
@@ -62,10 +62,9 @@ export function CommandBar({
         {results.map((x, idx) => (
           <CommandBarItem
             key={idx} // use index instead of id to avoid duplicate keys
-            entry={x}
             active={idx === idxNav.activeIdx}
             // mouseDown happens before blur, which closes the command bar
-            onMouseDown={x.handler}
+            onMouseDown={() => x.handler()}
           />
         ))}
       </div>

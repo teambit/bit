@@ -146,7 +146,7 @@ export class CommandBarUI {
         searcher={this.search}
         placeholder="Search anything or type > to only search commands"
         visible={visible}
-        setVisibility={setVisibility}
+        onVisibilityChange={setVisibility}
       />
     );
   };

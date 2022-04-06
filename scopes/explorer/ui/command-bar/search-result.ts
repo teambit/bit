@@ -1,11 +1,10 @@
-export type CommandHandler = (...arg: any[]) => any;
+import { ReactNode } from 'react';
+
 export type Keybinding = string | string[]; // TODO
 
 export type CommanderSearchResult = {
   id: string;
-  displayName: string;
-  handler: CommandHandler;
-  icon?: string;
-  iconAlt?: string;
-  keybinding?: Keybinding;
+  // TODO - rename to action
+  handler: Function;
+  children: ReactNode;
 };

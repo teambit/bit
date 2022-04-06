@@ -23,16 +23,16 @@ export function AutoCompleteInput({ className, keyHandlers, onKeyDown, focus, ..
   return <input {...rest} ref={inputRef} className={classNames(styles.input, className)} onKeyDown={handleKeyDown} />;
 }
 
-function useKeyHandler(callbacks: KeyHandlers, onEvent?: (e: React.KeyboardEvent<HTMLInputElement>) => void) {
-  const ref = useRef(callbacks);
-  ref.current = callbacks;
+function useKeyHandler(keyHandlers: KeyHandlers, onEvent?: (e: React.KeyboardEvent<HTMLInputElement>) => void) {
+  const handlersRef = useRef(keyHandlers);
+  handlersRef.current = keyHandlers;
 
   return useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       onEvent?.(e);
       if (e.defaultPrevented) return;
 
-      const callback = ref.current.callbacks[e.key];
+      const callback = handlersRef.current[e.key];
       if (!callback) return;
 
       e.preventDefault();

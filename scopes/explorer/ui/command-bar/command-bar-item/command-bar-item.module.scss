@@ -7,16 +7,6 @@
   transition: all 180ms;
 
   user-select: none;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--bit-bg-heavy, #f6f6f6);
-  }
-
-  &.active,
-  &.active:hover {
-    background-color: var(--bit-accent-bg, #eceaff);
-  }
 }
 
 .name {
