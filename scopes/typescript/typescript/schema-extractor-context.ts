@@ -140,7 +140,7 @@ export class SchemaExtractorContext {
     return ['string', 'number', 'bool', 'boolean', 'object', 'any', 'void'].includes(typeName);
   }
 
-  async jump(file: AbstractVinyl, start: any) {
+  async jump(file: AbstractVinyl, start: any): Promise<SchemaNode | undefined> {
     const sourceFile = this.extractor.parseSourceFile(file);
     const pos = this.getPosition(sourceFile, start.line, start.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
@@ -161,7 +161,7 @@ export class SchemaExtractorContext {
         const file = this.findFileInComponent(definition.file);
         // TODO: find component id is exists, otherwise add the package name.
         if (!file) return new TypeRefSchema(typeStr, undefined, '');
-        if (file) return new TypeRefSchema(typeStr, undefined, undefined, this.jump(file, definition.start));
+        if (file) return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
         return undefined;
       }) || []
     );

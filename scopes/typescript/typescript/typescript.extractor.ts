@@ -1,7 +1,7 @@
 import ts, { Node } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
-import { SchemaNode, SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
@@ -40,7 +40,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     context.setExports(new ExportList(exportNames));
     await this.computeSchema(mainAst, context); // TODO: create the schema
 
-    return SemanticSchema.from({});
+    return APISchema.from({});
   }
 
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {

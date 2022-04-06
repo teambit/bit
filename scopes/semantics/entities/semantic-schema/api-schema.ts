@@ -9,14 +9,17 @@ export class APISchema implements SchemaNode {
   constructor(readonly exports: Export[] = []) {}
 
   toString() {
-    // return JSON.stringify(this.exports.map(() => export.toObject()));
+    return JSON.stringify(
+      this.exports.map((exp) => exp.toObject()),
+      undefined,
+      2
+    );
   }
 
   toObject() {
     return {
-      // exports: this.exports.map((exp) => exp()),
+      exports: this.exports.map((exp) => exp.toObject()),
       filename: '',
-
     };
   }
 

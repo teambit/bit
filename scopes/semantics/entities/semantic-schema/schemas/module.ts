@@ -9,7 +9,11 @@ export class Module implements SchemaNode {
     readonly exports: Export[]
   ) {}
 
+  toObject(): Record<string, any> {
+    return this.exports.map((exp) => exp.toObject());
+  }
+
   // toString() {
-    
+
   // }
 }

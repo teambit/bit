@@ -1,3 +1,4 @@
+import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, SyntaxKind, ExportDeclaration as ExportDeclarationNode, NamedExports } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
@@ -27,7 +28,7 @@ export class ExportDeclaration implements SchemaTransformer {
     return [];
   }
 
-  async transform(node: Node, context: SchemaExtractorContext) {
+  async transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const exportDec = node as ExportDeclarationNode;
     // sourceFile.sear
     const exportClause = exportDec.exportClause;

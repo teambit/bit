@@ -15,7 +15,7 @@ export class TypeAliasTransformer implements SchemaTransformer {
   async transform(node: Node) {
     const typeAlias = node as TypeAliasDeclaration;
     typeAlias.typeParameters;
-    typeAlias.
+    // typeAlias.
     return {};
   }
 }

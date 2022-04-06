@@ -1,5 +1,6 @@
 import ts, { Node, TypeAliasDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
+import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 
 export class ClassDecelerationTransformer implements SchemaTransformer {
