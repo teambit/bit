@@ -1,14 +1,10 @@
-export type CommandId = string;
-export type CommandHandler = (...arg: any[]) => any;
+import { CommanderSearchResult } from '@teambit/explorer.ui.command-bar';
 
-export type CommanderSearchResult = {
-  id: string;
-  displayName: string;
-  handler: CommandHandler;
-  icon?: string;
-  iconAlt?: string;
-  keybinding?: Keybinding;
-};
+export type { CommanderSearchResult };
+export type CommandId = string;
+export type CommandHandler = Function;
+
+export type Keybinding = string | string[];
 
 export interface SearchProvider {
   /** provide completions for this search term */
@@ -16,5 +12,3 @@ export interface SearchProvider {
   /** determines what terms are handled by this searcher. */
   test(term: string): boolean;
 }
-
-export type Keybinding = string | string[];
