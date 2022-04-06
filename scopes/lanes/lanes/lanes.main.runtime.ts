@@ -166,7 +166,7 @@ export class LanesMain {
     });
 
     await this.workspace.consumer.onDestroy();
-
+    await this.workspace.consumer.bitMap.syncWithLanes();
     return results;
   }
 
