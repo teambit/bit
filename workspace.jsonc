@@ -161,6 +161,9 @@
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
+        "@teambit/react.modules.dom-to-react": "0.1.0",
+        "@teambit/react.ui.component-highlighter": "0.1.0",
+        "@teambit/react.ui.hover-selector": "0.1.0",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
@@ -371,7 +374,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.243",
+        "@teambit/legacy": "1.0.244",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -450,7 +453,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.243"
+            "@teambit/legacy": "1.0.244"
           }
         }
       },
@@ -709,7 +712,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.243"
+            "@teambit/legacy": "1.0.244"
           }
         }
       }
@@ -766,7 +769,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.243",
+            "@teambit/legacy": "1.0.244",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -844,7 +847,9 @@
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
-        "ignoreIssues": ["ImportNonMainFiles"]
+        "ignoreIssues": [
+          "ImportNonMainFiles"
+        ]
       },
       "teambit.dependencies/dependency-resolver": {
         "policy": {
@@ -896,7 +901,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.243"
+            "@teambit/legacy": "1.0.244"
           }
         }
       }
