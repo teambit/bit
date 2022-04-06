@@ -2,7 +2,7 @@ import { TsserverClient } from '@teambit/ts-server';
 import ts, { ExportDeclaration, Node } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
-// @ts-ignore
+// @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve } from 'path';
 import { Component } from '@teambit/component';
