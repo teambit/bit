@@ -24,9 +24,9 @@ export const nodeEnvTemplate: ComponentTemplate = {
     ];
   },
   config: {
-    'teambit.harmony/aspect': {},
+    'teambit.envs/env': {},
     'teambit.envs/envs': {
-      env: 'teambit.harmony/aspect',
+      env: 'teambit.envs/env',
     },
   },
 };
