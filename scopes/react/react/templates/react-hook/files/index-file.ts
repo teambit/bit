@@ -8,4 +8,4 @@ export const indexFile = (context: ComponentContext) => {
     content: `export { ${Name} } from './${name}';
 `,
   };
-}
+};

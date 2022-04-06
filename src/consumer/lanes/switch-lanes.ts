@@ -150,7 +150,7 @@ the lane already exists. please switch to the lane and merge`);
   consumer.scope.lanes.setCurrentLane(opts.localLaneName as string);
   const workspaceLane =
     opts.localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(opts.localLaneName as string, consumer.scope.path);
-  consumer.bitMap.reLoadAfterSwitchingLane(workspaceLane);
+  consumer.bitMap.syncWithLanes(workspaceLane);
 }
 
 async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: SwitchProps): Promise<ComponentStatus> {

@@ -104,8 +104,8 @@ export class MDXMain {
           return {
             type: 'mdx',
           };
-        }
-      })
+        },
+      }),
     ]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));

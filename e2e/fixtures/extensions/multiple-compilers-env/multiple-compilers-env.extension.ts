@@ -33,7 +33,7 @@ export class MultipleCompilersEnv {
         .setShouldCopyNonSupportedFiles(false);
       return config;
     };
-    const tsCompiler = react.env.getCompiler([transformer]);
+    const tsCompiler = react.env.getTsCjsCompiler('build', [transformer]);
 
     const buildPipeOverride = react.overrideBuildPipe([
       compiler.createTask('BabelCompiler', babelCompiler),
