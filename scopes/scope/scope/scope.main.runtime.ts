@@ -413,7 +413,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
       depsToLoad.push(...(manifest.dependencies || []));
-      (manifest?.getRuntimes() || []).forEach((runtime) => {
+      // @ts-ignore
+      (manifest._runtimes || []).forEach((runtime) => {
         depsToLoad.push(...(runtime.dependencies || []));
       });
       const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];

@@ -1009,9 +1009,10 @@ export class DependencyResolverMain {
       manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
-    const runtimes = manifest?.getRuntimes();
-    if (runtimes) {
-      await mapSeries(runtimes, async (runtime: RuntimeManifest) => {
+    // @ts-ignore
+    if (manifest?._runtimes) {
+      // @ts-ignore
+      await mapSeries(manifest?._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
           runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
