@@ -144,11 +144,14 @@ export class LanesMain {
     return results.laneResults;
   }
 
-  async mergeLane(laneName: string, options: MergeLaneOptions): Promise<ApplyVersionResults> {
+  async mergeLane(
+    laneName: string,
+    options: MergeLaneOptions
+  ): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
     if (!this.workspace) {
       throw new BitError(`unable to merge a lane outside of Bit workspace`);
     }
-    const mergeResults = await mergeLanes({
+    const results = await mergeLanes({
       merging: this.merging,
       consumer: this.workspace.consumer,
       laneName,
@@ -157,7 +160,7 @@ export class LanesMain {
 
     await this.workspace.consumer.onDestroy();
 
-    return mergeResults;
+    return results;
   }
 
   async getLaneComponentModels(name: string): Promise<Component[]> {

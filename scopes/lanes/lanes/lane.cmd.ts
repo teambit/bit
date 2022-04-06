@@ -10,6 +10,7 @@ import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
+import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -278,7 +279,7 @@ export class LaneMergeCmd implements Command {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
 
-    const results = await this.lanes.mergeLane(name, {
+    const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore
       remoteName,
       build,
@@ -289,7 +290,14 @@ export class LaneMergeCmd implements Command {
       snapMessage,
       deleteReadme,
     });
-    return mergeReport(results);
+
+    const mergeResult = `${mergeReport(mergeResults)}`;
+    const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
+      deleteResults.remoteResult || []
+    ).map((item) => paintRemoved(item, true))}${
+      (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
+    }\n`;
+    return mergeResult + deleteResult;
   }
 }
 

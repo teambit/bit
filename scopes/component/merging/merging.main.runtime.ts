@@ -164,7 +164,11 @@ export class MergingMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
-      .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
+      .map((componentStatus) => ({
+        id: componentStatus.id,
+        failureMessage: componentStatus.failureMessage as string,
+        unchangedLegitimately: componentStatus.unchangedLegitimately,
+      }));
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
@@ -229,7 +233,6 @@ export class MergingMain {
       return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
     }
     const currentlyUsedVersion = existingBitMapId.version;
-    console.log('🚀 ~ file: merging.main.runtime.ts ~ line 233 ~ MergingMain ~ existingBitMapId', existingBitMapId);
     if (currentlyUsedVersion === version) {
       // @todo: maybe this check is not needed as we check for diverge later on
       if (localLane || modelComponent.hasHead()) {
