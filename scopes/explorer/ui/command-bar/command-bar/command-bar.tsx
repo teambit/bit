@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import { CommanderSearchResult } from '../../types';
+import { CommanderSearchResult } from '../search-result';
 import { AutoCompleteInput } from '../autocomplete-input';
 import { CommandBarItem } from '../command-bar-item';
 import styles from './command-bar.module.scss';

@@ -1020,6 +1020,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
     },
+    "ui/command-bar": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/command-bar"
+    },
     "ui/component-drawer": {
         "scope": "teambit.component",
         "version": "0.0.10",
