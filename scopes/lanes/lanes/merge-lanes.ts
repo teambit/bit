@@ -86,6 +86,8 @@ export async function mergeLanes({
   let deleteResults = {};
 
   if (deleteReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
+    await consumer.onDestroy();
+
     const readmeComponentId = [
       otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),
     ];
@@ -97,8 +99,6 @@ export async function mergeLanes({
       track: false,
       deleteFiles: true,
     });
-
-    await consumer.onDestroy();
   } else if (!otherLane) {
     deleteResults = { readmeResult: `missing lane ${laneName}` };
   } else if (!otherLane.readmeComponent) {
