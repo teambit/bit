@@ -104,6 +104,52 @@ export class TypescriptMain {
   }
 
   /**
+   * Create a compiler instance and run the cjs transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  createCjsCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getCjsTransformer(), ...transformers], tsModule);
+  }
+
+  /**
+   * Create a compiler instance and run the esm transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  createEsmCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getEsmTransformer(), ...transformers], tsModule);
+  }
+
+  /**
+   * Create a transformer that change the ts module to CommonJS
+   * @returns
+   */
+  getCjsTransformer(): TsConfigTransformer {
+    const cjsTransformer = (config: TypescriptConfigMutator) => {
+      config.setModule('CommonJS');
+      return config;
+    };
+    return cjsTransformer;
+  }
+
+  /**
+   * Create a transformer that change the ts module to ES2020
+   * @returns
+   */
+  getEsmTransformer(): TsConfigTransformer {
+    const esmTransformer = (config: TypescriptConfigMutator) => {
+      config.setModule('ES2020');
+      return config;
+    };
+    return esmTransformer;
+  }
+
+  /**
    * create an instance of a typescript semantic schema extractor.
    */
   createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
@@ -114,9 +160,22 @@ export class TypescriptMain {
    * add the default package json properties to the component
    * :TODO @gilad why do we need this DSL? can't I just get the args here.
    */
-  getPackageJsonProps(): PackageJsonProps {
+  getCjsPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
+      types: '{main}.ts',
+    };
+  }
+
+  /**
+   * add type: module to the package.json props and the default props
+   * :TODO @gilad why do we need this DSL? can't I just get the args here.
+   */
+  getEsmPackageJsonProps(): PackageJsonProps {
+    return {
+      // main: 'dist-esm/{main}.js',
+      main: 'dist/{main}.js',
+      type: 'module',
       types: '{main}.ts',
     };
   }
