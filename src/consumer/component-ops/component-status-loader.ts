@@ -83,7 +83,7 @@ export class ComponentStatusLoader {
       throw err;
     }
 
-    if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+    if (this.consumer.isLegacy && componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       status.nested = true;
       return status;
     }

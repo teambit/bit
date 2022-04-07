@@ -8,7 +8,7 @@ export const deprecatedReactWorkspaceTemplate: WorkspaceTemplate = {
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },
-  importComponents: () => {
+  fork: () => {
     return [
       {
         id: 'teambit.react/templates/envs/my-react',
