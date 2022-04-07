@@ -57,7 +57,15 @@ export class WebpackBundler implements Bundler {
           if (!stats) throw new BitError('unknown build error');
           // const info = stats.toJson();
 
-          const info = stats.toJson({ all: false, entrypoints: true, warnings: true, errors: true, assets: true });
+          const info = stats.toJson({
+            all: false,
+            entrypoints: true,
+            warnings: true,
+            errors: true,
+            assets: true,
+            chunkGroupAuxiliary: true,
+            relatedAssets: true,
+          });
           const assetsMap = this.getAssets(info);
           const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
 
