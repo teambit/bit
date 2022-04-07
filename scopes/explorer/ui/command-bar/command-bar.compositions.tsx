@@ -1,16 +1,16 @@
 import React from 'react';
 import { CommandBar } from './command-bar';
 
-function _search() {
+function search() {
   return [
-    { id: '1', children: 'hello', handler: () => {} },
-    { id: '2', children: 'world', handler: () => {} },
-    { id: '3', children: 'what', handler: () => {} },
-    { id: '4', children: 'is', handler: () => {} },
-    { id: '5', children: 'up', handler: () => {} },
+    { id: '1', children: 'hello', action: () => {} },
+    { id: '2', children: 'world', action: () => {} },
+    { id: '3', children: 'what', action: () => {} },
+    { id: '4', children: 'is', action: () => {} },
+    { id: '5', children: 'up', action: () => {} },
   ];
 }
 
 export function Preview() {
-  return <CommandBar style={{ fontFamily: 'sans-serif' }} searcher={_search} visible />;
+  return <CommandBar style={{ fontFamily: 'sans-serif' }} searcher={search} visible />;
 }

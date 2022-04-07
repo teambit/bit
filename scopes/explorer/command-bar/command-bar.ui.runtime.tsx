@@ -24,7 +24,7 @@ type CommandSlot = SlotRegistry<CommandEntry[]>;
 
 export type CommandEntry = {
   id: CommandId;
-  handler: CommandHandler;
+  action: CommandHandler;
   keybinding?: Keybinding;
   displayName: string;
 };
@@ -63,7 +63,7 @@ export class CommandBarUI {
     const commands = originalCommands.map((x) => ({
       id: x.id,
       displayName: x.displayName,
-      handler: x.handler,
+      action: x.action,
       keybinding: x.keybinding,
     }));
 
@@ -78,7 +78,7 @@ export class CommandBarUI {
     this.updateCommandsSearcher();
 
     const updaters = commands.map((command) => (next: CommandHandler) => {
-      command.handler = next;
+      command.action = next;
     });
     return updaters;
   }
@@ -91,7 +91,7 @@ export class CommandBarUI {
     const commandEntry = this.getCommand(commandId);
     if (!commandEntry) return undefined;
 
-    return commandEntry.handler();
+    return commandEntry.action();
   }
 
   /**
@@ -174,7 +174,7 @@ export class CommandBarUI {
 
     commandBar.addCommand({
       id: commandBarCommands.open,
-      handler: commandBar.open,
+      action: commandBar.open,
       displayName: 'Open command bar',
       keybinding: openCommandBarKeybinding,
     });

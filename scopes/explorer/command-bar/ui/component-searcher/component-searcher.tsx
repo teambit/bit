@@ -1,6 +1,5 @@
 import React from 'react';
 
-import Fuse from 'fuse.js';
 import { ComponentModel } from '@teambit/component';
 import { Searcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';

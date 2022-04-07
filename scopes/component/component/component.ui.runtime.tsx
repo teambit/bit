@@ -77,7 +77,7 @@ export class ComponentUI {
   private keyBindings: CommandEntry[] = [
     {
       id: 'component.copyBitId', // TODO - extract to a component!
-      handler: () => {
+      action: () => {
         copy(this.activeComponent?.id.toString() || '');
       },
       displayName: 'Copy component ID',
@@ -85,7 +85,7 @@ export class ComponentUI {
     },
     {
       id: 'component.copyNpmId', // TODO - extract to a component!
-      handler: this.copyNpmId,
+      action: this.copyNpmId,
       displayName: 'Copy component package name',
       keybinding: ',',
     },
