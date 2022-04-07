@@ -39,7 +39,7 @@ export class ComponentSearcher extends Searcher<ComponentModel, ComponentSearchI
 
     return {
       id: component.id.fullName,
-      handler: () => navigate(`/${component.id.fullName}`),
+      action: () => navigate(`/${component.id.fullName}`),
       children: <ComponentResult component={component} plugins={plugins} />,
     };
   };

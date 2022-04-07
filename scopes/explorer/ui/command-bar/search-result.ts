@@ -4,6 +4,6 @@ export type Keybinding = string | string[]; // TODO
 
 export type SearchResult = {
   id: string;
-  handler: Function;
+  action: Function;
   children: ReactNode;
 };

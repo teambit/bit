@@ -24,7 +24,7 @@ export class CommandSearcher extends Searcher<Command, Command> implements Searc
   protected override toSearchResult({ item }: FuzzySearchItem<Command>): SearchResult {
     return {
       id: item.id,
-      handler: item.handler,
+      action: item.action,
       children: <CommandResult command={item} />,
     };
   }

@@ -33,7 +33,7 @@ export function CommandBar({
     setVisibility?.(false);
 
     const current = results[idxNav.activeIdx];
-    current?.handler();
+    current?.action();
   };
 
   const keyHandlers = {
@@ -59,12 +59,12 @@ export function CommandBar({
         onBlur={() => setVisibility?.(false)}
       />
       <div className={styles.results}>
-        {results.map(({ handler, id, ...result }, idx) => (
+        {results.map(({ action, id, ...result }, idx) => (
           <CommandBarItem
             key={id}
             active={idx === idxNav.activeIdx}
             // mouseDown happens before blur, which closes the command bar
-            onMouseDown={() => handler()}
+            onMouseDown={() => action()}
             {...result}
           />
         ))}
