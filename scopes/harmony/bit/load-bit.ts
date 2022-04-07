@@ -23,11 +23,7 @@ import {
 import json from 'comment-json';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
-import { Extension } from '@teambit/harmony/dist/extension';
-import { Config } from '@teambit/harmony/dist/harmony-config';
-// TODO: expose this type from harmony
-import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
+import { Harmony, RuntimeDefinition, Extension, Config, ConfigOptions } from '@teambit/harmony';
 import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
