@@ -1,21 +1,40 @@
+import React, { ComponentType } from 'react';
+import compact from 'lodash.compact';
 import { ComponentModel } from '@teambit/component';
-import React from 'react';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { EnvIcon } from '@teambit/envs.ui.env-icon';
+import classnames from 'classnames';
 
 import styles from './component-result.module.scss';
 
+export type ComponentPluginProps = React.HTMLAttributes<HTMLDivElement> & { component: ComponentModel };
+
+export type ComponentResultSlots = {
+  key: string;
+  start?: ComponentType<ComponentPluginProps>;
+  end?: ComponentType<ComponentPluginProps>;
+};
 type ComponentResultProps = {
   component: ComponentModel;
+  plugins?: ComponentResultSlots[];
 };
 
-export function ComponentResult({ component }: ComponentResultProps) {
+export function ComponentResult({ component, plugins }: ComponentResultProps) {
   const name = component.id.fullName;
-  const icon = component.environment?.icon;
-  const iconAlt = component.environment?.id;
+
+  const startPlugins = compact(
+    plugins?.map((plugin) => plugin.start && <plugin.start key={plugin.key} component={component} />)
+  );
+  const endPlugins = compact(
+    plugins?.map((plugin) => plugin.end && <plugin.end key={plugin.key} component={component} />)
+  );
 
   return (
     <>
-      {icon && <img src={icon} alt={iconAlt} className={styles.icon} />}
-      <div className={styles.name}>{name}</div>
+      {startPlugins}
+      <EnvIcon component={component} className={styles.icon} />
+      <div className={classnames(styles.name, ellipsis)}>{name}</div>
+      {endPlugins}
     </>
   );
 }

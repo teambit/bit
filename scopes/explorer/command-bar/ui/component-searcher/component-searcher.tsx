@@ -3,10 +3,9 @@ import React from 'react';
 import Fuse from 'fuse.js';
 import memoizeOne from 'memoize-one';
 import { ComponentModel } from '@teambit/component';
+import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { SearchProvider, CommanderSearchResult } from '../../types';
-import { ComponentResult } from './component-result';
-
-// type ComponentSearchResult = CommanderSearchResult & { name: string };
+import { ComponentResult, ComponentResultSlots } from './component-result';
 
 type ComponentSearchIdx = {
   name: string;
@@ -14,6 +13,7 @@ type ComponentSearchIdx = {
   component: ComponentModel;
 };
 
+const plugins: ComponentResultSlots[] = [{ key: 'deprecation', end: DeprecationIcon }];
 const searchedKeys: (keyof ComponentSearchIdx)[] = ['displayName', 'name'];
 
 export class ComponentSearcher implements SearchProvider {
@@ -46,7 +46,7 @@ export class ComponentSearcher implements SearchProvider {
       return {
         id: component.id.fullName,
         handler: () => navigate(`/${component.id.fullName}`),
-        children: <ComponentResult component={component} />,
+        children: <ComponentResult component={component} plugins={plugins} />,
       };
     });
   }
