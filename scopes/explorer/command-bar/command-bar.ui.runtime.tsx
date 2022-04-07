@@ -16,6 +16,8 @@ import { CommandBarContext } from './ui/command-bar-context';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
 
+import styles from './command-bar.module.scss';
+
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
 type CommandSlot = SlotRegistry<CommandEntry[]>;
@@ -143,6 +145,7 @@ export class CommandBarUI {
     return (
       <CommandBar
         key="CommandBarUI"
+        className={styles.commanderUi}
         searcher={this.search}
         placeholder="Search anything or type > to only search commands"
         visible={visible}

@@ -59,12 +59,13 @@ export function CommandBar({
         onBlur={() => setVisibility?.(false)}
       />
       <div className={styles.results}>
-        {results.map((x, idx) => (
+        {results.map(({ handler, id, ...result }, idx) => (
           <CommandBarItem
-            key={idx} // use index instead of id to avoid duplicate keys
+            key={id}
             active={idx === idxNav.activeIdx}
             // mouseDown happens before blur, which closes the command bar
-            onMouseDown={() => x.handler()}
+            onMouseDown={() => handler()}
+            {...result}
           />
         ))}
       </div>

@@ -2,27 +2,9 @@
   display: flex;
   align-items: center;
 
-  height: 40px;
-  padding: 0 24px;
-  transition: all 180ms;
+  height: 2.5em;
+  padding: 0 1.5em;
+  transition: background-color 180ms;
 
   user-select: none;
-}
-
-.name {
-  flex: 1 1;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.commandKeys {
-  float: right;
-  font-size: 15px;
-}
-
-.icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
 }
