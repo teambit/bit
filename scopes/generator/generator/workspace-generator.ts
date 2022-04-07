@@ -11,6 +11,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { init } from '@teambit/legacy/dist/api/consumer';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
@@ -33,6 +34,7 @@ export class WorkspaceGenerator {
   private workspacePath: string;
   private harmony: Harmony;
   private workspace: Workspace;
+  private importer: ImporterMain;
   private logger: Logger;
   constructor(
     private workspaceName: string,
@@ -55,6 +57,7 @@ export class WorkspaceGenerator {
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       await this.forkComponentsFromRemote();
+      await this.importComponentsFromRemote();
       await this.workspace.install(undefined, {
         dedupe: true,
         import: false,
@@ -113,14 +116,13 @@ export class WorkspaceGenerator {
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
     const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
     this.logger = loggerMain.createLogger(GeneratorAspect.id);
+    this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
   }
 
   private async forkComponentsFromRemote() {
     if (this.options.empty) return;
     const componentsToFork = this.template?.importComponents?.() || this.template?.fork?.() || [];
-    const componentsToImport = this.template?.import?.() || [];
-
-    if (!componentsToFork.length && !componentsToImport.length) return;
+    if (!componentsToFork.length) return;
     const dependencyResolver = this.harmony.get<DependencyResolverMain>(DependencyResolverAspect.id);
 
     const componentsToImportResolved = await Promise.all(
@@ -176,8 +178,22 @@ export class WorkspaceGenerator {
     const componentsToImport = this.template?.import?.() || [];
 
     if (!componentsToImport.length) return;
-    // @todo: import
-    // await this.workspace.importAndGetMany()
+
+    componentsToImport.map(async (componentToImport) => {
+      await this.importer.import(
+        {
+          ids: [componentToImport.id],
+          verbose: false,
+          objectsOnly: false,
+          override: false,
+          writeDists: false,
+          writeConfig: false,
+          installNpmPackages: true,
+          writeToPath: componentToImport.path,
+        },
+        []
+      );
+    });
   }
 
   private async compileComponents() {
