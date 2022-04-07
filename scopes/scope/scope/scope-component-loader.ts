@@ -139,9 +139,12 @@ export class ScopeComponentLoader {
     return tagMap;
   }
 
-  private async getHeadSnap(modelComponent: ModelComponent) {
+  private async getHeadSnap(modelComponent: ModelComponent): Promise<Snap | null> {
     const head = modelComponent.getHeadRegardlessOfLane();
-    if (!head) throw new Error(`scope-component-loader: component ${modelComponent.id()} has no head`);
+    if (!head) {
+      // happens for example when on main and merging a lane.
+      return null;
+    }
     const version = await modelComponent.loadVersion(head.toString(), this.scope.legacyScope.objects);
     return this.createSnapFromVersion(version);
   }
