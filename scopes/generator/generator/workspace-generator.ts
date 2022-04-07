@@ -179,7 +179,7 @@ export class WorkspaceGenerator {
 
     if (!componentsToImport.length) return;
 
-    componentsToImport.map(async (componentToImport) => {
+    await pMapSeries(componentsToImport, async (componentToImport) => {
       await this.importer.import(
         {
           ids: [componentToImport.id],
@@ -188,12 +188,16 @@ export class WorkspaceGenerator {
           override: false,
           writeDists: false,
           writeConfig: false,
-          installNpmPackages: true,
+          installNpmPackages: false,
           writeToPath: componentToImport.path,
         },
         []
       );
     });
+
+    await this.workspace.bitMap.write();
+    this.workspace.clearCache();
+    await this.compileComponents();
   }
 
   private async compileComponents() {
