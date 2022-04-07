@@ -5,6 +5,7 @@ import { RenamingMain } from '.';
 export type RenameOptions = {
   scope?: string;
   path?: string;
+  refactor?: boolean;
 };
 
 export class RenameCmd implements Command {
@@ -19,6 +20,7 @@ to assign a default-scope to this component, please use "--scope" flag`;
   options = [
     ['s', 'scope <string>', 'default scope for the newly created component'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
+    ['r', 'refactor', 'change the source code of all components using this component with the new package-name'],
   ] as CommandOptions;
   loader = true;
   migration = true;

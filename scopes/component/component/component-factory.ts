@@ -108,6 +108,12 @@ export interface ComponentFactory {
   isModified(component: Component): Promise<boolean>;
 
   /**
+   * write the component to the filesystem when applicable (no-op for scope).
+   * to change the component-path, specify the "rootPath", which should be a relative path inside the workspace.
+   */
+  write(component: Component, rootPath?: string): Promise<void>;
+
+  /**
    * determine whether host should be the prior one in case multiple hosts persist.
    */
   priority?: boolean;

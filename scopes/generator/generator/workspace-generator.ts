@@ -145,7 +145,7 @@ export class WorkspaceGenerator {
     await pMapSeries(components, async (comp) => {
       const compData = componentsToImportResolved.find((c) => c.id._legacy.isEqualWithoutVersion(comp.id._legacy));
       if (!compData) throw new Error(`workspace-generator, unable to find ${comp.id.toString()} in the given ids`);
-      await this.workspace.write(compData.path, comp);
+      await this.workspace.write(comp, compData.path);
       await this.workspace.track({
         rootDir: compData.path,
         componentName: compData.targetName || compData.id.fullName,
