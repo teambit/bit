@@ -37,7 +37,7 @@ export interface WorkspaceContext {
   aspectComponent?: Component;
 }
 
-export interface ComponentToImport {
+export interface ForkComponentInfo {
   /**
    * full component id
    */
@@ -52,6 +52,23 @@ export interface ComponentToImport {
    * a new component name. if not specified, use the original id (without the scope)
    */
   targetName?: string;
+}
+
+/**
+ * @deprecated use ForkComponentInfo instead.
+ */
+export type ComponentToImport = ForkComponentInfo;
+
+export interface ImportComponentInfo {
+  /**
+   * full component id
+   */
+  id: string;
+
+  /**
+   * path where to write the component
+   */
+  path: string;
 }
 
 export interface WorkspaceTemplate {
@@ -76,7 +93,20 @@ export interface WorkspaceTemplate {
   generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
   /**
-   * populate existing components into the new workspace and add them as new components
+   * @deprecated use `fork()` or `import()` instead
+   * this is working similarly to `fork()`
    */
-  importComponents?: () => ComponentToImport[];
+  importComponents?: () => ForkComponentInfo[];
+
+  /**
+   * populate existing components into the new workspace and add them as new components.
+   * don't change their source code.
+   */
+  import?: () => ImportComponentInfo[];
+
+  /**
+   * populate existing components into the new workspace and add them as new components.
+   * change their source code and update the dependency names according to the new component names.
+   */
+  fork?: () => ForkComponentInfo[];
 }
