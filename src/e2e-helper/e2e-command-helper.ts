@@ -178,6 +178,9 @@ export default class CommandHelper {
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
   }
+  refactorDependencyName(oldId: string, newId: string, flags = '') {
+    return this.runCmd(`bit refactor dependency-name ${oldId} ${newId} ${flags}`);
+  }
   use(aspectId: string, flags = '') {
     return this.runCmd(`bit use ${aspectId} ${flags}`);
   }

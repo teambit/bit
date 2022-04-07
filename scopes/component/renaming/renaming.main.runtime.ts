@@ -33,8 +33,8 @@ export class RenamingMain {
     }
     if (options.refactor) {
       const allComponents = await this.workspace.list();
-      const changedComps = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
-      await Promise.all(changedComps.map((comp) => this.workspace.write(comp)));
+      const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
+      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
     await this.workspace.link();

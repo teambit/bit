@@ -18,8 +18,15 @@ export class DependencyNameRefactorCmd implements Command {
   async report([oldId, newId]: [string, string]) {
     const host = this.componentMain.getHost();
     const allComps = await host.list();
-    const changed = await this.refactoringMain.refactorDependencyName(allComps, oldId, newId);
-    return `the following components have been changed:\n${changed.map((c) => c.id.toString()).join('\n')}`;
+    const { changedComponents, oldPackageName, newPackageName } = await this.refactoringMain.refactorDependencyName(
+      allComps,
+      oldId,
+      newId
+    );
+    await Promise.all(changedComponents.map((comp) => host.write(comp)));
+    return `the following components have been changed (${oldPackageName} => ${newPackageName}):\n${changedComponents
+      .map((c) => c.id.toString())
+      .join('\n')}`;
   }
 }
 

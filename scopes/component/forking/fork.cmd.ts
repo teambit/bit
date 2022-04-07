@@ -5,6 +5,7 @@ import { ForkingMain } from '.';
 export type ForkOptions = {
   scope?: string;
   path?: string;
+  refactor?: boolean;
 };
 
 export class ForkCmd implements Command {
@@ -18,6 +19,11 @@ to set the default-scope, please use --scope flag`;
   options = [
     ['s', 'scope <string>', 'default scope for the newly created component'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
+    [
+      'r',
+      'refactor',
+      'change the source code of all components using the original component with the new package-name',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;

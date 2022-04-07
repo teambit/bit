@@ -19,19 +19,19 @@ export class RefactoringMain {
     components: Component[],
     oldId: ComponentID | string,
     newId: ComponentID | string
-  ): Promise<Component[]> {
+  ): Promise<{ oldPackageName: string; newPackageName: string; changedComponents: Component[] }> {
     const oldPackageName = await this.getPackageNameByUnknownId(oldId);
     const newPackageName = await this.getPackageNameByUnknownId(newId);
     if (oldPackageName === newPackageName) {
       throw new BitError(`refactoring: the old package-name and the new package-name are the same: ${oldPackageName}`);
     }
-    const results = await Promise.all(
+    const changedComponents = await Promise.all(
       components.map(async (comp) => {
         const hasChanged = await this.replaceString(comp, oldPackageName, newPackageName);
         return hasChanged ? comp : null;
       })
     );
-    return compact(results);
+    return { oldPackageName, newPackageName, changedComponents: compact(changedComponents) };
   }
 
   private async getPackageNameByUnknownId(id: ComponentID | string): Promise<string> {
@@ -46,10 +46,12 @@ export class RefactoringMain {
       const componentID = await host.resolveComponentId(id);
       return await this.getPackageNameByComponentID(componentID);
     } catch (err) {
-      if (!this.isValidPackageName(id)) {
-        throw new BitError(`refactoring: the id "${id}" is neither a valid package-name nor a valid component-id`);
+      if (this.isValidScopedPackageName(id)) {
+        return id; // assume this is a package-name
       }
-      return id; // assume this is the package name
+      throw new BitError(
+        `refactoring: the id "${id}" is neither a valid scoped-package-name nor an existing component-id`
+      );
     }
   }
 
@@ -60,8 +62,10 @@ export class RefactoringMain {
     return this.pkg.getPackageName(comp);
   }
 
-  private isValidPackageName(name: string): boolean {
-    return name.length > 0 && name.length <= 214 && !name.includes('/') && !name.includes('\\') && !name.includes('..');
+  private isValidScopedPackageName(name: string) {
+    return (
+      name.startsWith('@') && name.includes('/') && name.length <= 214 && !name.includes('\\') && !name.includes('..')
+    );
   }
 
   private async replaceString(comp: Component, oldString: string, newString: string): Promise<boolean> {
