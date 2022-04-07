@@ -3,6 +3,23 @@ import { WebpackConfigTransformer } from '@teambit/webpack';
 
 import { ReactDeployContext } from './deploy-context';
 
+export type ReactAppPrerenderOptions = {
+  /**
+   * routes to prerender
+   */
+  routes: string[];
+  /**
+   * the proxy server you want the prerender headless browser to run on
+   */
+
+  server?: { proxy: { [key: string]: { target: 'http://localhost:8000/'; pathRewrite: { [key: string]: string } } } };
+
+  /**
+   * Post processing of the prerendered html. This is useful for adding meta tags to the html or changing the file name.
+   */
+  postProcess?: (prerenderRoute: string, staticDir: string) => string;
+};
+
 export type ReactAppOptions = {
   /**
    * name of the application.
@@ -40,10 +57,7 @@ export type ReactAppOptions = {
    * You can also pass a configuration for the proxy, please refer here: https://github.com/webpack/docs/wiki/webpack-dev-server#proxy
    *
    */
-  prerender?: {
-    routes?: string[];
-    server?: { proxy: { [key: string]: { target: string; pathRewrite: { [key: string]: string } } } };
-  };
+  prerender?: ReactAppPrerenderOptions;
 
   /**
    * deploy function.
