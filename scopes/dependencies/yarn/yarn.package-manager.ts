@@ -34,6 +34,7 @@ import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import parseOverrides from '@pnpm/parse-overrides';
 import { PkgMain } from '@teambit/pkg';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
@@ -57,8 +58,9 @@ export class YarnPackageManager implements PackageManager {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-      dedupe: true,
+      dedupe: !installOptions.rootComponentsForCapsules,
       dependencyFilterFn: installOptions.dependencyFilterFn,
+      hasRootComponents: installOptions.rootComponentsForCapsules,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
@@ -86,6 +88,19 @@ export class YarnPackageManager implements PackageManager {
 
     // @ts-ignore
     project.setupResolutions();
+    if (installOptions.rootComponentsForCapsules) {
+      const resolutions = {}
+      Array.from(componentDirectoryMap.hashMap.entries())
+        .forEach(([compId, [comp]]) => {
+          const component = comp.state._consumer;
+          const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
+          resolutions[name] = `file:${compId.replace(/\//g, '_')}`
+        })
+      installOptions.overrides = {
+        ...installOptions.overrides,
+        ...resolutions,
+      }
+    }
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
     if (installOptions.rootComponents) {
       // is it needed?
@@ -109,6 +124,22 @@ export class YarnPackageManager implements PackageManager {
         })),
         ...manifests,
       };
+    } else if (installOptions.rootComponentsForCapsules) {
+      for (const dir of Object.keys(manifests)) {
+        manifests[dir].dependencies = {
+          ...manifests[dir].peerDependencies,
+          ...manifests[dir].defaultPeerDependencies,
+          ...manifests[dir].dependencies,
+        }
+        manifests[dir].installConfig = {
+          hoistingLimits: 'workspaces',
+        };
+        const pkgJson = fs.readJsonSync(join(dir, 'package.json'));
+        fs.writeJsonSync(join(dir, 'package.json'), {
+          ...pkgJson,
+          dependencies: manifests[dir].dependencies,
+        }, { spaces: 2 });
+      }
     }
     await extendWithComponentsFromDir(rootDir, manifests);
 
@@ -230,6 +261,7 @@ export class YarnPackageManager implements PackageManager {
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
+    ws.manifest.installConfig = manifest.installConfig;
     if (overrides) {
       ws.manifest.resolutions = convertOverridesToResolutions(overrides);
     }

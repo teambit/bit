@@ -30,7 +30,7 @@ importers:
       '@pnpm/client': 6.1.3
       '@pnpm/colorize-semver-diff': 1.0.1
       '@pnpm/config': 13.13.2
-      '@pnpm/core': 2.7.4
+      '@pnpm/core': 2.7.5
       '@pnpm/default-reporter': 8.4.2
       '@pnpm/default-resolver': 14.0.12
       '@pnpm/error': 2.1.0
@@ -626,7 +626,7 @@ importers:
       '@pnpm/client': registry.npmjs.org/@pnpm/client/6.1.3_@pnpm+logger@4.0.0
       '@pnpm/colorize-semver-diff': registry.npmjs.org/@pnpm/colorize-semver-diff/1.0.1
       '@pnpm/config': registry.npmjs.org/@pnpm/config/13.13.2_@pnpm+logger@4.0.0
-      '@pnpm/core': registry.npmjs.org/@pnpm/core/2.7.4_@pnpm+logger@4.0.0
+      '@pnpm/core': registry.npmjs.org/@pnpm/core/2.7.5_@pnpm+logger@4.0.0
       '@pnpm/default-reporter': registry.npmjs.org/@pnpm/default-reporter/8.4.2_@pnpm+logger@4.0.0
       '@pnpm/default-resolver': registry.npmjs.org/@pnpm/default-resolver/14.0.12_@pnpm+logger@4.0.0
       '@pnpm/error': registry.npmjs.org/@pnpm/error/2.1.0
@@ -8243,11 +8243,11 @@ packages:
       '@pnpm/types': registry.npmjs.org/@pnpm/types/7.10.0
     dev: false
 
-  registry.npmjs.org/@pnpm/core/2.7.4_@pnpm+logger@4.0.0:
-    resolution: {integrity: sha512-fi7P4r3eoXQ16KFEJnH4eXZx5kQD9WpE38RsPCTv5sN+NdcIXJOqV+Hu5ERRxILFngiVZg6mNJekwuQnPkRxpQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/core/-/core-2.7.4.tgz}
-    id: registry.npmjs.org/@pnpm/core/2.7.4
+  registry.npmjs.org/@pnpm/core/2.7.5_@pnpm+logger@4.0.0:
+    resolution: {integrity: sha512-zgAGLv7882yqC+NB8EkRBXHPWg9hyypvWygiFsTuK7X3Lyn857M2+u/X8H6eS019knVhQsvA9OEbxitKsFME/Q==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/core/-/core-2.7.5.tgz}
+    id: registry.npmjs.org/@pnpm/core/2.7.5
     name: '@pnpm/core'
-    version: 2.7.4
+    version: 2.7.5
     engines: {node: '>=12.17'}
     peerDependencies:
       '@pnpm/logger': ^4.0.0
@@ -8280,7 +8280,7 @@ packages:
       '@pnpm/read-package-json': registry.npmjs.org/@pnpm/read-package-json/5.0.12
       '@pnpm/read-project-manifest': registry.npmjs.org/@pnpm/read-project-manifest/2.0.13
       '@pnpm/remove-bins': registry.npmjs.org/@pnpm/remove-bins/2.0.14_@pnpm+logger@4.0.0
-      '@pnpm/resolve-dependencies': registry.npmjs.org/@pnpm/resolve-dependencies/25.0.3_@pnpm+logger@4.0.0
+      '@pnpm/resolve-dependencies': registry.npmjs.org/@pnpm/resolve-dependencies/25.0.4_@pnpm+logger@4.0.0
       '@pnpm/resolver-base': registry.npmjs.org/@pnpm/resolver-base/8.1.6
       '@pnpm/store-controller-types': registry.npmjs.org/@pnpm/store-controller-types/12.0.0
       '@pnpm/symlink-dependency': registry.npmjs.org/@pnpm/symlink-dependency/4.0.13_@pnpm+logger@4.0.0
@@ -9224,11 +9224,11 @@ packages:
       is-windows: registry.npmjs.org/is-windows/1.0.2
     dev: false
 
-  registry.npmjs.org/@pnpm/resolve-dependencies/25.0.3_@pnpm+logger@4.0.0:
-    resolution: {integrity: sha512-FqakqS8iPX3j1sYgLu5/CNhfhHOiL88i3/UImgPDD2Okx4KbkVDsn8bF7OV34uflbVZ6N3yVyqSAaNiSC06Nag==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/resolve-dependencies/-/resolve-dependencies-25.0.3.tgz}
-    id: registry.npmjs.org/@pnpm/resolve-dependencies/25.0.3
+  registry.npmjs.org/@pnpm/resolve-dependencies/25.0.4_@pnpm+logger@4.0.0:
+    resolution: {integrity: sha512-e0KMELmgL4wKqSC7MZB9R4Ridcu04Pj5TKqEk9bLkrXpr6qaX4ebP/QifZssqSfgt2C9RsYnyjSyNl4tHWeCEg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/resolve-dependencies/-/resolve-dependencies-25.0.4.tgz}
+    id: registry.npmjs.org/@pnpm/resolve-dependencies/25.0.4
     name: '@pnpm/resolve-dependencies'
-    version: 25.0.3
+    version: 25.0.4
     engines: {node: '>=12.17'}
     peerDependencies:
       '@pnpm/logger': ^4.0.0
@@ -24070,7 +24070,7 @@ packages:
     version: 4.1.6
     engines: {node: '>=6.11.5', yarn: '>=1.0.0'}
     dependencies:
-      '@babel/code-frame': registry.npmjs.org/@babel/code-frame/7.10.4
+      '@babel/code-frame': registry.npmjs.org/@babel/code-frame/7.16.7
       chalk: registry.npmjs.org/chalk/2.4.2
       micromatch: registry.npmjs.org/micromatch/3.1.10
       minimatch: registry.npmjs.org/minimatch/3.0.4
@@ -27907,7 +27907,7 @@ packages:
     version: 27.5.1
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': registry.npmjs.org/@types/node/12.20.4
+      '@types/node': registry.npmjs.org/@types/node/13.13.52
       merge-stream: registry.npmjs.org/merge-stream/2.0.0
       supports-color: registry.npmjs.org/supports-color/8.1.1
 

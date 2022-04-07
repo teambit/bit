@@ -168,6 +168,7 @@ export async function install(
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
     rootComponents?: boolean;
+    rootComponentsForCapsules?: boolean;
   } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'> &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -234,6 +235,10 @@ export async function install(
     };
     opts.hoistingLimits = new Map();
     opts.hoistingLimits.set('.@', new Set(rootComponents));
+  } else if (options?.rootComponentsForCapsules) {
+    opts.hooks = {
+      readPackage: readPackageHookForCapsules as any,
+    };
   }
 
   const stopReporting = defaultReporter({
@@ -251,14 +256,31 @@ export async function install(
   } finally {
     stopReporting();
   }
-  const modulesState = await readModulesState(path.join(rootManifest.rootDir, 'node_modules'));
-  if (modulesState?.injectedDeps) {
-    await linkManifestsToInjectedDeps({
-      injectedDeps: modulesState.injectedDeps,
-      manifestsByPaths,
-      rootDir: rootManifest.rootDir,
+  if (options.rootComponents) {
+    const modulesState = await readModulesState(path.join(rootManifest.rootDir, 'node_modules'));
+    if (modulesState?.injectedDeps) {
+      await linkManifestsToInjectedDeps({
+        injectedDeps: modulesState.injectedDeps,
+        manifestsByPaths,
+        rootDir: rootManifest.rootDir,
+      });
+    }
+  }
+}
+
+function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
+  // workspaceDir is set only for workspace packages
+  if (workspaceDir) {
+    return readDependencyPackageHook({
+      ...pkg,
+      dependencies: {
+        ...pkg.dependencies,
+        ...pkg.peerDependencies,
+        ...pkg['defaultPeerDependencies'], // eslint-disable-line
+      },
     });
   }
+  return readDependencyPackageHook(pkg);
 }
 
 function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {

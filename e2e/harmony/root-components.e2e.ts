@@ -334,41 +334,41 @@ module.exports.default = {
       });
       it('should create the dist folder in all the locations of the component', () => {
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.exist;
+          .be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.exist;
+        ).to.be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
       });
     });
     describe('build', () => {
@@ -383,7 +383,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp4/node_modules/@${helper.scopes.remote}/comp4`
+                `${helper.scopes.remote}_comp4`
               ),
               [`@${helper.scopes.remote}/comp2`, 'react/package.json']
             )
@@ -394,7 +394,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp3/node_modules/@${helper.scopes.remote}/comp3`
+                `${helper.scopes.remote}_comp3`
               ),
               [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
             )
@@ -402,8 +402,8 @@ module.exports.default = {
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/dist/comp4.node-app.js`)).to.exist
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/types/asset.d.ts`)).to.exist
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
       });
     });
   });
@@ -723,41 +723,41 @@ module.exports.default = {
       });
       it('should create the dist folder in all the locations of the component', () => {
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.exist;
+          .be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.exist;
+        ).to.be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
       });
     });
     describe('build', () => {
@@ -772,7 +772,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp4/node_modules/@${helper.scopes.remote}/comp4`
+                `${helper.scopes.remote}_comp4`
               ),
               [`@${helper.scopes.remote}/comp2`, 'react/package.json']
             )
@@ -783,7 +783,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp3/node_modules/@${helper.scopes.remote}/comp3`
+                `${helper.scopes.remote}_comp3`
               ),
               [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
             )
@@ -791,8 +791,8 @@ module.exports.default = {
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/dist/comp4.node-app.js`)).to.exist
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/types/asset.d.ts`)).to.exist
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
       });
     });
   });
@@ -1048,41 +1048,41 @@ module.exports.default = {
       });
       it('should create the dist folder in all the locations of the component', () => {
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .exist;
+          .be.a.path();
         expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.exist;
+          .be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.exist;
+        ).to.be.a.path();
+        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
-        ).to.exist;
+        ).to.be.a.path();
       });
     });
     describe('build', () => {
@@ -1097,7 +1097,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp4/node_modules/@${helper.scopes.remote}/comp4`
+                `${helper.scopes.remote}_comp4`
               ),
               [`@${helper.scopes.remote}/comp2`, 'react/package.json']
             )
@@ -1108,7 +1108,7 @@ module.exports.default = {
             resolveFrom(
               path.join(
                 workspaceCapsulesRootDir,
-                `${ROOT_COMPS_DIR}/@${helper.scopes.remote}/comp3/node_modules/@${helper.scopes.remote}/comp3`
+                `${helper.scopes.remote}_comp3`
               ),
               [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
             )
@@ -1116,8 +1116,8 @@ module.exports.default = {
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/dist/comp4.node-app.js`)).to.exist
-        expect(path.join(workspaceCapsulesRootDir, `node_modules/@${helper.scopes.remote}/comp4/types/asset.d.ts`)).to.exist
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
+        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
       });
     });
   });
@@ -1274,7 +1274,7 @@ Env2Aspect.addRuntime(EnvMain);
   });
 });
 
-(supportNpmCiRegistryTesting ? describe : describe.skip)(
+(supportNpmCiRegistryTesting ? describe.skip : describe.skip)(
   'package manager rc file is read from the workspace directory when installation is in a capsule',
   function () {
     this.timeout(0);
@@ -1317,7 +1317,7 @@ Env2Aspect.addRuntime(EnvMain);
         scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.exist
+        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.be.a.path()
       });
     });
     describe('using pnpm', () => {
@@ -1334,7 +1334,7 @@ Env2Aspect.addRuntime(EnvMain);
         scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.exist
+        expect(path.join(scopeAspectsCapsulesRootDir, `node_modules/@${scope}.node-env-1/dist/node-env.extension.js`)).to.be.a.path()
       });
     });
     after(() => {

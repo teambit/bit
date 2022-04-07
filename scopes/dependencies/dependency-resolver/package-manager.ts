@@ -33,6 +33,8 @@ export type PackageManagerInstallOptions = {
   packageImportMethod?: PackageImportMethod;
 
   rootComponents?: boolean;
+
+  rootComponentsForCapsules?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

@@ -299,7 +299,7 @@ export class IsolatorMain {
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
-      rootComponents: this.dependencyResolver.config.rootComponents,
+      rootComponentsForCapsules: this.dependencyResolver.config.rootComponents,
     };
     await installer.install(
       capsulesDir,
@@ -331,8 +331,8 @@ export class IsolatorMain {
     });
     if (!this.dependencyResolver.config.rootComponents) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
+      await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     }
-    await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
     await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);

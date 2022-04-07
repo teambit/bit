@@ -52,7 +52,7 @@ export class PnpmPackageManager implements PackageManager {
       createManifestForComponentsWithoutDependencies: true,
       dedupe: installOptions.dedupe,
       dependencyFilterFn: installOptions.dependencyFilterFn,
-      hasRootComponents: Boolean(installOptions.rootComponents),
+      hasRootComponents: Boolean(installOptions.rootComponents || installOptions.rootComponentsForCapsules),
     };
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
@@ -134,6 +134,7 @@ export class PnpmPackageManager implements PackageManager {
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         rootComponents: installOptions.rootComponents,
+        rootComponentsForCapsules:  installOptions.rootComponentsForCapsules,
       },
       this.logger
     );
