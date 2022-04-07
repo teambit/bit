@@ -118,12 +118,11 @@ export class ReactApp implements Application {
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
     return bundler;
   }
-  private getESBuildConfig = () => {
+  private getESBuildConfig = (isPrerendering = this.prerender) => {
     // We don't want to use esbuild in case of prerendering since the headless browser puppeteer doesn't support
     // the output of esbuild
-    const isPrerenderConfig = this.prerender;
 
-    if (isPrerenderConfig) {
+    if (isPrerendering) {
       return new TerserPlugin({
         extractComments: false,
         terserOptions: {
