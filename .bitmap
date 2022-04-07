@@ -838,6 +838,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
+    "refactoring": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/refactoring"
+    },
     "renaming": {
         "scope": "teambit.component",
         "version": "0.0.107",
