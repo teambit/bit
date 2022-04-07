@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import semver, { ReleaseType } from 'semver';
+import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
