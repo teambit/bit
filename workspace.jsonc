@@ -292,7 +292,7 @@
         "lodash.orderby": "4.6.0",
         "lodash.pick": "4.4.0",
         "map-obj": "4.2.1",
-        "memoize-one": "5.1.1",
+        "memoize-one": "6.0.0",
         "memoizee": "0.4.15",
         "memory-fs": "0.5.0",
         "mime": "2.5.2",
