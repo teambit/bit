@@ -2,9 +2,10 @@ import React from 'react';
 
 import { ComponentModel } from '@teambit/component';
 import { Searcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
-import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { SearchProvider } from '../../types';
-import { ComponentResult, ComponentResultSlots } from './component-result';
+import { ComponentResult, ComponentResultPlugin } from './component-result';
+
+export type { ComponentResultPlugin };
 
 type ComponentSearchIdx = {
   name: string;
@@ -12,12 +13,23 @@ type ComponentSearchIdx = {
   component: ComponentModel;
 };
 
-const plugins: ComponentResultSlots[] = [{ key: 'deprecation', end: DeprecationIcon }];
 const searchKeys: (keyof ComponentSearchIdx)[] = ['displayName', 'name'];
 
+type ComponentSearcherOptions = {
+  navigate: (path: string) => void;
+  resultPlugins?: ComponentResultPlugin[];
+};
+
 export class ComponentSearcher extends Searcher<ComponentModel, ComponentSearchIdx> implements SearchProvider {
-  constructor(private navigate: (path: string) => void) {
+  constructor(public options: ComponentSearcherOptions) {
     super({ searchKeys });
+  }
+
+  updatePlugins(plugins: ComponentResultPlugin[]) {
+    this.options = {
+      ...this.options,
+      resultPlugins: plugins,
+    };
   }
 
   override test(term: string): boolean {
@@ -33,13 +45,13 @@ export class ComponentSearcher extends Searcher<ComponentModel, ComponentSearchI
   }
 
   protected override toSearchResult = ({ item }: FuzzySearchItem<ComponentSearchIdx>): SearchResult => {
-    const { navigate } = this;
+    const { navigate, resultPlugins } = this.options;
     const { component } = item;
 
     return {
       id: component.id.fullName,
       action: () => navigate(`/${component.id.fullName}`),
-      children: <ComponentResult component={component} plugins={plugins} />,
+      children: <ComponentResult component={component} plugins={resultPlugins} />,
     };
   };
 }

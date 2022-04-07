@@ -14,9 +14,9 @@ export type FuzzySearchItem<T> = Fuse.FuseResult<T>;
  * Simply extend and implement the abstract methods, and fuse.js will take care of the rest
  */
 export abstract class Searcher<Item, IndexedItem> {
-  constructor(readonly options: SearcherOptions) {}
+  constructor(readonly baseSearcherOptions: SearcherOptions) {}
 
-  private fuseCommands = new Fuse<IndexedItem>([], { keys: this.options.searchKeys });
+  private fuseCommands = new Fuse<IndexedItem>([], { keys: this.baseSearcherOptions.searchKeys });
 
   // this method could be called on every render. memoize to prevent redundant calls
   update = memoizeOne((components: Item[]) => {

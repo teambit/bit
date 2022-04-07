@@ -9,14 +9,14 @@ import styles from './component-result.module.scss';
 
 export type ComponentPluginProps = React.HTMLAttributes<HTMLDivElement> & { component: ComponentModel };
 
-export type ComponentResultSlots = {
+export type ComponentResultPlugin = {
   key: string;
   start?: ComponentType<ComponentPluginProps>;
   end?: ComponentType<ComponentPluginProps>;
 };
 type ComponentResultProps = {
   component: ComponentModel;
-  plugins?: ComponentResultSlots[];
+  plugins?: ComponentResultPlugin[];
 };
 
 export function ComponentResult({ component, plugins }: ComponentResultProps) {

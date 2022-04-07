@@ -1,3 +1,4 @@
+import flatten from 'lodash.flatten';
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -10,9 +11,15 @@ import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
+import CommandBarAspect, {
+  CommandBarUI,
+  ComponentSearcher,
+  CommandHandler,
+  ComponentResultPlugin,
+} from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
 import {
   DrawerWidgetSlot,
@@ -26,6 +33,7 @@ import { WorkspaceAspect } from './workspace.aspect';
 import { workspaceDrawer } from './workspace.ui.drawer';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
+export type CommandBarComponentSlot = SlotRegistry<ComponentResultPlugin[]>;
 
 export class WorkspaceUI {
   constructor(
@@ -59,11 +67,13 @@ export class WorkspaceUI {
 
     private drawerComponentsFiltersSlot: ComponentFiltersSlot,
 
+    private commandBarComponentSlot: CommandBarComponentSlot,
+
     private commandBarUI: CommandBarUI,
 
     reactRouterUI: ReactRouterUI
   ) {
-    this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
+    this.componentSearcher = new ComponentSearcher({ navigate: reactRouterUI.navigateTo });
   }
 
   private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
@@ -114,6 +124,13 @@ export class WorkspaceUI {
 
   registerDrawerWidgets = (widgets: ReactNode[]) => {
     this.drawerWidgetSlot.register(widgets);
+  };
+
+  /** add command bar plugins for components in search results */
+  registerComponentCommanderWidgets = (widgets: ComponentResultPlugin | ComponentResultPlugin[]) => {
+    this.commandBarComponentSlot.register(Array.isArray(widgets) ? widgets : [widgets]);
+    const plugins = flatten(this.commandBarComponentSlot.values());
+    this.componentSearcher.updatePlugins(plugins);
   };
 
   uiRoot(): UIRoot {
@@ -187,6 +204,7 @@ export class WorkspaceUI {
     Slot.withType<SidebarItemSlot>(),
     Slot.withType<DrawerWidgetSlot>(),
     Slot.withType<ComponentFiltersSlot>(),
+    Slot.withType<ComponentResultPlugin>(),
   ];
 
   static async provider(
@@ -200,14 +218,24 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot, drawerWidgetSlot, drawerComponentsFiltersSlot]: [
+    [
+      routeSlot,
+      menuSlot,
+      menuItemSlot,
+      sidebarSlot,
+      sidebarItemSlot,
+      drawerWidgetSlot,
+      drawerComponentsFiltersSlot,
+      commandBarComponentSlot,
+    ]: [
       RouteSlot,
       RouteSlot,
       MenuItemSlot,
       SidebarWidgetSlot,
       SidebarItemSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot
+      ComponentFiltersSlot,
+      CommandBarComponentSlot
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -224,6 +252,7 @@ export class WorkspaceUI {
       sidebarItemSlot,
       drawerWidgetSlot,
       drawerComponentsFiltersSlot,
+      commandBarComponentSlot,
       commandBarUI,
       reactRouterUI
     );
@@ -260,6 +289,8 @@ export class WorkspaceUI {
         children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
       },
     ]);
+
+    workspaceUI.registerComponentCommanderWidgets({ key: 'deprecation', end: DeprecationIcon });
 
     return workspaceUI;
   }
