@@ -54,7 +54,7 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
-      await this.addComponentsFromRemote();
+      await this.forkComponentsFromRemote();
       await this.workspace.install(undefined, {
         dedupe: true,
         import: false,
@@ -115,14 +115,16 @@ export class WorkspaceGenerator {
     this.logger = loggerMain.createLogger(GeneratorAspect.id);
   }
 
-  private async addComponentsFromRemote() {
+  private async forkComponentsFromRemote() {
     if (this.options.empty) return;
-    const componentsToImport = this.template?.importComponents?.();
-    if (!componentsToImport || !componentsToImport.length) return;
+    const componentsToFork = this.template?.importComponents?.() || this.template?.fork?.() || [];
+    const componentsToImport = this.template?.import?.() || [];
+
+    if (!componentsToFork.length && !componentsToImport.length) return;
     const dependencyResolver = this.harmony.get<DependencyResolverMain>(DependencyResolverAspect.id);
 
     const componentsToImportResolved = await Promise.all(
-      componentsToImport.map(async (c) => ({
+      componentsToFork.map(async (c) => ({
         id: ComponentID.fromLegacy(BitId.parse(c.id, true)),
         path: c.path,
         targetName: c.targetName,
@@ -167,6 +169,15 @@ export class WorkspaceGenerator {
     await dependencyResolver.persistConfig(this.workspace.path);
     this.workspace.clearCache();
     await this.compileComponents();
+  }
+
+  private async importComponentsFromRemote() {
+    if (this.options.empty) return;
+    const componentsToImport = this.template?.import?.() || [];
+
+    if (!componentsToImport.length) return;
+    // @todo: import
+    // await this.workspace.importAndGetMany()
   }
 
   private async compileComponents() {

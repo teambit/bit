@@ -76,7 +76,20 @@ export interface WorkspaceTemplate {
   generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 
   /**
-   * populate existing components into the new workspace and add them as new components
+   * @deprecated use `fork()` or `import()` instead
+   * this is working similarly to `fork()`
    */
   importComponents?: () => ComponentToImport[];
+
+  /**
+   * populate existing components into the new workspace and add them as new components.
+   * don't change their source code.
+   */
+  import?: () => ComponentToImport[];
+
+  /**
+   * populate existing components into the new workspace and add them as new components.
+   * change their source code and update the dependency names according to the new component names.
+   */
+  fork?: () => ComponentToImport[];
 }
