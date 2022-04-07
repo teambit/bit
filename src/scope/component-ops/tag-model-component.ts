@@ -24,6 +24,7 @@ import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
+import { ModelComponent } from '../models';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
@@ -75,7 +76,8 @@ async function setFutureVersions(
   autoTagIds: BitIds,
   ids: BitIds,
   incrementBy?: number,
-  preRelease?: string
+  preRelease?: string,
+  soft?: boolean
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -94,19 +96,29 @@ async function setFutureVersions(
       } else if (isAutoTag) {
         componentToTag.version = modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease); // auto-tag always bumped as patch
       } else {
-        const enteredId = ids.searchWithoutVersion(componentToTag.id);
-        if (enteredId && enteredId.hasVersion()) {
-          const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
-          componentToTag.version = modelComponent.getVersionToAdd(
-            exactVersionOrReleaseType.releaseType,
-            exactVersionOrReleaseType.exactVersion
-          );
-        } else {
-          componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
-        }
+        const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
+        componentToTag.version = soft
+          ? versionByEnteredId || exactVersion || releaseType
+          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
       }
     })
   );
+}
+
+function getVersionByEnteredId(
+  enteredIds: BitIds,
+  component: Component,
+  modelComponent: ModelComponent
+): string | undefined {
+  const enteredId = enteredIds.searchWithoutVersion(component.id);
+  if (enteredId && enteredId.hasVersion()) {
+    const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
+    return modelComponent.getVersionToAdd(
+      exactVersionOrReleaseType.releaseType,
+      exactVersionOrReleaseType.exactVersion
+    );
+  }
+  return undefined;
 }
 
 /**
@@ -305,7 +317,8 @@ export default async function tagModelComponent({
         autoTagIds,
         ids,
         incrementBy,
-        preRelease
+        preRelease,
+        soft
       );
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
@@ -314,7 +327,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
