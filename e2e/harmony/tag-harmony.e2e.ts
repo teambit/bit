@@ -145,6 +145,19 @@ describe('tag components on Harmony', function () {
         });
       });
     });
+    describe('soft tag with specific version attached to a component-id', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.softTag('comp1@0.0.5');
+      });
+      it('should save the version into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentMap = bitMap.comp1;
+        expect(componentMap).to.have.property('nextVersion');
+        expect(componentMap.nextVersion.version).to.equal('0.0.5');
+      });
+    });
     describe('soft tag after soft tag', () => {
       let tagOutput;
       before(() => {
