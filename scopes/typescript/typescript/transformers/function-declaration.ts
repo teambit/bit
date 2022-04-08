@@ -46,8 +46,7 @@ export class FunctionDeclaration implements SchemaTransformer {
     const returnTypeStr = this.parseReturnValue(displaySig);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const args = await this.getArgs(funcDec, context);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const returnType = await context.resolveType(funcDec.name!, returnTypeStr);
+    const returnType = await context.resolveType(funcDec, returnTypeStr);
 
     return new FunctionSchema(name || '', args, returnType);
   }
