@@ -1,6 +1,6 @@
 import React from 'react';
 import { Searcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
-import { SearchProvider } from '../../types';
+import { SearchProvider } from '../search-provider';
 import { CommandResult } from './command-result';
 import { Command } from './command';
 

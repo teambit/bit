@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ComponentModel } from '@teambit/component';
 import { Searcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
-import { SearchProvider } from '../../types';
+import { SearchProvider } from '../search-provider';
 import { ComponentResult, ComponentResultPlugin } from './component-result';
 
 export type { ComponentResultPlugin };
