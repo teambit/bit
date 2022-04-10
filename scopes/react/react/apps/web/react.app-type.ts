@@ -12,7 +12,7 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       options.entry,
       options.portRange || [3000, 4000],
       this.reactEnv,
-      options.prerender?.routes,
+      options.prerender,
       options.bundler,
       options.devServer,
       options.webpackTransformers,

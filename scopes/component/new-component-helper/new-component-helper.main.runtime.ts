@@ -46,7 +46,7 @@ export class NewComponentHelperMain {
   ) {
     const targetPath = this.getNewComponentPath(targetId, options?.path);
     await this.throwForExistingPath(targetPath);
-    await this.workspace.write(targetPath, comp);
+    await this.workspace.write(comp, targetPath);
     try {
       await this.workspace.track({
         rootDir: targetPath,
