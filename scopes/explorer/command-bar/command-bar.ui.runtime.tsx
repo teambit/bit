@@ -12,7 +12,6 @@ import { CommandSearcher, SearchProvider } from './searchers';
 import { Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
-import { CommandBarContext } from './ui/command-bar-context';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
 
@@ -126,10 +125,6 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
-  private renderContext = ({ children }: { children: ReactNode }) => {
-    return <CommandBarContext.Provider value={this}>{children}</CommandBarContext.Provider>;
-  };
-
   /**
    * internal. Opens and closes the command bar UI.
    */
@@ -183,9 +178,6 @@ export class CommandBarUI {
 
     if (uiUi) {
       uiUi.registerHudItem(<commandBar.CommandBar />);
-      uiUi.registerRenderHooks({
-        reactContext: commandBar.renderContext,
-      });
     }
 
     return commandBar;
