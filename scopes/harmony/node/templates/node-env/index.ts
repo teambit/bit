@@ -10,7 +10,7 @@ import { globalStylesFile } from './files/typescript/styles';
 import { tsTransformerFile } from './files/typescript/ts-transformer';
 import { jestConfigFile } from './files/jest.config';
 
-export const reactEnvTemplate: ComponentTemplate = {
+export const nodeEnvTemplate: ComponentTemplate = {
   name: 'node-env',
   description: 'customize the base Node env with your configs and tools',
   generateFiles: (context: ComponentContext) => {
