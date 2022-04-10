@@ -32,7 +32,7 @@ export class ${Name}Main {
   //};
 
   static async provider([node, envs]: [NodeMain, EnvsMain]) {
-    const templatesReactEnv = node.compose([
+    const ${name}Env = node.compose([
       /**
        * Uncomment to override the config files for TypeScript, Webpack or Jest
        * Your config gets merged with the defaults
