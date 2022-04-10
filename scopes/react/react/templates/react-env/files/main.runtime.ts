@@ -48,14 +48,14 @@ export class ${Name}Main {
        * bit lint
        * bit lint --fix
        */
-      react.useEslint({
-        transformers: [
-          (config) => {
-            config.setRule('no-console', ['error']);
-            return config;
-          }
-        ]
-      }),
+      //react.useEslint({
+      //  transformers: [
+      //  (config) => {
+      //    config.setRule('no-console', ['error']);
+      //    return config;
+      //    }
+      //  ]
+      //}),
 
       /**
        * override the Prettier default config here the check your formatting
@@ -63,14 +63,14 @@ export class ${Name}Main {
        * bit format --check
        * bit format
        */
-      react.usePrettier({
-        transformers: [
-          (config) => {
-            config.setKey('tabWidth', 2);
-            return config;
-          }
-        ]
-      }),
+      //react.usePrettier({
+      //  transformers: [
+      //    (config) => {
+      //      config.setKey('tabWidth', 2);
+      //      return config;
+      //    }
+      //  ]
+      //}),
 
       /**
        * override dependencies here
