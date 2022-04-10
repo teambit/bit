@@ -5,6 +5,8 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import RefactoringAspect, { RefactoringMain } from '@teambit/refactoring';
+import { BitError } from '@teambit/bit-error';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
@@ -19,7 +21,8 @@ export class ForkingMain {
   constructor(
     private workspace: Workspace,
     private dependencyResolver: DependencyResolverMain,
-    private newComponentHelper: NewComponentHelperMain
+    private newComponentHelper: NewComponentHelperMain,
+    private refactoring: RefactoringMain
   ) {}
 
   async fork(sourceIdStr: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
@@ -52,10 +55,18 @@ please specify the target-id arg`);
 
     const config = await this.getConfig(existing);
     await this.newComponentHelper.writeAndAddNewComp(existing, targetCompId, options, config);
-
+    if (options?.refactor) {
+      const allComponents = await this.workspace.list();
+      const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, existing.id, targetId);
+      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
+    }
     return targetCompId;
   }
   private async forkRemoteComponent(sourceId: ComponentID, targetId?: string, options?: ForkOptions) {
+    if (options?.refactor) {
+      throw new BitError(`the component ${sourceId.toStringWithoutVersion()} is not in the workspace, you can't use the --refactor flag.
+the reason is that the refactor changes the components using ${sourceId.toStringWithoutVersion()}, since it's not in the workspace, no components were using it, so nothing to refactor`);
+    }
     const targetName = targetId || sourceId.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     const comp = await this.workspace.scope.getRemoteComponent(sourceId);
@@ -104,17 +115,19 @@ please specify the target-id arg`);
     ComponentAspect,
     NewComponentHelperAspect,
     GraphqlAspect,
+    RefactoringAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper, graphql]: [
+  static async provider([cli, workspace, dependencyResolver, componentMain, newComponentHelper, graphql, refactoring]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     ComponentMain,
     NewComponentHelperMain,
-    GraphqlMain
+    GraphqlMain,
+    RefactoringMain
   ]) {
-    const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper);
+    const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper, refactoring);
     cli.register(new ForkCmd(forkingMain));
     graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);

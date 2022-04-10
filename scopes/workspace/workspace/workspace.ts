@@ -920,10 +920,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return `${owner}.${scopeName}`;
   }
 
-  async write(rootPath: string, component: Component) {
+  async write(component: Component, rootPath?: string) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.relative);
+        const pathToWrite = rootPath ? path.join(this.path, rootPath, file.relative) : file.path;
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
