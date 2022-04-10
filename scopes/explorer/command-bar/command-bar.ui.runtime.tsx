@@ -1,9 +1,11 @@
-import React, { useState, ReactNode } from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import React, { useState } from 'react';
+import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
 
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
+import { ReactRouterAspect } from '@teambit/react-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { CommandBar } from '@teambit/explorer.ui.command-bar';
 import { CommandBarAspect } from './command-bar.aspect';
@@ -18,7 +20,7 @@ import { openCommandBarKeybinding } from './keybinding';
 import styles from './command-bar.module.scss';
 
 const RESULT_LIMIT = 5;
-type SearcherSlot = SlotRegistry<SearchProvider>;
+type SearcherSlot = SlotRegistry<SearchProvider[]>;
 type CommandSlot = SlotRegistry<CommandEntry[]>;
 
 export type CommandEntry = {
@@ -45,7 +47,7 @@ export class CommandBarUI {
   };
 
   /** Add and autocomplete provider. To support keyboard navigation, each result should have a props `active: boolean`, and `exectue: () => any` */
-  addSearcher(commandSearcher: SearchProvider) {
+  addSearcher(...commandSearcher: SearchProvider[]) {
     this.searcherSlot.register(commandSearcher);
     return this;
   }
@@ -101,7 +103,7 @@ export class CommandBarUI {
   };
 
   private search = (term: string, limit: number = RESULT_LIMIT) => {
-    const searchers = this.searcherSlot.values();
+    const searchers = flatten(this.searcherSlot.values());
 
     const searcher = searchers.find((x) => x.test(term));
     return searcher?.search(term, limit) || [];
@@ -151,7 +153,7 @@ export class CommandBarUI {
 
   constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {}
 
-  static dependencies = [UIAspect, PubsubAspect];
+  static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
   static async provider(

@@ -2,7 +2,6 @@ import flatten from 'lodash.flatten';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
@@ -12,12 +11,7 @@ import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown'
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import CommandBarAspect, {
-  CommandBarUI,
-  ComponentSearcher,
-  CommandHandler,
-  ComponentResultPlugin,
-} from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import {
@@ -26,7 +20,6 @@ import {
   TreeToggleWidget,
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
-import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
 
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
@@ -56,8 +49,6 @@ export type OverviewLine = ComponentType;
 
 export type OverviewLineSlot = SlotRegistry<OverviewLine[]>;
 
-export type CommandBarComponentSlot = SlotRegistry<ComponentResultPlugin[]>;
-
 export class ScopeUI {
   constructor(
     /**
@@ -78,11 +69,7 @@ export class ScopeUI {
 
     private sidebarSlot: SidebarSlot,
 
-    private commandBarComponentSlot: CommandBarComponentSlot,
-
     private commandBarUI: CommandBarUI,
-
-    private componentSearcher: ComponentSearcher,
 
     private scopeBadgeSlot: ScopeBadgeSlot,
 
@@ -250,15 +237,7 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  /** add command bar plugins for components in search results */
-  registerComponentCommanderWidgets = (...widgets: ComponentResultPlugin[]) => {
-    this.commandBarComponentSlot.register(widgets);
-    const plugins = flatten(this.commandBarComponentSlot.values());
-    this.componentSearcher.updatePlugins(plugins);
-  };
-
   uiRoot(): UIRoot {
-    this.commandBarUI.addSearcher(this.componentSearcher);
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
@@ -298,7 +277,7 @@ export class ScopeUI {
 
   /** registers available components */
   setComponents = (components: ComponentModel[]) => {
-    this.componentSearcher.update(components);
+    this.componentUi.updateComponents(components);
   };
 
   private menuItems: MenuItem[] = [
@@ -316,7 +295,7 @@ export class ScopeUI {
     },
   ];
 
-  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect];
   static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
@@ -335,13 +314,7 @@ export class ScopeUI {
   ];
 
   static async provider(
-    [ui, componentUi, sidebar, commandBarUI, reactRouterUI]: [
-      UiUI,
-      ComponentUI,
-      SidebarUI,
-      CommandBarUI,
-      ReactRouterUI
-    ],
+    [ui, componentUi, sidebar, commandBarUI]: [UiUI, ComponentUI, SidebarUI, CommandBarUI],
     config,
     [
       routeSlot,
@@ -356,7 +329,6 @@ export class ScopeUI {
       contextSlot,
       drawerWidgetSlot,
       componentFiltersSlot,
-      commandBarComponentSlot,
     ]: [
       RouteSlot,
       RouteSlot,
@@ -369,20 +341,16 @@ export class ScopeUI {
       OverviewLineSlot,
       ContextSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot,
-      CommandBarComponentSlot
+      ComponentFiltersSlot
     ]
   ) {
-    const componentSearcher = new ComponentSearcher({ navigate: reactRouterUI.navigateTo });
     const scopeUi = new ScopeUI(
       routeSlot,
       componentUi,
       menuSlot,
       sidebar,
       sidebarSlot,
-      commandBarComponentSlot,
       commandBarUI,
-      componentSearcher,
       scopeBadgeSlot,
       menuWidgetSlot,
       sidebarItemSlot,
@@ -406,7 +374,6 @@ export class ScopeUI {
         Gallery
       </MenuLinkItem>
     ));
-    scopeUi.registerComponentCommanderWidgets({ key: 'deprecation', end: DeprecationIcon });
     scopeUi.registerExplicitRoutes();
 
     return scopeUi;
