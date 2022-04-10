@@ -155,7 +155,7 @@
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/graph.cleargraph": "0.0.1",
-        "@teambit/harmony": "0.2.11",
+        "@teambit/harmony": "0.3.3",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
@@ -729,8 +729,24 @@
     "scopes/semantics": {
       "defaultScope": "teambit.semantics"
     },
+    "scopes/harmony/testing/load-aspect": {
+      "teambit.component/issues": {
+        // This is here because in load-bit, we have to import harmony config from non main file
+        // we can't expose it from the main file, since it's not browser compatible
+        "ignoreIssues": [
+          "ImportNonMainFiles"
+        ]
+      }
+    },
     // overrides for @teambit/bit ("teambit.harmony/bit") package:
     "scopes/harmony/bit": {
+      "teambit.component/issues": {
+        // This is here because in load-bit, we have to import harmony config from non main file
+        // we can't expose it from the main file, since it's not browser compatible
+        "ignoreIssues": [
+          "ImportNonMainFiles"
+        ]
+      },
       "teambit.pkg/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [

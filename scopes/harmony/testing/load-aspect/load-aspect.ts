@@ -2,10 +2,10 @@ import { resolve, join } from 'path';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
 import { readdirSync } from 'fs';
-import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { Harmony, Aspect } from '@teambit/harmony';
+// TODO: expose this types from harmony (once we have a way to expose it only for node)
+import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
-import { Config } from '@teambit/harmony/dist/harmony-config';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
