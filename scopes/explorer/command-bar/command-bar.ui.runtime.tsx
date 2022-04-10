@@ -154,24 +154,19 @@ export class CommandBarUI {
     );
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
-    this.addSearcher(this.commandSearcher);
-    pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
-      const keyboardEvent = new KeyboardEvent(e.type, e.data);
-      document.dispatchEvent(keyboardEvent);
-    });
-  }
+  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {}
 
   static dependencies = [UIAspect, PubsubAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
   static async provider(
-    [uiUi, pubsubUI]: [UiUI, PubsubUI],
+    [uiUi, pubsubUI]: [UiUI | undefined, PubsubUI | undefined],
     config,
     [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
   ) {
-    const commandBar = new CommandBarUI(searcherSlot, commandSlots, pubsubUI);
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots);
 
+    commandBar.addSearcher(commandBar.commandSearcher);
     commandBar.addCommand({
       id: commandBarCommands.open,
       action: commandBar.open,
@@ -179,10 +174,19 @@ export class CommandBarUI {
       keybinding: openCommandBarKeybinding,
     });
 
-    uiUi.registerHudItem(<commandBar.CommandBar />);
-    uiUi.registerRenderHooks({
-      reactContext: commandBar.renderContext,
-    });
+    if (pubsubUI) {
+      pubsubUI.sub(CommandBarAspect.id, (e: KeyEvent) => {
+        const keyboardEvent = new KeyboardEvent(e.type, e.data);
+        document.dispatchEvent(keyboardEvent);
+      });
+    }
+
+    if (uiUi) {
+      uiUi.registerHudItem(<commandBar.CommandBar />);
+      uiUi.registerRenderHooks({
+        reactContext: commandBar.renderContext,
+      });
+    }
 
     return commandBar;
   }
