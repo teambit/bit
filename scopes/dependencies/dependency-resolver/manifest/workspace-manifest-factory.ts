@@ -106,6 +106,12 @@ export class WorkspaceManifestFactory {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
+      const additionalDeps = {}
+      if (hasRootComponents) {
+        for (const comp of depList.toTypeArray('component')) {
+          additionalDeps[comp.getPackageName!()] = `workspace:*`; // eslint-disable-line
+        }
+      }
       if (filterComponentsFromManifests) {
         depList = filterComponents(depList, components);
       }
@@ -117,10 +123,9 @@ export class WorkspaceManifestFactory {
       }
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
-      if (hasRootComponents) {
-        for (const compDep of Array.from(component.state.dependencies.dependencies) as any) {
-          depManifest.dependencies[compDep.packageName] = `workspace:*`;
-        }
+      depManifest.dependencies = {
+        ...depManifest.dependencies,
+        ...additionalDeps,
       }
 
       return { packageName, depManifest };
