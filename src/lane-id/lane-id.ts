@@ -35,14 +35,14 @@ export default class LaneId {
   }
 }
 
-export class RemoteLaneId extends LaneId {
+export class RemoteLaneId {
+  readonly name: string;
+  readonly scope: string;
   constructor({ name, scope }: { name: string; scope: string }) {
     if (!scope) throw new TypeError('RemoteLaneId expects to get scope');
-    super({ name, scope });
-  }
-  // @ts-ignore
-  set scope(scope: string) {
+    this.name = name;
     this.scope = scope;
+    Object.freeze(this);
   }
   static from(name: string, scope: string): RemoteLaneId {
     return new RemoteLaneId({ scope, name });
@@ -53,6 +53,22 @@ export class RemoteLaneId extends LaneId {
     }
     const split = id.split(LANE_REMOTE_DELIMITER);
     return new RemoteLaneId({ scope: R.head(split), name: R.tail(split).join(LANE_REMOTE_DELIMITER) });
+  }
+  hasSameName(id: LaneId): boolean {
+    return this.name === id.name;
+  }
+  hasSameScope(id: LaneId): boolean {
+    if (!id.scope && !this.scope) return true;
+    return this.scope === id.scope;
+  }
+  isEqual(laneId: LaneId) {
+    return this.hasSameName(laneId) && this.hasSameScope(laneId);
+  }
+  isDefault() {
+    return this.name === DEFAULT_LANE;
+  }
+  toString(): string {
+    return this.scope + LANE_REMOTE_DELIMITER + this.name;
   }
 }
 
