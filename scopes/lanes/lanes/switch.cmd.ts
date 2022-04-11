@@ -28,6 +28,7 @@ export class SwitchCmd implements Command {
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
@@ -39,12 +40,14 @@ export class SwitchCmd implements Command {
       as,
       merge,
       getAll = false,
+      skipDependencyInstallation = false,
       verbose = false,
       json = false,
     }: {
       as?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
+      skipDependencyInstallation?: boolean;
       verbose?: boolean;
       override?: boolean;
       json?: boolean;
@@ -67,7 +70,7 @@ export class SwitchCmd implements Command {
     const checkoutProps: CheckoutProps = {
       mergeStrategy,
       verbose,
-      skipNpmInstall: false, // not relevant in Harmony
+      skipNpmInstall: skipDependencyInstallation, // not relevant in Harmony
       ignorePackageJson: true, // not relevant in Harmony
       ignoreDist: true, // not relevant in Harmony
       isLane: true,
