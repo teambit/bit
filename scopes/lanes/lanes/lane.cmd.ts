@@ -301,22 +301,6 @@ export class LaneMergeCmd implements Command {
   }
 }
 
-export class LaneImportCmd implements Command {
-  name = 'import <lane>';
-  description = `import a remote lane to your workspace`;
-  alias = '';
-  options = [];
-  loader = true;
-  private = true;
-  migration = true;
-
-  constructor(private switchCmd: SwitchCmd) {}
-
-  async report([lane]: [string]): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true });
-  }
-}
-
 export class LaneRemoveCmd implements Command {
   name = 'remove <lane...>';
   description = `remove lanes`;
