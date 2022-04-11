@@ -3,7 +3,9 @@ import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { Tag, TagMap, TagProps } from '@teambit/component';
+import { Tag } from '../../tag';
+import { TagMap } from '../../tag-map';
+import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 
 // ADDING MORE PROPERTIES HERE IS NOT ALLOWED!!! IF YOU NEED DATA PLEASE ADD A NEW

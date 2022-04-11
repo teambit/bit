@@ -1,13 +1,6 @@
 .container {
   padding: 50px 5% 150px 5%;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-.laneComponentContainer {
   overflow-y: auto;
-  display: flex;
-  flex-direction: row;
+  height: 100%;
+  box-sizing: border-box;
 }

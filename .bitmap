@@ -567,6 +567,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
+    "mdx-example": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "examples"
+    },
     "merging": {
         "scope": "teambit.component",
         "version": "0.0.21",

@@ -15,8 +15,8 @@ export {
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {
-  LaneOverviewProps,
-  LaneOverview,
+  LanesOverviewProps,
+  LanesOverview,
   LaneDetails,
   LaneDetailsProps,
   LanesOverviewMenu,
@@ -26,9 +26,6 @@ export {
   LaneBreadcrumbProps,
   LaneOverviewLine,
   LaneOverviewLineSlot,
-  LaneReadme,
-  LaneReadmeProps,
-  NavPlugin,
 } from './overview';
 export { ViewedLaneFromUrl, ViewedLaneFromUrlProps } from './viewed-lane';
 export { UseLaneMenu } from './menu';

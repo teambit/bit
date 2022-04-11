@@ -1,6 +1,1 @@
-export {
-  LanesOverviewMenu,
-  LanesOverviewMenuProps,
-  LanesOrderedNavigationSlot,
-  NavPlugin,
-} from './lanes-overview-menu';
+export { LanesOverviewMenu, LanesOverviewMenuProps, LanesOrderedNavigationSlot } from './lanes-overview-menu';
