@@ -923,6 +923,10 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return false;
   }
 
+  async write() {
+    // no-op (it's relevant for the workspace only)
+  }
+
   /**
    * declare the slots of scope extension.
    */
