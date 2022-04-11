@@ -40,15 +40,53 @@
   width: 100%;
 }
 
+.envDropdownItemContainer {
+  display: flex;
+  width: calc(100% - 24px);
+  align-items: baseline;
+  flex-direction: column;
+}
+
+.envDropdownItemIconContainer {
+  display: flex;
+  height: 16px;
+  width: 16px;
+}
+
 .envDropdownItem {
   padding-left: 8px;
   display: flex;
   justify-content: space-between;
-  width: calc(100% - 24px);
+  width: 100%;
+  font-size: var(--bit-p-md, 16px);
 }
 
 .envDropdownItemLabel,
 .envDropdownItemIcon {
   display: flex;
   justify-content: space-between;
+  padding-left: 8px;
+}
+.description {
+  font-size: var(--bit-p-xs, 14px);
+  padding-left: 8px;
+  padding-right: 16px;
+  color: var(--bit-text-color-light, #6c707c);
+  width: calc(100% - 24px);
+}
+
+.envDropdownItemContainerWithIcon {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+}
+
+.descriptionText {
+  width: 100%;
+}
+
+.envLink {
+  color: white;
+  text-decoration: none;
 }
