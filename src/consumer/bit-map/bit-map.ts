@@ -738,7 +738,7 @@ export default class BitMap {
     return componentMap;
   }
 
-  reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
+  syncWithLanes(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
     if (!workspaceLane) this.remoteLaneName = undefined;
     this._invalidateCache();
