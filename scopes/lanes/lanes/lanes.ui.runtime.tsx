@@ -7,20 +7,18 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import {
   LanesDrawer,
   LanesHost,
-  LaneOverview,
+  LanesOverview,
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
   ViewedLaneFromUrl,
   LaneOverviewLineSlot,
   LaneOverviewLine,
-  LaneReadme,
-  NavPlugin,
-  useLanesContext,
   UseLaneMenu,
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import { NavLinkProps } from '@teambit/react-router';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
@@ -63,12 +61,10 @@ export class LanesUI {
         path: LanesModel.laneComponentUrlRegex,
         children: this.componentUi.getComponentUI(this.host),
       },
-      { path: `${LanesModel.laneRouteUrlRegex}/~readme`, children: <LaneReadme host={this.host} /> },
       {
-        path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
-        children: <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
+        path: LanesModel.laneRouteUrlRegex,
+        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
-      { exact: true, path: `${LanesModel.laneRouteUrlRegex}`, children: <LaneReadme host={this.host} /> },
     ]);
     this.hostAspect.registerMenuRoutes([
       {
@@ -87,26 +83,10 @@ export class LanesUI {
   }
 
   private registerLanesRoutes() {
-    this.registerNavigation([
-      {
-        props: {
-          href: '',
-          children: 'README',
-        },
-        order: 1,
-        hide: () => {
-          const lanesContext = useLanesContext();
-          return !lanesContext?.currentLane?.readmeComponent;
-        },
-      },
-      {
-        props: {
-          href: '~gallery',
-          children: 'Gallery',
-        },
-        order: 1,
-      },
-    ]);
+    this.registerNavigation({
+      href: '',
+      children: 'Gallery',
+    });
   }
 
   private registerRoutes() {
@@ -131,8 +111,11 @@ export class LanesUI {
     return this;
   }
 
-  registerNavigation(routes: NavPlugin[]) {
-    this.navSlot.register(routes);
+  registerNavigation(nav: NavLinkProps, order?: number) {
+    this.navSlot.register({
+      props: nav,
+      order,
+    });
   }
 
   static async provider(
