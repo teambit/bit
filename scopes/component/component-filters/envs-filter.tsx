@@ -5,7 +5,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { NavLink } from '@teambit/react-router';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -44,15 +44,15 @@ export const EnvsFilter: EnvsFilterCriteria = {
 };
 
 const getDefaultState = (components: ComponentModel[]) => {
-  const defaultState = {
-    dropdownState: false,
-    envsState: new Map<string, EnvFilterEnvState>(),
-  };
+  return useMemo(() => {
+    const defaultState = {
+      dropdownState: false,
+      envsState: new Map<string, EnvFilterEnvState>(),
+    };
 
-  const componentsEnvsWithIcons = useMemo(() => {
     const componentEnvSet = new Set<string>();
 
-    return components
+    const componentsEnvsWithIcons = components
       .filter((component) => {
         const envId = component.environment && ComponentID.tryFromString(component.environment.id);
 
@@ -76,13 +76,13 @@ const getDefaultState = (components: ComponentModel[]) => {
           componentId: envId,
         };
       });
+
+    componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
+      defaultState.envsState.set(componentEnvWithIcon.id, { ...componentEnvWithIcon, active: true });
+    });
+
+    return defaultState;
   }, [components]);
-
-  componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
-    defaultState.envsState.set(componentEnvWithIcon.id, { ...componentEnvWithIcon, active: true });
-  });
-
-  return defaultState;
 };
 
 function envsFilter({
