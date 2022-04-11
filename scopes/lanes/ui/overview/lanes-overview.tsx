@@ -12,25 +12,18 @@ import styles from './lanes-overview.module.scss';
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
-export type LaneOverviewProps = {
+export type LanesOverviewProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
 };
-export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
+export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
   const currentLane = lanesContext?.viewedLane;
 
   if (!currentLane || !currentLane.id) return null;
-  if (currentLane.components.length === 0)
-    return (
-      <EmptyLane
-        message={'Start by snapping components to this Lane.'}
-        name={currentLane.name}
-        title={'Snap components to'}
-      />
-    );
+  if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return <LaneOverviewWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
 }
@@ -48,7 +41,11 @@ function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot }: Lane
 
   return (
     <div className={styles.container}>
-      <LaneDetails laneName={currentLane.id} componentCount={currentLane.components.length}></LaneDetails>
+      <LaneDetails
+        laneName={currentLane.id}
+        description={''}
+        componentCount={currentLane.components.length}
+      ></LaneDetails>
       <ComponentGrid>
         {components?.map((component, index) => {
           return (

@@ -7,23 +7,17 @@ import styles from './empty-component-gallery.module.scss';
 
 export type EmptyComponentGalleryProps = {
   name: string;
-  title?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * page to be shown when workspace/scope has no components
  */
-export function EmptyComponentGallery({
-  name,
-  children,
-  title = 'Export components to',
-  className,
-}: EmptyComponentGalleryProps) {
+export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryProps) {
   // TODO: get the docs domain from the community aspect and pass it here as a prop
   return (
-    <div className={classNames(styles.emptyComponentGallery, className)}>
+    <div className={styles.emptyComponentGallery}>
       <div className={styles.title}>
-        <span>{title}</span>&nbsp;
+        <span>Export components to</span>&nbsp;
         <span>{name}</span>
       </div>
       <img src="https://static.bit.dev/harmony/no-components.svg" />

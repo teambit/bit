@@ -20,7 +20,6 @@ export type LaneQueryResult = {
   id: string;
   remote?: string;
   isMerged: boolean;
-  readmeComponent?: ComponentModelProps;
   components: ComponentModelProps[];
 };
 /**
@@ -41,6 +40,7 @@ export type LanesQuery = {
 };
 
 export type LanesHost = 'workspace' | 'scope';
+// export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope
  */
@@ -49,7 +49,6 @@ export type LaneModel = {
   scope: string;
   name: string;
   isMerged: boolean | null;
-  readmeComponent?: ComponentModel;
   components: ComponentModel[];
 };
 /**
@@ -70,6 +69,7 @@ export class LanesModel {
   static baseLaneComponentRoute = '/~component';
 
   static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
+
   static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
   static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
 
@@ -82,12 +82,10 @@ export class LanesModel {
   static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
 
   static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    if (!pathname.includes(LanesModel.baseLaneRoute)) return undefined;
-    const separator = '/~';
-    const [, laneIdRoute] = pathname.split(separator);
-    const laneUrlFromPathname = separator.concat(laneIdRoute);
-    const matches = LanesModel.regexp.exec(laneUrlFromPathname);
-
+    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
+      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
+      : pathname;
+    const matches = LanesModel.regexp.exec(path);
     if (!matches) return undefined;
     const [, orgId, scopeId, laneId] = matches;
     return `${orgId ? orgId.concat('.').concat(scopeId) : scopeId}/${laneId}`;
@@ -101,7 +99,7 @@ export class LanesModel {
     }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, isMerged, components, readmeComponent } = laneData;
+    const { id: name, remote, isMerged, components } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
@@ -112,20 +110,12 @@ export class LanesModel {
         return componentModel;
       }) || [];
 
-    const readmeComponentModel =
-      readmeComponent &&
-      ComponentModel.from({
-        ...readmeComponent,
-        host,
-      });
-
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
       components: componentModels,
-      readmeComponent: readmeComponentModel,
     };
   }
 

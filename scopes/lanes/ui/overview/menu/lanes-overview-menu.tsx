@@ -4,7 +4,6 @@ import classnames from 'classnames';
 import React from 'react';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
-import flatten from 'lodash.flatten';
 import { Menu, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
@@ -12,10 +11,8 @@ import styles from './lanes-overview-menu.module.scss';
 export type NavPlugin = {
   props: NavLinkProps;
   order?: number;
-  hide?: () => boolean;
 };
-
-export type LanesOrderedNavigationSlot = SlotRegistry<NavPlugin[]>;
+export type LanesOrderedNavigationSlot = SlotRegistry<NavPlugin>;
 
 export type LanesOverviewMenuProps = {
   className?: string;
@@ -55,25 +52,18 @@ export function LanesOverviewMenu({ navigationSlot, widgetSlot, className }: Lan
 }
 
 function MenuNav({ navigationSlot }: { navigationSlot: LanesOrderedNavigationSlot }) {
-  const plugins = flatten(
-    navigationSlot.toArray().map(([id, values]) => {
-      const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
-      return flattenedValues;
-    })
-  ).sort(sortFn);
+  const plugins = navigationSlot.toArray().sort(sortFn);
 
   return (
     <nav className={styles.navigation}>
-      {plugins.map((menuItem, index) => {
-        const hidden = menuItem.hide?.();
-        if (hidden) return null;
-        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
-      })}
+      {plugins.map(([id, menuItem]) => (
+        <TopBarNav key={id} {...menuItem.props} />
+      ))}
     </nav>
   );
 }
 
-function sortFn({ order: first }: NavPlugin, { order: second }: NavPlugin) {
+function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]: [string, NavPlugin]) {
   // 0  - equal
   // <0 - first < second
   // >0 - first > second
@@ -84,15 +74,16 @@ function sortFn({ order: first }: NavPlugin, { order: second }: NavPlugin) {
 /** TODO: replace it with tab-link */
 function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
-  const { search, pathname } = useLocation(); // sticky query params
+  const { search } = useLocation(); // sticky query params
   const { href } = props;
+
   const target = `${extendPath(url, href)}${search}`;
 
   return (
     <NavLink
       {...props}
       className={classnames(props.className, styles.topBarLink)}
-      activeClassName={classnames(props.className, target === pathname && styles.active)}
+      activeClassName={classnames(props.className, styles.active)}
       href={target}
     >
       <div>{props.children}</div>

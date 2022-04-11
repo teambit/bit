@@ -95,7 +95,6 @@ export class WorkspaceComponentLoader {
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    // TODO disable this to verify works with cache off
     const fromCache = this.getFromCache(id, forCapsule);
     if (fromCache && useCache) {
       return fromCache;
