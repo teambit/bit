@@ -1473,7 +1473,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
     const afterExclusion = excludeCore ? allDefs.filter((def) => {
       const isCore = coreAspectDefs.find(coreId => def.getId === coreId.getId);
-      const isTarget = idsToResolve.includes(def.getId || '');
+      const id = ComponentID.fromString(def.getId || '');
+      const isTarget = idsToResolve.includes(id.toStringWithoutVersion());
       if (isTarget) return true;
       return (isCore && isTarget);
     }) : allDefs;
