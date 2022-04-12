@@ -211,13 +211,6 @@ export class LanesMain {
     return readmeComponent;
   }
 
-  public isLaneReadme(component: Component) {
-    const lanesConfig = component.state.aspects.get(LanesAspect.id)?.config;
-    if (!lanesConfig) return false;
-
-    return Object.keys(lanesConfig).some((lane) => lanesConfig[lane].readme);
-  }
-
   async removeLaneReadme(laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError('unable to remove the lane readme component outside of Bit workspace');
