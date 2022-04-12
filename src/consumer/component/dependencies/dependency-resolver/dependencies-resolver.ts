@@ -67,7 +67,11 @@ type WorkspacePolicyGetter = () => {
   peerDependencies?: Record<string, string>;
 };
 
-type HarmonyEnvPeersPolicyGetter = (configuredExtensions: ExtensionDataList) => Promise<{ [name: string]: string }>;
+type HarmonyEnvPeersPolicyForComponentGetter = (
+  configuredExtensions: ExtensionDataList
+) => Promise<{ [name: string]: string }>;
+
+type HarmonyEnvPeersPolicyForEnvItselfGetter = (componentId: BitId) => Promise<{ [name: string]: string } | undefined>;
 
 export default class DependencyResolver {
   component: Component;
@@ -95,9 +99,20 @@ export default class DependencyResolver {
     this.getWorkspacePolicy = func;
   }
 
-  static getHarmonyEnvPeersPolicy: HarmonyEnvPeersPolicyGetter;
-  static registerHarmonyEnvPeersPolicyGetter(func: HarmonyEnvPeersPolicyGetter) {
-    this.getHarmonyEnvPeersPolicy = func;
+  /**
+   * This will get the peers policy provided by the env of the component
+   */
+  static getHarmonyEnvPeersPolicyForComponent: HarmonyEnvPeersPolicyForComponentGetter;
+  static registerHarmonyEnvPeersPolicyForComponentGetter(func: HarmonyEnvPeersPolicyForComponentGetter) {
+    this.getHarmonyEnvPeersPolicyForComponent = func;
+  }
+
+  /**
+   * This will get the peers policy provided by the env of the component
+   */
+  static getHarmonyEnvPeersPolicyForEnvItself: HarmonyEnvPeersPolicyForEnvItselfGetter;
+  static registerHarmonyEnvPeersPolicyForEnvItselfGetter(func: HarmonyEnvPeersPolicyForEnvItselfGetter) {
+    this.getHarmonyEnvPeersPolicyForEnvItself = func;
   }
 
   static getDepResolverAspectName: () => string;
@@ -230,7 +245,8 @@ export default class DependencyResolver {
     this.populatePeerPackageDependencies();
     if (!this.consumer.isLegacy) {
       this.applyWorkspacePolicy();
-      await this.applyAutoDetectedPeersFromEnv();
+      await this.applyAutoDetectedPeersFromEnvOnComponent();
+      await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     }
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
@@ -1179,8 +1195,8 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
 
-  async applyAutoDetectedPeersFromEnv(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicy(this.component.extensions);
+  async applyAutoDetectedPeersFromEnvOnComponent(): Promise<void> {
+    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForComponent(this.component.extensions);
     if (!envPolicy || !Object.keys(envPolicy).length) {
       return;
     }
@@ -1199,6 +1215,27 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
     // TODO: handle component deps once we support peers between components
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+  }
+  async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
+    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(this.component.id);
+    if (!envPolicy || !Object.keys(envPolicy).length) {
+      return;
+    }
+    const deps = this.allPackagesDependencies.packageDependencies || {};
+    // we are not iterate component deps since they are resolved from what actually installed
+    // the policy used for installation only in that case
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+      R.forEachObjIndexed((_pkgVal, pkgName) => {
+        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        if (this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'dependencies')) return;
+        if (peerVersionFromEnvPolicy) {
+          delete this.allPackagesDependencies[field][pkgName];
+        }
+      }, this.allPackagesDependencies[field]);
+    });
+    Object.assign(deps, envPolicy);
+    // TODO: handle component deps once we support peers between components
+    this.allPackagesDependencies.packageDependencies = deps;
   }
 
   /**

@@ -843,6 +843,13 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
+  async getEnvPolicyFromEnvLegacyId(id: BitId): Promise<EnvPolicy | undefined> {
+    const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
+    if (!envDef) return undefined;
+    const env = envDef.env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
@@ -1001,26 +1008,19 @@ export class DependencyResolverMain {
         // Lazily get the dependencies
         resolvedParentDeps = resolvedParentDeps || (await this.getDependencies(resolvedParentComponent));
         const resolvedDep = resolvedParentDeps.findDependency(dep.id, { ignoreVersion: true });
-        // TODO: add a way to update id in harmony
-        // @ts-ignore
         dep.id = resolvedDep?.id ?? dep.id;
         await this.resolveRequireableExtensionManifestDepsVersionsRecursively(dep.id, dep);
       });
     };
     if (manifest.dependencies) {
-      // TODO: add a way to access it properly with harmony (currently it's readonly)
-      // @ts-ignore
       manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
-    // TODO: add a function to get all runtimes and not access private member
     // @ts-ignore
-    if (manifest._runtimes) {
+    if (manifest?._runtimes) {
       // @ts-ignore
-      await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
+      await mapSeries(manifest?._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
-          // TODO: add a way to access it properly with harmony (currently it's readonly)
-          // @ts-ignore
           runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
         }
@@ -1204,9 +1204,16 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerHarmonyEnvPeersPolicyGetter(async (configuredExtensions: ExtensionDataList) => {
-      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
-      return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
+    DependencyResolver.registerHarmonyEnvPeersPolicyForComponentGetter(
+      async (configuredExtensions: ExtensionDataList) => {
+        const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
+        return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
+      }
+    );
+    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId) => {
+      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id);
+      if (!envPolicy) return undefined;
+      return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
