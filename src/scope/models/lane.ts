@@ -1,4 +1,5 @@
 import { v4 } from 'uuid';
+import { isHash } from '@teambit/component-version';
 
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
@@ -186,9 +187,17 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
+    // validate that the head
     this.components.forEach((component) => {
       if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
+      }
+      if (!isHash(component.head.hash)) {
+        throw new ValidationError(
+          `${message}, lane component ${component.id.toStringWithoutVersion()} head should be a hash, got ${
+            component.head.hash
+          }`
+        );
       }
     });
     if (this.name === DEFAULT_LANE) {
