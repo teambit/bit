@@ -17,7 +17,7 @@ import type { CommunityMain } from '@teambit/community';
 import { Component } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { DocsMain } from '@teambit/docs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
@@ -232,7 +232,7 @@ export class LanesMain {
     }
 
     const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
-    const scope: Scope = this.workspace.scope.legacyScope;
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane?.readmeComponent) {
@@ -273,7 +273,7 @@ export class LanesMain {
     const readmeComponentBitId = readmeComponentId._legacy;
 
     const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
-    const scope: Scope = this.workspace.scope.legacyScope;
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {

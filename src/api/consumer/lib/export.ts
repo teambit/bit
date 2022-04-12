@@ -4,6 +4,7 @@ import * as path from 'path';
 import R from 'ramda';
 import yn from 'yn';
 
+import { BitError } from '@teambit/bit-error';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import loader from '../../../cli/loader';
@@ -382,7 +383,7 @@ function _throwForUnsnappedLaneReadme(lane: Lane) {
     lane.getComponentHead(readmeComponent.id)?.isEqual(readmeComponent?.head);
 
   if (!isValid) {
-    throw new Error(
+    throw new BitError(
       `${lane?.name} has a readme component ${readmeComponent.id} that hasn't been snapped on the lane.
       Please run either snap -a or snap ${readmeComponent.id} to snap the component on the lane before exporting it.`
     );

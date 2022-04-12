@@ -396,7 +396,7 @@ https://${docsDomain}/components/lanes`;
 
 export class LaneReadmeRemoveCmd implements Command {
   name = 'remove-readme [laneName]';
-  description = 'remove lane readme component';
+  description = 'EXPERIMENTAL. remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
   private = true;
@@ -419,7 +419,7 @@ export class LaneReadmeRemoveCmd implements Command {
 
 export class LaneReadmeAddCmd implements Command {
   name = 'add-readme <componentId> [laneName]';
-  description = 'add lane readme component';
+  description = 'EXPERIMENTAL. add lane readme component';
   options = [] as CommandOptions;
   loader = true;
   private = true;
