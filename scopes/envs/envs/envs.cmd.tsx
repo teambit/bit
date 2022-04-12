@@ -114,6 +114,7 @@ export class EnvsCmd implements Command {
       },
     ];
     const table = CLITable.fromObject(header, tableData);
+    table.sort();
     return table.render();
   }
 }
