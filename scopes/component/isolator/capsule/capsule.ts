@@ -114,6 +114,10 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return files.map((file) => path.join(dir, file));
   }
 
+  async clone(baseDir: string): Promise<Capsule> {
+    return Capsule.createFromComponent(this.component, baseDir);
+  }
+
   static getCapsuleDirName(component: Component, config: { alwaysNew?: boolean; name?: string } = {}) {
     return config.name || filenamify(component.id.toString(), { replacement: '_' });
   }
@@ -125,7 +129,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
   static async createFromComponent(
     component: Component,
     baseDir: string,
-    config: { alwaysNew?: boolean; name?: string } = {}
+    config: { alwaysNew?: boolean } = {}
   ): Promise<Capsule> {
     // TODO: make this a static method and combine with ComponentCapsule
     const capsuleDirName = Capsule.getCapsuleDirName(component, config);
