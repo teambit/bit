@@ -246,15 +246,12 @@ export class LanesMain {
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
-    if (existingLaneConfig !== '-') {
-      delete existingLaneConfig[lane.name];
-      // this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+    if (existingLaneConfig.readme) {
+      delete existingLaneConfig.readme[lane.name];
       await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, existingLaneConfig);
-    } else {
-      // this should not happen but is it still possible to set the config as "-"
-      await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
     }
+
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
     await this.workspace.bitMap.write();
@@ -283,18 +280,23 @@ export class LanesMain {
     lane.setReadmeComponent(readmeComponentBitId);
     await scope.lanes.saveLane(lane);
 
-    // const existingLaneConfig = this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
-    if (existingLaneConfig !== '-') {
+
+    if (existingLaneConfig.readme) {
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
         ...existingLaneConfig,
-        [lane.name]: { readme: true },
+        readme: {
+          ...existingLaneConfig.readme,
+          [lane.name]: true,
+        },
       });
     } else {
-      // this should not happen but is it still possible to set the config as "-"
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        [lane.name]: { readme: true },
+        ...existingLaneConfig,
+        readme: {
+          [lane.name]: true,
+        },
       });
     }
     await this.workspace.bitMap.write();

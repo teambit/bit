@@ -90,7 +90,7 @@ describe('bit lane command', function () {
     it('bitmap should show the lane config for a readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
       const bitMap = helper.bitMap.read();
-      expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({ dev: { readme: true } });
+      expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({ readme: { dev: true } });
     });
     it('should not allow exporting a lane with unsnapped readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
