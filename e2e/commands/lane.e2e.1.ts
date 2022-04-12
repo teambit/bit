@@ -106,6 +106,11 @@ describe('bit lane command', function () {
         const cmd = () => helper.command.mergeLane('dev', '--delete-readme');
         expect(cmd).to.not.throw();
       });
+      it('should delete the readme component on successful merge', () => {
+        const output = helper.command.mergeLane('dev', '--delete-readme');
+        expect(output).to.have.string('removed components');
+        expect(output).to.have.string('comp1');
+      });
     });
   });
   describe('creating a new lane without any component', () => {
