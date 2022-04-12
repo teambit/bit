@@ -1,14 +1,24 @@
 import React, { useMemo } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
+type EnvFilterEnvState = {
+  active: boolean;
+  icon?: string;
+  displayName: string;
+  id: string;
+  description: string;
+  componentId: ComponentID;
+};
 export type EnvFilterState = {
-  envsState: Map<string, { active: boolean; icon?: string; displayName: string; id: string }>;
+  envsState: Map<string, EnvFilterEnvState>;
   dropdownState: boolean;
 };
 export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
@@ -20,12 +30,13 @@ export const EnvsFilter: EnvsFilterCriteria = {
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
     if (activeEnvs.length === 0) return true;
-    const envId = ComponentID.fromString(component.environment?.id as string).toStringWithoutVersion();
-    const matches = Boolean(component.environment?.id && activeEnvs.indexOf(envId) >= 0);
+    const envId =
+      component.environment && ComponentID.tryFromString(component.environment.id)?.toStringWithoutVersion();
+    const matches = !!envId && activeEnvs.indexOf(envId) >= 0;
     return matches;
   },
   state: {
-    envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
+    envsState: new Map<string, EnvFilterEnvState>(),
     dropdownState: false,
   },
   order: 1,
@@ -33,22 +44,26 @@ export const EnvsFilter: EnvsFilterCriteria = {
 };
 
 const getDefaultState = (components: ComponentModel[]) => {
-  const defaultState = {
-    dropdownState: false,
-    envsState: new Map<string, { active: boolean; icon?: string; displayName: string; id: string }>(),
-  };
-  const componentsEnvsWithIcons = useMemo(() => {
+  return useMemo(() => {
+    const defaultState = {
+      dropdownState: false,
+      envsState: new Map<string, EnvFilterEnvState>(),
+    };
+
     const componentEnvSet = new Set<string>();
-    return components
+
+    const componentsEnvsWithIcons = components
       .filter((component) => {
         const envId = component.environment && ComponentID.tryFromString(component.environment.id);
+
         if (!envId) return false;
 
-        const displayName = envId.name;
+        const envKey = envId.toStringWithoutVersion();
 
-        if (componentEnvSet.has(displayName)) return false;
+        if (componentEnvSet.has(envKey)) return false;
 
-        componentEnvSet.add(displayName);
+        componentEnvSet.add(envKey);
+
         return true;
       })
       .map((component) => {
@@ -56,14 +71,18 @@ const getDefaultState = (components: ComponentModel[]) => {
         return {
           displayName: envId.name,
           id: envId.toStringWithoutVersion(),
+          description: `${envId.scope}${envId.namespace ? '/'.concat(envId.namespace) : ''}`,
           icon: component.environment?.icon,
+          componentId: envId,
         };
       });
+
+    componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
+      defaultState.envsState.set(componentEnvWithIcon.id, { ...componentEnvWithIcon, active: true });
+    });
+
+    return defaultState;
   }, [components]);
-  componentsEnvsWithIcons.forEach((componentEnvWithIcon) => {
-    defaultState.envsState.set(componentEnvWithIcon.displayName, { ...componentEnvWithIcon, active: true });
-  });
-  return defaultState;
 };
 
 function envsFilter({
@@ -83,9 +102,10 @@ function envsFilter({
 
   currentFilter.state.envsState.forEach((state) => {
     selectList.push({
-      value: state.displayName,
+      value: state.id,
       icon: state.icon,
-      checked: !!currentEnvsState.get(state.displayName)?.active,
+      description: state.description,
+      checked: !!currentEnvsState.get(state.id)?.active,
       element: <EnvsDropdownItem {...state} />,
     });
   });
@@ -99,6 +119,7 @@ function envsFilter({
       }
 
       const currentEnvState = currentState.state.envsState.get(value);
+
       if (!currentEnvState) return currentState;
 
       currentState.state.envsState.set(value, { ...currentEnvState, active: checked });
@@ -159,21 +180,26 @@ function EnvsPlaceholder() {
   );
 }
 
-function EnvsDropdownItem({
-  displayName,
-  id,
-  icon,
-}: {
-  active: boolean;
-  icon?: string;
-  displayName: string;
-  id: string;
-}) {
+function EnvsDropdownItem({ displayName, icon, description, componentId, id }: EnvFilterEnvState) {
   return (
-    <Tooltip placement="right" content={id}>
-      <div className={styles.envDropdownItem}>
-        <Ellipsis>{displayName}</Ellipsis>
-        <img className={styles.envDropdownItemIcon} src={icon}></img>
+    <Tooltip
+      placement="right"
+      content={
+        <NavLink className={styles.envLink} href={ComponentUrl.toUrl(componentId)} external={true}>
+          {id}
+        </NavLink>
+      }
+    >
+      <div className={styles.envDropdownItemContainer}>
+        <div className={styles.envDropdownItem}>
+          <Ellipsis>{displayName}</Ellipsis>
+          <div className={styles.envDropdownItemIconContainer}>
+            <img className={styles.envDropdownItemIcon} src={icon}></img>
+          </div>
+        </div>
+        <div className={styles.description}>
+          <Ellipsis className={styles.descriptionText}>{description}</Ellipsis>
+        </div>
       </div>
     </Tooltip>
   );
