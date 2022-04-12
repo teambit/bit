@@ -170,6 +170,17 @@ export class LanesMain {
     return results;
   }
 
+  /**
+   * the values array may include zero to two values and will be processed as following:
+   * [] => diff between the current lane and default lane. (only inside workspace).
+   * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
+   * [from, to] => diff between "from" lane and "to" lane.
+   */
+  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    return laneDiffGenerator.generate(values, diffOptions);
+  }
+
   async getLaneComponentModels(name: string): Promise<Component[]> {
     if (!name) return [];
 
@@ -198,17 +209,6 @@ export class LanesMain {
     );
     const readmeComponent = await host.get(laneReadmeComponentId);
     return readmeComponent;
-  }
-
-  /**
-   * the values array may include zero to two values and will be processed as following:
-   * [] => diff between the current lane and default lane. (only inside workspace).
-   * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
-   * [from, to] => diff between "from" lane and "to" lane.
-   */
-  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    return laneDiffGenerator.generate(values, diffOptions);
   }
 
   public isLaneReadme(component: Component) {
