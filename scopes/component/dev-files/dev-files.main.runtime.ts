@@ -40,14 +40,14 @@ export class DevFilesMain {
 
   /**
    * compute all dev patterns on a component.
-   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns()) and
+   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns(component)) and
    * the registering aspects (through registerDevPattern()).
    */
   computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.calculateEnv(component);
-    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component, envDef) : [];
+    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
     const getPatterns = (devPatterns: DevPatterns) => {
       if (isFunction(devPatterns)) {
