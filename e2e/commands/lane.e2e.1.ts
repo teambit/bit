@@ -107,6 +107,7 @@ describe('bit lane command', function () {
         expect(cmd).to.not.throw();
       });
       it('should delete the readme component on successful merge', () => {
+        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
         const output = helper.command.mergeLane('dev', '--delete-readme');
         expect(output).to.have.string('removed components');
         expect(output).to.have.string('comp1');
