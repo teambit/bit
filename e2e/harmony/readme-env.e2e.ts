@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai';
-import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
