@@ -1,7 +1,6 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Menu } from '@teambit/ui-foundation.ui.menu';
 import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
@@ -10,7 +9,7 @@ import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
@@ -59,12 +58,8 @@ export class WorkspaceUI {
 
     private drawerComponentsFiltersSlot: ComponentFiltersSlot,
 
-    private commandBarUI: CommandBarUI,
-
-    reactRouterUI: ReactRouterUI
-  ) {
-    this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
-  }
+    private commandBarUI: CommandBarUI
+  ) {}
 
   private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
 
@@ -96,14 +91,12 @@ export class WorkspaceUI {
   };
 
   setComponents = (components: ComponentModel[]) => {
-    this.componentSearcher.update(components);
+    this.componentUi.updateComponents(components);
   };
 
   registerSidebarLink = (...links: SidebarItem[]) => {
     this.sidebarItemSlot.register(links);
   };
-
-  componentSearcher: ComponentSearcher;
 
   /**
    * register component filters
@@ -117,7 +110,6 @@ export class WorkspaceUI {
   };
 
   uiRoot(): UIRoot {
-    this.commandBarUI.addSearcher(this.componentSearcher);
     this.registerDrawers(
       workspaceDrawer({
         treeWidgets: this.sidebarSlot,
@@ -128,7 +120,7 @@ export class WorkspaceUI {
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
-      handler: () => {},
+      action: () => {},
       displayName: 'Toggle component list',
       keybinding: 'alt+s',
     });
@@ -167,15 +159,7 @@ export class WorkspaceUI {
     },
   ];
 
-  static dependencies = [
-    UIAspect,
-    ComponentAspect,
-    SidebarAspect,
-    ComponentTreeAspect,
-    CommandBarAspect,
-    ReactRouterAspect,
-    GraphAspect,
-  ];
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, ComponentTreeAspect, CommandBarAspect, GraphAspect];
 
   static runtime = UIRuntime;
 
@@ -190,13 +174,12 @@ export class WorkspaceUI {
   ];
 
   static async provider(
-    [ui, componentUi, sidebar, componentTree, commandBarUI, reactRouterUI, graphUI]: [
+    [ui, componentUi, sidebar, componentTree, commandBarUI, graphUI]: [
       UiUI,
       ComponentUI,
       SidebarUI,
       ComponentTreeUI,
       CommandBarUI,
-      ReactRouterUI,
       GraphUI
     ],
     config,
@@ -224,8 +207,7 @@ export class WorkspaceUI {
       sidebarItemSlot,
       drawerWidgetSlot,
       drawerComponentsFiltersSlot,
-      commandBarUI,
-      reactRouterUI
+      commandBarUI
     );
 
     workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
