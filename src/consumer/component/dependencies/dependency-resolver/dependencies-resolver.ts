@@ -71,7 +71,7 @@ type HarmonyEnvPeersPolicyForComponentGetter = (
   configuredExtensions: ExtensionDataList
 ) => Promise<{ [name: string]: string }>;
 
-type HarmonyEnvPeersPolicyForEnvItselfGetter = (componentId: BitId) => Promise<{ [name: string]: string }>;
+type HarmonyEnvPeersPolicyForEnvItselfGetter = (componentId: BitId) => Promise<{ [name: string]: string } | undefined>;
 
 export default class DependencyResolver {
   component: Component;
