@@ -327,11 +327,8 @@ export class PreviewMain {
       const withPaths = map.map<string[]>((files, component) => {
         const environment = this.envs.getEnv(component).env;
         const compilerInstance = environment.getCompiler?.();
-        let modulePath =
-          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
-        if (this.dependencyResolver.hasRootComponents()) {
-          modulePath = `${modulePath}/${modulePath}`;
-        }
+        const modulePath =
+          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;
