@@ -145,7 +145,11 @@ export class ScopeComponentLoader {
       // happens for example when on main and merging a lane.
       return null;
     }
-    const version = await modelComponent.loadVersion(head.toString(), this.scope.legacyScope.objects);
+    const version = await modelComponent.loadVersion(head.toString(), this.scope.legacyScope.objects, false);
+    if (!version) {
+      // might happen when the component is just a dependency and a previous version was needed.
+      return null;
+    }
     return this.createSnapFromVersion(version);
   }
 
