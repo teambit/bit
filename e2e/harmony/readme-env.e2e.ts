@@ -35,8 +35,7 @@ describe('readme env', function () {
     });
     describe('unset readme env and set default env', () => {
       before(() => {
-        helper.command.unsetEnv('comp1');
-        helper.command.setEnv('comp1', 'teambit.envs/env');
+        helper.command.setEnv('comp1', 'teambit.mdx/mdx');
         const status = helper.command.showComponentParsed('comp1');
         docFile = status.extensions.find((e) => e.name === 'teambit.component/dev-files').data.devFiles[
           'teambit.docs/docs'
