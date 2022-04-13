@@ -2,7 +2,6 @@ import { ComponentTreeSlot } from '@teambit/component-tree';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
-import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -43,7 +42,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   return (
     <NavLink
       href={`/${component.id.fullName}`}
-      className={classNames(indentClass, clickable, styles.component)}
+      className={classNames(indentClass, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}
     >
