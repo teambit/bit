@@ -62,6 +62,7 @@ export type IsolateComponentsInstallOptions = {
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
   packageManagerConfigRootDir?: string;
+  useNesting?: boolean;
 };
 
 type CreateGraphOptions = {
@@ -231,6 +232,9 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
   ): Promise<CapsuleList> {
+    if (opts.installOptions) {
+      opts.installOptions.useNesting = this.dependencyResolver.config.rootComponents && opts.installOptions.useNesting;
+    }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
@@ -255,7 +259,8 @@ export class IsolatorMain {
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
+      const rootDir = opts.installOptions?.useNesting ? capsuleList[0].path : capsulesDir
+      await this.installInCapsules(rootDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
@@ -300,6 +305,7 @@ export class IsolatorMain {
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
       rootComponentsForCapsules: this.dependencyResolver.config.rootComponents,
+      useNesting: isolateInstallOptions.useNesting,
     };
     await installer.install(
       capsulesDir,
@@ -450,6 +456,16 @@ export class IsolatorMain {
     baseDir: string,
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
+    if (opts.installOptions?.useNesting) {
+      const capsuleDepsDir = path.join(baseDir, `${Capsule.getCapsuleDirName(components[0], opts)}`, `deps`);
+      const capsules: Capsule[] = await Promise.all(
+        components.map((component: Component, index) => {
+          const dir = index === 0 ? baseDir : capsuleDepsDir
+          return Capsule.createFromComponent(component, dir, opts);
+        })
+      );
+      return capsules;
+    }
     const capsules: Capsule[] = await Promise.all(
       components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);

@@ -202,10 +202,10 @@ export async function install(
     ...newManifestsByPaths,
     ...manifestsByPaths,
   };
-  const { packagesToBuild, workspacePackages } = groupPkgs({
-    ...manifestsByPaths,
-    [rootManifest.rootDir]: rootManifest.manifest,
-  });
+  if (!manifestsByPaths[rootManifest.rootDir]) {
+    manifestsByPaths[rootManifest.rootDir] = rootManifest.manifest;
+  }
+  const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({

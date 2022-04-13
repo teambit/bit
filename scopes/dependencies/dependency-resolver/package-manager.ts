@@ -35,6 +35,8 @@ export type PackageManagerInstallOptions = {
   rootComponents?: boolean;
 
   rootComponentsForCapsules?: boolean;
+
+  useNesting?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

@@ -118,7 +118,9 @@ export class PnpmPackageManager implements PackageManager {
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests);
+    if (!installOptions.useNesting) {
+      await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests);
+    }
     await install(
       rootManifest,
       componentsManifests,

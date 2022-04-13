@@ -1274,7 +1274,7 @@ Env2Aspect.addRuntime(EnvMain);
   });
 });
 
-(supportNpmCiRegistryTesting ? describe.skip : describe.skip)(
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
   'package manager rc file is read from the workspace directory when installation is in a capsule',
   function () {
     this.timeout(0);

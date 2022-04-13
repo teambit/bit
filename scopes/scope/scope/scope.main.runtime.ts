@@ -474,6 +474,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
           copyPeerToRuntimeOnRoot: true,
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
+          useNesting: true,
         },
       },
       this.legacyScope

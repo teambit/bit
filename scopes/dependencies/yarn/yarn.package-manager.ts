@@ -88,13 +88,13 @@ export class YarnPackageManager implements PackageManager {
 
     // @ts-ignore
     project.setupResolutions();
-    if (installOptions.rootComponentsForCapsules) {
+    if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
       const resolutions = {}
       Array.from(componentDirectoryMap.hashMap.entries())
-        .forEach(([compId, [comp]]) => {
+        .forEach(([, [comp, path]]) => {
           const component = comp.state._consumer;
           const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
-          resolutions[name] = `file:${compId.replace(/\//g, '_')}`
+          resolutions[name] = `file:${relative(rootDir, path)}`;
         })
       installOptions.overrides = {
         ...installOptions.overrides,
@@ -124,6 +124,20 @@ export class YarnPackageManager implements PackageManager {
         })),
         ...manifests,
       };
+    } else if (installOptions.useNesting) {
+      manifests[rootDir].dependencies = {
+        ...manifests[rootDir].peerDependencies,
+        ...manifests[rootDir].defaultPeerDependencies,
+        ...manifests[rootDir].dependencies,
+      }
+      manifests[rootDir].installConfig = {
+        hoistingLimits: 'workspaces',
+      };
+      const pkgJson = fs.readJsonSync(join(rootDir, 'package.json'));
+      fs.writeJsonSync(join(rootDir, 'package.json'), {
+        ...pkgJson,
+        dependencies: manifests[rootDir].dependencies,
+      }, { spaces: 2 });
     } else if (installOptions.rootComponentsForCapsules) {
       for (const dir of Object.keys(manifests)) {
         manifests[dir].dependencies = {
@@ -165,7 +179,10 @@ export class YarnPackageManager implements PackageManager {
 
     const workspaces = await Promise.all(workspacesP);
 
-    this.setupWorkspaces(project, workspaces.concat(rootWs));
+    if (!manifests[rootDir]) {
+      workspaces.push(rootWs);
+    }
+    this.setupWorkspaces(project, workspaces)
 
     const cache = await Cache.find(config);
     // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
