@@ -125,7 +125,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
   static async createFromComponent(
     component: Component,
     baseDir: string,
-    config: { alwaysNew?: boolean; name?: string } = {}
+    config: { alwaysNew?: boolean } = {}
   ): Promise<Capsule> {
     // TODO: make this a static method and combine with ComponentCapsule
     const capsuleDirName = Capsule.getCapsuleDirName(component, config);
