@@ -364,7 +364,7 @@ describe('bit eject command', function () {
             helper.fs.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
 
             npmCiRegistry.setCiScopeInBitJson();
-            helper.command.tagScope('2.0.0', 'msg', '-a');
+            helper.command.tagIncludeUnmodified('2.0.0', 'msg', '-a');
             helper.command.exportAllComponents();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('bar/foo', '2.0.0');

@@ -136,7 +136,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           npmCiRegistry.setCiScopeInBitJson();
           helper.command.importComponent('string/is-string');
           helper.command.importComponent('string/pad-left');
-          helper.command.tagScope('2.0.0', 'msg', '-a');
+          helper.command.tagIncludeUnmodified('2.0.0', 'msg', '-a');
 
           // as an intermediate step, make sure bit status doesn't show them as modified
           // it's a very important step which covers a few bugs
@@ -531,7 +531,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
         });
         it('should be able to tag the components', () => {
-          const tagCmd = () => helper.command.tagScope('2.0.0');
+          const tagCmd = () => helper.command.tagIncludeUnmodified('2.0.0');
           expect(tagCmd).to.not.throw();
         });
       });

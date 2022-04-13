@@ -435,7 +435,7 @@ describe('bit checkout command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
-      helper.command.tagScope('0.0.5');
+      helper.command.tagIncludeUnmodified('0.0.5');
       helper.command.exportAllComponents();
       authorScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();

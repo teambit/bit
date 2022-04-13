@@ -221,7 +221,7 @@ describe('bit checkout command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       scopeAfterFirstVersion = helper.scopeHelper.cloneLocalScope();
-      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(scopeAfterFirstVersion);
       helper.command.import();

@@ -853,7 +853,7 @@ describe('bit tag command', function () {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          output = helper.command.tagScope('0.0.5', 'msg');
+          output = helper.command.tagIncludeUnmodified('0.0.5', 'msg');
         });
         it('should tag authored components with the specified version', () => {
           expect(output).to.have.string('1 component(s) tagged');
@@ -884,7 +884,7 @@ describe('bit tag command', function () {
         let output;
         before(() => {
           helper.command.tagComponent('bar/foo@0.1.5', 'msg', '--force');
-          output = helper.command.tagScope('0.1.4', 'msg');
+          output = helper.command.tagIncludeUnmodified('0.1.4', 'msg');
         });
         it('should display a warning', () => {
           expect(output).to.have.string('warning: bar/foo@0.1.5 has a version greater than 0.1.4');
