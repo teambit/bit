@@ -45,6 +45,8 @@ export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
 export type PkgExtensionConfig = {};
 
+type GetModulePathOptions = { absPath?: boolean };
+
 /**
  * Config for variants
  */
@@ -139,7 +141,8 @@ export class PkgMain implements CloneConfig {
       packer,
       envs,
       componentAspect,
-      publishTask
+      publishTask,
+      dependencyResolver
     );
 
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
@@ -182,15 +185,30 @@ export class PkgMain implements CloneConfig {
    * get the package name of a component.
    */
   getPackageName(component: Component) {
-    return componentIdToPackageName(component.state._consumer);
+    return this.dependencyResolver.getPackageName(component);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePath(component: Component, options: GetModulePathOptions = {}) {
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    if (options?.absPath) {
+      if (this.workspace) {
+        return join(this.workspace.path, relativePath);
+      }
+      throw new Error('getModulePath with abs path option is not implemented for scope');
+    }
+    return relativePath;
   }
 
   /**
    * returns the package path in the /node_modules/ folder
+   * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
    */
-  getModulePath(component: Component, options: { absPath?: boolean } = {}) {
-    const pkgName = this.getPackageName(component);
-    const relativePath = join('node_modules', pkgName);
+  getModulePath(component: Component, options: GetModulePathOptions = {}) {
+    const relativePath = this.dependencyResolver.getModulePath(component);
     if (options?.absPath) {
       if (this.workspace) {
         return join(this.workspace.path, relativePath);
@@ -212,14 +230,6 @@ export class PkgMain implements CloneConfig {
     }
     // we don't want to add any data to the compiler aspect, only to add issues on the component
     return undefined;
-  }
-
-  /*
-   * Returns the location where the component is installed with its peer dependencies
-   */
-  getRootComponentPath(component: Component) {
-    const pkgName = this.getPackageName(component);
-    return join(this.getModulePath(component), 'node_modules', pkgName);
   }
 
   /**
@@ -263,7 +273,9 @@ export class PkgMain implements CloneConfig {
     /**
      * keep it as public. external env might want to register it to the snap pipeline
      */
-    public publishTask: PublishTask
+    public publishTask: PublishTask,
+
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   /**
