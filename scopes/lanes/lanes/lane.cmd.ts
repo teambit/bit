@@ -332,15 +332,20 @@ export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
   alias = '';
-  options = [];
+  options = [
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+  ] as CommandOptions;
   loader = true;
   private = true;
   migration = true;
 
   constructor(private switchCmd: SwitchCmd) {}
 
-  async report([lane]: [string]): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true });
+  async report(
+    [lane]: [string],
+    { skipDependencyInstallation = false }: { skipDependencyInstallation: boolean }
+  ): Promise<string> {
+    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation });
   }
 }
 
