@@ -8,8 +8,8 @@ export type CodeDiffRouteParams = {
 } & CodeRouteParams;
 /**
  *
- * path = /<org>/<scope>/<componentId>/~codeDiff
- * variables = ?to=0.0.562&?from=0.0.555&?file=index.ts
+ * path = /<org>/<scope>/<componentId>/~codeDiff/file
+ * variables = ?to=0.0.562&?from=0.0.555
  */
 export function useCodeDiffParams(): CodeDiffRouteParams {
   const query = useQuery();
