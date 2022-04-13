@@ -1302,12 +1302,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
     },
-    "ui/input/option-button": {
-        "scope": "teambit.design",
-        "version": "0.0.26",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/input/option-button"
-    },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.486",
