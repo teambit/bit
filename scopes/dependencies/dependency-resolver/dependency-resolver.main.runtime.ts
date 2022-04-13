@@ -2,6 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
+import { join } from 'path';
 import { get, pick } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -14,6 +15,7 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
@@ -311,6 +313,10 @@ export class DependencyResolverMain {
     private postInstallSlot: PostInstallSlot
   ) {}
 
+  hasRootComponents(): boolean {
+    return Boolean(this.config.rootComponents);
+  }
+
   /**
    * register a new package manager to the dependency resolver.
    */
@@ -469,9 +475,9 @@ export class DependencyResolverMain {
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
-      hasRootComponents: options?.hasRootComponents ?? Boolean(
-        this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'
-      ),
+      hasRootComponents:
+        options?.hasRootComponents ??
+        Boolean(this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'),
     };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
@@ -484,6 +490,36 @@ export class DependencyResolverMain {
     );
     this.logger.consoleSuccess();
     return res;
+  }
+
+  /**
+   * get the package name of a component.
+   */
+  getPackageName(component: Component) {
+    return componentIdToPackageName(component.state._consumer);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePath(component: Component) {
+    const modulePath = this.getModulePath(component);
+    if (!this.hasRootComponents()) {
+      return modulePath;
+    }
+    const pkgName = this.getPackageName(component);
+    return join(modulePath, 'node_modules', pkgName);
+  }
+
+  /**
+   * returns the package path in the /node_modules/ folder
+   * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
+   */
+  getModulePath(component: Component) {
+    const pkgName = this.getPackageName(component);
+    const relativePath = join('node_modules', pkgName);
+    return relativePath;
   }
 
   /**
