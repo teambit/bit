@@ -14,11 +14,10 @@ import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consume
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { DocsMain } from '@teambit/docs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
@@ -59,7 +58,12 @@ export type CreateLaneOptions = {
 };
 
 export class LanesMain {
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private merging: MergingMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private merging: MergingMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   async getLanes({
     name,
@@ -186,7 +190,7 @@ export class LanesMain {
 
     const [lane] = await this.getLanes({ name });
     const laneComponents = lane.components;
-    const host = this.workspace || this.scope;
+    const host = this.componentAspect.getHost();
     const laneComponentIds = await Promise.all(
       laneComponents.map((laneComponent) => {
         const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
@@ -203,7 +207,7 @@ export class LanesMain {
     const [lane] = await this.getLanes({ name });
     const laneReadmeComponent = lane.readmeComponent;
     if (!laneReadmeComponent) return undefined;
-    const host = this.workspace || this.scope;
+    const host = this.componentAspect.getHost();
     const laneReadmeComponentId = await host.resolveComponentId(
       laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
     );
@@ -315,18 +319,26 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect, MergingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    WorkspaceAspect,
+    GraphqlAspect,
+    CommunityAspect,
+    MergingAspect,
+    ComponentAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging]: [
+  static async provider([cli, scope, workspace, graphql, community, merging, component]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
     CommunityMain,
     MergingMain,
-    DocsMain
+    ComponentMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope, merging);
+    const lanesMain = new LanesMain(workspace, scope, merging, component);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd();
     if (!isLegacy) {
