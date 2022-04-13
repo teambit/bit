@@ -385,7 +385,9 @@ export class SnappingMain {
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
-    const tagPendingComponents = await componentsList.listPotentialTagAllWorkspace();
+    const tagPendingComponents = includeUnmodified
+      ? await componentsList.listPotentialTagAllWorkspace()
+      : await componentsList.listTagPendingComponents();
 
     const snappedComponents = await componentsList.listSnappedComponentsOnMain();
     const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
