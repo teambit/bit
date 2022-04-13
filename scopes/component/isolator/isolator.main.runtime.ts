@@ -299,7 +299,7 @@ export class IsolatorMain {
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
-      rootComponentsForCapsules: this.dependencyResolver.config.rootComponents,
+      rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
     };
     await installer.install(
       capsulesDir,
@@ -322,14 +322,14 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    if (this.dependencyResolver.config.rootComponents) {
+    if (this.dependencyResolver.hasRootComponents()) {
       linkingOptions.linkNestedDepsInNM = false;
     }
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       legacyLink: false,
     });
-    if (!this.dependencyResolver.config.rootComponents) {
+    if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     }
