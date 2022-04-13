@@ -1,0 +1,45 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+$panelBg: #fafafa;
+
+.codePage {
+  height: calc(100vh - 56px);
+  width: 100%;
+}
+
+.left {
+  min-width: 200px;
+
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+
+  display: flex;
+}
+
+.right {
+  position: relative;
+  background: $panelBg;
+  overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+}
+
+.splitter {
+  position: relative;
+
+  > :first-child {
+    z-index: $nav-z-index + 1;
+    position: absolute;
+  }
+}
+
+.collapser {
+  right: 1px;
+}
+
+.depNode {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}

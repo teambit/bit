@@ -190,8 +190,8 @@ export class ComponentUI {
     );
   }
 
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoute(routes: RouteProps[] | RouteProps) {
+    this.routeSlot.register(routes);
     return this;
   }
 
@@ -278,7 +278,7 @@ export class ComponentUI {
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute(section.route);
+    componentUI.registerRoute([section.route]);
     componentUI.registerWidget(section.navigationLink, section.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;

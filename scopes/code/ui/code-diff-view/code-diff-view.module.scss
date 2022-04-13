@@ -1,0 +1,13 @@
+.diff-editor {
+  padding-top: 10px;
+  background-color: var(--editor-bg-color, #1e1e1e);
+}
+
+.codeDiffView {
+  width: 100%;
+}
+
+.fileName {
+  display: flex;
+  align-items: baseline;
+}
