@@ -233,10 +233,7 @@ export class LanesMain {
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane?.readmeComponent) {
-      return {
-        result: false,
-        message: `there is no readme component added to the lane ${laneName || currentLaneName}`,
-      };
+      throw new BitError(`there is no readme component added to the lane ${laneName || currentLaneName}`);
     }
 
     const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);

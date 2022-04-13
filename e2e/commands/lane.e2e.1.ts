@@ -67,8 +67,8 @@ describe('bit lane command', function () {
       expect(readmeOutput).to.have.string('the readme component has been successfully removed from the lane dev');
     });
     it('bit lane readme-remove should throw an error when there no readme component added to the lane', () => {
-      const output = helper.command.removeLaneReadme();
-      expect(output).to.have.string('there is no readme component added to the lane dev');
+      const cmd = () => helper.command.removeLaneReadme();
+      expect(cmd).to.throw();
     });
     it('bit lane should show the readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
