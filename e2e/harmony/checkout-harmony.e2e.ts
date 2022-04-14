@@ -61,7 +61,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.command.tagAllWithoutBuild('0.0.10');
+            helper.command.tagAllWithoutBuild('--ver 0.0.10');
             output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {

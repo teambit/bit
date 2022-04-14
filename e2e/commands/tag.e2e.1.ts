@@ -834,25 +834,6 @@ describe('bit tag command', function () {
         });
       });
     });
-    describe('with --all flag', () => {
-      describe('when current components have lower versions', () => {
-        let output;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
-          output = helper.command.tagAllComponents('--scope 0.2.0');
-        });
-        it('should tag all components with the specified version including the imported components', () => {
-          // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
-          // current version of is-string is 0.0.1, so auto-tag would tag it to 0.0.2
-          expect(output).to.have.string('2 component(s) tagged');
-          expect(output).to.have.string('bar/foo@0.2.0');
-          expect(output).to.have.string('utils/is-string@0.2.0');
-        });
-        it('should not tag nested components', () => {
-          expect(output).not.to.have.string('utils/is-type');
-        });
-      });
-    });
   });
   describe('with Windows end-of-line characters', () => {
     before(() => {
