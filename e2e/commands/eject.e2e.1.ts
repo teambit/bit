@@ -1,7 +1,5 @@
 import chai, { expect } from 'chai';
-import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
 
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
@@ -221,7 +219,6 @@ describe('bit eject command', function () {
       });
     });
     describe('export components with dependencies', () => {
-      let remoteScope;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
@@ -233,7 +230,6 @@ describe('bit eject command', function () {
         npmCiRegistry.setCiScopeInBitJson();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        remoteScope = helper.scopeHelper.cloneRemoteScope();
 
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.unpublishComponent('bar.foo');

@@ -768,7 +768,6 @@ describe('bit tag command', function () {
     });
   });
   describe('with --scope flag', () => {
-    let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithTwoComponents();
@@ -786,7 +785,6 @@ describe('bit tag command', function () {
       helper.fixtures.createComponentBarFoo(fooBarFixture);
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
