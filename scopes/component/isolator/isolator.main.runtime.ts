@@ -457,10 +457,10 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     if (opts.installOptions?.useNesting) {
-      const capsuleDepsDir = path.join(baseDir, `${Capsule.getCapsuleDirName(components[0], opts)}`, `deps`);
+      const subcapsulesDir = path.join(baseDir, Capsule.getCapsuleDirName(components[0], opts), `subcapsules`);
       const capsules: Capsule[] = await Promise.all(
         components.map((component: Component, index) => {
-          const dir = index === 0 ? baseDir : capsuleDepsDir
+          const dir = index === 0 ? baseDir : subcapsulesDir
           return Capsule.createFromComponent(component, dir, opts);
         })
       );
