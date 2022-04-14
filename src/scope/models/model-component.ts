@@ -320,7 +320,7 @@ export default class Component extends BitObject {
 
   latest(): string {
     if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
-    const head = this.laneHeadLocal || this.getHead();
+    const head = this.getHeadRegardlessOfLane();
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
@@ -341,7 +341,7 @@ export default class Component extends BitObject {
     const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
-    if (!this.laneHeadLocal && !this.hasHead()) {
+    if (!this.getHeadRegardlessOfLane()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
 
