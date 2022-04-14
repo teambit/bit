@@ -26,6 +26,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
 `;
     output += commands.map((cmd) => this.generateCommand(cmd)).join('\n');
 
+    // throw new Error('stop here')
     return output;
   }
 
@@ -45,7 +46,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     result += `\`bit ${cmd.name}\`  \n\n`;
 
     if (cmd.commands && cmd.commands.length > 0) {
-      result += this.generateSubCommands(cmd.commands);
+      result += this.generateSubCommands(cmd.commands, cmd);
     }
     result += this.generateOptions(cmd.options);
     result += `---  \n`;
@@ -53,13 +54,13 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     return result;
   }
 
-  private generateSubCommands(subCommands: Command[]) {
+  private generateSubCommands(subCommands: Command[], command: Command) {
     let ret = '';
     subCommands.forEach((subCommand) => {
-      // @ts-ignore
-      const name = subCommand.name.match(/^([\w-]+)/)[0];
-      const usage = subCommand.name;
-      ret += `### ${name} \n`;
+      const commandName = getCommandId(command.name);
+      const subcommandName = getCommandId(subCommand.name);
+      const usage = `${commandName} ${subCommand.name}`;
+      ret += `### ${commandName} ${subcommandName} \n`;
       ret += `**Usage**: \`${usage}\`  \n\n`;
       ret += `**Description**: ${this.formatDescription(subCommand.description as string)}`;
 
