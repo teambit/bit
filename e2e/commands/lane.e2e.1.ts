@@ -1406,6 +1406,54 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('multiple scopes when the components are new', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fs.outputFile('bar1/index.js', 'const bar2 = require("../bar2"); console.log(bar2);');
+      helper.fs.outputFile('bar2/index.js', 'console.log("v1");');
+      helper.command.add('bar1');
+      helper.command.add('bar2', `--scope ${anotherRemote}`);
+      helper.command.linkAndRewire();
+
+      helper.command.compile();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    describe('exporting the lane to the remote', () => {
+      before(() => {
+        helper.command.export();
+      });
+      // previously, it was changing the scope-name of bar2 to the first remote.
+      it('should not change the scope of the components in .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.bar2.scope).to.equal(anotherRemote);
+      });
+      // previously, it was changing the scope-name of bar2 to the first remote.
+      it('should not change the scope-name in the lane object', () => {
+        const lane = helper.command.catLane('dev');
+        const bar2 = lane.components.find((c) => c.id.name === 'bar2');
+        expect(bar2.id.scope).to.equal(anotherRemote);
+      });
+      describe('importing the lane', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope();
+          // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
+          helper.command.switchRemoteLane('dev');
+        });
+        it('should not show the component as staged', () => {
+          helper.command.expectStatusToBeClean();
+        });
+      });
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
