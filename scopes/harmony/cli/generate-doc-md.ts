@@ -43,7 +43,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
       result += `**Alias**: \`${cmd.alias}\`  \n`;
     }
     result += `**Workspace only**: ${cmd.skipWorkspace ? 'no' : 'yes'}  \n`;
-    result += `**Description**: ${this.formatDescription(cmd.description as string)}`;
+    result += `**Description**: ${this.formatDescription(cmd)}`;
     result += `\`bit ${cmd.name}\`  \n\n`;
 
     if (cmd.commands && cmd.commands.length > 0) {
@@ -63,7 +63,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
       const usage = `${commandName} ${subCommand.name}`;
       ret += `### ${commandName} ${subcommandName} \n`;
       ret += `**Usage**: \`${usage}\`  \n\n`;
-      ret += `**Description**: ${this.formatDescription(subCommand.description as string)}`;
+      ret += `**Description**: ${this.formatDescription(subCommand)}`;
 
       ret += '\n';
       ret += this.generateOptions(subCommand.options);
@@ -85,7 +85,15 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     return output;
   }
 
-  private formatDescription(description: string): string {
-    return `${description.split('\n').join('  \n')}  \n\n`;
+  private formatStringToMD(str: string): string {
+    return str.split('\n').join('  \n');
+  }
+
+  private formatDescription(command: Command): string {
+    const extendedDescription = command.extendedDescription
+      ? `  \n${this.formatStringToMD(command.extendedDescription)}`
+      : '';
+    const description = this.formatStringToMD(command.description as string);
+    return `${description}${extendedDescription}  \n\n`;
   }
 }
