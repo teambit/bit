@@ -22,11 +22,12 @@ export class GenerateCommandsDoc {
 ${metadataStr}
 ---
 
+# CLI Reference
+
 Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.
 `;
     output += commands.map((cmd) => this.generateCommand(cmd)).join('\n');
 
-    // throw new Error('stop here')
     return output;
   }
 
