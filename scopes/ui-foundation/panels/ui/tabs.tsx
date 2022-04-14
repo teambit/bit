@@ -1,4 +1,3 @@
-import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React from 'react';
 import {
@@ -33,7 +32,7 @@ export function Tab(props: BaseTabProps) {
     // @ts-ignore @TODO "Types of property 'ref' are incompatible"
     <BaseTab
       {...props}
-      className={classNames(props.className, clickable, styles.tab)}
+      className={classNames(props.className, styles.tab)}
       selectedClassName={styles.active}
       disabledClassName={styles.disabled}
     />
