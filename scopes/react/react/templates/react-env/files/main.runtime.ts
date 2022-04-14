@@ -5,12 +5,14 @@ export function mainRuntimeFile({ namePascalCase: Name, name }: ComponentContext
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ${Name}Aspect } from './${name}.aspect';
-// import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
-
-/**
- * Uncomment to include config files for overrides of Typescript or Webpack
- */
-// const tsconfig = require('./typescript/tsconfig');
+//import {
+//  previewConfigTransformer,
+//  devServerConfigTransformer
+//} from './webpack/webpack-transformers';
+//import {
+//  devConfigTransformer,
+//  buildConfigTransformer,
+//} from "./typescript/ts-transformers";
 
 export class ${Name}Main {
   static slots = [];
@@ -19,18 +21,25 @@ export class ${Name}Main {
 
   static runtime = MainRuntime;
 
+  //const webpackModifiers: UseWebpackModifiers = {
+  //  previewConfig: [previewConfigTransformer],
+  //  devServerConfig: [devServerConfigTransformer],
+  //};
+
+  //const tsModifiers: UseTypescriptModifiers = {
+  //  devConfig: [devConfigTransformer],
+  //  buildConfig: [buildConfigTransformer],
+  //};
+
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const templatesReactEnv = envs.compose(react.reactEnv, [
+    const ${Name}Env = react.compose([
       /**
        * Uncomment to override the config files for TypeScript, Webpack or Jest
        * Your config gets merged with the defaults
        */
 
-      // react.overrideTsConfig(tsconfig),
-      // react.useWebpack({
-      //   previewConfig: [previewConfigTransformer],
-      //   devServerConfig: [devServerConfigTransformer],
-      // }),
+      // react.useTypescript(tsModifiers),  // note: this cannot be used in conjunction with react.overrideCompiler
+      // react.useWebpack(webpackModifiers),
       // react.overrideJestConfig(require.resolve('./jest/jest.config')),
 
       /**
@@ -39,14 +48,14 @@ export class ${Name}Main {
        * bit lint
        * bit lint --fix
        */
-      react.useEslint({
-        transformers: [
-          (config) => {
-            config.setRule('no-console', ['error']);
-            return config;
-          }
-        ]
-      }),
+      //react.useEslint({
+      //  transformers: [
+      //  (config) => {
+      //    config.setRule('no-console', ['error']);
+      //    return config;
+      //    }
+      //  ]
+      //}),
 
       /**
        * override the Prettier default config here the check your formatting
@@ -54,14 +63,14 @@ export class ${Name}Main {
        * bit format --check
        * bit format
        */
-      react.usePrettier({
-        transformers: [
-          (config) => {
-            config.setKey('tabWidth', 2);
-            return config;
-          }
-        ]
-      }),
+      //react.usePrettier({
+      //  transformers: [
+      //    (config) => {
+      //      config.setKey('tabWidth', 2);
+      //      return config;
+      //    }
+      //  ]
+      //}),
 
       /**
        * override dependencies here
@@ -74,7 +83,7 @@ export class ${Name}Main {
         }
       })
     ]);
-    envs.registerEnv(templatesReactEnv);
+    envs.registerEnv(${Name}Env);
     return new ${Name}Main();
   }
 }

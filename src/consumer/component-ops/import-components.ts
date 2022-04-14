@@ -436,6 +436,11 @@ export default class ImportComponents {
   }
 
   async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
+    if (!this.consumer.isLegacy) {
+      // only legacy has the concept of writing the dependencies as components.
+      // currently, they're installed as packages.
+      return;
+    }
     const allDependenciesIds = R.flatten(
       componentsAndDependencies.map((componentAndDependencies) =>
         componentAndDependencies.component.dependencies.getAllIds()
