@@ -259,7 +259,7 @@ describe('tag components on Harmony', function () {
     });
     describe('tag with specific version', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('1.0.0');
+        helper.command.tagAllWithoutBuild('--ver 1.0.0');
       });
       it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
         const bitMap = helper.bitMap.read();

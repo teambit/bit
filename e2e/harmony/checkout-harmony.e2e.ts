@@ -42,7 +42,7 @@ describe('bit checkout command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('0.0.5');
+        helper.command.tagAllWithoutBuild('--ver 0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
