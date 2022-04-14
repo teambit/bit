@@ -5,10 +5,10 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
-import { CodeDiffPage } from '@teambit/code.ui.code-diff-tab-page';
+import { CodeComparePage } from '@teambit/code.ui.code-compare-tab-page';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
-import { CodeDiffSection } from './code-diff.section';
+import { CodeCompareSection } from './code-compare.section';
 
 const isTsx = /\.tsx$/;
 
@@ -28,8 +28,8 @@ export class CodeUI {
   getCodePage = () => {
     return <CodePage fileIconSlot={this.fileIconSlot} />;
   };
-  getCodeDiffPage = () => {
-    return <CodeDiffPage></CodeDiffPage>;
+  getCodeComparePage = () => {
+    return <CodeComparePage></CodeComparePage>;
   };
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);
@@ -43,13 +43,16 @@ export class CodeUI {
 
   static async provider([component]: [ComponentUI], config, [fileIconSlot]: [FileIconSlot]) {
     const ui = new CodeUI(fileIconSlot);
-    const diffSection = new CodeDiffSection(ui);
+    const codeSection = new CodeSection(ui);
+    const compareSection = new CodeCompareSection(ui);
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
-    component.registerRoute([diffSection.route]);
-    component.registerWidget(diffSection.navigationLink, diffSection.order);
+    component.registerRoute([codeSection.route, compareSection.route]);
+    component.registerWidget(codeSection.navigationLink, codeSection.order);
+    component.registerNavigation(compareSection.navigationLink, compareSection.order);
+
     return ui;
   }
 }

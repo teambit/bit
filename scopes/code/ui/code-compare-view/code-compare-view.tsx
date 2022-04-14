@@ -4,7 +4,7 @@ import React, { HTMLAttributes, useMemo, useState } from 'react';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { ComponentID } from '@teambit/component';
 import { DiffEditor, DiffEditorProps } from '@monaco-editor/react';
-import styles from './code-diff-view.module.scss';
+import styles from './code-compare-view.module.scss';
 
 // a translation list of specific monaco languages that are not the same as their file ending.
 const languages = {
@@ -16,22 +16,26 @@ const languages = {
   md: 'markdown',
 };
 
-export type CodeDiffViewProps = {
+export type CodeCompareViewProps = {
   from: ComponentID;
   to: ComponentID;
-  currentFile: string;
+  fileName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeDiffView({ className, from, currentFile, to }: CodeDiffViewProps) {
-  const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(from, currentFile);
-  const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(to, currentFile);
-  const [selected] = useState(currentFile);
-  const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
+export function CodeCompareView({ className, from, fileName, to }: CodeCompareViewProps) {
+  // const { mainFile: fromMainFile, fileTree: fromFileTree = [] } = useCode(fromComponentId);
+  // const { fileTree: toFileTree = [] } = useCode(toComponentId);
+
+  // const currentFile = file || (fromMainFile as string);
+  const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(from, fileName);
+  const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(to, fileName);
+  const [selected] = useState(fileName);
+  const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
   const language = useMemo(() => {
     if (!selected) return languages.ts;
     const fileEnding = selected?.split('.').pop();
     return languages[fileEnding || ''] || fileEnding;
-  }, [currentFile]);
+  }, [fileName]);
 
   if (originalLoading || modifiedLoading) return null;
 
@@ -42,10 +46,11 @@ export function CodeDiffView({ className, from, currentFile, to }: CodeDiffViewP
     height: '90vh',
     onMount: handleEditorDidMount,
     className: styles.diffEditor,
+    theme: 'dark',
   };
 
   return (
-    <div className={classNames(styles.codeDiffView, className)}>
+    <div className={classNames(styles.codeDiffFileView, className)}>
       <div className={styles.fileName}>
         <H1 size="sm" className={styles.fileName}>
           <span>{title}</span>
@@ -57,6 +62,7 @@ export function CodeDiffView({ className, from, currentFile, to }: CodeDiffViewP
     </div>
   );
 }
+
 // this disables ts errors in editor
 function handleEditorDidMount(editor, monaco) {
   monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({

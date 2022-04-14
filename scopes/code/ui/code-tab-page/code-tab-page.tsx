@@ -1,17 +1,22 @@
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
-import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
+import React, { useContext, useState, HTMLAttributes, useMemo, useCallback } from 'react';
 import { flatten } from 'lodash';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import { Label } from '@teambit/documenter.ui.label';
+import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
-import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
+import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
@@ -33,6 +38,35 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
+  const treeNodeRenderer = useCallback(
+    function TreeNode(props: any) {
+      const urlParams = useCodeParams();
+      const children = props.node.children;
+      const { selected } = useContext(TreeContext);
+      const lanesContext = useLanesContext();
+
+      const currentLaneUrl = lanesContext?.viewedLane
+        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
+        : '';
+      const version = urlParams.version ? `?version=${urlParams.version}` : '';
+      const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
+      const widgets = getWidgets(props.node.id, mainFile, devFiles);
+
+      if (!children) {
+        return (
+          <Node
+            href={href}
+            {...props}
+            isActive={props.node.id === selected}
+            icon={getFileIcon(fileIconMatchers, props.node.id)}
+            widgets={widgets}
+          />
+        );
+      }
+      return <FolderTreeNode {...props} />;
+    },
+    [fileIconMatchers, devFiles]
+  );
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
@@ -54,11 +88,23 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
-          devFiles={devFiles}
-          mainFile={mainFile}
-          fileIconMatchers={fileIconMatchers}
+          treeNodeRenderer={treeNodeRenderer}
         />
       </Pane>
     </SplitPane>
   );
+}
+
+function getWidgets(fileName: string, mainFile?: string, devFiles?: string[]) {
+  if (fileName === mainFile) {
+    return [() => createLabel('main')];
+  }
+  if (devFiles?.includes(fileName)) {
+    return [() => createLabel('dev')];
+  }
+  return null;
+}
+
+function createLabel(str: string) {
+  return <Label className={styles.label}>{str}</Label>;
 }

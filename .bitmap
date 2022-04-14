@@ -1008,17 +1008,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/cli-snippet"
     },
-    "ui/code-diff-tab-page": {
+    "ui/code-compare-tab-page": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-diff-tab-page"
+        "rootDir": "scopes/code/ui/code-compare-tab-page"
     },
-    "ui/code-diff-view": {
+    "ui/code-compare-view": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-diff-view"
+        "rootDir": "scopes/code/ui/code-compare-view"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",
@@ -1260,11 +1260,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-bind-key"
     },
-    "ui/hooks/use-code-diff-params": {
+    "ui/hooks/use-code-compare-params": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/hooks/use-code-diff-params"
+        "rootDir": "scopes/code/hooks/use-code-compare-params"
     },
     "ui/hooks/use-code-params": {
         "scope": "teambit.code",
