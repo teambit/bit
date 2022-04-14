@@ -130,32 +130,31 @@ export class YarnPackageManager implements PackageManager {
         ...manifests[rootDir].defaultPeerDependencies,
         ...manifests[rootDir].dependencies,
       }
-      manifests[rootDir].installConfig = {
-        hoistingLimits: 'workspaces',
-      };
-      const pkgJson = fs.readJsonSync(join(rootDir, 'package.json'));
-      fs.writeJsonSync(join(rootDir, 'package.json'), {
-        ...pkgJson,
-        dependencies: manifests[rootDir].dependencies,
-      }, { spaces: 2 });
     } else if (installOptions.rootComponentsForCapsules) {
-      for (const dir of Object.keys(manifests)) {
-        manifests[dir].dependencies = {
-          ...manifests[dir].peerDependencies,
-          ...manifests[dir].defaultPeerDependencies,
-          ...manifests[dir].dependencies,
-        }
-        manifests[dir].installConfig = {
-          hoistingLimits: 'workspaces',
-        };
-        const pkgJson = fs.readJsonSync(join(dir, 'package.json'));
-        fs.writeJsonSync(join(dir, 'package.json'), {
-          ...pkgJson,
-          dependencies: manifests[dir].dependencies,
-        }, { spaces: 2 });
-      }
+      await Promise.all(
+        Object.entries(manifests).map(async ([dir, manifest]) => {
+          const pkgJsonPath = join(dir, 'package.json')
+          const pkgJson = await fs.readJson(pkgJsonPath);
+          // We need to write the package.json files because they need to contain the workspace dependencies.
+          // When packages are installed via the "file:" protocol, Yarn reads their package.json files
+          // from the file system even if they are from the workspace.
+          await fs.writeJson(pkgJsonPath, {
+            ...pkgJson,
+            dependencies: manifest.dependencies,
+          }, { spaces: 2 });
+          manifest.dependencies = {
+            ...manifest.peerDependencies,
+            ...manifest.defaultPeerDependencies,
+            ...manifest.dependencies,
+          }
+          manifest.installConfig = {
+            hoistingLimits: 'workspaces',
+          };
+        }),
+      );
+    } else {
+      await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await extendWithComponentsFromDir(rootDir, manifests);
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
