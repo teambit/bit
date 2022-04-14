@@ -191,7 +191,7 @@ export default class CommandHelper {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    const ver = version ? `@${version}` : '';
+    const ver = version ? `--ver ${version}` : '';
     return this.runCmd(`bit tag ${id} ${ver} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
