@@ -803,7 +803,7 @@ module.exports.default = {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
-      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
+      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
@@ -1345,7 +1345,7 @@ Env2Aspect.addRuntime(EnvMain);
     describe('using Yarn', () => {
       let scopeAspectsCapsulesRootDir!: string
       before(() => {
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.scopeHelper.addRemoteScope();
         helper.bitJsonc.setupDefault();
@@ -1384,7 +1384,7 @@ Env2Aspect.addRuntime(EnvMain);
     describe('using pnpm', () => {
       let scopeAspectsCapsulesRootDir!: string
       before(() => {
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.scopeHelper.addRemoteScope();
         helper.bitJsonc.setupDefault();
