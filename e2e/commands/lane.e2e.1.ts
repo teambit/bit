@@ -1415,7 +1415,6 @@ describe('bit lane command', function () {
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
       helper.fs.outputFile('bar1/index.js', 'const bar2 = require("../bar2"); console.log(bar2);');
       helper.fs.outputFile('bar2/index.js', 'console.log("v1");');
       helper.command.add('bar1');
@@ -1445,7 +1444,6 @@ describe('bit lane command', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
-          // previously, it was throwing an error while trying to fetch these two components, each from its own scope.
           helper.command.switchRemoteLane('dev');
         });
         it('should not show the component as staged', () => {
