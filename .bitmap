@@ -1302,12 +1302,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
     },
-    "ui/input/option-button": {
-        "scope": "teambit.design",
-        "version": "0.0.26",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/input/option-button"
-    },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.486",
@@ -1571,24 +1565,6 @@
         "version": "0.0.35",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/styles/muted-italic"
-    },
-    "ui/surfaces/menu/item": {
-        "scope": "teambit.design",
-        "version": "0.0.354",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/surfaces/menu/item"
-    },
-    "ui/surfaces/menu/link-item": {
-        "scope": "teambit.design",
-        "version": "0.0.379",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/surfaces/menu/link-item"
-    },
-    "ui/surfaces/menu/section": {
-        "scope": "teambit.design",
-        "version": "0.0.347",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/surfaces/menu/section"
     },
     "ui/surfaces/message-card": {
         "scope": "teambit.design",

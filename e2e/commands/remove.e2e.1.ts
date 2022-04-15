@@ -444,7 +444,7 @@ describe('bit remove command', function () {
       // this additional is to prevent another bug, where nested are imported only with their
       // latest version and then when 'bit remove' tries to remove all versions array of
       // ModelComponent, it doesn't find some of them and throws ENOENT error
-      helper.command.tagScope('1.0.0');
+      helper.command.tagIncludeUnmodified('1.0.0');
 
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
