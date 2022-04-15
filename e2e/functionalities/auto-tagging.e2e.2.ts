@@ -168,26 +168,6 @@ describe('auto tagging functionality', function () {
           );
         });
       });
-      describe('tagging with --verbose flag', () => {
-        before(() => {
-          try {
-            tagOutput = helper.command.tagComponent('utils/is-type --verbose');
-          } catch (err: any) {
-            tagOutput = err.toString() + err.stdout.toString();
-          }
-        });
-        it('should not auto-tag the dependents', () => {
-          expect(tagOutput).to.have.string(
-            'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
-          );
-        });
-        it('should display the failing tests results', () => {
-          expect(tagOutput).to.have.string('tests failed');
-          expect(tagOutput).to.have.string(
-            "expected 'got is-type! and got is-string' to equal 'got is-type and got is-string'"
-          );
-        });
-      });
     });
   });
   describe('with dependencies of dependencies', () => {
