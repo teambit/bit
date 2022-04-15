@@ -14,18 +14,23 @@ export class FunctionSchema implements SchemaNode {
     // readonly doc: any,
     readonly args: Argument[],
 
-    readonly returnType: TypeRefSchema
+    readonly returnType: TypeRefSchema,
+    private signature: string
   ) {}
 
   serialize() {}
 
   toJsonSchema() {}
 
+  getSignature() {
+    return this.signature;
+  }
+
   toObject(): Record<string, any> {
     return {
       name: this.name,
       args: this.args,
-      returnType: this.returnType.toObject()
+      returnType: this.returnType.toObject(),
     };
   }
 }

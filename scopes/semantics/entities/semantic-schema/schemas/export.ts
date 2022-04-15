@@ -13,7 +13,7 @@ export class Export implements SchemaNode {
     /**
      * API node.
      */
-    readonly node?: SchemaNode,
+    readonly nodes?: SchemaNode[],
 
     /**
      * static properties attached to this export
@@ -26,6 +26,8 @@ export class Export implements SchemaNode {
   ) {}
 
   toObject() {
-    return {};
+    return {
+      identifier: this.identifier,
+    };
   }
 }

@@ -48,6 +48,6 @@ export class FunctionDeclaration implements SchemaTransformer {
     const args = await this.getArgs(funcDec, context);
     const returnType = await context.resolveType(funcDec, returnTypeStr);
 
-    return new FunctionSchema(name || '', args, returnType);
+    return new FunctionSchema(name || '', args, returnType, displaySig || '');
   }
 }

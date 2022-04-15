@@ -1,4 +1,4 @@
-import { Export } from './schemas';
+import { Export, Module } from './schemas';
 import { SchemaNode } from './schema-node';
 
 export type PlainSemanticSchema = {
@@ -6,11 +6,11 @@ export type PlainSemanticSchema = {
 };
 
 export class APISchema implements SchemaNode {
-  constructor(readonly exports: Export[] = []) {}
+  constructor(readonly module: Module) {}
 
   toString() {
     return JSON.stringify(
-      this.exports.map((exp) => exp.toObject()),
+      this.module.exports.map((exp) => exp.toObject()),
       undefined,
       2
     );
@@ -18,9 +18,13 @@ export class APISchema implements SchemaNode {
 
   toObject() {
     return {
-      exports: this.exports.map((exp) => exp.toObject()),
+      exports: this.module.exports.map((exp) => exp.toObject()),
       filename: '',
     };
+  }
+
+  listSignatures() {
+    return module.exports.map(() => {});
   }
 
   static fromSchema() {}

@@ -4,7 +4,7 @@ import { SchemaNode } from '../schema-node';
 export class Module implements SchemaNode {
   constructor(
     /**
-     * all module exports.
+     * todoL should be an array of schema-nodes
      */
     readonly exports: Export[]
   ) {}

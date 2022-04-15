@@ -1,4 +1,4 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { Export, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, SyntaxKind, ExportDeclaration as ExportDeclarationNode, NamedExports } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
@@ -35,15 +35,13 @@ export class ExportDeclaration implements SchemaTransformer {
     if (exportClause?.kind === SyntaxKind.NamedExports) {
       exportClause as NamedExports;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const exports = await Promise.all(
+      const schemas: SchemaNode[] = await Promise.all(
         exportClause.elements.map(async (element) => {
-          const sig = await context.visitDefinition(element.name);
-          // const app = await context.visitDefinition(element.name);
-          return element.name;
+          return context.visitDefinition(element.name);
         })
       );
 
-      return [];
+      return new Export();
       // return exports.map((identifier) => {
       //   // const type = context.resolveType(identifier);
       // });

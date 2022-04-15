@@ -20,6 +20,9 @@ export class SchemaExtractorContext {
     return this.extractor.computeSchema(node, this);
   }
 
+  /**
+   * returns the location of a node in a source file.
+   */
   getLocation(node: Node, targetSourceFile?: ts.SourceFile) {
     const sourceFile = targetSourceFile || node.getSourceFile();
     const position = sourceFile.getLineAndCharacterOfPosition(node.pos);
@@ -32,27 +35,43 @@ export class SchemaExtractorContext {
     };
   }
 
+  /**
+   * returns a signature for a node.
+   */
   async getSignature(node: Node) {
     return this.tsserver.getSignatureHelp(this.getPath(node), this.getLocation(node));
   }
 
+  /**
+   * get the position for the tsserver.
+   */
   getPosition(sourceFile: ts.SourceFile, line: number, offset: number): number {
     return sourceFile.getPositionOfLineAndCharacter(line - 1, offset - 2);
   }
 
+  /**
+   * get the path for a source file.
+   */
   getPath(node: Node) {
     const sourceFile = node.getSourceFile();
     return sourceFile.fileName;
   }
 
-  createRef() {
-    return {};
-  }
+  /**
+   * create a reference to a type from a component.
+   * think if we don't need this because of type ref
+   */
+  // createRef() {
+  //   return {};
+  // }
 
   getQuickInfo(node: Node) {
     return this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
   }
 
+  /**
+   * returns the type definition for a type.
+   */
   typeDefinition(node: Node) {
     return this.tsserver.getTypeDefinition(this.getPath(node), this.getLocation(node));
   }
@@ -85,6 +104,9 @@ export class SchemaExtractorContext {
     return this.extractor.parseSourceFile(file);
   }
 
+  /**
+   * get a definition for a given node.
+   */
   async definition(node: Node): Promise<Node | undefined> {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
@@ -99,6 +121,9 @@ export class SchemaExtractorContext {
     return nodeAtPos;
   }
 
+  /**
+   * visit a definition for node - e.g. return it's schema.
+   */
   async visitDefinition(node: Node): Promise<SchemaNode | undefined> {
     const definition = await this.definition(node);
     if (!definition) return undefined;
@@ -148,6 +173,9 @@ export class SchemaExtractorContext {
     return this.visit(nodeAtPos);
   }
 
+  /**
+   * resolve a type by a node and its identifier.
+   */
   async resolveType(node: Node, typeStr: string, type = true): Promise<TypeRefSchema> {
     if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);

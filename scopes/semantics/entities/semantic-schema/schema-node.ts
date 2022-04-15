@@ -2,7 +2,9 @@
  * an interface for implementing a new schema node.
  */
 export interface SchemaNode {
-  // toString(): string;
+  getSignature?(): string;
+
+  toString(): string;
 
   toObject(): Record<string, any>;
 }

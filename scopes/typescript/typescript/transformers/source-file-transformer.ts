@@ -27,6 +27,7 @@ export class SourceFileTransformer implements SchemaTransformer {
     return exportIds;
   }
 
+  // todo:  should return module.
   async transform(node: SourceFile, context: SchemaExtractorContext) {
     const exports = this.listExports(node);
     const schemas = await Promise.all(
