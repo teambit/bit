@@ -477,7 +477,7 @@ export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
 export const PATTERN_HELP = (command: string) =>
-  `you can use a <pattern> for multiple component ids, such as bit ${command} "org.scope/utils/**". use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+  `you can use a <pattern> for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
 always wrap the pattern with quotes to avoid collision with shell commands.
 to validate the pattern before running this command, run "bit pattern <pattern>".
 `;

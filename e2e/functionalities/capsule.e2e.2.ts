@@ -266,8 +266,8 @@ describe('capsule', function () {
         before(() => {
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
-          helper.command.tagScope('2.0.0');
-          helper.command.tagScope('2.0.1');
+          helper.command.tagIncludeUnmodified('2.0.0');
+          helper.command.tagIncludeUnmodified('2.0.1');
           helper.command.untag('-a 2.0.1');
         });
         // @see https://github.com/teambit/bit/issues/1817
