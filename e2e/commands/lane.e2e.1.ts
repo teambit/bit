@@ -982,7 +982,7 @@ describe('bit lane command', function () {
           });
           it('should indicate that the lane was not found', () => {
             // this is to make sure it doesn't show an error about indexJson having the component but missing from the scope
-            expect(removeOutput).to.have.string('lane dev was not found in scope');
+            expect(removeOutput).to.have.string('lane "dev" was not found in scope');
           });
         });
       });
