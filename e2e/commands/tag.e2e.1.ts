@@ -162,7 +162,7 @@ describe('bit tag command', function () {
       });
       it('Should not allow invalid semver', () => {
         const version = 'invalidVersion';
-        const tag = () => helper.command.tagAllComponents(version);
+        const tag = () => helper.command.tagAllComponents(undefined, version);
         expect(tag).to.throw(
           `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
         );
@@ -278,67 +278,6 @@ describe('bit tag command', function () {
       expect(output).to.have.string(
         "error: component \"non/existing\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
-    });
-    it.skip('should persist the model in the scope', () => {});
-    it.skip('should run the onCommit hook', () => {});
-    it.skip('should throw error if the build failed', () => {});
-    describe('tagging without --verbose flag', () => {
-      let output;
-      before(() => {
-        try {
-          helper.command.tagWithoutMessage('bar/foo');
-        } catch (err: any) {
-          output = err.message;
-        }
-      });
-      it('should throw a general error saying the tests failed', () => {
-        expect(output).to.have.string(
-          'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
-        );
-      });
-      it('should not display the tests results', () => {
-        expect(output).to.not.have.string('failing test should fail');
-        expect(output).to.not.have.string('expected true to equal false');
-      });
-    });
-    describe('tagging with --verbose flag', () => {
-      let output;
-      before(() => {
-        try {
-          helper.command.tagWithoutMessage('bar/foo --verbose');
-        } catch (err: any) {
-          output = err.toString() + err.stdout.toString();
-        }
-      });
-      it('should display the failing tests results', () => {
-        expect(output).to.have.string('failing test should fail');
-        expect(output).to.have.string('expected true to equal false');
-      });
-      it('should display the failed component', () => {
-        expect(output).to.have.string('bar/foo');
-      });
-      it('should display the failed test file', () => {
-        expect(output).to.have.string('file: bar/foo.spec.js');
-      });
-      it('should also display a general error saying the tests failed', () => {
-        expect(output).to.have.string(
-          'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
-        );
-      });
-    });
-    describe('tagging with --force flag', () => {
-      let output;
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
-        output = helper.command.tagWithoutMessage('bar/foo --force');
-      });
-      it('should tag successfully although the tests failed', () => {
-        expect(output).to.have.string('1 component(s) tagged');
-      });
-      it('should not display any data about the tests', () => {
-        expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
-        expect(output).to.not.have.string('failing test should fail');
-      });
     });
     describe('tagging with --skip-tests flag', () => {
       let output;
@@ -829,7 +768,6 @@ describe('bit tag command', function () {
     });
   });
   describe('with --scope flag', () => {
-    let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithTwoComponents();
@@ -847,13 +785,12 @@ describe('bit tag command', function () {
       helper.fixtures.createComponentBarFoo(fooBarFixture);
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          output = helper.command.tagScope('0.0.5', 'msg');
+          output = helper.command.tagIncludeUnmodified('0.0.5', 'msg');
         });
         it('should tag authored components with the specified version', () => {
           expect(output).to.have.string('1 component(s) tagged');
@@ -884,7 +821,7 @@ describe('bit tag command', function () {
         let output;
         before(() => {
           helper.command.tagComponent('bar/foo@0.1.5', 'msg', '--force');
-          output = helper.command.tagScope('0.1.4', 'msg');
+          output = helper.command.tagIncludeUnmodified('0.1.4', 'msg');
         });
         it('should display a warning', () => {
           expect(output).to.have.string('warning: bar/foo@0.1.5 has a version greater than 0.1.4');
@@ -892,25 +829,6 @@ describe('bit tag command', function () {
         it('should continue tagging the authored components', () => {
           expect(output).to.have.string('1 component(s) tagged');
           expect(output).to.have.string('bar/foo@0.1.4');
-        });
-      });
-    });
-    describe('with --all flag', () => {
-      describe('when current components have lower versions', () => {
-        let output;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
-          output = helper.command.tagAllComponents('--scope 0.2.0');
-        });
-        it('should tag all components with the specified version including the imported components', () => {
-          // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
-          // current version of is-string is 0.0.1, so auto-tag would tag it to 0.0.2
-          expect(output).to.have.string('2 component(s) tagged');
-          expect(output).to.have.string('bar/foo@0.2.0');
-          expect(output).to.have.string('utils/is-string@0.2.0');
-        });
-        it('should not tag nested components', () => {
-          expect(output).not.to.have.string('utils/is-type');
         });
       });
     });

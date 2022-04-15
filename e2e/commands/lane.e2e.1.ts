@@ -1232,7 +1232,7 @@ describe('bit lane command', function () {
         });
         describe('tagging the components', () => {
           before(() => {
-            helper.command.tagScope();
+            helper.command.tagIncludeUnmodified();
           });
           it('should be able to export with no errors', () => {
             expect(() => helper.command.export()).not.to.throw();
@@ -1257,7 +1257,7 @@ describe('bit lane command', function () {
         });
         describe('tagging the components', () => {
           before(() => {
-            helper.command.tagScope();
+            helper.command.tagIncludeUnmodified();
           });
           it('should be able to export with no errors', () => {
             expect(() => helper.command.export()).not.to.throw();
