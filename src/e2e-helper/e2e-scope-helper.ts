@@ -157,17 +157,14 @@ export default class ScopeHelper {
   }
   addRemoteScope(
     remoteScopePath: string = this.scopes.remotePath,
-    localScopePath: string = this.scopes.localPath,
+    cwd: string = this.scopes.localPath,
     isGlobal = false
   ) {
     const globalArg = isGlobal ? '-g' : '';
     if (process.env.npm_config_with_ssh) {
-      return this.command.runCmd(
-        `bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath} ${globalArg}`,
-        localScopePath
-      );
+      return this.command.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath} ${globalArg}`, cwd);
     }
-    return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, localScopePath);
+    return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, cwd);
   }
 
   addRemoteHttpScope(port = '3000') {
