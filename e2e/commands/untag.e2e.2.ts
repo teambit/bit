@@ -195,7 +195,7 @@ describe('bit untag command', function () {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        helper.command.tagScope('0.0.5');
+        helper.command.tagIncludeUnmodified('0.0.5');
         untagOutput = helper.command.runCmd('bit untag 0.0.5 --all');
       });
       it('should display a descriptive successful message', () => {
@@ -252,7 +252,7 @@ describe('bit untag command', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
-          helper.command.tagScope('1.0.5');
+          helper.command.tagIncludeUnmodified('1.0.5');
           try {
             output = helper.command.runCmd('bit untag utils/is-type');
           } catch (err: any) {
@@ -265,8 +265,8 @@ describe('bit untag command', function () {
         describe('tagging after the export, then, un-tagging the local tag', () => {
           let packageJsonUtilsIsStringPath;
           before(() => {
-            helper.command.tagScope('2.0.0');
-            helper.command.tagScope('2.0.1');
+            helper.command.tagIncludeUnmodified('2.0.0');
+            helper.command.tagIncludeUnmodified('2.0.1');
             // an intermediate step, make sure the package.json is updated to that version
             packageJsonUtilsIsStringPath = path.join(
               helper.scopes.localPath,
