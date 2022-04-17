@@ -329,8 +329,8 @@ export class PreviewMain {
         const compilerInstance = environment.getCompiler?.();
         let modulePath =
           compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
-        if (this.dependencyResolver.config.rootComponents) {
-          modulePath = `${modulePath}/${modulePath}`
+        if (this.dependencyResolver.hasRootComponents()) {
+          modulePath = `${modulePath}/${modulePath}`;
         }
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {

@@ -247,7 +247,7 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     if (opts.installOptions) {
-      opts.installOptions.useNesting = this.dependencyResolver.config.rootComponents && opts.installOptions.useNesting;
+      opts.installOptions.useNesting = this.dependencyResolver.hasRootComponents() && opts.installOptions.useNesting;
     }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
@@ -273,7 +273,7 @@ export class IsolatorMain {
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      const rootDir = opts.installOptions?.useNesting ? capsuleList[0].path : capsulesDir
+      const rootDir = opts.installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
       await this.installInCapsules(rootDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
@@ -318,7 +318,7 @@ export class IsolatorMain {
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
-      rootComponentsForCapsules: this.dependencyResolver.config.rootComponents,
+      rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
       useNesting: isolateInstallOptions.useNesting,
     };
     await installer.install(
@@ -342,14 +342,14 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    if (this.dependencyResolver.config.rootComponents) {
+    if (this.dependencyResolver.hasRootComponents()) {
       linkingOptions.linkNestedDepsInNM = false;
     }
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       legacyLink: false,
     });
-    if (!this.dependencyResolver.config.rootComponents) {
+    if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     }
@@ -474,7 +474,7 @@ export class IsolatorMain {
       const subcapsulesDir = path.join(baseDir, Capsule.getCapsuleDirName(components[0], opts), `subcapsules`);
       const capsules: Capsule[] = await Promise.all(
         components.map((component: Component, index) => {
-          const dir = index === 0 ? baseDir : subcapsulesDir
+          const dir = index === 0 ? baseDir : subcapsulesDir;
           return Capsule.createFromComponent(component, dir, opts);
         })
       );
