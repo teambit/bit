@@ -1753,7 +1753,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
-    const hasRootComponents = Boolean(this.dependencyResolver.config.rootComponents);
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
