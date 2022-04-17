@@ -4,7 +4,7 @@ import { CompilerAspect } from '@teambit/compiler';
 import { DevFilesMain } from '@teambit/dev-files';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import fs from 'fs-extra'
+import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 
 export class CapsulesSyncerTask implements BuildTask {
   readonly name = 'SyncComponents';
@@ -38,30 +38,3 @@ export class CapsulesSyncerTask implements BuildTask {
   }
 }
 
-async function hardLinkDirectory(src: string, destDirs: string[]) {
-  const files = fs.readdirSync(src);
-  await Promise.all(files.map(async (file) => {
-    if (file === 'node_modules') return;
-    const srcFile = path.join(src, file);
-    if ((await fs.lstat(srcFile)).isDirectory()) {
-      await Promise.all(destDirs.map(async (destDir) => {
-        const destFile = path.join(destDir, file);
-        try {
-          await fs.mkdir(destFile);
-        } catch (err: any) {
-          if (err.code !== 'EEXIST') throw err;
-        }
-        return hardLinkDirectory(srcFile, [destFile]);
-      }));
-      return;
-    }
-    await Promise.all(destDirs.map(async (destDir) => {
-      const destFile = path.join(destDir, file);
-      try {
-        await fs.link(srcFile, destFile);
-      } catch (err: any) {
-        if (err.code !== 'EEXIST') throw err;
-      }
-    }));
-  }))
-}
