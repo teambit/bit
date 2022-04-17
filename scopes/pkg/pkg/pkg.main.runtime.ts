@@ -11,7 +11,6 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
