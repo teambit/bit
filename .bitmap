@@ -730,6 +730,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
+    "fs/hard-link-directory": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/hard-link-directory"
+    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.473",
