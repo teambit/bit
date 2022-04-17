@@ -62,6 +62,7 @@ export type IsolateComponentsInstallOptions = {
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
   packageManagerConfigRootDir?: string;
+  useNesting?: boolean;
 };
 
 type CreateGraphOptions = {
@@ -245,6 +246,9 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
   ): Promise<CapsuleList> {
+    if (opts.installOptions) {
+      opts.installOptions.useNesting = this.dependencyResolver.config.rootComponents && opts.installOptions.useNesting;
+    }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
@@ -269,7 +273,8 @@ export class IsolatorMain {
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
+      const rootDir = opts.installOptions?.useNesting ? capsuleList[0].path : capsulesDir
+      await this.installInCapsules(rootDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
@@ -313,6 +318,8 @@ export class IsolatorMain {
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
+      rootComponentsForCapsules: this.dependencyResolver.config.rootComponents,
+      useNesting: isolateInstallOptions.useNesting,
     };
     await installer.install(
       capsulesDir,
@@ -335,12 +342,17 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+    if (this.dependencyResolver.config.rootComponents) {
+      linkingOptions.linkNestedDepsInNM = false;
+    }
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       legacyLink: false,
     });
-    await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-    await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    if (!this.dependencyResolver.config.rootComponents) {
+      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
+      await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    }
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
     await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
@@ -458,6 +470,16 @@ export class IsolatorMain {
     baseDir: string,
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
+    if (opts.installOptions?.useNesting) {
+      const subcapsulesDir = path.join(baseDir, Capsule.getCapsuleDirName(components[0], opts), `subcapsules`);
+      const capsules: Capsule[] = await Promise.all(
+        components.map((component: Component, index) => {
+          const dir = index === 0 ? baseDir : subcapsulesDir
+          return Capsule.createFromComponent(component, dir, opts);
+        })
+      );
+      return capsules;
+    }
     const capsules: Capsule[] = await Promise.all(
       components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
