@@ -345,6 +345,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-version"
     },
+    "capsules-syncer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/capsules-syncer"
+    },
     "compositions": {
         "scope": "teambit.compositions",
         "version": "0.0.708",

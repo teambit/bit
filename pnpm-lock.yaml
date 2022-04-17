@@ -166,7 +166,7 @@ importers:
       '@teambit/evangelist.input.input': 1.0.2
       '@teambit/evangelist.surfaces.dropdown': 1.0.2
       '@teambit/evangelist.surfaces.tooltip': 1.0.1
-      '@teambit/explorer.ui.command-bar': 1.0.0
+      '@teambit/explorer.ui.command-bar': 1.0.2
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.3.3
       '@teambit/legacy': 1.0.251
@@ -754,7 +754,7 @@ importers:
       '@teambit/evangelist.input.input': registry.npmjs.org/@teambit/evangelist.input.input/1.0.2_react-dom@17.0.2+react@17.0.2
       '@teambit/evangelist.surfaces.dropdown': registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/1.0.2_react-dom@17.0.2+react@17.0.2
       '@teambit/evangelist.surfaces.tooltip': registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/1.0.1_react-dom@17.0.2+react@17.0.2
-      '@teambit/explorer.ui.command-bar': registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.0_2bb1c2f6941b337f5f9ecab4a31ade6a
+      '@teambit/explorer.ui.command-bar': registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.2_2bb1c2f6941b337f5f9ecab4a31ade6a
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': registry.npmjs.org/@teambit/harmony/0.3.3
       '@teambit/legacy': registry.npmjs.org/@teambit/legacy/1.0.251_725285d85e248e6bf4a5fdeaa5be6212
@@ -1266,6 +1266,9 @@ importers:
     specifiers: {}
 
   scopes/component/aspect-docs/component:
+    specifiers: {}
+
+  scopes/component/capsules-syncer:
     specifiers: {}
 
   scopes/component/changelog:
@@ -9908,7 +9911,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.elevation/0.5.9_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-x+2RmCaj84JDpk2ejtFmXDj4+uSmR6bjb/qjfx+QypqibL8XPWBwkz16St0iOlMdFkQHC05Tea0RB61JCniyZg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-0.5.9.tgz}
+    resolution: {integrity: sha512-x+2RmCaj84JDpk2ejtFmXDj4+uSmR6bjb/qjfx+QypqibL8XPWBwkz16St0iOlMdFkQHC05Tea0RB61JCniyZg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-0.5.9.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.elevation/0.5.9
     name: '@teambit/base-ui.css-components.elevation'
     version: 0.5.9
@@ -9935,7 +9938,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.elevation/1.0.1_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-2GIr0mfRyn8L/vIoJLNgiYvM6XdKFEKV0Iz0DFp2As9wVunLNeZANIDdYfkZIkxZ5wNhfzyZAgsrLv6b9hSw8g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.1.tgz}
+    resolution: {integrity: sha512-2GIr0mfRyn8L/vIoJLNgiYvM6XdKFEKV0Iz0DFp2As9wVunLNeZANIDdYfkZIkxZ5wNhfzyZAgsrLv6b9hSw8g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.elevation/1.0.1
     name: '@teambit/base-ui.css-components.elevation'
     version: 1.0.1
@@ -9963,7 +9966,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.roundness/0.5.9_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-dabIkX3Or8Jb4TVEgkm9GRNn3Wu6Jr7HfjJV/iacGrmN/ChUorbs+UbUXpuXMmt7pcA5TiQgTy2n+nqoMAFj1g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-0.5.9.tgz}
+    resolution: {integrity: sha512-dabIkX3Or8Jb4TVEgkm9GRNn3Wu6Jr7HfjJV/iacGrmN/ChUorbs+UbUXpuXMmt7pcA5TiQgTy2n+nqoMAFj1g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-0.5.9.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.roundness/0.5.9
     name: '@teambit/base-ui.css-components.roundness'
     version: 0.5.9
@@ -10549,7 +10552,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.background/0.5.9_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-haJVrVKGsgZmQFGQGcICl0sQHrtoVgJ9qoXaswlZhG7+EZxcVwG3S6yjT6S1lnJ7NP5y24F7YeXaATNMVRQZXQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-0.5.9.tgz}
+    resolution: {integrity: sha512-haJVrVKGsgZmQFGQGcICl0sQHrtoVgJ9qoXaswlZhG7+EZxcVwG3S6yjT6S1lnJ7NP5y24F7YeXaATNMVRQZXQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-0.5.9.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.background/0.5.9
     name: '@teambit/base-ui.surfaces.background'
     version: 0.5.9
@@ -10576,7 +10579,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.background/1.0.2_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-i3BstjlxR1R9lBYpKrxpzZ+zf4JasVCCCZg+3j8wXVT2C94ZoOvPv6pYVwjYbAWW7V9vABm8qffGMyEYSZIa7g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.2.tgz}
+    resolution: {integrity: sha512-i3BstjlxR1R9lBYpKrxpzZ+zf4JasVCCCZg+3j8wXVT2C94ZoOvPv6pYVwjYbAWW7V9vABm8qffGMyEYSZIa7g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.background/1.0.2
     name: '@teambit/base-ui.surfaces.background'
     version: 1.0.2
@@ -10625,7 +10628,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.card/1.0.3_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-djkPjuL8soIgsU49AJYxG0y67W6zl7fKA8Y8DOyZSujhdvjRacL8FVt5yAAKci3Ruy+dxpp+5Wu1o+TiwXddFw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.3.tgz}
+    resolution: {integrity: sha512-djkPjuL8soIgsU49AJYxG0y67W6zl7fKA8Y8DOyZSujhdvjRacL8FVt5yAAKci3Ruy+dxpp+5Wu1o+TiwXddFw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.3.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.card/1.0.3
     name: '@teambit/base-ui.surfaces.card'
     version: 1.0.3
@@ -12953,11 +12956,11 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
-  registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.0_2bb1c2f6941b337f5f9ecab4a31ade6a:
-    resolution: {integrity: sha512-5497qKe0b07zpg7rFB8lhfemBcpEPHnUdYUBXB+f1XX5wYyVFUvgry7NqqzazdF2maeXain3GsxhrTpc6uF/MA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/explorer.ui.command-bar/-/explorer.ui.command-bar-1.0.0.tgz}
-    id: registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.0
+  registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.2_2bb1c2f6941b337f5f9ecab4a31ade6a:
+    resolution: {integrity: sha512-+W5gQ0zA9Ye4f0z3DxJBtA7ZA5rdR/7LrqUNI9yYFipYqKi+BJaM5xUuVycSLlsn8B8pyf8BENc82BaRYk/Y0A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/explorer.ui.command-bar/-/explorer.ui.command-bar-1.0.2.tgz}
+    id: registry.npmjs.org/@teambit/explorer.ui.command-bar/1.0.2
     name: '@teambit/explorer.ui.command-bar'
-    version: 1.0.0
+    version: 1.0.2
     peerDependencies:
       '@types/react': 17.0.0
       react: ^16.8.0 || ^17.0.0

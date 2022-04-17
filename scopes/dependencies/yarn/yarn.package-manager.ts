@@ -14,7 +14,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { ComponentMap, Component } from '@teambit/component';
 import fs from 'fs-extra';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import {
   Workspace,
   Project,
@@ -34,9 +34,12 @@ import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import parseOverrides from '@pnpm/parse-overrides';
 import { PkgMain } from '@teambit/pkg';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
+import YAML from 'yaml';
+import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
   [path: string]: Buffer | undefined;
@@ -55,8 +58,9 @@ export class YarnPackageManager implements PackageManager {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-      dedupe: true,
+      dedupe: !installOptions.rootComponentsForCapsules,
       dependencyFilterFn: installOptions.dependencyFilterFn,
+      hasRootComponents: installOptions.rootComponentsForCapsules,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
@@ -84,15 +88,73 @@ export class YarnPackageManager implements PackageManager {
 
     // @ts-ignore
     project.setupResolutions();
+    if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
+      const resolutions = {}
+      Array.from(componentDirectoryMap.hashMap.entries())
+        .forEach(([, [comp, path]]) => {
+          const component = comp.state._consumer;
+          const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
+          resolutions[name] = `file:${relative(rootDir, path)}`;
+        })
+      installOptions.overrides = {
+        ...installOptions.overrides,
+        ...resolutions,
+      }
+    }
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
+    if (installOptions.rootComponents) {
+      // is it needed?
+      rootWs.manifest.installConfig = {
+        hoistingLimits: 'dependencies',
+      };
+    }
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
-    const manifests = this.computeComponents(
+    let manifests = this.computeComponents(
       workspaceManifest.componentsManifestsMap,
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
-    await extendWithComponentsFromDir(rootDir, manifests);
+    if (installOptions.rootComponents) {
+      manifests = {
+        ...(await createRootComponentsDir({
+          depResolver: this.depResolver,
+          rootDir,
+          componentDirectoryMap,
+        })),
+        ...manifests,
+      };
+    } else if (installOptions.useNesting) {
+      manifests[rootDir].dependencies = {
+        ...manifests[rootDir].peerDependencies,
+        ...manifests[rootDir].defaultPeerDependencies,
+        ...manifests[rootDir].dependencies,
+      }
+    } else if (installOptions.rootComponentsForCapsules) {
+      await Promise.all(
+        Object.entries(manifests).map(async ([dir, manifest]) => {
+          const pkgJsonPath = join(dir, 'package.json')
+          const pkgJson = await fs.readJson(pkgJsonPath);
+          // We need to write the package.json files because they need to contain the workspace dependencies.
+          // When packages are installed via the "file:" protocol, Yarn reads their package.json files
+          // from the file system even if they are from the workspace.
+          await fs.writeJson(pkgJsonPath, {
+            ...pkgJson,
+            dependencies: manifest.dependencies,
+          }, { spaces: 2 });
+          manifest.dependencies = {
+            ...manifest.peerDependencies,
+            ...manifest.defaultPeerDependencies,
+            ...manifest.dependencies,
+          }
+          manifest.installConfig = {
+            hoistingLimits: 'workspaces',
+          };
+        }),
+      );
+    } else {
+      await extendWithComponentsFromDir(rootDir, manifests);
+    }
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
@@ -116,7 +178,10 @@ export class YarnPackageManager implements PackageManager {
 
     const workspaces = await Promise.all(workspacesP);
 
-    this.setupWorkspaces(project, workspaces.concat(rootWs));
+    if (!manifests[rootDir]) {
+      workspaces.push(rootWs);
+    }
+    this.setupWorkspaces(project, workspaces)
 
     const cache = await Cache.find(config);
     // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
@@ -212,6 +277,7 @@ export class YarnPackageManager implements PackageManager {
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
+    ws.manifest.installConfig = manifest.installConfig;
     if (overrides) {
       ws.manifest.resolutions = convertOverridesToResolutions(overrides);
     }
@@ -438,6 +504,27 @@ export class YarnPackageManager implements PackageManager {
       version,
       isSemver: true,
     };
+  }
+
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const modulesDir = join(rootDir, 'node_modules');
+    relative(modulesDir, componentDir);
+    let yarnStateContent!: string;
+    try {
+      yarnStateContent = await fs.readFile(join(modulesDir, '.yarn-state.yml'), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return [];
+    }
+    const yarnState = YAML.parse(yarnStateContent) as Record<string, { locations: string[] }>;
+    const injectedDirs: string[] = [];
+    for (const [key, { locations }] of Object.entries(yarnState)) {
+      if (key.startsWith(`${packageName}@`) || key.startsWith(`${packageName}__root@`)) {
+        for (const location of locations) {
+          injectedDirs.push(location);
+        }
+      }
+    }
+    return injectedDirs;
   }
 }
 

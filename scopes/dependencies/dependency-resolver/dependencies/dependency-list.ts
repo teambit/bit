@@ -70,8 +70,8 @@ export class DependencyList {
     return serialized;
   }
 
-  toDependenciesManifest(): DependenciesManifest {
-    const manifest: DependenciesManifest = {
+  toDependenciesManifest(): Required<DependenciesManifest> {
+    const manifest: Required<DependenciesManifest> = {
       dependencies: {},
       devDependencies: {},
       peerDependencies: {},

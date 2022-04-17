@@ -31,6 +31,12 @@ export type PackageManagerInstallOptions = {
   packageManagerConfigRootDir?: string;
 
   packageImportMethod?: PackageImportMethod;
+
+  rootComponents?: boolean;
+
+  rootComponentsForCapsules?: boolean;
+
+  useNesting?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -59,7 +65,7 @@ export interface PackageManager {
     rootDir: string,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
-    options?: PackageManagerInstallOptions
+    options: PackageManagerInstallOptions
   ): Promise<void>;
 
   resolveRemoteVersion(
@@ -73,6 +79,8 @@ export interface PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<PeerDependencyIssuesByProjects>;
+
+  getInjectedDirs?(rootDir: string, componentDir: string, packageName: string): Promise<string[]>;
 
   getRegistries?(): Promise<Registries>;
 

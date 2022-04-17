@@ -214,6 +214,14 @@ export class PkgMain implements CloneConfig {
     return undefined;
   }
 
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   */
+  getRootComponentPath(component: Component) {
+    const pkgName = this.getPackageName(component);
+    return join(this.getModulePath(component), 'node_modules', pkgName);
+  }
+
   /**
    *Creates an instance of PkgExtension.
    * @param {PkgExtensionConfig} config
