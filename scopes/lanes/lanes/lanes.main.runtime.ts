@@ -14,7 +14,9 @@ import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consume
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
+import { Component } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -73,10 +75,16 @@ export class LanesMain {
       const lanes = await remoteObj.listLanes(name, showMergeData);
       return lanes;
     }
+
+    if (name === DEFAULT_LANE) {
+      const defaultLane = await this.getLaneDataOfDefaultLane();
+      return defaultLane ? [defaultLane] : [];
+    }
+
     const lanes = await this.scope.legacyScope.lanes.getLanesData(this.scope.legacyScope, name, showMergeData);
 
     if (showDefaultLane) {
-      const defaultLane = this.getLaneDataOfDefaultLane();
+      const defaultLane = await this.getLaneDataOfDefaultLane();
       if (defaultLane) lanes.push(defaultLane);
     }
 
@@ -148,7 +156,7 @@ export class LanesMain {
       ...options,
     });
     await this.workspace.consumer.onDestroy();
-
+    this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
     return mergeResults;
   }
 
@@ -163,10 +171,32 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
-  private getLaneDataOfDefaultLane(): LaneData | null {
+  async getLaneComponentModels(name: string): Promise<Component[]> {
+    if (!name) return [];
+
+    const [lane] = await this.getLanes({ name });
+    const laneComponents = lane.components;
+    const host = this.workspace || this.scope;
+    const laneComponentIds = await Promise.all(
+      laneComponents.map((laneComponent) => {
+        const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
+        return host.resolveComponentId(legacyIdWithVersion);
+      })
+    );
+    const components = await host.getMany(laneComponentIds);
+    return components;
+  }
+
+  private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
     const consumer = this.workspace?.consumer;
-    if (!consumer) return null;
-    const bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    let bitIds: BitId[] = [];
+    if (!consumer) {
+      const scopeComponents = await this.scope.list();
+      bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id._legacy);
+    } else {
+      bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    }
+
     return {
       name: DEFAULT_LANE,
       remote: null,

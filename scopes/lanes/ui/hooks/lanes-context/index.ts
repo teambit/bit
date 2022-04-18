@@ -3,9 +3,9 @@ export { LanesProvider, LanesProviderProps } from './lanes-provider';
 export {
   LanesModel,
   LaneModel,
-  LaneComponentModel,
   LaneComponentQueryResult,
   LaneQueryResult,
   LanesQueryResult,
   LanesHost,
+  LanesQuery,
 } from './lanes-model';

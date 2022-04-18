@@ -422,10 +422,10 @@ describe('bit export command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo('// v2');
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagScope('2.0.0');
+      helper.command.tagIncludeUnmodified('2.0.0');
       helper.command.exportAllComponents();
       helper.fixtures.createComponentBarFoo('// v1');
-      helper.command.tagScope('1.0.0');
+      helper.command.tagIncludeUnmodified('1.0.0');
       helper.command.exportAllComponents();
     });
     it('.bitmap should keep the current version and do not update to the latest version', () => {
@@ -536,7 +536,7 @@ describe('bit export command', function () {
         helper.command.addComponent('foo2.js');
         helper.command.tagAllComponents();
         helper.command.exportComponent('foo1');
-        helper.command.tagScope('1.0.0');
+        helper.command.tagIncludeUnmodified('1.0.0');
         localScopeBefore = helper.scopeHelper.cloneLocalScope();
         remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
       });
@@ -645,7 +645,7 @@ describe('bit export command', function () {
         helper.command.tagAllComponents();
         helper.command.exportComponent('foo1');
         helper.command.runCmd(`bit export ${anotherRemote} foo2`);
-        helper.command.tagScope('2.0.0');
+        helper.command.tagIncludeUnmodified('2.0.0');
         localScopeBefore = helper.scopeHelper.cloneLocalScope();
         remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
         anotherRemoteScopeBefore = helper.scopeHelper.cloneScope(anotherRemotePath);
@@ -733,7 +733,7 @@ describe('bit export command', function () {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
-          helper.command.tagScope('3.0.0');
+          helper.command.tagIncludeUnmodified('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.command.export();
         });
@@ -755,7 +755,7 @@ describe('bit export command', function () {
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.fs.outputFile('foo2.js', "require('./foo1');");
-          helper.command.tagScope('3.0.0');
+          helper.command.tagIncludeUnmodified('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.general.runWithTryCatch('bit export');
         });
@@ -771,10 +771,10 @@ describe('bit export command', function () {
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
 
-          helper.command.tagScope('3.0.0');
+          helper.command.tagIncludeUnmodified('3.0.0');
           helper.fs.outputFile('foo1.js', '');
           helper.fs.outputFile('foo2.js', "require('./foo1');");
-          helper.command.tagScope('4.0.0');
+          helper.command.tagIncludeUnmodified('4.0.0');
 
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, anotherRemotePath);
@@ -797,7 +797,7 @@ describe('bit export command', function () {
           helper.command.runCmd(`bit export ${anotherRemote} foo3`);
           helper.fs.outputFile('foo2.js', "require('./foo3');");
           helper.fs.outputFile('foo3.js', "require('./foo2');");
-          helper.command.tagScope('3.0.0');
+          helper.command.tagIncludeUnmodified('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.command.export();
         });
@@ -937,7 +937,7 @@ describe('bit export command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
-          helper.command.tagScope('1.0.0');
+          helper.command.tagIncludeUnmodified('1.0.0');
           output = helper.command.export(`${forkScope} utils/is-type`);
         });
         it('should show a success message', () => {
@@ -972,7 +972,7 @@ describe('bit export command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
-          helper.command.tagScope('1.0.0');
+          helper.command.tagIncludeUnmodified('1.0.0');
           output = helper.command.export(`${forkScope} utils/is-type --set-current-scope`);
         });
         it('should show a success message', () => {
@@ -1006,7 +1006,7 @@ describe('bit export command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
-          helper.command.tagScope('1.0.0');
+          helper.command.tagIncludeUnmodified('1.0.0');
         });
         describe('without --force flag', () => {
           let output;
@@ -1073,7 +1073,7 @@ describe('bit export command', function () {
             helper.fixtures.createComponentUtilsIsString(fixtures.isStringModulePath(helper.scopes.remote));
             helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
             helper.env.importDummyCompiler();
-            helper.command.tagScope('1.0.0');
+            helper.command.tagIncludeUnmodified('1.0.0');
             helper.command.export(`${forkScope} --include-dependencies --rewire`);
           });
           it('should not change the files locally on the workspace', () => {
@@ -1109,7 +1109,7 @@ describe('bit export command', function () {
             helper.fixtures.createComponentUtilsIsString(fixtures.isStringModulePath(helper.scopes.remote));
             helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
             helper.env.importDummyCompiler();
-            helper.command.tagScope('1.0.0');
+            helper.command.tagIncludeUnmodified('1.0.0');
             localBeforeFork = helper.scopeHelper.cloneLocalScope();
             helper.command.export(`${forkScope} --include-dependencies --set-current-scope --rewire`);
           });

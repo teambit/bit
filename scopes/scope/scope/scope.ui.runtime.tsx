@@ -2,7 +2,6 @@ import flatten from 'lodash.flatten';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
@@ -12,7 +11,7 @@ import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown'
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import {
@@ -71,8 +70,6 @@ export class ScopeUI {
     private sidebarSlot: SidebarSlot,
 
     private commandBarUI: CommandBarUI,
-
-    private componentSearcher: ComponentSearcher,
 
     private scopeBadgeSlot: ScopeBadgeSlot,
 
@@ -241,7 +238,6 @@ export class ScopeUI {
   };
 
   uiRoot(): UIRoot {
-    this.commandBarUI.addSearcher(this.componentSearcher);
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
@@ -251,7 +247,7 @@ export class ScopeUI {
     );
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
-      handler: () => {},
+      action: () => {},
       displayName: 'Toggle component list',
       keybinding: 'alt+s',
     });
@@ -281,7 +277,7 @@ export class ScopeUI {
 
   /** registers available components */
   setComponents = (components: ComponentModel[]) => {
-    this.componentSearcher.update(components);
+    this.componentUi.updateComponents(components);
   };
 
   private menuItems: MenuItem[] = [
@@ -299,7 +295,7 @@ export class ScopeUI {
     },
   ];
 
-  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect];
   static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
@@ -318,13 +314,7 @@ export class ScopeUI {
   ];
 
   static async provider(
-    [ui, componentUi, sidebar, commandBarUI, reactRouterUI]: [
-      UiUI,
-      ComponentUI,
-      SidebarUI,
-      CommandBarUI,
-      ReactRouterUI
-    ],
+    [ui, componentUi, sidebar, commandBarUI]: [UiUI, ComponentUI, SidebarUI, CommandBarUI],
     config,
     [
       routeSlot,
@@ -354,7 +344,6 @@ export class ScopeUI {
       ComponentFiltersSlot
     ]
   ) {
-    const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
     const scopeUi = new ScopeUI(
       routeSlot,
       componentUi,
@@ -362,7 +351,6 @@ export class ScopeUI {
       sidebar,
       sidebarSlot,
       commandBarUI,
-      componentSearcher,
       scopeBadgeSlot,
       menuWidgetSlot,
       sidebarItemSlot,

@@ -306,7 +306,7 @@ export class ScopeMain implements ComponentFactory {
 
     const fns = this.postDeleteSlot.values();
     const metadata = { auth: authData, headers };
-    const componentIds = ids.map((id) => ComponentID.fromString(id));
+    const componentIds = lanes ? [] : ids.map((id) => ComponentID.fromString(id));
     await mapSeries(fns, async (fn) => {
       try {
         await fn({ ids: componentIds }, metadata);
@@ -921,6 +921,10 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
   async isModified(): Promise<boolean> {
     return false;
+  }
+
+  async write() {
+    // no-op (it's relevant for the workspace only)
   }
 
   /**

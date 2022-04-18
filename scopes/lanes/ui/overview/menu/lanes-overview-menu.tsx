@@ -24,7 +24,6 @@ export type LanesOverviewMenuProps = {
    * right side menu item slot
    */
   widgetSlot?: MenuWidgetSlot;
-  host: string;
   /**
    * main dropdown item slot
    */

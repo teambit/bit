@@ -25,10 +25,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
             devPatterns: {
               'teambit.community/envs/community-react@1.95.0': [],
               config: [],
-              'teambit.defender/tester': [
-                '**/*.spec.+(js|ts|jsx|tsx)',
-                '**/*.test.+(js|ts|jsx|tsx)',
-              ],
+              'teambit.defender/tester': ['**/*.spec.+(js|ts|jsx|tsx)', '**/*.test.+(js|ts|jsx|tsx)'],
               'teambit.compositions/compositions': ['**/*.composition?(s).*'],
               'teambit.docs/docs': ['**/*.docs.*'],
             },
@@ -57,13 +54,7 @@ export const descriptorMock = ComponentDescriptor.fromObject({
                 },
                 {
                   name: 'labels',
-                  value: [
-                    'footer',
-                    'footing',
-                    'foot',
-                    'page footer',
-                    'superfooter',
-                  ],
+                  value: ['footer', 'footing', 'foot', 'page footer', 'superfooter'],
                 },
               ],
             },

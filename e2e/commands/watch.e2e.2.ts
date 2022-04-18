@@ -113,7 +113,7 @@ chai.use(require('chai-fs'));
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
@@ -173,7 +173,7 @@ chai.use(require('chai-fs'));
       });
       describe('tagging the component', () => {
         before(async () => {
-          helper.command.tagScopeWithoutBuild();
+          helper.command.tagIncludeUnmodifiedWithoutBuild();
           helper.fs.appendFile('comp1/index.ts', '   ');
           await watchRunner.waitForWatchToRebuildComponent();
           helper.command.tagWithoutBuild('comp1', '--force');
