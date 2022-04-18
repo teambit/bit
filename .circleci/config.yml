@@ -1704,12 +1704,12 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  bvm_bundle_debug:
-    jobs:
-      - checkout_code:
-          filters:
-            branches:
-              only: fix-circle-cache
+#   bvm_bundle_debug:
+#     jobs:
+#       - checkout_code:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
 #       - bundle_version_linux:
 #           filters:
 #             branches:
@@ -1730,16 +1730,16 @@ workflows:
 #             - bundle_version_macos
 #             - bundle_version_linux
 #             - bundle_version_windows
-      - docker_build:
-          requires:
-            - checkout_code
+#       - docker_build:
+#           requires:
+#             - checkout_code
 #             - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - checkout_code
+#       - docker_non_root_build:
+#           requires:
+#             - checkout_code
 #             - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - docker_build
+#       - server_docker_build:
+#           requires:
+#             - docker_build
 
 
