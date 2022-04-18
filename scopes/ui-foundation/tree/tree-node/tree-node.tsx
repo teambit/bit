@@ -1,5 +1,4 @@
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
-import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { ComponentType } from 'react';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -33,7 +32,7 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       isActive={active}
       exact
       strict
-      className={classNames(indentClass, clickable, styles.fileNode)}
+      className={classNames(indentClass, styles.fileNode)}
       activeClassName={styles.active}
       onClick={onClick}
     >

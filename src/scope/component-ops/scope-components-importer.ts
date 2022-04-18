@@ -192,7 +192,6 @@ export default class ScopeComponentsImporter {
       cache,
       lanes,
     });
-
     const allIdsWithAllVersions = new BitIds();
     versionDependenciesArr.forEach((versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
@@ -437,7 +436,10 @@ export default class ScopeComponentsImporter {
     return null;
   }
 
-  private async multipleCompsDefsToVersionDeps(compsDefs: ComponentDef[]): Promise<VersionDependencies[]> {
+  private async multipleCompsDefsToVersionDeps(
+    compsDefs: ComponentDef[],
+    lanes: Lane[] = []
+  ): Promise<VersionDependencies[]> {
     const concurrency = concurrentComponentsLimit();
     const componentsWithVersionsWithNulls = await pMap(
       compsDefs,
@@ -466,7 +468,7 @@ export default class ScopeComponentsImporter {
       idsToFetch.add(compWithVer.versionObj.flattenedDependencies);
     });
 
-    const compVersionsOfDeps = await this.importWithoutDeps(idsToFetch);
+    const compVersionsOfDeps = await this.importWithoutDeps(idsToFetch, undefined, lanes);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
       const dependencies = versionObj.flattenedDependencies.map((dep) =>
@@ -509,7 +511,7 @@ export default class ScopeComponentsImporter {
       context
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
-    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs);
+    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes);
     if (throwForDependencyNotFound) {
       versionDeps.forEach((verDep) => verDep.throwForMissingDependencies());
     }

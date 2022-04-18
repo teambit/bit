@@ -25,6 +25,10 @@ export class MDXCompiler implements Compiler {
     return JSON.stringify(this.config, null, 2);
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const afterMdxCompile = mdxCompileSync(fileContent, {
       filepath: options.filePath,

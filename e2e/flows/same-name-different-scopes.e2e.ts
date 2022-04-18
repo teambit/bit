@@ -20,7 +20,7 @@ describe('two components with the same name but different scope-name', function 
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
-      helper.command.tagScope('0.0.2');
+      helper.command.tagIncludeUnmodified('0.0.2');
       helper.command.exportComponent('bar/foo', scopeName);
 
       helper.scopeHelper.setNewLocalAndRemoteScopes();

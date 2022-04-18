@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import semver, { ReleaseType } from 'semver';
+import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -551,27 +551,23 @@ export default class Consumer {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
-  updateNextVersionOnBitmap(
-    taggedComponents: Component[],
-    exactVersion?: string | null,
-    releaseType?: ReleaseType,
-    preRelease?: string
-  ) {
-    taggedComponents.forEach((taggedComponent) => {
-      const log = taggedComponent.log;
+  updateNextVersionOnBitmap(componentsToTag: Component[], preRelease?: string) {
+    componentsToTag.forEach((compToTag) => {
+      const log = compToTag.log;
       if (!log) throw new Error('updateNextVersionOnBitmap, unable to get log');
+      const version = compToTag.version as string;
       const nextVersion: NextVersion = {
-        version: exactVersion || (releaseType as string), // one of them is set for sure
+        version,
         message: log.message,
         username: log.username,
         email: log.email,
       };
       if (preRelease) nextVersion.preRelease = preRelease;
-      if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
-      taggedComponent.componentMap.updateNextVersion(nextVersion);
+      if (!compToTag.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
+      compToTag.componentMap.updateNextVersion(nextVersion);
     });
 
-    if (taggedComponents.length) this.bitMap.markAsChanged();
+    if (componentsToTag.length) this.bitMap.markAsChanged();
   }
 
   async updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {

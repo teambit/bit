@@ -167,14 +167,15 @@ export class MergingMain {
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
+    const componentsResults = await mapSeries(succeededComponents, async ({ componentFromFS, id, mergeResults }) => {
+      const modelComponent = await consumer.scope.getModelComponent(id);
       return this.applyVersion({
         consumer,
         componentFromFS,
         id,
         mergeResults,
         mergeStrategy,
-        remoteHead: new Ref(id.version as string),
+        remoteHead: modelComponent.getRef(id.version as string) as Ref,
         remoteName: remoteName || componentFromFS?.scope || null,
         laneId,
         localLane,
