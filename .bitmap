@@ -359,7 +359,7 @@
     },
     "content/cli-reference": {
         "scope": "teambit.harmony",
-        "version": "1.95.15",
+        "version": "1.95.16",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
