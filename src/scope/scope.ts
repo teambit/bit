@@ -107,7 +107,11 @@ export type OnTagOpts = {
   skipTests?: boolean;
   isSnap?: boolean;
 };
-export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type OnTagFunc = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions: { packageManagerConfigRootDir?: string }
+) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
