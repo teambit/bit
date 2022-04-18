@@ -616,7 +616,8 @@ jobs:
       - run: cd bit && bit status
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
-      - run: cd bit && bit checkout latest --all --skip-npm-install
+      - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
+      - run: cd bit && bit checkout latest --all --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
@@ -759,12 +760,12 @@ jobs:
       - run: mkdir esbuild-arm
       # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      # - run: brew install wget
-      # - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-      # - save_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      #     paths:
-      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+#       - run: brew install wget
+#       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+#       - save_cache:
+#           key: esbuild-0.14.29-darwin-arm64-v1
+#           paths:
+#             - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
       - restore_cache:
           key: esbuild-0.14.29-darwin-arm64-v1
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
@@ -1703,23 +1704,42 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
-      # - bundle_version_windows:
-      #     filters:
-      #       branches:
-      #         only: bvm-build-from-bit-dev-registry1
-      # - bundle_version_macos:
-      #     filters:
-      #       branches:
-      #         only: bvm-build-from-bit-dev-registry1
-      # - harmony_publish_to_gcloud:
-      #     filters:
-      #       branches:
-      #         only: bvm-build-from-bit-dev-registry1
-      #     requires:
-      #       - bundle_version_macos
+#   bvm_bundle_debug:
+#     jobs:
+#       - checkout_code:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_linux:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_windows:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_macos:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - harmony_publish_to_gcloud:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#           requires:
+#             - bundle_version_macos
+#             - bundle_version_linux
+#             - bundle_version_windows
+#       - docker_build:
+#           requires:
+#             - checkout_code
+#             - harmony_publish_to_gcloud
+#       - docker_non_root_build:
+#           requires:
+#             - checkout_code
+#             - harmony_publish_to_gcloud
+#       - server_docker_build:
+#           requires:
+#             - docker_build
+
+
