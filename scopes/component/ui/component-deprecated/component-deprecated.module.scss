@@ -1,0 +1,12 @@
+.componentDeprecated {
+  font-size: var(--bit-p-xs, 14px);
+  background-color: var(--warning-color, #ffc640);
+  color: #2b2b2b;
+  border-color: transparent;
+  padding: 5px 8px;
+
+  > img {
+    width: 16px;
+    margin-right: 8px;
+  }
+}

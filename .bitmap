@@ -1032,6 +1032,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
     },
+    "ui/component-deprecated": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-deprecated"
+    },
     "ui/component-drawer": {
         "scope": "teambit.component",
         "version": "0.0.16",
