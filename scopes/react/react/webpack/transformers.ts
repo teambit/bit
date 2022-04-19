@@ -1,25 +1,29 @@
 import findRoot from 'find-root';
+import { WebpackConfigTransformContext } from '@teambit/webpack';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import { Logger } from '@teambit/logger';
+import { getExposedRules } from './get-exposed-rules';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
-  const peerAliases = peers.reduce((acc, peerName) => {
-    // gets the correct module folder of the package.
-    // this allows us to resolve internal files, for example:
-    // node_modules/react-dom/test-utils
-    //
-    // we can't use require.resolve() because it resolves to a specific file.
-    // for example, if we used "react-dom": require.resolve("react-dom"),
-    // it would try to resolve "react-dom/test-utils" as:
-    // node_modules/react-dom/index.js/test-utils
-    const resolved = getResolvedDirOrFile(peerName, logger);
-    if (resolved) {
-      acc[peerName] = resolved;
-    }
-    return acc;
-  }, {});
-  return (config: WebpackConfigMutator): WebpackConfigMutator => {
+  return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
+    const peerAliases = peers.reduce((acc, peerName) => {
+      acc[peerName] = getResolvedDirOrFile(peerName, logger, context.target.hostRootDir);
+      return acc;
+    }, {});
     config.addAliases(peerAliases);
+    return config;
+  };
+}
+
+/**
+ * Generate a transformer that expose all the peers as global via the expose loader
+ * @param peers
+ * @returns
+ */
+export function generateExposePeersTransformer(peers: string[]) {
+  return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
+    const exposedRules = getExposedRules(peers, context.target.hostRootDir);
+    config.addModuleRules(exposedRules);
     return config;
   };
 }
@@ -29,10 +33,16 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
  * @param peerName
  * @returns
  */
-function getResolvedDirOrFile(peerName: string, logger: Logger): string | undefined {
+function getResolvedDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
   let resolved;
   try {
-    resolved = require.resolve(peerName);
+    let options;
+    if (hostRootDir) {
+      options = {
+        paths: [hostRootDir, __dirname],
+      };
+    }
+    resolved = require.resolve(peerName, options);
     const folder = findRoot(resolved);
     return folder;
   } catch (e) {
