@@ -108,10 +108,12 @@ export class WorkspaceManifestFactory {
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {}
       if (hasRootComponents) {
-        for (const comp of depList.toTypeArray('component')) {
-          const pkgName = comp.getPackageName!() // eslint-disable-line
-          if (pkgName !== '@teambit/harmony') {
-            additionalDeps[pkgName] = `workspace:*`;
+        for (const comp of (depList.toTypeArray('component') as ComponentDependency[])) {
+          if (components.some(c => c.id.isEqual(comp.componentId))) {
+            const pkgName = comp.getPackageName()
+            if (pkgName !== '@teambit/harmony') {
+              additionalDeps[pkgName] = `workspace:*`;
+            }
           }
         }
       }
@@ -127,9 +129,10 @@ export class WorkspaceManifestFactory {
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
       depManifest.dependencies = {
-        ...depManifest.dependencies,
         ...additionalDeps,
+        ...depManifest.dependencies,
       }
+      // console.log(depManifest);
 
       return { packageName, depManifest };
     });
