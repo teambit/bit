@@ -30,7 +30,7 @@ importers:
       '@pnpm/client': 6.1.3
       '@pnpm/colorize-semver-diff': 1.0.1
       '@pnpm/config': 13.13.3
-      '@pnpm/core': 2.7.8
+      '@pnpm/core': 2.7.9
       '@pnpm/default-reporter': 8.4.2
       '@pnpm/default-resolver': 14.0.12
       '@pnpm/error': 2.1.0
@@ -630,7 +630,7 @@ importers:
       '@pnpm/client': registry.npmjs.org/@pnpm/client/6.1.3_@pnpm+logger@4.0.0
       '@pnpm/colorize-semver-diff': registry.npmjs.org/@pnpm/colorize-semver-diff/1.0.1
       '@pnpm/config': registry.npmjs.org/@pnpm/config/13.13.3_@pnpm+logger@4.0.0
-      '@pnpm/core': registry.npmjs.org/@pnpm/core/2.7.8_@pnpm+logger@4.0.0
+      '@pnpm/core': registry.npmjs.org/@pnpm/core/2.7.9_@pnpm+logger@4.0.0
       '@pnpm/default-reporter': registry.npmjs.org/@pnpm/default-reporter/8.4.2_@pnpm+logger@4.0.0
       '@pnpm/default-resolver': registry.npmjs.org/@pnpm/default-resolver/14.0.12_@pnpm+logger@4.0.0
       '@pnpm/error': registry.npmjs.org/@pnpm/error/2.1.0
@@ -1830,6 +1830,9 @@ importers:
     specifiers: {}
 
   scopes/semantics/schema:
+    specifiers: {}
+
+  scopes/toolbox/fs/hard-link-directory:
     specifiers: {}
 
   scopes/toolbox/network/agent:
@@ -8250,11 +8253,11 @@ packages:
       '@pnpm/types': registry.npmjs.org/@pnpm/types/7.10.0
     dev: false
 
-  registry.npmjs.org/@pnpm/core/2.7.8_@pnpm+logger@4.0.0:
-    resolution: {integrity: sha512-mMr0qfGAbwXVzrdebNIppXBNRUA69PevPPN6zTXyOOt5vzOv8EaT6x2ahIgLc2UZEIvOoRB4o1ZmzwKy6vfoug==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/core/-/core-2.7.8.tgz}
-    id: registry.npmjs.org/@pnpm/core/2.7.8
+  registry.npmjs.org/@pnpm/core/2.7.9_@pnpm+logger@4.0.0:
+    resolution: {integrity: sha512-+rE1DWW89/UuCDkJ028zPqEXTCDHAnWJB+/CjjSj6VofgAFTbNlvn4TaRYlAUVNX6ujIXMIFAONkcaY86eHoPA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/core/-/core-2.7.9.tgz}
+    id: registry.npmjs.org/@pnpm/core/2.7.9
     name: '@pnpm/core'
-    version: 2.7.8
+    version: 2.7.9
     engines: {node: '>=12.17'}
     peerDependencies:
       '@pnpm/logger': ^4.0.0
@@ -8287,7 +8290,7 @@ packages:
       '@pnpm/read-package-json': registry.npmjs.org/@pnpm/read-package-json/5.0.12
       '@pnpm/read-project-manifest': registry.npmjs.org/@pnpm/read-project-manifest/2.0.13
       '@pnpm/remove-bins': registry.npmjs.org/@pnpm/remove-bins/2.0.14_@pnpm+logger@4.0.0
-      '@pnpm/resolve-dependencies': registry.npmjs.org/@pnpm/resolve-dependencies/25.0.6_@pnpm+logger@4.0.0
+      '@pnpm/resolve-dependencies': registry.npmjs.org/@pnpm/resolve-dependencies/25.0.7_@pnpm+logger@4.0.0
       '@pnpm/resolver-base': registry.npmjs.org/@pnpm/resolver-base/8.1.6
       '@pnpm/store-controller-types': registry.npmjs.org/@pnpm/store-controller-types/12.0.0
       '@pnpm/symlink-dependency': registry.npmjs.org/@pnpm/symlink-dependency/4.0.13_@pnpm+logger@4.0.0
@@ -9231,11 +9234,11 @@ packages:
       is-windows: registry.npmjs.org/is-windows/1.0.2
     dev: false
 
-  registry.npmjs.org/@pnpm/resolve-dependencies/25.0.6_@pnpm+logger@4.0.0:
-    resolution: {integrity: sha512-bALSPG094QhY1PB1cDejPpg7vsl8gUx7r9dEhBmS2T5fUE9t0mi7LLAR0pPRkKit2HObumllaLhjrEc7zXZvPA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/resolve-dependencies/-/resolve-dependencies-25.0.6.tgz}
-    id: registry.npmjs.org/@pnpm/resolve-dependencies/25.0.6
+  registry.npmjs.org/@pnpm/resolve-dependencies/25.0.7_@pnpm+logger@4.0.0:
+    resolution: {integrity: sha512-FHryktw3Ai/8pwHtKtCRN/8Ft9R/K+/p66Y2edbsSgnsCjQDp4C8fe8LV3oJ4pnfHzGy+1iHMqbdnkZ7UVNn8w==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@pnpm/resolve-dependencies/-/resolve-dependencies-25.0.7.tgz}
+    id: registry.npmjs.org/@pnpm/resolve-dependencies/25.0.7
     name: '@pnpm/resolve-dependencies'
-    version: 25.0.6
+    version: 25.0.7
     engines: {node: '>=12.17'}
     peerDependencies:
       '@pnpm/logger': ^4.0.0
