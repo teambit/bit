@@ -341,7 +341,8 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     await mapSeries(modelComponents, processModelComponent);
     if (lane) {
       lane.components.forEach((c) => {
-        c.id = c.id.hasScope() ? c.id : c.id.changeScope(remoteName);
+        const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
+        c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || remoteName);
       });
       if (lane.readmeComponent) {
         lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
@@ -857,7 +858,8 @@ async function convertToCorrectScopeHarmony(
     : !componentsObjects.component.scope;
   const hasComponentChanged = shouldChangeScope;
   if (shouldChangeScope) {
-    componentsObjects.component.scope = remoteScope;
+    const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(componentsObjects.component.toBitId());
+    componentsObjects.component.scope = idWithFutureScope?.scope || remoteScope;
   }
 
   // return true if one of the versions has changed or the component itself

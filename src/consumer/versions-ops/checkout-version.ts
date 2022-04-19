@@ -58,9 +58,9 @@ export default async function checkoutVersion(
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const { components } = await consumer.loadComponents(ids);
-  await consumer.scope.import(BitIds.fromArray(ids || []));
+  const bitIds = BitIds.fromArray(ids || []);
+  await consumer.scope.import(bitIds);
+  const { components } = await consumer.loadComponents(bitIds);
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     (component) => component.mergeResults && component.mergeResults.hasConflicts
