@@ -240,8 +240,10 @@ export class LanesMain {
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
     if (existingLaneConfig.readme) {
-      delete existingLaneConfig.readme[lane.name];
+      delete existingLaneConfig.readme[remoteLaneIdStr];
       await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, existingLaneConfig);
     }
@@ -277,19 +279,21 @@ export class LanesMain {
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
     if (existingLaneConfig.readme) {
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
         ...existingLaneConfig,
         readme: {
           ...existingLaneConfig.readme,
-          [lane.name]: true,
+          [remoteLaneIdStr]: true,
         },
       });
     } else {
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
         ...existingLaneConfig,
         readme: {
-          [lane.name]: true,
+          [remoteLaneIdStr]: true,
         },
       });
     }
