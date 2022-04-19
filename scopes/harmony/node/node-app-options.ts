@@ -1,10 +1,10 @@
-import { AppBuildResult, DeployFn } from '@teambit/application';
+import { AppDeployContext, DeployFn } from '@teambit/application';
 
-export interface DeployContext extends AppBuildResult {
+export interface DeployContext extends AppDeployContext {
   /**
-   * the entry file of the app e.g: dist/app.js
+   * the main file file of the app e.g: dist/app.js
    */
-  entry?: string;
+  mainFile?: string;
 }
 
 export type NodeAppOptions = {

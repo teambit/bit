@@ -173,7 +173,7 @@ chai.use(require('chai-fs'));
       });
       describe('tagging the component', () => {
         before(async () => {
-          helper.command.tagScopeWithoutBuild();
+          helper.command.tagIncludeUnmodifiedWithoutBuild();
           helper.fs.appendFile('comp1/index.ts', '   ');
           await watchRunner.waitForWatchToRebuildComponent();
           helper.command.tagWithoutBuild('comp1', '--force');

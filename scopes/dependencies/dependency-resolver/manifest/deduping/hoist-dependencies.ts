@@ -425,7 +425,11 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
     versions: [],
   };
   indexItems.forEach((item) => {
-    const parsed = parseRange(semver.validRange(item.range));
+    const validRange = semver.validRange(item.range);
+    if (!validRange) {
+      throw new Error(`fatal: the version "${item.range}" of "${item.origin}" is invalid semver range`);
+    }
+    const parsed = parseRange(validRange);
     if (parsed.condition === '=') {
       result.versions.push(item);
       return;

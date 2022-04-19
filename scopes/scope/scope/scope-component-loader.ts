@@ -45,11 +45,10 @@ export class ScopeComponentLoader {
     }
     if (!modelComponent) return undefined;
 
-    // :TODO move to head snap once we have it merged, for now using `latest`.
     const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
-    const snap = this.createSnapFromVersion(version);
+    const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
 
@@ -66,7 +65,7 @@ export class ScopeComponentLoader {
     const version =
       consumerComponent.pendingVersion ||
       (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
-    const snap = this.createSnapFromVersion(version);
+    const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
 
@@ -138,6 +137,20 @@ export class ScopeComponentLoader {
       tagMap.set(tag.version, tag);
     });
     return tagMap;
+  }
+
+  private async getHeadSnap(modelComponent: ModelComponent): Promise<Snap | null> {
+    const head = modelComponent.getHeadRegardlessOfLane();
+    if (!head) {
+      // happens for example when on main and merging a lane.
+      return null;
+    }
+    const version = await modelComponent.loadVersion(head.toString(), this.scope.legacyScope.objects, false);
+    if (!version) {
+      // might happen when the component is just a dependency and a previous version was needed.
+      return null;
+    }
+    return this.createSnapFromVersion(version);
   }
 
   private createSnapFromVersion(version: Version): Snap {
