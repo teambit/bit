@@ -51,7 +51,7 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
-import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
+import { generateAddAliasesFromPeersTransformer, generateExposePeersTransformer } from './webpack/transformers';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -321,6 +321,7 @@ export class ReactEnv
   ): Promise<Bundler> {
     const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
+    const exposePeersTransformer = generateExposePeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
 
@@ -328,7 +329,7 @@ export class ReactEnv
       const merged = configMutator.merge([baseConfig, baseProdConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, exposePeersTransformer, ...transformers];
     return this.createWebpackBundler(context, mergedTransformers);
   }
 
