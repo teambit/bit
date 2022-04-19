@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { UIRoot } from '@teambit/ui';
 
 import type { ScopeMain } from './scope.main.runtime';
@@ -30,8 +31,8 @@ export class ScopeUIRoot implements UIRoot {
     ssr: true,
   };
 
-  resolveAspects(runtime: string) {
-    return this.scope.resolveAspects(runtime);
+  resolveAspects(runtime: string, componentIds?: ComponentID[]) {
+    return this.scope.resolveAspects(runtime, componentIds);
   }
 
   async resolvePattern() {
