@@ -33,8 +33,8 @@ export class NodeApp implements Application {
   async build(context: AppBuildContext): Promise<DeployContext> {
     const { base } = parse(this.entry);
     const { distDir } = this.nodeEnv.getCompiler();
-    const entry = join(distDir, base);
-    const _context = Object.assign(context, { entry });
+    const mainFile = join(distDir, base);
+    const _context = Object.assign(context, { mainFile });
     return _context;
   }
 }
