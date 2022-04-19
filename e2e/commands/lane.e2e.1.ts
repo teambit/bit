@@ -116,7 +116,7 @@ describe('bit lane command', function () {
       it('should skip deleting the readme component on successful merge when (--skip-deleting-readme) is set', () => {
         helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
         helper.command.switchLocalLane('main');
-        const mergeOutput = helper.command.mergeLane('dev');
+        const mergeOutput = helper.command.mergeLane('dev', '--skip-deleting-readme');
         expect(mergeOutput).to.not.have.string('removed components');
       });
     });
