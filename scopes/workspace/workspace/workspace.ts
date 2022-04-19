@@ -1446,6 +1446,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       defs = defs.filter((def) => def.runtimePath);
     }
 
+    if (componentIds && componentIds.length) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
+    }
+
     return defs;
   }
 
