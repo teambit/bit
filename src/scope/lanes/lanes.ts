@@ -1,4 +1,6 @@
+import { BitError } from '@teambit/bit-error';
 import { Scope } from '..';
+import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId } from '../../bit-id';
 import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
 import GeneralError from '../../error/general-error';
@@ -79,7 +81,7 @@ export default class Lanes {
       if (laneName === this.getCurrentLaneName())
         throw new GeneralError(`unable to remove the currently used lane "${laneName}"`);
       const existingLane = existingLanes.find((l) => l.name === laneName);
-      if (!existingLane) throw new GeneralError(`lane ${laneName} was not found in scope`);
+      if (!existingLane) throw new LaneNotFound(scope.name, laneName);
       return existingLane;
     });
     if (!force) {
@@ -87,8 +89,7 @@ export default class Lanes {
         lanesToRemove.map(async (laneObj) => {
           const isFullyMerged = await laneObj.isFullyMerged(scope);
           if (!isFullyMerged) {
-            // @todo: this error comes pretty ugly to the client when removing from a lane from remote using ssh
-            throw new GeneralError(
+            throw new BitError(
               `unable to remove ${laneObj.name} lane, it is not fully merged. to disregard this error, please use --force flag`
             );
           }

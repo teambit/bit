@@ -42,7 +42,7 @@ describe('bit checkout command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('0.0.5');
+        helper.command.tagAllWithoutBuild('--ver 0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -61,7 +61,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.command.tagAllWithoutBuild('0.0.10');
+            helper.command.tagAllWithoutBuild('--ver 0.0.10');
             output = helper.general.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
@@ -221,7 +221,7 @@ describe('bit checkout command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       scopeAfterFirstVersion = helper.scopeHelper.cloneLocalScope();
-      helper.command.tagScopeWithoutBuild(); // 0.0.2
+      helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(scopeAfterFirstVersion);
       helper.command.import();

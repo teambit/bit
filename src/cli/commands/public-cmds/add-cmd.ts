@@ -34,6 +34,7 @@ export default class Add implements LegacyCommand {
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern',
     ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
+    ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -46,6 +47,7 @@ export default class Add implements LegacyCommand {
       tests,
       namespace,
       exclude,
+      scope,
       override = false,
     }: {
       id: string | null | undefined;
@@ -53,6 +55,7 @@ export default class Add implements LegacyCommand {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
+      scope?: string;
       override: boolean;
     }
   ): Promise<any> {
@@ -82,6 +85,7 @@ export default class Add implements LegacyCommand {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
+      defaultScope: scope,
       override,
     });
   }

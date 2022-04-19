@@ -294,7 +294,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      helper.command.tagScope('2.0.0');
+      helper.command.tagIncludeUnmodified('2.0.0');
       const bitMap = helper.bitMap.read();
       helper.command.untag('bar/foo@2.0.0');
       helper.bitMap.write(bitMap);
@@ -330,7 +330,7 @@ describe('components that are not synced between the scope and the consumer', fu
         helper.fixtures.tagComponentBarFoo();
         helper.command.exportAllComponents();
         scopeAfterV1 = helper.scopeHelper.cloneLocalScope();
-        helper.command.tagScope('2.0.0');
+        helper.command.tagIncludeUnmodified('2.0.0');
         helper.command.exportAllComponents();
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedLocalScope(scopeAfterV1);
@@ -365,7 +365,7 @@ describe('components that are not synced between the scope and the consumer', fu
         helper.fixtures.tagComponentBarFoo();
         helper.command.exportAllComponents();
         scopeAfterV1 = helper.scopeHelper.cloneLocalScope();
-        helper.command.tagScope('2.0.0');
+        helper.command.tagIncludeUnmodified('2.0.0');
         helper.command.exportAllComponents();
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedLocalScope(scopeAfterV1);
