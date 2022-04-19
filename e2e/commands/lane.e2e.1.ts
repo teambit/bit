@@ -103,15 +103,21 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('should allow deleting the lane readme on a successful merge', () => {
-        const cmd = () => helper.command.mergeLane('dev', '--delete-readme');
+        const cmd = () => helper.command.mergeLane('dev');
         expect(cmd).to.not.throw();
       });
       it('should delete the readme component on successful merge', () => {
         helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
         helper.command.switchLocalLane('main');
-        const output = helper.command.mergeLane('dev', '--delete-readme');
+        const output = helper.command.mergeLane('dev');
         expect(output).to.have.string('removed components');
         expect(output).to.have.string('comp1');
+      });
+      it('should skip deleting the readme component on successful merge when (--skip-deleting-readme) is set', () => {
+        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
+        helper.command.switchLocalLane('main');
+        const mergeOutput = helper.command.mergeLane('dev');
+        expect(mergeOutput).to.not.have.string('removed components');
       });
     });
   });

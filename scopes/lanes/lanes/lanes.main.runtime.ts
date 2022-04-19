@@ -49,7 +49,7 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
-  deleteReadme: boolean;
+  skipDeletingReadme: boolean;
 };
 
 export type CreateLaneOptions = {
