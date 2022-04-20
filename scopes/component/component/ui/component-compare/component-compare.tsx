@@ -11,7 +11,6 @@ import { CodeCompareView } from '@teambit/code.ui.code-compare-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { useCodeCompareParams } from '@teambit/code.ui.hooks.use-code-compare-params';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
@@ -25,7 +24,6 @@ export type ComponentCompareProps = {
 
 /*
   Component Aspect registers the Component Compare Page 
-  When a user lands on ~/<component-id>/compare?version=""&?to=""?selected=""
    * version: it is the currently viewed version. if not present, default to latest
    * to: version to compare to, if present auto select it in the dropdown
    * selected: selected defaults to the first composition of the component, the user 

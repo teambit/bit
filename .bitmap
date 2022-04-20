@@ -1014,12 +1014,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/cli-snippet"
     },
-    "ui/code-compare-tab-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-compare-tab-page"
-    },
     "ui/code-compare-view": {
         "scope": "",
         "version": "",
@@ -1265,12 +1259,6 @@
         "version": "0.0.486",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-bind-key"
-    },
-    "ui/hooks/use-code-compare-params": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/hooks/use-code-compare-params"
     },
     "ui/hooks/use-code-params": {
         "scope": "teambit.code",
