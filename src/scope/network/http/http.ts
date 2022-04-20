@@ -386,7 +386,7 @@ export class Http implements Network {
       const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
         namespaces: namespacesUsingWildcards,
       });
-      data.scope.components.forEach((comp) => {
+      data.scope._legacyList.forEach((comp) => {
         comp.id = BitId.parse(comp.id);
       });
       return data.scope._legacyList;
