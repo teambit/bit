@@ -126,10 +126,6 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
-  readonly renderContext = ({ children }: { children: ReactNode }) => {
-    return <CommandBarContext.Provider value={this}>{children}</CommandBarContext.Provider>;
-  };
-
   /**
    * Opens and closes the command bar UI.
    */
@@ -138,7 +134,7 @@ export class CommandBarUI {
   /**
    * generate the ui for command bar
    */
-  private CommandBar = () => {
+  CommandBar = () => {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 
