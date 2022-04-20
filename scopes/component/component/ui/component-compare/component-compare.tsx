@@ -17,13 +17,24 @@ import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
 
-import styles from './code-compare-tab-page.module.scss';
+import styles from './component-compare.module.scss';
 
-export type CodeComparePageProps = {
+export type ComponentCompareProps = {
   fileIconSlot?: FileIconSlot;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeComparePage({ className, fileIconSlot }: CodeComparePageProps) {
+/*
+  Component Aspect registers the Component Compare Page 
+  When a user lands on ~/<component-id>/compare?version=""&?to=""?selected=""
+   * version: it is the currently viewed version. if not present, default to latest
+   * to: version to compare to, if present auto select it in the dropdown
+   * selected: selected defaults to the first composition of the component, the user 
+   *           can change selection between the following drawers; 
+   *           compositions, files, aspects, dependencies. (~file/, ~composition/, ~aspects/, ~dependencies/)
+   * clicking on the compare button computes the compare between the selected versions
+   *    note: highlight the compare button when the selection changes
+ */
+export function ComponentCompare({ fileIconSlot, className }: ComponentCompareProps) {
   const { toVersion, fromVersion, file: currentFile } = useCodeCompareParams();
   const component = useContext(ComponentContext);
   const [showCodeCompare] = useState<boolean>(true);
