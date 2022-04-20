@@ -344,25 +344,32 @@ export class Http implements Network {
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
     const LIST_LEGACY = gql`
-      query listLegacy($namespaces: String) {
+      query list($namespaces: [String!]) {
         scope {
-          _legacyList(namespaces: $namespaces) {
-            id
-            deprecated
+          components(namespaces: $namespaces) {
+            id {
+              scope
+              version
+              name
+            }
+            deprecation {
+              isDeprecate
+            }
           }
         }
       }
     `;
 
     const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
-      namespaces: namespacesUsingWildcards,
+      namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
     });
 
-    data.scope._legacyList.forEach((comp) => {
+    data.scope.components.forEach((comp) => {
       comp.id = BitId.parse(comp.id);
+      comp.deprecated = comp.deprecation.isDeprecate;
     });
 
-    return data.scope._legacyList;
+    return data.scope.components;
   }
 
   async show(bitId: BitId): Promise<Component | null | undefined> {

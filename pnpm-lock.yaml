@@ -533,6 +533,7 @@ importers:
       sass-lookup: 3.0.0
       semver: 7.3.4
       semver-intersect: 1.4.0
+      semver-range-intersect: 0.3.1
       serialize-error: 5.0.0
       singleton-tsserver: 1.0.1
       sinon: 5.1.1
@@ -1106,6 +1107,7 @@ importers:
       sass-lookup: registry.npmjs.org/sass-lookup/3.0.0
       semver: registry.npmjs.org/semver/7.3.4
       semver-intersect: registry.npmjs.org/semver-intersect/1.4.0
+      semver-range-intersect: registry.npmjs.org/semver-range-intersect/0.3.1
       serialize-error: registry.npmjs.org/serialize-error/5.0.0
       singleton-tsserver: registry.npmjs.org/singleton-tsserver/1.0.1
       sinon: registry.npmjs.org/sinon/5.1.1
@@ -13303,7 +13305,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/network.agent/0.0.1_4af74d00c71e1cf8b8113131e3551ba9:
-    resolution: {integrity: sha512-I5LUdhNvyuCxXGsHf5em+8z+SBKFiNkGSZHImyzO58LEhTI52CZabpGnMPaUMWfx1RLUndnZyHjIm0N1/FyYTg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/network.agent/-/network.agent-0.0.1.tgz}
+    resolution: {integrity: sha512-I5LUdhNvyuCxXGsHf5em+8z+SBKFiNkGSZHImyzO58LEhTI52CZabpGnMPaUMWfx1RLUndnZyHjIm0N1/FyYTg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/network.agent/-/network.agent-0.0.1.tgz}
     id: registry.npmjs.org/@teambit/network.agent/0.0.1
     name: '@teambit/network.agent'
     version: 0.0.1
@@ -13324,7 +13326,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/network.proxy-agent/0.0.1_4af74d00c71e1cf8b8113131e3551ba9:
-    resolution: {integrity: sha512-1SufCQVjaOaJvEVY6xmMCbFNvIFt13N56doPMU1F8da4Uu9xF/T9/B0tQ/NPF3+86xgpUuHtPA/xAZUixgV+hA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/network.proxy-agent/-/network.proxy-agent-0.0.1.tgz}
+    resolution: {integrity: sha512-1SufCQVjaOaJvEVY6xmMCbFNvIFt13N56doPMU1F8da4Uu9xF/T9/B0tQ/NPF3+86xgpUuHtPA/xAZUixgV+hA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/network.proxy-agent/-/network.proxy-agent-0.0.1.tgz}
     id: registry.npmjs.org/@teambit/network.proxy-agent/0.0.1
     name: '@teambit/network.proxy-agent'
     version: 0.0.1
@@ -13496,7 +13498,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/toolbox.network.proxy-agent/0.0.116_@teambit+legacy@1.0.251:
-    resolution: {integrity: sha512-XFF8dwV7t0tLh/OtWArayE16/j020YA5nMwOLTeFeQEK9JuA+KK820cWTILyzysOel8Xt9tfvp6x/LLq/wE13w==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.proxy-agent/-/toolbox.network.proxy-agent-0.0.116.tgz}
+    resolution: {integrity: sha512-XFF8dwV7t0tLh/OtWArayE16/j020YA5nMwOLTeFeQEK9JuA+KK820cWTILyzysOel8Xt9tfvp6x/LLq/wE13w==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.proxy-agent/-/toolbox.network.proxy-agent-0.0.116.tgz}
     id: registry.npmjs.org/@teambit/toolbox.network.proxy-agent/0.0.116
     name: '@teambit/toolbox.network.proxy-agent'
     version: 0.0.116
