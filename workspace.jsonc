@@ -341,6 +341,7 @@
         "resolve-url-loader": "4.0.0",
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
+        "semver-range-intersect": "0.3.1",
         "singleton-tsserver": "1.0.1",
         "socket.io": "2.4.1",
         "socket.io-client": "2.4.0",

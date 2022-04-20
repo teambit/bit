@@ -732,11 +732,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * list all components in the scope.
    */
   async list(
-    filter?: { offset: number; limit: number },
+    filter?: { offset: number; limit: number; namespaces?: string[] },
     includeCache = false,
     includeFromLanes = false
   ): Promise<Component[]> {
-    const componentsIds = await this.listIds(includeCache, includeFromLanes);
+    const patternsWithScope =
+      (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
+    const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
@@ -756,17 +758,23 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * get ids of all scope components.
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
-  async listIds(includeCache = false, includeFromLanes = false): Promise<ComponentID[]> {
+  async listIds(includeCache = false, includeFromLanes = false, patterns?: string[]): Promise<ComponentID[]> {
     const allModelComponents = await this.legacyScope.list();
     const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
       const cacheFilter = includeCache ? true : this.exists(modelComponent);
       const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
+
       return cacheFilter && lanesFilter;
     };
     const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
-    const ids = modelComponentsToList.map((component) =>
+    let ids = modelComponentsToList.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );
+    if (patterns && patterns.length > 0) {
+      ids = ids.filter((id) =>
+        patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
+      );
+    }
     this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
     return ids;
   }
@@ -869,13 +877,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * load components into the scope through a variants pattern.
    */
   async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
-    const ids = await this.listIds(true);
-    const finalPatterns = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
-    const targetIds = ids.filter((id) => {
-      return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
-    });
+    const patternsWithScope = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
 
-    const components = await this.getMany(targetIds);
+    const ids = await this.listIds(true, false, patternsWithScope);
+
+    const components = await this.getMany(ids);
     return components;
   }
 
