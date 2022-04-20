@@ -11,7 +11,7 @@ export class DependencyNameRefactorCmd implements Command {
   options = [] as CommandOptions;
   group = 'development';
   // extendedDescription = `${PATTERN_HELP('refactor dependency-name')}`;
-  extendedDescription = `the "<old-id>" and "<new-id>" arguments can be either a component-id or a package-name.`;
+  extendedDescription = `the \`<old-id>\` and \`<new-id>\` arguments can be either a component-id or a package-name.`;
 
   constructor(private refactoringMain: RefactoringMain, private componentMain: ComponentMain) {}
 

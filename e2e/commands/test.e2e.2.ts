@@ -143,28 +143,6 @@ describe('bit test command', function () {
         );
       });
     });
-    describe('tagging the component without --force flag and with --verbose flag', () => {
-      let output;
-      before(() => {
-        try {
-          helper.command.tagAllComponents('--verbose');
-        } catch (err: any) {
-          output = err.message;
-        }
-      });
-      it('should show the exact exception it caught', () => {
-        expect(output).to.have.string('exception occurred with this spec file');
-      });
-    });
-    describe('tagging the component with --force flag', () => {
-      let output;
-      before(() => {
-        output = helper.command.tagAllComponents('--force');
-      });
-      it('should tag the component successfully', () => {
-        expect(output).to.have.string('1 component(s) tagged');
-      });
-    });
   });
   describe('when there is before hook which fail', () => {
     let output;

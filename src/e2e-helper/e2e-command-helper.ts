@@ -117,6 +117,9 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
     return JSON.parse(result);
   }
+  add(dir: string, flag = '') {
+    return this.runCmd(`bit add ${dir} ${flag}`);
+  }
   addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
       typeof options === 'string'
@@ -191,16 +194,17 @@ export default class CommandHelper {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    const ver = version ? `@${version}` : '';
-    return this.runCmd(`bit tag ${id}${ver} ${options} --build`);
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag ${id} ${ver} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
+    const ver = version ? `--ver ${version}` : '';
+    const result = this.runCmd(`bit tag ${ver} ${options} --build`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagAllWithoutBuild(options = '') {
-    const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${options}`, undefined, undefined, BUILD_ON_CI);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -213,11 +217,13 @@ export default class CommandHelper {
     this.linkAndRewire();
     return this.tagAllComponents(options, version, assertTagged);
   }
-  tagScope(version = '', message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
+  tagIncludeUnmodified(version = '', message = 'tag-message', options = '') {
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag --unmodified ${ver} -m ${message} ${options} --build`);
   }
-  tagScopeWithoutBuild(version = '', options = '') {
-    return this.runCmd(`bit tag -s ${version} ${options}`, undefined, undefined, BUILD_ON_CI);
+  tagIncludeUnmodifiedWithoutBuild(version = '', options = '') {
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag --unmodified ${ver} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
