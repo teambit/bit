@@ -343,7 +343,7 @@ export class Http implements Network {
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
-    const LIST_LEGACY = gql`
+    const LIST_HARMONY = gql`
       query list($namespaces: [String!]) {
         scope {
           components(namespaces: $namespaces) {
@@ -360,16 +360,37 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
-      namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
-    });
+    const LIST_LEGACY = gql`
+      query list($namespaces: String) {
+        scope {
+          _legacyList(namespaces: $namespaces) {
+            id
+            deprecated
+          }
+        }
+      }
+    `;
 
-    data.scope.components.forEach((comp) => {
-      comp.id = BitId.parse(comp.id);
-      comp.deprecated = comp.deprecation.isDeprecate;
-    });
+    try {
+      const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+      });
 
-    return data.scope.components;
+      data.scope.components.forEach((comp) => {
+        comp.id = BitId.parse(comp.id);
+        comp.deprecated = comp.deprecation.isDeprecate;
+      });
+
+      return data.scope.components;
+    } catch (e) {
+      const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
+        namespaces: namespacesUsingWildcards,
+      });
+      data.scope.components.forEach((comp) => {
+        comp.id = BitId.parse(comp.id);
+      });
+      return data.scope._legacyList;
+    }
   }
 
   async show(bitId: BitId): Promise<Component | null | undefined> {
