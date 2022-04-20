@@ -24,7 +24,7 @@ export class PkgUI {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.dev`}
+          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
           componentName={comp.id.name}
           packageManager="npm"
           copyString={`npm i ${comp.packageName}${packageVersion}`}
