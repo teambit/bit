@@ -617,6 +617,11 @@
     "scopes/code": {
       "defaultScope": "teambit.code"
     },
+    "scopes/mdx/readme": {
+      "teambit.envs/envs": {
+        "env": "teambit.envs/env"
+      }
+    },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"

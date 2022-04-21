@@ -40,16 +40,15 @@ export class DevFilesMain {
 
   /**
    * compute all dev patterns on a component.
-   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns()) and
+   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns(component)) and
    * the registering aspects (through registerDevPattern()).
    */
   computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.calculateEnv(component);
-    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component, envDef) : [];
+    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
-    // filter any pattern that starts with "-" from any aspect
     const getPatterns = (devPatterns: DevPatterns) => {
       if (isFunction(devPatterns)) {
         return devPatterns(component);
@@ -58,7 +57,7 @@ export class DevFilesMain {
     };
     const patternSlot = this.devPatternSlot.toArray();
     const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
-      const [aspectId, patterns] = current; // pattern can be a func
+      const [aspectId, patterns] = current;
       if (!acc[aspectId]) acc[aspectId] = [];
       // if (component.state.aspects.get(aspectId)) acc[aspectId] = acc[aspectId].concat(patterns);
       acc[aspectId] = acc[aspectId].concat(getPatterns(patterns));
@@ -153,10 +152,6 @@ export class DevFilesMain {
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
         // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
-        // TODO: verify when the component is not in the cache
-        /**
-         *
-         */
         const component = await workspace.get(componentId, false, consumerComponent, true, false);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = devFiles.computeDevFiles(component);

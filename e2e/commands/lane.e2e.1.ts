@@ -67,8 +67,8 @@ describe('bit lane command', function () {
       expect(readmeOutput).to.have.string('the readme component has been successfully removed from the lane dev');
     });
     it('bit lane readme-remove should throw an error when there no readme component added to the lane', () => {
-      const output = helper.command.removeLaneReadme();
-      expect(output).to.have.string('there is no readme component added to the lane dev');
+      const cmd = () => helper.command.removeLaneReadme();
+      expect(cmd).to.throw();
     });
     it('bit lane should show the readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
@@ -80,7 +80,7 @@ describe('bit lane command', function () {
     });
     it('bit list should show the readme component', () => {
       const listOutput = helper.command.listLocalScope();
-      expect(listOutput).to.have.string('[Lane Readme]: dev');
+      expect(listOutput).to.have.string(`[Lane Readme]: ${helper.scopeHelper.scopes.remote}/dev`);
     });
     it('should export component as lane readme ', () => {
       helper.command.exportLane();
@@ -90,7 +90,9 @@ describe('bit lane command', function () {
     it('bitmap should show the lane config for a readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
       const bitMap = helper.bitMap.read();
-      expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({ dev: { readme: true } });
+      expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({
+        readme: { [`${helper.scopeHelper.scopes.remote}/dev`]: true },
+      });
     });
     it('should not allow exporting a lane with unsnapped readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
@@ -103,8 +105,21 @@ describe('bit lane command', function () {
         helper.command.switchLocalLane('main');
       });
       it('should allow deleting the lane readme on a successful merge', () => {
-        const cmd = () => helper.command.mergeLane('dev', '--delete-readme');
+        const cmd = () => helper.command.mergeLane('dev');
         expect(cmd).to.not.throw();
+      });
+      it('should delete the readme component on successful merge', () => {
+        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
+        helper.command.switchLocalLane('main');
+        const output = helper.command.mergeLane('dev');
+        expect(output).to.have.string('removed components');
+        expect(output).to.have.string('comp1');
+      });
+      it('should skip deleting the readme component on successful merge when (--skip-deleting-readme) is set', () => {
+        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
+        helper.command.switchLocalLane('main');
+        const mergeOutput = helper.command.mergeLane('dev', '--skip-deleting-readme');
+        expect(mergeOutput).to.not.have.string('removed components');
       });
     });
   });

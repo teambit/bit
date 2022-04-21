@@ -14,11 +14,10 @@ import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consume
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { Scope } from '@teambit/legacy/dist/scope';
-import { DocsMain } from '@teambit/docs';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
@@ -50,7 +49,7 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
-  deleteReadme: boolean;
+  skipDeletingReadme: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -59,7 +58,12 @@ export type CreateLaneOptions = {
 };
 
 export class LanesMain {
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private merging: MergingMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private merging: MergingMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   async getLanes({
     name,
@@ -170,12 +174,23 @@ export class LanesMain {
     return results;
   }
 
+  /**
+   * the values array may include zero to two values and will be processed as following:
+   * [] => diff between the current lane and default lane. (only inside workspace).
+   * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
+   * [from, to] => diff between "from" lane and "to" lane.
+   */
+  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    return laneDiffGenerator.generate(values, diffOptions);
+  }
+
   async getLaneComponentModels(name: string): Promise<Component[]> {
     if (!name) return [];
 
     const [lane] = await this.getLanes({ name });
     const laneComponents = lane.components;
-    const host = this.workspace || this.scope;
+    const host = this.componentAspect.getHost();
     const laneComponentIds = await Promise.all(
       laneComponents.map((laneComponent) => {
         const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
@@ -192,30 +207,12 @@ export class LanesMain {
     const [lane] = await this.getLanes({ name });
     const laneReadmeComponent = lane.readmeComponent;
     if (!laneReadmeComponent) return undefined;
-    const host = this.workspace || this.scope;
+    const host = this.componentAspect.getHost();
     const laneReadmeComponentId = await host.resolveComponentId(
       laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
     );
     const readmeComponent = await host.get(laneReadmeComponentId);
     return readmeComponent;
-  }
-
-  /**
-   * the values array may include zero to two values and will be processed as following:
-   * [] => diff between the current lane and default lane. (only inside workspace).
-   * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
-   * [from, to] => diff between "from" lane and "to" lane.
-   */
-  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    return laneDiffGenerator.generate(values, diffOptions);
-  }
-
-  public isLaneReadme(component: Component) {
-    const lanesConfig = component.state.aspects.get(LanesAspect.id)?.config;
-    if (!lanesConfig) return false;
-
-    return Object.keys(lanesConfig).some((lane) => lanesConfig[lane].readme);
   }
 
   async removeLaneReadme(laneName?: string): Promise<{ result: boolean; message?: string }> {
@@ -232,29 +229,25 @@ export class LanesMain {
     }
 
     const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
-    const scope: Scope = this.workspace.scope.legacyScope;
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane?.readmeComponent) {
-      return {
-        result: false,
-        message: `there is no readme component added to the lane ${laneName || currentLaneName}`,
-      };
+      throw new BitError(`there is no readme component added to the lane ${laneName || currentLaneName}`);
     }
 
     const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
-    if (existingLaneConfig !== '-') {
-      delete existingLaneConfig[lane.name];
-      // this.workspace.bitMap.removeComponentConfig(readmeComponentId, LanesAspect.id, false);
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
+    if (existingLaneConfig.readme) {
+      delete existingLaneConfig.readme[remoteLaneIdStr];
       await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, existingLaneConfig);
-    } else {
-      // this should not happen but is it still possible to set the config as "-"
-      await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
     }
+
     lane.setReadmeComponent(undefined);
     await scope.lanes.saveLane(lane);
     await this.workspace.bitMap.write();
@@ -273,7 +266,7 @@ export class LanesMain {
     const readmeComponentBitId = readmeComponentId._legacy;
 
     const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
-    const scope: Scope = this.workspace.scope.legacyScope;
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {
@@ -283,18 +276,25 @@ export class LanesMain {
     lane.setReadmeComponent(readmeComponentBitId);
     await scope.lanes.saveLane(lane);
 
-    // const existingLaneConfig = this.workspace.bitMap.getBitmapEntry(readmeComponentId)?.config?.[LanesAspect.id] || {};
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
-    if (existingLaneConfig !== '-') {
+
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
+    if (existingLaneConfig.readme) {
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
         ...existingLaneConfig,
-        [lane.name]: { readme: true },
+        readme: {
+          ...existingLaneConfig.readme,
+          [remoteLaneIdStr]: true,
+        },
       });
     } else {
-      // this should not happen but is it still possible to set the config as "-"
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        [lane.name]: { readme: true },
+        ...existingLaneConfig,
+        readme: {
+          [remoteLaneIdStr]: true,
+        },
       });
     }
     await this.workspace.bitMap.write();
@@ -320,18 +320,26 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect, MergingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    WorkspaceAspect,
+    GraphqlAspect,
+    CommunityAspect,
+    MergingAspect,
+    ComponentAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging]: [
+  static async provider([cli, scope, workspace, graphql, community, merging, component]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
     CommunityMain,
     MergingMain,
-    DocsMain
+    ComponentMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope, merging);
+    const lanesMain = new LanesMain(workspace, scope, merging, component);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd();
     if (!isLegacy) {

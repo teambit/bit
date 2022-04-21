@@ -854,19 +854,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/readme/readme"
-    },
-    "readme-component": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "test",
-        "config": {
-            "teambit.mdx/readme": {},
-            "teambit.envs/envs": {
-                "env": "teambit.mdx/readme"
-            }
-        }
+        "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "scope": "teambit.component",

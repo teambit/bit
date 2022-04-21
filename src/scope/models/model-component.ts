@@ -44,7 +44,6 @@ import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
-import { INTERNAL_CONFIG_FIELDS } from '../../consumer/config/extension-data';
 
 type State = {
   versions?: {
@@ -754,10 +753,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       return [];
     }
     const lanesAspect = version.extensions.findCoreExtension(Extensions.lanes);
-    if (!lanesAspect) {
+    if (!lanesAspect || !lanesAspect.config.readme) {
       return [];
     }
-    return Object.keys(lanesAspect.config).filter((key) => INTERNAL_CONFIG_FIELDS.indexOf(key) < 0);
+    return Object.keys(lanesAspect.config.readme);
   }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
