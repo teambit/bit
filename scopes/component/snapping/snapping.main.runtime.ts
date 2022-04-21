@@ -161,6 +161,7 @@ export class SnappingMain {
       disableTagAndSnapPipelines,
       forceDeploy,
       incrementBy,
+      packageManagerConfigRootDir: this.workspace.path,
     });
 
     const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
@@ -244,6 +245,7 @@ export class SnappingMain {
       isSnap: true,
       disableTagAndSnapPipelines,
       forceDeploy,
+      packageManagerConfigRootDir: this.workspace.path,
     });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const snapResults: SnapResults = { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };

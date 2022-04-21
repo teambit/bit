@@ -209,6 +209,7 @@ export default async function tagModelComponent({
   disableTagAndSnapPipelines,
   forceDeploy,
   incrementBy,
+  packageManagerConfigRootDir,
 }: {
   consumerComponents: Component[];
   ids: BitIds;
@@ -219,6 +220,7 @@ export default async function tagModelComponent({
   consumer: Consumer;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
+  packageManagerConfigRootDir?: string;
 } & BasicTagParams): Promise<{
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
@@ -330,8 +332,9 @@ export default async function tagModelComponent({
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
+    const isolateOptions = { packageManagerConfigRootDir };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
-      func(allComponentsToTag, onTagOpts)
+      func(allComponentsToTag, onTagOpts, isolateOptions)
     );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));

@@ -38,6 +38,21 @@ import { HttpHelper } from '../http-helper';
       const cmd = () => helper.command.install();
       expect(cmd).to.not.throw();
     });
+    // previously it was throwing UnexpectedNetworkError without any message.
+    it('bit lane remove -r should not remove the remote lane without --force flag as it was not fully merged', () => {
+      expect(() => helper.command.removeRemoteLane()).to.throw(
+        'unable to remove dev lane, it is not fully merged. to disregard this error, please use --force flag'
+      );
+    });
+    it('bit lane remove -r -f should remove the remote lane', () => {
+      helper.command.removeRemoteLane('dev', '--force');
+      const output = helper.command.showRemoteLanesParsed();
+      expect(output.lanes).to.have.lengthOf(0);
+    });
+    // previously it was throwing UnexpectedNetworkError without any message.
+    it('bit lane remove -r of a non-existing lane should throw a descriptive error', () => {
+      expect(() => helper.command.removeRemoteLane('non-exist')).to.throw('lane "non-exist" was not found');
+    });
     after(() => {
       httpHelper.killHttp();
     });

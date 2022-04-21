@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.250",
+  "version": "1.0.254",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -112,7 +112,8 @@
     "nightly": "npm run assert:master && git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
-    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
+    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files",
+    "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write"
   },
   "dependencies": {
     "@teambit/toolbox.network.agent": "0.0.116",
@@ -177,7 +178,7 @@
     "minimatch": "3.0.4",
     "mockery": "2.1.0",
     "module-definition": "3.3.1",
-    "moment": "2.29.1",
+    "moment": "2.29.2",
     "node-fetch": "2.6.7",
     "node-source-walk": "4.2.0",
     "normalize-path": "2.1.1",
