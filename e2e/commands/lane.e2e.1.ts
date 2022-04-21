@@ -1537,6 +1537,10 @@ describe('bit lane command', function () {
         const bar2 = lane.components.find((c) => c.id.name === 'bar2');
         expect(bar2.id.scope).to.equal(anotherRemote);
       });
+      it('should symlink in the object to the correct scope', () => {
+        const obj = helper.command.catObject('033c4846b506a4a48e32cdf54515c91d3499adb3', true);
+        expect(obj.realScope).to.equal(anotherRemote);
+      });
       describe('importing the lane', () => {
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
