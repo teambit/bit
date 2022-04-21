@@ -109,9 +109,13 @@ export class WorkspaceManifestFactory {
       const additionalDeps = {};
       if (hasRootComponents) {
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
-          if (components.some((c) => c.id.isEqual(comp.componentId))) {
+          if (
+            !comp.isExtension &&
+            comp.lifecycle === 'runtime' &&
+            components.some((c) => c.id.isEqual(comp.componentId))
+          ) {
             const pkgName = comp.getPackageName();
-            if (pkgName !== '@teambit/harmony') {
+            if (pkgName !== '@teambit/harmony' && pkgName !== '@teambit/bit') {
               additionalDeps[pkgName] = `workspace:*`;
             }
           }
