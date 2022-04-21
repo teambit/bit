@@ -301,22 +301,6 @@ export class LaneMergeCmd implements Command {
   }
 }
 
-export class LaneImportCmd implements Command {
-  name = 'import <lane>';
-  description = `import a remote lane to your workspace`;
-  alias = '';
-  options = [];
-  loader = true;
-  private = true;
-  migration = true;
-
-  constructor(private switchCmd: SwitchCmd) {}
-
-  async report([lane]: [string]): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true });
-  }
-}
-
 export class LaneRemoveCmd implements Command {
   name = 'remove <lane...>';
   description = `remove lanes`;
@@ -359,6 +343,28 @@ export class LaneRemoveCmd implements Command {
     return chalk.green(`successfully removed the following lane(s): ${chalk.bold(laneResults.join(', '))}`);
   }
 }
+
+export class LaneImportCmd implements Command {
+  name = 'import <lane>';
+  description = `import a remote lane to your workspace`;
+  alias = '';
+  options = [
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+  ] as CommandOptions;
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private switchCmd: SwitchCmd) {}
+
+  async report(
+    [lane]: [string],
+    { skipDependencyInstallation = false }: { skipDependencyInstallation: boolean }
+  ): Promise<string> {
+    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation });
+  }
+}
+
 export class LaneCmd implements Command {
   name = 'lane [name]';
   shortDescription = 'show lanes details';

@@ -107,7 +107,14 @@ export type OnTagOpts = {
   skipTests?: boolean;
   isSnap?: boolean;
 };
-export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type IsolateComponentsOptions = {
+  packageManagerConfigRootDir?: string;
+};
+export type OnTagFunc = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions: IsolateComponentsOptions
+) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -487,13 +494,7 @@ export default class Scope {
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
-    const modelComponent = await this.sources.get(id);
-    if (modelComponent) {
-      // @todo: what about other places the model-component is loaded
-      const currentLane = await this.getCurrentLaneObject();
-      await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
-    }
-    return modelComponent;
+    return this.sources.get(id);
   }
 
   async getCurrentLaneObject() {

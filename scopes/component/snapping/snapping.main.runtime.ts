@@ -1,5 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { isString } from '@teambit/legacy/dist/utils';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
@@ -56,22 +55,19 @@ export class SnappingMain {
   async tag({
     ids = [],
     message = '',
-    ver,
-    all = false,
+    version,
     editor = '',
     snapped = false,
     patch,
     minor,
     major,
     preRelease,
-    force = false,
-    verbose = false,
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
     skipAutoTag = false,
-    scope,
     build,
+    unmodified = false,
     soft = false,
     persist = false,
     forceDeploy = false,
@@ -80,8 +76,8 @@ export class SnappingMain {
   }: {
     ids?: string[];
     all?: boolean | string;
-    snapped?: boolean | string;
-    ver?: string;
+    snapped?: boolean;
+    version?: string;
     patch?: boolean;
     minor?: boolean;
     major?: boolean;
@@ -91,26 +87,8 @@ export class SnappingMain {
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (soft) build = false;
-    function getVersion(): string | undefined {
-      if (scope && isString(scope)) return scope;
-      if (all && isString(all)) return all;
-      if (snapped && isString(snapped)) return snapped;
-      return ver;
-    }
-
-    if (!ids.length && !all && !snapped && !scope && !persist) {
-      throw new BitError('missing [id]. to tag all components, please use --all flag');
-    }
-    if (ids.length && all) {
-      throw new BitError(
-        'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
-      );
-    }
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-tag-pipeline, but not both');
-    }
-    if (all && persist) {
-      throw new BitError('you can use either --all or --persist, but not both');
     }
     if (editor && persist) {
       throw new BitError('you can use either --editor or --persist, but not both');
@@ -125,35 +103,24 @@ export class SnappingMain {
     }
 
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-    const includeImported = Boolean(scope && all);
 
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
     else if (patch) releaseType = 'patch';
     else if (preRelease) releaseType = 'prerelease';
 
-    const exactVersion = getVersion();
-    all = Boolean(all);
-    snapped = Boolean(snapped);
+    const exactVersion = version;
     preRelease = typeof preRelease === 'string' ? preRelease : '';
 
     if (!this.workspace) throw new ConsumerNotFound();
     const idsHasWildcard = hasWildcard(ids);
-    const isAll = Boolean(all || scope || idsHasWildcard);
+    const isAll = Boolean(!ids.length || idsHasWildcard);
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     loader.start('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
-    const { bitIds, warnings } = await this.getComponentsToTag(
-      Boolean(scope),
-      exactVersion,
-      includeImported,
-      persist,
-      force,
-      ids,
-      snapped
-    );
+    const { bitIds, warnings } = await this.getComponentsToTag(unmodified, exactVersion, persist, ids, snapped);
     if (R.isEmpty(bitIds)) return null;
 
     const legacyBitIds = BitIds.fromArray(bitIds);
@@ -183,11 +150,9 @@ export class SnappingMain {
       exactVersion: validExactVersion,
       releaseType,
       preRelease,
-      force,
       consumer: this.workspace.consumer,
       ignoreNewestVersion,
       skipTests,
-      verbose,
       skipAutoTag,
       soft,
       build,
@@ -196,6 +161,7 @@ export class SnappingMain {
       disableTagAndSnapPipelines,
       forceDeploy,
       incrementBy,
+      packageManagerConfigRootDir: this.workspace.path,
     });
 
     const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
@@ -225,27 +191,25 @@ export class SnappingMain {
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     resolveUnmerged = false,
     message = '',
-    force = false,
-    verbose = false,
     ignoreIssues,
     skipTests = false,
     skipAutoSnap = false,
     build,
     disableTagAndSnapPipelines = false,
     forceDeploy = false,
+    unmodified = false,
   }: {
     id?: string;
     legacyBitIds?: BitIds;
     resolveUnmerged?: boolean;
     message?: string;
-    force?: boolean;
-    verbose?: boolean;
     ignoreIssues?: string;
     build: boolean;
     skipTests?: boolean;
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
     forceDeploy?: boolean;
+    unmodified?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
     if (id && legacyBitIds) throw new Error(`please pass either id or legacyBitIds, not both`);
@@ -271,10 +235,8 @@ export class SnappingMain {
       ignoreNewestVersion: false,
       scope: this.workspace.scope.legacyScope,
       message,
-      force,
       consumer: this.workspace.consumer,
       skipTests,
-      verbose,
       skipAutoTag: skipAutoSnap,
       persist: true,
       soft: false,
@@ -283,6 +245,7 @@ export class SnappingMain {
       isSnap: true,
       disableTagAndSnapPipelines,
       forceDeploy,
+      packageManagerConfigRootDir: this.workspace.path,
     });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const snapResults: SnapResults = { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
@@ -294,21 +257,25 @@ export class SnappingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
-    async function getIdsToSnap(): Promise<BitIds> {
+    async function getIdsToSnap(): Promise<BitIds | null> {
       const idHasWildcard = id && hasWildcard(id);
       if (id && !idHasWildcard) {
         const bitId = consumer.getParsedId(id);
-        if (!force) {
+        if (!unmodified) {
           const componentStatus = await consumer.getComponentStatusById(bitId);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (componentStatus.modified === false) return null;
         }
         return new BitIds(bitId);
       }
-      const tagPendingComponents = await componentsList.listTagPendingComponents();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const tagPendingComponents = unmodified
+        ? await componentsList.listPotentialTagAllWorkspace()
+        : await componentsList.listTagPendingComponents();
       if (R.isEmpty(tagPendingComponents)) return null;
-      return idHasWildcard ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id) : tagPendingComponents;
+      const bitIds = idHasWildcard
+        ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id)
+        : tagPendingComponents;
+      return BitIds.fromArray(bitIds);
     }
   }
 
@@ -407,11 +374,9 @@ export class SnappingMain {
   }
 
   private async getComponentsToTag(
-    isAllScope: boolean,
+    includeUnmodified: boolean,
     exactVersion: string | undefined,
-    includeImported: boolean,
     persist: boolean,
-    force: boolean,
     ids: string[],
     snapped: boolean
   ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
@@ -422,8 +387,8 @@ export class SnappingMain {
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
-    const tagPendingComponents = isAllScope
-      ? await componentsList.listTagPendingOfAllScope(includeImported)
+    const tagPendingComponents = includeUnmodified
+      ? await componentsList.listPotentialTagAllWorkspace()
       : await componentsList.listTagPendingComponents();
 
     const snappedComponents = await componentsList.listSnappedComponentsOnMain();
@@ -439,7 +404,7 @@ export class SnappingMain {
             return allIds.map((bitId) => bitId.changeVersion(version));
           }
           const bitId = this.workspace.consumer.getParsedId(idWithoutVer);
-          if (!force) {
+          if (!includeUnmodified) {
             const componentStatus = await this.workspace.consumer.getComponentStatusById(bitId);
             if (componentStatus.modified === false) return null;
           }
@@ -456,7 +421,7 @@ export class SnappingMain {
 
     tagPendingComponents.push(...snappedComponentsIds);
 
-    if (isAllScope && exactVersion) {
+    if (includeUnmodified && exactVersion) {
       const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(
         tagPendingComponents,
         false
