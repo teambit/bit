@@ -341,6 +341,7 @@
         "resolve-url-loader": "4.0.0",
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
+        "semver-range-intersect": "0.3.1",
         "singleton-tsserver": "1.0.1",
         "socket.io": "2.4.1",
         "socket.io-client": "2.4.0",
@@ -379,7 +380,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.251",
+        "@teambit/legacy": "1.0.254",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -458,7 +459,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.251"
+            "@teambit/legacy": "1.0.254"
           }
         }
       },
@@ -717,7 +718,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.251"
+            "@teambit/legacy": "1.0.254"
           }
         }
       }
@@ -790,7 +791,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.251",
+            "@teambit/legacy": "1.0.254",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -922,7 +923,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.251"
+            "@teambit/legacy": "1.0.254"
           }
         }
       }
