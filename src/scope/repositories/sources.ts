@@ -630,7 +630,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    if (existingComponentHead) {
+    if (existingComponentHead || mergedComponent.hasHead()) {
       const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
       mergedVersions.push(...mergedSnaps);
     }
@@ -639,7 +639,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   private async getMergedSnaps(
-    existingHead: Ref,
+    existingHead: Ref | undefined,
     incomingComp: ModelComponent,
     versionObjects: Version[]
   ): Promise<string[]> {

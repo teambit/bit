@@ -486,6 +486,22 @@ describe('bit lane command', function () {
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
+      describe('exporting the components to the remote', () => {
+        let exportOutput: string;
+        before(() => {
+          exportOutput = helper.command.export();
+        });
+        it('should indicate that the components were exported successfully', () => {
+          expect(exportOutput).to.not.have.string('nothing to export');
+        });
+        it('the remote should have the updated component objects', () => {
+          const comp1Id = `${helper.scopes.remote}/comp1`;
+          const comp1 = helper.command.catComponent(comp1Id);
+          const remoteComp1 = helper.command.catComponent(comp1Id, helper.scopes.remotePath);
+          expect(remoteComp1).to.have.property('head');
+          expect(remoteComp1.head).to.equal(comp1.head);
+        });
+      });
     });
     describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
       let mergeOutput;
