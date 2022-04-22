@@ -116,7 +116,7 @@ to be able to rename the scope, please untag the components first (using "bit un
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.renameMultiplePackages(allComponents, packagesToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
