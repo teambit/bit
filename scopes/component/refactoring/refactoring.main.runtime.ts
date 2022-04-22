@@ -7,6 +7,8 @@ import PkgAspect, { PkgMain } from '@teambit/pkg';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 
+export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
+
 export class RefactoringMain {
   constructor(private componentMain: ComponentMain, private pkg: PkgMain) {}
 
@@ -32,6 +34,25 @@ export class RefactoringMain {
       })
     );
     return { oldPackageName, newPackageName, changedComponents: compact(changedComponents) };
+  }
+
+  /**
+   * rename multiple packages dependencies.
+   * this method changes the source code of the component, but doesn't write to the filesystem.
+   */
+  async renameMultiplePackages(
+    components: Component[],
+    oldAndNewPackageNames: MultipleStringsReplacement
+  ): Promise<{
+    changedComponents: Component[];
+  }> {
+    const changedComponents = await Promise.all(
+      components.map(async (comp) => {
+        const hasChanged = await this.replaceMultipleStrings(comp, oldAndNewPackageNames);
+        return hasChanged ? comp : null;
+      })
+    );
+    return { changedComponents: compact(changedComponents) };
   }
 
   private async getPackageNameByUnknownId(id: ComponentID | string): Promise<string> {
@@ -77,6 +98,30 @@ export class RefactoringMain {
         if (strContent.includes(oldString)) {
           const oldStringRegex = new RegExp(oldString, 'g');
           const newContent = strContent.replace(oldStringRegex, newString);
+          file.contents = Buffer.from(newContent);
+          return true;
+        }
+        return false;
+      })
+    );
+    return changed.some((c) => c);
+  }
+
+  private async replaceMultipleStrings(
+    comp: Component,
+    stringsToReplace: MultipleStringsReplacement
+  ): Promise<boolean> {
+    const changed = await Promise.all(
+      comp.filesystem.files.map(async (file) => {
+        const isBinary = await isBinaryFile(file.contents);
+        if (isBinary) return false;
+        const strContent = file.contents.toString();
+        let newContent = strContent;
+        stringsToReplace.forEach(({ oldStr, newStr }) => {
+          const oldStringRegex = new RegExp(oldStr, 'g');
+          newContent = strContent.replace(oldStringRegex, newStr);
+        });
+        if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;
         }
