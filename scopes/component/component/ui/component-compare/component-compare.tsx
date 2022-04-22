@@ -8,13 +8,18 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeCompareView } from '@teambit/code.ui.code-compare-view';
-import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
+import { Contributors } from '@teambit/design.ui.contributors';
+import { H2 } from '@teambit/documenter.ui.heading';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { useComponentCompareParams } from './use-component-compare-params';
 
 import styles from './component-compare.module.scss';
 
@@ -24,24 +29,31 @@ export type ComponentCompareProps = {
 
 /*
   Component Aspect registers the Component Compare Page 
-   * version: it is the currently viewed version. if not present, default to latest
+   * version: it is the currently viewed version. Component Context keeps track of this and sets the version 
+   *          of the component in the context accordingly.
    * to: version to compare to, if present auto select it in the dropdown
    * selected: selected defaults to the first composition of the component, the user 
    *           can change selection between the following drawers; 
    *           compositions, files, aspects, dependencies. (~file/, ~composition/, ~aspects/, ~dependencies/)
-   * clicking on the compare button computes the compare between the selected versions
-   *    note: highlight the compare button when the selection changes
+   * * clicking on the compare button computes the compare between the selected versions
+   * note: highlight the compare button when the selection changes
  */
 export function ComponentCompare({ fileIconSlot, className }: ComponentCompareProps) {
-  const { toVersion, fromVersion, file: currentFile } = useCodeCompareParams();
+  const { toVersion, selected: currentFile } = useComponentCompareParams();
   const component = useContext(ComponentContext);
+
   const [showCodeCompare] = useState<boolean>(true);
 
-  const fromComponentId = (fromVersion && component.id.changeVersion(fromVersion)) || component.id;
-  const lastVersion = (component.logs && component.logs.length > 1 && component.logs[1].hash) || undefined;
+  const fromComponentId = component.id;
+
+  const [currentVersionInfo, lastVersionInfo] = useMemo(() => {
+    const [currentLog, lastLog] = component?.logs?.reverse() || [];
+    return [currentLog, lastLog];
+  }, component.logs);
+
   const toComponentId =
     (toVersion && component.id.changeVersion(toVersion)) ||
-    (lastVersion && component.id.changeVersion(lastVersion)) ||
+    (lastVersionInfo && component.id.changeVersion(lastVersionInfo.hash)) ||
     fromComponentId;
 
   const isMobile = useIsMobile();
@@ -49,8 +61,14 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   return (
-    <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
+    <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.componentCompareContainer, className)}>
       <Pane className={styles.left}>
+        <H2>{component.id.fullName}</H2>
+        <div className={styles.componentCompareVersionSelector}>
+          <ComponentCompareVersionInfo versionInfo={currentVersionInfo} />
+          <ComponentCompareVersionInfo versionInfo={lastVersionInfo} />
+        </div>
+        <div className={styles.componentCompareViewerContainer}></div>
         {showCodeCompare && <CodeCompareView to={toComponentId} fileName={currentFile} from={fromComponentId} />}
       </Pane>
       <HoverSplitter className={styles.splitter}>
@@ -63,8 +81,8 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
           className={styles.collapser}
         />
       </HoverSplitter>
-      <Pane className={styles.right}>
-        <CodeCompareTabTree
+      <Pane className={classNames(styles.componentCompareTreeContainer, styles.right)}>
+        <ComponentCompareTree
           currentFile={currentFile}
           toComponentId={toComponentId}
           fromComponentId={fromComponentId}
@@ -75,14 +93,48 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
   );
 }
 
-export type CodeCompareTabTreeProps = {
+export type ComponentCompareVersionInfoProps = {
+  versionInfo: LegacyComponentLog;
+} & HTMLAttributes<HTMLDivElement>;
+
+export function ComponentCompareVersionInfo({ className, versionInfo }: ComponentCompareVersionInfoProps) {
+  const { date, message, username, email, tag, hash } = versionInfo;
+  const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+  const commitMessage =
+    !message || message === '' ? (
+      <div className={styles.emptyMessage}>No commit message</div>
+    ) : (
+      <div className="commitMessage">{message}</div>
+    );
+  const author = {
+    displayName: username,
+    email,
+  };
+  const version = tag ? `v${tag}` : hash;
+
+  return (
+    <div className={classNames(styles.currentVersionContainer, className)}>
+      <div className="currentVersion">{version}</div>
+      <Contributors contributors={[author || {}]} timestamp={timestamp} />
+      {commitMessage}
+    </div>
+  );
+}
+
+export type ComponentCompareTreeProps = {
   currentFile?: string;
   fileIconSlot?: FileIconSlot;
   fromComponentId: ComponentID;
   toComponentId: ComponentID;
 } & HTMLAttributes<HTMLDivElement>;
 
-function CodeCompareTabTree({ currentFile, fromComponentId, toComponentId, fileIconSlot }: CodeCompareTabTreeProps) {
+export function ComponentCompareTree({
+  currentFile,
+  fromComponentId,
+  toComponentId,
+  fileIconSlot,
+  className,
+}: ComponentCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
   const { mainFile: fromMainFile, fileTree: fromFileTree = [], devFiles: fromDevFiles = [] } = useCode(fromComponentId);
@@ -95,7 +147,7 @@ function CodeCompareTabTree({ currentFile, fromComponentId, toComponentId, fileI
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
       const lanesContext = useLanesContext();
-      const { componentId } = useCodeCompareParams();
+      const { componentId } = useComponentCompareParams();
 
       const currentLaneUrl = lanesContext?.viewedLane
         ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
@@ -112,7 +164,46 @@ function CodeCompareTabTree({ currentFile, fromComponentId, toComponentId, fileI
     [fileIconMatchers, devFiles]
   );
 
+  const [openDrawerList, onToggleDrawer] = useState(['FILES']);
+
+  const handleDrawerToggle = (id: string) => {
+    const isDrawerOpen = openDrawerList.includes(id);
+    if (isDrawerOpen) {
+      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      return;
+    }
+    onToggleDrawer((list) => list.concat(id));
+  };
+
   return (
-    <CodeTabTree currentFile={currentFile || fromMainFile} fileTree={fileTree} treeNodeRenderer={treeNodeRenderer} />
+    <div className={classNames(styles.codeTabTree, className)}>
+      <DrawerUI
+        isOpen={openDrawerList.includes('FILES')}
+        onToggle={() => handleDrawerToggle('FILES')}
+        name="FILES"
+        contentClass={styles.codeDrawerContent}
+        className={classNames(styles.codeTabDrawer)}
+      >
+        <FileTree TreeNode={treeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
+      </DrawerUI>
+      <DrawerUI
+        isOpen={openDrawerList.includes('DEPENDENCIES')}
+        onToggle={() => handleDrawerToggle('DEPENDENCIES')}
+        className={classNames(styles.codeTabDrawer)}
+        contentClass={styles.codeDrawerContent}
+        name="DEPENDENCIES"
+      >
+        {/* <DependencyTree dependenciesArray={dependencies} /> */}
+      </DrawerUI>
+    </div>
   );
 }
+// return (
+//   <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
+//     <TreeNodeContext.Provider value={TreeNode}>
+//       <TreeContextProvider onSelect={onSelect} selected={selected}>
+//         <RootNode node={rootNode} depth={1} />
+//       </TreeContextProvider>
+//     </TreeNodeContext.Provider>
+//   </div>
+// );

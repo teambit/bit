@@ -5,10 +5,8 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
-import { CodeComparePage } from '@teambit/code.ui.code-compare-tab-page';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
-import { CodeCompareSection } from './code-compare.section';
 
 const isTsx = /\.tsx$/;
 
