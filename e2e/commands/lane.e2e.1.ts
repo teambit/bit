@@ -966,7 +966,7 @@ describe('bit lane command', function () {
         helper.bitJsonc.setupDefault();
         helper.command.createLane();
         helper.fixtures.populateComponents();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
       });
       it('as an intermediate step, make sure the lane is on the remote', () => {
@@ -988,6 +988,10 @@ describe('bit lane command', function () {
         it('the remote should not have the lane anymore', () => {
           const lanes = helper.command.showRemoteLanesParsed();
           expect(lanes.lanes).to.have.lengthOf(0);
+        });
+        it('the remote should not have the components anymore as they dont belong to any lane', () => {
+          const remoteComps = helper.command.catScope(undefined, helper.scopes.remotePath);
+          expect(remoteComps).to.have.lengthOf(0);
         });
         describe('removing again after the lane was removed', () => {
           let removeOutput;
