@@ -430,7 +430,9 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
       );
       scope.objects.removeManyObjects(refsToRemove.flat());
       // @ts-ignore
-      idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
+      idsToChangeLocally.forEach((id) => {
+        scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
+      });
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
 
       // update lanes

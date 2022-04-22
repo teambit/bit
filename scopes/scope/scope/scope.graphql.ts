@@ -24,7 +24,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
         path: String
 
         # list of components contained in the scope.
-        components(offset: Int, limit: Int, includeCache: Boolean): [Component]
+        components(offset: Int, limit: Int, includeCache: Boolean, namespaces: [String!]): [Component]
 
         # get a specific component.
         get(id: String!): Component
@@ -42,7 +42,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
         _legacyLatestVersions(ids: [String]!): [String]
 
         # get serialized list component of components. deprecated. PLEASE DO NOT USE THIS API.
-        _legacyList(namespaces: String): [LegacyMeta]
+        _legacyList(namespaces: String): [LegacyMeta] @deprecated(reason: "Use the component query on Scope")
       }
 
       type Log {
@@ -77,9 +77,12 @@ export function scopeSchema(scopeMain: ScopeMain) {
         backgroundIconColor: (scope: ScopeMain) => {
           return scope.backgroundIconColor;
         },
-        components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
+        components: (
+          scope: ScopeMain,
+          props?: { offset: number; limit: number; includeCache?: boolean; namespaces?: string[] }
+        ) => {
           if (!props) return scope.list();
-          return scope.list({ offset: props.offset, limit: props.limit }, props.includeCache);
+          return scope.list({ ...props }, props.includeCache);
         },
 
         get: async (scope: ScopeMain, { id }: { id: string }) => {
