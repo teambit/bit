@@ -246,6 +246,7 @@ export function useComponentQuery(
         : !rawComponent && !loading
         ? new ComponentError(404)
         : undefined,
+      loading,
     };
   }, [rawComponent, host, error]);
 }

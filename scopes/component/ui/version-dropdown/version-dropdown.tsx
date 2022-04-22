@@ -28,6 +28,7 @@ export type VersionDropdownProps = {
   currentLane?: LaneModel;
   latestVersion?: string;
   loading?: boolean;
+  overrideVersionHref?: (version: string) => string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -39,6 +40,7 @@ export function VersionDropdown({
   localVersion,
   loading,
   currentLane,
+  overrideVersionHref,
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
@@ -73,6 +75,7 @@ export function VersionDropdown({
             latestVersion={latestVersion}
             localVersion={localVersion}
             currentLane={currentLane}
+            overrideVersionHref={overrideVersionHref}
           />
         )}
       </Dropdown>
@@ -96,6 +99,7 @@ type VersionMenuProps = {
   currentVersion?: string;
   latestVersion?: string;
   currentLane?: LaneModel;
+  overrideVersionHref?: (version: string) => string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
@@ -108,6 +112,7 @@ function VersionMenu({
   localVersion,
   latestVersion,
   currentLane,
+  overrideVersionHref,
   ...rest
 }: VersionMenuProps) {
   const getActiveTabIndex = () => {
@@ -176,6 +181,7 @@ function VersionMenu({
               key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
+              overrideVersionHref={overrideVersionHref}
               {...payload}
             ></VersionInfo>
           ))}

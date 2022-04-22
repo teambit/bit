@@ -11,7 +11,6 @@ export type ComponentCompareRouteParams = {
 };
 
 /**
- *
  * path = /<org>/<scope>/<componentId>/~compare/<selected>
  * variables = to
  */

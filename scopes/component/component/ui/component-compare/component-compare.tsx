@@ -1,4 +1,4 @@
-import { ComponentContext, ComponentID } from '@teambit/component';
+import { ComponentContext, ComponentID, ComponentModel, useComponent } from '@teambit/component';
 import classNames from 'classnames';
 import flatten from 'lodash.flatten';
 import React, { useContext, useState, HTMLAttributes, useCallback, useMemo } from 'react';
@@ -18,9 +18,11 @@ import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { Contributors } from '@teambit/design.ui.contributors';
 import { H2 } from '@teambit/documenter.ui.heading';
+import compact from 'lodash.compact';
+import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { useComponentCompareParams } from './use-component-compare-params';
 
+import { useComponentCompareParams } from './use-component-compare-params';
 import styles from './component-compare.module.scss';
 
 export type ComponentCompareProps = {
@@ -47,14 +49,13 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
   const fromComponentId = component.id;
 
   const [currentVersionInfo, lastVersionInfo] = useMemo(() => {
-    const [currentLog, lastLog] = component?.logs?.reverse() || [];
-    return [currentLog, lastLog];
-  }, component.logs);
+    return component.logs?.slice().reverse() || [] || [];
+  }, [component.logs]);
 
   const toComponentId =
     (toVersion && component.id.changeVersion(toVersion)) ||
-    (lastVersionInfo && component.id.changeVersion(lastVersionInfo.hash)) ||
-    fromComponentId;
+    (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
+    undefined;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -62,14 +63,18 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.componentCompareContainer, className)}>
-      <Pane className={styles.left}>
+      <Pane className={classNames(styles.left)}>
         <H2>{component.id.fullName}</H2>
         <div className={styles.componentCompareVersionSelector}>
           <ComponentCompareVersionInfo versionInfo={currentVersionInfo} />
-          <ComponentCompareVersionInfo versionInfo={lastVersionInfo} />
+          <div className={styles.toVersionContainer}>
+            <ComponentCompareVersion component={component} selected={toComponentId.version} />
+          </div>
         </div>
         <div className={styles.componentCompareViewerContainer}></div>
-        {showCodeCompare && <CodeCompareView to={toComponentId} fileName={currentFile} from={fromComponentId} />}
+        {/* {showCodeCompare && toComponentId && (
+          <CodeCompareView to={toComponentId} fileName={currentFile} from={fromComponentId} />
+        )} */}
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
@@ -93,13 +98,58 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
   );
 }
 
+export type ComponentCompareVersionProps = {
+  selected?: string;
+  component: ComponentModel;
+} & HTMLAttributes<HTMLDivElement>;
+
+export function ComponentCompareVersion({ component, selected }: ComponentCompareVersionProps) {
+  const toSnaps = useMemo(() => {
+    const logs = component?.logs;
+    return (logs || [])
+      .filter((log) => !log.tag)
+      .map((snap) => ({ ...snap, version: snap.hash }))
+      .reverse();
+  }, [component?.logs]);
+
+  const toTags = useMemo(() => {
+    const tagLookup = new Map<string, LegacyComponentLog>();
+    const logs = component?.logs;
+
+    (logs || [])
+      .filter((log) => log.tag)
+      .forEach((tag) => {
+        tagLookup.set(tag?.tag as string, tag);
+      });
+    return compact(
+      component?.tags
+        ?.toArray()
+        .reverse()
+        .map((tag) => tagLookup.get(tag.version.version))
+    ).map((tag) => ({ ...tag, version: tag.tag as string }));
+  }, [component?.logs]);
+
+  return (
+    <div className={styles.toVersionContainer}>
+      <VersionDropdown
+        snaps={toSnaps}
+        tags={toTags}
+        currentVersion={selected}
+        overrideVersionHref={(version) => `&?to=${version}`}
+      />
+    </div>
+  );
+}
+
 export type ComponentCompareVersionInfoProps = {
-  versionInfo: LegacyComponentLog;
+  versionInfo?: LegacyComponentLog;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareVersionInfo({ className, versionInfo }: ComponentCompareVersionInfoProps) {
-  const { date, message, username, email, tag, hash } = versionInfo;
+  const { date, message, username, email, tag, hash } = versionInfo || {};
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+  if (!versionInfo) return null;
+
   const commitMessage =
     !message || message === '' ? (
       <div className={styles.emptyMessage}>No commit message</div>
@@ -198,6 +248,7 @@ export function ComponentCompareTree({
     </div>
   );
 }
+
 // return (
 //   <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
 //     <TreeNodeContext.Provider value={TreeNode}>

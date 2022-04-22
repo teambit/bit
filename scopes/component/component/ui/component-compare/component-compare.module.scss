@@ -1,0 +1,16 @@
+.componentCompareContainer {
+  width: 100%;
+}
+.componentCompareVersionSelector {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+}
+.componentCompareViewerContainer {
+  display: flex;
+  overflow-y: auto;
+  height: 100%;
+  width: 85%;
+}
+.componentCompareTreeContainer {
+}

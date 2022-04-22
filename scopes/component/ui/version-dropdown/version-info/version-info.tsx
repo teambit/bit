@@ -11,9 +11,18 @@ import styles from './version-info.module.scss';
 export type VersionInfoProps = DropdownComponentVersion & {
   currentVersion?: string;
   latestVersion?: string;
+  overrideVersionHref?: (version: string) => string;
 };
 
-export function VersionInfo({ version, currentVersion, latestVersion, date, username, email }: VersionInfoProps) {
+export function VersionInfo({
+  version,
+  currentVersion,
+  latestVersion,
+  date,
+  username,
+  email,
+  overrideVersionHref,
+}: VersionInfoProps) {
   const isCurrent = version === currentVersion;
   const author = useMemo(() => {
     return {
@@ -30,9 +39,10 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
     }
   }, [isCurrent]);
 
+  const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
   return (
     <div ref={currentVersionRef}>
-      <MenuLinkItem isActive={() => isCurrent} href={`?version=${version}`} className={styles.versionRow}>
+      <MenuLinkItem isActive={() => isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={styles.versionName}>{version}</Ellipsis>
