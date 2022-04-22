@@ -51,6 +51,7 @@ import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
+import { ScopeCmd } from './scope-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -1019,6 +1020,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
+    cli.register(new ScopeCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
