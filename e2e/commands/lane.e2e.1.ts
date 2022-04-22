@@ -860,6 +860,43 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('importing a (non-lane) component from another scope when checked out to a lane', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
+      helper.command.addComponent('bar1');
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
+      helper.command.addComponent('bar2');
+      helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.compile();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+
+      helper.command.switchRemoteLane('dev');
+      helper.command.importComponent('bar1');
+    });
+    it('should import the component into the current lane', () => {
+      const list = helper.command.listLocalScopeParsed();
+      const ids = list.map((c) => c.id);
+      expect(ids).to.include(`${helper.scopes.remote}/bar1`);
+    });
+  });
   describe('branching out when a component is checked out to an older version', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
