@@ -2,7 +2,7 @@ import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import { Logger } from '@teambit/logger';
 import { ReactEnv } from '@teambit/react';
-import { Application, DeployFn } from '@teambit/application';
+import { Application, DeployFn, AppBuildContext } from '@teambit/application';
 import { NodeEnv } from './node.env';
 import { DeployContext } from './node-app-options';
 
@@ -30,10 +30,11 @@ export class NodeApp implements Application {
     });
   }
 
-  async build(): Promise<DeployContext> {
+  async build(context: AppBuildContext): Promise<DeployContext> {
     const { base } = parse(this.entry);
     const { distDir } = this.nodeEnv.getCompiler();
-    const entry = join(distDir, base);
-    return { entry };
+    const mainFile = join(distDir, base);
+    const _context = Object.assign(context, { mainFile });
+    return _context;
   }
 }

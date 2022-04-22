@@ -486,6 +486,22 @@ describe('bit lane command', function () {
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
+      describe('exporting the components to the remote', () => {
+        let exportOutput: string;
+        before(() => {
+          exportOutput = helper.command.export();
+        });
+        it('should indicate that the components were exported successfully', () => {
+          expect(exportOutput).to.not.have.string('nothing to export');
+        });
+        it('the remote should have the updated component objects', () => {
+          const comp1Id = `${helper.scopes.remote}/comp1`;
+          const comp1 = helper.command.catComponent(comp1Id);
+          const remoteComp1 = helper.command.catComponent(comp1Id, helper.scopes.remotePath);
+          expect(remoteComp1).to.have.property('head');
+          expect(remoteComp1.head).to.equal(comp1.head);
+        });
+      });
     });
     describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
       let mergeOutput;
@@ -844,6 +860,43 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('importing a (non-lane) component from another scope when checked out to a lane', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
+      helper.command.addComponent('bar1');
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
+      helper.command.addComponent('bar2');
+      helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.compile();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+
+      helper.command.switchRemoteLane('dev');
+      helper.command.importComponent('bar1');
+    });
+    it('should import the component into the current lane', () => {
+      const list = helper.command.listLocalScopeParsed();
+      const ids = list.map((c) => c.id);
+      expect(ids).to.include(`${helper.scopes.remote}/bar1`);
+    });
+  });
   describe('branching out when a component is checked out to an older version', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -950,7 +1003,7 @@ describe('bit lane command', function () {
         helper.bitJsonc.setupDefault();
         helper.command.createLane();
         helper.fixtures.populateComponents();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
       });
       it('as an intermediate step, make sure the lane is on the remote', () => {
@@ -973,6 +1026,10 @@ describe('bit lane command', function () {
           const lanes = helper.command.showRemoteLanesParsed();
           expect(lanes.lanes).to.have.lengthOf(0);
         });
+        it('the remote should not have the components anymore as they dont belong to any lane', () => {
+          const remoteComps = helper.command.catScope(undefined, helper.scopes.remotePath);
+          expect(remoteComps).to.have.lengthOf(0);
+        });
         describe('removing again after the lane was removed', () => {
           let removeOutput;
           before(() => {
@@ -982,7 +1039,7 @@ describe('bit lane command', function () {
           });
           it('should indicate that the lane was not found', () => {
             // this is to make sure it doesn't show an error about indexJson having the component but missing from the scope
-            expect(removeOutput).to.have.string('lane dev was not found in scope');
+            expect(removeOutput).to.have.string('lane "dev" was not found in scope');
           });
         });
       });
@@ -1439,6 +1496,10 @@ describe('bit lane command', function () {
         const lane = helper.command.catLane('dev');
         const bar2 = lane.components.find((c) => c.id.name === 'bar2');
         expect(bar2.id.scope).to.equal(anotherRemote);
+      });
+      it('should symlink in the object to the correct scope', () => {
+        const obj = helper.command.catObject('033c4846b506a4a48e32cdf54515c91d3499adb3', true);
+        expect(obj.realScope).to.equal(anotherRemote);
       });
       describe('importing the lane', () => {
         before(() => {
