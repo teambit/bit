@@ -129,7 +129,7 @@ ${WILDCARD_HELP('tag')}`;
     if (disableTagPipeline) {
       this.logger.consoleWarning(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`);
     }
-    if (!message) {
+    if (!message && !persist) {
       this.logger.consoleWarning(
         `--message will be mandatory in the next few releases. make sure to add a message with your tag`
       );
