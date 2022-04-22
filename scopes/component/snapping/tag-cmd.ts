@@ -8,6 +8,8 @@ import {
 } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
+import { BitError } from '@teambit/bit-error';
+import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class TagCmd implements Command {
@@ -67,7 +69,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(docsDomain: string, private snapping: SnappingMain) {
+  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
     this.description = `record component changes and lock versions.
 if no ids are provided, it will tag all new and modified components.
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
@@ -119,38 +121,37 @@ ${WILDCARD_HELP('tag')}`;
     } & Partial<BasicTagParams>
   ): Promise<string> {
     if (typeof ignoreUnresolvedDependencies === 'boolean') {
-      throw new Error(`--ignore-unresolved-dependencies has been removed, please use --ignore-issues instead`);
+      throw new BitError(`--ignore-unresolved-dependencies has been removed, please use --ignore-issues instead`);
     }
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
-      throw new Error(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
+      throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
     if (disableTagPipeline) {
-      // eslint-disable-next-line no-console
-      console.warn(chalk.yellow(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`));
+      this.logger.consoleWarning(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`);
+    }
+    if (!message) {
+      this.logger.consoleWarning(
+        `--message will be mandatory in the next few releases. make sure to add a message with your tag`
+      );
     }
     if (all) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(
-          `--all is deprecated, please omit it. "bit tag" by default will tag all new and modified components. to specify a version, use --ver flag`
-        )
+      this.logger.consoleWarning(
+        `--all is deprecated, please omit it. "bit tag" by default will tag all new and modified components. to specify a version, use --ver flag`
       );
       if (typeof all === 'string') {
         ver = all;
       }
     }
     if (scope) {
-      // eslint-disable-next-line no-console
-      console.warn(chalk.yellow(`--scope is deprecated, use --unmodified instead`));
+      this.logger.consoleWarning(`--scope is deprecated, use --unmodified instead`);
       unmodified = true;
       if (typeof scope === 'string') {
         ver = scope;
       }
     }
     if (force) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(`--force is deprecated, use either --skip-tests or --unmodified depending on the use case`)
+      this.logger.consoleWarning(
+        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
       );
       if (id.length) unmodified = true;
     }
