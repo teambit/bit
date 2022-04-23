@@ -40,15 +40,15 @@ export class RefactoringMain {
    * rename multiple packages dependencies.
    * this method changes the source code of the component, but doesn't write to the filesystem.
    */
-  async renameMultiplePackages(
+  async replaceMultipleStrings(
     components: Component[],
-    oldAndNewPackageNames: MultipleStringsReplacement
+    stringsToReplace: MultipleStringsReplacement
   ): Promise<{
     changedComponents: Component[];
   }> {
     const changedComponents = await Promise.all(
       components.map(async (comp) => {
-        const hasChanged = await this.replaceMultipleStrings(comp, oldAndNewPackageNames);
+        const hasChanged = await this.replaceMultipleStringsInOneComp(comp, stringsToReplace);
         return hasChanged ? comp : null;
       })
     );
@@ -107,7 +107,7 @@ export class RefactoringMain {
     return changed.some((c) => c);
   }
 
-  private async replaceMultipleStrings(
+  private async replaceMultipleStringsInOneComp(
     comp: Component,
     stringsToReplace: MultipleStringsReplacement
   ): Promise<boolean> {
@@ -119,7 +119,7 @@ export class RefactoringMain {
         let newContent = strContent;
         stringsToReplace.forEach(({ oldStr, newStr }) => {
           const oldStringRegex = new RegExp(oldStr, 'g');
-          newContent = strContent.replace(oldStringRegex, newStr);
+          newContent = newContent.replace(oldStringRegex, newStr);
         });
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
