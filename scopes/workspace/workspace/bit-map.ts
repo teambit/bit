@@ -67,6 +67,20 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
   }
 
+  removeDefaultScope(id: ComponentID) {
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    if (bitMapEntry.defaultScope) {
+      delete bitMapEntry.defaultScope;
+      this.legacyBitMap.markAsChanged();
+    }
+  }
+
+  setDefaultScope(id: ComponentID, defaultScope: string) {
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    bitMapEntry.defaultScope = defaultScope;
+    this.legacyBitMap.markAsChanged();
+  }
+
   /**
    * write .bitmap object to the filesystem
    */

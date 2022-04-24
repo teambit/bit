@@ -107,7 +107,10 @@ export class Logger implements IBitLogger {
    * print to the screen with a red `⚠` prefix. if message is empty, print the last logged message.
    */
   consoleWarning(message?: string) {
-    if (message) this.warn(message);
+    if (message) {
+      this.warn(message);
+      message = chalk.yellow(message);
+    }
     loader.warn(message);
   }
 
