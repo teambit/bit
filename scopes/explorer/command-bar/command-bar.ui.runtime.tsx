@@ -1,4 +1,4 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState } from 'react';
 import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -104,7 +104,7 @@ export class CommandBarUI {
   private search = (term: string, limit: number = RESULT_LIMIT) => {
     const searchers = flatten(this.searcherSlot.values());
 
-    const searcher = searchers.find((x) => x.test(term));
+    const searcher = searchers.find((x) => x && x.test(term));
     return searcher?.search(term, limit) || [];
   };
 
