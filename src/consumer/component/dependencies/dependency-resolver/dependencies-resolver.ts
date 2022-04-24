@@ -246,9 +246,17 @@ export default class DependencyResolver {
     if (!this.consumer.isLegacy) {
       this.applyWorkspacePolicy();
       await this.applyAutoDetectedPeersFromEnvOnComponent();
-      await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     }
     this.manuallyAddDependencies();
+    if (!this.consumer.isLegacy) {
+      // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
+      // which will make this not work if it come before
+      // example:
+      // custom react has peers with react 16.4.0.
+      // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
+      // we want to make sure that the custom react is using 16.4.0 not 17.
+      await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
+    }
     this.applyOverridesOnEnvPackages();
     this.coreAspects = R.uniq(this.coreAspects);
   }
