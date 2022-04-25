@@ -618,6 +618,7 @@
       "defaultScope": "teambit.code"
     },
     "scopes/mdx/readme": {
+      "teambit.envs/env": {},
       "teambit.envs/envs": {
         "env": "teambit.envs/env"
       }
