@@ -49,6 +49,11 @@ export interface Environment {
    * Returns a schema generator instance
    */
   getSchemaExtractor?: (config?: any) => SchemaExtractor;
+
+  /**
+   * Returns the dev patterns to match doc file
+   */
+  getDocsDevPatterns?: (component: Component) => string[];
 }
 
 export interface DependenciesEnv extends Environment {

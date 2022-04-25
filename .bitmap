@@ -844,6 +844,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
+    "readme": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/readme"
+    },
     "refactoring": {
         "scope": "teambit.component",
         "version": "0.0.13",

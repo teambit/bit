@@ -34,12 +34,23 @@ export default class ComponentFS extends MemoryFS {
    * filter all files using an array of glob patterns.
    */
   byGlob(patterns: string[]) {
-    return this.files.filter((file) => {
-      return patterns.find((pattern) => {
+    const excludePatterns = patterns.filter((pattern) => pattern.startsWith('!'));
+    const includePatterns = patterns.filter((pattern) => !pattern.startsWith('!'));
+
+    const files = this.files.filter((file) => {
+      const included = includePatterns.some((pattern) => {
         const match = minimatch(file.relative, pattern);
         return match;
       });
+      const excluded = excludePatterns.every((pattern) => {
+        const match = minimatch(file.relative, pattern);
+        return match;
+      });
+
+      return included && excluded;
     });
+
+    return files;
   }
 
   toObject() {

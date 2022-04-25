@@ -25,6 +25,7 @@ export type ListScopeResult = {
   currentlyUsedVersion?: string | null | undefined;
   remoteVersion?: string;
   deprecated?: boolean;
+  laneReadmeOf?: string[];
 };
 
 export type DivergedComponent = { id: BitId; diverge: DivergeData };
@@ -441,10 +442,13 @@ export default class ComponentsList {
     const listAllResults: ListScopeResult[] = await Promise.all(
       idsSorted.map(async (id: BitId) => {
         const component = modelComponents.find((c) => c.toBitId().isEqualWithoutVersion(id));
+        const laneReadmeOf = await component?.isLaneReadmeOf(this.scope.objects);
+
         const deprecated = await component?.isDeprecated(this.scope.objects);
         return {
           id: component ? component.toBitIdWithLatestVersion() : id,
           deprecated,
+          laneReadmeOf,
         };
       })
     );
@@ -490,10 +494,13 @@ export default class ComponentsList {
       : components;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     return Promise.all(
-      componentsSorted.map(async (component: ModelComponent) => ({
-        id: component.toBitIdWithLatestVersion(),
-        deprecated: await component.isDeprecated(scope.objects),
-      }))
+      componentsSorted.map(async (component: ModelComponent) => {
+        return {
+          id: component.toBitIdWithLatestVersion(),
+          deprecated: await component.isDeprecated(scope.objects),
+          laneReadmeOf: await component?.isLaneReadmeOf(scope.objects),
+        };
+      })
     );
   }
 
