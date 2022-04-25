@@ -288,7 +288,7 @@ export class LaneMergeCmd implements Command {
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,
-      skipDeletingReadme,
+      keepReadme,
     });
 
     const mergeResult = `${mergeReport(mergeResults)}`;
