@@ -2,6 +2,7 @@ import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathToRegexp } from 'path-to-regexp';
+import { AspectDataEntry, ComponentDescriptor } from '@teambit/component-descriptor';
 /**
  * GQL (lanes/getLanes/components)
  * Return type of each Component in a Lane
@@ -20,8 +21,8 @@ export type LaneQueryResult = {
   id: string;
   remote?: string;
   isMerged: boolean;
-  components: ComponentModelProps[];
-  readmeComponent?: ComponentModelProps;
+  components: (ComponentModelProps & { aspects: AspectDataEntry[] })[];
+  readmeComponent?: ComponentModelProps & { aspects: AspectDataEntry[] };
 };
 /**
  * GQL
@@ -50,8 +51,8 @@ export type LaneModel = {
   scope: string;
   name: string;
   isMerged: boolean | null;
-  components: ComponentModel[];
-  readmeComponent?: ComponentModel;
+  components: { model: ComponentModel; descriptor: ComponentDescriptor }[];
+  readmeComponent?: { model: ComponentModel; descriptor: ComponentDescriptor };
 };
 /**
  * Props to instantiate a LanesModel
@@ -109,10 +110,22 @@ export class LanesModel {
     const componentModels =
       components?.map((component) => {
         const componentModel = ComponentModel.from({ ...component, host });
-        return componentModel;
+        const aspectList = {
+          entries: component?.aspects,
+        };
+
+        const componentDescriptor = ComponentDescriptor.fromObject({ id: componentModel.id.toString(), aspectList });
+        return { model: componentModel, descriptor: componentDescriptor };
       }) || [];
 
     const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
+    const readmeAspectList = {
+      entries: readmeComponent?.aspects,
+    };
+
+    const readmeComponentDescriptor =
+      readmeComponent &&
+      ComponentDescriptor.fromObject({ id: readmeComponent.id.toString(), aspectList: readmeAspectList });
 
     return {
       id: laneId,
@@ -120,7 +133,10 @@ export class LanesModel {
       scope: laneScope,
       isMerged,
       components: componentModels,
-      readmeComponent: readmeComponentModel,
+      readmeComponent:
+        readmeComponentModel && readmeComponentDescriptor
+          ? { model: readmeComponentModel, descriptor: readmeComponentDescriptor }
+          : undefined,
     };
   }
 
@@ -139,16 +155,19 @@ export class LanesModel {
   }
 
   static groupByComponentHashAndId(lanes: LaneModel[]): {
-    byHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
+    byHash: Map<string, { lane: LaneModel; component: { model: ComponentModel; descriptor: ComponentDescriptor } }>;
     byId: Map<string, LaneModel[]>;
   } {
-    const byHash = new Map<string, { lane: LaneModel; component: ComponentModel }>();
+    const byHash = new Map<
+      string,
+      { lane: LaneModel; component: { model: ComponentModel; descriptor: ComponentDescriptor } }
+    >();
     const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        const id = component.id.fullName;
-        const version = component.id.version as string;
+        const id = component.model.id.fullName;
+        const version = component.model.id.version as string;
         byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
@@ -189,7 +208,10 @@ export class LanesModel {
   }
 
   readonly lanesByScope: Map<string, LaneModel[]>;
-  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
+  readonly lanebyComponentHash: Map<
+    string,
+    { lane: LaneModel; component: { model: ComponentModel; descriptor: ComponentDescriptor } }
+  >;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
@@ -197,13 +219,13 @@ export class LanesModel {
   readonly lanes: LaneModel[];
 
   isInViewedLane = (componentId: ComponentID) =>
-    this.viewedLane?.components.some((comp) => comp.id.name === componentId.name);
+    this.viewedLane?.components.some((comp) => comp.model.id.name === componentId.name);
 
   getLaneComponentUrlByVersion = (version?: string) => {
     if (!version) return '';
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return '';
-    return LanesModel.getLaneComponentUrl(componentAndLane.component.id, componentAndLane.lane.id);
+    return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);

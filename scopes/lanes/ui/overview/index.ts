@@ -1,4 +1,4 @@
-export { LanesOverviewProps, LanesOverview, LaneOverviewLine, LaneOverviewLineSlot } from './lanes-overview';
+export { LaneOverviewProps, LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from './lane-overview';
 export { LaneDetails, LaneDetailsProps } from './lane-details';
 export { LaneBreadcrumb, LaneBreadcrumbProps } from './lane-breadcrumb';
-export { LanesOverviewMenu, LanesOverviewMenuProps, LanesOrderedNavigationSlot } from './menu';
+export { LanesOverviewMenu, LanesOverviewMenuProps, LanesOrderedNavigationSlot, LanesNavPlugin } from './menu';

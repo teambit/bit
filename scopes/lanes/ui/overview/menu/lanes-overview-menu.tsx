@@ -2,17 +2,19 @@ import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { SlotRegistry } from '@teambit/harmony';
 import classnames from 'classnames';
 import React from 'react';
+import flatten from 'lodash.flatten';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import { Menu, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
 
-export type NavPlugin = {
+export type LanesNavPlugin = {
   props: NavLinkProps;
   order?: number;
+  hide?: () => boolean;
 };
-export type LanesOrderedNavigationSlot = SlotRegistry<NavPlugin>;
+export type LanesOrderedNavigationSlot = SlotRegistry<LanesNavPlugin[]>;
 
 export type LanesOverviewMenuProps = {
   className?: string;
@@ -50,20 +52,26 @@ export function LanesOverviewMenu({ navigationSlot, widgetSlot, className }: Lan
     </div>
   );
 }
-
 function MenuNav({ navigationSlot }: { navigationSlot: LanesOrderedNavigationSlot }) {
-  const plugins = navigationSlot.toArray().sort(sortFn);
+  const plugins = flatten(
+    navigationSlot.toArray().map(([id, values]) => {
+      const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
+      return flattenedValues;
+    })
+  ).sort(sortFn);
 
   return (
     <nav className={styles.navigation}>
-      {plugins.map(([id, menuItem]) => (
-        <TopBarNav key={id} {...menuItem.props} />
-      ))}
+      {plugins.map((menuItem, index) => {
+        const hidden = menuItem.hide?.();
+        if (hidden) return null;
+        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
+      })}
     </nav>
   );
 }
 
-function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]: [string, NavPlugin]) {
+function sortFn({ order: first }: LanesNavPlugin, { order: second }: LanesNavPlugin) {
   // 0  - equal
   // <0 - first < second
   // >0 - first > second

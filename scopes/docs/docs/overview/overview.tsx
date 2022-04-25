@@ -16,7 +16,7 @@ const ENV_ASPECT_NAME = 'teambit.envs/envs';
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
-  titleBadges: TitleBadgeSlot;
+  titleBadges?: TitleBadgeSlot;
 };
 
 export function Overview({ titleBadges }: OverviewProps) {
@@ -45,7 +45,7 @@ export function Overview({ titleBadges }: OverviewProps) {
     );
 
   if (showHeaderOutsideIframe) {
-    const badges = flatten(titleBadges.values());
+    const badges = flatten(titleBadges?.values());
 
     return (
       <div className={styles.overviewWrapper}>

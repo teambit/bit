@@ -7,16 +7,16 @@ import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
 import { EmptyLane } from './empty-lane-overview';
 
-import styles from './lanes-overview.module.scss';
+import styles from './lane-overview.module.scss';
 
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
-export type LanesOverviewProps = {
+export type LaneOverviewProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
 };
-export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
+export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
