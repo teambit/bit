@@ -242,7 +242,7 @@ export class LaneMergeCmd implements Command {
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
-    ['', 'skip-deleting-readme', 'skip deleting the lane readme component after merging'],
+    ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -262,7 +262,7 @@ export class LaneMergeCmd implements Command {
       existing: existingOnWorkspaceOnly = false,
       noSnap = false,
       message: snapMessage = '',
-      skipDeletingReadme = false,
+      keepReadme = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -272,7 +272,7 @@ export class LaneMergeCmd implements Command {
       build?: boolean;
       noSnap: boolean;
       message: string;
-      skipDeletingReadme?: boolean;
+      keepReadme?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
