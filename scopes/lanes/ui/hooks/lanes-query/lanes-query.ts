@@ -13,6 +13,13 @@ const GET_LANES = gql`
         id
         remote
         isMerged
+        readmeComponent {
+          id {
+            name
+            scope
+            version
+          }
+        }
         components {
           id {
             name
@@ -40,6 +47,9 @@ const GET_LANE_COMPONENTS = gql`
         remote
         isMerged
         components {
+          ...componentOverviewFields
+        }
+        readmeComponent {
           ...componentOverviewFields
         }
       }

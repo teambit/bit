@@ -21,6 +21,7 @@ export type LaneQueryResult = {
   remote?: string;
   isMerged: boolean;
   components: ComponentModelProps[];
+  readmeComponent?: ComponentModelProps;
 };
 /**
  * GQL
@@ -50,6 +51,7 @@ export type LaneModel = {
   name: string;
   isMerged: boolean | null;
   components: ComponentModel[];
+  readmeComponent?: ComponentModel;
 };
 /**
  * Props to instantiate a LanesModel
@@ -99,7 +101,7 @@ export class LanesModel {
     }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, isMerged, components } = laneData;
+    const { id: name, remote, isMerged, components, readmeComponent } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
@@ -110,12 +112,15 @@ export class LanesModel {
         return componentModel;
       }) || [];
 
+    const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
+
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
       components: componentModels,
+      readmeComponent: readmeComponentModel,
     };
   }
 
