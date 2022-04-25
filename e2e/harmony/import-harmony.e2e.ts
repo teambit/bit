@@ -109,6 +109,19 @@ describe('import functionality on Harmony', function () {
           expect(workspaceConf.dependencies).to.be.empty;
         });
       });
+      describe('importing a component, modify it and then importing its dependent', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp2');
+          helper.fs.appendFile(`${scopeWithoutOwner}/comp2/index.ts`);
+          output = helper.command.importComponent('comp1');
+        });
+        it('should not throw an error asking to use --override flag', () => {
+          expect(output).to.have.string('successfully imported');
+        });
+      });
     });
   });
   describe('tag, export, clean scope objects, tag and export', () => {

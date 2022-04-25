@@ -11,7 +11,7 @@ import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, 
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
-import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
+import { NewerVersionFound } from '../../consumer/exceptions';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -24,6 +24,7 @@ import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
+import { ModelComponent } from '../models';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
@@ -75,7 +76,8 @@ async function setFutureVersions(
   autoTagIds: BitIds,
   ids: BitIds,
   incrementBy?: number,
-  preRelease?: string
+  preRelease?: string,
+  soft?: boolean
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -94,19 +96,29 @@ async function setFutureVersions(
       } else if (isAutoTag) {
         componentToTag.version = modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease); // auto-tag always bumped as patch
       } else {
-        const enteredId = ids.searchWithoutVersion(componentToTag.id);
-        if (enteredId && enteredId.hasVersion()) {
-          const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
-          componentToTag.version = modelComponent.getVersionToAdd(
-            exactVersionOrReleaseType.releaseType,
-            exactVersionOrReleaseType.exactVersion
-          );
-        } else {
-          componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
-        }
+        const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
+        componentToTag.version = soft
+          ? versionByEnteredId || exactVersion || releaseType
+          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
       }
     })
   );
+}
+
+function getVersionByEnteredId(
+  enteredIds: BitIds,
+  component: Component,
+  modelComponent: ModelComponent
+): string | undefined {
+  const enteredId = enteredIds.searchWithoutVersion(component.id);
+  if (enteredId && enteredId.hasVersion()) {
+    const exactVersionOrReleaseType = getValidVersionOrReleaseType(enteredId.version as string);
+    return modelComponent.getVersionToAdd(
+      exactVersionOrReleaseType.releaseType,
+      exactVersionOrReleaseType.exactVersion
+    );
+  }
+  return undefined;
 }
 
 /**
@@ -185,11 +197,9 @@ export default async function tagModelComponent({
   exactVersion,
   releaseType,
   preRelease,
-  force,
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
-  verbose = false,
   skipAutoTag,
   soft,
   build,
@@ -199,6 +209,7 @@ export default async function tagModelComponent({
   disableTagAndSnapPipelines,
   forceDeploy,
   incrementBy,
+  packageManagerConfigRootDir,
 }: {
   consumerComponents: Component[];
   ids: BitIds;
@@ -209,6 +220,7 @@ export default async function tagModelComponent({
   consumer: Consumer;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
+  packageManagerConfigRootDir?: string;
 } & BasicTagParams): Promise<{
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
@@ -267,7 +279,7 @@ export default async function tagModelComponent({
   let testsResults = [];
   if (consumer.isLegacy) {
     logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
-    await scope.buildMultiple(allComponentsToTag, consumer, false, verbose);
+    await scope.buildMultiple(allComponentsToTag, consumer, false, false);
 
     logger.debug('scope.putMany: sequentially test all components');
 
@@ -275,20 +287,11 @@ export default async function tagModelComponent({
       const testsResultsP = scope.testMultiple({
         components: allComponentsToTag,
         consumer,
-        verbose,
-        rejectOnFailure: !force,
+        verbose: false,
+        rejectOnFailure: true,
       });
-      try {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        testsResults = await testsResultsP;
-      } catch (err: any) {
-        // if force is true, ignore the tests and continue
-        if (!force) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (!verbose) throw new ComponentSpecsFailed();
-          throw err;
-        }
-      }
+      // @ts-ignore
+      testsResults = await testsResultsP;
     }
   }
 
@@ -305,7 +308,8 @@ export default async function tagModelComponent({
         autoTagIds,
         ids,
         incrementBy,
-        preRelease
+        preRelease,
+        soft
       );
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
@@ -314,7 +318,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType, preRelease);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, preRelease);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
@@ -328,8 +332,9 @@ export default async function tagModelComponent({
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
+    const isolateOptions = { packageManagerConfigRootDir };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
-      func(allComponentsToTag, onTagOpts)
+      func(allComponentsToTag, onTagOpts, isolateOptions)
     );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));

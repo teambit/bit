@@ -244,7 +244,7 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
         helper.command.tagAllComponents();
-        helper.command.tagScope('0.0.5');
+        helper.command.tagIncludeUnmodified('0.0.5');
 
         // as an intermediate step, make sure all components are staged
         const status = helper.command.statusJson();
@@ -283,7 +283,7 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
         helper.command.tagAllComponents();
-        helper.command.tagScope('0.0.5');
+        helper.command.tagIncludeUnmodified('0.0.5');
 
         // as an intermediate step, make sure all components are staged
         const status = helper.command.statusJson();

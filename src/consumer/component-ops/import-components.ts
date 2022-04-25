@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { BitError } from '@teambit/bit-error';
 import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
@@ -102,7 +103,7 @@ export default class ImportComponents {
 
   async importSpecificComponents(): Promise<ImportResult> {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
-    const bitIds: BitIds = await this._getBitIds();
+    const bitIds: BitIds = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = this.consumer.isLegacy
@@ -171,38 +172,75 @@ export default class ImportComponents {
     });
   }
 
-  async _getBitIds(): Promise<BitIds> {
-    const bitIds: BitId[] = [];
-    if (this.options.lanes && !this.options.skipLane) {
-      const idsToFilter: BitId[] = [];
-      await Promise.all(
-        this.options.ids.map(async (idStr: string) => {
-          const ids: BitId[] = [];
-          if (hasWildcard(idStr)) {
-            const remoteIdsByWildcard = await getRemoteBitIdsByWildcards(idStr);
-            ids.push(...remoteIdsByWildcard);
-          } else {
-            ids.push(BitId.parse(idStr, true));
-          }
-          if (ids.some((id) => id.scope === this.options.lanes?.laneIds[0].scope)) {
-            idsToFilter.push(...ids);
-          }
-        })
-      );
-      await this.populateBitIdsFromLanes(bitIds, idsToFilter);
-    } else {
-      await Promise.all(
-        this.options.ids.map(async (idStr: string) => {
-          if (hasWildcard(idStr)) {
-            const ids = await getRemoteBitIdsByWildcards(idStr);
-            loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
-            bitIds.push(...ids);
-          } else {
-            bitIds.push(BitId.parse(idStr, true)); // we don't support importing without a scope name
-          }
-        })
-      );
+  /**
+   * consider the following use cases:
+   * 1) no ids were provided. it should import all the lanes components objects.
+   * 2) ids are provided with wildcards. we assume the user wants only the ids that are available on the lane.
+   * because a user may entered "bit import scope/*" and this scope has many component on the lane and many not on the lane.
+   * we want to bring only the components on the lane.
+   * 3) ids are provided without wildcards. here, the user knows exactly what's needed and it's ok to get the ids from
+   * main if not found on the lane.
+   */
+  private async getBitIdsForLanes(): Promise<BitId[]> {
+    if (!this.options.lanes) {
+      throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
+    this.laneObjects = this.options.lanes.lanes as Lane[];
+    const bitIdsFromLane = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
+
+    if (!this.options.ids.length) {
+      return bitIdsFromLane;
+    }
+
+    const idsWithWildcard = this.options.ids.filter((id) => hasWildcard(id));
+    const idsWithoutWildcard = this.options.ids.filter((id) => !hasWildcard(id));
+    const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
+      const id = BitId.parse(idStr, true);
+      const fromLane = bitIdsFromLane.searchWithoutVersion(id);
+      return fromLane || id;
+    });
+
+    const bitIds: BitId[] = [...idsWithoutWildcardPreferFromLane];
+
+    if (!idsWithWildcard) {
+      return bitIds;
+    }
+
+    await pMapSeries(idsWithWildcard, async (idStr: string) => {
+      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr);
+      const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
+      if (!existingOnLanes.length) {
+        throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
+however, none of them existing on the lane "${this.laneObjects.map((l) => l.name).join(', ')}"
+in case you intend to import these components from main, please run the following:
+bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`);
+      }
+      bitIds.push(...existingOnLanes);
+    });
+
+    return bitIds;
+  }
+
+  private async getBitIdsForNonLanes() {
+    const bitIds: BitId[] = [];
+    await Promise.all(
+      this.options.ids.map(async (idStr: string) => {
+        if (hasWildcard(idStr)) {
+          const ids = await getRemoteBitIdsByWildcards(idStr);
+          loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          bitIds.push(...ids);
+        } else {
+          bitIds.push(BitId.parse(idStr, true)); // we don't support importing without a scope name
+        }
+      })
+    );
+
+    return bitIds;
+  }
+
+  private async getBitIds(): Promise<BitIds> {
+    const bitIds: BitId[] =
+      this.options.lanes && !this.options.skipLane ? await this.getBitIdsForLanes() : await this.getBitIdsForNonLanes();
     if (this.options.importDependenciesDirectly || this.options.importDependents) {
       const graphs = await this._getComponentsGraphs(bitIds);
       if (this.options.importDependenciesDirectly) {
@@ -215,18 +253,6 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
-  }
-
-  private async populateBitIdsFromLanes(bitIds: BitId[], idsToFilter: BitId[]) {
-    if (!this.options.lanes) return;
-
-    this.laneObjects = this.options.lanes.lanes as Lane[];
-    const bitIdsFromLane = this.laneObjects.flatMap((lane) => lane.toBitIds());
-    const filteredIds =
-      idsToFilter.length > 0
-        ? bitIdsFromLane.filter((bitId) => idsToFilter.find((idToFilter) => idToFilter.isEqualWithoutVersion(bitId)))
-        : bitIdsFromLane;
-    bitIds.push(...filteredIds);
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
@@ -436,6 +462,11 @@ export default class ImportComponents {
   }
 
   async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
+    if (!this.consumer.isLegacy) {
+      // only legacy has the concept of writing the dependencies as components.
+      // currently, they're installed as packages.
+      return;
+    }
     const allDependenciesIds = R.flatten(
       componentsAndDependencies.map((componentAndDependencies) =>
         componentAndDependencies.component.dependencies.getAllIds()

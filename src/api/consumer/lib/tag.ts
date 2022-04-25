@@ -17,10 +17,8 @@ export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
 export type BasicTagParams = {
   message: string;
-  force: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
-  verbose: boolean;
   skipAutoTag: boolean;
   build: boolean;
   soft: boolean;
@@ -29,6 +27,7 @@ export type BasicTagParams = {
   forceDeploy: boolean;
   preRelease?: string;
   editor?: string;
+  unmodified?: boolean;
 };
 
 export type TagParams = {

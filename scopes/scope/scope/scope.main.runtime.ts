@@ -11,7 +11,7 @@ import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State 
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Capsule, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { Capsule, IsolatorAspect, IsolatorMain, IsolateComponentsOptions } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -51,13 +51,18 @@ import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
+import { ScopeCmd } from './scope-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
-export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
+export type OnTag = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions?: IsolateComponentsOptions
+) => Promise<OnTagResults>;
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -164,12 +169,13 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
     const legacyOnTagFunc: OnTagFunc = async (
       legacyComponents: ConsumerComponent[],
-      options?: OnTagOpts
+      options: OnTagOpts,
+      isolateOptions?: IsolateComponentsOptions
     ): Promise<LegacyOnTagResult[]> => {
       // Reload the aspects with their new version
       await this.reloadAspectsWithNewVersion(legacyComponents);
       const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options);
+      const { builderDataMap } = await tagFn(components, options, isolateOptions);
       return this.builderDataMapToLegacyOnTagResults(builderDataMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
@@ -306,7 +312,7 @@ export class ScopeMain implements ComponentFactory {
 
     const fns = this.postDeleteSlot.values();
     const metadata = { auth: authData, headers };
-    const componentIds = ids.map((id) => ComponentID.fromString(id));
+    const componentIds = lanes ? [] : ids.map((id) => ComponentID.fromString(id));
     await mapSeries(fns, async (fn) => {
       try {
         await fn({ ids: componentIds }, metadata);
@@ -731,11 +737,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * list all components in the scope.
    */
   async list(
-    filter?: { offset: number; limit: number },
+    filter?: { offset: number; limit: number; namespaces?: string[] },
     includeCache = false,
     includeFromLanes = false
   ): Promise<Component[]> {
-    const componentsIds = await this.listIds(includeCache, includeFromLanes);
+    const patternsWithScope =
+      (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
+    const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
@@ -755,17 +763,23 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * get ids of all scope components.
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
-  async listIds(includeCache = false, includeFromLanes = false): Promise<ComponentID[]> {
+  async listIds(includeCache = false, includeFromLanes = false, patterns?: string[]): Promise<ComponentID[]> {
     const allModelComponents = await this.legacyScope.list();
     const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
       const cacheFilter = includeCache ? true : this.exists(modelComponent);
       const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
+
       return cacheFilter && lanesFilter;
     };
     const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
-    const ids = modelComponentsToList.map((component) =>
+    let ids = modelComponentsToList.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
     );
+    if (patterns && patterns.length > 0) {
+      ids = ids.filter((id) =>
+        patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
+      );
+    }
     this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
     return ids;
   }
@@ -868,13 +882,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    * load components into the scope through a variants pattern.
    */
   async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
-    const ids = await this.listIds(true);
-    const finalPatterns = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
-    const targetIds = ids.filter((id) => {
-      return finalPatterns.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match);
-    });
+    const patternsWithScope = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
 
-    const components = await this.getMany(targetIds);
+    const ids = await this.listIds(true, false, patternsWithScope);
+
+    const components = await this.getMany(ids);
     return components;
   }
 
@@ -921,6 +933,10 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
   async isModified(): Promise<boolean> {
     return false;
+  }
+
+  async write() {
+    // no-op (it's relevant for the workspace only)
   }
 
   /**
@@ -1004,6 +1020,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
+    cli.register(new ScopeCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
