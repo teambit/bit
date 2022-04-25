@@ -712,5 +712,16 @@ export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]
     (grouped[scope] ||= []).push(...laneIdsStr);
   });
 
+  // ids that were not found on any of the lanes, fetch from main.
+  const allIdsFromLanes = Object.keys(grouped)
+    .map((scope) => grouped[scope])
+    .flat();
+  ids.forEach((id) => {
+    const idStr = id.toString();
+    if (!allIdsFromLanes.includes(idStr)) {
+      (grouped[id.scope as string] ||= []).push(idStr);
+    }
+  });
+
   return grouped;
 }

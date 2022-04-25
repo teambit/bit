@@ -1,5 +1,6 @@
 import React, { ComponentType } from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import type { DeprecationInfo } from '@teambit/deprecation';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
@@ -24,6 +25,7 @@ export type ComponentOverviewProps = {
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
   componentDescriptor?: ComponentDescriptor;
+  deprecation?: DeprecationInfo;
 } & SectionProps;
 
 export function ComponentOverview({
@@ -34,6 +36,7 @@ export function ComponentOverview({
   packageName,
   elementsUrl,
   componentDescriptor,
+  deprecation,
   ...rest
 }: ComponentOverviewProps) {
   let finalElementsUrl = elementsUrl;
@@ -51,7 +54,13 @@ export function ComponentOverview({
               // @ts-ignore
               ?.sort((a, b) => a?.weight - b?.weight)
               ?.map((titleBadge, index) => {
-                return <titleBadge.component key={index} componentDescriptor={componentDescriptor} />;
+                return (
+                  <titleBadge.component
+                    key={index}
+                    componentDescriptor={componentDescriptor}
+                    deprecation={deprecation}
+                  />
+                );
               })}
           </div>
         </div>

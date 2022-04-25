@@ -61,9 +61,9 @@ export class LaneListCmd implements Command {
       return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
     const currentLane = this.lanes.getCurrentLane();
-    let currentLaneStr = currentLane ? `current lane - ${chalk.bold(currentLane as string)}` : '';
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
+    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentLane as string)}` : '';
     currentLaneStr += currentLaneReadmeComponentStr;
 
     if (details) {
@@ -80,7 +80,7 @@ export class LaneListCmd implements Command {
       .map((laneData) => {
         const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
         if (details) {
-          const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
           return laneTitle + readmeComponentStr.concat('\n') + components;
         }

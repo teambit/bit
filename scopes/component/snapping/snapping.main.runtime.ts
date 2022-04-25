@@ -449,8 +449,8 @@ export class SnappingMain {
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(workspace, logger, issues, insights);
-    const snapCmd = new SnapCmd(community.getBaseDomain(), snapping);
-    const tagCmd = new TagCmd(community.getBaseDomain(), snapping);
+    const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
+    const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
     cli.register(tagCmd, snapCmd);
     return snapping;
   }
