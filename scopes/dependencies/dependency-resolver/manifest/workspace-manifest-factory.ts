@@ -1,3 +1,4 @@
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
@@ -33,7 +34,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   dedupe: true,
 };
 export class WorkspaceManifestFactory {
-  constructor(private dependencyResolver: DependencyResolverMain) {}
+  constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
 
   async createFromComponents(
     name: string,
@@ -108,14 +109,17 @@ export class WorkspaceManifestFactory {
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (hasRootComponents) {
+        const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
+          const [compIdWithoutVersion] = comp.id.split('@');
           if (
             !comp.isExtension &&
+            !coreAspectIds.includes(compIdWithoutVersion) &&
             comp.lifecycle === 'runtime' &&
             components.some((c) => c.id.isEqual(comp.componentId))
           ) {
             const pkgName = comp.getPackageName();
-            if (pkgName !== '@teambit/harmony' && pkgName !== '@teambit/bit') {
+            if (pkgName !== '@teambit/harmony') {
               additionalDeps[pkgName] = `workspace:*`;
             }
           }
