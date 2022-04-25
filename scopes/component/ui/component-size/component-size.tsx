@@ -27,7 +27,7 @@ export function ComponentSize({ componentDescriptor, ...rest }: ComponentSizePro
       }
     >
       <div {...rest}>
-        <PillLabel>
+        <PillLabel className={styles.label}>
           <img style={{ width: '16px', marginRight: '4px' }} src="https://static.bit.dev/bit-icons/weight.svg" />
           {fileSize(compressedSize)}
         </PillLabel>

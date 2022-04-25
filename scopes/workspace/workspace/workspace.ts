@@ -1202,7 +1202,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (componentConfigFile) {
       return componentConfigFile.aspects.get(aspectId)?.config;
     }
-    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
+    return this.bitMap.getBitmapEntry(id, { ignoreVersion: true }).config?.[aspectId];
   }
 
   /**
