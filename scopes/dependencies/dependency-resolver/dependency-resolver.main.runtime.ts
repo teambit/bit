@@ -475,9 +475,6 @@ export class DependencyResolverMain {
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
-      hasRootComponents:
-        options?.hasRootComponents ??
-        Boolean(this.config.rootComponents && this.config.packageManager === 'teambit.dependencies/pnpm'),
     };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
     const res = await workspaceManifestFactory.createFromComponents(
@@ -1287,7 +1284,8 @@ export class DependencyResolverMain {
    * Returns a list of target locations where that given component was hard linked to.
    *
    * @param rootDir - The root directory of the workspace
-   * @param compDir - Relative path to the component's directory
+   * @param componentDir - Relative path to the component's directory
+   * @param packageName - The injected component's packageName
    */
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);

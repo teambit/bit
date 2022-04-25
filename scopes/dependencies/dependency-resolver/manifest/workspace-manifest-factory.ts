@@ -25,7 +25,6 @@ export type CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: boolean;
   dedupe?: boolean;
   dependencyFilterFn?: DepsFilterFn;
-  hasRootComponents?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -46,15 +45,16 @@ export class WorkspaceManifestFactory {
   ): Promise<WorkspaceManifest> {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(
       components,
       optsWithDefaults.filterComponentsFromManifests,
       rootPolicy,
       optsWithDefaults.dependencyFilterFn,
-      optsWithDefaults.hasRootComponents
+      hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
-    if (options.dedupe && !options.hasRootComponents) {
+    if (options.dedupe && !hasRootComponents) {
       dedupedDependencies = dedupeDependencies(rootPolicy, componentDependenciesMap);
     } else {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();

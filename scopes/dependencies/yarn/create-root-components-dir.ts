@@ -4,6 +4,16 @@ import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency
 import { ComponentMap } from '@teambit/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 
+/**
+ * All components are copied to a temporary folder (`<workspace-root>/.bit_components`).
+ * Each of the copies gets a `package.json` generated, where the component dependencies
+ * from the workspace are declared using the `file:` protocol.
+ * Every workspace component is then referenced from the `node_modules/<pkgname>` directory (using the `file:` protocol).
+ * The peer dependencies of the components are added as runtime dependencies of `node_modules/<pkgname>`.
+ *
+ * This way Yarn will install each workspace component in isolation with its component dependencies and peer dependencies
+ * inside `node_modules/<pkgName>/node_modules`.
+ */
 export async function createRootComponentsDir({
   depResolver,
   rootDir,
@@ -57,6 +67,11 @@ export async function createRootComponentsDir({
   return newManifestsByPaths;
 }
 
+/**
+ * This function generates a `package.json` for each component in the workspace.
+ * Any component dependencies that are present in the workspace are added to the dependencies
+ * as local `file:` dependencies.
+ */
 async function pickComponentsAndAllDeps(
   depResolver: DependencyResolverMain,
   rootComponentIds: string[],

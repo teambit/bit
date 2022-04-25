@@ -177,31 +177,23 @@ export async function install(
   if (!rootManifest.manifest.dependenciesMeta) {
     rootManifest.manifest.dependenciesMeta = {};
   }
-  const newManifestsByPaths: Record<string, ProjectManifest> = {};
-  const rootComponents: string[] = [];
+  let readPackage: any;
+  let hoistingLimits = new Map();
   if (options?.rootComponents) {
-    for (const manifest of Object.values(manifestsByPaths)) {
-      const name = manifest.name!.toString(); // eslint-disable-line
-      const compDir = path.join(rootManifest.rootDir, 'node_modules', name);
-      const id = path.relative(rootManifest.rootDir, compDir).replace(/\\/g, '/');
-      rootComponents.push(encodeURIComponent(id));
-      newManifestsByPaths[compDir] = {
-        name: `${name}__root`,
-        dependencies: {
-          [name]: `workspace:*`,
-          ...manifest.peerDependencies,
-          ...manifest['defaultPeerDependencies'], // eslint-disable-line
-        },
-        dependenciesMeta: {
-          [name]: { injected: true },
-        },
-      };
-    }
+    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(
+      rootManifest.rootDir,
+      manifestsByPaths
+    );
+    manifestsByPaths = {
+      ...rootComponentWrappers,
+      ...manifestsByPaths,
+    };
+    readPackage = readPackageHook;
+    hoistingLimits = new Map();
+    hoistingLimits.set('.@', new Set(rootComponents));
+  } else if (options?.rootComponentsForCapsules) {
+    readPackage = readPackageHookForCapsules;
   }
-  manifestsByPaths = {
-    ...newManifestsByPaths,
-    ...manifestsByPaths,
-  };
   if (!manifestsByPaths[rootManifest.rootDir]) {
     manifestsByPaths[rootManifest.rootDir] = rootManifest.manifest;
   }
@@ -227,19 +219,10 @@ export async function install(
     pruneLockfileImporters: true,
     registries: registriesMap,
     rawConfig: authConfig,
+    hooks: { readPackage },
+    hoistingLimits,
     ...options,
   };
-  if (rootComponents.length) {
-    opts.hooks = {
-      readPackage: readPackageHook as any,
-    };
-    opts.hoistingLimits = new Map();
-    opts.hoistingLimits.set('.@', new Set(rootComponents));
-  } else if (options?.rootComponentsForCapsules) {
-    opts.hooks = {
-      readPackage: readPackageHookForCapsules as any,
-    };
-  }
 
   const stopReporting = defaultReporter({
     context: {
@@ -268,6 +251,46 @@ export async function install(
   }
 }
 
+/**
+ * This function creates manifests for root component wrappers.
+ * Root component wrappers are used to isolated workspace components with their workspace dependencies
+ * and peer dependencies.
+ * A root component wrapper has the wrapped component in the dependencies and any of its peer dependencies.
+ * This way pnpm will install the wrapped component in isolation from other components and their dependencies.
+ */
+function createRootComponentWrapperManifests(rootDir: string, manifestsByPaths: Record<string, ProjectManifest>) {
+  const rootComponentWrappers: Record<string, ProjectManifest> = {};
+  const rootComponents: string[] = [];
+  for (const manifest of Object.values(manifestsByPaths)) {
+    const name = manifest.name!.toString(); // eslint-disable-line
+    const compDir = path.join(rootDir, 'node_modules', name);
+    const id = path.relative(rootDir, compDir).replace(/\\/g, '/');
+    rootComponents.push(encodeURIComponent(id));
+    rootComponentWrappers[compDir] = {
+      name: `${name}__root`,
+      dependencies: {
+        [name]: `workspace:*`,
+        ...manifest.peerDependencies,
+        ...manifest['defaultPeerDependencies'], // eslint-disable-line
+      },
+      dependenciesMeta: {
+        [name]: { injected: true },
+      },
+    };
+  }
+  return {
+    rootComponentWrappers,
+    rootComponents,
+  };
+}
+
+/**
+ * This hook is used when installation is executed inside a capsule.
+ * The components in the capsules should get their peer dependencies installed,
+ * so this hook converts any peer dependencies into runtime dependencies.
+ * Also, any local dependencies are extended with the "injected" option,
+ * this tells pnpm to hard link the packages instead of symlinking them.
+ */
 function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
   // workspaceDir is set only for workspace packages
   if (workspaceDir) {
@@ -283,6 +306,12 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
   return readDependencyPackageHook(pkg);
 }
 
+/**
+ * This hook is used when installation happens in a Bit workspace.
+ * We need a different hook for this case because unlike in a capsule, in a workspace,
+ * the package manager only links workspace components to subdependencies.
+ * For direct dependencies, Bit's linking is used.
+ */
 function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
   if (!pkg.dependencies || pkg.name?.endsWith(`__root`)) {
     return pkg;
@@ -294,6 +323,10 @@ function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageMa
   return readDependencyPackageHook(pkg);
 }
 
+/**
+ * This hook adds the "injected" option to any workspace dependency.
+ * The injected option tell pnpm to hard link the packages instead of symlinking them.
+ */
 function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
   const dependenciesMeta = pkg.dependenciesMeta ?? {};
   for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
@@ -308,6 +341,13 @@ function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
   };
 }
 
+/**
+ * This hook is used when installation happens in a Bit workspace.
+ * It is applied on workspace projects, and it removes any references to other workspace projects.
+ * This is needed because Bit has its own linking for workspace projects.
+ * pnpm should not override the links created by Bit.
+ * Otherwise, the IDE would reference workspace projects from inside `node_modules/.pnpm`.
+ */
 function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   const newDeps = {};
   for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {

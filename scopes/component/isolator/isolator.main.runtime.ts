@@ -46,6 +46,7 @@ import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-d
 import { Network } from './network';
 
 const DEFAULT_CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
+const SUBCAPSULES_DIR_NAME = 'subcapsules';
 
 export type ListResults = {
   workspace: string;
@@ -62,6 +63,8 @@ export type IsolateComponentsInstallOptions = {
   installPeersFromEnvs?: boolean;
   installTeambitBit?: boolean;
   packageManagerConfigRootDir?: string;
+  // When set to true, the newly added components will be grouped inside one directory.
+  // This is useful for scope aspect capsules, which are installed in stages.
   useNesting?: boolean;
 };
 
@@ -246,9 +249,11 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
   ): Promise<CapsuleList> {
-    if (opts.installOptions) {
-      opts.installOptions.useNesting = this.dependencyResolver.hasRootComponents() && opts.installOptions.useNesting;
-    }
+    const installOptions = {
+      ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
+      ...opts.installOptions,
+      useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
+    };
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
@@ -271,9 +276,11 @@ export class IsolatorMain {
 
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
-    const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      const rootDir = opts.installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
+      // When nesting is used, the first component (which is the entry component) is installed in the root
+      // and all other components (which are the dependencies of the entry component) are installed in
+      // a subdirectory.
+      const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
       await this.installInCapsules(rootDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
@@ -342,12 +349,10 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    if (this.dependencyResolver.hasRootComponents()) {
-      linkingOptions.linkNestedDepsInNM = false;
-    }
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       legacyLink: false,
+      linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
     });
     if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
@@ -471,18 +476,26 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     if (opts.installOptions?.useNesting) {
-      const subcapsulesDir = path.join(baseDir, Capsule.getCapsuleDirName(components[0], opts), `subcapsules`);
-      const capsules: Capsule[] = await Promise.all(
-        components.map((component: Component, index) => {
-          const dir = index === 0 ? baseDir : subcapsulesDir;
-          return Capsule.createFromComponent(component, dir, opts);
-        })
-      );
-      return capsules;
+      return this.createCapsulesFromComponentsWithNesting(components, baseDir, opts);
     }
     const capsules: Capsule[] = await Promise.all(
       components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
+      })
+    );
+    return capsules;
+  }
+
+  private async createCapsulesFromComponentsWithNesting(
+    components: Component[],
+    baseDir: string,
+    opts: IsolateComponentsOptions
+  ): Promise<Capsule[]> {
+    const subcapsulesDir = path.join(baseDir, Capsule.getCapsuleDirName(components[0], opts), SUBCAPSULES_DIR_NAME);
+    const capsules: Capsule[] = await Promise.all(
+      components.map((component: Component, index) => {
+        const dir = index === 0 ? baseDir : subcapsulesDir;
+        return Capsule.createFromComponent(component, dir, opts);
       })
     );
     return capsules;

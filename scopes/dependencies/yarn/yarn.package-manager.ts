@@ -60,7 +60,6 @@ export class YarnPackageManager implements PackageManager {
       createManifestForComponentsWithoutDependencies: true,
       dedupe: !installOptions.rootComponentsForCapsules,
       dependencyFilterFn: installOptions.dependencyFilterFn,
-      hasRootComponents: installOptions.rootComponentsForCapsules,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
@@ -89,17 +88,16 @@ export class YarnPackageManager implements PackageManager {
     // @ts-ignore
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
-      const resolutions = {}
-      Array.from(componentDirectoryMap.hashMap.entries())
-        .forEach(([, [comp, path]]) => {
-          const component = comp.state._consumer;
-          const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
-          resolutions[name] = `file:${relative(rootDir, path)}`;
-        })
+      const resolutions = {};
+      Array.from(componentDirectoryMap.hashMap.entries()).forEach(([, [comp, path]]) => {
+        const component = comp.state._consumer;
+        const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
+        resolutions[name] = `file:${relative(rootDir, path)}`;
+      });
       installOptions.overrides = {
         ...installOptions.overrides,
         ...resolutions,
-      }
+      };
     }
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
     if (installOptions.rootComponents) {
@@ -116,6 +114,8 @@ export class YarnPackageManager implements PackageManager {
       installOptions.copyPeerToRuntimeOnComponents
     );
     if (installOptions.rootComponents) {
+      // Manifests are extended with "wrapper components"
+      // that group all workspace components with their dependencies and peer dependencies.
       manifests = {
         ...(await createRootComponentsDir({
           depResolver: this.depResolver,
@@ -125,33 +125,16 @@ export class YarnPackageManager implements PackageManager {
         ...manifests,
       };
     } else if (installOptions.useNesting) {
+      // Nesting in used for scope aspect capsules.
+      // In a capsule, all peer dependencies should be installed,
+      // so we make runtime dependencies from peer dependencies.
       manifests[rootDir].dependencies = {
         ...manifests[rootDir].peerDependencies,
         ...manifests[rootDir].defaultPeerDependencies,
         ...manifests[rootDir].dependencies,
-      }
+      };
     } else if (installOptions.rootComponentsForCapsules) {
-      await Promise.all(
-        Object.entries(manifests).map(async ([dir, manifest]) => {
-          const pkgJsonPath = join(dir, 'package.json')
-          const pkgJson = await fs.readJson(pkgJsonPath);
-          // We need to write the package.json files because they need to contain the workspace dependencies.
-          // When packages are installed via the "file:" protocol, Yarn reads their package.json files
-          // from the file system even if they are from the workspace.
-          await fs.writeJson(pkgJsonPath, {
-            ...pkgJson,
-            dependencies: manifest.dependencies,
-          }, { spaces: 2 });
-          manifest.dependencies = {
-            ...manifest.peerDependencies,
-            ...manifest.defaultPeerDependencies,
-            ...manifest.dependencies,
-          }
-          manifest.installConfig = {
-            hoistingLimits: 'workspaces',
-          };
-        }),
-      );
+      await updateManifestsForInstallationInWorkspaceCapsules(manifests);
     } else {
       await extendWithComponentsFromDir(rootDir, manifests);
     }
@@ -181,7 +164,7 @@ export class YarnPackageManager implements PackageManager {
     if (!manifests[rootDir]) {
       workspaces.push(rootWs);
     }
-    this.setupWorkspaces(project, workspaces)
+    this.setupWorkspaces(project, workspaces);
 
     const cache = await Cache.find(config);
     // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
@@ -546,4 +529,39 @@ function toYarnResolutionSelector({ name, pref }: { name: string; pref?: string 
     fullName: name,
     description: pref,
   };
+}
+
+/**
+ * This function prepares the component manifests for installation inside a capsule.
+ * Inside a capsule, all peer dependencies of the component should be installed.
+ * So peer dependencies are added to the manifest as runtime dependencies.
+ * Also, the package.json files are update to contain other component dependencies
+ * in dependencies as local "file:" dependencies.
+ */
+async function updateManifestsForInstallationInWorkspaceCapsules(manifests: { [key: string]: any }) {
+  await Promise.all(
+    Object.entries(manifests).map(async ([dir, manifest]) => {
+      const pkgJsonPath = join(dir, 'package.json');
+      const pkgJson = await fs.readJson(pkgJsonPath);
+      // We need to write the package.json files because they need to contain the workspace dependencies.
+      // When packages are installed via the "file:" protocol, Yarn reads their package.json files
+      // from the file system even if they are from the workspace.
+      await fs.writeJson(
+        pkgJsonPath,
+        {
+          ...pkgJson,
+          dependencies: manifest.dependencies,
+        },
+        { spaces: 2 }
+      );
+      manifest.dependencies = {
+        ...manifest.peerDependencies,
+        ...manifest.defaultPeerDependencies,
+        ...manifest.dependencies,
+      };
+      manifest.installConfig = {
+        hoistingLimits: 'workspaces',
+      };
+    })
+  );
 }

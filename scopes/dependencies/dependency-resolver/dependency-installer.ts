@@ -104,7 +104,11 @@ export class DependencyInstaller {
     }
 
     if (!packageManagerOptions.rootComponents) {
-      // remove node modules dir for all components dirs, since it might contain left overs from previous install
+      // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
+      //
+      // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
+      // and it never leaves node_modules in a broken state.
+      // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
       await this.cleanCompsNodeModules(componentDirectoryMap);
     }
 
