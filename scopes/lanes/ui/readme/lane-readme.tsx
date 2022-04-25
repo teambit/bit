@@ -1,6 +1,13 @@
 import React from 'react';
 import { ReactRouter } from '@teambit/react-router';
-import { LanesProvider, useLanesContext, LaneModel, LaneDetails, LanesModel } from '@teambit/lanes.ui.lanes';
+import {
+  LanesProvider,
+  useLanesContext,
+  LaneModel,
+  LaneDetails,
+  LanesModel,
+  useLaneReadmeQuery,
+} from '@teambit/lanes.ui.lanes';
 import { ComponentProvider, ComponentDescriptorProvider, ComponentModel } from '@teambit/component';
 import { Overview } from '@teambit/docs';
 // import { Carousel } from '@teambit/design.content.carousel';
@@ -14,7 +21,6 @@ import styles from './lane-readme.module.scss';
 
 export type LaneReadmeProps = {
   host: string;
-  readmeComponent: { model: ComponentModel; descriptor: ComponentDescriptor };
   currentLane: LaneModel;
 };
 
@@ -28,7 +34,7 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
   const readmeComponent = currentLane?.readmeComponent;
 
   if (readmeComponent) {
-    return <LaneReadme host={host} readmeComponent={readmeComponent} currentLane={currentLane} />;
+    return <LaneReadme host={host} currentLane={currentLane} />;
   }
 
   if (currentLane) {
@@ -38,8 +44,8 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
   return null;
 }
 
-function LaneReadme({ readmeComponent, currentLane }: LaneReadmeProps) {
-  const { model, descriptor } = readmeComponent;
+function LaneReadme({ currentLane }: LaneReadmeProps) {
+  const { model, descriptor, loading } = useLaneReadmeQuery(currentLane);
   const laneComponents = currentLane.components;
   const hasComponents = laneComponents.length > 0;
   //   const emptyLane = (
@@ -51,6 +57,7 @@ function LaneReadme({ readmeComponent, currentLane }: LaneReadmeProps) {
   //     />
   //   );
 
+  if (loading) return null;
   return (
     <LanesProvider viewedLaneId={undefined}>
       <ComponentProvider component={model}>

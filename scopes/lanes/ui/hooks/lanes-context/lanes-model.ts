@@ -124,8 +124,8 @@ export class LanesModel {
     };
 
     const readmeComponentDescriptor =
-      readmeComponent &&
-      ComponentDescriptor.fromObject({ id: readmeComponent.id.toString(), aspectList: readmeAspectList });
+      readmeComponentModel &&
+      ComponentDescriptor.fromObject({ id: readmeComponentModel.id.toString(), aspectList: readmeAspectList });
 
     return {
       id: laneId,

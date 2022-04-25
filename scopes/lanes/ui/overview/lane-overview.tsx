@@ -51,8 +51,8 @@ function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot }: Lane
           return (
             <WorkspaceComponentCard
               key={index}
-              component={component}
-              componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+              component={component.model}
+              componentUrl={LanesModel.getLaneComponentUrl(component.model.id, currentLane.id)}
             />
           );
         })}

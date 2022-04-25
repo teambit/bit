@@ -4,6 +4,7 @@ import { gql, QueryResult } from '@apollo/client';
 import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.lanes';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 
 const GET_LANES = gql`
   query Lanes($extensionId: String) {
@@ -78,18 +79,68 @@ export function useLanesQuery(viewedLaneId?: string): { lanes?: LanesModel } & O
 }
 
 export function useLaneComponentsQuery(lane: LaneModel): {
-  components?: Array<ComponentModel>;
+  components?: Array<{ model: ComponentModel; descriptor: ComponentDescriptor }>;
 } & Omit<QueryResult<LanesQuery>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [lane.name] },
   });
 
-  const components: Array<ComponentModel> = data?.lanes.list[0].components.map((component) =>
-    ComponentModel.from({ ...component, host: data.getHost.id })
-  );
+  const components = data?.lanes.list[0].components.map((component) => {
+    const componentModel = ComponentModel.from({ ...component, host: data.getHost.id });
+    const aspectList = {
+      entries: component?.aspects,
+    };
+
+    const componentDescriptor = ComponentDescriptor.fromObject({ id: componentModel.id.toString(), aspectList });
+    return { model: componentModel, descriptor: componentDescriptor };
+  });
 
   return {
     ...rest,
     components,
+  };
+}
+
+const GET_LANE_README_COMPONENT = gql`
+  query LaneReadmeComponent($ids: [String!], $extensionId: String) {
+    lanes {
+      id
+      list(ids: $ids) {
+        id
+        remote
+        isMerged
+        readmeComponent {
+          ...componentOverviewFields
+        }
+      }
+    }
+    getHost(id: $extensionId) {
+      id
+    }
+  }
+  ${componentOverviewFields}
+`;
+
+export function useLaneReadmeQuery(lane: LaneModel): {
+  model: ComponentModel;
+  descriptor: ComponentDescriptor;
+} & Omit<QueryResult<LanesQuery>, 'data'> {
+  const { data, ...rest } = useDataQuery(GET_LANE_README_COMPONENT, {
+    variables: { ids: [lane.name] },
+  });
+  const readmeComponentFromQuery = data?.lanes.list[0].readmeComponent;
+
+  const model = readmeComponentFromQuery && ComponentModel.from({ ...readmeComponentFromQuery, host: data.getHost.id });
+
+  const aspectList = {
+    entries: readmeComponentFromQuery?.aspects,
+  };
+
+  const descriptor = model && ComponentDescriptor.fromObject({ id: model.id.toString(), aspectList });
+
+  return {
+    ...rest,
+    model,
+    descriptor,
   };
 }
