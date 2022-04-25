@@ -125,7 +125,7 @@ function revertPnpmLockChanges() {
 }
 
 function resetPnpmLockChanges() {
-  exec('git checkout pnpm-lock.yml');
+  exec('git checkout pnpm-lock.yaml');
 }
 
 function gitStatus() {
