@@ -1,19 +1,13 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import path from 'path';
 import { CompilerAspect } from '@teambit/compiler';
-import { DevFilesMain } from '@teambit/dev-files';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 
 export class CapsulesSyncerTask implements BuildTask {
   readonly name = 'SyncComponents';
   readonly dependencies = [CompilerAspect.id]; // I can put my new task here. And compiler to the deps of this taks
-  constructor(
-    readonly aspectId: string,
-    private devFiles: DevFilesMain,
-    private dependencyResolver: DependencyResolverMain
-  ) {}
+  constructor(readonly aspectId: string, private dependencyResolver: DependencyResolverMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     if (!this.dependencyResolver.hasRootComponents())
@@ -27,7 +21,7 @@ export class CapsulesSyncerTask implements BuildTask {
         const injectedDirs = await this.dependencyResolver.getInjectedDirs(
           context.capsuleNetwork.capsulesRootDir,
           relCompDir,
-          componentIdToPackageName(capsule.component.state._consumer)
+          this.dependencyResolver.getPackageName(capsule.component)
         );
         return hardLinkDirectory(
           capsule.path,
