@@ -156,6 +156,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle, peers);
+    const resolvedEnvAspects = await this.preview.resolveAspects(undefined, [envComponent.id]);
+    const hostRootDir = resolvedEnvAspects[0].aspectPath;
 
     return {
       peers,
@@ -167,6 +169,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       },
       components: [envComponent],
       outputPath,
+      hostRootDir,
     };
   }
 

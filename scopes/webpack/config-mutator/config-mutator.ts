@@ -92,7 +92,7 @@ export class WebpackConfigMutator {
 
   /**
    * Add rule to the module config
-   * @param entry
+   * @param rule
    * @param opts
    * @returns
    */
@@ -105,6 +105,17 @@ export class WebpackConfigMutator {
     }
 
     addToArray(this.raw.module.rules, rule, opts);
+    return this;
+  }
+
+  /**
+   * Add many rules to the module config
+   * @param rules
+   * @param opts
+   * @returns
+   */
+  addModuleRules(rules: RuleSetRule[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
+    rules.forEach((rule) => this.addModuleRule(rule, opts));
     return this;
   }
 

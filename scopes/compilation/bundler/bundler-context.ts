@@ -94,6 +94,14 @@ export type Target = {
    * Different configuration related to chunking
    */
   chunking?: Chunking;
+
+  /**
+   * A path for the host root dir
+   * Host root dir is usually the env root dir
+   * This can be used in different bundle options which run require.resolve
+   * for example when configuring webpack aliases or webpack expose loader on the peers deps
+   */
+  hostRootDir?: string;
 };
 
 export type ModuleTarget = {
