@@ -19,7 +19,7 @@ export async function mergeLanes({
   snapMessage,
   existingOnWorkspaceOnly,
   build,
-  skipDeletingReadme,
+  keepReadme,
 }: {
   merging: MergingMain;
   consumer: Consumer;
@@ -30,7 +30,7 @@ export async function mergeLanes({
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
-  skipDeletingReadme?: boolean;
+  keepReadme?: boolean;
 }): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
@@ -85,7 +85,7 @@ export async function mergeLanes({
 
   let deleteResults = {};
 
-  if (!skipDeletingReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
+  if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
     await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
 
     const readmeComponentId = [

@@ -29,6 +29,9 @@ export const componentOverviewFields = gql`
     }
     elementsUrl
     description
+    deprecation {
+      isDeprecate
+    }
     labels
     displayName
     server {

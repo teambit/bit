@@ -30,8 +30,8 @@ import {
   LaneRemoveCmd,
   LaneShowCmd,
   LaneTrackCmd,
-  LaneReadmeAddCmd,
-  LaneReadmeRemoveCmd,
+  LaneAddReadmeCmd,
+  LaneRemoveReadmeCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -49,7 +49,7 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
-  skipDeletingReadme: boolean;
+  keepReadme: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -353,8 +353,8 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
-        new LaneReadmeAddCmd(lanesMain),
-        new LaneReadmeRemoveCmd(lanesMain),
+        new LaneAddReadmeCmd(lanesMain),
+        new LaneRemoveReadmeCmd(lanesMain),
         new LaneImportCmd(switchCmd),
       ];
       cli.register(laneCmd, switchCmd);

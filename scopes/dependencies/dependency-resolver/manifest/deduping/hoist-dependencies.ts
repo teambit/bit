@@ -426,7 +426,8 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
     if (!validRange) {
-      throw new Error(`fatal: the version "${item.range}" of "${item.origin}" is invalid semver range`);
+      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range.
+this is a temporary issue with unsupported snaps (hashes) on the registry and will be fixed very soon`);
     }
     const parsed = parseRange(validRange);
     if (parsed.condition === '=') {

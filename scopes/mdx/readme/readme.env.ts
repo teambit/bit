@@ -6,11 +6,11 @@ export const ReadmeEnvType = 'readme';
 
 export class ReadmeEnv implements Environment {
   constructor(private docs: DocsMain) {}
-  private removeDocsDevPatterns(): string[] {
+  private getNegateDocsDevPatterns(): string[] {
     return this.docs.getPatterns().map((pattern) => `!${pattern}`);
   }
   getDocsDevPatterns(component: Component): string[] {
-    return this.getDevPatterns(component).concat(this.removeDocsDevPatterns());
+    return this.getDevPatterns(component).concat(this.getNegateDocsDevPatterns());
   }
   getDevPatterns(component?: Component): string[] {
     return component && component.mainFile.relative ? [component.mainFile.relative] : ['index.*'];

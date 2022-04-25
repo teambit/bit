@@ -4,6 +4,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
+import { Logger } from '@teambit/logger';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
@@ -37,7 +38,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   private = true;
   migration = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain) {
+  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
     this.description = `record component changes.
 https://${docsDomain}/components/snaps
 ${WILDCARD_HELP('snap')}`;
@@ -74,20 +75,22 @@ ${WILDCARD_HELP('snap')}`;
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
     }
+
     if (all) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(
-          `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
-        )
+      this.logger.consoleWarning(
+        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
       );
     }
     if (force) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(`--force is deprecated, use either --skip-tests or --unmodified depending on the use case`)
+      this.logger.consoleWarning(
+        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
       );
       if (id) unmodified = true;
+    }
+    if (!message) {
+      this.logger.consoleWarning(
+        `--message will be mandatory in the next few releases. make sure to add a message with your snap`
+      );
     }
 
     const results = await this.snapping.snap({

@@ -132,9 +132,14 @@ export class WorkspaceConfig implements HostConfig {
 
   setExtension(extensionId: string, config: Record<string, any>, options: SetExtensionOptions): any {
     const existing = this.extension(extensionId, options.ignoreVersion);
-    if (existing && !options.overrideExisting) {
-      throw new ExtensionAlreadyConfigured(extensionId);
+    if (existing) {
+      if (options.mergeIntoExisting) {
+        config = { ...existing, ...config };
+      } else if (!options.overrideExisting) {
+        throw new ExtensionAlreadyConfigured(extensionId);
+      }
     }
+
     this.raw[extensionId] = config;
     this.loadExtensions();
   }

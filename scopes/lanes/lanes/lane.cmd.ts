@@ -61,9 +61,9 @@ export class LaneListCmd implements Command {
       return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
     const currentLane = this.lanes.getCurrentLane();
-    let currentLaneStr = currentLane ? `current lane - ${chalk.bold(currentLane as string)}` : '';
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
+    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentLane as string)}` : '';
     currentLaneStr += currentLaneReadmeComponentStr;
 
     if (details) {
@@ -80,7 +80,7 @@ export class LaneListCmd implements Command {
       .map((laneData) => {
         const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
         if (details) {
-          const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
           return laneTitle + readmeComponentStr.concat('\n') + components;
         }
@@ -242,7 +242,7 @@ export class LaneMergeCmd implements Command {
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
-    ['', 'skip-deleting-readme', 'skip deleting the lane readme component after merging'],
+    ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -262,7 +262,7 @@ export class LaneMergeCmd implements Command {
       existing: existingOnWorkspaceOnly = false,
       noSnap = false,
       message: snapMessage = '',
-      skipDeletingReadme = false,
+      keepReadme = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -272,7 +272,7 @@ export class LaneMergeCmd implements Command {
       build?: boolean;
       noSnap: boolean;
       message: string;
-      skipDeletingReadme?: boolean;
+      keepReadme?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -288,7 +288,7 @@ export class LaneMergeCmd implements Command {
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,
-      skipDeletingReadme,
+      keepReadme,
     });
 
     const mergeResult = `${mergeReport(mergeResults)}`;
@@ -394,7 +394,7 @@ https://${docsDomain}/components/lanes`;
   }
 }
 
-export class LaneReadmeRemoveCmd implements Command {
+export class LaneRemoveReadmeCmd implements Command {
   name = 'remove-readme [laneName]';
   description = 'EXPERIMENTAL. remove lane readme component';
   options = [] as CommandOptions;
@@ -417,7 +417,7 @@ export class LaneReadmeRemoveCmd implements Command {
   }
 }
 
-export class LaneReadmeAddCmd implements Command {
+export class LaneAddReadmeCmd implements Command {
   name = 'add-readme <componentId> [laneName]';
   description = 'EXPERIMENTAL. add lane readme component';
   options = [] as CommandOptions;
