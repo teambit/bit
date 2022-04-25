@@ -16,8 +16,23 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
+    const getFormattedId = () => {
+      const { deprecated, laneReadmeOf } = listScopeResult;
+      let formattedId = c.white(`${id}`);
+      if (deprecated) {
+        formattedId = c.white(`${formattedId} [Deprecated]`);
+      }
+      if (laneReadmeOf && laneReadmeOf.length > 0) {
+        formattedId = `${formattedId}\n`;
+        laneReadmeOf.forEach((laneName) => {
+          formattedId = `${formattedId}${c.yellow(`[Lane Readme]: ${laneName}\n`)}`;
+        });
+      }
+      return formattedId;
+    };
+
     const data: Row = {
-      id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
+      id: getFormattedId(),
       localVersion: version,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
     };

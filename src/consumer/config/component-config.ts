@@ -277,12 +277,7 @@ export default class ComponentConfig extends AbstractConfig {
       const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
       const wsComponentConfig = onLoadResults[0];
       const defaultScope = wsComponentConfig.defaultScope;
-      const splittedScope = defaultScope.split('.');
-      const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-      let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
-      if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
-        bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
-      }
+      const bindingPrefix = getBindingPrefixByDefaultScope(defaultScope);
       componentConfig = new ComponentConfig({
         extensions: wsComponentConfig.extensions,
         defaultScope,
@@ -368,4 +363,15 @@ export default class ComponentConfig extends AbstractConfig {
     }
     return [];
   }
+}
+
+export function getBindingPrefixByDefaultScope(defaultScope: string): string {
+  const splittedScope = defaultScope.split('.');
+  const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
+  let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
+  if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
+    bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
+  }
+
+  return bindingPrefix;
 }
