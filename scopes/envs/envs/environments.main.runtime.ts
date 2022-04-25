@@ -101,6 +101,7 @@ export class EnvsMain {
       'teambit.html/html',
       'teambit.mdx/mdx',
       'teambit.envs/env',
+      'teambit.mdx/readme',
     ];
   }
 

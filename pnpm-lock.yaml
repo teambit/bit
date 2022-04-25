@@ -362,7 +362,7 @@ importers:
       gitconfig: 2.0.8
       glob: 7.1.6
       globby: 11.0.1
-      graceful-fs: 4.2.4
+      graceful-fs: 4.2.10
       graphlib: 2.1.8
       graphql: 14.7.0
       graphql-request: 3.4.0
@@ -937,7 +937,7 @@ importers:
       gitconfig: registry.npmjs.org/gitconfig/2.0.8
       glob: registry.npmjs.org/glob/7.1.6
       globby: registry.npmjs.org/globby/11.0.1
-      graceful-fs: registry.npmjs.org/graceful-fs/4.2.4
+      graceful-fs: registry.npmjs.org/graceful-fs/4.2.10
       graphlib: registry.npmjs.org/graphlib/2.1.8
       graphql: registry.npmjs.org/graphql/14.7.0
       graphql-request: registry.npmjs.org/graphql-request/3.4.0_graphql@14.7.0
@@ -1359,6 +1359,9 @@ importers:
   scopes/component/testing/mock-components:
     specifiers: {}
 
+  scopes/component/ui/component-deprecated:
+    specifiers: {}
+
   scopes/component/ui/component-meta:
     specifiers: {}
 
@@ -1696,6 +1699,9 @@ importers:
     specifiers: {}
 
   scopes/mdx/modules/loader:
+    specifiers: {}
+
+  scopes/mdx/readme:
     specifiers: {}
 
   scopes/mdx/ui/link:
@@ -24341,7 +24347,7 @@ packages:
     version: 10.0.0
     engines: {node: '>=12'}
     dependencies:
-      graceful-fs: registry.npmjs.org/graceful-fs/4.2.4
+      graceful-fs: registry.npmjs.org/graceful-fs/4.2.10
       jsonfile: registry.npmjs.org/jsonfile/6.1.0
       universalify: registry.npmjs.org/universalify/2.0.0
     dev: false
@@ -24981,12 +24987,6 @@ packages:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.10.tgz}
     name: graceful-fs
     version: 4.2.10
-    dev: false
-
-  registry.npmjs.org/graceful-fs/4.2.4:
-    resolution: {integrity: sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.4.tgz}
-    name: graceful-fs
-    version: 4.2.4
     dev: false
 
   registry.npmjs.org/graceful-git/3.1.2:
