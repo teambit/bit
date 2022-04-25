@@ -11,7 +11,7 @@ import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State 
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Capsule, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { Capsule, IsolatorAspect, IsolatorMain, IsolateComponentsOptions } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -51,13 +51,18 @@ import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
+import { ScopeCmd } from './scope-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
-export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
+export type OnTag = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions?: IsolateComponentsOptions
+) => Promise<OnTagResults>;
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -164,12 +169,13 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
     const legacyOnTagFunc: OnTagFunc = async (
       legacyComponents: ConsumerComponent[],
-      options?: OnTagOpts
+      options: OnTagOpts,
+      isolateOptions?: IsolateComponentsOptions
     ): Promise<LegacyOnTagResult[]> => {
       // Reload the aspects with their new version
       await this.reloadAspectsWithNewVersion(legacyComponents);
       const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options);
+      const { builderDataMap } = await tagFn(components, options, isolateOptions);
       return this.builderDataMapToLegacyOnTagResults(builderDataMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
@@ -1014,6 +1020,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
+    cli.register(new ScopeCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
