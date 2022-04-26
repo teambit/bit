@@ -164,7 +164,7 @@ export class TypescriptCompiler implements Compiler {
    */
   private async runTscBuild(network: Network): Promise<ComponentResult[]> {
     const rootDir = network.capsulesRootDir;
-    const capsules = network.originalSeedersCapsules;
+    const capsules = await network.getCapsulesToCompile();
     if (!capsules.length) {
       return [];
     }
