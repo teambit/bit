@@ -10,7 +10,11 @@ import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import {
+  MergeStrategy,
+  ApplyVersionResults,
+  MergeOptions,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -36,6 +40,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
+import { switchLanes } from './switch-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -55,6 +60,15 @@ export type MergeLaneOptions = {
 export type CreateLaneOptions = {
   remoteScope?: string; // default to the defaultScope in workspace.jsonc
   remoteName?: string; // default to the local lane
+};
+
+export type SwitchLaneOptions = {
+  newLaneName?: string;
+  merge?: MergeStrategy;
+  getAll?: boolean;
+  skipDependencyInstallation?: boolean;
+  verbose?: boolean;
+  override?: boolean;
 };
 
 export class LanesMain {
@@ -172,6 +186,48 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
     this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
     return results;
+  }
+
+  /**
+   * switch to a different local or remote lane.
+   * switching to a remote lane also imports and writes the components of that remote lane.
+   * by default, only the components existing on the workspace will be imported from that lane, unless the "getAll"
+   * flag is true.
+   */
+  async switchLanes(
+    laneName: string,
+    { newLaneName, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+  ) {
+    if (!this.workspace) {
+      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+    }
+    let mergeStrategy;
+    if (merge && typeof merge === 'string') {
+      const mergeOptions = Object.keys(MergeOptions);
+      if (!mergeOptions.includes(merge)) {
+        throw new BitError(`merge must be one of the following: ${mergeOptions.join(', ')}`);
+      }
+      mergeStrategy = merge;
+    }
+
+    const switchProps = {
+      laneName,
+      existingOnWorkspaceOnly: !getAll,
+      newLaneName,
+    };
+    const checkoutProps = {
+      mergeStrategy,
+      skipNpmInstall: skipDependencyInstallation,
+      verbose: false, // not relevant in Harmony
+      ignorePackageJson: true, // not relevant in Harmony
+      ignoreDist: true, // not relevant in Harmony
+      isLane: true,
+      promptMergeOptions: false,
+      writeConfig: false,
+      reset: false,
+      all: false,
+    };
+    return switchLanes(this.workspace.consumer, switchProps, checkoutProps);
   }
 
   /**
@@ -341,7 +397,7 @@ export class LanesMain {
   ]) {
     const lanesMain = new LanesMain(workspace, scope, merging, component);
     const isLegacy = workspace && workspace.consumer.isLegacy;
-    const switchCmd = new SwitchCmd();
+    const switchCmd = new SwitchCmd(lanesMain);
     if (!isLegacy) {
       const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
       laneCmd.commands = [
