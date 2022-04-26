@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
-import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 import { LanesIsDisabled } from '@teambit/legacy/dist/consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy, applyVersionReport } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import LanesMain from './lanes.main.runtime';
+import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
   name = 'switch <lane>';
