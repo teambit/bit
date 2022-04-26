@@ -64,7 +64,6 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
         <ComponentDescriptorProvider componentDescriptor={descriptor}>
           <div className={styles.readmeContainer}>
             <LaneDetails className={styles.laneId} laneName={currentLane.id}></LaneDetails>
-
             <Separator isPresentational />
             <Overview />
             {hasComponents && <H5 className={styles.carouselTitle}>Components</H5>}

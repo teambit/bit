@@ -3,7 +3,7 @@ import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
 import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.lanes';
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
-import { ComponentModel, componentOverviewFields } from '@teambit/component';
+import { componentFields, ComponentModel, componentOverviewFields } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 
 const GET_LANES = gql`
@@ -110,7 +110,7 @@ const GET_LANE_README_COMPONENT = gql`
         remote
         isMerged
         readmeComponent {
-          ...componentOverviewFields
+          ...componentFields
         }
       }
     }
@@ -118,7 +118,7 @@ const GET_LANE_README_COMPONENT = gql`
       id
     }
   }
-  ${componentOverviewFields}
+  ${componentFields}
 `;
 
 export function useLaneReadmeQuery(lane: LaneModel): {
