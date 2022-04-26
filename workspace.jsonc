@@ -107,6 +107,7 @@
         "@teambit/defender.content.formatter-overview": "1.95.9",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
+        "@teambit/design.content.carousel": "0.0.15",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",

@@ -2,13 +2,26 @@
   height: 100%;
   overflow: auto;
 }
-.laneId,
-.carouselTitle,
-.laneCarousel {
-  padding: 48px 0px 0px 32px;
+.laneId {
+  padding: 50px 0px 0px 32px;
 }
 .emptyLane {
   height: auto;
   padding-top: 8px;
   padding-bottom: 16px;
+}
+.carouselTitle {
+  padding: 32px 0px 0px 32px;
+}
+.carouselTitle,
+.laneCarousel {
+  display: flex;
+  flex-direction: column;
+}
+.laneCarousel {
+  height: 350px;
+}
+.laneCarouselComponent {
+  height: 300px;
+  width: 300px;
 }

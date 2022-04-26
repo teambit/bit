@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, HTMLAttributes } from 'react';
 import flatten from 'lodash.flatten';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
@@ -7,6 +7,7 @@ import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-ca
 import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
 import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
+import classNames from 'classnames';
 import styles from './overview.module.scss';
 
 const ENV_LIST_WITH_DOCS_TEMPLATE = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme']; // envs using react based docs
@@ -17,9 +18,9 @@ export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
   titleBadges?: TitleBadgeSlot;
-};
+} & HTMLAttributes<HTMLDivElement>;
 
-export function Overview({ titleBadges }: OverviewProps) {
+export function Overview({ titleBadges, className }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
@@ -48,7 +49,7 @@ export function Overview({ titleBadges }: OverviewProps) {
     const badges = flatten(titleBadges?.values());
 
     return (
-      <div className={styles.overviewWrapper}>
+      <div className={classNames(styles.overviewWrapper, className)}>
         <LaneBreadcrumb lane={currentLane} />
         <Separator isPresentational />
         <ComponentOverview
@@ -74,7 +75,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   }
 
   return currentLane ? (
-    <div className={styles.overviewWrapper}>
+    <div className={classNames(styles.overviewWrapper, className)}>
       <LaneBreadcrumb lane={currentLane} />
       <Separator isPresentational />
       <ComponentPreview
@@ -88,6 +89,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   ) : (
     <ComponentPreview
       component={component}
+      className={className}
       style={{ width: '100%', height: '100%' }}
       previewName="overview"
       fullContentHeight
