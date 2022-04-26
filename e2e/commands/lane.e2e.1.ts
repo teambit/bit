@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
@@ -992,6 +993,24 @@ describe('bit lane command', function () {
       const list = helper.command.listLocalScopeParsed();
       const ids = list.map((c) => c.id);
       expect(ids).to.include(`${helper.scopes.remote}/bar1`);
+    });
+  });
+  describe('import a non-lane component that has dependencies into a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane();
+      helper.command.importComponent('comp1');
+    });
+    it('should not save all the dependencies into the lane, only the imported component', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components.length).to.equal(1);
     });
   });
   describe('branching out when a component is checked out to an older version', () => {
