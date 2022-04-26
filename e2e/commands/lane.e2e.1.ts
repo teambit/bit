@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
