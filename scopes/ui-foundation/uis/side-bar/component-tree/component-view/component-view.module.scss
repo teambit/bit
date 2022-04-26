@@ -57,6 +57,8 @@
   .envIcon {
     transition: filter 300ms ease-in-out;
     filter: grayscale(1);
+    width: 16px;
+    height: 16px;
   }
 
   .right {
