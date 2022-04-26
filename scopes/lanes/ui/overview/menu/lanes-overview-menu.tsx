@@ -82,7 +82,7 @@ function sortFn({ order: first }: LanesNavPlugin, { order: second }: LanesNavPlu
 /** TODO: replace it with tab-link */
 function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
-  const { search } = useLocation(); // sticky query params
+  const { search, pathname } = useLocation(); // sticky query params
   const { href } = props;
 
   const target = `${extendPath(url, href)}${search}`;
@@ -91,7 +91,7 @@ function TopBarNav(props: NavLinkProps) {
     <NavLink
       {...props}
       className={classnames(props.className, styles.topBarLink)}
-      activeClassName={classnames(props.className, styles.active)}
+      activeClassName={classnames(props.className, target === pathname && styles.active)}
       href={target}
     >
       <div>{props.children}</div>

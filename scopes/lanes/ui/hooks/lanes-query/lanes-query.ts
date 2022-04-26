@@ -102,7 +102,15 @@ export function useLaneComponentsQuery(lane: LaneModel): {
 }
 
 const GET_LANE_README_COMPONENT = gql`
-  query LaneReadmeComponent($ids: [String!], $extensionId: String) {
+  query LaneReadmeComponent(
+    $ids: [String!]
+    $extensionId: String
+    $logType: String
+    $logOffset: Int
+    $logLimit: Int
+    $logHead: String
+    $logSort: String
+  ) {
     lanes {
       id
       list(ids: $ids) {

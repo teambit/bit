@@ -85,9 +85,10 @@ export class LanesModel {
   static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
 
   static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
-      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
-      : pathname;
+    let path = pathname.split(this.baseLaneRoute)[1];
+    if (!path) return undefined;
+    path = path.split('~')[0];
+    path = `${this.baseLaneRoute}${path}`;
     const matches = LanesModel.regexp.exec(path);
     if (!matches) return undefined;
     const [, orgId, scopeId, laneId] = matches;
