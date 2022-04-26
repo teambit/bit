@@ -60,7 +60,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
-  as?: string;
+  newLaneName?: string;
   merge?: MergeStrategy;
   getAll?: boolean;
   skipDependencyInstallation?: boolean;
@@ -193,7 +193,7 @@ export class LanesMain {
    */
   async switchLanes(
     laneName: string,
-    { as, merge, getAll = false, skipDependencyInstallation = false, verbose = false }: SwitchLaneOptions
+    { newLaneName, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -210,12 +210,12 @@ export class LanesMain {
     const switchProps = {
       laneName,
       existingOnWorkspaceOnly: !getAll,
-      newLaneName: as,
+      newLaneName,
     };
     const checkoutProps = {
       mergeStrategy,
-      verbose,
-      skipNpmInstall: skipDependencyInstallation, // not relevant in Harmony
+      skipNpmInstall: skipDependencyInstallation,
+      verbose: false, // not relevant in Harmony
       ignorePackageJson: true, // not relevant in Harmony
       ignoreDist: true, // not relevant in Harmony
       isLane: true,

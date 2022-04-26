@@ -21,7 +21,6 @@ export class SwitchCmd implements Command {
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
@@ -35,24 +34,21 @@ export class SwitchCmd implements Command {
       merge,
       getAll = false,
       skipDependencyInstallation = false,
-      verbose = false,
       json = false,
     }: {
       as?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
       skipDependencyInstallation?: boolean;
-      verbose?: boolean;
       override?: boolean;
       json?: boolean;
     }
   ) {
     const { components, failedComponents } = await this.lanes.switchLanes(lane, {
-      as,
+      newLaneName: as,
       merge,
       getAll,
       skipDependencyInstallation,
-      verbose,
     });
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
