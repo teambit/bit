@@ -10,10 +10,6 @@ import {
 } from '@teambit/lanes.ui.lanes';
 import { ComponentProvider, ComponentDescriptorProvider } from '@teambit/component';
 import { Overview } from '@teambit/docs';
-// import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
-// import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
-// import { H5 } from '@teambit/documenter.ui.heading';
-// import { Carousel } from '@teambit/design.content.carousel';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 
@@ -61,24 +57,6 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
               componentCount={laneComponents.length || undefined}
             ></LaneDetails>
             <Overview hideOverviewHeader={true} className={styles.laneReadmeOverview} />
-            {/* {hasComponents && <H5 className={styles.carouselTitle}>Components</H5>} */}
-            {/* {hasComponents && (
-              <Carousel animation={true} className={styles.laneCarousel}>
-                {laneComponents.map((laneComponent) => (
-                  <ComponentCard
-                    className={styles.laneCarouselComponent}
-                    hidePreview={true}
-                    key={laneComponent.model.id.fullName}
-                    id={laneComponent.model.id.fullName}
-                    href={LanesModel.getLaneComponentUrl(laneComponent.model.id, currentLane.id)}
-                    envIcon={laneComponent.model.environment?.icon}
-                    description={laneComponent.model.description}
-                    version={laneComponent.model.version === 'new' ? undefined : laneComponent.model.version}
-                    preview={<PreviewPlaceholder component={laneComponent.model} shouldShowPreview={true} />}
-                  />
-                ))}
-              </Carousel>
-            )} */}
             <div className={styles.readmeComponentCardContainer}>
               <ComponentCard
                 className={styles.readmeComponentCard}
