@@ -723,6 +723,17 @@
         }
       }
     },
+    "scopes/mdx/modules/loader": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@babel/preset-react": "7.13.13",
+            "@babel/preset-env": "7.12.17",
+            "babel-loader": "8.2.2"
+          }
+        }
+      }
+    },
     "scopes/typescript": {
       "defaultScope": "teambit.typescript"
     },
