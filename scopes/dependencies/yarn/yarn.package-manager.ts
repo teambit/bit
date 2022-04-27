@@ -34,7 +34,6 @@ import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import parseOverrides from '@pnpm/parse-overrides';
 import { PkgMain } from '@teambit/pkg';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
@@ -88,20 +87,13 @@ export class YarnPackageManager implements PackageManager {
     // @ts-ignore
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
-      const resolutions = {};
-      Array.from(componentDirectoryMap.hashMap.entries()).forEach(([, [comp, path]]) => {
-        const component = comp.state._consumer;
-        const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
-        resolutions[name] = `file:${relative(rootDir, path)}`;
-      });
       installOptions.overrides = {
         ...installOptions.overrides,
-        ...resolutions,
+        ...this._createLocalDirectoryOverrides(rootDir, componentDirectoryMap),
       };
     }
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
     if (installOptions.rootComponents) {
-      // is it needed?
       rootWs.manifest.installConfig = {
         hoistingLimits: 'dependencies',
       };
@@ -192,6 +184,22 @@ export class YarnPackageManager implements PackageManager {
     if (installReport.hasErrors()) process.exit(installReport.exitCode());
 
     this.logger.consoleSuccess('installing dependencies');
+  }
+
+  /**
+   * Every component is overriden with a local directory of that component.
+   * So the component will be installed from the local directory, not from the registry.
+   */
+  private _createLocalDirectoryOverrides(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): Record<string, string> {
+    const overrides = {};
+    Array.from(componentDirectoryMap.hashMap.entries()).forEach(([, [component, path]]) => {
+      const name = this.depResolver.getPackageName(component);
+      overrides[name] = `file:${relative(rootDir, path)}`;
+    });
+    return overrides;
   }
 
   private getPackageJsonPath(dir: string): string {
