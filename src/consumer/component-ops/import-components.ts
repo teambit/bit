@@ -647,7 +647,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,
       override: this.options.override,
-      saveOnLane: this._shouldSaveLaneData(),
     });
     await manyComponentsWriter.writeAll();
   }
