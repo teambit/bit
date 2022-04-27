@@ -17,13 +17,20 @@ const reactNativePackagesRule = {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function commonTransformation(config: WebpackConfigMutator, _context: WebpackConfigTransformContext) {
-  config
-    .addAliases({
-      react: require.resolve('react'),
-      'react-dom/server': require.resolve('react-dom/server'),
-      'react-native$': require.resolve('react-native-web'),
-    })
-    .addModuleRule(reactNativePackagesRule);
+  const hostRootDir = _context.target?.hostRootDir || _context.hostRootDir;
+  let options;
+  if (hostRootDir) {
+    options = {
+      paths: [hostRootDir, __dirname],
+    };
+  }
+  const peerAliases = {
+    react: require.resolve('react', options),
+    'react-dom/server': require.resolve('react-dom/server', options),
+    'react-native$': require.resolve('react-native-web', options),
+  };
+
+  config.addAliases(peerAliases).addModuleRule(reactNativePackagesRule);
 
   return config;
 }
