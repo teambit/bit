@@ -14,7 +14,7 @@ export function ComponentDeprecated({ deprecation, className }: ComponentDepreca
 
   return (
     <PillLabel className={classNames(styles.label, className)}>
-      <img src="https://static.bit.dev/bit-icons/deprecated.svg" />
+      <img src="https://static.bit.dev/bit-icons/deprecated-black.svg" />
       Deprecated
     </PillLabel>
   );
