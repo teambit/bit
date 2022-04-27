@@ -1,27 +1,26 @@
 .readmeContainer {
+  padding-bottom: 50px;
   height: 100%;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 .laneId {
-  padding: 50px 0px 0px 32px;
+  padding: 50px 0px 0px 120px;
 }
 .emptyLane {
   height: auto;
   padding-top: 8px;
   padding-bottom: 16px;
 }
-.carouselTitle {
-  padding: 32px 0px 0px 32px;
-}
-.carouselTitle,
-.laneCarousel {
-  display: flex;
-  flex-direction: column;
-}
-.laneCarousel {
-  height: 350px;
-}
-.laneCarouselComponent {
-  height: 300px;
+.readmeComponentCard {
   width: 300px;
+}
+.laneReadmeOverview {
+  overflow: auto;
+  display: flex;
+}
+
+.readmeComponentCardContainer {
+  display: flex;
+  padding: 24px 0px 32px 120px;
 }

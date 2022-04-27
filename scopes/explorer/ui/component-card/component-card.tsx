@@ -52,6 +52,7 @@ export type ComponentCardProps = {
    */
   href?: string;
   external?: boolean;
+  hidePreview?: boolean;
 } & BaseComponentCardProps;
 
 export function ComponentCard({
@@ -64,13 +65,13 @@ export function ComponentCard({
   isDeprecated = false,
   href,
   external,
+  hidePreview,
 }: ComponentCardProps) {
   return (
     <Card className={className}>
       <Link className={styles.componentCardLink} href={href || id} external={external}>
         <DeprecationSticker isDeprecated={isDeprecated} />
-        <PreviewContainer preview={preview} />
-
+        {hidePreview || <PreviewContainer preview={preview} />}
         <ComponentDetails id={id} version={version} description={description} className={styles.content} />
         <div className={styles.bottom}>
           <div className={styles.left} />

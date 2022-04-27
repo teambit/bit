@@ -12,8 +12,8 @@ import { ComponentProvider, ComponentDescriptorProvider } from '@teambit/compone
 import { Overview } from '@teambit/docs';
 // import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 // import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
-import { H5 } from '@teambit/documenter.ui.heading';
-import { Carousel } from '@teambit/design.content.carousel';
+// import { H5 } from '@teambit/documenter.ui.heading';
+// import { Carousel } from '@teambit/design.content.carousel';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 
@@ -47,7 +47,6 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
 function LaneReadme({ currentLane }: LaneReadmeProps) {
   const { model, descriptor, loading } = useLaneReadmeQuery(currentLane);
   const laneComponents = currentLane.components;
-  const hasComponents = laneComponents.length > 0;
 
   if (loading) return null;
 
@@ -61,13 +60,14 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
               laneName={currentLane.id}
               componentCount={laneComponents.length || undefined}
             ></LaneDetails>
-            <Overview className={styles.laneReadmeOverview} />
-            {hasComponents && <H5 className={styles.carouselTitle}>Components</H5>}
-            {hasComponents && (
+            <Overview hideOverviewHeader={true} className={styles.laneReadmeOverview} />
+            {/* {hasComponents && <H5 className={styles.carouselTitle}>Components</H5>} */}
+            {/* {hasComponents && (
               <Carousel animation={true} className={styles.laneCarousel}>
                 {laneComponents.map((laneComponent) => (
                   <ComponentCard
                     className={styles.laneCarouselComponent}
+                    hidePreview={true}
                     key={laneComponent.model.id.fullName}
                     id={laneComponent.model.id.fullName}
                     href={LanesModel.getLaneComponentUrl(laneComponent.model.id, currentLane.id)}
@@ -78,7 +78,20 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
                   />
                 ))}
               </Carousel>
-            )}
+            )} */}
+            <div className={styles.readmeComponentCardContainer}>
+              <ComponentCard
+                className={styles.readmeComponentCard}
+                hidePreview={true}
+                key={model.id.toString()}
+                id={model.id.fullName}
+                href={LanesModel.getLaneComponentUrl(model.id, currentLane.id)}
+                envIcon={model.environment?.icon}
+                description={model.description}
+                version={model.version === 'new' ? undefined : model.version}
+                preview={<PreviewPlaceholder component={model} shouldShowPreview={true} />}
+              />
+            </div>
           </div>
         </ComponentDescriptorProvider>
       </ComponentProvider>

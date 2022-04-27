@@ -18,9 +18,10 @@ export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
   titleBadges?: TitleBadgeSlot;
+  hideOverviewHeader?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function Overview({ titleBadges, className }: OverviewProps) {
+export function Overview({ titleBadges, className, hideOverviewHeader }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const lanesModel = useLanesContext();
@@ -28,7 +29,8 @@ export function Overview({ titleBadges, className }: OverviewProps) {
 
   const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
   const showHeaderOutsideIframe =
-    component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType);
+    (component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType)) &&
+    !hideOverviewHeader;
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
