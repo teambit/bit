@@ -11,7 +11,6 @@ import {
 import { ComponentProvider, ComponentDescriptorProvider } from '@teambit/component';
 import { Overview } from '@teambit/docs';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
-import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 
 import styles from './lane-readme.module.scss';
 
@@ -67,7 +66,6 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
                 envIcon={model.environment?.icon}
                 description={model.description}
                 version={model.version === 'new' ? undefined : model.version}
-                preview={<PreviewPlaceholder component={model} shouldShowPreview={true} />}
               />
             </div>
           </div>
