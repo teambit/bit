@@ -49,11 +49,12 @@ export default class Remove implements LegacyCommand {
   ): Promise<any> {
     if (deleteFiles) {
       loader.stop();
+      // eslint-disable-next-line no-console
       console.warn(
         chalk.yellow(
           '--delete-files flag is deprecated. by default the files are deleted, unless --keep-files was provided'
         )
-      ); // eslint-disable-line no-console
+      );
     }
     if (!silent) {
       const willDeleteFiles = !remote && !keepFiles;
