@@ -294,7 +294,7 @@ importers:
       chai-arrays: 1.1.0
       chai-fs: 1.0.0
       chai-string: 1.5.0
-      chalk: 2.4.2
+      chalk: 4.1.2
       checksum: 0.1.1
       chokidar: 3.5.1
       classnames: 2.2.6
@@ -545,7 +545,6 @@ importers:
       stream-http: 3.2.0
       string_decoder: 1.3.0
       string-format: 0.5.0
-      string-to-color: 2.2.2
       stringify-package: 1.0.1
       strip-ansi: 6.0.0
       style-loader: 2.0.0
@@ -828,7 +827,7 @@ importers:
       chai-arrays: registry.npmjs.org/chai-arrays/1.1.0
       chai-fs: registry.npmjs.org/chai-fs/1.0.0_chai@4.3.0
       chai-string: registry.npmjs.org/chai-string/1.5.0_chai@4.3.0
-      chalk: registry.npmjs.org/chalk/2.4.2
+      chalk: registry.npmjs.org/chalk/4.1.2
       checksum: registry.npmjs.org/checksum/0.1.1
       chokidar: registry.npmjs.org/chokidar/3.5.1
       classnames: registry.npmjs.org/classnames/2.2.6
@@ -1078,7 +1077,6 @@ importers:
       stream-http: registry.npmjs.org/stream-http/3.2.0
       string_decoder: registry.npmjs.org/string_decoder/1.3.0
       string-format: registry.npmjs.org/string-format/0.5.0
-      string-to-color: registry.npmjs.org/string-to-color/2.2.2
       stringify-package: registry.npmjs.org/stringify-package/1.0.1
       strip-ansi: registry.npmjs.org/strip-ansi/6.0.0
       style-loader: registry.npmjs.org/style-loader/2.0.0_webpack@5.51.1
@@ -19691,12 +19689,6 @@ packages:
     name: colorette
     version: 2.0.16
 
-  registry.npmjs.org/colornames/1.1.1:
-    resolution: {integrity: sha1-+IiQMGhcfE/54qVZ9Qd+t2qBb5Y=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/colornames/-/colornames-1.1.1.tgz}
-    name: colornames
-    version: 1.1.1
-    dev: false
-
   registry.npmjs.org/colors/1.0.3:
     resolution: {integrity: sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/colors/-/colors-1.0.3.tgz}
     name: colors
@@ -25497,13 +25489,6 @@ packages:
     hasBin: true
     dev: false
 
-  registry.npmjs.org/hex-rgb/4.3.0:
-    resolution: {integrity: sha512-Ox1pJVrDCyGHMG9CFg1tmrRUMRPRsAWYc/PinY0XzJU4K7y7vjNoLKIQ7BR5UJMCxNN8EM1MNDmHWA/B3aZUuw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/hex-rgb/-/hex-rgb-4.3.0.tgz}
-    name: hex-rgb
-    version: 4.3.0
-    engines: {node: '>=6'}
-    dev: false
-
   registry.npmjs.org/highlight.js/10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/highlight.js/-/highlight.js-10.7.3.tgz}
     name: highlight.js
@@ -29066,12 +29051,6 @@ packages:
     version: 4.6.0
     dev: false
 
-  registry.npmjs.org/lodash.padend/4.6.1:
-    resolution: {integrity: sha1-U8y6BH0G4VjTEfRdpiX05J5vFm4=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.padend/-/lodash.padend-4.6.1.tgz}
-    name: lodash.padend
-    version: 4.6.1
-    dev: false
-
   registry.npmjs.org/lodash.partition/4.6.0:
     resolution: {integrity: sha1-o45GtzRp4EILDaEhLmbUFL42S6Q=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.partition/-/lodash.partition-4.6.0.tgz}
     name: lodash.partition
@@ -29108,12 +29087,6 @@ packages:
     version: 4.4.0
     dev: false
 
-  registry.npmjs.org/lodash.trimstart/4.5.1:
-    resolution: {integrity: sha1-j/TexTLYJIavWVc8OURZFOlEp/E=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.trimstart/-/lodash.trimstart-4.5.1.tgz}
-    name: lodash.trimstart
-    version: 4.5.1
-    dev: false
-
   registry.npmjs.org/lodash.truncate/4.4.2:
     resolution: {integrity: sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.truncate/-/lodash.truncate-4.4.2.tgz}
     name: lodash.truncate
@@ -29130,12 +29103,6 @@ packages:
     resolution: {integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.uniq/-/lodash.uniq-4.5.0.tgz}
     name: lodash.uniq
     version: 4.5.0
-    dev: false
-
-  registry.npmjs.org/lodash.words/4.2.0:
-    resolution: {integrity: sha1-Xs/q+Oz4rKqODIOGKV8Zk8nPQDY=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.words/-/lodash.words-4.2.0.tgz}
-    name: lodash.words
-    version: 4.2.0
     dev: false
 
   registry.npmjs.org/lodash/4.17.15:
@@ -35404,13 +35371,6 @@ packages:
     version: 1.3.0
     dev: false
 
-  registry.npmjs.org/rgb-hex/3.0.0:
-    resolution: {integrity: sha512-8h7ZcwxCBDKvchSWbWngJuSCqJGQ6nDuLLg+QcRyQDbX9jMWt+PpPeXAhSla0GOooEomk3lCprUpGkMdsLjKyg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/rgb-hex/-/rgb-hex-3.0.0.tgz}
-    name: rgb-hex
-    version: 3.0.0
-    engines: {node: '>=8'}
-    dev: false
-
   registry.npmjs.org/right-pad/1.0.1:
     resolution: {integrity: sha1-jKCMLLtbVedNr6lr9/0aJ9VoyNA=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/right-pad/-/right-pad-1.0.1.tgz}
     name: right-pad
@@ -37013,19 +36973,6 @@ packages:
     dependencies:
       char-regex: registry.npmjs.org/char-regex/2.0.1
       strip-ansi: registry.npmjs.org/strip-ansi/7.0.1
-    dev: false
-
-  registry.npmjs.org/string-to-color/2.2.2:
-    resolution: {integrity: sha512-XeA2goP7PNsSlz8RRn6KhYswnMf5Tl+38ajfy8n4oZJyMGC4qqKgHNHsZ/3qwvr42NRIjf9eSr721SyetDeMkA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/string-to-color/-/string-to-color-2.2.2.tgz}
-    name: string-to-color
-    version: 2.2.2
-    dependencies:
-      colornames: registry.npmjs.org/colornames/1.1.1
-      hex-rgb: registry.npmjs.org/hex-rgb/4.3.0
-      lodash.padend: registry.npmjs.org/lodash.padend/4.6.1
-      lodash.trimstart: registry.npmjs.org/lodash.trimstart/4.5.1
-      lodash.words: registry.npmjs.org/lodash.words/4.2.0
-      rgb-hex: registry.npmjs.org/rgb-hex/3.0.0
     dev: false
 
   registry.npmjs.org/string-width/1.0.2:
