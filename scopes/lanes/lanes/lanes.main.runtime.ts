@@ -9,8 +9,13 @@ import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import {
+  MergeStrategy,
+  ApplyVersionResults,
+  MergeOptions,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -36,6 +41,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
+import { LaneSwitcher } from './switch-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -57,12 +63,22 @@ export type CreateLaneOptions = {
   remoteName?: string; // default to the local lane
 };
 
+export type SwitchLaneOptions = {
+  newLaneName?: string;
+  merge?: MergeStrategy;
+  getAll?: boolean;
+  skipDependencyInstallation?: boolean;
+  verbose?: boolean;
+  override?: boolean;
+};
+
 export class LanesMain {
   constructor(
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
     private merging: MergingMain,
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+    private logger: Logger
   ) {}
 
   async getLanes({
@@ -172,6 +188,48 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
     this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
     return results;
+  }
+
+  /**
+   * switch to a different local or remote lane.
+   * switching to a remote lane also imports and writes the components of that remote lane.
+   * by default, only the components existing on the workspace will be imported from that lane, unless the "getAll"
+   * flag is true.
+   */
+  async switchLanes(
+    laneName: string,
+    { newLaneName, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+  ) {
+    if (!this.workspace) {
+      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+    }
+    let mergeStrategy;
+    if (merge && typeof merge === 'string') {
+      const mergeOptions = Object.keys(MergeOptions);
+      if (!mergeOptions.includes(merge)) {
+        throw new BitError(`merge must be one of the following: ${mergeOptions.join(', ')}`);
+      }
+      mergeStrategy = merge;
+    }
+
+    const switchProps = {
+      laneName,
+      existingOnWorkspaceOnly: !getAll,
+      newLaneName,
+    };
+    const checkoutProps = {
+      mergeStrategy,
+      skipNpmInstall: skipDependencyInstallation,
+      verbose: false, // not relevant in Harmony
+      ignorePackageJson: true, // not relevant in Harmony
+      ignoreDist: true, // not relevant in Harmony
+      isLane: true,
+      promptMergeOptions: false,
+      writeConfig: false,
+      reset: false,
+      all: false,
+    };
+    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps).switch();
   }
 
   /**
@@ -328,20 +386,23 @@ export class LanesMain {
     CommunityAspect,
     MergingAspect,
     ComponentAspect,
+    LoggerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging, component]: [
+  static async provider([cli, scope, workspace, graphql, community, merging, component, loggerMain]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
     CommunityMain,
     MergingMain,
-    ComponentMain
+    ComponentMain,
+    LoggerMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope, merging, component);
+    const logger = loggerMain.createLogger(LanesAspect.id);
+    const lanesMain = new LanesMain(workspace, scope, merging, component, logger);
     const isLegacy = workspace && workspace.consumer.isLegacy;
-    const switchCmd = new SwitchCmd();
+    const switchCmd = new SwitchCmd(lanesMain);
     if (!isLegacy) {
       const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
       laneCmd.commands = [

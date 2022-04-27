@@ -26,7 +26,6 @@ import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import remove from './lib/remove';
 import show from './lib/show';
-import switchAction from './lib/switch';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
@@ -68,7 +67,6 @@ export {
   login,
   show,
   paintGraph,
-  switchAction,
   fetch,
   clearCache,
 };
