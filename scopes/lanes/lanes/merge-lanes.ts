@@ -7,6 +7,7 @@ import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { MergingMain } from '@teambit/merging';
+import { remove } from '@teambit/legacy/dist/api/consumer';
 
 export async function mergeLanes({
   merging,
@@ -18,6 +19,7 @@ export async function mergeLanes({
   snapMessage,
   existingOnWorkspaceOnly,
   build,
+  keepReadme,
 }: {
   merging: MergingMain;
   consumer: Consumer;
@@ -28,7 +30,8 @@ export async function mergeLanes({
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
-}): Promise<ApplyVersionResults> {
+  keepReadme?: boolean;
+}): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
     throw new BitError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
@@ -37,7 +40,7 @@ export async function mergeLanes({
   const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(localLaneId);
   const laneId = new LaneId({ name: laneName });
   let bitIds: BitId[];
-  let otherLane: Lane | null;
+  let otherLane: Lane | null | undefined;
   let remoteLane;
   let otherLaneName: string;
   const isDefaultLane = laneName === DEFAULT_LANE;
@@ -61,9 +64,10 @@ export async function mergeLanes({
     bitIds = otherLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     otherLaneName = laneId.name;
   }
+
   const allComponentsStatus = await getAllComponentsStatus();
 
-  return merging.mergeSnaps({
+  const mergeResults = await merging.mergeSnaps({
     mergeStrategy,
     allComponentsStatus,
     remoteName,
@@ -73,6 +77,35 @@ export async function mergeLanes({
     snapMessage,
     build,
   });
+
+  const mergedSuccessfully =
+    !mergeResults.failedComponents ||
+    mergeResults.failedComponents.length === 0 ||
+    mergeResults.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately);
+
+  let deleteResults = {};
+
+  if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
+    await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
+
+    const readmeComponentId = [
+      otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),
+    ];
+
+    deleteResults = await remove({
+      ids: readmeComponentId,
+      force: false,
+      remote: false,
+      track: false,
+      deleteFiles: true,
+    });
+  } else if (!otherLane) {
+    deleteResults = { readmeResult: `missing lane ${laneName}` };
+  } else if (!otherLane.readmeComponent) {
+    deleteResults = { readmeResult: `lane ${otherLane.name} doesn't have a readme component` };
+  }
+
+  return { mergeResults, deleteResults };
 
   async function getAllComponentsStatus() {
     const tmp = new Tmp(consumer.scope);

@@ -41,6 +41,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         isMerged: Boolean
         remote: String
         components(offset: Int, limit: Int): [Component!]!
+        readmeComponent: Component
       }
 
       # Lane API
@@ -101,6 +102,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane.name);
           return laneComponents;
+        },
+        readmeComponent: async (lane: LaneData) => {
+          const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane.name);
+          return laneReadmeComponent;
         },
       },
       Query: {

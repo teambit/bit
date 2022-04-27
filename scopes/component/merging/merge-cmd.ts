@@ -85,6 +85,7 @@ export class MergeCmd implements Command {
       const componentsStr = abortedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
+
     return mergeReport({
       components,
       failedComponents,

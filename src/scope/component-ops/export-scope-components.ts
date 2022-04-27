@@ -280,6 +280,9 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         lane.components.forEach((c) => {
           c.id = c.id.changeScope(remoteName);
         });
+        if (lane.readmeComponent) {
+          lane.readmeComponent.id = lane.readmeComponent.id.changeScope(remoteName);
+        }
         return { ref: lane.hash(), buffer: await lane.compress() };
       })
     );
@@ -341,6 +344,11 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
         c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || remoteName);
       });
+      if (lane.readmeComponent) {
+        lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
+          ? lane.readmeComponent.id
+          : lane.readmeComponent.id.changeScope(remoteName);
+      }
       const laneData = { ref: lane.hash(), buffer: await lane.compress() };
       objectList.addIfNotExist([laneData]);
     }
