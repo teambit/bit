@@ -15,7 +15,13 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "rootDir": ".",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "react": [
+        "node_modules/@types/react"
+      ]
+    }
   },
   "exclude": [
     "dist"

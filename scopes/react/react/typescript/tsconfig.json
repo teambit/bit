@@ -11,7 +11,13 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "react": [
+        "node_modules/@types/react"
+      ]
+    }
   },
   "exclude": [
     "dist"
