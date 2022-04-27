@@ -11,7 +11,6 @@ import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
-import Environment from '../../../../../src/environment';
 
 export class ReactApp implements Application {
   constructor(
