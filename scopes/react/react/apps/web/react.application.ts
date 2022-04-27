@@ -11,6 +11,7 @@ import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
+import Environment from '../../../../../src/environment';
 
 export class ReactApp implements Application {
   constructor(
@@ -78,7 +79,7 @@ export class ReactApp implements Application {
   }
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
-    const reactEnv: ReactEnv = context.env;
+    const reactEnv: ReactEnv = context.env as ReactEnv;
     const publicDir = this.getPublicDir();
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
