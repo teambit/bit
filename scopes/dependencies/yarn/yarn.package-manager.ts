@@ -60,7 +60,6 @@ export class YarnPackageManager implements PackageManager {
       createManifestForComponentsWithoutDependencies: true,
       dedupe: !installOptions.rootComponentsForCapsules,
       dependencyFilterFn: installOptions.dependencyFilterFn,
-      hasRootComponents: installOptions.rootComponentsForCapsules,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
