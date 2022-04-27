@@ -619,16 +619,13 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!currentLane) {
       return; // user on main
     }
+    const components = componentsWithDependencies.map((c) => c.component);
     await Promise.all(
-      componentsWithDependencies.map(async (compWithDeps) => {
-        const allComps = [compWithDeps.component, ...compWithDeps.allDependencies];
-        const updateAllCompsP = allComps.map(async (comp) => {
-          const modelComponent = await this.scope.getModelComponent(comp.id);
-          const ref = modelComponent.getRef(comp.id.version as string);
-          if (!ref) throw new Error(`_saveLaneDataIfNeeded unable to get ref for ${comp.id.toString()}`);
-          currentLane.addComponent({ id: comp.id, head: ref });
-        });
-        await Promise.all(updateAllCompsP);
+      components.map(async (comp) => {
+        const modelComponent = await this.scope.getModelComponent(comp.id);
+        const ref = modelComponent.getRef(comp.id.version as string);
+        if (!ref) throw new Error(`_saveLaneDataIfNeeded unable to get ref for ${comp.id.toString()}`);
+        currentLane.addComponent({ id: comp.id, head: ref });
       })
     );
     await this.scope.lanes.saveLane(currentLane);
