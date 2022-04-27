@@ -9,7 +9,7 @@ import userpassSchema from './schemas/user-password';
 
 const passphrase = prompt(passphraseSchema);
 const userpass = prompt(userpassSchema);
-const removePrompt = prompt(removeSchema);
+const removePrompt = (deleteFiles: boolean) => prompt(removeSchema(deleteFiles));
 const resolveConflictPrompt = prompt(resolveConflictSchema);
 const analyticsPrompt = prompt(analyticsSchema);
 const errorReportingPrompt = prompt(errorReportingSchema);
