@@ -4,7 +4,7 @@ import { getExposedRules } from './get-exposed-rules';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[]) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
-    const hostRootDir = context.target.hostRootDir;
+    const hostRootDir = context.target?.hostRootDir || context.hostRootDir;
     let options;
     if (hostRootDir) {
       options = {
@@ -27,7 +27,8 @@ export function generateAddAliasesFromPeersTransformer(peers: string[]) {
  */
 export function generateExposePeersTransformer(peers: string[]) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
-    const exposedRules = getExposedRules(peers, context.target.hostRootDir);
+    const hostRootDir = context.target?.hostRootDir || context.hostRootDir;
+    const exposedRules = getExposedRules(peers, hostRootDir);
     config.addModuleRules(exposedRules);
     return config;
   };
