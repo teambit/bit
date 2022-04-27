@@ -9,6 +9,7 @@ import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import {
   MergeStrategy,
@@ -40,7 +41,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
-import { switchLanes } from './switch-lanes';
+import { LaneSwitcher } from './switch-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -76,7 +77,8 @@ export class LanesMain {
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
     private merging: MergingMain,
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+    private logger: Logger
   ) {}
 
   async getLanes({
@@ -227,7 +229,7 @@ export class LanesMain {
       reset: false,
       all: false,
     };
-    return switchLanes(this.workspace.consumer, switchProps, checkoutProps);
+    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps).switch();
   }
 
   /**
@@ -384,18 +386,21 @@ export class LanesMain {
     CommunityAspect,
     MergingAspect,
     ComponentAspect,
+    LoggerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging, component]: [
+  static async provider([cli, scope, workspace, graphql, community, merging, component, loggerMain]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
     CommunityMain,
     MergingMain,
-    ComponentMain
+    ComponentMain,
+    LoggerMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope, merging, component);
+    const logger = loggerMain.createLogger(LanesAspect.id);
+    const lanesMain = new LanesMain(workspace, scope, merging, component, logger);
     const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd(lanesMain);
     if (!isLegacy) {
