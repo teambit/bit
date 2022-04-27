@@ -391,9 +391,19 @@ describe('tag components on Harmony', function () {
       expect(taskIds.length).to.equal(taskIdsUniq.length);
     });
   });
-  describe('component with issues', () => {
+  describe('soft tag --minor with auto-tag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp2/index.js');
+      helper.command.softTag('--minor');
+    });
+    it('should not bump the auto-tagged with minor but with patch', () => {
+      const bitMap = helper.bitMap.readComponentsMapOnly();
+      expect(bitMap.comp2.nextVersion.version).equal('minor');
+      expect(bitMap.comp1.nextVersion.version).equal('0.0.2');
     });
   });
 });
