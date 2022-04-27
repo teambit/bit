@@ -1,4 +1,5 @@
 import { EnvDefinition } from '../env-definition';
+import { Environment } from '../environment';
 
 import { EnvRuntime, Runtime } from '../runtime';
 
@@ -36,7 +37,7 @@ export class ExecutionContext {
   /**
    * environment instance.
    */
-  get env(): any {
+  get env(): Environment {
     return this.envRuntime.env;
   }
 
