@@ -1,3 +1,4 @@
+import { AspectDefinition } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 
 import { Environment } from '../environment';
@@ -20,6 +21,11 @@ export class EnvRuntime {
     /**
      * components to be loaded in the environment
      */
-    readonly components: Component[]
+    readonly components: Component[],
+
+    /**
+     * Aspect definition of the env.
+     */
+    readonly envAspectDefinition: AspectDefinition
   ) {}
 }
