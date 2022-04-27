@@ -346,7 +346,6 @@
         "socket.io": "2.4.1",
         "socket.io-client": "2.4.0",
         "socks-proxy-agent": "5.0.0",
-        "string-to-color": "2.2.2",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
         "table": "6.7.3",
