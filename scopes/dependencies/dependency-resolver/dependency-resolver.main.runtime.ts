@@ -900,7 +900,7 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  private async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
+  async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
