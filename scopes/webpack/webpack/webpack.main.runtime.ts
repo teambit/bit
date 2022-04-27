@@ -31,6 +31,13 @@ export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransfor
 
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
+  /**
+   * A path for the host root dir
+   * Host root dir is usually the env root dir
+   * This can be used in different bundle options which run require.resolve
+   * for example when configuring webpack aliases or webpack expose loader on the peers deps
+   */
+  hostRootDir?: string;
 };
 
 export type WebpackConfigTransformer = (
@@ -79,7 +86,7 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'dev' };
+    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'dev', hostRootDir: context.hostRootDir };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
