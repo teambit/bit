@@ -54,9 +54,11 @@ function Router({ type, children, location }: { type: Routing; children: ReactNo
         </MemoryRouter>
       );
     case Routing.hash:
+      // @ts-ignore - https://github.com/teambit/bit/issues/5746
       return <HashRouter>{children}</HashRouter>;
     case Routing.url:
     default:
+      // @ts-ignore - https://github.com/teambit/bit/issues/5746
       return <BrowserRouter>{children}</BrowserRouter>;
   }
 }

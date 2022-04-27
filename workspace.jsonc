@@ -195,7 +195,7 @@
         "@types/lodash.head": "4.0.6",
         "@types/lodash.orderby": "4.6.6",
         "@types/lodash.pick": "4.4.6",
-        "@types/mdx-js__react": "1.5.3",
+        "@types/mdx-js__react": "1.5.5",
         "@types/memoizee": "0.4.5",
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
