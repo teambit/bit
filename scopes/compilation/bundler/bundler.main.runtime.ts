@@ -1,6 +1,7 @@
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect } from '@teambit/component';
+import { Component } from '@teambit/component';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -114,18 +115,18 @@ export class BundlerMain {
   static slots = [Slot.withType<BrowserRuntime>()];
 
   static runtime = MainRuntime;
-  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
+  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect];
 
   static defaultConfig = {
     dedicatedEnvDevServers: [],
   };
 
   static async provider(
-    [pubsub, envs, graphql]: [PubsubMain, EnvsMain, GraphqlMain],
+    [pubsub, envs, graphql, dependencyResolver]: [PubsubMain, EnvsMain, GraphqlMain, DependencyResolverMain],
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const devServerService = new DevServerService(pubsub, runtimeSlot);
+    const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot);
     const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot);
     envs.registerService(devServerService);
 

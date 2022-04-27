@@ -3,6 +3,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import React from 'react';
 import { Text, Newline } from 'ink';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
@@ -46,6 +47,8 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
      * browser runtime slot
      */
     private pubsub: PubsubMain,
+
+    private dependencyResolver: DependencyResolverMain,
 
     /**
      * browser runtime slot
@@ -104,7 +107,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     contexts: ExecutionContext[],
     { dedicatedEnvDevServers }: DevServerServiceOptions
   ): Promise<ComponentServer[]> {
-    const groupedEnvs = dedupEnvs(contexts, dedicatedEnvDevServers);
+    const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
     const servers = await Promise.all(
       Object.entries(groupedEnvs).map(async ([id, contextList]) => {
@@ -146,6 +149,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `${sep}public`,
+      hostRootDir: context.envRuntime.envAspectDefinition.aspectPath,
     });
   }
 }
