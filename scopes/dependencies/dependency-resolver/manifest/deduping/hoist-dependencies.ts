@@ -431,7 +431,11 @@ this is a temporary issue with unsupported snaps (hashes) on the registry and wi
     }
     // parseRange does not support `*` as version
     // `*` does not affect resulted version, it might be just ignored
-    if (validRange === '*') return;
+    if (validRange === '*') {
+      // to prevent empty `result.ranges`, it needs to be pushed
+      result.ranges.push(item);
+      return;
+    }
     const parsed = parseRange(validRange);
     if (parsed.condition === '=') {
       result.versions.push(item);
