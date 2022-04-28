@@ -79,6 +79,11 @@ describe('import lanes', function () {
         const lanes = helper.command.showLanes();
         expect(lanes).to.have.string('current lane - dev');
       });
+      it('.bitmap should save the component as belong to the lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.onLanesOnly).to.be.true;
+        expect(bitMap.comp2.onLanesOnly).to.be.true;
+      });
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
