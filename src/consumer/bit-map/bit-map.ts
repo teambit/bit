@@ -695,7 +695,7 @@ export default class BitMap {
       const newComponentMap = new ComponentMap({
         files,
         origin,
-        onLanesOnly: Boolean(this.workspaceLane),
+        onLanesOnly: Boolean(this.workspaceLane) && componentId.hasVersion(),
       });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, newComponentMap);
