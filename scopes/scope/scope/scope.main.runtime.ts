@@ -648,7 +648,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
-    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    let userAspectsIds;
+    if (componentIds && componentIds.length) {
+      userAspectsIds = componentIds.filter((id) => !coreAspectsIds.includes(id.toString()));
+    } else {
+      userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
+    }
+
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
       return !this.localAspects.find((localAspect) => {
         return localAspect.includes(aspectId.fullName.replace('/', '.'));
