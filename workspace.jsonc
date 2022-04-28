@@ -195,7 +195,7 @@
         "@types/lodash.head": "4.0.6",
         "@types/lodash.orderby": "4.6.6",
         "@types/lodash.pick": "4.4.6",
-        "@types/mdx-js__react": "1.5.3",
+        "@types/mdx-js__react": "1.5.5",
         "@types/memoizee": "0.4.5",
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
@@ -379,7 +379,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.258",
+        "@teambit/legacy": "1.0.259",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -458,7 +458,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.258"
+            "@teambit/legacy": "1.0.259"
           }
         }
       },
@@ -723,7 +723,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.258"
+            "@teambit/legacy": "1.0.259"
           }
         }
       }
@@ -796,7 +796,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.258",
+            "@teambit/legacy": "1.0.259",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -926,7 +926,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.258"
+            "@teambit/legacy": "1.0.259"
           }
         }
       }
