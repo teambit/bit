@@ -46,6 +46,10 @@ export const componentOverviewFields = gql`
     preview {
       includesEnvTemplate
     }
+    compositions {
+      identifier
+      displayName
+    }
   }
   ${componentIdFields}
 `;
@@ -58,10 +62,6 @@ export const componentFields = gql`
     ...componentOverviewFields
     packageName
     latest
-    compositions {
-      identifier
-      displayName
-    }
     tags {
       version
     }
