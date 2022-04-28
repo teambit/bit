@@ -1,9 +1,8 @@
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import os from 'os';
 import * as path from 'path';
 
-import { generateRandomStr } from '../utils';
+import { BIT_TEMP_ROOT, generateRandomStr } from '../utils';
 
 export const DEFAULT_OWNER = 'ci';
 
@@ -22,7 +21,7 @@ export default class ScopesData {
   globalRemote: string;
   globalRemotePath: string;
   constructor(scopesOptions?: ScopesOptions) {
-    this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
+    this.e2eDir = path.join(BIT_TEMP_ROOT, 'e2e');
     this.setLocalScope();
     this.setRemoteScope(scopesOptions?.remoteScopeWithDot, scopesOptions?.remoteScopePrefix);
     this.setEnvScope();

@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
-import tempy from 'tempy';
+import { createTempDir } from '../../../../src/utils';
 import { hardLinkDirectory } from './hard-link-directory';
 
 test('hardLinkDirectory()', async () => {
-  const tempDir = tempy.directory();
-  const srcDir = path.join(tempDir, 'source')
-  const dest1Dir = path.join(tempDir, 'dest1')
-  const dest2Dir = path.join(tempDir, 'dest2')
+  const tempDir = createTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const dest1Dir = path.join(tempDir, 'dest1');
+  const dest2Dir = path.join(tempDir, 'dest2');
 
   fs.mkdirpSync(srcDir);
   fs.mkdirpSync(dest1Dir);
