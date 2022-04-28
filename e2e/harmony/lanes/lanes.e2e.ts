@@ -203,6 +203,16 @@ describe('bit lane command', function () {
           expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
         });
       });
+      describe('importing the component', () => {
+        before(() => {
+          helper.command.importComponent('bar/foo');
+        });
+        it('should not set the onLaneOnly to true as it exists also on main', () => {
+          const bitmap = helper.bitMap.read();
+          const bitmapEntry = bitmap['bar/foo'];
+          expect(bitmapEntry).to.not.have.property('onLanesOnly');
+        });
+      });
     });
     describe('bit lane diff on the workspace', () => {
       let diffOutput: string;
