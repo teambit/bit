@@ -35,6 +35,7 @@ function ComponentNodeContainer(props: NodeProps) {
   );
 }
 
+// @ts-ignore - incorrect NodeTypes https://github.com/wbkd/react-flow/issues/2101 (#5746)
 const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
 export type DependenciesGraphProps = {
@@ -75,6 +76,7 @@ export function DependenciesGraph({
 
   return (
     <ComponentGraphContext.Provider value={context}>
+      {/* @ts-ignore - TODO - remove when ReactFlowProvider will be of type `FC<PropsWithChildren<{}>>` instead of `FC` (#5746) */}
       <ReactFlowProvider>
         <ReactFlow
           draggable={false}

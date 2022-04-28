@@ -692,7 +692,11 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      const newComponentMap = new ComponentMap({ files, origin });
+      const newComponentMap = new ComponentMap({
+        files,
+        origin,
+        onLanesOnly: Boolean(this.workspaceLane) && componentId.hasVersion(),
+      });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, newComponentMap);
       return newComponentMap;
