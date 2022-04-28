@@ -4,32 +4,32 @@ import tempy from 'tempy';
 import { hardLinkDirectory } from './hard-link-directory';
 
 test('hardLinkDirectory()', async () => {
-  process.chdir(tempy.directory());
+  const tempDir = tempy.directory();
+  const srcDir = path.join(tempDir, 'source')
+  const dest1Dir = path.join(tempDir, 'dest1')
+  const dest2Dir = path.join(tempDir, 'dest2')
 
-  fs.mkdirpSync('source');
-  fs.mkdirpSync('dest1');
-  fs.mkdirpSync('dest2');
-  fs.mkdirpSync('source/node_modules');
-  fs.mkdirpSync('source/subdir');
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(dest1Dir);
+  fs.mkdirpSync(dest2Dir);
+  fs.mkdirpSync(path.join(srcDir, 'node_modules'));
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
 
-  fs.writeFileSync('source/file.txt', 'Hello World');
-  fs.writeFileSync('source/subdir/file.txt', 'Hello World');
-  fs.writeFileSync('source/node_modules/file.txt', 'Hello World');
+  fs.writeFileSync(path.join(srcDir, 'file.txt'), 'Hello World');
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+  fs.writeFileSync(path.join(srcDir, 'node_modules/file.txt'), 'Hello World');
 
-  await hardLinkDirectory(path.resolve('source'), [
-    path.resolve('dest1'),
-    path.resolve('dest2'),
-  ]);
+  await hardLinkDirectory(srcDir, [dest1Dir, dest2Dir]);
 
   // It should link the files from the root
-  expect(fs.readFileSync('dest1/file.txt', 'utf8')).toBe('Hello World');
-  expect(fs.readFileSync('dest2/file.txt', 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest1Dir, 'file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest2Dir, 'file.txt'), 'utf8')).toBe('Hello World');
 
   // It should link files from a subdirectory
-  expect(fs.readFileSync('dest1/subdir/file.txt', 'utf8')).toBe('Hello World');
-  expect(fs.readFileSync('dest2/subdir/file.txt', 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest1Dir, 'subdir/file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest2Dir, 'subdir/file.txt'), 'utf8')).toBe('Hello World');
 
   // It should not link files from node_modules
-  expect(fs.existsSync('dest1/node_modules/file.txt')).toBe(false);
-  expect(fs.existsSync('dest2/node_modules/file.txt')).toBe(false);
+  expect(fs.existsSync(path.join(dest1Dir, 'node_modules/file.txt'))).toBe(false);
+  expect(fs.existsSync(path.join(dest2Dir, 'node_modules/file.txt'))).toBe(false);
 })
