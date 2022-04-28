@@ -429,6 +429,9 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
       throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range.
 this is a temporary issue with unsupported snaps (hashes) on the registry and will be fixed very soon`);
     }
+    // parseRange does not support `*` as version
+    // `*` does not affect resulted version, it might be just ignored
+    if (validRange === '*') return;
     const parsed = parseRange(validRange);
     if (parsed.condition === '=') {
       result.versions.push(item);
