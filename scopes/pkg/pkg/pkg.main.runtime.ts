@@ -344,7 +344,6 @@ export class PkgMain implements CloneConfig {
       latest: latestVersion,
       ...preReleaseLatestTags,
     };
-
     const versions = await this.getAllSnapsManifests(component);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
     const externalRegistry = this.isPublishedToExternalRegistry(component);
@@ -391,13 +390,21 @@ export class PkgMain implements CloneConfig {
 
   async getSnapManifest(component: Component, snap: Snap): Promise<VersionPackageManifest | undefined> {
     const idWithCorrectVersion = component.id.changeVersion(snap.hash);
-    // const state = await this.scope.getState(component.id, tag.hash);
-    // const currentExtension = state.aspects.get(PkgAspect.id);
-    const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
-    if (!updatedComponent) {
-      throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
-    }
-    const currentData = this.getComponentBuildData(updatedComponent);
+
+    // @todo: this is a hack. see below the right way to do it.
+    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion._legacy);
+    const builderData = version.extensions.findCoreExtension(BuilderAspect.id)?.data?.aspectsData;
+    const currentData = builderData?.find((a) => a.aspectId === PkgAspect.id)?.data;
+
+    // @todo: this is the proper way to communicate with the builder aspect. however, getting
+    // the entire Component for each one of the snaps is terrible in terms of the performance.
+
+    // const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
+    // if (!updatedComponent) {
+    //   throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
+    // }
+    // const currentData = this.getComponentBuildData(updatedComponent);
+
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;
