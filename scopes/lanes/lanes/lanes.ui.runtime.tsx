@@ -7,7 +7,7 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import {
   LanesDrawer,
   LanesHost,
-  LaneOverview,
+  LaneGallery,
   LanesOrderedNavigationSlot,
   LanesModel,
   LanesOverviewMenu,
@@ -17,7 +17,7 @@ import {
   UseLaneMenu,
   useLanesContext,
   LanesNavPlugin,
-  LaneReadme,
+  LaneReadmeOverview,
 } from '@teambit/lanes.ui.lanes';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
@@ -63,12 +63,19 @@ export class LanesUI {
         path: LanesModel.laneComponentUrlRegex,
         children: this.componentUi.getComponentUI(this.host),
       },
-      { path: `${LanesModel.laneRouteUrlRegex}/~readme`, children: <LaneReadme host={this.host} /> },
+      {
+        path: `${LanesModel.laneRouteUrlRegex}/~readme`,
+        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
+      },
       {
         path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
-        children: <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
+        children: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
       },
-      { exact: true, path: `${LanesModel.laneRouteUrlRegex}`, children: <LaneReadme host={this.host} /> },
+      {
+        exact: true,
+        path: `${LanesModel.laneRouteUrlRegex}`,
+        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
+      },
     ]);
     this.hostAspect.registerMenuRoutes([
       {

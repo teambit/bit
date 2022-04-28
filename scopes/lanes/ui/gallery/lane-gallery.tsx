@@ -7,16 +7,17 @@ import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
 import { EmptyLane } from './empty-lane-overview';
 
-import styles from './lane-overview.module.scss';
+import styles from './lane-gallery.module.scss';
 
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
-export type LaneOverviewProps = {
+export type LaneGalleryProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
 };
-export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
+
+export function LaneGallery({ routeSlot, overviewSlot }: LaneGalleryProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -25,7 +26,7 @@ export function LaneOverview({ routeSlot, overviewSlot }: LaneOverviewProps) {
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
-  return <LaneOverviewWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
+  return <LaneGalleryWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
 }
 
 type LaneOverviewWithPreviewProps = {
@@ -34,7 +35,7 @@ type LaneOverviewWithPreviewProps = {
   routeSlot: RouteSlot;
 };
 
-function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
+function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
   const { loading, components } = useLaneComponents(currentLane);
 
   if (loading) return null;

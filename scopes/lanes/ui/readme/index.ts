@@ -1,1 +1,2 @@
-export { LaneReadmeWrapper as LaneReadme, LaneReadmeWrapperProps as LaneReadmeProps } from './lane-readme';
+export { LaneReadme, LaneReadmeProps } from './lane-readme';
+export { LaneReadmeOverview, LaneReadmeOverviewProps } from './lane-readme-overview';

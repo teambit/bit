@@ -1,46 +1,30 @@
-import React from 'react';
-import { ReactRouter } from '@teambit/react-router';
+import React, { useMemo } from 'react';
 import {
   LanesProvider,
-  useLanesContext,
   LaneModel,
   LaneDetails,
   LanesModel,
   useLaneReadme,
+  LaneOverviewLineSlot,
 } from '@teambit/lanes.ui.lanes';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
-
+import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
+import flatten from 'lodash.flatten';
 import styles from './lane-readme.module.scss';
 
 export type LaneReadmeProps = {
   host: string;
   currentLane: LaneModel;
+  overviewSlot?: LaneOverviewLineSlot;
+  routeSlot: RouteSlot;
 };
 
-export type LaneReadmeWrapperProps = {
-  host: string;
-};
-
-export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
-  const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.currentLane;
-  const readmeComponent = currentLane?.readmeComponent;
-
-  if (readmeComponent) {
-    return <LaneReadme host={host} currentLane={currentLane} />;
-  }
-
-  if (currentLane) {
-    return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(currentLane.id)}/~gallery`} />;
-  }
-
-  return null;
-}
-
-function LaneReadme({ currentLane }: LaneReadmeProps) {
-  const { model, loading } = useLaneReadme(currentLane);
+export function LaneReadme({ currentLane, overviewSlot, routeSlot }: LaneReadmeProps) {
+  const { component, loading } = useLaneReadme(currentLane);
   const laneComponents = currentLane.components;
+  const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
   if (loading) return null;
 
@@ -54,7 +38,7 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
         ></LaneDetails>
         <div className={styles.laneReadmeOverview}>
           <ComponentPreview
-            component={model}
+            component={component}
             style={{ width: '100%', height: '100%' }}
             previewName="overview"
             fullContentHeight
@@ -63,15 +47,17 @@ function LaneReadme({ currentLane }: LaneReadmeProps) {
         <div className={styles.readmeComponentCardContainer}>
           <ComponentCard
             className={styles.readmeComponentCard}
-            hidePreview={true}
-            key={model.id.toString()}
-            id={model.id.fullName}
-            href={LanesModel.getLaneComponentUrl(model.id, currentLane.id)}
-            envIcon={model.environment?.icon}
-            description={model.description}
-            version={model.version === 'new' ? undefined : model.version}
+            key={component.id.toString()}
+            id={component.id.fullName}
+            href={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+            envIcon={component.environment?.icon}
+            description={component.description}
+            version={component.version === 'new' ? undefined : component.version}
+            preview={<PreviewPlaceholder component={component} shouldShowPreview={true} />}
           />
         </div>
+        {routeSlot && <SlotSubRouter slot={routeSlot} />}
+        {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
       </div>
     </LanesProvider>
   );
