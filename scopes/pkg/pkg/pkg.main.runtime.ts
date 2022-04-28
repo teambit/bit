@@ -19,7 +19,8 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -214,13 +215,7 @@ export class PkgMain implements CloneConfig {
     return undefined;
   }
 
-  /**
-   *Creates an instance of PkgExtension.
-   * @param {PkgExtensionConfig} config
-   * @param {PackageJsonPropsRegistry} packageJsonPropsRegistry
-   * @param {Packer} packer
-   * @memberof PkgExtension
-   */
+  private manifestCache: InMemoryCache<{ head: string; manifest: VersionPackageManifest[] }>; // cache components manifests
   constructor(
     /**
      * logger extension
@@ -256,7 +251,9 @@ export class PkgMain implements CloneConfig {
      * keep it as public. external env might want to register it to the snap pipeline
      */
     public publishTask: PublishTask
-  ) {}
+  ) {
+    this.manifestCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+  }
 
   /**
    * register changes in the package.json
@@ -344,14 +341,29 @@ export class PkgMain implements CloneConfig {
       latest: latestVersion,
       ...preReleaseLatestTags,
     };
-    const versions = await this.getAllSnapsManifests(component);
-    const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
+    const versionsFromCache = this.manifestCache.get(name);
+    const getVersions = async (): Promise<VersionPackageManifest[]> => {
+      const headHash = component.head?.hash;
+      if (!headHash) throw new BitError(`unable to get manifest for "${name}", the head is empty`);
+      if (versionsFromCache) {
+        if (versionsFromCache.head !== headHash) this.manifestCache.delete(name);
+        else {
+          return versionsFromCache.manifest;
+        }
+      }
+      const versions = await this.getAllSnapsManifests(component);
+      const versionsWithoutEmpty = compact(versions);
+      this.manifestCache.set(name, { head: headHash, manifest: versionsWithoutEmpty });
+      return versionsWithoutEmpty;
+    };
+
+    const versions = await getVersions();
     const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
       name,
       distTags,
       externalRegistry,
-      versions: versionsWithoutEmpty,
+      versions,
     };
   }
 
