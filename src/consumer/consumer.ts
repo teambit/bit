@@ -3,6 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+import { DEFAULT_LANE, LocalLaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -14,14 +15,12 @@ import {
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
   COMPONENT_ORIGINS,
-  DEFAULT_LANE,
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
   TESTER_ENV_TYPE,
 } from '../constants';
 import GeneralError from '../error/general-error';
-import { LocalLaneId } from '../lane-id/lane-id';
 import CompilerExtension from '../legacy-extensions/compiler-extension';
 import EnvExtension from '../legacy-extensions/env-extension';
 import { EnvType } from '../legacy-extensions/env-extension-types';

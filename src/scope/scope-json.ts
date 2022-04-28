@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import pathlib from 'path';
-
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import BitId from '../bit-id/bit-id';
-import { DEFAULT_LANE, SCOPE_JSON, SCOPE_JSONC } from '../constants';
+import { SCOPE_JSON, SCOPE_JSONC } from '../constants';
 import GeneralError from '../error/general-error';
 import { Remote } from '../remotes';
 import { cleanObject, writeFile } from '../utils';

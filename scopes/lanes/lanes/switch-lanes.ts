@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { RemoteLaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
