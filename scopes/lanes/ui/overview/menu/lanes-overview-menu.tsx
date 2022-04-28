@@ -91,7 +91,7 @@ function TopBarNav(props: NavLinkProps) {
     <NavLink
       {...props}
       className={classnames(props.className, styles.topBarLink)}
-      activeClassName={classnames(props.className, target === pathname && styles.active)}
+      activeClassName={classnames(props.activeClassName, target === pathname && styles.active)}
       href={target}
     >
       <div>{props.children}</div>

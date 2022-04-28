@@ -8,9 +8,8 @@ import {
   LanesModel,
   useLaneReadmeQuery,
 } from '@teambit/lanes.ui.lanes';
-import { ComponentProvider, ComponentDescriptorProvider } from '@teambit/component';
-import { Overview } from '@teambit/docs';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
+import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 
 import styles from './lane-readme.module.scss';
 
@@ -40,37 +39,40 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
 }
 
 function LaneReadme({ currentLane }: LaneReadmeProps) {
-  const { model, descriptor, loading } = useLaneReadmeQuery(currentLane);
+  const { model, loading } = useLaneReadmeQuery(currentLane);
   const laneComponents = currentLane.components;
 
   if (loading) return null;
 
   return (
     <LanesProvider viewedLaneId={undefined}>
-      <ComponentProvider component={model}>
-        <ComponentDescriptorProvider componentDescriptor={descriptor}>
-          <div className={styles.readmeContainer}>
-            <LaneDetails
-              className={styles.laneId}
-              laneName={currentLane.id}
-              componentCount={laneComponents.length || undefined}
-            ></LaneDetails>
-            <Overview hideOverviewHeader={true} className={styles.laneReadmeOverview} />
-            <div className={styles.readmeComponentCardContainer}>
-              <ComponentCard
-                className={styles.readmeComponentCard}
-                hidePreview={true}
-                key={model.id.toString()}
-                id={model.id.fullName}
-                href={LanesModel.getLaneComponentUrl(model.id, currentLane.id)}
-                envIcon={model.environment?.icon}
-                description={model.description}
-                version={model.version === 'new' ? undefined : model.version}
-              />
-            </div>
-          </div>
-        </ComponentDescriptorProvider>
-      </ComponentProvider>
+      <div className={styles.readmeContainer}>
+        <LaneDetails
+          className={styles.laneId}
+          laneName={currentLane.id}
+          componentCount={laneComponents.length || undefined}
+        ></LaneDetails>
+        <div className={styles.laneReadmeOverview}>
+          <ComponentPreview
+            component={model}
+            style={{ width: '100%', height: '100%' }}
+            previewName="overview"
+            fullContentHeight
+          />
+        </div>
+        <div className={styles.readmeComponentCardContainer}>
+          <ComponentCard
+            className={styles.readmeComponentCard}
+            hidePreview={true}
+            key={model.id.toString()}
+            id={model.id.fullName}
+            href={LanesModel.getLaneComponentUrl(model.id, currentLane.id)}
+            envIcon={model.environment?.icon}
+            description={model.description}
+            version={model.version === 'new' ? undefined : model.version}
+          />
+        </div>
+      </div>
     </LanesProvider>
   );
 }
