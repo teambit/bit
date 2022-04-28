@@ -62,6 +62,10 @@ export const componentFields = gql`
     ...componentOverviewFields
     packageName
     latest
+    compositions {
+      identifier
+      displayName
+    }
     tags {
       version
     }
