@@ -8,11 +8,11 @@ export {
   LaneComponentQueryResult,
   LaneQueryResult,
   LanesQueryResult,
-  useLanesQuery,
+  useLanes,
   LanesHost,
-  useLaneComponentsQuery,
+  useLaneComponents,
   LanesQuery,
-  useLaneReadmeQuery,
+  useLaneReadme,
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {

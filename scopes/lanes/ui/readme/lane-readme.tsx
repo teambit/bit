@@ -6,7 +6,7 @@ import {
   LaneModel,
   LaneDetails,
   LanesModel,
-  useLaneReadmeQuery,
+  useLaneReadme,
 } from '@teambit/lanes.ui.lanes';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
@@ -39,7 +39,7 @@ export function LaneReadmeWrapper({ host }: LaneReadmeWrapperProps) {
 }
 
 function LaneReadme({ currentLane }: LaneReadmeProps) {
-  const { model, loading } = useLaneReadmeQuery(currentLane);
+  const { model, loading } = useLaneReadme(currentLane);
   const laneComponents = currentLane.components;
 
   if (loading) return null;

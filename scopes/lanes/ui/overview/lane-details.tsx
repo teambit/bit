@@ -23,14 +23,17 @@ export function LaneDetails({ description, componentCount, className, laneName, 
         />
       </div>
       <Subtitle>{description}</Subtitle>
-      {componentCount && (
-        <div className={classNames(styles.pillsContainer)}>
-          <PillLabel>
-            <span className={styles.componentCount}>{componentCount}</span>
-            <span>Components</span>
-          </PillLabel>
-        </div>
-      )}
+      {
+        // scopes/component/ui/badges/component-count
+        componentCount && (
+          <div className={classNames(styles.pillsContainer)}>
+            <PillLabel>
+              <span className={styles.componentCount}>{componentCount}</span>
+              <span>Components</span>
+            </PillLabel>
+          </div>
+        )
+      }
     </div>
   );
 }
