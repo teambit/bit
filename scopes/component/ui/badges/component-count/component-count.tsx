@@ -6,11 +6,11 @@ export type ComponentCountProps = {
   count?: number;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function ComponentCount({ className, count: componentCount }: ComponentCountProps) {
-  if (!componentCount) return null;
+export function ComponentCount({ className, count }: ComponentCountProps) {
+  if (!count) return null;
   return (
     <PillLabel className={className}>
-      <span className={styles.componentCount}>{componentCount}</span>
+      <span className={styles.componentCount}>{count}</span>
       <span>Components</span>
     </PillLabel>
   );
