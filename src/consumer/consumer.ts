@@ -339,7 +339,14 @@ export default class Consumer {
       [versionDependencies],
       this.scope.objects
     );
-    return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
+    const results = await versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
+    if (!this.isLegacy) {
+      // temp check whether Harmony needs the dependencies
+      results.dependencies = [];
+      results.devDependencies = [];
+      results.extensionDependencies = [];
+    }
+    return results;
   }
 
   async loadComponent(id: BitId): Promise<Component> {
