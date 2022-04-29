@@ -1,5 +1,12 @@
-import { Export, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, SyntaxKind, ExportDeclaration as ExportDeclarationNode, NamedExports } from 'typescript';
+import { SchemaNode, Module } from '@teambit/semantics.entities.semantic-schema';
+import { compact } from 'lodash';
+import ts, {
+  Node,
+  SyntaxKind,
+  ExportDeclaration as ExportDeclarationNode,
+  NamedExports,
+  NamespaceExport,
+} from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
@@ -30,23 +37,49 @@ export class ExportDeclaration implements SchemaTransformer {
 
   async transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const exportDec = node as ExportDeclarationNode;
-    // sourceFile.sear
     const exportClause = exportDec.exportClause;
+    // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause?.kind === SyntaxKind.NamedExports) {
       exportClause as NamedExports;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const schemas: SchemaNode[] = await Promise.all(
+      const schemas = await Promise.all(
         exportClause.elements.map(async (element) => {
           return context.visitDefinition(element.name);
         })
       );
 
-      return new Export();
+      return new Module(compact(schemas));
       // return exports.map((identifier) => {
       //   // const type = context.resolveType(identifier);
       // });
     }
+    // e.g. `export * as Composition from './button';
+    if (exportClause?.kind === SyntaxKind.NamespaceExport) {
+      exportClause as NamespaceExport;
+      const namespace = exportClause.name.getText();
+      const sourceFile = await context.getSourceFileFromNode(exportClause.name);
+      if (!sourceFile) {
+        throw new Error(`unable to find the source-file for "${namespace}"`);
+      }
+      const result = await context.computeSchema(sourceFile);
+      if (!(result instanceof Module)) {
+        throw new Error(`expect result to be instance of Module`);
+      }
+      result.namespace = namespace;
+      return result;
+    }
+    // it's export-all, e.g. `export * from './button'`;
+    if (!exportClause) {
+      const specifier = exportDec.moduleSpecifier;
+      if (!specifier) {
+        throw new Error(`fatal: no specifier`);
+      }
+      const sourceFile = await context.getSourceFileFromNode(specifier);
+      if (!sourceFile) {
+        throw new Error(`unable to find the source-file`);
+      }
+      return context.computeSchema(sourceFile);
+    }
 
-    return {};
+    throw new Error('unrecognized export type');
   }
 }

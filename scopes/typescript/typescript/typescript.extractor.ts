@@ -38,10 +38,16 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const context = this.createContext(tsserver, component);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
-    const module = (await this.computeSchema(mainAst, context)) as Module;
+    const moduleSchema = (await this.computeSchema(mainAst, context)) as Module;
+    const allModules = moduleSchema.exports.filter((e) => e instanceof Module) as Module[];
+    const allModulesExports = allModules.map((m) => m.exports);
+    const nonModules = moduleSchema.exports.filter((e) => !(e instanceof Module));
+    const flattened = [...nonModules, ...allModulesExports.flat()];
+    const apiScheme = new Module(flattened);
+    console.log('\n[*] apiScheme', flattened);
 
     // return APISchema.from({ });
-    return new APISchema(module);
+    return new APISchema(apiScheme);
   }
 
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {

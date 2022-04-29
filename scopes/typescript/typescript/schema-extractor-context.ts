@@ -104,6 +104,19 @@ export class SchemaExtractorContext {
     return this.extractor.parseSourceFile(file);
   }
 
+  async getSourceFileFromNode(node: Node) {
+    const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
+
+    const firstDef = head(def.body);
+    if (!firstDef) {
+      return undefined;
+    }
+
+    const sourceFile = this.getSourceFile(firstDef.file);
+
+    return sourceFile;
+  }
+
   /**
    * get a definition for a given node.
    */
@@ -111,11 +124,15 @@ export class SchemaExtractorContext {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
     const firstDef = head(def.body);
-    if (!firstDef) return undefined;
+    if (!firstDef) {
+      return undefined;
+    }
 
     const startPosition = firstDef.start;
     const sourceFile = this.getSourceFile(firstDef.file);
-    if (!sourceFile) return undefined; // learn how to return a reference to a different component here.
+    if (!sourceFile) {
+      return undefined; // learn how to return a reference to a different component here.
+    }
     const pos = this.getPosition(sourceFile, startPosition.line, startPosition.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
     return nodeAtPos;
@@ -126,11 +143,13 @@ export class SchemaExtractorContext {
    */
   async visitDefinition(node: Node): Promise<SchemaNode | undefined> {
     const definition = await this.definition(node);
-    if (!definition) return undefined;
+    if (!definition) {
+      return undefined;
+    }
     return this.visit(definition.parent);
   }
 
-  async visit(node: Node): Promise<SchemaNode | undefined> {
+  async visit(node: Node): Promise<SchemaNode> {
     return this.extractor.computeSchema(node, this);
   }
 
