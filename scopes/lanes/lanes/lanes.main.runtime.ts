@@ -9,13 +9,20 @@ import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
 import { BitError } from '@teambit/bit-error';
 import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import {
+  MergeStrategy,
+  ApplyVersionResults,
+  MergeOptions,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
@@ -28,10 +35,13 @@ import {
   LaneRemoveCmd,
   LaneShowCmd,
   LaneTrackCmd,
+  LaneAddReadmeCmd,
+  LaneRemoveReadmeCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
+import { LaneSwitcher } from './switch-lanes';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -45,6 +55,7 @@ export type MergeLaneOptions = {
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
   build: boolean;
+  keepReadme: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -52,8 +63,23 @@ export type CreateLaneOptions = {
   remoteName?: string; // default to the local lane
 };
 
+export type SwitchLaneOptions = {
+  newLaneName?: string;
+  merge?: MergeStrategy;
+  getAll?: boolean;
+  skipDependencyInstallation?: boolean;
+  verbose?: boolean;
+  override?: boolean;
+};
+
 export class LanesMain {
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private merging: MergingMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private merging: MergingMain,
+    private componentAspect: ComponentMain,
+    private logger: Logger
+  ) {}
 
   async getLanes({
     name,
@@ -145,19 +171,65 @@ export class LanesMain {
     return results.laneResults;
   }
 
-  async mergeLane(laneName: string, options: MergeLaneOptions): Promise<ApplyVersionResults> {
+  async mergeLane(
+    laneName: string,
+    options: MergeLaneOptions
+  ): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
     if (!this.workspace) {
       throw new BitError(`unable to merge a lane outside of Bit workspace`);
     }
-    const mergeResults = await mergeLanes({
+    const results = await mergeLanes({
       merging: this.merging,
       consumer: this.workspace.consumer,
       laneName,
       ...options,
     });
+
     await this.workspace.consumer.onDestroy();
     this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
-    return mergeResults;
+    return results;
+  }
+
+  /**
+   * switch to a different local or remote lane.
+   * switching to a remote lane also imports and writes the components of that remote lane.
+   * by default, only the components existing on the workspace will be imported from that lane, unless the "getAll"
+   * flag is true.
+   */
+  async switchLanes(
+    laneName: string,
+    { newLaneName, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+  ) {
+    if (!this.workspace) {
+      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+    }
+    let mergeStrategy;
+    if (merge && typeof merge === 'string') {
+      const mergeOptions = Object.keys(MergeOptions);
+      if (!mergeOptions.includes(merge)) {
+        throw new BitError(`merge must be one of the following: ${mergeOptions.join(', ')}`);
+      }
+      mergeStrategy = merge;
+    }
+
+    const switchProps = {
+      laneName,
+      existingOnWorkspaceOnly: !getAll,
+      newLaneName,
+    };
+    const checkoutProps = {
+      mergeStrategy,
+      skipNpmInstall: skipDependencyInstallation,
+      verbose: false, // not relevant in Harmony
+      ignorePackageJson: true, // not relevant in Harmony
+      ignoreDist: true, // not relevant in Harmony
+      isLane: true,
+      promptMergeOptions: false,
+      writeConfig: false,
+      reset: false,
+      all: false,
+    };
+    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps).switch();
   }
 
   /**
@@ -176,7 +248,7 @@ export class LanesMain {
 
     const [lane] = await this.getLanes({ name });
     const laneComponents = lane.components;
-    const host = this.workspace || this.scope;
+    const host = this.componentAspect.getHost();
     const laneComponentIds = await Promise.all(
       laneComponents.map((laneComponent) => {
         const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
@@ -185,6 +257,106 @@ export class LanesMain {
     );
     const components = await host.getMany(laneComponentIds);
     return components;
+  }
+
+  async getLaneReadmeComponent(name: string): Promise<Component | undefined> {
+    if (!name) return undefined;
+
+    const [lane] = await this.getLanes({ name });
+    const laneReadmeComponent = lane.readmeComponent;
+    if (!laneReadmeComponent) return undefined;
+    const host = this.componentAspect.getHost();
+    const laneReadmeComponentId = await host.resolveComponentId(
+      laneReadmeComponent.id.changeVersion(laneReadmeComponent.head)
+    );
+    const readmeComponent = await host.get(laneReadmeComponentId);
+    return readmeComponent;
+  }
+
+  async removeLaneReadme(laneName?: string): Promise<{ result: boolean; message?: string }> {
+    if (!this.workspace) {
+      throw new BitError('unable to remove the lane readme component outside of Bit workspace');
+    }
+    const currentLaneName = this.getCurrentLane();
+
+    if (!laneName && !currentLaneName) {
+      return {
+        result: false,
+        message: 'unable to remove the lane readme component. Either pass a laneName or switch to a lane',
+      };
+    }
+
+    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
+    const lane: Lane | null | undefined = await scope.loadLane(laneId);
+
+    if (!lane?.readmeComponent) {
+      throw new BitError(`there is no readme component added to the lane ${laneName || currentLaneName}`);
+    }
+
+    const readmeComponentId = await this.workspace.resolveComponentId(lane.readmeComponent.id);
+    const existingLaneConfig =
+      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
+
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
+    if (existingLaneConfig.readme) {
+      delete existingLaneConfig.readme[remoteLaneIdStr];
+      await this.workspace.removeSpecificComponentConfig(readmeComponentId, LanesAspect.id, false);
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, existingLaneConfig);
+    }
+
+    lane.setReadmeComponent(undefined);
+    await scope.lanes.saveLane(lane);
+    await this.workspace.bitMap.write();
+
+    return { result: true };
+  }
+
+  async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
+    if (!this.workspace) {
+      throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
+    }
+    const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
+
+    const currentLaneName = this.getCurrentLane();
+
+    const readmeComponentBitId = readmeComponentId._legacy;
+
+    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
+    const scope: LegacyScope = this.workspace.scope.legacyScope;
+    const lane: Lane | null | undefined = await scope.loadLane(laneId);
+
+    if (!lane) {
+      return { result: false, message: `cannot find lane ${laneName}` };
+    }
+
+    lane.setReadmeComponent(readmeComponentBitId);
+    await scope.lanes.saveLane(lane);
+
+    const existingLaneConfig =
+      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
+
+    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+
+    if (existingLaneConfig.readme) {
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
+        ...existingLaneConfig,
+        readme: {
+          ...existingLaneConfig.readme,
+          [remoteLaneIdStr]: true,
+        },
+      });
+    } else {
+      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
+        ...existingLaneConfig,
+        readme: {
+          [remoteLaneIdStr]: true,
+        },
+      });
+    }
+    await this.workspace.bitMap.write();
+    return { result: true };
   }
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
@@ -206,19 +378,31 @@ export class LanesMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, GraphqlAspect, CommunityAspect, MergingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    WorkspaceAspect,
+    GraphqlAspect,
+    CommunityAspect,
+    MergingAspect,
+    ComponentAspect,
+    LoggerAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging]: [
+  static async provider([cli, scope, workspace, graphql, community, merging, component, loggerMain]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
     CommunityMain,
-    MergingMain
+    MergingMain,
+    ComponentMain,
+    LoggerMain
   ]) {
-    const lanesMain = new LanesMain(workspace, scope, merging);
+    const logger = loggerMain.createLogger(LanesAspect.id);
+    const lanesMain = new LanesMain(workspace, scope, merging, component, logger);
     const isLegacy = workspace && workspace.consumer.isLegacy;
-    const switchCmd = new SwitchCmd();
+    const switchCmd = new SwitchCmd(lanesMain);
     if (!isLegacy) {
       const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
       laneCmd.commands = [
@@ -230,6 +414,8 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
+        new LaneAddReadmeCmd(lanesMain),
+        new LaneRemoveReadmeCmd(lanesMain),
         new LaneImportCmd(switchCmd),
       ];
       cli.register(laneCmd, switchCmd);

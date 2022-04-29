@@ -29,6 +29,9 @@ export const componentOverviewFields = gql`
     }
     elementsUrl
     description
+    deprecation {
+      isDeprecate
+    }
     labels
     displayName
     server {
@@ -42,6 +45,10 @@ export const componentOverviewFields = gql`
     }
     preview {
       includesEnvTemplate
+    }
+    compositions {
+      identifier
+      displayName
     }
   }
   ${componentIdFields}

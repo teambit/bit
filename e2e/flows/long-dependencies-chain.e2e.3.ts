@@ -18,7 +18,7 @@ describe('flow of a long-dependencies-chain', function () {
     helper.scopeHelper.destroy();
   });
   describe('a component bar4/foo4 (or any other number set in sizeOfChain) has a dependency bar3/foo3, which has a dependency bar2/foo2 and so on', () => {
-    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS) {
       // @ts-ignore
       this.skip;
     } else {

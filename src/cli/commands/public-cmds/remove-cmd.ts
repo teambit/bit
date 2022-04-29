@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import yn from 'yn';
 import { remove } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
@@ -7,6 +8,7 @@ import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import loader from '../../loader';
 import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
@@ -21,11 +23,8 @@ export default class Remove implements LegacyCommand {
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track', 'keep tracking component (default = false)'],
-    [
-      'd',
-      'delete-files',
-      'delete local component files (authored components only. for imported components the files are always deleted)',
-    ],
+    ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
+    ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
       'f',
       'force',
@@ -38,24 +37,34 @@ export default class Remove implements LegacyCommand {
   remoteOp = true;
 
   async action(
-    [ids]: [string],
+    [ids]: [string[]],
     {
       force = false,
       remote = false,
       track = false,
       deleteFiles = false,
       silent = false,
-    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean }
+      keepFiles = false,
+    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; keepFiles: boolean }
   ): Promise<any> {
+    if (deleteFiles) {
+      loader.stop();
+      // eslint-disable-next-line no-console
+      console.warn(
+        chalk.yellow(
+          '--delete-files flag is deprecated. by default the files are deleted, unless --keep-files was provided'
+        )
+      );
+    }
     if (!silent) {
-      const removePromptResult = await removePrompt();
+      const willDeleteFiles = !remote && !keepFiles;
+      const removePromptResult = await removePrompt(willDeleteFiles)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new GeneralError('the operation has been canceled');
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ ids, remote, force, track, deleteFiles });
+    return remove({ ids, remote, force, track, deleteFiles: !keepFiles });
   }
   report({
     localResult,

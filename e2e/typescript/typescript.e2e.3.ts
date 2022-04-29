@@ -30,7 +30,7 @@ describe('typescript', function () {
     });
     describe('components with auto-resolve dependencies - with ts compiler', () => {
       // Skipping this test on appveyor because it's fail due to madge issues
-      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS) {
         // @ts-ignore
         this.skip;
       } else {
@@ -165,7 +165,7 @@ describe('typescript', function () {
       }
     });
     describe('with default and non default export', () => {
-      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS) {
         // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
         // @ts-ignore
         this.skip;
@@ -590,7 +590,7 @@ describe('typescript', function () {
     });
   });
   describe('react style => .tsx extension', () => {
-    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS) {
       // @ts-ignore
       this.skip;
     } else {

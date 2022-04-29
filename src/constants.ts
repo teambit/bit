@@ -519,6 +519,7 @@ export enum Extensions {
   deprecation = 'teambit.component/deprecation',
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
+  lanes = 'teambit.lanes/lanes',
 }
 
 export enum BuildStatus {
