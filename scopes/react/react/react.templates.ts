@@ -9,6 +9,7 @@ import { reactAppTemplate } from './templates/react-app';
 import { reactWorkspaceTemplate } from './templates/react-workspace';
 import { reactWorkspaceDesignSystemTemplate } from './templates/react-workspace-design-system';
 import { reactWorkspaceWikiTemplate } from './templates/react-workspace-wiki';
+import { reactWorkspaceAnalyticsTemplate } from './templates/react-workspace-analytics';
 
 import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
 import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
@@ -31,4 +32,5 @@ export const workspaceTemplates: WorkspaceTemplate[] = [
   deprecatedReactWorkspaceTemplate,
   reactWorkspaceDesignSystemTemplate,
   reactWorkspaceWikiTemplate,
+  reactWorkspaceAnalyticsTemplate,
 ];
