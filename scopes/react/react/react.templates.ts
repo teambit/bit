@@ -10,7 +10,7 @@ import { reactWorkspaceTemplate } from './templates/react-workspace';
 import { reactWorkspaceDesignSystemTemplate } from './templates/react-workspace-design-system';
 import { reactWorkspaceWikiTemplate } from './templates/react-workspace-wiki';
 import { reactWorkspaceAnalyticsTemplate } from './templates/react-workspace-analytics';
-
+import { reactWorkspaceDataFetchingTemplate } from './templates/react-workspace-data-fetching';
 import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
 import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
 
@@ -33,4 +33,5 @@ export const workspaceTemplates: WorkspaceTemplate[] = [
   reactWorkspaceDesignSystemTemplate,
   reactWorkspaceWikiTemplate,
   reactWorkspaceAnalyticsTemplate,
+  reactWorkspaceDataFetchingTemplate,
 ];
