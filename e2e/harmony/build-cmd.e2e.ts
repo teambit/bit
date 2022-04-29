@@ -28,7 +28,7 @@ describe('build command', function () {
       helper.command.create('react-env', 'my-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
       helper.fs.prependFile(path.join(helper.scopes.remote, 'my-env/my-env.docs.mdx'), importStatement);
-      helper.bitJsonc.setVariant(undefined, `${helper.scopes.remote}/my-env`, { 'teambit.harmony/aspect': {} });
+      helper.bitJsonc.setVariant(undefined, `${helper.scopes.remote}/my-env`, { 'teambit.envs/env': {} });
       helper.bitJsonc.setVariant(undefined, `${helper.scopes.remote}/my-mdx`, { 'teambit.mdx/mdx': {} });
       helper.command.link();
       helper.command.compile();
@@ -70,8 +70,8 @@ describe('build command', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.command.create('node-env', 'my-env');
       helper.fixtures.populateComponents(1);
-      helper.fs.outputFile('my-scope/my-env/my-env.extension.ts', getMyEnvExtension());
-      helper.bitJsonc.setVariant(undefined, 'my-scope/my-env', { 'teambit.harmony/aspect': {} });
+      helper.fs.outputFile('my-scope/my-env/my-env.main.runtime.ts', getMyEnvMainRuntime());
+      helper.bitJsonc.setVariant(undefined, 'my-scope/my-env', { 'teambit.envs/env': {} });
       helper.bitJsonc.setVariant(undefined, 'comp1', { 'my-scope/my-env': {} });
       helper.command.compile();
       helper.command.install();
@@ -88,29 +88,97 @@ describe('build command', function () {
   });
 });
 
-function getMyEnvExtension() {
-  return `import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { NodeAspect, NodeMain } from '@teambit/node';
+function getMyEnvMainRuntime() {
+  return `import { MainRuntime } from '@teambit/cli';
+import { NodeAspect, NodeMain } from '@teambit/node'
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { MyEnvAspect } from './my-env.aspect';
+//import {
+//  previewConfigTransformer,
+//  devServerConfigTransformer
+//} from './webpack/webpack-transformers';
+//import {
+//  devConfigTransformer,
+//  buildConfigTransformer,
+//} from "./typescript/ts-transformers";
 
-export class MyEnvExtension {
-  constructor(private node: NodeMain) {}
+export class MyEnvMain {
+  static slots = [];
 
-  static dependencies: any = [EnvsAspect, NodeAspect, PkgAspect, BuilderAspect]
+  static dependencies = [NodeAspect, EnvsAspect, PkgAspect, BuilderAspect];
 
-  static async provider([envs, node, pkg, builder]: [EnvsMain, NodeMain, PkgMain, BuilderMain]) {
+  static runtime = MainRuntime;
+
+  //const webpackModifiers: UseWebpackModifiers = {
+  //  previewConfig: [previewConfigTransformer],
+  //  devServerConfig: [devServerConfigTransformer],
+  //};
+
+  //const tsModifiers: UseTypescriptModifiers = {
+  //  devConfig: [devConfigTransformer],
+  //  buildConfig: [buildConfigTransformer],
+  //};
+
+  static async provider([node, envs, pkg, builder]: [NodeMain, EnvsMain, PkgMain, BuilderMain]) {
     const MyEnvEnv = node.compose([
-      /*
-        Use any of the "node.override..." transformers to
-      */
-    ])
+      /**
+       * Uncomment to override the config files for TypeScript, Webpack or Jest
+       * Your config gets merged with the defaults
+       */
 
+      // node.useTypescript(tsModifiers),  // note: this cannot be used in conjunction with node.overrideCompiler
+      // node.useWebpack(webpackModifiers),
+      // node.overrideJestConfig(require.resolve('./jest/jest.config')),
+
+      /**
+       * override the ESLint default config here then check your files for lint errors
+       * @example
+       * bit lint
+       * bit lint --fix
+       */
+      node.useEslint({
+        transformers: [
+          (config) => {
+            config.setRule('no-console', ['error']);
+            return config;
+          }
+        ]
+      }),
+
+      /**
+       * override the Prettier default config here the check your formatting
+       * @example
+       * bit format --check
+       * bit format
+       */
+      node.usePrettier({
+        transformers: [
+          (config) => {
+            config.setKey('tabWidth', 2);
+            return config;
+          }
+        ]
+      }),
+
+      /**
+       * override dependencies here
+       * @example
+       * Uncomment types to include version 17.0.3 of the types package
+       */
+      node.overrideDependencies({
+        devDependencies: {
+          // '@types/node': '16.11.7'
+        }
+      })
+    ]);
     envs.registerEnv(MyEnvEnv);
     builder.registerSnapTasks([pkg.publishTask]);
-
-    return new MyEnvExtension(node)
+    return new MyEnvMain();
   }
 }
-  `;
+
+MyEnvAspect.addRuntime(MyEnvMain);
+`;
 }

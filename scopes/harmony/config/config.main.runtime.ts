@@ -25,8 +25,9 @@ import { ConfigType, HostConfig } from './types';
 import { ConfigAspect } from './config.aspect';
 
 export type SetExtensionOptions = {
-  overrideExisting: boolean;
+  overrideExisting?: boolean;
   ignoreVersion: boolean;
+  mergeIntoExisting?: boolean;
 };
 
 export type ConfigDeps = [];

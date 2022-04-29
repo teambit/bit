@@ -4,6 +4,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
+import { Logger } from '@teambit/logger';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
@@ -13,9 +14,7 @@ export class SnapCmd implements Command {
   alias = '';
   options = [
     ['m', 'message <message>', 'log message describing the user changes'],
-    ['a', 'all', 'snap all new and modified components'],
-    ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
-    ['v', 'verbose', 'show specs output on failure'],
+    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
@@ -28,12 +27,18 @@ export class SnapCmd implements Command {
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
+    ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
+    [
+      'f',
+      'force',
+      'DEPRECATED (use "--skip-tests" or "--unmodified" instead). force-snap even if tests are failing and even when component has not changed',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
   migration = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain) {
+  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
     this.description = `record component changes.
 https://${docsDomain}/components/snaps
 ${WILDCARD_HELP('snap')}`;
@@ -45,51 +50,59 @@ ${WILDCARD_HELP('snap')}`;
       message = '',
       all = false,
       force = false,
-      verbose = false,
       ignoreIssues,
       build,
       skipTests = false,
       skipAutoSnap = false,
       disableSnapPipeline = false,
       forceDeploy = false,
+      unmodified = false,
     }: {
       message?: string;
       all?: boolean;
       force?: boolean;
-      verbose?: boolean;
       ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
+      unmodified?: boolean;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    if (!id && !all) {
-      throw new BitError('missing [id]. to snap all components, please use --all flag');
-    }
-    if (id && all) {
-      throw new BitError(
-        'you can use either a specific component [id] to snap a particular component or --all flag to snap them all'
-      );
-    }
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
     }
 
+    if (all) {
+      this.logger.consoleWarning(
+        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
+      );
+    }
+    if (force) {
+      this.logger.consoleWarning(
+        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
+      );
+      if (id) unmodified = true;
+    }
+    if (!message) {
+      this.logger.consoleWarning(
+        `--message will be mandatory in the next few releases. make sure to add a message with your snap`
+      );
+    }
+
     const results = await this.snapping.snap({
       id,
       message,
-      force,
-      verbose,
       ignoreIssues,
       build,
       skipTests,
       skipAutoSnap,
       disableTagAndSnapPipelines,
       forceDeploy,
+      unmodified,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);

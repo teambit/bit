@@ -320,7 +320,7 @@ export default class Component extends BitObject {
 
   latest(): string {
     if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
-    const head = this.laneHeadLocal || this.getHead();
+    const head = this.getHeadRegardlessOfLane();
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
@@ -341,7 +341,7 @@ export default class Component extends BitObject {
     const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
-    if (!this.laneHeadLocal && !this.hasHead()) {
+    if (!this.getHeadRegardlessOfLane()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
 
@@ -493,13 +493,18 @@ export default class Component extends BitObject {
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
+      const currentBitId = this.toBitId();
       const versionToAddRef = Ref.from(versionToAdd);
-      const existingComponentInLane = lane.getComponentByName(this.toBitId());
+      const existingComponentInLane = lane.getComponentByName(currentBitId);
       const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
       if (currentHead && !currentHead.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(currentHead);
       }
-      lane.addComponent({ id: this.toBitId(), head: versionToAddRef });
+      lane.addComponent({ id: currentBitId, head: versionToAddRef });
+
+      if (lane.readmeComponent && lane.readmeComponent.id.isEqualWithoutScopeAndVersion(currentBitId)) {
+        lane.setReadmeComponent(currentBitId);
+      }
       repo.add(lane);
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;
@@ -736,6 +741,23 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return deprecationAspect.config.deprecate;
   }
 
+  async isLaneReadmeOf(repo: Repository): Promise<string[]> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // we dont support lanes in legacy
+      return [];
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it is a lane readme component
+      return [];
+    }
+    const lanesAspect = version.extensions.findCoreExtension(Extensions.lanes);
+    if (!lanesAspect || !lanesAspect.config.readme) {
+      return [];
+    }
+    return Object.keys(lanesAspect.config.readme);
+  }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
    * when it's being called from the Consumer, some manipulation are done on the component, such

@@ -280,6 +280,9 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         lane.components.forEach((c) => {
           c.id = c.id.changeScope(remoteName);
         });
+        if (lane.readmeComponent) {
+          lane.readmeComponent.id = lane.readmeComponent.id.changeScope(remoteName);
+        }
         return { ref: lane.hash(), buffer: await lane.compress() };
       })
     );
@@ -338,8 +341,14 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
     await mapSeries(modelComponents, processModelComponent);
     if (lane) {
       lane.components.forEach((c) => {
-        c.id = c.id.hasScope() ? c.id : c.id.changeScope(remoteName);
+        const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
+        c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || remoteName);
       });
+      if (lane.readmeComponent) {
+        lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
+          ? lane.readmeComponent.id
+          : lane.readmeComponent.id.changeScope(remoteName);
+      }
       const laneData = { ref: lane.hash(), buffer: await lane.compress() };
       objectList.addIfNotExist([laneData]);
     }
@@ -429,7 +438,9 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
       );
       scope.objects.removeManyObjects(refsToRemove.flat());
       // @ts-ignore
-      idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
+      idsToChangeLocally.forEach((id) => {
+        scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
+      });
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
 
       // update lanes
@@ -849,7 +860,8 @@ async function convertToCorrectScopeHarmony(
     : !componentsObjects.component.scope;
   const hasComponentChanged = shouldChangeScope;
   if (shouldChangeScope) {
-    componentsObjects.component.scope = remoteScope;
+    const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(componentsObjects.component.toBitId());
+    componentsObjects.component.scope = idWithFutureScope?.scope || remoteScope;
   }
 
   // return true if one of the versions has changed or the component itself

@@ -104,6 +104,12 @@ ${WILDCARD_HELP('import')}`;
     if (override && merge) {
       throw new GeneralError('you cant use --override and --merge flags combined');
     }
+    if (!ids.length && dependencies) {
+      throw new GeneralError('you have to specify ids to use "--dependencies" flag');
+    }
+    if (!ids.length && dependents) {
+      throw new GeneralError('you have to specify ids to use "--dependents" flag');
+    }
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
       console.log(

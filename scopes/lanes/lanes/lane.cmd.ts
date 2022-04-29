@@ -9,7 +9,8 @@ import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/mer
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
-import { removePrompt } from '@teambit/legacy/dist/prompts';
+import { approveOperation } from '@teambit/legacy/dist/prompts';
+import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -60,9 +61,12 @@ export class LaneListCmd implements Command {
       return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
     const currentLane = this.lanes.getCurrentLane();
-    let currentLaneStr = currentLane ? `current lane - ${chalk.bold(currentLane as string)}` : '';
+    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
+    const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
+    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentLane as string)}` : '';
+    currentLaneStr += currentLaneReadmeComponentStr;
+
     if (details) {
-      const laneDataOfCurrentLane = lanes.find((l) => l.name === currentLane);
       const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
       if (currentLaneStr) {
@@ -74,12 +78,13 @@ export class LaneListCmd implements Command {
       .filter((l) => l.name !== currentLane)
       // @ts-ignore
       .map((laneData) => {
+        const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
         if (details) {
-          const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
-          return laneTitle + components;
+          return laneTitle + readmeComponentStr.concat('\n') + components;
         }
-        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)`;
+        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)${readmeComponentStr}`;
       })
       .join('\n');
 
@@ -237,6 +242,7 @@ export class LaneMergeCmd implements Command {
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
+    ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -256,6 +262,7 @@ export class LaneMergeCmd implements Command {
       existing: existingOnWorkspaceOnly = false,
       noSnap = false,
       message: snapMessage = '',
+      keepReadme = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -265,13 +272,14 @@ export class LaneMergeCmd implements Command {
       build?: boolean;
       noSnap: boolean;
       message: string;
+      keepReadme?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
 
-    const results = await this.lanes.mergeLane(name, {
+    const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore
       remoteName,
       build,
@@ -280,8 +288,16 @@ export class LaneMergeCmd implements Command {
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,
+      keepReadme,
     });
-    return mergeReport(results);
+
+    const mergeResult = `${mergeReport(mergeResults)}`;
+    const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
+      deleteResults.remoteResult || []
+    ).map((item) => paintRemoved(item, true))}${
+      (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
+    }\n`;
+    return mergeResult + deleteResult;
   }
 }
 
@@ -317,7 +333,7 @@ export class LaneRemoveCmd implements Command {
     }
   ): Promise<string> {
     if (!silent) {
-      const removePromptResult = await removePrompt();
+      const removePromptResult = await approveOperation();
       // @ts-ignore
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
@@ -378,10 +394,69 @@ https://${docsDomain}/components/lanes`;
   }
 }
 
+export class LaneRemoveReadmeCmd implements Command {
+  name = 'remove-readme [laneName]';
+  description = 'EXPERIMENTAL. remove lane readme component';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  skipWorkspace = false;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName]: [string]): Promise<string> {
+    const { result, message } = await this.lanes.removeLaneReadme(laneName);
+
+    if (result) {
+      return chalk.green(
+        `the readme component has been successfully removed from the lane ${laneName || this.lanes.getCurrentLane()}`
+      );
+    }
+
+    return chalk.red(`${message}\n`);
+  }
+}
+
+export class LaneAddReadmeCmd implements Command {
+  name = 'add-readme <componentId> [laneName]';
+  description = 'EXPERIMENTAL. add lane readme component';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  skipWorkspace = false;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([componentId, laneName]: [string, string]): Promise<string> {
+    const { result, message } = await this.lanes.addLaneReadme(componentId, laneName);
+
+    if (result)
+      return chalk.green(
+        `the component ${componentId} has been successfully added as the readme component for the lane ${
+          laneName || this.lanes.getCurrentLane()
+        }`
+      );
+
+    return chalk.red(
+      `${message || ''}\nthe component ${componentId} could not be added as a readme component for the lane ${
+        laneName || this.lanes.getCurrentLane()
+      }`
+    );
+  }
+}
+
 function outputComponents(components: LaneData['components']): string {
-  const componentsTitle = `\tcomponents (${components.length})\n`;
+  const componentsTitle = `\t${chalk.bold(`components (${components.length})`)}\n`;
   const componentsStr = components.map((c) => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
   return componentsTitle + componentsStr;
+}
+
+function outputReadmeComponent(component: LaneData['readmeComponent']): string {
+  if (!component) return '';
+  return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
+    component.head ||
+    `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
+  }`}\n`;
 }
 
 function outputRemoteLane(remoteLane: string | null | undefined): string {

@@ -11,7 +11,7 @@ import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, 
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
-import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
+import { NewerVersionFound } from '../../consumer/exceptions';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -197,11 +197,9 @@ export default async function tagModelComponent({
   exactVersion,
   releaseType,
   preRelease,
-  force,
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
-  verbose = false,
   skipAutoTag,
   soft,
   build,
@@ -211,6 +209,7 @@ export default async function tagModelComponent({
   disableTagAndSnapPipelines,
   forceDeploy,
   incrementBy,
+  packageManagerConfigRootDir,
 }: {
   consumerComponents: Component[];
   ids: BitIds;
@@ -221,6 +220,7 @@ export default async function tagModelComponent({
   consumer: Consumer;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
+  packageManagerConfigRootDir?: string;
 } & BasicTagParams): Promise<{
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
@@ -279,7 +279,7 @@ export default async function tagModelComponent({
   let testsResults = [];
   if (consumer.isLegacy) {
     logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
-    await scope.buildMultiple(allComponentsToTag, consumer, false, verbose);
+    await scope.buildMultiple(allComponentsToTag, consumer, false, false);
 
     logger.debug('scope.putMany: sequentially test all components');
 
@@ -287,20 +287,11 @@ export default async function tagModelComponent({
       const testsResultsP = scope.testMultiple({
         components: allComponentsToTag,
         consumer,
-        verbose,
-        rejectOnFailure: !force,
+        verbose: false,
+        rejectOnFailure: true,
       });
-      try {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        testsResults = await testsResultsP;
-      } catch (err: any) {
-        // if force is true, ignore the tests and continue
-        if (!force) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (!verbose) throw new ComponentSpecsFailed();
-          throw err;
-        }
-      }
+      // @ts-ignore
+      testsResults = await testsResultsP;
     }
   }
 
@@ -341,8 +332,9 @@ export default async function tagModelComponent({
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
+    const isolateOptions = { packageManagerConfigRootDir };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
-      func(allComponentsToTag, onTagOpts)
+      func(allComponentsToTag, onTagOpts, isolateOptions)
     );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));
