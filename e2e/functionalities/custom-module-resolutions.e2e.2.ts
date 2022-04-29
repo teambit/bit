@@ -92,27 +92,6 @@ describe('custom module resolutions', function () {
           `@bit/${helper.scopes.remote}.utils.is-string`
         );
       });
-      describe('importing the component using isolated environment', () => {
-        let isolatePath;
-        before(() => {
-          isolatePath = helper.command.isolateComponent('bar/foo', '-olws');
-        });
-        it('should be able to generate the links correctly and require the dependencies', () => {
-          const appJsFixture = `const barFoo = require('./');
-  console.log(barFoo());`;
-          helper.command.runCmd('npm run postinstall', isolatePath);
-          const isStringPath = path.join(
-            isolatePath,
-            'node_modules',
-            '@bit',
-            `${helper.scopes.remote}.utils.is-string`
-          );
-          helper.command.runCmd('npm run postinstall', isStringPath);
-          fs.outputFileSync(path.join(isolatePath, 'app.js'), appJsFixture);
-          const result = helper.command.runCmd('node app.js', isolatePath);
-          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
-        });
-      });
       describe('npm packing the component using an extension pack', () => {
         let packDir;
         let untarDir;
