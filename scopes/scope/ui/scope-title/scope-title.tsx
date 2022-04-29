@@ -23,8 +23,8 @@ export function ScopeTitle({
   className,
   iconClassName,
 }: ScopeTitleProps) {
+  // TODO: move the className to H1 from span
   return (
-    // TODO: move the className to H1 from span
     <H1 className={styles.title} size="sm">
       <ScopeIcon
         size={32}
