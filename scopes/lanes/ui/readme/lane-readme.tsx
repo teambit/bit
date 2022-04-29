@@ -36,25 +36,26 @@ export function LaneReadme({ currentLane, overviewSlot, routeSlot }: LaneReadmeP
           laneName={currentLane.id}
           componentCount={laneComponents.length || undefined}
         ></LaneDetails>
-        <div className={styles.laneReadmeOverview}>
+        <div className={styles.laneReadmePreviewContainer}>
           <ComponentPreview
             component={component}
             style={{ width: '100%', height: '100%' }}
             previewName="overview"
             fullContentHeight
+            scrolling="no"
           />
-        </div>
-        <div className={styles.readmeComponentCardContainer}>
-          <ComponentCard
-            className={styles.readmeComponentCard}
-            key={component.id.toString()}
-            id={component.id.fullName}
-            href={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
-            envIcon={component.environment?.icon}
-            description={component.description}
-            version={component.version === 'new' ? undefined : component.version}
-            preview={<PreviewPlaceholder component={component} shouldShowPreview={true} />}
-          />
+          <div className={styles.readmeComponentCardContainer}>
+            <ComponentCard
+              className={styles.readmeComponentCard}
+              key={component.id.toString()}
+              id={component.id.fullName}
+              href={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+              envIcon={component.environment?.icon}
+              description={component.description}
+              version={component.version === 'new' ? undefined : component.version}
+              preview={<PreviewPlaceholder component={component} shouldShowPreview={true} />}
+            />
+          </div>
         </div>
         {routeSlot && <SlotSubRouter slot={routeSlot} />}
         {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}

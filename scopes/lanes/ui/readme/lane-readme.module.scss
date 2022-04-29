@@ -5,7 +5,7 @@
   flex-direction: column;
 }
 .laneId {
-  padding: 50px 0px 0px 120px;
+  padding: 50px 0px 0px 5%;
 }
 .emptyLane {
   height: auto;
@@ -14,13 +14,13 @@
 }
 .readmeComponentCard {
   max-width: 300px;
+  max-height: 320px;
 }
-.laneReadmeOverview {
+.laneReadmePreviewContainer {
   overflow: auto;
-  display: flex;
+  padding-left: 2%;
 }
 
 .readmeComponentCardContainer {
-  display: flex;
-  padding: 24px 0px 32px 120px;
+  padding: 24px 0px 32px 3%;
 }
