@@ -7,7 +7,7 @@ export type ComponentCountProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCount({ className, count }: ComponentCountProps) {
-  if (!count) return null;
+  if (count === null || count === undefined) return null;
   return (
     <PillLabel className={className}>
       <span className={styles.componentCount}>{count}</span>
