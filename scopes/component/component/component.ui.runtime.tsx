@@ -22,7 +22,6 @@ import { ComponentModel } from './ui';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
 import { ConsumeMethodSlot, ConsumePlugin, Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
-import { ComponentCompareSection } from './ui/component-compare';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
@@ -273,15 +272,13 @@ export class ComponentUI {
       reactRouterUI
     );
     const aspectSection = new AspectSection();
-    const compareSection = new ComponentCompareSection();
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute([aspectSection.route, compareSection.route]);
+    componentUI.registerRoute([aspectSection.route]);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
-    componentUI.registerWidget(compareSection.navigationLink, compareSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

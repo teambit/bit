@@ -1,4 +1,4 @@
-import { ComponentContext, ComponentID, ComponentModel, useComponent } from '@teambit/component';
+import { ComponentContext, ComponentID, ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
 import flatten from 'lodash.flatten';
 import React, { useContext, useState, HTMLAttributes, useCallback, useMemo } from 'react';
@@ -72,9 +72,9 @@ export function ComponentCompare({ fileIconSlot, className }: ComponentComparePr
           </div>
         </div>
         <div className={styles.componentCompareViewerContainer}></div>
-        {/* {showCodeCompare && toComponentId && (
+        {showCodeCompare && toComponentId && (
           <CodeCompareView to={toComponentId} fileName={currentFile} from={fromComponentId} />
-        )} */}
+        )}
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser

@@ -13,5 +13,5 @@ export class ChangelogSection implements Section {
     children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
     displayName: 'Change log',
   };
-  order = 30;
+  order = 40;
 }
