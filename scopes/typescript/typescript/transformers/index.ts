@@ -1,7 +1,10 @@
 export { ExportDeclaration } from './export-declaration';
 export { FunctionDeclaration } from './function-declaration';
+export { MethodDeclaration } from './method-declaration';
+export { PropertyDeclaration } from './property-declaration';
 export { VariableStatementTransformer } from './variable-statement';
 export { VariableDeclaration } from './variable-declaration';
 export { SourceFileTransformer } from './source-file-transformer';
 export { TypeAliasTransformer } from './type-alias';
 export { ClassDecelerationTransformer } from './class-deceleration';
+export { Constructor } from './constructor';

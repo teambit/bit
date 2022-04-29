@@ -1,5 +1,5 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node } from 'typescript';
+import ts, { ExportDeclaration, Node, LiteralTypeNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -25,9 +25,9 @@ export class SchemaExtractorContext {
    */
   getLocation(node: Node, targetSourceFile?: ts.SourceFile) {
     const sourceFile = targetSourceFile || node.getSourceFile();
-    const position = sourceFile.getLineAndCharacterOfPosition(node.pos);
+    const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
-    const character = position.character + 2; // need to verify why a 2 char difference here.
+    const character = position.character + 1;
 
     return {
       line,
@@ -46,7 +46,7 @@ export class SchemaExtractorContext {
    * get the position for the tsserver.
    */
   getPosition(sourceFile: ts.SourceFile, line: number, offset: number): number {
-    return sourceFile.getPositionOfLineAndCharacter(line - 1, offset - 2);
+    return sourceFile.getPositionOfLineAndCharacter(line - 1, offset - 1);
   }
 
   /**
@@ -189,14 +189,23 @@ export class SchemaExtractorContext {
     const pos = this.getPosition(sourceFile, start.line, start.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
     if (!nodeAtPos) return undefined;
+    if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
+      // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
+      return this.visitDefinition(nodeAtPos);
+    }
     return this.visit(nodeAtPos);
   }
 
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(node: Node, typeStr: string, type = true): Promise<TypeRefSchema> {
+  async resolveType(node: Node | LiteralTypeNode, typeStr: string, type = true): Promise<TypeRefSchema> {
     if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
+    if (node.kind === ts.SyntaxKind.LiteralType) {
+      if ((node as LiteralTypeNode).literal.kind === ts.SyntaxKind.StringLiteral) {
+        return new TypeRefSchema(typeStr);
+      }
+    }
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
 
     const typeDef = type
