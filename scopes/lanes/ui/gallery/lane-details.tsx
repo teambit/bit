@@ -2,7 +2,7 @@ import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { ScopeTitle } from '@teambit/scope.ui.scope-title';
 import classNames from 'classnames';
 import React from 'react';
-import { PillLabel } from '@teambit/design.ui.pill-label';
+import { ComponentCount } from '@teambit/component.ui.badges.component-count';
 import styles from './lane-details.module.scss';
 
 export type LaneDetailsProps = {
@@ -23,17 +23,7 @@ export function LaneDetails({ description, componentCount, className, laneName, 
         />
       </div>
       <Subtitle>{description}</Subtitle>
-      {
-        // scopes/component/ui/badges/component-count
-        componentCount && (
-          <div className={classNames(styles.pillsContainer)}>
-            <PillLabel>
-              <span className={styles.componentCount}>{componentCount}</span>
-              <span>Components</span>
-            </PillLabel>
-          </div>
-        )
-      }
+      <ComponentCount count={componentCount} />
     </div>
   );
 }
