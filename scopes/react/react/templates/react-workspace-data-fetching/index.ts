@@ -26,9 +26,9 @@ export const reactWorkspaceDataFetchingTemplate: WorkspaceTemplate = {
         path: 'ui/book-list',
       },
       {
-        id: 'learn-bit-react.data-fetching/models/books',
-        targetName: 'models/books',
-        path: 'models/books',
+        id: 'learn-bit-react.data-fetching/models/book',
+        targetName: 'models/book',
+        path: 'models/book',
       },
     ];
   },
