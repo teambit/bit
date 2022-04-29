@@ -316,6 +316,9 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
+  /**
+   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
+   */
   async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const getModelComponent = async (): Promise<ModelComponent> => {
@@ -330,23 +333,27 @@ export default class Consumer {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
 
-    const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
-      modelComponent,
-      id
-    )) as VersionDependencies;
-    const manipulateDirData = await getManipulateDirWhenImportingComponents(
-      this.bitMap,
-      [versionDependencies],
-      this.scope.objects
-    );
-    const results = await versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
-    if (!this.isLegacy) {
-      // temp check whether Harmony needs the dependencies
-      results.dependencies = [];
-      results.devDependencies = [];
-      results.extensionDependencies = [];
+    if (this.isLegacy) {
+      const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
+        modelComponent,
+        id
+      )) as VersionDependencies;
+      const manipulateDirData = await getManipulateDirWhenImportingComponents(
+        this.bitMap,
+        [versionDependencies],
+        this.scope.objects
+      );
+      return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
     }
-    return results;
+
+    const compVersion = modelComponent.toComponentVersion(id.version);
+    const consumerComp = await compVersion.toConsumer(this.scope.objects, null);
+    return new ComponentWithDependencies({
+      component: consumerComp,
+      dependencies: [],
+      devDependencies: [],
+      extensionDependencies: [],
+    });
   }
 
   async loadComponent(id: BitId): Promise<Component> {
