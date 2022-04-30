@@ -3,13 +3,12 @@ import { Workspace } from '@teambit/workspace';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import {
   diffBetweenVersionsObjects,
   DiffResults,
   DiffOptions,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 
 type LaneData = {
   name: string;

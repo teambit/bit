@@ -52,7 +52,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
-import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';

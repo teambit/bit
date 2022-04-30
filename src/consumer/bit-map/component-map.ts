@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-
+import { RemoteLaneId } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';

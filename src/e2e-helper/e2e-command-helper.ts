@@ -5,10 +5,10 @@ import childProcess, { StdioOptions } from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
-
+import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER, NOTHING_TO_SNAP_MSG } from '../constants';
+import { CURRENT_UPSTREAM, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';

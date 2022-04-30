@@ -537,6 +537,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
+    "lane-id": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/lane-id",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
+    },
     "lanes": {
         "scope": "teambit.lanes",
         "version": "0.0.293",
