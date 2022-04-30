@@ -133,7 +133,9 @@ export default class ManyComponentsWriter {
   async writeAll() {
     await this._writeComponentsAndDependencies();
     await this._installPackages();
-    await this._writeLinks();
+    if (this.consumer?.isLegacy) {
+      await this._writeLinks();
+    }
     logger.debug('ManyComponentsWriter, Done!');
   }
   async _writeComponentsAndDependencies() {
@@ -153,7 +155,7 @@ export default class ManyComponentsWriter {
     }
     await this._installPackagesIfNeeded();
   }
-  async _writeLinks() {
+  private async _writeLinks() {
     logger.debug('ManyComponentsWriter, _writeLinks');
     const links: DataToPersist = await this._getAllLinks();
     if (this.basePath) {

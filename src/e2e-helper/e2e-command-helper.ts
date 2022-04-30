@@ -396,16 +396,6 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
   }
 
-  isolateComponent(id: string, flags: string): string {
-    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.scopes.remote}/${id} ${this.scopes.remotePath} ${flags}`);
-    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter((str) => str);
-    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
-  }
-
-  isolateComponentWithCapsule(id: string, capsuleDir: string) {
-    return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
-  }
-
   /**
    * returns the capsule dir in case there is --json flag
    */
