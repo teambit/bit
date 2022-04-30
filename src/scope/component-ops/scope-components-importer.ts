@@ -317,6 +317,9 @@ export default class ScopeComponentsImporter {
     );
     if (R.isEmpty(groupedHashedMissing)) return;
     const remotes = await getScopeRemotes(this.scope);
+    logger.debug(
+      `importManyObjects, going to fetch missing objects from ${Object.keys(groupedHashedMissing).length} remotes`
+    );
     const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
 
     const bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(multipleStreams));
@@ -438,7 +441,8 @@ export default class ScopeComponentsImporter {
 
   private async multipleCompsDefsToVersionDeps(
     compsDefs: ComponentDef[],
-    lanes: Lane[] = []
+    lanes: Lane[] = [],
+    alreadyImported: BitIds = new BitIds()
   ): Promise<VersionDependencies[]> {
     const concurrency = concurrentComponentsLimit();
     const componentsWithVersionsWithNulls = await pMap(
@@ -468,7 +472,21 @@ export default class ScopeComponentsImporter {
       idsToFetch.add(compWithVer.versionObj.flattenedDependencies);
     });
 
-    const compVersionsOfDeps = await this.importWithoutDeps(idsToFetch, undefined, lanes);
+    // this is an optimization. instead of running `this.importWithoutDeps(idsToFetch)`, it filters the ids that were
+    // exported before. the reason why they are here is because their version wasn't built yet. (buildStatus !== succeed)
+    const idsToFetchFiltered = idsToFetch.filter((id) => !alreadyImported.has(id));
+    const compVersionsOfDeps = await this.importWithoutDeps(BitIds.fromArray(idsToFetchFiltered), undefined, lanes);
+
+    // add all componentVersions that were filtered before to `compVersionsOfDeps`.
+    const alreadyImportedNeeded = alreadyImported.filter((id) => idsToFetch.has(id));
+    const alreadyImportedCompDef = await this.sources.getMany(alreadyImportedNeeded);
+    const alreadyImportedCompVer = await Promise.all(
+      alreadyImportedCompDef.map(({ id, component }) => {
+        if (!component) return null;
+        return component.toComponentVersion(id.version);
+      })
+    );
+    compVersionsOfDeps.push(...compact(alreadyImportedCompVer));
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
       const dependencies = versionObj.flattenedDependencies.map((dep) =>
@@ -511,7 +529,7 @@ export default class ScopeComponentsImporter {
       context
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
-    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes);
+    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes, BitIds.fromArray(ids));
     if (throwForDependencyNotFound) {
       versionDeps.forEach((verDep) => verDep.throwForMissingDependencies());
     }
