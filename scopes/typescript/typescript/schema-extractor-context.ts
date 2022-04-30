@@ -215,10 +215,11 @@ export class SchemaExtractorContext {
     const def = await Promise.all(
       typeDef?.body?.map(async (definition) => {
         const file = this.findFileInComponent(definition.file);
-        // TODO: find component id is exists, otherwise add the package name.
-        if (!file) return new TypeRefSchema(typeStr, undefined, '');
-        if (file) return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
-        return undefined;
+        if (!file) {
+          // TODO: find component id is exists, otherwise add the package name.
+          return new TypeRefSchema(typeStr, undefined, '');
+        }
+        return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
       }) || []
     );
 
