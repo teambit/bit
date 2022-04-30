@@ -488,11 +488,6 @@ export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDepe
 
 export const HASH_SIZE = 40;
 
-// @todo: decide how the delimiter should look like
-export const LANE_REMOTE_DELIMITER = '/';
-
-export const DEFAULT_LANE = 'main';
-
 export const PREVIOUS_DEFAULT_LANE = 'master';
 
 export const statusInvalidComponentsMsg = 'invalid components';

@@ -1,9 +1,8 @@
 import groupArray from 'group-array';
 import R from 'ramda';
-
+import { RemoteLaneId } from '@teambit/lane-id';
 import { Consumer } from '..';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import { Remotes } from '../../remotes';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import WorkspaceLane from '../bit-map/workspace-lane';

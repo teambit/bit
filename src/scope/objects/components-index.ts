@@ -3,8 +3,7 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import * as path from 'path';
 import R from 'ramda';
-
-import LaneId from '../../lane-id/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import logger from '../../logger/logger';
 import InvalidIndexJson from '../exceptions/invalid-index-json';
 import { ModelComponent, Symlink } from '../models';
