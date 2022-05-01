@@ -42,6 +42,8 @@ import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
 import { LaneSwitcher } from './switch-lanes';
 
+export { Lane };
+
 export type LaneResults = {
   lanes: LaneData[];
   currentLane?: string | null;
