@@ -35,7 +35,7 @@ export type MenuBarWidget = {
 export type CompositionsProp = {
   menuBarWidgets?: CompositionsMenuSlot;
   emptyState?: EmptyStateSlot,
-  customUI?: (component: ComponentModel) => JSX.Element;
+  customUI?: {prepend: boolean, component: (component: ComponentModel) => JSX.Element};
 };
 
 export function Compositions({ menuBarWidgets, emptyState, customUI }: CompositionsProp) {
@@ -78,6 +78,7 @@ export function Compositions({ menuBarWidgets, emptyState, customUI }: Compositi
               <OptionButton icon="open-tab" />
             </NativeLink>
           </CompositionsMenuBar>
+          {customUI && customUI.prepend && customUI.component(component)}
           <CompositionContent
             emptyState={emptyState}
             component={component}
@@ -118,7 +119,7 @@ export function Compositions({ menuBarWidgets, emptyState, customUI }: Compositi
           </ThemeContext>
         </Pane>
       </SplitPane>
-      {customUI && customUI(component)}
+      {customUI && !customUI.prepend && customUI.component(component)}
     </CompositionContextProvider>
 
   );
