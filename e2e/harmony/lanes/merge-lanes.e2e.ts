@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { DEFAULT_LANE, statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 

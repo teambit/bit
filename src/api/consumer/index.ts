@@ -16,7 +16,6 @@ import importAction from './lib/import';
 import init from './lib/init';
 import injectConf from './lib/inject-conf';
 import installAction from './lib/install';
-import isolate from './lib/isolate';
 import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
@@ -33,7 +32,6 @@ import { clearCache } from './lib/clear-cache';
 
 export {
   init,
-  isolate,
   config,
   exportAction,
   registerDefaultScopeGetter,

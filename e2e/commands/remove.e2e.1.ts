@@ -112,7 +112,7 @@ describe('bit remove command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      helper.command.removeComponent('bar/foo', '-t');
+      helper.command.removeComponent('bar/foo', '-t --keep-files');
     });
     it('should  show in bitmap', () => {
       const bitMap = helper.bitMap.read();

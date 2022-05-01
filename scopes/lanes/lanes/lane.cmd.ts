@@ -9,7 +9,7 @@ import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/mer
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
-import { removePrompt } from '@teambit/legacy/dist/prompts';
+import { approveOperation } from '@teambit/legacy/dist/prompts';
 import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
@@ -333,7 +333,7 @@ export class LaneRemoveCmd implements Command {
     }
   ): Promise<string> {
     if (!silent) {
-      const removePromptResult = await removePrompt();
+      const removePromptResult = await approveOperation();
       // @ts-ignore
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');

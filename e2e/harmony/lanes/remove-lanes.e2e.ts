@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
-import { DEFAULT_LANE, IS_WINDOWS } from '../../../src/constants';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import { IS_WINDOWS } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));

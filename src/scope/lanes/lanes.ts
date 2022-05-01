@@ -1,11 +1,10 @@
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
+import { LaneId, LocalLaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId, BitIds } from '../../bit-id';
-import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
 import GeneralError from '../../error/general-error';
-import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Ref, Repository } from '../objects';
