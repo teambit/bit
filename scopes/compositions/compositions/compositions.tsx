@@ -32,9 +32,13 @@ export type MenuBarWidget = {
   location: 'start' | 'end';
   content: ReactNode;
 };
-export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptyState?: EmptyStateSlot };
+export type CompositionsProp = {
+  menuBarWidgets?: CompositionsMenuSlot;
+  emptyState?: EmptyStateSlot,
+  customUI?: (component: ComponentModel) => JSX.Element;
+};
 
-export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
+export function Compositions({ menuBarWidgets, emptyState, customUI }: CompositionsProp) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
@@ -114,7 +118,9 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
           </ThemeContext>
         </Pane>
       </SplitPane>
+      {customUI && customUI(component)}
     </CompositionContextProvider>
+
   );
 }
 
