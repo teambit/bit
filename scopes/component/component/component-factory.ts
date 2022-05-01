@@ -101,6 +101,19 @@ export interface ComponentFactory {
   hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
 
   /**
+   * whether a component is not the same as its head.
+   * for a new component, it'll return "true" as it has no head yet.
+   * this is relevant for component from the workspace, where it can be locally changed. on the scope it's always false
+   */
+  isModified(component: Component): Promise<boolean>;
+
+  /**
+   * write the component to the filesystem when applicable (no-op for scope).
+   * to change the component-path, specify the "rootPath", which should be a relative path inside the workspace.
+   */
+  write(component: Component, rootPath?: string): Promise<void>;
+
+  /**
    * determine whether host should be the prior one in case multiple hosts persist.
    */
   priority?: boolean;

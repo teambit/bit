@@ -16,7 +16,6 @@ import importAction from './lib/import';
 import init from './lib/init';
 import injectConf from './lib/inject-conf';
 import installAction from './lib/install';
-import isolate from './lib/isolate';
 import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
@@ -26,7 +25,6 @@ import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import remove from './lib/remove';
 import show from './lib/show';
-import switchAction from './lib/switch';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
@@ -34,7 +32,6 @@ import { clearCache } from './lib/clear-cache';
 
 export {
   init,
-  isolate,
   config,
   exportAction,
   registerDefaultScopeGetter,
@@ -68,7 +65,6 @@ export {
   login,
   show,
   paintGraph,
-  switchAction,
   fetch,
   clearCache,
 };

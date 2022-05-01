@@ -1,7 +1,8 @@
 import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
 import { countBy, property, sortBy, uniq } from 'lodash';
 import semver from 'semver';
-import { intersect, parseRange } from 'semver-intersect';
+import { parseRange } from 'semver-intersect';
+import { intersect } from 'semver-range-intersect';
 
 import {
   DEV_DEP_LIFECYCLE_TYPE,
@@ -91,7 +92,7 @@ function handlePreserved(
     // this in very rare cases might create bugs in case the version are intersects, but the real version in the registry
     // which satisfies the preserved not satisfy the item range.
     // In such case I would expect to get version not exist when coming to install the version in the nested component
-    return !!intersectNoThrow(item.range, preservedVersion);
+    return !!intersect(item.range, preservedVersion);
   };
 
   indexItem.componentItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
@@ -143,11 +144,11 @@ function handlePeersOnly(
     return true;
   }
   const allRanges = indexItems.map((item) => item.range);
-  try {
-    intersect(...allRanges);
+  const intersected = intersect(...allRanges);
+  if (intersected) {
     // Add to peers for each component to make sure we are getting warning from the package manager about missing peers
     indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
-  } catch (e: any) {
+  } else {
     indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
     // There are peer version with conflicts, let the user know about it
     const conflictedComponents = indexItems.map((item) => {
@@ -156,10 +157,13 @@ function handlePeersOnly(
         range: item.range,
       };
     });
+    const conflictMessage = `The following components has conflicted peer dependencies: ${conflictedComponents
+      .map((c) => c.componentPackageName)
+      .join(',')} for the dependency: ${packageName}`;
     const issue: DedupedDependenciesPeerConflicts = {
       packageName,
       conflictedComponents,
-      conflictMessage: e.message,
+      conflictMessage,
     };
     dedupedDependencies.issus?.peerConflicts.push(issue);
   }
@@ -217,11 +221,6 @@ function handleRangesOnly(
   const lifeCycleType = getLifecycleType(indexItems);
   const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
   dedupedDependencies.rootDependencies[depKeyName][packageName] = bestRange.intersectedRange;
-
-  indexItems.forEach((item) => {
-    if (bestRange.ranges.includes(item.range)) return;
-    addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName)(item);
-  });
 
   const filterFunc = (item) => {
     if (bestRange.ranges.includes(item.range)) return true;
@@ -294,14 +293,14 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
   // Since it's already sorted by count, once we found match we can stop looping
   while (result.count === 0 && i < sortedByTotal.length) {
     const combinationWithTotal = sortedByTotal[i];
-    try {
-      const intersectedRange = intersect(...combinationWithTotal.combination);
+    const intersectedRange = intersect(...combinationWithTotal.combination);
+    if (intersectedRange) {
       result.intersectedRange = intersectedRange;
       result.ranges = combinationWithTotal.combination;
       result.count = combinationWithTotal.total;
-      // eslint-disable-next-line
-    } catch (e: any) {}
-    i += 1;
+    } else {
+      i += 1;
+    }
   }
   return result;
 }
@@ -425,7 +424,19 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
     versions: [],
   };
   indexItems.forEach((item) => {
-    const parsed = parseRange(semver.validRange(item.range));
+    const validRange = semver.validRange(item.range);
+    if (!validRange) {
+      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range.
+this is a temporary issue with unsupported snaps (hashes) on the registry and will be fixed very soon`);
+    }
+    // parseRange does not support `*` as version
+    // `*` does not affect resulted version, it might be just ignored
+    if (validRange === '*') {
+      // to prevent empty `result.ranges`, it needs to be pushed
+      result.ranges.push(item);
+      return;
+    }
+    const parsed = parseRange(validRange);
     if (parsed.condition === '=') {
       result.versions.push(item);
       return;
@@ -478,12 +489,4 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
     },
   };
   return result;
-}
-
-function intersectNoThrow(...args): string | undefined {
-  try {
-    return intersect(...args);
-  } catch (e: any) {
-    return undefined;
-  }
 }

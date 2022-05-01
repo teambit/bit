@@ -45,7 +45,6 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 import type { VariantsMain, Patterns } from '@teambit/variants';
 import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
@@ -53,7 +52,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
-import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -466,32 +465,6 @@ export class Workspace implements ComponentFactory {
     return dependentsIds;
   }
 
-  async loadCapsules(bitIds: string[]) {
-    // throw new Error("Method not implemented.");
-    const components = await this.load(bitIds);
-    return components.map((comp) => comp.capsule);
-  }
-  /**
-   * fully load components, including dependency resolution and prepare them for runtime.
-   * @todo: remove the string option, use only BitId
-   */
-  async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const componentIds = await this.resolveMultipleComponentIds(ids);
-    const components = await this.getMany(componentIds);
-    const network = await this.isolator.isolateComponents(
-      components.map((c) => c.id),
-      {
-        packageManagerConfigRootDir: this.path,
-      }
-    );
-    const resolvedComponents = components.map((component) => {
-      const capsule = network.graphCapsules.getCapsule(component.id);
-      if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
-      return new ResolvedComponent(component, capsule);
-    });
-    return resolvedComponents;
-  }
-
   public async createAspectList(extensionDataList: ExtensionDataList) {
     const entiresP = extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry));
     const entries: AspectEntry[] = await Promise.all(entiresP);
@@ -797,10 +770,15 @@ export class Workspace implements ComponentFactory {
     return newAndModified;
   }
 
-  async getComponentsUsingEnv(env: string, throwIfNotFound = false): Promise<Component[]> {
+  async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
     const allComps = await this.list();
     const allEnvs = await this.envs.createEnvironment(allComps);
-    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => runtimeEnv.id === env);
+    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => {
+      if (runtimeEnv.id === env) return true;
+      if (!ignoreVersion) return false;
+      const envWithoutVersion = runtimeEnv.id.split('@')[0];
+      return env === envWithoutVersion;
+    });
     if (!foundEnv && throwIfNotFound) {
       const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
       throw new BitError(`unable to find components that using "${env}" env.
@@ -915,10 +893,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return `${owner}.${scopeName}`;
   }
 
-  async write(rootPath: string, component: Component) {
+  async write(component: Component, rootPath?: string) {
     await Promise.all(
       component.filesystem.files.map(async (file) => {
-        const pathToWrite = path.join(this.path, rootPath, file.relative);
+        const pathToWrite = rootPath ? path.join(this.path, rootPath, file.relative) : file.path;
         await fs.outputFile(pathToWrite, file.contents);
       })
     );
@@ -1143,6 +1121,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     };
   }
 
+  async isModified(component: Component): Promise<boolean> {
+    const head = component.head;
+    if (!head) {
+      return true; // it's a new component
+    }
+    const consumerComp = component.state._consumer as ConsumerComponent;
+    if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
+    const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
+    return componentStatus.modified === true;
+  }
+
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
@@ -1194,12 +1183,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
   }
 
+  async getAspectIdFromConfig(
+    componentId: ComponentID,
+    aspectIdStr: string,
+    ignoreAspectVersion = false
+  ): Promise<string | undefined> {
+    const aspectId = await this.resolveComponentId(aspectIdStr);
+    const componentConfigFile = await this.componentConfigFile(componentId);
+    if (componentConfigFile) {
+      const aspectEntry = componentConfigFile.aspects.find(aspectId, ignoreAspectVersion);
+      return aspectEntry?.id.toString();
+    }
+    return this.bitMap.getAspectIdFromConfig(componentId, aspectId, ignoreAspectVersion);
+  }
+
   async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
       return componentConfigFile.aspects.get(aspectId)?.config;
     }
-    return this.bitMap.getBitmapEntry(id).config?.[aspectId];
+    return this.bitMap.getBitmapEntry(id, { ignoreVersion: true }).config?.[aspectId];
   }
 
   /**
@@ -1390,7 +1393,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return graphFromFsBuilder.buildGraph(ids);
   }
 
-  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    excludeCore = false
+  ): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -1437,7 +1444,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
-    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    const ids = idsToResolve.map((idStr) => ComponentID.fromString(idStr).toStringWithoutVersion());
+    const afterExclusion = excludeCore ? allDefs.filter((def) => {
+      const isCore = coreAspectDefs.find(coreId => def.getId === coreId.getId);
+      const id = ComponentID.fromString(def.getId || '');
+      const isTarget = ids.includes(id.toStringWithoutVersion());
+      if (isTarget) return true;
+      return (isCore && isTarget);
+    }) : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
@@ -2072,17 +2088,41 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * overrides in workspace.jsonc.
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
-    const envIdStr = envId.toString();
-    const existsOnWorkspace = await this.hasId(envId);
+    const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.addSpecificComponentConfig(componentId, existsOnWorkspace ? envIdStrNoVersion : envIdStr);
+        await this.addSpecificComponentConfig(componentId, envStrWithPossiblyVersion);
         await this.addSpecificComponentConfig(componentId, EnvsAspect.id, { env: envIdStrNoVersion });
       })
     );
     await this.bitMap.write();
+  }
+
+  /**
+   * helpful when a user provides an env-string to be set and this env has no version.
+   * in the workspace config, a custom-env needs to be set with a version unless it's part of the workspace.
+   * (inside envs/envs it's set without a version).
+   */
+  async resolveEnvIdWithPotentialVersionForConfig(envId: ComponentID): Promise<string> {
+    const isCore = this.aspectLoader.isCoreAspect(envId.toStringWithoutVersion());
+    const existsOnWorkspace = await this.hasId(envId);
+    if (isCore || existsOnWorkspace) {
+      // the env needs to be without version
+      return envId.toStringWithoutVersion();
+    }
+    // the env must include a version
+    if (envId.hasVersion()) {
+      return envId.toString();
+    }
+    const extensions = this.harmony.get<ConfigMain>('teambit.harmony/config').extensions;
+    const found = extensions?.findExtension(envId.toString(), true);
+    if (found && found.extensionId?.version) {
+      return found.extensionId.toString();
+    }
+    const comps = await this.importAndGetMany([envId]);
+    return comps[0].id.toString();
   }
 
   /**
@@ -2099,7 +2139,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           unchanged.push(id);
           return;
         }
-        await this.removeSpecificComponentConfig(id, currentEnv, false);
+        const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, false);
         await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
         changed.push(id);
       })

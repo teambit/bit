@@ -477,9 +477,9 @@ export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
 export const PATTERN_HELP = (command: string) =>
-  `you can use a <pattern> for multiple component ids, such as bit ${command} "org.scope/utils/**". use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+  `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
 always wrap the pattern with quotes to avoid collision with shell commands.
-to validate the pattern before running this command, run "bit pattern <pattern>".
+to validate the pattern before running this command, run \`bit pattern <pattern>\`.
 `;
 
 export const CURRENT_UPSTREAM = 'current';
@@ -487,11 +487,6 @@ export const CURRENT_UPSTREAM = 'current';
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
 
 export const HASH_SIZE = 40;
-
-// @todo: decide how the delimiter should look like
-export const LANE_REMOTE_DELIMITER = '/';
-
-export const DEFAULT_LANE = 'main';
 
 export const PREVIOUS_DEFAULT_LANE = 'master';
 
@@ -519,6 +514,7 @@ export enum Extensions {
   deprecation = 'teambit.component/deprecation',
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
+  lanes = 'teambit.lanes/lanes',
 }
 
 export enum BuildStatus {

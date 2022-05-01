@@ -220,6 +220,20 @@ export class IsolatorMain {
   }
 
   /**
+   *
+   * @param originalCapsule the capsule that contains the original component
+   * @param newBaseDir relative path. (it will be saved inside `this.getRootDirOfAllCapsules()`. the final path of the capsule will be getRootDirOfAllCapsules() + newBaseDir + filenameify(component.id))
+   * @returns a new capsule with the same content of the original capsule but with a new baseDir and all packages
+   * installed in the newBaseDir.
+   */
+  async cloneCapsule(originalCapsule: Capsule, newBaseDir: string): Promise<Capsule> {
+    const network = await this.isolateComponents([originalCapsule.component.id], { baseDir: newBaseDir });
+    const clonedCapsule = network.seedersCapsules[0];
+    await fs.copy(originalCapsule.path, clonedCapsule.path);
+    return clonedCapsule;
+  }
+
+  /**
    * Create capsules for the provided components
    * do not use this outside directly, use isolate components which build the entire network
    * @param components
@@ -278,7 +292,7 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    cachePackagesOnCapsulesRoot: boolean
+    cachePackagesOnCapsulesRoot?: boolean
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
@@ -346,14 +360,28 @@ export class IsolatorMain {
   }
 
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
-    const legacyComponents = components.map((component) => component.state._consumer.clone());
-    if (legacyScope) await importMultipleDistsArtifacts(legacyScope, legacyComponents);
+    const modifiedComps: Component[] = [];
+    const unmodifiedComps: Component[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const isModified = await component.isModified();
+        if (isModified) modifiedComps.push(component);
+        else unmodifiedComps.push(component);
+      })
+    );
+    const legacyUnmodifiedComps = unmodifiedComps.map((component) => component.state._consumer.clone());
+    const legacyModifiedComps = modifiedComps.map((component) => component.state._consumer.clone());
+    const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
+    if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
+        if (await component.isModified()) {
+          delete params.scope;
+        }
         const componentWriter = new ComponentWriter(params);
         await componentWriter.populateComponentsFilesToWrite();
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });

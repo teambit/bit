@@ -23,7 +23,7 @@ import path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import LaneId, { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneId, RemoteLaneId, LocalLaneId } from '@teambit/lane-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
@@ -47,6 +47,7 @@ export type ComponentStatus = {
   componentFromModel?: Version;
   id: BitId;
   failureMessage?: string;
+  unchangedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
 };
 
@@ -163,20 +164,24 @@ export class MergingMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
-      .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
+      .map((componentStatus) => ({
+        id: componentStatus.id,
+        failureMessage: componentStatus.failureMessage as string,
+        unchangedLegitimately: componentStatus.unchangedLegitimately,
+      }));
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
+    const componentsResults = await mapSeries(succeededComponents, async ({ componentFromFS, id, mergeResults }) => {
+      const modelComponent = await consumer.scope.getModelComponent(id);
       return this.applyVersion({
         consumer,
         componentFromFS,
         id,
         mergeResults,
         mergeStrategy,
-        remoteHead: new Ref(id.version as string),
-        // @ts-ignore
-        remoteName: remoteName || componentFromFS.scope,
+        remoteHead: modelComponent.getRef(id.version as string) as Ref,
+        remoteName: remoteName || componentFromFS?.scope || null,
         laneId,
         localLane,
       });
@@ -201,8 +206,9 @@ export class MergingMain {
   ): Promise<ComponentStatus> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentStatus = { id };
-    const returnFailure = (msg: string) => {
+    const returnFailure = (msg: string, unchangedLegitimately = false) => {
       componentStatus.failureMessage = msg;
+      componentStatus.unchangedLegitimately = unchangedLegitimately;
       return componentStatus;
     };
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
@@ -219,22 +225,21 @@ export class MergingMain {
     }
     const version = id.version as string;
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+    const existOnCurrentLane = existingBitMapId && consumer.bitMap.isIdAvailableOnCurrentLane(existingBitMapId);
     const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (!existingBitMapId) {
-      if (existingOnWorkspaceOnly) {
-        return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
-      }
-      // @ts-ignore
+    if (!existingBitMapId && existingOnWorkspaceOnly) {
+      return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
+    }
+    if (!existingBitMapId || !existOnCurrentLane) {
       return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
     }
     const currentlyUsedVersion = existingBitMapId.version;
     if (currentlyUsedVersion === version) {
       // @todo: maybe this check is not needed as we check for diverge later on
       if (localLane || modelComponent.hasHead()) {
-        return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
+        return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`, true);
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await consumer.loadComponent(existingBitMapId);
     const componentModificationStatus = await consumer.getComponentStatusById(component.id);
     if (componentModificationStatus.modified) {
@@ -247,12 +252,15 @@ export class MergingMain {
       localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
     const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
 
-    const otherLaneHead = new Ref(version);
+    const otherLaneHead = modelComponent.getRef(version);
+    if (!otherLaneHead) {
+      throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
+    }
     const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
         // do nothing!
-        return returnFailure(`component ${component.id.toString()} is ahead, nothing to merge`);
+        return returnFailure(`component ${component.id.toString()} is ahead, nothing to merge`, true);
       }
       if (divergeData.isRemoteAhead()) {
         // just override with the model data
@@ -264,7 +272,7 @@ export class MergingMain {
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return returnFailure(`component ${component.id.toString()} is already merged`);
+      return returnFailure(`component ${component.id.toString()} is already merged`, true);
     }
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
@@ -396,7 +404,11 @@ export class MergingMain {
     } else {
       // this is main
       const modelComponent = await consumer.scope.getModelComponent(id);
-      if (!consumer.isLegacy) modelComponent.setHead(remoteHead);
+      if (!consumer.isLegacy) {
+        modelComponent.setHead(remoteHead);
+        // mark it as local, otherwise, when importing this component from a remote, it'll override it.
+        modelComponent.markVersionAsLocal(remoteHead.toString());
+      }
       consumer.scope.objects.add(modelComponent);
     }
 

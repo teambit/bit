@@ -613,10 +613,11 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
-      - run: cd bit && bbit status
-      # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
-      - run: cd bit && rm -rf node_modules
-      - run: cd bit && bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bit status
+      - run: cd bit && npm run generate-cli-reference
+      - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
+      - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
+      - run: cd bit && bit checkout latest --all --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
@@ -755,12 +756,42 @@ jobs:
       - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+
+      - run: mkdir esbuild-arm
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+#       - run: brew install wget
+#       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+#       - save_cache:
+#           key: esbuild-0.14.29-darwin-arm64-v1
+#           paths:
+#             - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+      - restore_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
+      - run:
+          name: create macos-arm64
+          command: mkdir macos-arm64
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
+      - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run:
+          name: compress bit arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to macos-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+
+
       - persist_to_workspace:
           root: .
           paths:
             - macos
+            - macos-arm64
       - store_artifacts:
           path: macos
+      - store_artifacts:
+          path: macos-arm64
 
   bundle_version_windows:
     <<: *windows_defaults
@@ -838,6 +869,9 @@ jobs:
       - run:
           name: Upload tar file (OSX)
           command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
 
 
   bit_export:
@@ -1670,18 +1704,42 @@ workflows:
             - harmony_deploy_approval_job
             - docker_build
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
-      # - bundle_version_windows:
-      #     filters:
-      #       branches:
-      #         only: bvm-build-from-bit-dev-registry1
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: bvm-build-from-bit-dev-registry
+#   bvm_bundle_debug:
+#     jobs:
+#       - checkout_code:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_linux:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_windows:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - bundle_version_macos:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#       - harmony_publish_to_gcloud:
+#           filters:
+#             branches:
+#               only: fix-circle-cache
+#           requires:
+#             - bundle_version_macos
+#             - bundle_version_linux
+#             - bundle_version_windows
+#       - docker_build:
+#           requires:
+#             - checkout_code
+#             - harmony_publish_to_gcloud
+#       - docker_non_root_build:
+#           requires:
+#             - checkout_code
+#             - harmony_publish_to_gcloud
+#       - server_docker_build:
+#           requires:
+#             - docker_build
+
 

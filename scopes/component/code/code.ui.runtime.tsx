@@ -23,9 +23,11 @@ export class CodeUI {
      */
     private fileIconSlot?: FileIconSlot
   ) {}
+
   getCodePage = () => {
     return <CodePage fileIconSlot={this.fileIconSlot} />;
   };
+  
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);
     return this;

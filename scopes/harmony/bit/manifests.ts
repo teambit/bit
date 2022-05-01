@@ -61,6 +61,7 @@ import WorkerAspect from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
+import ReadmeAspect from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
@@ -83,6 +84,7 @@ import { StatusAspect } from '@teambit/status';
 import { SnappingAspect } from '@teambit/snapping';
 import { MergingAspect } from '@teambit/merging';
 import { IssuesAspect } from '@teambit/issues';
+import { RefactoringAspect } from '@teambit/refactoring';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -97,6 +99,7 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
+  [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
   [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
@@ -170,6 +173,7 @@ export const manifestsMap = {
   [SnappingAspect.id]: SnappingAspect,
   [MergingAspect.id]: MergingAspect,
   [IssuesAspect.id]: IssuesAspect,
+  [RefactoringAspect.id]: RefactoringAspect,
 };
 
 export function isCoreAspect(id: string) {

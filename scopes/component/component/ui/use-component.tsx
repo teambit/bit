@@ -26,19 +26,23 @@ export function useComponent(host: string, id?: ComponentID): Component {
   const lanesContext = useLanesContext();
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
   if (!targetId) throw new TypeError('useComponent received no component id');
-  const currentLane = lanesContext?.currentLane;
+  const currentLane = lanesContext?.viewedLane;
   // when on a lane, always fetch all the logs starting from the 'head' version
-  const logHead = lanesContext?.currentLane?.components.find((component) => component.model.id.fullName === targetId)
-    ?.model.id.version;
+  const laneComponentId = lanesContext?.viewedLane?.components.find(
+    (component) => component.id.fullName === targetId
+  )?.id;
+
+  const componentIdStr = laneComponentId ? laneComponentId?.toString() : withVersion(targetId, version);
+
   const logFilters = currentLane
     ? {
         log: {
-          logHead,
+          logHead: laneComponentId?.version,
         },
       }
     : undefined;
 
-  return useComponentQuery(withVersion(targetId, version), host, logFilters);
+  return useComponentQuery(componentIdStr, host, logFilters);
 }
 
 function withVersion(id: string, version?: string) {

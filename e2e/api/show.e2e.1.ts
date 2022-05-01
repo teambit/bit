@@ -19,7 +19,7 @@ describe('show api', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
-      helper.command.tagScope('1.0.0');
+      helper.command.tagIncludeUnmodified('1.0.0');
       helper.command.exportAllComponents();
     });
     describe('with no options', () => {

@@ -5,10 +5,10 @@ import childProcess, { StdioOptions } from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
-
+import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER, NOTHING_TO_SNAP_MSG } from '../constants';
+import { CURRENT_UPSTREAM, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -117,6 +117,9 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
     return JSON.parse(result);
   }
+  add(dir: string, flag = '') {
+    return this.runCmd(`bit add ${dir} ${flag}`);
+  }
   addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
       typeof options === 'string'
@@ -125,6 +128,12 @@ export default class CommandHelper {
             .map((key) => `-${key} ${options[key]}`)
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
+  }
+  addLaneReadme(id: string, laneName = '') {
+    return this.runCmd(`bit lane add-readme ${id} ${laneName}`);
+  }
+  removeLaneReadme(laneName = '') {
+    return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
   sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
@@ -149,6 +158,9 @@ export default class CommandHelper {
   }
   unsetEnv(compId: string) {
     return this.runCmd(`bit envs unset ${compId}`);
+  }
+  replaceEnv(oldEnv: string, newEnv: string) {
+    return this.runCmd(`bit envs replace ${oldEnv} ${newEnv}`);
   }
   setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
     const configStr = config ? `'${JSON.stringify(config)}'` : '';
@@ -175,6 +187,9 @@ export default class CommandHelper {
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
   }
+  refactorDependencyName(oldId: string, newId: string, flags = '') {
+    return this.runCmd(`bit refactor dependency-name ${oldId} ${newId} ${flags}`);
+  }
   use(aspectId: string, flags = '') {
     return this.runCmd(`bit use ${aspectId} ${flags}`);
   }
@@ -185,16 +200,17 @@ export default class CommandHelper {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    const ver = version ? `@${version}` : '';
-    return this.runCmd(`bit tag ${id}${ver} ${options} --build`);
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag ${id} ${ver} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
+    const ver = version ? `--ver ${version}` : '';
+    const result = this.runCmd(`bit tag ${ver} ${options} --build`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagAllWithoutBuild(options = '') {
-    const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${options}`, undefined, undefined, BUILD_ON_CI);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -207,11 +223,13 @@ export default class CommandHelper {
     this.linkAndRewire();
     return this.tagAllComponents(options, version, assertTagged);
   }
-  tagScope(version = '', message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
+  tagIncludeUnmodified(version = '', message = 'tag-message', options = '') {
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag --unmodified ${ver} -m ${message} ${options} --build`);
   }
-  tagScopeWithoutBuild(version = '', options = '') {
-    return this.runCmd(`bit tag -s ${version} ${options}`, undefined, undefined, BUILD_ON_CI);
+  tagIncludeUnmodifiedWithoutBuild(version = '', options = '') {
+    const ver = version ? `--ver ${version}` : '';
+    return this.runCmd(`bit tag --unmodified ${ver} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
@@ -376,16 +394,6 @@ export default class CommandHelper {
 
   importAllComponents(writeToFileSystem = false) {
     return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
-  }
-
-  isolateComponent(id: string, flags: string): string {
-    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.scopes.remote}/${id} ${this.scopes.remotePath} ${flags}`);
-    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter((str) => str);
-    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
-  }
-
-  isolateComponentWithCapsule(id: string, capsuleDir: string) {
-    return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
   /**

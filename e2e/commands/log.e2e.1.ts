@@ -20,7 +20,7 @@ describe('bit log', function () {
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.command.tagScope('2.0.0', 'new-tagging-message');
+      helper.command.tagIncludeUnmodified('2.0.0', 'new-tagging-message');
       helper.command.export(); // just a quick test to make sure export with no ids and multiple versions works
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();

@@ -1,10 +1,15 @@
 .deprecateFilter {
+  align-items: center;
+
   > div {
     line-height: 16px;
     display: flex;
   }
 
   .filterIcon {
+    display: flex;
+    padding: 8px;
+
     img {
       width: 16px;
     }

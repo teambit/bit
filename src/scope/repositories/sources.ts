@@ -96,8 +96,13 @@ export default class SourceRepository {
    */
   async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
     const emptyComponent = ModelComponent.fromBitId(bitId);
+    const isInCache = this.objects().getCache(emptyComponent.hash());
     const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
     if (!component) return undefined;
+    if (!isInCache) {
+      const currentLane = await this.scope.getCurrentLaneObject();
+      await component.populateLocalAndRemoteHeads(this.objects(), currentLane);
+    }
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = (version: Version): ModelComponent | undefined => {
@@ -625,7 +630,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    if (existingComponentHead) {
+    if (existingComponentHead || mergedComponent.hasHead()) {
       const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
       mergedVersions.push(...mergedSnaps);
     }
@@ -634,7 +639,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   private async getMergedSnaps(
-    existingHead: Ref,
+    existingHead: Ref | undefined,
     incomingComp: ModelComponent,
     versionObjects: Version[]
   ): Promise<string[]> {

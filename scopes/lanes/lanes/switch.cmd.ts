@@ -1,15 +1,7 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import { switchAction } from '@teambit/legacy/dist/api/consumer';
-import { SwitchProps } from '@teambit/legacy/dist/consumer/lanes/switch-lanes';
-import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import {
-  MergeOptions,
-  MergeStrategy,
-  applyVersionReport,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { BitError } from '@teambit/bit-error';
+import { MergeStrategy, applyVersionReport } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
   name = 'switch <lane>';
@@ -28,10 +20,12 @@ export class SwitchCmd implements Command {
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
-    ['v', 'verbose', 'showing verbose output for inspection'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
+
+  constructor(private lanes: LanesMain) {}
 
   async report(
     [lane]: [string],
@@ -39,44 +33,23 @@ export class SwitchCmd implements Command {
       as,
       merge,
       getAll = false,
-      verbose = false,
+      skipDependencyInstallation = false,
       json = false,
     }: {
       as?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
-      verbose?: boolean;
+      skipDependencyInstallation?: boolean;
       override?: boolean;
       json?: boolean;
     }
   ) {
-    let mergeStrategy;
-    if (merge && R.is(String, merge)) {
-      const options = Object.keys(MergeOptions);
-      if (!options.includes(merge)) {
-        throw new BitError(`merge must be one of the following: ${options.join(', ')}`);
-      }
-      mergeStrategy = merge;
-    }
-
-    const switchProps: SwitchProps = {
-      laneName: lane,
-      existingOnWorkspaceOnly: !getAll,
+    const { components, failedComponents } = await this.lanes.switchLanes(lane, {
       newLaneName: as,
-    };
-    const checkoutProps: CheckoutProps = {
-      mergeStrategy,
-      verbose,
-      skipNpmInstall: false, // not relevant in Harmony
-      ignorePackageJson: true, // not relevant in Harmony
-      ignoreDist: true, // not relevant in Harmony
-      isLane: true,
-      promptMergeOptions: false,
-      writeConfig: false,
-      reset: false,
-      all: false,
-    };
-    const { components, failedComponents } = await switchAction(switchProps, checkoutProps);
+      merge,
+      getAll,
+      skipDependencyInstallation,
+    });
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }

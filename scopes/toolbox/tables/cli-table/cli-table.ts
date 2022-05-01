@@ -14,6 +14,19 @@ export class CLITable {
     return table.toString();
   }
 
+  /**
+   * sort by the first column
+   */
+  sort() {
+    this.body.sort((a, b) => {
+      const aValue = a[0];
+      const bValue = b[0];
+      if (aValue < bValue) return -1;
+      if (aValue > bValue) return 1;
+      return 0;
+    });
+  }
+
   static fromObject(header: { value: string }[], data: Record<string, string>[]) {
     const headers = Object.values(header).map((d) => colors.cyan(d.value));
     return new CLITable(

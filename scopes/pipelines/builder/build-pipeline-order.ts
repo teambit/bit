@@ -1,4 +1,4 @@
-import { Graph } from 'cleargraph';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
@@ -127,9 +127,9 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
       if (!graphLocation) throw new Error(`unable to find graph for location ${location}`);
       const dependencyId = BuildTaskHelper.serializeId(dependencyTask);
       const graph = graphLocation.graph;
-      graph.setNode(taskId, taskId);
-      graph.setNode(dependencyId, dependencyId);
-      graph.setEdge(dependencyId, taskId, 'dependency');
+      graph.setNode(new Node(taskId, taskId));
+      graph.setNode(new Node(dependencyId, dependencyId));
+      graph.setEdge(new Edge(dependencyId, taskId, 'dependency'));
     });
   });
 }

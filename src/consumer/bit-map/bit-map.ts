@@ -3,20 +3,13 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
+import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import {
-  BIT_MAP,
-  COMPONENT_ORIGINS,
-  DEFAULT_LANE,
-  OLD_BIT_MAP,
-  VERSION_DELIMITER,
-  BITMAP_PREFIX_MESSAGE,
-} from '../../constants';
+import { BIT_MAP, COMPONENT_ORIGINS, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
@@ -398,6 +391,11 @@ export default class BitMap {
     return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
   }
 
+  isIdAvailableOnCurrentLane(id: BitId): boolean {
+    const allIdsOfCurrentLane = this.getAllIdsAvailableOnLane();
+    return allIdsOfCurrentLane.hasWithoutScopeAndVersion(id);
+  }
+
   /**
    * get existing bitmap bit-id by bit-id.
    * throw an exception if not found
@@ -675,6 +673,10 @@ export default class BitMap {
           // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
           componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
         }
+        if (!this.workspaceLane && componentMap.onLanesOnly) {
+          // happens when merging from another lane to main and main is empty
+          componentMap.onLanesOnly = false;
+        }
         componentMap.id = componentId;
         return componentMap;
       }
@@ -683,7 +685,11 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      const newComponentMap = new ComponentMap({ files, origin });
+      const newComponentMap = new ComponentMap({
+        files,
+        origin,
+        onLanesOnly: Boolean(this.workspaceLane) && componentId.hasVersion(),
+      });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, newComponentMap);
       return newComponentMap;
@@ -729,7 +735,7 @@ export default class BitMap {
     return componentMap;
   }
 
-  reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
+  syncWithLanes(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
     if (!workspaceLane) this.remoteLaneName = undefined;
     this._invalidateCache();

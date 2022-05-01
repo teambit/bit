@@ -7,7 +7,7 @@ import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
-const componentIdFields = gql`
+export const componentIdFields = gql`
   fragment componentIdFields on ComponentID {
     name
     version
@@ -15,8 +15,8 @@ const componentIdFields = gql`
   }
 `;
 
-const componentFields = gql`
-  fragment componentFields on Component {
+export const componentOverviewFields = gql`
+  fragment componentOverviewFields on Component {
     id {
       ...componentIdFields
     }
@@ -27,27 +27,47 @@ const componentFields = gql`
       aspectId: id
       aspectData: data
     }
-    packageName
     elementsUrl
     description
+    deprecation {
+      isDeprecate
+    }
     labels
     displayName
-    latest
     server {
       env
       url
     }
     buildStatus
+    env {
+      id
+      icon
+    }
+    preview {
+      includesEnvTemplate
+    }
+    compositions {
+      identifier
+      displayName
+    }
+  }
+  ${componentIdFields}
+`;
+
+export const componentFields = gql`
+  fragment componentFields on Component {
+    id {
+      ...componentIdFields
+    }
+    ...componentOverviewFields
+    packageName
+    latest
     compositions {
       identifier
       displayName
     }
     tags {
       version
-    }
-    env {
-      id
-      icon
     }
     logs(type: $logType, offset: $logOffset, limit: $logLimit, head: $logHead, sort: $logSort) {
       id
@@ -58,11 +78,9 @@ const componentFields = gql`
       hash
       tag
     }
-    preview {
-      includesEnvTemplate
-    }
   }
   ${componentIdFields}
+  ${componentOverviewFields}
 `;
 
 const GET_COMPONENT = gql`

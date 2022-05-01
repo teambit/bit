@@ -1,10 +1,10 @@
 import { v4 } from 'uuid';
-
+import { isHash } from '@teambit/component-version';
+import { LaneId, RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
-import { DEFAULT_LANE, PREVIOUS_DEFAULT_LANE } from '../../constants';
+import { PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
@@ -17,17 +17,20 @@ export type LaneProps = {
   scope?: string;
   components?: LaneComponent[];
   hash: string;
+  readmeComponent?: LaneReadmeComponent;
 };
 
 export type LaneComponent = { id: BitId; head: Ref };
-
+export type LaneReadmeComponent = { id: BitId; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
   // @todo: delete this. seems like it being written to the filesystem and it should not
   scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
   remoteLaneId?: RemoteLaneId;
   components: LaneComponent[];
+  readmeComponent?: LaneReadmeComponent;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
+
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -35,6 +38,7 @@ export default class Lane extends BitObject {
     this.scope = props.scope;
     this.components = props.components || [];
     this._hash = props.hash;
+    this.readmeComponent = props.readmeComponent;
   }
   id(): string {
     return this.name;
@@ -62,6 +66,10 @@ export default class Lane extends BitObject {
           id: { scope: component.id.scope, name: component.id.name },
           head: component.head.toString(),
         })),
+        readmeComponent: this.readmeComponent && {
+          id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
+          head: this.readmeComponent.head?.toString() ?? null,
+        },
       },
       (val) => !!val
     );
@@ -81,6 +89,10 @@ export default class Lane extends BitObject {
         id: new BitId({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head),
       })),
+      readmeComponent: laneObject.readmeComponent && {
+        id: new BitId({ scope: laneObject.readmeComponent.id.scope, name: laneObject.readmeComponent.id.name }),
+        head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
+      },
       hash: laneObject.hash || hash,
     });
   }
@@ -122,6 +134,19 @@ export default class Lane extends BitObject {
     // clone the objects to not change the original data.
     this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
   }
+  setReadmeComponent(id?: BitId) {
+    if (!id) {
+      this.readmeComponent = undefined;
+      return;
+    }
+    const readmeComponent = this.getComponentByName(id);
+    if (!readmeComponent) {
+      this.readmeComponent = { id, head: null };
+    } else {
+      this.readmeComponent = readmeComponent;
+    }
+  }
+
   async isFullyMerged(scope: Scope): Promise<boolean> {
     const { unmerged } = await this.getMergedAndUnmergedIds(scope);
     return unmerged.length === 0;
@@ -161,9 +186,17 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
+    // validate that the head
     this.components.forEach((component) => {
       if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
+      }
+      if (!isHash(component.head.hash)) {
+        throw new ValidationError(
+          `${message}, lane component ${component.id.toStringWithoutVersion()} head should be a hash, got ${
+            component.head.hash
+          }`
+        );
       }
     });
     if (this.name === DEFAULT_LANE) {

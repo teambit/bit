@@ -64,7 +64,7 @@ export class ComponentsDrawer implements DrawerType {
     const combinedContexts = [
       ComponentTreeProvider,
       ComponentFilterWidgetProvider,
-      [ComponentFiltersProvider, { filters }] as ComponentTuple<{ filters: any }>,
+      [ComponentFiltersProvider, { filters }] as ComponentTuple<{ children?: ReactNode; filters: any }>,
     ];
     return <Composer components={combinedContexts}>{children}</Composer>;
   };

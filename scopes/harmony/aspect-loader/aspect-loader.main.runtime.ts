@@ -479,7 +479,7 @@ export class AspectLoaderMain {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning, e);
+      this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);
       } else {

@@ -343,8 +343,25 @@ export class Http implements Network {
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
+    const LIST_HARMONY = gql`
+      query list($namespaces: [String!]) {
+        scope {
+          components(namespaces: $namespaces) {
+            id {
+              scope
+              version
+              name
+            }
+            deprecation {
+              isDeprecate
+            }
+          }
+        }
+      }
+    `;
+
     const LIST_LEGACY = gql`
-      query listLegacy($namespaces: String) {
+      query list($namespaces: String) {
         scope {
           _legacyList(namespaces: $namespaces) {
             id
@@ -354,15 +371,26 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
-      namespaces: namespacesUsingWildcards,
-    });
+    try {
+      const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+      });
 
-    data.scope._legacyList.forEach((comp) => {
-      comp.id = BitId.parse(comp.id);
-    });
+      data.scope.components.forEach((comp) => {
+        comp.id = BitId.parse(comp.id);
+        comp.deprecated = comp.deprecation.isDeprecate;
+      });
 
-    return data.scope._legacyList;
+      return data.scope.components;
+    } catch (e) {
+      const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
+        namespaces: namespacesUsingWildcards,
+      });
+      data.scope._legacyList.forEach((comp) => {
+        comp.id = BitId.parse(comp.id);
+      });
+      return data.scope._legacyList;
+    }
   }
 
   async show(bitId: BitId): Promise<Component | null | undefined> {
@@ -495,18 +523,18 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
+  async listLanes(): Promise<LaneData[]> {
     const LIST_LANES = gql`
       query Lanes {
         lanes {
-          getLanes {
-            name
+          list {
+            name: id
             components {
               id {
                 name
                 scope
+                version
               }
-              head
             }
             isMerged
           }
@@ -514,11 +542,9 @@ export class Http implements Network {
       }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, Verb.READ, {
-      mergeData,
-    });
+    const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
 
-    return res.lanes.getLanes;
+    return res.lanes.list;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

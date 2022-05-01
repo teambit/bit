@@ -94,9 +94,9 @@ describe('multiple compilers - babel and typescript', function () {
       helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
       helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
-      helper.extensions.addExtensionToVariant('comp2', 'teambit.react/react');
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node');
       helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
-      helper.extensions.addExtensionToVariant('comp4', 'teambit.react/react');
+      helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/node');
       helper.command.compile();
       buildOutput = helper.command.build();
     });

@@ -5,6 +5,7 @@ import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
+import { BitId } from '@teambit/legacy-bit-id';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -100,6 +101,7 @@ export class EnvsMain {
       'teambit.html/html',
       'teambit.mdx/mdx',
       'teambit.envs/env',
+      'teambit.mdx/readme',
     ];
   }
 
@@ -216,6 +218,19 @@ export class EnvsMain {
     }
     // Do not allow a non existing env
     throw new EnvNotFound(id, component.id.toString());
+  }
+
+  /**
+   * get the env of the given component.
+   * This will try to use the regular getEnv but fallback to the calculate env (in case you are using it during on load)
+   * This is safe to be used on onLoad as well
+   */
+  getOrCalculateEnv(component: Component): EnvDefinition {
+    try {
+      return this.getEnv(component);
+    } catch (err) {
+      return this.calculateEnv(component);
+    }
   }
 
   /**
@@ -441,6 +456,12 @@ export class EnvsMain {
       this.getEnvDefinitionByStringId(id.toString()) ||
       this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
     return envDef;
+  }
+
+  async getEnvDefinitionByLegacyId(id: BitId): Promise<EnvDefinition | undefined> {
+    const host = this.componentMain.getHost();
+    const newId = await host.resolveComponentId(id);
+    return this.getEnvDefinitionById(newId);
   }
 
   private getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {

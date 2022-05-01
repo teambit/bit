@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
+import { LaneId, RemoteLaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -30,7 +31,6 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
@@ -107,7 +107,14 @@ export type OnTagOpts = {
   skipTests?: boolean;
   isSnap?: boolean;
 };
-export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type IsolateComponentsOptions = {
+  packageManagerConfigRootDir?: string;
+};
+export type OnTagFunc = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions: IsolateComponentsOptions
+) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -487,13 +494,7 @@ export default class Scope {
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
-    const modelComponent = await this.sources.get(id);
-    if (modelComponent) {
-      // @todo: what about other places the model-component is loaded
-      const currentLane = await this.getCurrentLaneObject();
-      await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
-    }
-    return modelComponent;
+    return this.sources.get(id);
   }
 
   async getCurrentLaneObject() {

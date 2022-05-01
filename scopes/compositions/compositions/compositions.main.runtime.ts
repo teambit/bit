@@ -148,6 +148,8 @@ export class CompositionsMain {
       schema,
       devFiles
     );
+
+    // TODO: use the docs implementation to allow component specific pattern
     devFiles.registerDevPattern(config.compositionFilePattern);
 
     graphql.register(compositionsSchema(compositions));

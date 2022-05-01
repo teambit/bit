@@ -1,8 +1,11 @@
+import { BitError } from '@teambit/bit-error';
+import { compact } from 'lodash';
+import { LaneId, LocalLaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
-import { BitId } from '../../bit-id';
-import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
+import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
+import { BitId, BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
-import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Ref, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/components-index';
@@ -75,11 +78,11 @@ export default class Lanes {
   async removeLanes(scope: Scope, lanes: string[], force: boolean): Promise<string[]> {
     const existingLanes = await this.listLanes();
     const lanesToRemove: Lane[] = lanes.map((laneName) => {
-      if (laneName === DEFAULT_LANE) throw new GeneralError(`unable to remove the default lane "${DEFAULT_LANE}"`);
+      if (laneName === DEFAULT_LANE) throw new BitError(`unable to remove the default lane "${DEFAULT_LANE}"`);
       if (laneName === this.getCurrentLaneName())
-        throw new GeneralError(`unable to remove the currently used lane "${laneName}"`);
+        throw new BitError(`unable to remove the currently used lane "${laneName}"`);
       const existingLane = existingLanes.find((l) => l.name === laneName);
-      if (!existingLane) throw new GeneralError(`lane ${laneName} was not found in scope`);
+      if (!existingLane) throw new LaneNotFound(scope.name, laneName);
       return existingLane;
     });
     if (!force) {
@@ -87,8 +90,7 @@ export default class Lanes {
         lanesToRemove.map(async (laneObj) => {
           const isFullyMerged = await laneObj.isFullyMerged(scope);
           if (!isFullyMerged) {
-            // @todo: this error comes pretty ugly to the client when removing from a lane from remote using ssh
-            throw new GeneralError(
+            throw new BitError(
               `unable to remove ${laneObj.name} lane, it is not fully merged. to disregard this error, please use --force flag`
             );
           }
@@ -96,6 +98,21 @@ export default class Lanes {
       );
     }
     await this.objects.deleteObjectsFromFS(lanesToRemove.map((l) => l.hash()));
+
+    const compIdsFromDeletedLanes = BitIds.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
+    const notDeletedLanes = existingLanes.filter((l) => !lanes.includes(l.name));
+    const compIdsFromNonDeletedLanes = BitIds.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
+    const pendingDeleteCompIds = compIdsFromDeletedLanes.filter(
+      (id) => !compIdsFromNonDeletedLanes.hasWithoutVersion(id)
+    );
+    const modelComponents = await Promise.all(pendingDeleteCompIds.map((id) => scope.getModelComponentIfExist(id)));
+    const modelComponentsWithoutHead = compact(modelComponents).filter((comp) => !comp.hasHead());
+    if (modelComponentsWithoutHead.length) {
+      const idsStr = modelComponentsWithoutHead.map((comp) => comp.id()).join(', ');
+      logger.debug(`lanes, deleting the following orphaned components: ${idsStr}`);
+      await this.objects.deleteObjectsFromFS(modelComponentsWithoutHead.map((comp) => comp.hash()));
+    }
+
     return lanes;
   }
 
@@ -108,6 +125,10 @@ export default class Lanes {
         remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
+        readmeComponent: laneObject.readmeComponent && {
+          id: laneObject.readmeComponent.id,
+          head: laneObject.readmeComponent.head?.toString(),
+        },
       };
     };
     if (name) {
@@ -128,4 +149,5 @@ export type LaneData = {
   components: Array<{ id: BitId; head: string }>;
   remote: string | null;
   isMerged: boolean | null;
+  readmeComponent?: { id: BitId; head?: string };
 };
