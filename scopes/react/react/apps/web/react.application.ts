@@ -91,6 +91,7 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostRootDir: capsule?.path,
         },
       ],
       entry: [],
