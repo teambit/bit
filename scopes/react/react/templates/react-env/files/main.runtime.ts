@@ -12,7 +12,7 @@ import { ${Name}Aspect } from './${name}.aspect';
 //import {
 //  devConfigTransformer,
 //  buildConfigTransformer,
-//} from "./typescript/ts-transformers";
+//} from "./typescript/ts-transformer";
 
 export class ${Name}Main {
   static slots = [];

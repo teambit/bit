@@ -59,7 +59,7 @@ chai.use(require('chai-fs'));
       });
     });
     describe('as imported', function () {
-      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS) {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
         // @ts-ignore
         this.skip;
