@@ -9,5 +9,6 @@ export {
   VariableSchema,
   ClassSchema,
   ConstructorSchema,
+  TypeSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

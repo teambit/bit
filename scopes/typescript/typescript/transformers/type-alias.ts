@@ -1,6 +1,8 @@
 import ts, { Node, TypeAliasDeclaration } from 'typescript';
+import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
-// import { ExportIdentifier } from '../export-identifier';
+import { SchemaExtractorContext } from '../schema-extractor-context';
+import { ExportIdentifier } from '../export-identifier';
 
 export class TypeAliasTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -8,14 +10,17 @@ export class TypeAliasTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: TypeAliasDeclaration) {
-    // return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
-    return [];
+    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
-  async transform(node: Node) {
-    const typeAlias = node as TypeAliasDeclaration;
-    typeAlias.typeParameters;
-    // typeAlias.
-    return {};
+  private getName(node: TypeAliasDeclaration): string {
+    return node.name.getText();
+  }
+
+  async transform(typeAlias: TypeAliasDeclaration, context: SchemaExtractorContext) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const info = await context.getQuickInfo(typeAlias.name!);
+    const displaySig = info?.body?.displayString;
+    return new TypeSchema(this.getName(typeAlias), displaySig as string);
   }
 }

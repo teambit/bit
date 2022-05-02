@@ -5,3 +5,4 @@ export { TypeRefSchema } from './type-ref';
 export { VariableSchema } from './variable';
 export { ClassSchema } from './class';
 export { ConstructorSchema } from './constructor';
+export { TypeSchema } from './type';
