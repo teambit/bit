@@ -1014,6 +1014,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/Avatar"
     },
+    "ui/badges/component-count": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/badges/component-count"
+    },
     "ui/buttons/collapser": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.194",
