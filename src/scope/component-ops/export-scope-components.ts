@@ -1,10 +1,10 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
+import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, DEFAULT_LANE } from '../../constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../../constants';
 import GeneralError from '../../error/general-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';

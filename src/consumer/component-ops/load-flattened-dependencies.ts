@@ -8,13 +8,20 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import Component from '../component/consumer-component';
 
+/**
+ * LEGACY ONLY
+ */
 export class FlattenedDependencyLoader {
   private cache: { [bitIdStr: string]: Component } = {};
   constructor(
     private consumer: Consumer,
     private ignoreIds = new BitIds(),
     private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
-  ) {}
+  ) {
+    if (!this.consumer.isLegacy) {
+      throw new Error(`FlattenedDependencyLoader should not be instantiated on Harmony`);
+    }
+  }
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds().difference(this.ignoreIds));
     const devDependencies = await this.loadManyDependencies(

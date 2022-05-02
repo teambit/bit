@@ -1,8 +1,8 @@
 import { Readable } from 'stream';
+import { RemoteLaneId } from '@teambit/lane-id';
 import { BitIds } from '../../../bit-id';
 import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';

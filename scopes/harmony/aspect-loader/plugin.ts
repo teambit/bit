@@ -13,9 +13,9 @@ export class Plugin {
     return this.def.runtimes.includes(runtime);
   }
 
-  register() {
+  async register() {
     const object = this.require();
-    this.def.register<unknown>(object);
+    await this.def.register<unknown>(object);
   }
 
   require() {

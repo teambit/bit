@@ -47,6 +47,9 @@ export interface IsolateOptions {
   silentPackageManagerResult?: boolean; // Print environment install result
 }
 
+/**
+ * LEGACY ONLY
+ */
 export default class Isolator {
   capsule: Capsule;
   consumer?: Consumer;
@@ -70,6 +73,10 @@ export default class Isolator {
     this.scope = scope;
     this.consumer = consumer;
     this.dir = dir;
+
+    if (this.consumer && !this.consumer.isLegacy) {
+      throw new Error(`Isolator should not be instantiated on Harmony`);
+    }
   }
 
   static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {

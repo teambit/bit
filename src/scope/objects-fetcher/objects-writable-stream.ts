@@ -1,7 +1,6 @@
 import { Writable } from 'stream';
+import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitObject, Repository } from '../objects';
-import { DEFAULT_LANE } from '../../constants';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { Lane, ModelComponent } from '../models';

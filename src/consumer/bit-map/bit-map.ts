@@ -3,20 +3,13 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
+import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import {
-  BIT_MAP,
-  COMPONENT_ORIGINS,
-  DEFAULT_LANE,
-  OLD_BIT_MAP,
-  VERSION_DELIMITER,
-  BITMAP_PREFIX_MESSAGE,
-} from '../../constants';
+import { BIT_MAP, COMPONENT_ORIGINS, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
