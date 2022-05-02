@@ -8,5 +8,7 @@ export default async function catLane(name: string) {
   const lane = await scope.loadLane(laneId);
   // @todo: throw LaneNotFound
   if (!lane) throw new GeneralError(`lane ${name} was not found!`);
-  return lane.toObject();
+  const obj = lane.toObject();
+  obj.hash = lane.hash().toString();
+  return obj;
 }

@@ -12,8 +12,8 @@ import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
-import { EmptyLane } from './empty-lane-overview';
 import { ScopeComponentCard } from '@teambit/scope';
+import { EmptyLane } from './empty-lane-overview';
 
 import styles from './lanes-overview.module.scss';
 
