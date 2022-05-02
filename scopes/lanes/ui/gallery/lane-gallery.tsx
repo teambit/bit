@@ -1,5 +1,5 @@
 import React, { useMemo, ComponentType } from 'react';
-import { LaneDetails, useLanesContext, useLaneComponentsQuery, LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
+import { LaneDetails, useLanesContext, useLaneComponents, LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
@@ -7,16 +7,17 @@ import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
 import { EmptyLane } from './empty-lane-overview';
 
-import styles from './lanes-overview.module.scss';
+import styles from './lane-gallery.module.scss';
 
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
-export type LanesOverviewProps = {
+export type LaneGalleryProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
 };
-export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
+
+export function LaneGallery({ routeSlot, overviewSlot }: LaneGalleryProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -25,7 +26,7 @@ export function LanesOverview({ routeSlot, overviewSlot }: LanesOverviewProps) {
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
-  return <LaneOverviewWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
+  return <LaneGalleryWithPreview currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />;
 }
 
 type LaneOverviewWithPreviewProps = {
@@ -34,14 +35,15 @@ type LaneOverviewWithPreviewProps = {
   routeSlot: RouteSlot;
 };
 
-function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
-  const { loading, components } = useLaneComponentsQuery(currentLane);
+function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot }: LaneOverviewWithPreviewProps) {
+  const { loading, components } = useLaneComponents(currentLane);
 
   if (loading) return null;
 
   return (
     <div className={styles.container}>
       <LaneDetails
+        className={styles.laneDetails}
         laneName={currentLane.id}
         description={''}
         componentCount={currentLane.components.length}

@@ -21,6 +21,7 @@ export type LaneQueryResult = {
   remote?: string;
   isMerged: boolean;
   components: ComponentModelProps[];
+  readmeComponent?: ComponentModelProps;
 };
 /**
  * GQL
@@ -50,6 +51,7 @@ export type LaneModel = {
   name: string;
   isMerged: boolean | null;
   components: ComponentModel[];
+  readmeComponent?: ComponentModel;
 };
 /**
  * Props to instantiate a LanesModel
@@ -82,9 +84,15 @@ export class LanesModel {
   static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
 
   static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
-      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
-      : pathname;
+    let path = pathname.split(this.baseLaneRoute).pop();
+    if (!path) return undefined;
+
+    // removes sub routes from the pathname
+    path = path.split('~')[0];
+
+    // attach the base lane route
+    path = `${this.baseLaneRoute}${path}`;
+
     const matches = LanesModel.regexp.exec(path);
     if (!matches) return undefined;
     const [, orgId, scopeId, laneId] = matches;
@@ -99,7 +107,7 @@ export class LanesModel {
     }`;
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, isMerged, components } = laneData;
+    const { id: name, remote, isMerged, components, readmeComponent } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
@@ -110,12 +118,15 @@ export class LanesModel {
         return componentModel;
       }) || [];
 
+    const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
+
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
       components: componentModels,
+      readmeComponent: readmeComponentModel,
     };
   }
 

@@ -1,11 +1,10 @@
 import { v4 } from 'uuid';
 import { isHash } from '@teambit/component-version';
-
+import { LaneId, RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
-import { DEFAULT_LANE, PREVIOUS_DEFAULT_LANE } from '../../constants';
+import { PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';

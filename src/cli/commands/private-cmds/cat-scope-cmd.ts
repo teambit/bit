@@ -53,7 +53,10 @@ export default class CatScope implements LegacyCommand {
     }
     if (!full) {
       const table = new Table({ head: ['id', 'Object'], style: { head: ['cyan'] } });
-      payload.forEach((co) => table.push([co.id(), `obj: ${co.hash().toString()}`]));
+      payload.forEach((co) => {
+        const id = co.getType() === 'Lane' ? `${co.id()} [lane]` : co.id();
+        table.push([id, `obj: ${co.hash().toString()}`]);
+      });
       return table.toString();
     }
 

@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
+import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import path from 'path';
-import { LANE_REMOTE_DELIMITER, statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG } from '../../../src/constants';
+import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';

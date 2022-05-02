@@ -3,6 +3,7 @@ import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
+// @ts-ignore david what to do?
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
