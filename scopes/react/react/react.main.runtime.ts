@@ -33,6 +33,7 @@ import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates, workspaceTemplates } from './react.templates';
+import { ReactAppOptions } from './apps/web/react-app-options';
 
 type ReactDeps = [
   EnvsMain,
@@ -97,11 +98,22 @@ export class ReactMain {
 
     private application: ApplicationMain,
 
-    private workspace: Workspace
+    private reactAppType: ReactAppType
   ) {}
 
   readonly env = this.reactEnv;
 
+  getReactAppType(name: string) {
+    return new ReactAppType(name, this.reactEnv);
+  }
+
+  /**
+   * use this to register apps programmatically.
+   */
+  async registerApp(reactApp: ReactAppOptions) {
+    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+  }
+ 
   /**
    * override the env's typescript config for both dev and build time.
    * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
@@ -412,12 +424,14 @@ export class ReactMain {
       prettier,
       CompilerAspect.id
     );
-    const react = new ReactMain(reactEnv, envs, application, workspace);
+    const appType = new ReactAppType('react-app', reactEnv);
+    const react = new ReactMain(reactEnv, envs, application, appType);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
     generator.registerWorkspaceTemplate(workspaceTemplates);
-    application.registerAppType(new ReactAppType('react-app', reactEnv));
+    application.registerAppType(appType);
+
     return react;
   }
 }

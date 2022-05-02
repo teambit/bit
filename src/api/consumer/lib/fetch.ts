@@ -2,6 +2,7 @@ import R from 'ramda';
 
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { RemoteLaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
@@ -9,7 +10,6 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { Lane } from '../../../scope/models';
 import { ScopeNotFoundOrDenied } from '../../../remotes/exceptions/scope-not-found-or-denied';
 import { LaneNotFound } from '../../scope/lib/exceptions/lane-not-found';

@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import tar from 'tar';
-
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import defaultErrorHandler from '../cli/default-error-handler';
-import { BIT_HIDDEN_DIR, BIT_VERSION, DEFAULT_LANE, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+import { BIT_HIDDEN_DIR, BIT_VERSION, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
 import { generateRandomStr, removeChalkCharacters } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
