@@ -70,6 +70,7 @@ export function ComponentCard({
       <Link className={styles.componentCardLink} href={href || id} external={external}>
         <DeprecationSticker isDeprecated={isDeprecated} />
         <PreviewContainer preview={preview} />
+
         <ComponentDetails id={id} version={version} description={description} className={styles.content} />
         <div className={styles.bottom}>
           <div className={styles.left} />
