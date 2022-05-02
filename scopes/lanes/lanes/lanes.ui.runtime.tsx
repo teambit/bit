@@ -63,7 +63,7 @@ export class LanesUI {
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
+        children: <LanesOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />,
       },
     ]);
     this.hostAspect.registerMenuRoutes([

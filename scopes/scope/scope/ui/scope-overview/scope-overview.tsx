@@ -45,12 +45,13 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
 
 type ScopeComponentCardProps = {
   component: ComponentModel;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
-export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
+export function ScopeComponentCard({ component, ...rest }: ScopeComponentCardProps) {
   const shouldShowPreview = component.compositions.length > 0;
   return (
     <ComponentCard
+      {...rest}
       id={component.id.fullName}
       envIcon={component.environment?.icon}
       description={component.description}
