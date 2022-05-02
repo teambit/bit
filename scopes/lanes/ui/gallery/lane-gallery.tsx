@@ -35,7 +35,7 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return (
-    <LaneOverviewWithPreview
+    <LaneGalleryWithPreview
       host={host}
       currentLane={currentLane}
       overviewItems={overviewItems}
@@ -44,14 +44,14 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   );
 }
 
-type LaneOverviewWithPreviewProps = {
+type LaneGalleryWithPreviewProps = {
   currentLane: LaneModel;
   overviewItems: LaneOverviewLine[];
   routeSlot: RouteSlot;
   host: LanesHost;
 };
 
-function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot, host }: LaneOverviewWithPreviewProps) {
+function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }: LaneGalleryWithPreviewProps) {
   const { loading, components } = useLaneComponents(currentLane);
 
   if (loading) return null;
