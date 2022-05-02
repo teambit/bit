@@ -3,9 +3,9 @@ import { TypeRefSchema } from './type-ref';
 
 export type Argument = {
   name: string;
+  type: TypeRefSchema;
   defaultValue?: any;
-  description: any;
-  type: string;
+  description?: string;
 };
 
 export class FunctionSchema implements SchemaNode {

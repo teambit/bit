@@ -1,11 +1,5 @@
 import { SchemaNode } from '../schema-node';
-
-export type Argument = {
-  name: string;
-  defaultValue?: any;
-  description: any;
-  type: string;
-};
+import { Argument } from './function';
 
 export class ConstructorSchema implements SchemaNode {
   constructor(readonly args: Argument[]) {}

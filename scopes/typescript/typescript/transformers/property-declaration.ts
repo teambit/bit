@@ -3,6 +3,7 @@ import ts, { Node, PropertyDeclaration as PropertyDeclarationNode } from 'typesc
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
+import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
 export class PropertyDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -22,7 +23,9 @@ export class PropertyDeclaration implements SchemaTransformer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const info = await context.getQuickInfo(propertyDec.name!);
     const displaySig = info?.body?.displayString;
+    const typeStr = parseTypeFromQuickInfo(displaySig);
+    const type = await context.resolveType(propertyDec, typeStr);
 
-    return new VariableSchema(name || '', displaySig || '');
+    return new VariableSchema(name || '', displaySig || '', type);
   }
 }
