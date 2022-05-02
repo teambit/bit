@@ -134,24 +134,28 @@ export class YarnPackageManager implements PackageManager {
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
 
-    const workspacesIdents = {};
-
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
       const workspace = await this.createWorkspace(path, project, manifest);
-      const workspaceIdentHash = workspace.locator.identHash;
-      //
-      if (workspacesIdents[workspaceIdentHash]) {
-        this.logger.debug(
-          `overriding internal workspace fields to prevent duplications for workspace ${workspace.cwd}`
-        );
-        this.overrideInternalWorkspaceParams(workspace);
-      }
-      workspacesIdents[workspace.locator.identHash] = true;
       return workspace;
     });
 
     const workspaces = await Promise.all(workspacesP);
+
+    if (!installOptions.rootComponents && !installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
+      const workspacesIdents = {};
+      for (const workspace of workspaces) {
+        const workspaceIdentHash = workspace.locator.identHash;
+        if (workspacesIdents[workspaceIdentHash]) {
+          this.logger.debug(
+            `overriding internal workspace fields to prevent duplications for workspace ${workspace.cwd}`
+          );
+          this.overrideInternalWorkspaceParams(workspace);
+        }
+        workspacesIdents[workspace.locator.identHash] = true;
+      }
+    }
+
 
     if (!manifests[rootDir]) {
       workspaces.push(rootWs);
