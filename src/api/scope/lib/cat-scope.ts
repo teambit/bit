@@ -6,5 +6,5 @@ export default async function catScope(path: string, full: boolean): Promise<Bit
   const scope: Scope = await loadScope(path);
   return full
     ? scope.objects.list([ModelComponent, Symlink, Lane, Version, ScopeMeta])
-    : scope.objects.list([ModelComponent, Symlink]);
+    : scope.objects.list([ModelComponent, Symlink, Lane]);
 }
