@@ -11,15 +11,15 @@ export type LaneReadmeOverviewProps = {
 
 export function LaneReadmeOverview({ host, overviewSlot, routeSlot }: LaneReadmeOverviewProps) {
   const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.currentLane;
-  const readmeComponent = currentLane?.readmeComponent;
+  const viewedLane = lanesContext?.viewedLane;
+  const readmeComponent = viewedLane?.readmeComponent;
 
   if (readmeComponent) {
-    return <LaneReadme host={host} currentLane={currentLane} overviewSlot={overviewSlot} routeSlot={routeSlot} />;
+    return <LaneReadme host={host} viewedLane={viewedLane} overviewSlot={overviewSlot} routeSlot={routeSlot} />;
   }
 
-  if (currentLane) {
-    return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(currentLane.id)}/~gallery`} />;
+  if (viewedLane) {
+    return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(viewedLane.id)}/~gallery`} />;
   }
 
   return null;

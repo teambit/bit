@@ -103,7 +103,7 @@ export class LanesUI {
         order: 1,
         hide: () => {
           const lanesContext = useLanesContext();
-          return !lanesContext?.currentLane?.readmeComponent;
+          return !lanesContext?.viewedLane?.readmeComponent;
         },
       },
       {

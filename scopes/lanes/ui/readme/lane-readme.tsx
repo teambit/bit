@@ -16,14 +16,14 @@ import styles from './lane-readme.module.scss';
 
 export type LaneReadmeProps = {
   host: string;
-  currentLane: LaneModel;
+  viewedLane: LaneModel;
   overviewSlot?: LaneOverviewLineSlot;
   routeSlot: RouteSlot;
 };
 
-export function LaneReadme({ currentLane, overviewSlot, routeSlot }: LaneReadmeProps) {
-  const { component, loading } = useLaneReadme(currentLane);
-  const laneComponents = currentLane.components;
+export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmeProps) {
+  const { component, loading } = useLaneReadme(viewedLane);
+  const laneComponents = viewedLane.components;
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
   if (loading) return null;
@@ -33,7 +33,7 @@ export function LaneReadme({ currentLane, overviewSlot, routeSlot }: LaneReadmeP
       <div className={styles.readmeContainer}>
         <LaneDetails
           className={styles.laneId}
-          laneName={currentLane.id}
+          laneName={viewedLane.id}
           componentCount={laneComponents.length || undefined}
         ></LaneDetails>
         <div className={styles.laneReadmePreviewContainer}>
@@ -49,7 +49,7 @@ export function LaneReadme({ currentLane, overviewSlot, routeSlot }: LaneReadmeP
               className={styles.readmeComponentCard}
               key={component.id.toString()}
               id={component.id.fullName}
-              href={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+              href={LanesModel.getLaneComponentUrl(component.id, viewedLane.id)}
               envIcon={component.environment?.icon}
               description={component.description}
               version={component.version === 'new' ? undefined : component.version}
