@@ -1,8 +1,0 @@
----
-description: 'Docs for Capsules Syncer aspect'
-labels: ['aspect']
----
-
-Capsules syncer is an aspect that initializes the `CapsulesSyncerTask`. The capsules syncer task is executed during `bit build` after the capsules were compiled. This task copies the compiled artifacts to the `node_modules` of other component capsules.
-
-For instance, if we have a `button` component that is a dependency of the `card` component, then the `dist` folder of the `button` component will be copied to `<card_capsule>/node_modules/button/dist`.

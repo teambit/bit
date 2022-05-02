@@ -28,7 +28,6 @@ import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
-import { CapsulesSyncerMain, CapsulesSyncerAspect } from '@teambit/capsules-syncer';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
@@ -50,7 +49,6 @@ type ReactDeps = [
   PrettierMain,
   ApplicationMain,
   GeneratorMain,
-  CapsulesSyncerMain,
 ];
 
 export type ReactMainConfig = {
@@ -393,7 +391,6 @@ export class ReactMain {
     PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
-    CapsulesSyncerAspect,
   ];
 
   static async provider(
@@ -411,7 +408,6 @@ export class ReactMain {
       prettier,
       application,
       generator,
-      capsulesSyncer,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
@@ -427,7 +423,6 @@ export class ReactMain {
       eslint,
       prettier,
       CompilerAspect.id,
-      capsulesSyncer
     );
     const appType = new ReactAppType('react-app', reactEnv);
     const react = new ReactMain(reactEnv, envs, application, appType);

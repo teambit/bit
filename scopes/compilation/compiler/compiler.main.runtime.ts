@@ -31,7 +31,8 @@ export class CompilerMain {
     private workspaceCompiler: WorkspaceCompiler,
     private envs: EnvsMain,
     private builder: BuilderMain,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   /**
@@ -48,7 +49,7 @@ export class CompilerMain {
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
   createTask(name: string, compiler: Compiler): CompilerTask {
-    return new CompilerTask(CompilerAspect.id, name, compiler);
+    return new CompilerTask(CompilerAspect.id, name, compiler, this.dependencyResolver);
   }
 
   /**
@@ -148,7 +149,7 @@ export class CompilerMain {
       dependencyResolver
     );
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace);
+    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace, dependencyResolver);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
     if (workspace) {
       workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));

@@ -21,7 +21,6 @@ import {
 import { JestMain } from '@teambit/jest';
 import { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
-import { CapsulesSyncerMain } from '@teambit/capsules-syncer';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { TypeScriptCompilerOptions } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
@@ -116,8 +115,6 @@ export class ReactEnv
     private prettier: PrettierMain,
 
     private compilerAspectId: string,
-
-    private capsulesSyncer: CapsulesSyncerMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -448,7 +445,6 @@ export class ReactEnv
       (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
     return [
       this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts),
-      this.capsulesSyncer.task,
       this.tester.task,
     ];
   }
