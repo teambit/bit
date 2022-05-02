@@ -24,12 +24,12 @@ export class APISchema implements SchemaNode {
   }
 
   listSignatures() {
-    return module.exports.map(() => {});
+    return this.module.exports.map((exp) => exp.getSignature?.());
   }
 
   static fromSchema() {}
 
-  static from(plainSchema: PlainSemanticSchema) {
-    return new APISchema(plainSchema.exports);
-  }
+  // static from(plainSchema: PlainSemanticSchema) {
+  //   return new APISchema(plainSchema.exports);
+  // }
 }
