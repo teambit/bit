@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
+import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import path from 'path';
-import { LANE_REMOTE_DELIMITER, statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG } from '../../../src/constants';
+import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
@@ -201,6 +202,16 @@ describe('bit lane command', function () {
 
           expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
           expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+        });
+      });
+      describe('importing the component', () => {
+        before(() => {
+          helper.command.importComponent('bar/foo');
+        });
+        it('should not set the onLaneOnly to true as it exists also on main', () => {
+          const bitmap = helper.bitMap.read();
+          const bitmapEntry = bitmap['bar/foo'];
+          expect(bitmapEntry).to.not.have.property('onLanesOnly');
         });
       });
     });

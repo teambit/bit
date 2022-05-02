@@ -2,17 +2,17 @@ import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
+import { RemoteLaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
+import { Consumer } from '../../consumer';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
 import { ComponentWithDependencies, Scope } from '../../scope';
@@ -647,7 +647,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,
       override: this.options.override,
-      saveOnLane: this._shouldSaveLaneData(),
     });
     await manyComponentsWriter.writeAll();
   }

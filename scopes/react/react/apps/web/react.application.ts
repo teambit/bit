@@ -21,12 +21,13 @@ export class ReactApp implements Application {
     readonly prerender?: ReactAppPrerenderOptions,
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
-    readonly transformers?: WebpackConfigTransformer[],
+    readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
     readonly favicon?: string
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
+
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
@@ -36,19 +37,20 @@ export class ReactApp implements Application {
     }
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
-      (configMutator) => {
+      (configMutator) =>
         configMutator.addTopLevel('devServer', {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
           },
-        });
-
+        }),
+      (configMutator) => {
         if (!configMutator.raw.output) configMutator.raw.output = {};
         configMutator.raw.output.publicPath = '/';
 
         return configMutator;
       },
+      ...this.transformers,
     ]);
     await devServer.listen(port);
     return port;
@@ -115,7 +117,7 @@ export class ReactApp implements Application {
 
       return config;
     };
-    const transformers = [defaultTransformer, ...(this.transformers ?? [])];
+    const transformers = [defaultTransformer, ...this.transformers];
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
     return bundler;
   }
