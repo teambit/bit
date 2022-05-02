@@ -39,7 +39,7 @@ export function useLaneReadme(lane: LaneModel): {
     skip: !lane.readmeComponent,
   });
 
-  const readmeComponentFromQuery = data?.lanes.list[0].readmeComponent;
+  const readmeComponentFromQuery = data?.lanes.list[0]?.readmeComponent;
 
   const component =
     readmeComponentFromQuery && ComponentModel.from({ ...readmeComponentFromQuery, host: data.getHost.id });

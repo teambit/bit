@@ -22,5 +22,6 @@ export function LaneReadmeOverview({ host, overviewSlot, routeSlot }: LaneReadme
     return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(viewedLane.id)}/~gallery`} />;
   }
 
+  // throw 404
   return null;
 }
