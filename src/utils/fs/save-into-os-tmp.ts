@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
+import { BIT_TEMP_ROOT } from '@teambit/defender.fs.global-bit-temp-dir';
 import { PathOsBased } from '../path';
-import { BIT_TEMP_ROOT } from './create-temp-dir';
 
 const BASE_PATH = path.join(BIT_TEMP_ROOT, 'tmp');
 

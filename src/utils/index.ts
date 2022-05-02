@@ -16,7 +16,6 @@ import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
 import currentDirName from './fs/current-dir-name';
 import createSymlinkOrCopy from './fs/create-symlink-or-copy';
-import { BIT_TEMP_ROOT, createTempDir } from './fs/create-temp-dir';
 import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
@@ -107,8 +106,6 @@ export {
   readDirIgnoreDsStore,
   readDirSyncIgnoreDsStore,
   createSymlinkOrCopy,
-  BIT_TEMP_ROOT,
-  createTempDir,
   cleanBang,
   prependBang,
   forEach,

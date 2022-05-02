@@ -116,6 +116,7 @@
     "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write"
   },
   "dependencies": {
+    "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",

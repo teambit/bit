@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { createTempDir } from '../../../../src/utils';
+import { globalBitTempDir } from '@teambit/defender.fs.global-bit-temp-dir';
 import { hardLinkDirectory } from './hard-link-directory';
 
 test('hardLinkDirectory()', async () => {
-  const tempDir = createTempDir();
+  const tempDir = globalBitTempDir();
   const srcDir = path.join(tempDir, 'source');
   const dest1Dir = path.join(tempDir, 'dest1');
   const dest2Dir = path.join(tempDir, 'dest2');

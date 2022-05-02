@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import * as path from 'path';
-
-import { BIT_TEMP_ROOT, generateRandomStr } from '../utils';
+import { BIT_TEMP_ROOT } from '@teambit/defender.fs.global-bit-temp-dir';
+import { generateRandomStr } from '../utils';
 
 export const DEFAULT_OWNER = 'ci';
 
