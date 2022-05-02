@@ -2,7 +2,7 @@ import React, { useMemo, ComponentType } from 'react';
 import {
   LaneDetails,
   useLanesContext,
-  useLaneComponentsQuery,
+  useLaneComponents,
   LaneModel,
   LanesModel,
   LanesHost,
@@ -15,17 +15,17 @@ import { SlotRegistry } from '@teambit/harmony';
 import { ScopeComponentCard } from '@teambit/scope';
 import { EmptyLane } from './empty-lane-overview';
 
-import styles from './lanes-overview.module.scss';
+import styles from './lane-gallery.module.scss';
 
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
-export type LanesOverviewProps = {
+export type LaneGalleryProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
   host: LanesHost;
 };
-export function LanesOverview({ routeSlot, overviewSlot, host }: LanesOverviewProps) {
+export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps) {
   const lanesContext = useLanesContext();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -52,7 +52,7 @@ type LaneOverviewWithPreviewProps = {
 };
 
 function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot, host }: LaneOverviewWithPreviewProps) {
-  const { loading, components } = useLaneComponentsQuery(currentLane);
+  const { loading, components } = useLaneComponents(currentLane);
 
   if (loading) return null;
 
@@ -69,6 +69,7 @@ function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot, host }
   return (
     <div className={styles.container}>
       <LaneDetails
+        className={styles.laneDetails}
         laneName={currentLane.id}
         description={''}
         componentCount={currentLane.components.length}
