@@ -35,7 +35,7 @@ export default class Lane extends BitObject {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
     this.name = props.name;
-    this.scope = props.scope;
+    // this.scope = props.scope;
     this.components = props.components || [];
     this._hash = props.hash;
     this.readmeComponent = props.readmeComponent;
@@ -61,7 +61,7 @@ export default class Lane extends BitObject {
     return filterObject(
       {
         name: this.name,
-        scope: this.scope,
+        // scope: this.scope,
         components: this.components.map((component) => ({
           id: { scope: component.id.scope, name: component.id.name },
           head: component.head.toString(),
