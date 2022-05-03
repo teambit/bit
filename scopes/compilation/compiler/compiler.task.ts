@@ -35,16 +35,16 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const buildResults = await this.compilerInstance.build(context);
-    await this._syncCapsules(context);
+    await this._hardLinkBuildArtifactsOnCapsules(context);
     return buildResults;
   }
 
   /**
-   * This function copies the compiled artifacts to the `node_modules` of other component capsules.
+   * This function hard links the compiled artifacts to the `node_modules` of other component capsules.
    * For instance, if we have a `button` component that is a dependency of the `card` component,
    * then the `dist` folder of the `button` component will be copied to `<card_capsule>/node_modules/button/dist`.
    */
-  private async _syncCapsules(context: BuildContext): Promise<void> {
+  private async _hardLinkBuildArtifactsOnCapsules(context: BuildContext): Promise<void> {
     await Promise.all(
       context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
         const relCompDir = path.relative(context.capsuleNetwork.capsulesRootDir, capsule.path).replace(/\\/g, '/');

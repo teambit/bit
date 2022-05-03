@@ -214,9 +214,11 @@ export class DependencyLinker {
   }
 
   /**
-   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * Add symlinks from the node_modules in the component's root-dir to the workspace node_modules
    * of the component. e.g.
-   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   * <ws-root>/node_modules/comp1/node_modules/<dep> -> <ws-root>/components/comp1/node_modules/<dep>
+   * This is needed because the component is compiled into the dist folder at <ws-root>/node_modules/comp1/dist,
+   * so the files in the dist folder need to find the right dependencies of comp1.
    */
   private addSymlinkFromComponentDirNMToWorkspaceDirNM(
     rootDir: string,
