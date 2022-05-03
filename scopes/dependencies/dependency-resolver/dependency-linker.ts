@@ -59,6 +59,11 @@ export type LinkingOptions = {
    * consumer is required for the legacyLink
    */
   consumer?: Consumer;
+
+  /**
+   * Link deps which should be linked to the env
+   */
+  linkDepsResolvedFromEnv?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -66,6 +71,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
+  linkDepsResolvedFromEnv: true,
   linkNestedDepsInNM: true,
 };
 
@@ -155,9 +161,11 @@ export class DependencyLinker {
     }
 
     // Link deps which should be linked to the env
-    result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    if (linkingOpts.linkDepsResolvedFromEnv) {
+      result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    }
     if (linkingOpts.linkNestedDepsInNM) {
-      result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+      result.nestedDepsInNmLinks = this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
         finalRootDir,
         componentDirectoryMap
       );

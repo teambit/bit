@@ -1760,6 +1760,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
@@ -1767,6 +1768,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       linkTeambitBit: true,
       legacyLink: true,
       linkCoreAspects: false,
+      linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: false,
     });
     this.consumer.componentLoader.clearComponentsCache();
@@ -1778,7 +1780,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
-    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
@@ -1793,7 +1794,8 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       linkTeambitBit: false,
       legacyLink: true,
       linkCoreAspects: true,
-      linkNestedDepsInNM: !this.isLegacy && !this.dependencyResolver.hasRootComponents(),
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: !this.isLegacy && !hasRootComponents,
     });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
