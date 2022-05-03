@@ -1,4 +1,6 @@
-import globby from 'globby';
+// Using fast-glob instead of globby.
+// globby causes "Maximum call stack size exceeded" errors with some commands
+import glob from 'fast-glob';
 import fs, { Stats } from 'fs-extra';
 import { compact } from 'lodash';
 
@@ -6,7 +8,7 @@ import { compact } from 'lodash';
  * check recursively all the sub-directories as well
  */
 export async function getLastModifiedDirTimestampMs(rootDir: string): Promise<number> {
-  const allDirs = await globby(rootDir, {
+  const allDirs = await glob(rootDir, {
     onlyDirectories: true,
     // ignore: ['**/node_modules/**'], // need to think about it more. sometimes we do want to invalidate cache upon node_modules changes inside component dir
     // stats: true // todo: consider retrieving the stats from here.
