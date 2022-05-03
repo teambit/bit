@@ -8,24 +8,29 @@ export {
   LaneComponentQueryResult,
   LaneQueryResult,
   LanesQueryResult,
-  useLanesQuery,
+  useLanes,
   LanesHost,
-  useLaneComponentsQuery,
+  useLaneComponents,
   LanesQuery,
+  useLaneReadme,
 } from './hooks';
 export { LanesDrawer, LaneTree, LaneTreeNode, LaneTreeProps, LaneTreeNodeProps } from './drawer';
 export {
-  LanesOverviewProps,
-  LanesOverview,
+  LaneGalleryProps,
+  LaneGallery,
   LaneDetails,
   LaneDetailsProps,
-  LanesOverviewMenu,
-  LanesOverviewMenuProps,
-  LanesOrderedNavigationSlot,
   LaneBreadcrumb,
   LaneBreadcrumbProps,
   LaneOverviewLine,
   LaneOverviewLineSlot,
-} from './overview';
+} from './gallery';
 export { ViewedLaneFromUrl, ViewedLaneFromUrlProps } from './viewed-lane';
-export { UseLaneMenu } from './menu';
+export { LaneReadme, LaneReadmeProps, LaneReadmeOverview, LaneReadmeOverviewProps } from './readme';
+export {
+  UseLaneMenu,
+  LanesOverviewMenu,
+  LanesOverviewMenuProps,
+  LanesOrderedNavigationSlot,
+  LanesNavPlugin,
+} from './menu';

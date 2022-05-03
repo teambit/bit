@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ScopeBadgeSlot } from '@teambit/scope';
 import classNames from 'classnames';
 import React from 'react';
-import { PillLabel } from '@teambit/design.ui.pill-label';
+import { ComponentCount } from '@teambit/component.ui.badges.component-count';
 
 import styles from './scope-labels.module.scss';
 
@@ -20,12 +20,7 @@ export function ScopeLabels({ badgeSlot, componentCount, className }: ScopeLabel
         const UserBadge = badge;
         return <UserBadge key={key} />;
       })}
-      {componentCount && (
-        <PillLabel>
-          <span className={styles.componentCount}>{componentCount}</span>
-          <span>Components</span>
-        </PillLabel>
-      )}
+      <ComponentCount count={componentCount} />
     </div>
   );
 }
