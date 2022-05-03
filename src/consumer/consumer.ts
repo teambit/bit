@@ -556,6 +556,28 @@ export default class Consumer {
     }
   }
 
+  /**
+   * Check whether the component files from the model and from the file-system of the same component is the same.
+   */
+  async isComponentSourceCodeModified(
+    componentFromModel: Version,
+    componentFromFileSystem: Component
+  ): Promise<boolean> {
+    if (componentFromFileSystem._isModified === false) {
+      // we only check for "false". if it's "true", it can be dependency changes not necessarily component files changes
+      return false;
+    }
+    componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
+    const { version } = await this.scope.sources.consumerComponentToVersion({
+      consumer: this,
+      consumerComponent: componentFromFileSystem,
+    });
+
+    version.files = R.sortBy(R.prop('relativePath'), version.files);
+    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
+  }
+
   async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
     return this.componentStatusLoader.getManyComponentsStatuses(ids);
   }
