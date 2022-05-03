@@ -294,7 +294,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const baseComponent: Version = await modelComponent.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const component = await consumer.loadComponent(existingBitMapId);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  // don't use `consumer.isModified` here. otherwise, if there are dependency changes, the user can't discard them
+  // and won't be able to switch lanes.
+  const isModified = await consumer.isComponentSourceCodeModified(baseComponent, component);
   let mergeResults: MergeResultsThreeWay | null | undefined;
   const isHeadSameAsMain = () => {
     const head = modelComponent.getHead();
