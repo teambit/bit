@@ -98,9 +98,9 @@ describe('bit lane command', function () {
           const lanes = helper.command.showOneLaneParsed('my-new-lane');
           expect(lanes.components).to.have.lengthOf(1);
         });
-        it('should not create a lane with the same name as the remote', () => {
-          const output = helper.general.runWithTryCatch('bit lane show dev');
-          expect(output).to.have.string('not found');
+        it('should be able to retrieve the lane using the remote-name', () => {
+          const lanes = helper.command.showOneLaneParsed('dev');
+          expect(lanes.components).to.have.lengthOf(1);
         });
       });
       describe('switching to a local lane', () => {
