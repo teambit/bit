@@ -30,7 +30,7 @@ export async function createLane(consumer: Consumer, laneName: string, remoteLan
     return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
   };
   const newLane = remoteLane
-    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString() })
+    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString(), log: remoteLane.log })
     : Lane.create(laneName);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);

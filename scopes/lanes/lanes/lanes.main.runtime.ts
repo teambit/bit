@@ -371,6 +371,7 @@ export class LanesMain {
     return {
       name: DEFAULT_LANE,
       remote: null,
+      log: {},
       components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
       isMerged: null,
     };
