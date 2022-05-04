@@ -1,6 +1,6 @@
 import R from 'ramda';
 import pMap from 'p-map';
-import { BitError } from '@teambit/bit-error';
+// import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
