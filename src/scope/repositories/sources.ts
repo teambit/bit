@@ -718,9 +718,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const repo = this.objects();
     const existingLane = await this.scope.loadLane(lane.toLaneId());
     if (existingLane && !existingLane.hash().isEqual(lane.hash())) {
-      throw new BitError(`unable to merge "${lane.toLaneId()}" lane. a lane with the same id already exists with a different hash.
-you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.
-otherwise, to collaborate on the same lane as the remote, you'll need to remove the local lane and import the remote lane (bit lane import)`);
+      // @todo: uncomment this to activate the error. It's going to be a breaking change.
+      //       throw new BitError(`unable to merge "${lane.toLaneId()}" lane. a lane with the same id already exists with a different hash.
+      // you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.
+      // otherwise, to collaborate on the same lane as the remote, you'll need to remove the local lane and import the remote lane (bit lane import)`);
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
