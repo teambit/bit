@@ -5,7 +5,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
@@ -33,6 +33,7 @@ import {
   LaneRemoveCmd,
   LaneShowCmd,
   LaneTrackCmd,
+  LaneChangeScopeCmd,
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
 } from './lane.cmd';
@@ -168,6 +169,32 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
 
     return { beforeTrackData: beforeTrackDataCloned, afterTrackData };
+  }
+
+  async changeScope(laneName: string, remoteScope: string): Promise<{ remoteScopeBefore: string }> {
+    if (!this.workspace) {
+      throw new BitError(`unable to change-scope of a lane outside of Bit workspace`);
+    }
+    const laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
+      ? laneName.split(LANE_REMOTE_DELIMITER)[1]
+      : laneName;
+    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    if (!lane) {
+      throw new BitError(`unable to find a local lane "${laneName}"`);
+    }
+    const remoteScopeBefore = lane.scope;
+    lane.scope = remoteScope;
+    const trackData = {
+      localLane: laneNameWithoutScope,
+      remoteLane: laneId.name,
+      remoteScope,
+    };
+    this.scope.legacyScope.lanes.trackLane(trackData);
+    await this.scope.legacyScope.lanes.saveLane(lane);
+    await this.workspace.consumer.onDestroy();
+
+    return { remoteScopeBefore };
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -421,6 +448,7 @@ export class LanesMain {
         new LaneMergeCmd(lanesMain),
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
+        new LaneChangeScopeCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
         new LaneAddReadmeCmd(lanesMain),
         new LaneRemoveReadmeCmd(lanesMain),

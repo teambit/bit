@@ -433,7 +433,7 @@ describe('bit lane command', function () {
       const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.createLane('dev');
-      helper.command.trackLane('dev', scopeName);
+      helper.command.changeLaneScope('dev', scopeName);
       helper.fs.outputFile('comp1/comp1.spec.js');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -731,10 +731,12 @@ describe('bit lane command', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.bitJsonc.setupDefault();
       helper.command.createLane();
-      output = helper.command.trackLane('dev', 'my-remote');
+      output = helper.command.changeLaneScope('dev', 'my-remote');
     });
     it('should output the changes', () => {
-      expect(output).to.have.string(`the remote-scope has been changed from ${helper.scopes.remote} to my-remote`);
+      expect(removeChalkCharacters(output)).to.have.string(
+        `the remote-scope has been changed from ${helper.scopes.remote} to my-remote`
+      );
     });
     it('bit lane show should show the changed values', () => {
       const laneData = helper.command.showOneLane('dev');

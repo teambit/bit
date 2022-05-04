@@ -231,6 +231,25 @@ export class LaneTrackCmd implements Command {
   }
 }
 
+export class LaneChangeScopeCmd implements Command {
+  name = 'change-scope <lane-name> <remote-scope>';
+  description = `change the remote scope of a lane`;
+  alias = '';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([localName, remoteScope]: [string, string]): Promise<string> {
+    const { remoteScopeBefore } = await this.lanes.changeScope(localName, remoteScope);
+    return `the remote-scope of ${chalk.bold(localName)} has been changed from ${chalk.bold(
+      remoteScopeBefore
+    )} to ${chalk.bold(remoteScope)}`;
+  }
+}
+
 export class LaneMergeCmd implements Command {
   name = 'merge <lane>';
   description = `merge a local or a remote lane`;

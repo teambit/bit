@@ -263,6 +263,9 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane track ${localName} ${remoteScope} ${remoteName}`);
     return removeChalkCharacters(results) as string;
   }
+  changeLaneScope(laneName: string, newScope: string) {
+    return this.runCmd(`bit lane change-scope ${laneName} ${newScope}`);
+  }
   clearCache() {
     return this.runCmd('bit clear-cache');
   }

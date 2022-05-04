@@ -27,7 +27,7 @@ export class ComponentItem implements IndexItem {
 }
 
 export class LaneItem implements IndexItem {
-  constructor(public id: LaneId, public hash: string) {}
+  constructor(public id: { scope: string; name: string }, public hash: string) {}
 
   toIdentifierString() {
     const scope = this.id.scope ? `${this.id.scope}/` : '';
@@ -115,19 +115,27 @@ export default class ScopeIndex {
     if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink) && !(bitObject instanceof Lane))
       return false;
     const hash = bitObject.hash().toString();
-    if (this._exist(hash)) return false;
+
+    if (bitObject instanceof Lane) {
+      const found = this.find(hash) as LaneItem | undefined;
+      if (found) {
+        if ((found as LaneItem).toLaneId().isEqual(bitObject.toLaneId())) return false;
+        found.id = bitObject.toLaneId();
+      } else {
+        const laneItem = new LaneItem(bitObject.toLaneId(), hash);
+        this.index.lanes.push(laneItem);
+      }
+      return true;
+    }
     if (bitObject instanceof ModelComponent || bitObject instanceof Symlink) {
+      if (this._exist(hash)) return false;
       const componentItem = new ComponentItem(
         { scope: bitObject.scope || null, name: bitObject.name },
         bitObject instanceof Symlink,
         hash
       );
       this.index.components.push(componentItem);
-    } else if (bitObject instanceof Lane) {
-      const laneItem = new LaneItem(bitObject.toLaneId(), hash);
-      this.index.lanes.push(laneItem);
     }
-
     return true;
   }
   removeMany(refs: Ref[]): boolean {
