@@ -349,7 +349,6 @@ importers:
       express: 4.17.1
       express-graphql: 0.12.0
       express-history-api-fallback: 2.2.1
-      fast-glob: 3.2.11
       filenamify: 4.2.0
       find-root: 1.1.0
       find-up: 5.0.0
@@ -882,7 +881,6 @@ importers:
       express: registry.npmjs.org/express/4.17.1
       express-graphql: registry.npmjs.org/express-graphql/0.12.0_graphql@14.7.0
       express-history-api-fallback: registry.npmjs.org/express-history-api-fallback/2.2.1
-      fast-glob: registry.npmjs.org/fast-glob/3.2.11
       filenamify: registry.npmjs.org/filenamify/4.2.0
       find-root: registry.npmjs.org/find-root/1.1.0
       find-up: registry.npmjs.org/find-up/5.0.0
@@ -19221,7 +19219,7 @@ packages:
     dev: false
 
   registry.npmjs.org/chokidar/3.5.3:
-    resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/chokidar/-/chokidar-3.5.3.tgz}
+    resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/chokidar/-/chokidar-3.5.3.tgz}
     name: chokidar
     version: 3.5.3
     engines: {node: '>= 8.10.0'}
