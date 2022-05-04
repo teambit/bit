@@ -7,7 +7,6 @@ import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
-import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import {
@@ -41,6 +40,7 @@ import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
 import { LaneSwitcher } from './switch-lanes';
+import { createLane } from './create-lane';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -125,7 +125,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
-    await createNewLane(this.workspace.consumer, name);
+    await createLane(this.workspace.consumer, name);
     this.scope.legacyScope.lanes.setCurrentLane(name);
     const trackLaneData = {
       localLane: name,
