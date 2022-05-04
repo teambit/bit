@@ -1,4 +1,4 @@
-import { RemoteLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '..';
 import { BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
@@ -19,7 +19,7 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
     );
   }
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
-  const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
+  const remoteLaneId = lane.remoteLaneId as LaneId;
   consumer.bitMap.setRemoteLane(remoteLaneId);
   const workspaceLane = consumer.bitMap.workspaceLane as WorkspaceLane; // bitMap.workspaceLane is empty only when is on main
   consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
@@ -45,8 +45,7 @@ export async function getLaneCompIdsToExport(
 }
 
 export function isUserTryingToExportLanes(consumer: Consumer) {
-  const currentLaneId = consumer.getCurrentLaneId();
-  return !currentLaneId.isDefault();
+  return consumer.isOnLane();
 }
 
 // leave this here in case we do want to guess whether a user wants to export a lane.

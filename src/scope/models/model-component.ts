@@ -3,7 +3,7 @@ import { isEmpty } from 'lodash';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
-import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
@@ -269,7 +269,7 @@ export default class Component extends BitObject {
         this.laneHeadRemote = await repo.remoteLanes.getRef(lane.remoteLaneId, this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
-      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+      this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
     }
   }
 

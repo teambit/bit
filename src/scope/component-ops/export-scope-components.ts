@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../../constants';
 import GeneralError from '../../error/general-error';
@@ -450,15 +450,14 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
           scope.objects.add(lane);
           // this is needed so later on we can add the tracking data and update .bitmap
           // @todo: support having a different name on the remote by a flag
-          lane.remoteLaneId = RemoteLaneId.from(lane.name, remoteNameStr);
+          lane.remoteLaneId = LaneId.from(lane.name, remoteNameStr);
         }
         await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
       }
 
-      const currentLane = scope.lanes.getCurrentLaneName();
-      if (currentLane === DEFAULT_LANE && !lane) {
+      if (scope.lanes.isOnMain() && !lane) {
         // all exported from main
-        const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
+        const remoteLaneId = LaneId.from(DEFAULT_LANE, remoteNameStr);
         await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
         await Promise.all(
           componentsAndObjects.map(async ({ component }) => {

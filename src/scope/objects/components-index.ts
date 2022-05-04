@@ -27,14 +27,15 @@ export class ComponentItem implements IndexItem {
 }
 
 export class LaneItem implements IndexItem {
-  constructor(public id: { name: string }, public hash: string) {}
+  constructor(public id: LaneId, public hash: string) {}
 
   toIdentifierString() {
-    return `lane "${this.id.name}"`;
+    const scope = this.id.scope ? `${this.id.scope}/` : '';
+    return `lane "${scope}${this.id.name}"`;
   }
 
   toLaneId(): LaneId {
-    return new LaneId({ name: this.id.name });
+    return new LaneId({ name: this.id.name, scope: this.id.scope });
   }
 }
 
@@ -123,7 +124,7 @@ export default class ScopeIndex {
       );
       this.index.components.push(componentItem);
     } else if (bitObject instanceof Lane) {
-      const laneItem = new LaneItem({ name: bitObject.name }, hash);
+      const laneItem = new LaneItem(bitObject.toLaneId(), hash);
       this.index.lanes.push(laneItem);
     }
 

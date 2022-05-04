@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
-import { LaneId, LocalLaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId, BitIds } from '../../bit-id';
@@ -44,13 +44,20 @@ export default class Lanes {
     return laneName;
   }
 
-  isOnDefaultLane(): boolean {
+  isOnMain(): boolean {
     const currentLane = this.getCurrentLaneName();
     return currentLane === DEFAULT_LANE;
   }
 
-  getCurrentLaneId(): LocalLaneId {
-    return LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE);
+  getCurrentLaneId(): LaneId {
+    const laneName = this.scopeJson.lanes.current;
+    // backward compatibility, in the past, the default lane was master
+    if (laneName === 'master' || laneName === DEFAULT_LANE) {
+      return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
+    }
+    const remoteScope = this.getRemoteScopeByLocalLane(laneName);
+    if (!remoteScope) throw new BitError(`unable to find the remote-scope for the current lane "${laneName}"`);
+    return LaneId.from(laneName, remoteScope);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -66,6 +73,11 @@ export default class Lanes {
       (t) => t.remoteLane === remoteLane && t.remoteScope === remoteScope
     );
     return trackedLane ? trackedLane.localLane : null;
+  }
+
+  getRemoteScopeByLocalLane(localLane: string): string | null {
+    const trackedLane = this.scopeJson.lanes.tracking.find((t) => t.localLane === localLane);
+    return trackedLane ? trackedLane.remoteScope : null;
   }
 
   getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
@@ -117,6 +129,24 @@ export default class Lanes {
     return lanes;
   }
 
+  async parseLaneIdFromString(name: string): Promise<LaneId> {
+    if (name.includes(LANE_REMOTE_DELIMITER)) {
+      return LaneId.parse(name);
+    }
+    // the name is only the lane-name without the scope. search for lanes with the same name
+    const allLanes = await this.listLanes();
+    const foundWithSameName = allLanes.filter((lane) => lane.name === name);
+    if (foundWithSameName.length === 0) {
+      throw new BitError(`unable to find a lane with the name "${name}"`);
+    }
+    if (foundWithSameName.length > 1) {
+      throw new BitError(
+        `found more than one lane with the name "${name}", please specify the scope in a form of "<scope>${LANE_REMOTE_DELIMITER}<name>"`
+      );
+    }
+    return foundWithSameName[0].toLaneId();
+  }
+
   async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {
     const getLaneDataOfLane = async (laneObject: Lane): Promise<LaneData> => {
       const laneName = laneObject.name;
@@ -134,7 +164,8 @@ export default class Lanes {
       };
     };
     if (name) {
-      const laneObject = await this.loadLane(LaneId.from(name));
+      const laneId = await this.parseLaneIdFromString(name);
+      const laneObject = await this.loadLane(laneId);
       if (!laneObject) throw new GeneralError(`lane "${name}" was not found`);
       return [await getLaneDataOfLane(laneObject)];
     }

@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { DEFAULT_LANE, LocalLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -173,8 +173,16 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
-  getCurrentLaneId(): LocalLaneId {
-    return LocalLaneId.from(this.scope.lanes.getCurrentLaneName() || DEFAULT_LANE);
+  getCurrentLaneId(): LaneId {
+    return this.scope.lanes.getCurrentLaneId();
+  }
+
+  async getParsedLaneId(name: string): Promise<LaneId> {
+    return this.scope.lanes.parseLaneIdFromString(name);
+  }
+
+  isOnLane(): boolean {
+    return !this.scope.lanes.isOnMain();
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {

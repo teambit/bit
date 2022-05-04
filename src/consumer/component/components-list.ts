@@ -151,7 +151,7 @@ export default class ComponentsList {
    * to show them in the "snapped" section in bit-status.
    */
   async listSnappedComponentsOnMain() {
-    if (!this.scope.lanes.isOnDefaultLane()) {
+    if (!this.scope.lanes.isOnMain()) {
       return [];
     }
     const componentsFromModel = await this.getModelComponents();

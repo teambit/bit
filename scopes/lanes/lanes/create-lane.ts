@@ -4,7 +4,12 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 
-export async function createLane(consumer: Consumer, laneName: string, remoteLane?: Lane): Promise<Lane> {
+export async function createLane(
+  consumer: Consumer,
+  laneName: string,
+  scopeName: string,
+  remoteLane?: Lane
+): Promise<Lane> {
   const lanes = await consumer.scope.listLanes();
   if (lanes.find((lane) => lane.name === laneName)) {
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
@@ -30,8 +35,8 @@ export async function createLane(consumer: Consumer, laneName: string, remoteLan
     return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
   };
   const newLane = remoteLane
-    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString(), log: remoteLane.log })
-    : Lane.create(laneName);
+    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString(), log: remoteLane.log, scope: remoteLane.scope })
+    : Lane.create(laneName, scopeName);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 

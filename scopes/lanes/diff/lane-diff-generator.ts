@@ -8,7 +8,7 @@ import {
   DiffResults,
   DiffOptions,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 
 type LaneData = {
   name: string;
@@ -39,8 +39,8 @@ export class LaneDiffGenerator {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
     }
     const legacyScope = this.scope.legacyScope;
-    const fromLaneId = fromLaneName ? new LaneId({ name: fromLaneName }) : null;
-    const toLaneId = toLaneName ? new LaneId({ name: toLaneName }) : null;
+    const fromLaneId = fromLaneName ? await legacyScope.lanes.parseLaneIdFromString(fromLaneName) : null;
+    const toLaneId = toLaneName ? await legacyScope.lanes.parseLaneIdFromString(toLaneName) : null;
     const isFromOrToDefault = fromLaneId?.isDefault() || toLaneId?.isDefault();
 
     if (!isFromOrToDefault && !toLaneId) {

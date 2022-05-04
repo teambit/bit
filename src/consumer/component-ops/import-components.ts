@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
-import { RemoteLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
@@ -48,7 +48,7 @@ export type ImportOptions = {
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   skipLane?: boolean; // save on main instead of current lane
-  lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
+  lanes?: { laneIds: LaneId[]; lanes?: Lane[] };
   allHistory?: boolean;
 };
 type ComponentMergeStatus = {
@@ -607,8 +607,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (this.options.skipLane || this.options.objectsOnly) {
       return false;
     }
-    const currentLaneId = this.consumer.getCurrentLaneId();
-    return !currentLaneId.isDefault();
+    return this.consumer.isOnLane();
   }
 
   async _saveLaneDataIfNeeded(componentsWithDependencies: ComponentWithDependencies[]): Promise<void> {

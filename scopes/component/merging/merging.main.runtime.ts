@@ -23,7 +23,7 @@ import path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { LaneId, RemoteLaneId, LocalLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
@@ -108,16 +108,16 @@ export class MergingMain {
     snapMessage: string,
     build: boolean
   ): Promise<ApplyVersionResults> {
-    const localLaneId = consumer.getCurrentLaneId();
-    const localLaneObject = await consumer.getCurrentLaneObject();
-    const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(localLaneId.name);
-    if (!localLaneId.isDefault() && !remoteTrackedLane) {
-      throw new Error(`unable to find a remote tracked to the local lane "${localLaneId.name}"`);
+    const currentLaneId = consumer.getCurrentLaneId();
+    const currentLaneObject = await consumer.getCurrentLaneObject();
+    const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(currentLaneId.name);
+    if (!currentLaneId.isDefault() && !remoteTrackedLane) {
+      throw new Error(`unable to find a remote tracked to the local lane "${currentLaneId.name}"`);
     }
     const allComponentsStatus = await this.getAllComponentsStatus(
       bitIds,
-      localLaneId,
-      localLaneObject,
+      currentLaneId,
+      currentLaneObject,
       remoteTrackedLane
     );
 
@@ -125,8 +125,8 @@ export class MergingMain {
       mergeStrategy,
       allComponentsStatus,
       remoteName: remoteTrackedLane ? remoteTrackedLane.remoteScope : null,
-      laneId: localLaneId,
-      localLane: localLaneObject,
+      laneId: currentLaneId,
+      localLane: currentLaneObject,
       noSnap,
       snapMessage,
       build,
@@ -443,7 +443,7 @@ export class MergingMain {
 
   private async getAllComponentsStatus(
     bitIds: BitId[],
-    localLaneId: LocalLaneId,
+    localLaneId: LaneId,
     localLaneObject: Lane | null,
     remoteTrackedLane?: TrackLane
   ): Promise<ComponentStatus[]> {
@@ -453,7 +453,7 @@ export class MergingMain {
         bitIds.map(async (bitId) => {
           const remoteLaneName = remoteTrackedLane ? remoteTrackedLane.remoteLane : localLaneId.name;
           const remoteScopeName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
-          const remoteLaneId = RemoteLaneId.from(remoteLaneName, remoteScopeName as string);
+          const remoteLaneId = LaneId.from(remoteLaneName, remoteScopeName as string);
           const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
           const remoteLaneIdStr = remoteLaneId.toString();
           if (!remoteHead)

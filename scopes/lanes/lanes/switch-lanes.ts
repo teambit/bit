@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
@@ -121,9 +121,9 @@ export class LaneSwitcher {
   }
 
   private async populatePropsAccordingToRemoteLane(lanes: Lane[]) {
-    let remoteLaneId: RemoteLaneId;
+    let remoteLaneId: LaneId;
     try {
-      remoteLaneId = RemoteLaneId.parse(this.switchProps.laneName);
+      remoteLaneId = LaneId.parse(this.switchProps.laneName);
     } catch (e) {
       throw new GeneralError(
         `invalid lane id "${this.switchProps.laneName}", the lane ${this.switchProps.laneName} doesn't exist.`
@@ -207,7 +207,7 @@ then, to merge the remote lane into the local lane, run "bit lane merge ${this.s
     const saveRemoteLaneToBitmap = () => {
       if (this.switchProps.remoteLaneScope) {
         this.consumer.bitMap.setRemoteLane(
-          RemoteLaneId.from(this.switchProps.remoteLaneName as string, this.switchProps.remoteLaneScope)
+          LaneId.from(this.switchProps.remoteLaneName as string, this.switchProps.remoteLaneScope)
         );
         // add versions to lane
       }
@@ -222,7 +222,12 @@ then, to merge the remote lane into the local lane, run "bit lane merge ${this.s
 
     if (this.switchProps.remoteLane) {
       await throwIfLaneExists();
-      await createLane(this.consumer, this.switchProps.localLaneName as string, this.switchProps.remoteLane);
+      await createLane(
+        this.consumer,
+        this.switchProps.localLaneName as string,
+        this.switchProps.remoteLaneScope as string,
+        this.switchProps.remoteLane
+      );
       if (!this.switchProps.localTrackedLane) {
         this.consumer.scope.lanes.trackLane({
           localLane: this.switchProps.localLaneName as string,

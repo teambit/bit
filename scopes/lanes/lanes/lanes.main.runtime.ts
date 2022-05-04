@@ -121,16 +121,22 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneName();
   }
 
+  getCurrentLaneId(): LaneId | null {
+    if (!this.workspace) return null;
+    return this.scope.legacyScope.lanes.getCurrentLaneId();
+  }
+
   async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
-    await createLane(this.workspace.consumer, name);
+    const scope = remoteScope || this.workspace.defaultScope;
+    await createLane(this.workspace.consumer, name, scope);
     this.scope.legacyScope.lanes.setCurrentLane(name);
     const trackLaneData = {
       localLane: name,
       remoteLane: remoteName || name,
-      remoteScope: remoteScope || this.workspace.defaultScope,
+      remoteScope: scope,
     };
     this.scope.legacyScope.lanes.trackLane(trackLaneData);
     await this.workspace.consumer.onDestroy();
@@ -146,7 +152,8 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane outside of Bit workspace`);
     }
-    const lane = await this.scope.legacyScope.lanes.loadLane(LaneId.from(localName));
+    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(localName);
+    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${localName}"`);
     }
@@ -285,8 +292,10 @@ export class LanesMain {
       };
     }
 
-    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
     const scope: LegacyScope = this.workspace.scope.legacyScope;
+    const laneId: LaneId = laneName
+      ? await scope.lanes.parseLaneIdFromString(laneName)
+      : (this.getCurrentLaneId() as LaneId);
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane?.readmeComponent) {
@@ -318,12 +327,12 @@ export class LanesMain {
     }
     const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
 
-    const currentLaneName = this.getCurrentLane();
-
     const readmeComponentBitId = readmeComponentId._legacy;
-
-    const laneId: LaneId = (laneName && LaneId.from(laneName)) || LaneId.from(currentLaneName as string);
     const scope: LegacyScope = this.workspace.scope.legacyScope;
+    const laneId: LaneId = laneName
+      ? await scope.lanes.parseLaneIdFromString(laneName)
+      : (this.getCurrentLaneId() as LaneId);
+
     const lane: Lane | null | undefined = await scope.loadLane(laneId);
 
     if (!lane) {
