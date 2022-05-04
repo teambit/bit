@@ -152,5 +152,5 @@ export type LaneData = {
   remote: string | null;
   isMerged: boolean | null;
   readmeComponent?: { id: BitId; head?: string };
-  log: Log;
+  log?: Log;
 };
