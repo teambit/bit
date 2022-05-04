@@ -18,6 +18,7 @@ describe('import lanes', function () {
   });
   describe('importing lanes', () => {
     let appOutput: string;
+    let laneHash: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -25,6 +26,9 @@ describe('import lanes', function () {
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
       helper.command.exportLane();
+
+      const laneObj = helper.command.catLane('dev');
+      laneHash = laneObj.hash;
     });
     describe('fetching lanes objects', () => {
       before(() => {
@@ -83,6 +87,10 @@ describe('import lanes', function () {
         const bitMap = helper.bitMap.read();
         expect(bitMap.comp1.onLanesOnly).to.be.true;
         expect(bitMap.comp2.onLanesOnly).to.be.true;
+      });
+      it('should save the lane object with the same hash as the original lane', () => {
+        const laneObj = helper.command.catLane('dev');
+        expect(laneObj.hash).to.eq(laneHash);
       });
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
