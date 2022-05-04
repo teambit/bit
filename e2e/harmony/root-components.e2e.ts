@@ -333,15 +333,21 @@ module.exports.default = {
         helper.command.compile();
       });
       it('should create the dist folder in all the locations of the component', () => {
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
@@ -355,7 +361,9 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
         ).to.be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
@@ -372,7 +380,7 @@ module.exports.default = {
       });
     });
     describe('build', () => {
-      let workspaceCapsulesRootDir: string
+      let workspaceCapsulesRootDir: string;
       before(() => {
         helper.command.build();
         workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -380,30 +388,35 @@ module.exports.default = {
       it('should create root components for workspace capsules', () => {
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp4`
-              ),
-              [`@${helper.scopes.remote}/comp2`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4`), [
+              `@${helper.scopes.remote}/comp2`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^17\./);
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp3`
-              ),
-              [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3`), [
+              `@${helper.scopes.remote}/comp2`,
+              `@${helper.scopes.remote}/comp1`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`
+          )
+        ).to.be.a.path();
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`
+          )
+        ).to.be.a.path();
       });
     });
   });
@@ -722,15 +735,21 @@ module.exports.default = {
         helper.command.compile();
       });
       it('should create the dist folder in all the locations of the component', () => {
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
@@ -744,7 +763,9 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
         ).to.be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
@@ -761,7 +782,7 @@ module.exports.default = {
       });
     });
     describe('build', () => {
-      let workspaceCapsulesRootDir: string
+      let workspaceCapsulesRootDir: string;
       before(() => {
         helper.command.build();
         workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -769,30 +790,35 @@ module.exports.default = {
       it('should create root components for workspace capsules', () => {
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp4`
-              ),
-              [`@${helper.scopes.remote}/comp2`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4`), [
+              `@${helper.scopes.remote}/comp2`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^17\./);
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp3`
-              ),
-              [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3`), [
+              `@${helper.scopes.remote}/comp2`,
+              `@${helper.scopes.remote}/comp1`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`
+          )
+        ).to.be.a.path();
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp3/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`
+          )
+        ).to.be.a.path();
       });
     });
   });
@@ -1047,15 +1073,21 @@ module.exports.default = {
         helper.command.compile();
       });
       it('should create the dist folder in all the locations of the component', () => {
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])).to
-          .be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [
             `@${helper.scopes.remote}/comp3`,
@@ -1069,7 +1101,9 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp1/dist/index.js`,
           ])
         ).to.be.a.path();
-        expect(resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp4'), [`@${helper.scopes.remote}/comp4/dist/index.js`])
+        ).to.be.a.path();
         expect(
           resolveFrom(rootCompDir(helper, 'comp4'), [
             `@${helper.scopes.remote}/comp4`,
@@ -1086,7 +1120,7 @@ module.exports.default = {
       });
     });
     describe('build', () => {
-      let workspaceCapsulesRootDir: string
+      let workspaceCapsulesRootDir: string;
       before(() => {
         helper.command.build();
         workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -1094,30 +1128,35 @@ module.exports.default = {
       it('should create root components for workspace capsules', () => {
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp4`
-              ),
-              [`@${helper.scopes.remote}/comp2`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4`), [
+              `@${helper.scopes.remote}/comp2`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^17\./);
         expect(
           fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                workspaceCapsulesRootDir,
-                `${helper.scopes.remote}_comp3`
-              ),
-              [`@${helper.scopes.remote}/comp2`, `@${helper.scopes.remote}/comp1`, 'react/package.json']
-            )
+            resolveFrom(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp3`), [
+              `@${helper.scopes.remote}/comp2`,
+              `@${helper.scopes.remote}/comp1`,
+              'react/package.json',
+            ])
           ).version
         ).to.match(/^16\./);
       });
       it('should link build side-effects to all instances of the component in the capsule directory', () => {
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`)).to.be.a.path()
-        expect(path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`)).to.be.a.path()
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js`
+          )
+        ).to.be.a.path();
+        expect(
+          path.join(
+            workspaceCapsulesRootDir,
+            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`
+          )
+        ).to.be.a.path();
       });
     });
   });
@@ -1275,154 +1314,143 @@ Env2Aspect.addRuntime(EnvMain);
 });
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('root components for scope aspect capsules', function () {
-    this.timeout(0);
-    let helper: Helper;
-    let npmCiRegistry: NpmCiRegistry;
-    before(async () => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.setupDefault();
-      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-      npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.command.create('aspect', 'dep-dep-aspect');
-      helper.command.create('aspect', 'dep-aspect');
-      helper.command.create('aspect', 'main-aspect');
-      helper.fs.outputFile(
-        `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
-        getDepAspect(helper.scopes.remoteWithoutOwner)
-      );
-      helper.fs.outputFile(
-        `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
-        getMainAspect(helper.scopes.remoteWithoutOwner)
-      );
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/aspect');
-      helper.extensions.addExtensionToVariant('{**/dep-dep-aspect},{**/dep-aspect}', 'teambit.dependencies/dependency-resolver', {
+  this.timeout(0);
+  let helper: Helper;
+  let npmCiRegistry: NpmCiRegistry;
+  before(async () => {
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.bitJsonc.setupDefault();
+    helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+    npmCiRegistry = new NpmCiRegistry(helper);
+    await npmCiRegistry.init();
+    npmCiRegistry.configureCiInPackageJsonHarmony();
+    helper.command.create('aspect', 'dep-dep-aspect');
+    helper.command.create('aspect', 'dep-aspect');
+    helper.command.create('aspect', 'main-aspect');
+    helper.fs.outputFile(
+      `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
+      getDepAspect(helper.scopes.remoteWithoutOwner)
+    );
+    helper.fs.outputFile(
+      `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
+      getMainAspect(helper.scopes.remoteWithoutOwner)
+    );
+    helper.extensions.addExtensionToVariant('*', 'teambit.harmony/aspect');
+    helper.extensions.addExtensionToVariant(
+      '{**/dep-dep-aspect},{**/dep-aspect}',
+      'teambit.dependencies/dependency-resolver',
+      {
         policy: {
           peerDependencies: {
             react: '16 || 17',
           },
         },
-      });
-      helper.extensions.addExtensionToVariant('{**/main-aspect}', 'teambit.dependencies/dependency-resolver', {
-        policy: {
-          peerDependencies: {
-            react: '16',
-          },
+      }
+    );
+    helper.extensions.addExtensionToVariant('{**/main-aspect}', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '16',
         },
-      });
-      helper.command.compile();
-      helper.command.install('react@16.6.3');
-      helper.command.tagAllComponents();
-      helper.command.export();
+      },
+    });
+    helper.command.compile();
+    helper.command.install('react@16.6.3');
+    helper.command.tagAllComponents();
+    helper.command.export();
 
-      helper.extensions.addExtensionToVariant('{**/main-aspect}', 'teambit.dependencies/dependency-resolver', {
-        policy: {
-          peerDependencies: {
-            react: '17',
-          },
+    helper.extensions.addExtensionToVariant('{**/main-aspect}', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '17',
         },
-      });
-      helper.fs.outputFile(
-        `${helper.scopes.remoteWithoutOwner}/dep-aspect/new-file.ts`,
-        ''
-      );
-      helper.fs.outputFile(
-        `${helper.scopes.remoteWithoutOwner}/main-aspect/new-file.ts`,
-        ''
-      );
-      helper.command.install('react@17.0.2 --update-existing');
-      helper.command.tagAllComponents();
-      helper.command.export();
+      },
+    });
+    helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/dep-aspect/new-file.ts`, '');
+    helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/main-aspect/new-file.ts`, '');
+    helper.command.install('react@17.0.2 --update-existing');
+    helper.command.tagAllComponents();
+    helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.addRemoteScope();
+    helper.bitJsonc.setupDefault();
+  });
+  describe('using Yarn', () => {
+    let scopeAspectsCapsulesRootDir!: string;
+    before(() => {
+      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
+      helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
+      helper.capsules.removeScopeAspectCapsules();
+      helper.command.status(); // populate capsules.
+      scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
     });
-    describe('using Yarn', () => {
-      let scopeAspectsCapsulesRootDir!: string
-      before(() => {
-        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-        helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.populateComponents(2);
-        helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
-        helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-        scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
-      });
-      it('should install components with the right peer dependencies', () => {
-        expect(
-          fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                scopeAspectsCapsulesRootDir,
-                `${helper.scopes.remote}_main-aspect@0.0.1`
-              ),
-              [`@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`, `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`, 'react/package.json']
-            )
-          ).version
-        ).to.match(/^16\./);
-        expect(
-          fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                scopeAspectsCapsulesRootDir,
-                `${helper.scopes.remote}_main-aspect@0.0.2`
-              ),
-              [`@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`, `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`, 'react/package.json']
-            )
-          ).version
-        ).to.match(/^17\./);
-      });
+    it('should install components with the right peer dependencies', () => {
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.1`), [
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`,
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`,
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^17\./);
     });
-    describe('using pnpm', () => {
-      let scopeAspectsCapsulesRootDir!: string
-      before(() => {
-        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-        helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-        helper.scopeHelper.addRemoteScope();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.populateComponents(2);
-        helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
-        helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-        scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
-      });
-      it('should install components with the right peer dependencies', () => {
-        expect(
-          fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                scopeAspectsCapsulesRootDir,
-                `${helper.scopes.remote}_main-aspect@0.0.1`
-              ),
-              [`@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`, `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`, 'react/package.json']
-            )
-          ).version
-        ).to.match(/^16\./);
-        expect(
-          fs.readJsonSync(
-            resolveFrom(
-              path.join(
-                scopeAspectsCapsulesRootDir,
-                `${helper.scopes.remote}_main-aspect@0.0.2`
-              ),
-              [`@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`, `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`, 'react/package.json']
-            )
-          ).version
-        ).to.match(/^17\./);
-      });
+  });
+  describe('using pnpm', () => {
+    let scopeAspectsCapsulesRootDir!: string;
+    before(() => {
+      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/main-aspect@0.0.1`);
+      helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/main-aspect@0.0.2`);
+      helper.capsules.removeScopeAspectCapsules();
+      helper.command.status(); // populate capsules.
+      scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
     });
-    after(() => {
-      npmCiRegistry.destroy();
+    it('should install components with the right peer dependencies', () => {
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.1`), [
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`,
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-aspect`,
+            `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.dep-dep-aspect`,
+            'react/package.json',
+          ])
+        ).version
+      ).to.match(/^17\./);
     });
-  }
-);
+  });
+  after(() => {
+    npmCiRegistry.destroy();
+  });
+});
 
 function resolveFrom(fromDir: string, moduleIds: string[]) {
   if (moduleIds.length === 0) return fromDir;
@@ -1475,3 +1503,25 @@ export class DepAspectMain {
 DepAspectAspect.addRuntime(DepAspectMain);
 `;
 }
+
+describe('env peer dependencies hoisting', function () {
+  let helper: Helper;
+  this.timeout(0);
+
+  describe('pnpm isolated linker', function () {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.create('react', 'my-button', '-p my-button');
+      helper.command.install();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should hoist react to the root of the workspace', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/react')).to.be.a.path();
+    });
+  });
+});

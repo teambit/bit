@@ -54,7 +54,20 @@ export class WorkspaceManifestFactory {
       hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
-    if (options.dedupe && !hasRootComponents) {
+    if (hasRootComponents) {
+      dedupedDependencies.rootDependencies = rootPolicy.toManifest();
+      const { peerDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, [
+        'peerDependencies',
+      ]).rootDependencies;
+      // We hoist peer dependencies in order for the IDE to work.
+      // For runtime, the peer dependencies are installed inside:
+      // <ws root>/node_module/<comp name>/node_module/<comp name>/node_modules
+      dedupedDependencies.rootDependencies.dependencies = {
+        ...peerDependencies,
+        ...dedupedDependencies.rootDependencies.dependencies,
+      };
+      dedupedDependencies.componentDependenciesMap = componentDependenciesMap;
+    } else if (options.dedupe) {
       dedupedDependencies = dedupeDependencies(rootPolicy, componentDependenciesMap);
     } else {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();

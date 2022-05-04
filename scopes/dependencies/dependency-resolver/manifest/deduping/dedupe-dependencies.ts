@@ -1,4 +1,4 @@
-import { ManifestDependenciesObject } from '../manifest';
+import { ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
 import { WorkspacePolicy } from '../../policy';
 import { PackageName, SemverVersion } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
@@ -40,9 +40,10 @@ export type DedupedDependencies = {
  */
 export function dedupeDependencies(
   rootPolicy: WorkspacePolicy,
-  componentDependenciesMap: ComponentDependenciesMap
+  componentDependenciesMap: ComponentDependenciesMap,
+  hoistedDepFields?: ManifestDependenciesKeysNames[]
 ): DedupedDependencies {
-  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap);
+  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap, hoistedDepFields);
   const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
   const result = mergeWithRootDeps(rootPolicy.toManifest(), dedupedDependenciesWithoutRootOriginal);
   return result;

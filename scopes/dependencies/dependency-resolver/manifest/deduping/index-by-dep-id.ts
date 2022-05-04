@@ -1,4 +1,5 @@
 import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
+import pick from 'ramda/src/pick';
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies/constants';
 import { ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
@@ -33,10 +34,14 @@ export type PackageNameIndex = Map<PackageName, PackageNameIndexItem>;
  */
 export function indexByDepId(
   rootPolicy: WorkspacePolicy,
-  componentDependenciesMap: ComponentDependenciesMap
+  componentDependenciesMap: ComponentDependenciesMap,
+  hoistedDepFields?: ManifestDependenciesKeysNames[]
 ): PackageNameIndex {
   const result: PackageNameIndex = new Map();
   componentDependenciesMap.forEach((depsObject, compPackageName) => {
+    if (hoistedDepFields) {
+      depsObject = pick(hoistedDepFields, depsObject);
+    }
     forEachObjIndexed(addSpecificLifeCycleDepsToIndex(result, compPackageName), depsObject);
   });
   addPreservedFromRoot(result, rootPolicy);
