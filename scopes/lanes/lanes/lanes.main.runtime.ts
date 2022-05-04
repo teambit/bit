@@ -34,6 +34,7 @@ import {
   LaneShowCmd,
   LaneTrackCmd,
   LaneChangeScopeCmd,
+  LaneAliasCmd,
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
 } from './lane.cmd';
@@ -169,6 +170,36 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
 
     return { beforeTrackData: beforeTrackDataCloned, afterTrackData };
+  }
+
+  async aliasLane(laneName: string, alias: string): Promise<{ laneId: LaneId }> {
+    if (!this.workspace) {
+      throw new BitError(`unable to alias a lane outside of Bit workspace`);
+    }
+    if (alias.includes(LANE_REMOTE_DELIMITER)) {
+      throw new BitError(`an alias cannot include a delimiter "${LANE_REMOTE_DELIMITER}"`);
+    }
+    if (alias === laneName) {
+      throw new BitError(`an alias cannot be the same as the lane name`);
+    }
+    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    if (!lane) {
+      throw new BitError(`unable to find a local lane "${laneName}"`);
+    }
+    const trackData = {
+      localLane: alias,
+      remoteLane: laneId.name,
+      remoteScope: laneId.scope,
+    };
+    const laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
+      ? laneName.split(LANE_REMOTE_DELIMITER)[1]
+      : laneName;
+    this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
+    this.scope.legacyScope.lanes.trackLane(trackData);
+    await this.workspace.consumer.onDestroy();
+
+    return { laneId };
   }
 
   async changeScope(laneName: string, remoteScope: string): Promise<{ remoteScopeBefore: string }> {
@@ -449,6 +480,7 @@ export class LanesMain {
         new LaneRemoveCmd(lanesMain),
         new LaneTrackCmd(lanesMain),
         new LaneChangeScopeCmd(lanesMain),
+        new LaneAliasCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
         new LaneAddReadmeCmd(lanesMain),
         new LaneRemoveReadmeCmd(lanesMain),

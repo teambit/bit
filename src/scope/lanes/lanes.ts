@@ -87,6 +87,9 @@ export default class Lanes {
   trackLane(trackLaneData: TrackLane) {
     this.scopeJson.trackLane(trackLaneData);
   }
+  removeTrackLane(localLane: string) {
+    this.scopeJson.removeTrackLane(localLane);
+  }
 
   async removeLanes(scope: Scope, lanes: string[], force: boolean): Promise<string[]> {
     const existingLanes = await this.listLanes();

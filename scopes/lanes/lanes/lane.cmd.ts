@@ -231,6 +231,25 @@ export class LaneTrackCmd implements Command {
   }
 }
 
+export class LaneAliasCmd implements Command {
+  name = 'alias <lane-name> <alias>';
+  description = 'add an alias to a lane';
+  extendedDescription = `an alias is a name that can be used to refer to a lane. it is saved locally and never reach the remote.
+it is useful when having multiple lanes with the same name, but with different remote scopes.`;
+  alias = '';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([laneName, alias]: [string, string, string]): Promise<string> {
+    const { laneId } = await this.lanes.aliasLane(laneName, alias);
+    return `successfully added the alias ${chalk.bold(alias)} to the lane ${chalk.bold(laneId.toString())}`;
+  }
+}
+
 export class LaneChangeScopeCmd implements Command {
   name = 'change-scope <lane-name> <remote-scope>';
   description = `change the remote scope of a lane`;
