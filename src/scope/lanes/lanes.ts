@@ -137,6 +137,9 @@ export default class Lanes {
       return LaneId.parse(name);
     }
     // the name is only the lane-name without the scope. search for lanes with the same name
+    if (name === DEFAULT_LANE) {
+      return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
+    }
     const trackedData = this.getRemoteTrackedDataByLocalLane(name);
     if (trackedData) {
       return LaneId.from(trackedData.remoteLane, trackedData.remoteScope);
