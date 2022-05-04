@@ -152,7 +152,9 @@ export class LaneShowCmd implements Command {
 
     const onlyLane = lanes[0];
     const title = `showing information for ${chalk.bold(name)}${outputRemoteLane(onlyLane.remote)}\n`;
-    return title + outputComponents(onlyLane.components);
+    const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
+    const date = onlyLane.log?.date ? `${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : undefined;
+    return title + author + date + outputComponents(onlyLane.components);
   }
 
   async json([name]: [string], laneOptions: LaneOptions) {
