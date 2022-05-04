@@ -129,11 +129,19 @@ export default class Lanes {
     return lanes;
   }
 
+  /**
+   * the name can be a full lane-id or only the lane-name, which can be the alias (local-lane) or the remote-name.
+   */
   async parseLaneIdFromString(name: string): Promise<LaneId> {
     if (name.includes(LANE_REMOTE_DELIMITER)) {
       return LaneId.parse(name);
     }
     // the name is only the lane-name without the scope. search for lanes with the same name
+    const trackedData = this.getRemoteTrackedDataByLocalLane(name);
+    if (trackedData) {
+      return LaneId.from(trackedData.remoteLane, trackedData.remoteScope);
+    }
+
     const allLanes = await this.listLanes();
     const foundWithSameName = allLanes.filter((lane) => lane.name === name);
     if (foundWithSameName.length === 0) {
