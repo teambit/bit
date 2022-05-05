@@ -9,6 +9,7 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import {
   MergeStrategy,
   ApplyVersionResults,
@@ -22,6 +23,7 @@ import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -35,6 +37,7 @@ import {
   LaneTrackCmd,
   LaneChangeScopeCmd,
   LaneAliasCmd,
+  LaneRenameCmd,
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
 } from './lane.cmd';
@@ -226,6 +229,72 @@ export class LanesMain {
     await this.workspace.consumer.onDestroy();
 
     return { remoteScopeBefore };
+  }
+
+  async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
+    if (!this.workspace) {
+      throw new BitError(`unable to rename a lane outside of Bit workspace`);
+    }
+    if (newName.includes(LANE_REMOTE_DELIMITER)) {
+      throw new BitError(`the new-name cannot include a delimiter "${LANE_REMOTE_DELIMITER}"`);
+    }
+    const existingAliasWithNewName = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(newName);
+    if (existingAliasWithNewName) {
+      const remoteIdStr = `${existingAliasWithNewName.remoteLane}/${existingAliasWithNewName.remoteScope}`;
+      throw new BitError(`unable to rename to ${newName}. this name is already used to track: ${remoteIdStr}`);
+    }
+    const laneNameWithoutScope = currentName.includes(LANE_REMOTE_DELIMITER)
+      ? currentName.split(LANE_REMOTE_DELIMITER)[1]
+      : currentName;
+    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(currentName);
+    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    if (!lane) {
+      throw new BitError(`unable to find a local lane "${currentName}"`);
+    }
+    lane.name = newName;
+    const afterTrackData = {
+      localLane: newName,
+      remoteLane: newName,
+      remoteScope: lane.scope,
+    };
+    this.scope.legacyScope.lanes.trackLane(afterTrackData);
+    this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
+
+    await this.scope.legacyScope.lanes.saveLane(lane);
+
+    const currentLaneName = this.getCurrentLane();
+    if (currentLaneName === laneNameWithoutScope) this.scope.legacyScope.lanes.setCurrentLane(newName);
+
+    const clonedLaneToExport = lane.clone();
+    clonedLaneToExport.components = []; // otherwise, it'll export the changes done on the components.
+    let exported = false;
+    let exportErr: Error | undefined;
+    try {
+      await this.exportLane(clonedLaneToExport);
+      exported = true;
+    } catch (err: any) {
+      this.logger.error(`unable to export ${lane.id.toString()}: ${err.message}`);
+      exportErr = err;
+    }
+
+    await this.workspace.consumer.onDestroy();
+
+    return { exported, exportErr };
+  }
+
+  async exportLane(lane: Lane) {
+    await exportMany({
+      scope: this.scope.legacyScope,
+      isLegacy: false,
+      laneObject: lane,
+      ids: new BitIds(),
+      codemod: false,
+      changeLocallyAlthoughRemoteIsDifferent: false,
+      includeDependencies: false,
+      remoteName: null,
+      idsWithFutureScope: new BitIds(),
+      allVersions: false,
+    });
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -481,6 +550,7 @@ export class LanesMain {
         new LaneTrackCmd(lanesMain),
         new LaneChangeScopeCmd(lanesMain),
         new LaneAliasCmd(lanesMain),
+        new LaneRenameCmd(lanesMain),
         new LaneDiffCmd(workspace, scope),
         new LaneAddReadmeCmd(lanesMain),
         new LaneRemoveReadmeCmd(lanesMain),

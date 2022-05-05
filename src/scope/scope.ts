@@ -341,6 +341,11 @@ export default class Scope {
     return lane;
   }
 
+  async loadLaneByHash(ref: Ref): Promise<Lane | null> {
+    const lane = (await this.objects.load(ref)) as Lane | null;
+    return lane;
+  }
+
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);

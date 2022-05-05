@@ -269,6 +269,28 @@ export class LaneChangeScopeCmd implements Command {
   }
 }
 
+export class LaneRenameCmd implements Command {
+  name = 'rename <current-name> <new-name>';
+  description = `change the lane-name locally and on the remote (if exported)`;
+  alias = '';
+  options = [] as CommandOptions;
+  loader = true;
+  private = true;
+  migration = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([currentName, newName]: [string, string]): Promise<string> {
+    const { exported, exportErr } = await this.lanes.rename(currentName, newName);
+    const exportedStr = exported
+      ? `and have been exported successfully to the remote`
+      : `however if failed to export the renamed lane to the remote, due to an error: ${
+          exportErr?.message || 'unknown'
+        }`;
+    return `the lane ${chalk.bold(currentName)} has been changed to ${chalk.bold(newName)}, ${exportedStr}`;
+  }
+}
+
 export class LaneMergeCmd implements Command {
   name = 'merge <lane>';
   description = `merge a local or a remote lane`;

@@ -57,7 +57,7 @@ describe('bit lane command', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         expect(lanes.currentLane).to.equal('dev');
       });
       describe('changing the component and running bit diff', () => {

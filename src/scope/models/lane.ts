@@ -218,4 +218,11 @@ export default class Lane extends BitObject {
       throw new GeneralError(`${message}, this name is reserved as the old default lane`);
     }
   }
+  clone() {
+    return new Lane({
+      ...this,
+      hash: this._hash,
+      components: [...this.components],
+    });
+  }
 }

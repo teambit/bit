@@ -67,7 +67,7 @@ describe('bit lane command', function () {
     it('bit lane should show the readme component', () => {
       helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
       const laneOutput = helper.command.catLane('dev');
-      const output = helper.command.showLanes();
+      const output = helper.command.listLanes();
       expect(output).to.have.string(
         `readme component\n\t  ${laneOutput.readmeComponent.id.name} - ${laneOutput.readmeComponent.head}`
       );
@@ -78,7 +78,7 @@ describe('bit lane command', function () {
     });
     it('should export component as lane readme ', () => {
       helper.command.exportLane();
-      const output = helper.command.showRemoteLanesParsed();
+      const output = helper.command.listRemoteLanesParsed();
       expect(output.lanes[0].readmeComponent.id.name).to.be.string('comp1');
     });
     it('bitmap should show the lane config for a readme component', () => {
@@ -122,7 +122,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.command.createLane();
-      output = helper.command.showLanes();
+      output = helper.command.listLanes();
     });
     it('bit lane should show the active lane', () => {
       expect(output).to.have.string('current lane - dev');
@@ -164,7 +164,7 @@ describe('bit lane command', function () {
     describe('bit lane with --details flag', () => {
       let output: string;
       before(() => {
-        output = helper.command.showLanes('--details');
+        output = helper.command.listLanes('--details');
       });
       it('should show all lanes and mark the current one', () => {
         expect(output).to.have.string('current lane - dev');
@@ -187,7 +187,7 @@ describe('bit lane command', function () {
         expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane --remote should show the exported lane', () => {
-        const remoteLanes = helper.command.showRemoteLanesParsed();
+        const remoteLanes = helper.command.listRemoteLanesParsed();
         expect(remoteLanes.lanes).to.have.lengthOf(1);
         expect(remoteLanes.lanes[0].name).to.equal('dev');
       });
@@ -648,7 +648,7 @@ describe('bit lane command', function () {
           helper.command.mergeLane('dev');
         });
         it('should merge the lane', () => {
-          const mergedLanes = helper.command.showLanes('--merged');
+          const mergedLanes = helper.command.listLanes('--merged');
           expect(mergedLanes).to.include('dev');
         });
         it('should show the merged components as staged', () => {
@@ -679,7 +679,7 @@ describe('bit lane command', function () {
           helper.command.mergeLane('dev', '--ours');
         });
         it('should merge the lane', () => {
-          const mergedLanes = helper.command.showLanes('--merged');
+          const mergedLanes = helper.command.listLanes('--merged');
           expect(mergedLanes).to.include('dev');
         });
         it('should show the merged components as staged', () => {
@@ -1020,6 +1020,31 @@ describe('bit lane command', function () {
         const status = helper.command.statusJson();
         expect(status.mergePendingComponents).to.have.lengthOf(1);
       });
+    });
+  });
+  describe('rename an exported lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.renameLane('dev', 'new-lane');
+    });
+    it('should rename the lane locally', () => {
+      const lanes = helper.command.listLanes();
+      expect(lanes).to.have.string('new-lane');
+      expect(lanes).to.not.have.string('dev');
+    });
+    it('should change the current lane', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('new-lane');
+    });
+    it('should change the remote lane name as well', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      expect(remoteLanes.lanes).to.have.lengthOf(1);
+      expect(remoteLanes.lanes[0].name).to.equal('new-lane');
     });
   });
 });

@@ -275,10 +275,6 @@ export default class CommandHelper {
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
-  showLanes(options = '') {
-    const results = this.runCmd(`bit lane list ${options}`);
-    return removeChalkCharacters(results) as string;
-  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
@@ -287,11 +283,15 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed;
   }
-  showLanesParsed(options = '') {
+  listLanes(options = '') {
+    const results = this.runCmd(`bit lane list ${options}`);
+    return removeChalkCharacters(results) as string;
+  }
+  listLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
-  showRemoteLanesParsed(options = '') {
+  listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
@@ -382,6 +382,9 @@ export default class CommandHelper {
   }
   fetchAllLanes() {
     return this.runCmd(`bit fetch --lanes`);
+  }
+  renameLane(oldName: string, newName: string) {
+    return this.runCmd(`bit lane rename ${oldName} ${newName}`);
   }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);

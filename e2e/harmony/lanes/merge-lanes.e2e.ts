@@ -46,7 +46,7 @@ describe('merge lanes', function () {
         expect(status.stagedComponents).to.have.lengthOf(3);
       });
       it('bit lane should show that all components are belong to main', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
@@ -91,7 +91,7 @@ describe('merge lanes', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should not show the components as if they belong to main', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(0);
       });
@@ -136,19 +136,18 @@ describe('merge lanes', function () {
           expect(lane.components).to.have.lengthOf(3);
         });
         it('bit lane --merged should not show the lane as it was not merged into main yet', () => {
-          const merged = helper.command.showLanes('--merged');
+          const merged = helper.command.listLanes('--merged');
           expect(merged).to.not.have.string('dev');
           expect(merged).to.have.string('None of the lanes is merged');
         });
         it('bit lane --unmerged should show the lane', () => {
-          const merged = helper.command.showLanes('--not-merged');
+          const merged = helper.command.listLanes('--not-merged');
           expect(merged).to.have.string('dev');
           expect(merged).to.not.have.string('All lanes are merged');
         });
       });
     });
-    // @todo: enable this once we're good with the breaking change on sources.ts mergeLane()
-    describe.skip('creating a new lane with the same name on a different workspace', () => {
+    describe('creating a new lane with the same name on a different workspace', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();

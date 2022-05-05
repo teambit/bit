@@ -85,3 +85,9 @@ Summary of when/what lanes data is saved per command:
 ### Useful APIs
 
 - bit-map `getAllIdsAvailableOnLane()` filters the currently checked out lane.
+
+### Remove component from a lane
+
+Locally, to remove a component from a lane, use `bit remove` command. It will remove the component from the local lane-object.
+This change won't affect the remote scope, even after exporting the lane. This is becuase on the remote, the merge-lane process doesn't remove anything, only adds/changes components to the lane object.
+Remember that by default when importing a lane, only the components on the workspace are part of the lane, so the same lane-object, locally can have less components than the remote and obviously in this case we don't want to remove them from the remote on export.
