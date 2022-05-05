@@ -201,36 +201,6 @@ export class LaneCreateCmd implements Command {
   }
 }
 
-// export class LaneTrackCmd implements Command {
-//   name = 'track <local-name> <remote-scope> [remote-name]';
-//   description = `change the remote scope or remote lane of the local lane`;
-//   alias = '';
-//   options = [] as CommandOptions;
-//   loader = true;
-//   private = true;
-//   migration = true;
-
-//   constructor(private lanes: LanesMain) {}
-
-//   async report([localName, remoteScope, remoteName]: [string, string, string]): Promise<string> {
-//     const { beforeTrackData, afterTrackData } = await this.lanes.trackLane(localName, remoteScope, remoteName);
-//     const remoteScopeChanges =
-//       afterTrackData.remoteScope === beforeTrackData?.remoteScope
-//         ? `the remote-scope has not been changed`
-//         : `the remote-scope has been changed from ${chalk.bold(
-//             beforeTrackData?.remoteScope || '<n/a>'
-//           )} to ${chalk.bold(afterTrackData.remoteScope)}`;
-//     const remoteNameChanges =
-//       afterTrackData.remoteLane === beforeTrackData?.remoteLane
-//         ? `the remote-name has not been changed`
-//         : `the remote-name has been changed from ${chalk.bold(beforeTrackData?.remoteLane || '<n/a>')} to ${chalk.bold(
-//             afterTrackData.remoteLane
-//           )}`;
-
-//     return `${remoteScopeChanges}\n${remoteNameChanges}`;
-//   }
-// }
-
 export class LaneAliasCmd implements Command {
   name = 'alias <lane-name> <alias>';
   description = 'add an alias to a lane';
