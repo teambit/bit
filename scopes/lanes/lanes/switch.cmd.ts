@@ -11,7 +11,7 @@ export class SwitchCmd implements Command {
   options = [
     [
       'n',
-      'as <as>',
+      'alias <string>',
       'relevant when the specified lane is a remote late. name a local lane differently than the remote lane',
     ],
     [
@@ -30,13 +30,13 @@ export class SwitchCmd implements Command {
   async report(
     [lane]: [string],
     {
-      as,
+      alias,
       merge,
       getAll = false,
       skipDependencyInstallation = false,
       json = false,
     }: {
-      as?: string;
+      alias?: string;
       merge?: MergeStrategy;
       getAll?: boolean;
       skipDependencyInstallation?: boolean;
@@ -45,7 +45,7 @@ export class SwitchCmd implements Command {
     }
   ) {
     const { components, failedComponents } = await this.lanes.switchLanes(lane, {
-      alias: as,
+      alias,
       merge,
       getAll,
       skipDependencyInstallation,

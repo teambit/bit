@@ -171,17 +171,19 @@ export class LaneShowCmd implements Command {
 export class LaneCreateCmd implements Command {
   name = 'create <name>';
   description = `create and switch to a new lane`;
+  extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
+a lane created from another lane has all the components of the original lane.`;
   alias = '';
   options = [
     [
       '',
       'remote-scope <string>',
-      'remote scope where this lane will be exported to (can be changed later with "bit lane track")',
+      'remote scope where this lane will be exported to, default to the defaultScope (can be changed later with "bit lane change-scope")',
     ],
     [
       '',
-      'remote-name <string>',
-      'lane name on the remote, default to the local name (can be changed later with "bit lane track")',
+      'alias <string>',
+      'a local alias to refer to this lane, default to the <name> (can be added later with "bit lane alias")',
     ],
   ] as CommandOptions;
   loader = true;

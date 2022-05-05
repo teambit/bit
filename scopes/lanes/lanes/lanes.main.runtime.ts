@@ -63,7 +63,7 @@ export type MergeLaneOptions = {
 
 export type CreateLaneOptions = {
   remoteScope?: string; // default to the defaultScope in workspace.jsonc
-  remoteName?: string; // default to the local lane
+  alias?: string; // default to the remote name
 };
 
 export type SwitchLaneOptions = {
@@ -130,7 +130,7 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneId();
   }
 
-  async createLane(name: string, { remoteScope, remoteName }: CreateLaneOptions = {}): Promise<TrackLane> {
+  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
     }
@@ -138,8 +138,8 @@ export class LanesMain {
     await createLane(this.workspace.consumer, name, scope);
     this.scope.legacyScope.lanes.setCurrentLane(name);
     const trackLaneData = {
-      localLane: name,
-      remoteLane: remoteName || name,
+      localLane: alias || name,
+      remoteLane: name,
       remoteScope: scope,
     };
     this.scope.legacyScope.lanes.trackLane(trackLaneData);
