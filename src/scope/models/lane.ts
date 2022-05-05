@@ -29,7 +29,6 @@ export type LaneReadmeComponent = { id: BitId; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
   scope: string;
-  remoteLaneId?: LaneId; // @todo: remove this. toLaneId() gets the LaneId.
   components: LaneComponent[];
   log: Log;
   readmeComponent?: LaneReadmeComponent;

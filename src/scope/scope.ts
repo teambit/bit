@@ -333,12 +333,7 @@ export default class Scope {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    const lane = await this.lanes.loadLane(id);
-    const remoteTrackedData = this.lanes.getRemoteTrackedDataByLocalLane(id.name);
-    if (lane && remoteTrackedData?.remoteLane && remoteTrackedData.remoteScope) {
-      lane.remoteLaneId = LaneId.from(remoteTrackedData?.remoteLane, remoteTrackedData.remoteScope);
-    }
-    return lane;
+    return this.lanes.loadLane(id);
   }
 
   async loadLaneByHash(ref: Ref): Promise<Lane | null> {

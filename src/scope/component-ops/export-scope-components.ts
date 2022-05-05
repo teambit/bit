@@ -448,9 +448,6 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
         if (idsToChangeLocally.length) {
           // otherwise, we don't want to update scope-name of components in the lane object
           scope.objects.add(lane);
-          // this is needed so later on we can add the tracking data and update .bitmap
-          // @todo: support having a different name on the remote by a flag
-          lane.remoteLaneId = LaneId.from(lane.name, remoteNameStr);
         }
         await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
       }

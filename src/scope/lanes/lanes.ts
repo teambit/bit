@@ -4,7 +4,6 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId, BitIds } from '../../bit-id';
-import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Ref, Repository } from '../objects';
@@ -53,11 +52,19 @@ export default class Lanes {
     const laneName = this.scopeJson.lanes.current;
     // backward compatibility, in the past, the default lane was master
     if (laneName === 'master' || laneName === DEFAULT_LANE) {
-      return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
+      return this.getDefaultLaneId();
     }
-    const remoteScope = this.getRemoteScopeByLocalLane(laneName);
-    if (!remoteScope) throw new BitError(`unable to find the remote-scope for the current lane "${laneName}"`);
-    return LaneId.from(laneName, remoteScope);
+    const trackData = this.getRemoteTrackedDataByLocalLane(laneName);
+    if (!trackData) throw new BitError(`unable to find the tracking data for the current lane "${laneName}"`);
+    return LaneId.from(trackData.remoteLane, trackData.remoteScope);
+  }
+
+  getAliasByLaneId(laneId: LaneId): string | null {
+    return this.getLocalTrackedLaneByRemoteName(laneId.name, laneId.scope);
+  }
+
+  getDefaultLaneId() {
+    return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -180,7 +187,7 @@ export default class Lanes {
     if (name) {
       const laneId = await this.parseLaneIdFromString(name);
       const laneObject = await this.loadLane(laneId);
-      if (!laneObject) throw new GeneralError(`lane "${name}" was not found`);
+      if (!laneObject) throw new BitError(`lane "${name}" was not found`);
       return [await getLaneDataOfLane(laneObject)];
     }
 

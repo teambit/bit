@@ -271,7 +271,7 @@ export class LaneChangeScopeCmd implements Command {
 
 export class LaneRenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
-  description = `change the lane-name locally and on the remote (if exported)`;
+  description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
   alias = '';
   options = [] as CommandOptions;
   loader = true;

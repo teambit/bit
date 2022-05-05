@@ -45,7 +45,7 @@ export class SwitchCmd implements Command {
     }
   ) {
     const { components, failedComponents } = await this.lanes.switchLanes(lane, {
-      newLaneName: as,
+      alias: as,
       merge,
       getAll,
       skipDependencyInstallation,

@@ -68,7 +68,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
-  newLaneName?: string;
+  alias?: string;
   merge?: MergeStrategy;
   getAll?: boolean;
   skipDependencyInstallation?: boolean;
@@ -231,6 +231,9 @@ export class LanesMain {
     return { remoteScopeBefore };
   }
 
+  /**
+   * @todo: change also the refs, .bitmap and workspace-lanes accordingly
+   */
   async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
@@ -331,7 +334,7 @@ export class LanesMain {
    */
   async switchLanes(
     laneName: string,
-    { newLaneName, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+    { alias, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -348,7 +351,7 @@ export class LanesMain {
     const switchProps = {
       laneName,
       existingOnWorkspaceOnly: !getAll,
-      newLaneName,
+      alias,
     };
     const checkoutProps = {
       mergeStrategy,
