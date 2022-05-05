@@ -118,6 +118,20 @@ export default class RemoteLanes {
     );
   }
 
+  async renameRefByNewScopeName(laneName: string, oldScopeName: string, newScopeName: string) {
+    const remoteLaneId = LaneId.from(laneName, oldScopeName);
+    const remoteLane = await this.getRemoteLane(remoteLaneId);
+    this.remotes[newScopeName] = { ...this.remotes[newScopeName], [laneName]: remoteLane };
+    delete this.remotes[oldScopeName][laneName];
+  }
+
+  async renameRefByNewLaneName(oldLaneName: string, newLaneName: string, scopeName: string) {
+    const remoteLaneId = LaneId.from(oldLaneName, scopeName);
+    const remoteLane = await this.getRemoteLane(remoteLaneId);
+    this.remotes[scopeName] = { ...this.remotes[scopeName], [newLaneName]: remoteLane };
+    delete this.remotes[scopeName][oldLaneName];
+  }
+
   private async writeRemoteLanes(remoteName: string) {
     return Promise.all(
       Object.keys(this.remotes[remoteName]).map((laneName) => this.writeRemoteLaneFile(remoteName, laneName))

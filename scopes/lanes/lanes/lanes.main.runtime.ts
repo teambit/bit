@@ -20,6 +20,7 @@ import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
+import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -44,7 +45,7 @@ import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { mergeLanes } from './merge-lanes';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane } from './create-lane';
+import { createLane, throwForInvalidLaneName } from './create-lane';
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -133,6 +134,9 @@ export class LanesMain {
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
+    }
+    if (alias) {
+      throwForInvalidLaneName(alias);
     }
     const scope = remoteScope || this.workspace.defaultScope;
     await createLane(this.workspace.consumer, name, scope);
@@ -237,9 +241,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
     }
-    if (newName.includes(LANE_REMOTE_DELIMITER)) {
-      throw new BitError(`the new-name cannot include a delimiter "${LANE_REMOTE_DELIMITER}"`);
-    }
+    throwForInvalidLaneName(newName);
     const existingAliasWithNewName = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(newName);
     if (existingAliasWithNewName) {
       const remoteIdStr = `${existingAliasWithNewName.remoteLane}/${existingAliasWithNewName.remoteScope}`;
@@ -253,7 +255,17 @@ export class LanesMain {
     if (!lane) {
       throw new BitError(`unable to find a local lane "${currentName}"`);
     }
-    lane.name = newName;
+
+    // rename the workspace-lane file
+    const previousAlias = this.scope.legacyScope.lanes.getAliasByLaneId(laneId);
+    if (previousAlias) {
+      await WorkspaceLane.rename(this.scope.legacyScope.getPath(), previousAlias, newName);
+    }
+
+    // rename the ref file
+    await this.scope.legacyScope.objects.remoteLanes.renameRefByNewLaneName(laneNameWithoutScope, newName, lane.scope);
+
+    // change tracking data
     const afterTrackData = {
       localLane: newName,
       remoteLane: newName,
@@ -262,11 +274,15 @@ export class LanesMain {
     this.scope.legacyScope.lanes.trackLane(afterTrackData);
     this.scope.legacyScope.lanes.removeTrackLane(laneNameWithoutScope);
 
+    // change the lane object
+    lane.name = newName;
     await this.scope.legacyScope.lanes.saveLane(lane);
 
+    // change current-lane if needed
     const currentLaneName = this.getCurrentLane();
     if (currentLaneName === laneNameWithoutScope) this.scope.legacyScope.lanes.setCurrentLane(newName);
 
+    // export the lane with only the name-change
     const clonedLaneToExport = lane.clone();
     clonedLaneToExport.components = []; // otherwise, it'll export the changes done on the components.
     let exported = false;
@@ -345,6 +361,9 @@ export class LanesMain {
         throw new BitError(`merge must be one of the following: ${mergeOptions.join(', ')}`);
       }
       mergeStrategy = merge;
+    }
+    if (alias) {
+      throwForInvalidLaneName(alias);
     }
 
     const switchProps = {
