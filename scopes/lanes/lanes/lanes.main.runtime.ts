@@ -436,7 +436,7 @@ export class LanesMain {
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
-    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+    const remoteLaneIdStr = lane.toLaneId().toString();
 
     if (existingLaneConfig.readme) {
       delete existingLaneConfig.readme[remoteLaneIdStr];
@@ -475,7 +475,7 @@ export class LanesMain {
     const existingLaneConfig =
       (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
 
-    const remoteLaneIdStr = (lane.remoteLaneId || LaneId.from(laneId.name, lane.scope)).toString();
+    const remoteLaneIdStr = lane.toLaneId().toString();
 
     if (existingLaneConfig.readme) {
       await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
