@@ -735,7 +735,7 @@ describe('bit lane command', function () {
     });
     it('should output the changes', () => {
       expect(removeChalkCharacters(output)).to.have.string(
-        `the remote-scope has been changed from ${helper.scopes.remote} to my-remote`
+        `the remote-scope of dev has been changed from ${helper.scopes.remote} to my-remote`
       );
     });
     it('bit lane show should show the changed values', () => {
