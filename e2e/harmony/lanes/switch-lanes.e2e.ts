@@ -92,7 +92,7 @@ describe('bit lane command', function () {
       describe('switching with a different lane name', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
-          helper.command.switchRemoteLane('dev', '--as my-new-lane');
+          helper.command.switchRemoteLane('dev', '--alias my-new-lane');
         });
         it('should save the remote-lane data into a local with the specified name', () => {
           const lanes = helper.command.showOneLaneParsed('my-new-lane');

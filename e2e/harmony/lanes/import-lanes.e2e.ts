@@ -97,7 +97,7 @@ describe('import lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.switchRemoteLane('dev', '--as my-new-lane');
+        helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lane = helper.command.showOneLaneParsed('my-new-lane');
