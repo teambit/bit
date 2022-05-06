@@ -235,7 +235,7 @@ export class LanesMain {
   }
 
   /**
-   * @todo: change also the refs, .bitmap and workspace-lanes accordingly
+   * change a lane-name and if possible, export the lane to the remote
    */
   async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
     if (!this.workspace) {
