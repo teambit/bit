@@ -444,7 +444,7 @@ export class MergingMain {
           const remoteScopeName = laneId.isDefault() ? bitId.scope : laneId.scope;
           const remoteLaneId = LaneId.from(laneId.name, remoteScopeName as string);
           const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
-          const laneIdStr = laneId.toString();
+          const laneIdStr = remoteLaneId.toString();
           if (!remoteHead)
             throw new BitError(`unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${laneIdStr}"`);
           return this.getComponentMergeStatus(bitId.changeVersion(remoteHead.toString()), localLaneObject, laneIdStr);
