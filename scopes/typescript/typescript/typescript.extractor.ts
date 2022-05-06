@@ -45,7 +45,6 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const nonModules = moduleSchema.exports.filter((e) => !(e instanceof Module));
     const flattened = [...nonModules, ...allModulesExports.flat()];
     const apiScheme = new Module(flattened);
-    console.log('\n[*] apiScheme', flattened);
 
     // return APISchema.from({ });
     return new APISchema(apiScheme);

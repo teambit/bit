@@ -6,3 +6,6 @@ export { VariableSchema } from './variable';
 export { ClassSchema } from './class';
 export { ConstructorSchema } from './constructor';
 export { TypeSchema } from './type';
+export { TypeIntersectionSchema } from './type-intersection';
+export { TypeUnionSchema } from './type-union';
+export { TypeLiteralSchema } from './type-literal';

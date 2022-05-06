@@ -8,7 +8,7 @@ import { ExportIdentifier } from '../export-identifier';
 
 /**
  * variable statement is a collection of variable declarations.
- * e.g. `const a = 1, b = () => {}, c = {};`
+ * e.g. `export const a = 1, b = () => {}, c = {};`
  */
 export class VariableStatementTransformer implements SchemaTransformer {
   predicate(node: Node) {

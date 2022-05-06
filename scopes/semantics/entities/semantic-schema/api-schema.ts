@@ -1,4 +1,5 @@
-import { Export, Module } from './schemas';
+import chalk from 'chalk';
+import { ClassSchema, Export, FunctionSchema, Module, TypeSchema, VariableSchema } from './schemas';
 import { SchemaNode } from './schema-node';
 
 export type PlainSemanticSchema = {
@@ -21,6 +22,23 @@ export class APISchema implements SchemaNode {
       exports: this.module.exports.map((exp) => exp.toObject()),
       filename: '',
     };
+  }
+
+  toStringPerType() {
+    const getSection = (ClassObj, sectionName: string) => {
+      const objects = this.module.exports.filter((exp) => exp instanceof ClassObj);
+      if (!objects.length) {
+        return '';
+      }
+      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
+    };
+
+    return (
+      getSection(ClassSchema, 'Classes') +
+      getSection(FunctionSchema, 'Functions') +
+      getSection(VariableSchema, 'Variables') +
+      getSection(TypeSchema, 'Types')
+    );
   }
 
   listSignatures() {

@@ -12,6 +12,12 @@ export class SchemaCommand implements Command {
   constructor(private schema: SchemaMain, private component: ComponentMain) {}
 
   async report([idStr]) {
+    const schema = await this.json([idStr]);
+
+    return schema.toStringPerType();
+  }
+
+  async json([idStr]) {
     const host = this.component.getHost();
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
@@ -19,6 +25,6 @@ export class SchemaCommand implements Command {
 
     const schema = await this.schema.getSchema(component);
 
-    return schema.toString();
+    return schema;
   }
 }

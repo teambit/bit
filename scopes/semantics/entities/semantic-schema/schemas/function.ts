@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
 import { TypeRefSchema } from './type-ref';
 
@@ -32,5 +33,10 @@ export class FunctionSchema implements SchemaNode {
       args: this.args,
       returnType: this.returnType.toObject(),
     };
+  }
+
+  toString() {
+    const argsStr = this.args.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
+    return `${chalk.bold(this.name)}(${argsStr}): ${this.returnType.toString()}`;
   }
 }

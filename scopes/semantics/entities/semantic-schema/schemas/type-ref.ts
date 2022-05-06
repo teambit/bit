@@ -32,8 +32,12 @@ export class TypeRefSchema implements SchemaNode {
     return {
       name: this.name,
       componentId: this.componentId,
-      packageName: this.packageName
+      packageName: this.packageName,
     };
+  }
+
+  toString() {
+    return this.name;
   }
 
   static from(plainSchema: PlainTypeRefSchema) {

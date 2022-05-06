@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
 
 export class ClassSchema implements SchemaNode {
@@ -8,5 +9,10 @@ export class ClassSchema implements SchemaNode {
       name: this.className,
       members: this.members.map((member) => member.toObject()),
     };
+  }
+
+  toString() {
+    const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
+    return `${chalk.bold.underline(this.className)}\n${membersStr}`;
   }
 }

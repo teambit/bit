@@ -203,9 +203,7 @@ export class SchemaExtractorContext {
   async resolveType(node: Node | LiteralTypeNode, typeStr: string, type = true): Promise<TypeRefSchema> {
     if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
     if (node.kind === ts.SyntaxKind.LiteralType) {
-      if ((node as LiteralTypeNode).literal.kind === ts.SyntaxKind.StringLiteral) {
-        return new TypeRefSchema(typeStr);
-      }
+      return new TypeRefSchema((node as LiteralTypeNode).literal.getText());
     }
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
 

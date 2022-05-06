@@ -29,7 +29,13 @@ import {
   VariableDeclaration,
   SourceFileTransformer,
   ClassDecelerationTransformer,
+  TypeIntersectionTransformer,
+  TypeReferenceTransformer,
   Constructor,
+  TypeLiteralTransformer,
+  PropertySignature,
+  TypeUnionTransformer,
+  LiteralTypeTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -240,6 +246,12 @@ export class TypescriptMain {
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
       new ClassDecelerationTransformer(),
+      new TypeIntersectionTransformer(),
+      new TypeReferenceTransformer(),
+      new TypeLiteralTransformer(),
+      new PropertySignature(),
+      new TypeUnionTransformer(),
+      new LiteralTypeTransformer(),
     ]);
 
     if (workspace) {

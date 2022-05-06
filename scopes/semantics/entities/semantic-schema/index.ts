@@ -10,5 +10,8 @@ export {
   ClassSchema,
   ConstructorSchema,
   TypeSchema,
+  TypeIntersectionSchema,
+  TypeUnionSchema,
+  TypeLiteralSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

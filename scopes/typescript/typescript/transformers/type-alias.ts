@@ -21,6 +21,7 @@ export class TypeAliasTransformer implements SchemaTransformer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const info = await context.getQuickInfo(typeAlias.name!);
     const displaySig = info?.body?.displayString;
-    return new TypeSchema(this.getName(typeAlias), displaySig as string);
+    const type = await context.computeSchema(typeAlias.type);
+    return new TypeSchema(this.getName(typeAlias), type, displaySig as string);
   }
 }
