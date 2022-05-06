@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
 import { TypeRefSchema } from './type-ref';
 
-export type Argument = {
+export type Parameter = {
   name: string;
   type: TypeRefSchema;
   defaultValue?: any;
@@ -13,7 +13,7 @@ export class FunctionSchema implements SchemaNode {
   constructor(
     readonly name: string,
     // readonly doc: any,
-    readonly args: Argument[],
+    readonly args: Parameter[],
 
     readonly returnType: TypeRefSchema,
     private signature: string

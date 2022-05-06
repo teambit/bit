@@ -37,6 +37,12 @@ export class TypeRefSchema implements SchemaNode {
   }
 
   toString() {
+    if (this.componentId) {
+      return `${this.componentId}/${this.name}`;
+    }
+    if (this.packageName) {
+      return `${this.packageName}/${this.name}`;
+    }
     return this.name;
   }
 

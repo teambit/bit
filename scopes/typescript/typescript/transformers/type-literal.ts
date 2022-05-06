@@ -7,14 +7,14 @@ import { ExportIdentifier } from '../export-identifier';
 
 /**
  * not to be confused with "LiteralType", which is string/boolean/null.
- * this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`
+ * this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
  */
 export class TypeLiteralTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.TypeLiteral;
   }
 
-  async getIdentifiers(node: TypeLiteralNode): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<ExportIdentifier[]> {
     return [];
   }
 

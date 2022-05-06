@@ -1,9 +1,13 @@
+import { Parameter, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { ParameterDeclaration, NodeArray } from 'typescript';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
 
-export async function getParams(parameterNodes: NodeArray<ParameterDeclaration>, context: SchemaExtractorContext) {
+export async function getParams(
+  parameterNodes: NodeArray<ParameterDeclaration>,
+  context: SchemaExtractorContext
+): Promise<Parameter[]> {
   return pMapSeries(parameterNodes, async (param) => {
     return {
       name: param.name.getText(),
@@ -13,7 +17,7 @@ export async function getParams(parameterNodes: NodeArray<ParameterDeclaration>,
   });
 }
 
-async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext) {
+async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<TypeRefSchema> {
   if (param.type) {
     const type = param.type;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -22,5 +26,5 @@ async function getParamType(param: ParameterDeclaration, context: SchemaExtracto
   const info = await context.getQuickInfo(param.name);
   const displaySig = info?.body?.displayString;
   const parsed = parseTypeFromQuickInfo(displaySig);
-  return parsed || 'any';
+  return new TypeRefSchema(parsed || 'any');
 }

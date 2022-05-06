@@ -6,7 +6,8 @@ export class TransformerNotFound extends Error {
     super(
       `typescript: could not find schema transformer for node of kind ${node.kind} (${
         ts.SyntaxKind[node.kind]
-      }) in component ${component.id.toString()}`
+      }) in component ${component.id.toString()}.
+node text: ${node.getText()}`
     );
   }
 }

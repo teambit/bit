@@ -14,3 +14,6 @@ export { TypeLiteralTransformer } from './type-literal';
 export { PropertySignature } from './property-signature';
 export { TypeUnionTransformer } from './type-union';
 export { LiteralTypeTransformer } from './literal-type';
+export { IndexSignature } from './index-signature';
+export { InterfaceDeclarationTransformer } from './interface-declaration';
+export { MethodSignatureTransformer } from './method-signature';

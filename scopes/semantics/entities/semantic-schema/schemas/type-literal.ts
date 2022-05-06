@@ -11,6 +11,6 @@ export class TypeLiteralSchema implements SchemaNode {
     };
   }
   toString() {
-    return `{${this.members.map((type) => type.toString()).join('; ')}}`;
+    return `{ ${this.members.map((type) => type.toString()).join('; ')} }`;
   }
 }

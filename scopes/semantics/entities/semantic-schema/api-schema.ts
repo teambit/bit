@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { ClassSchema, Export, FunctionSchema, Module, TypeSchema, VariableSchema } from './schemas';
+import { ClassSchema, Export, FunctionSchema, InterfaceSchema, Module, TypeSchema, VariableSchema } from './schemas';
 import { SchemaNode } from './schema-node';
 
 export type PlainSemanticSchema = {
@@ -35,6 +35,7 @@ export class APISchema implements SchemaNode {
 
     return (
       getSection(ClassSchema, 'Classes') +
+      getSection(InterfaceSchema, 'Interfaces') +
       getSection(FunctionSchema, 'Functions') +
       getSection(VariableSchema, 'Variables') +
       getSection(TypeSchema, 'Types')

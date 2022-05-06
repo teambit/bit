@@ -36,6 +36,9 @@ import {
   PropertySignature,
   TypeUnionTransformer,
   LiteralTypeTransformer,
+  IndexSignature,
+  InterfaceDeclarationTransformer,
+  MethodSignatureTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -252,6 +255,9 @@ export class TypescriptMain {
       new PropertySignature(),
       new TypeUnionTransformer(),
       new LiteralTypeTransformer(),
+      new IndexSignature(),
+      new InterfaceDeclarationTransformer(),
+      new MethodSignatureTransformer(),
     ]);
 
     if (workspace) {

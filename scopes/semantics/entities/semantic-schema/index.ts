@@ -5,6 +5,7 @@ export {
   Module,
   StaticProperties,
   FunctionSchema,
+  Parameter,
   TypeRefSchema,
   VariableSchema,
   ClassSchema,
@@ -13,5 +14,7 @@ export {
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
+  IndexSignatureSchema,
+  InterfaceSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';
