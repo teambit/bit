@@ -147,6 +147,15 @@ the reason is that the refactor changes the components using ${sourceId.toString
     const targetName = targetId || sourceId.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     const component = await this.workspace.scope.getRemoteComponent(sourceId);
+    await this.refactoring.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: sourceId.toStringWithoutVersion(),
+          newStr: targetCompId.toStringWithoutVersion(),
+        },
+      ]
+    );
     const config = await this.getConfig(component);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
 
