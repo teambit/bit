@@ -57,6 +57,17 @@ export default class WorkspaceLane {
     return new WorkspaceLane(lanePath, laneName, ids);
   }
 
+  static async rename(scopePath: string, oldName: string, newName: string) {
+    const oldPath = path.join(scopePath, WORKSPACE_LANES_DIR, oldName);
+    const newPath = path.join(scopePath, WORKSPACE_LANES_DIR, newName);
+    try {
+      await fs.move(oldPath, newPath);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // it's possible that the old-lane doesn't exist
+      throw err;
+    }
+  }
+
   async write() {
     const obj = this.ids.map((id) => ({ scope: id.scope, name: id.name, version: id.version }));
     return fs.outputFile(this.lanePath, JSON.stringify(obj, null, 2));

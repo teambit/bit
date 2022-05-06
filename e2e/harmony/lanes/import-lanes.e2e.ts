@@ -80,7 +80,7 @@ describe('import lanes', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanes();
+        const lanes = helper.command.listLanes();
         expect(lanes).to.have.string('current lane - dev');
       });
       it('.bitmap should save the component as belong to the lane', () => {
@@ -97,14 +97,14 @@ describe('import lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.switchRemoteLane('dev', '--as my-new-lane');
+        helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lane = helper.command.showOneLaneParsed('my-new-lane');
         expect(lane.components).to.have.lengthOf(3);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         expect(lanes.currentLane).to.equal('my-new-lane');
       });
       it('should write the components to the filesystem', () => {
