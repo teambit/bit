@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { RemoteLaneId } from '@teambit/lane-id';
 import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import { glob } from '../../utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';

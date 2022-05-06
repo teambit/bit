@@ -3,6 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+import { DEFAULT_LANE, LocalLaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -14,14 +15,12 @@ import {
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
   COMPONENT_ORIGINS,
-  DEFAULT_LANE,
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
   TESTER_ENV_TYPE,
 } from '../constants';
 import GeneralError from '../error/general-error';
-import { LocalLaneId } from '../lane-id/lane-id';
 import CompilerExtension from '../legacy-extensions/compiler-extension';
 import EnvExtension from '../legacy-extensions/env-extension';
 import { EnvType } from '../legacy-extensions/env-extension-types';
@@ -316,6 +315,9 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
+  /**
+   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
+   */
   async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const getModelComponent = async (): Promise<ModelComponent> => {
@@ -330,16 +332,27 @@ export default class Consumer {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
 
-    const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
-      modelComponent,
-      id
-    )) as VersionDependencies;
-    const manipulateDirData = await getManipulateDirWhenImportingComponents(
-      this.bitMap,
-      [versionDependencies],
-      this.scope.objects
-    );
-    return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
+    if (this.isLegacy) {
+      const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
+        modelComponent,
+        id
+      )) as VersionDependencies;
+      const manipulateDirData = await getManipulateDirWhenImportingComponents(
+        this.bitMap,
+        [versionDependencies],
+        this.scope.objects
+      );
+      return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
+    }
+
+    const compVersion = modelComponent.toComponentVersion(id.version);
+    const consumerComp = await compVersion.toConsumer(this.scope.objects, null);
+    return new ComponentWithDependencies({
+      component: consumerComp,
+      dependencies: [],
+      devDependencies: [],
+      extensionDependencies: [],
+    });
   }
 
   async loadComponent(id: BitId): Promise<Component> {
@@ -541,6 +554,28 @@ export default class Consumer {
         if (overrides[field]) overrides[field] = sortObject(overrides[field]);
       });
     }
+  }
+
+  /**
+   * Check whether the component files from the model and from the file-system of the same component is the same.
+   */
+  async isComponentSourceCodeModified(
+    componentFromModel: Version,
+    componentFromFileSystem: Component
+  ): Promise<boolean> {
+    if (componentFromFileSystem._isModified === false) {
+      // we only check for "false". if it's "true", it can be dependency changes not necessarily component files changes
+      return false;
+    }
+    componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
+    const { version } = await this.scope.sources.consumerComponentToVersion({
+      consumer: this,
+      consumerComponent: componentFromFileSystem,
+    });
+
+    version.files = R.sortBy(R.prop('relativePath'), version.files);
+    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
   async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {

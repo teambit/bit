@@ -23,7 +23,7 @@ import path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import LaneId, { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneId, RemoteLaneId, LocalLaneId } from '@teambit/lane-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';

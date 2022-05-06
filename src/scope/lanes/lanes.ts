@@ -1,16 +1,16 @@
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
+import { LaneId, LocalLaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId, BitIds } from '../../bit-id';
-import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
 import GeneralError from '../../error/general-error';
-import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Ref, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/components-index';
 import { ScopeJson, TrackLane } from '../scope-json';
+import { Log } from '../models/lane';
 
 export default class Lanes {
   objects: Repository;
@@ -125,6 +125,7 @@ export default class Lanes {
         name: laneName,
         remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
+        log: laneObject.log,
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
         readmeComponent: laneObject.readmeComponent && {
           id: laneObject.readmeComponent.id,
@@ -151,4 +152,5 @@ export type LaneData = {
   remote: string | null;
   isMerged: boolean | null;
   readmeComponent?: { id: BitId; head?: string };
+  log?: Log;
 };

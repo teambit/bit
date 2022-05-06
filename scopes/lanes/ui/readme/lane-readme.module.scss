@@ -1,0 +1,26 @@
+.readmeContainer {
+  padding-bottom: 50px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.laneId {
+  padding: 50px 0px 0px 5%;
+}
+.emptyLane {
+  height: auto;
+  padding-top: 8px;
+  padding-bottom: 16px;
+}
+.readmeComponentCard {
+  max-width: 300px;
+  max-height: 320px;
+}
+.laneReadmePreviewContainer {
+  overflow: auto;
+  padding-left: 2%;
+}
+
+.readmeComponentCardContainer {
+  padding: 24px 0px 32px 3%;
+}

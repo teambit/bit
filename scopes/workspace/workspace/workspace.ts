@@ -52,7 +52,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
-import { LocalLaneId, RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LocalLaneId, RemoteLaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -1393,7 +1393,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return graphFromFsBuilder.buildGraph(ids);
   }
 
-  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    excludeCore = false
+  ): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -1440,7 +1444,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
-    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    const ids = idsToResolve.map((idStr) => ComponentID.fromString(idStr).toStringWithoutVersion());
+    const afterExclusion = excludeCore ? allDefs.filter((def) => {
+      const isCore = coreAspectDefs.find(coreId => def.getId === coreId.getId);
+      const id = ComponentID.fromString(def.getId || '');
+      const isTarget = ids.includes(id.toStringWithoutVersion());
+      if (isTarget) return true;
+      return (isCore && isTarget);
+    }) : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
