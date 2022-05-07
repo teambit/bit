@@ -22,8 +22,9 @@ import mapSeries from 'p-map-series';
 import path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
+import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { LaneId, RemoteLaneId, LocalLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
@@ -38,7 +39,6 @@ import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/cons
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
-import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 
@@ -108,25 +108,16 @@ export class MergingMain {
     snapMessage: string,
     build: boolean
   ): Promise<ApplyVersionResults> {
-    const localLaneId = consumer.getCurrentLaneId();
-    const localLaneObject = await consumer.getCurrentLaneObject();
-    const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(localLaneId.name);
-    if (!localLaneId.isDefault() && !remoteTrackedLane) {
-      throw new Error(`unable to find a remote tracked to the local lane "${localLaneId.name}"`);
-    }
-    const allComponentsStatus = await this.getAllComponentsStatus(
-      bitIds,
-      localLaneId,
-      localLaneObject,
-      remoteTrackedLane
-    );
+    const currentLaneId = consumer.getCurrentLaneId();
+    const currentLaneObject = await consumer.getCurrentLaneObject();
+    const allComponentsStatus = await this.getAllComponentsStatus(bitIds, currentLaneId, currentLaneObject);
 
     return this.mergeSnaps({
       mergeStrategy,
       allComponentsStatus,
-      remoteName: remoteTrackedLane ? remoteTrackedLane.remoteScope : null,
-      laneId: localLaneId,
-      localLane: localLaneObject,
+      remoteName: currentLaneId.isDefault() ? null : currentLaneId.scope,
+      laneId: currentLaneId,
+      localLane: currentLaneObject,
       noSnap,
       snapMessage,
       build,
@@ -443,28 +434,20 @@ export class MergingMain {
 
   private async getAllComponentsStatus(
     bitIds: BitId[],
-    localLaneId: LocalLaneId,
-    localLaneObject: Lane | null,
-    remoteTrackedLane?: TrackLane
+    laneId: LaneId,
+    localLaneObject: Lane | null
   ): Promise<ComponentStatus[]> {
     const tmp = new Tmp(this.consumer.scope);
     try {
       const componentsStatus = await Promise.all(
         bitIds.map(async (bitId) => {
-          const remoteLaneName = remoteTrackedLane ? remoteTrackedLane.remoteLane : localLaneId.name;
-          const remoteScopeName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
-          const remoteLaneId = RemoteLaneId.from(remoteLaneName, remoteScopeName as string);
+          const remoteScopeName = laneId.isDefault() ? bitId.scope : laneId.scope;
+          const remoteLaneId = LaneId.from(laneId.name, remoteScopeName as string);
           const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
-          const remoteLaneIdStr = remoteLaneId.toString();
+          const laneIdStr = remoteLaneId.toString();
           if (!remoteHead)
-            throw new GeneralError(
-              `unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${remoteLaneIdStr}"`
-            );
-          return this.getComponentMergeStatus(
-            bitId.changeVersion(remoteHead.toString()),
-            localLaneObject,
-            remoteLaneIdStr
-          );
+            throw new BitError(`unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${laneIdStr}"`);
+          return this.getComponentMergeStatus(bitId.changeVersion(remoteHead.toString()), localLaneObject, laneIdStr);
         })
       );
       await tmp.clear();

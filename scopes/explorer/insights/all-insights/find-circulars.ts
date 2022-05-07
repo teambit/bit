@@ -4,11 +4,11 @@ import { GraphBuilder } from '@teambit/graph';
 import { uniq } from 'lodash';
 import { Insight, InsightResult, RawResult } from '../insight';
 
-export const INSIGHT_NAME = 'cyclic dependencies';
+export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular dependencies';
 
 export default class FindCycles implements Insight {
-  name = INSIGHT_NAME;
-  description = 'Get all cyclic dependencies in component graph';
+  name = INSIGHT_CIRCULAR_DEPS_NAME;
+  description = 'Get all circular dependencies in component graph';
   graphBuilder: GraphBuilder;
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;

@@ -1,20 +1,24 @@
 import { v4 } from 'uuid';
 import { isHash } from '@teambit/component-version';
-import { LaneId, RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
-import { PREVIOUS_DEFAULT_LANE } from '../../constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
+import * as globalConfig from '../../api/consumer/lib/global-config';
 import GeneralError from '../../error/general-error';
+
+export type Log = { date: string; username?: string; email?: string };
 
 export type LaneProps = {
   name: string;
-  scope?: string;
+  scope: string;
+  log: Log;
   components?: LaneComponent[];
   hash: string;
   readmeComponent?: LaneReadmeComponent;
@@ -24,10 +28,9 @@ export type LaneComponent = { id: BitId; head: Ref };
 export type LaneReadmeComponent = { id: BitId; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
-  // @todo: delete this. seems like it being written to the filesystem and it should not
-  scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
-  remoteLaneId?: RemoteLaneId;
+  scope: string;
   components: LaneComponent[];
+  log: Log;
   readmeComponent?: LaneReadmeComponent;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
 
@@ -37,11 +40,12 @@ export default class Lane extends BitObject {
     this.name = props.name;
     this.scope = props.scope;
     this.components = props.components || [];
+    this.log = props.log || {};
     this._hash = props.hash;
     this.readmeComponent = props.readmeComponent;
   }
   id(): string {
-    return this.name;
+    return this.scope + LANE_REMOTE_DELIMITER + this.name;
   }
   hash(): Ref {
     if (!this._hash) {
@@ -66,6 +70,7 @@ export default class Lane extends BitObject {
           id: { scope: component.id.scope, name: component.id.name },
           head: component.head.toString(),
         })),
+        log: this.log,
         readmeComponent: this.readmeComponent && {
           id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
           head: this.readmeComponent.head?.toString() ?? null,
@@ -77,14 +82,20 @@ export default class Lane extends BitObject {
   static from(props: LaneProps): Lane {
     return new Lane(props);
   }
-  static create(name: string) {
-    return new Lane({ name, hash: sha1(v4()) });
+  static create(name: string, scope: string) {
+    const log = {
+      date: Date.now().toString(),
+      username: globalConfig.getSync(CFG_USER_NAME_KEY),
+      email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
+    };
+    return new Lane({ name, scope, hash: sha1(v4()), log });
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
     return Lane.from({
       name: laneObject.name,
       scope: laneObject.scope,
+      log: laneObject.log,
       components: laneObject.components.map((component) => ({
         id: new BitId({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head),
@@ -109,6 +120,7 @@ export default class Lane extends BitObject {
       existsComponent.id = component.id;
       existsComponent.head = component.head;
     } else {
+      logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);
     }
   }
@@ -173,7 +185,7 @@ export default class Lane extends BitObject {
     return this.components.map((c) => c.id.changeVersion(c.head.toString()));
   }
   toLaneId() {
-    return new LaneId({ name: this.name });
+    return new LaneId({ scope: this.scope, name: this.name });
   }
   collectObjectsById(repo: Repository): Promise<Array<{ id: BitId; objects: BitObject[] }>> {
     return Promise.all(
@@ -205,5 +217,12 @@ export default class Lane extends BitObject {
     if (this.name === PREVIOUS_DEFAULT_LANE) {
       throw new GeneralError(`${message}, this name is reserved as the old default lane`);
     }
+  }
+  clone() {
+    return new Lane({
+      ...this,
+      hash: this._hash,
+      components: [...this.components],
+    });
   }
 }

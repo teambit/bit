@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { DEFAULT_LANE, LocalLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -173,8 +173,16 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
-  getCurrentLaneId(): LocalLaneId {
-    return LocalLaneId.from(this.scope.lanes.getCurrentLaneName() || DEFAULT_LANE);
+  getCurrentLaneId(): LaneId {
+    return this.scope.lanes.getCurrentLaneId();
+  }
+
+  async getParsedLaneId(name: string): Promise<LaneId> {
+    return this.scope.lanes.parseLaneIdFromString(name);
+  }
+
+  isOnLane(): boolean {
+    return !this.scope.lanes.isOnMain();
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -554,6 +562,28 @@ export default class Consumer {
         if (overrides[field]) overrides[field] = sortObject(overrides[field]);
       });
     }
+  }
+
+  /**
+   * Check whether the component files from the model and from the file-system of the same component is the same.
+   */
+  async isComponentSourceCodeModified(
+    componentFromModel: Version,
+    componentFromFileSystem: Component
+  ): Promise<boolean> {
+    if (componentFromFileSystem._isModified === false) {
+      // we only check for "false". if it's "true", it can be dependency changes not necessarily component files changes
+      return false;
+    }
+    componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
+    const { version } = await this.scope.sources.consumerComponentToVersion({
+      consumer: this,
+      consumerComponent: componentFromFileSystem,
+    });
+
+    version.files = R.sortBy(R.prop('relativePath'), version.files);
+    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
   async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
