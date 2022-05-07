@@ -47,6 +47,8 @@ import { mergeLanes } from './merge-lanes';
 import { LaneSwitcher } from './switch-lanes';
 import { createLane, throwForInvalidLaneName } from './create-lane';
 
+export { Lane };
+
 export type LaneResults = {
   lanes: LaneData[];
   currentLane?: string | null;
