@@ -48,9 +48,6 @@ export class ExportDeclaration implements SchemaTransformer {
       );
 
       return new Module(compact(schemas));
-      // return exports.map((identifier) => {
-      //   // const type = context.resolveType(identifier);
-      // });
     }
     // e.g. `export * as Composition from './button';
     if (exportClause?.kind === SyntaxKind.NamespaceExport) {

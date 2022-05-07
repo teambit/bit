@@ -34,6 +34,7 @@ export class APISchema implements SchemaNode {
     };
 
     return (
+      getSection(Module, 'Namespaces') +
       getSection(ClassSchema, 'Classes') +
       getSection(InterfaceSchema, 'Interfaces') +
       getSection(FunctionSchema, 'Functions') +
