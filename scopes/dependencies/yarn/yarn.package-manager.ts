@@ -156,7 +156,6 @@ export class YarnPackageManager implements PackageManager {
       }
     }
 
-
     if (!manifests[rootDir]) {
       workspaces.push(rootWs);
     }
@@ -400,6 +399,8 @@ export class YarnPackageManager implements PackageManager {
       enableStrictSsl: proxyConfig.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
+      // We need to disable self-references as say create circular symlinks.
+      nmSelfReferences: false,
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
