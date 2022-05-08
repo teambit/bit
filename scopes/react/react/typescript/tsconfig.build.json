@@ -18,7 +18,8 @@
     "resolveJsonModule": true,
     "paths": {
       "react": [
-        "./node_modules/@types/react"
+        "./node_modules/@types/react",
+        "../node_modules/@types/react"
       ]
     }
   },
