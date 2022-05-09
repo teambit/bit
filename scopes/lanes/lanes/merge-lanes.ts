@@ -97,9 +97,7 @@ export async function mergeLanes({
       track: false,
       deleteFiles: true,
     });
-  } else if (!otherLane) {
-    deleteResults = { readmeResult: `missing lane ${laneName}` };
-  } else if (!otherLane.readmeComponent) {
+  } else if (otherLane && !otherLane.readmeComponent) {
     deleteResults = { readmeResult: `lane ${otherLane.name} doesn't have a readme component` };
   }
 
