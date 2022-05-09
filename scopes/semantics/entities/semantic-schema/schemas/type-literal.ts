@@ -5,8 +5,9 @@ import { SchemaNode } from '../schema-node';
  */
 export class TypeLiteralSchema implements SchemaNode {
   constructor(private members: SchemaNode[]) {}
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       types: this.members.map((type) => type.toObject()),
     };
   }

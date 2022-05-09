@@ -8,8 +8,9 @@ export class VariableSchema implements SchemaNode {
     return this.signature;
   }
 
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       name: this.name,
       signature: this.signature,
       type: this.type.toObject(),

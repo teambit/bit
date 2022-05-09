@@ -2,8 +2,9 @@ import { SchemaNode } from '../schema-node';
 
 export class TypeUnionSchema implements SchemaNode {
   constructor(private types: SchemaNode[]) {}
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       types: this.types.map((type) => type.toObject()),
     };
   }

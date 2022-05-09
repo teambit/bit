@@ -3,8 +3,9 @@ import { SchemaNode } from '../schema-node';
 
 export class TypeSchema implements SchemaNode {
   constructor(private name: string, private type: SchemaNode, private signature: string) {}
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       name: this.name,
       type: this.type.toObject(),
       signature: this.signature,

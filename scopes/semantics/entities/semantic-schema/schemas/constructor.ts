@@ -10,8 +10,9 @@ export class ConstructorSchema implements SchemaNode {
     return `${chalk.bold('constructor')}(${argsStr})`;
   }
 
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       args: this.args,
     };
   }

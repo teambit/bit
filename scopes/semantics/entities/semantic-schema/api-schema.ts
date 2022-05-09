@@ -19,7 +19,8 @@ export class APISchema implements SchemaNode {
 
   toObject() {
     return {
-      exports: this.module.exports.map((exp) => exp.toObject()),
+      constructorName: this.constructor.name,
+      module: this.module.toObject(),
       filename: '',
     };
   }

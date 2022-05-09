@@ -10,8 +10,12 @@ export class Module implements SchemaNode {
     return this.exports.filter((e) => e instanceof Export) as Export[];
   }
 
-  toObject(): Record<string, any> {
-    return this.exports.map((exp) => exp.toObject());
+  toObject() {
+    return {
+      constructorName: this.constructor.name,
+      namespace: this.namespace,
+      exports: this.exports.map((exp) => exp.toObject()),
+    };
   }
 
   flatExportsRecursively() {

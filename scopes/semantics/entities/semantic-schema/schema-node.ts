@@ -6,5 +6,5 @@ export interface SchemaNode {
 
   toString(): string;
 
-  toObject(): Record<string, any>;
+  toObject(): Record<string, any> & { constructorName: string };
 }

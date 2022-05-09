@@ -8,8 +8,9 @@ import { TypeRefSchema } from './type-ref';
  */
 export class IndexSignatureSchema implements SchemaNode {
   constructor(private parameters: Parameter[], private type: TypeRefSchema) {}
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       parameters: this.parameters,
       type: this.type.toObject(),
     };

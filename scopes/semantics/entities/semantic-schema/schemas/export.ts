@@ -27,6 +27,7 @@ export class Export implements SchemaNode {
 
   toObject() {
     return {
+      constructorName: this.constructor.name,
       identifier: this.identifier,
     };
   }

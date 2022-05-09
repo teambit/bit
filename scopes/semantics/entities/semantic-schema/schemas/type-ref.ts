@@ -28,8 +28,9 @@ export class TypeRefSchema implements SchemaNode {
     readonly node?: SchemaNode
   ) {}
 
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       name: this.name,
       componentId: this.componentId,
       packageName: this.packageName,

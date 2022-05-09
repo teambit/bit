@@ -3,8 +3,9 @@ import { SchemaNode } from '../schema-node';
 
 export class InterfaceSchema implements SchemaNode {
   constructor(private name: string, private members: SchemaNode[]) {}
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       name: this.name,
       types: this.members.map((type) => type.toObject()),
     };

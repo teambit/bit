@@ -27,8 +27,9 @@ export class FunctionSchema implements SchemaNode {
     return this.signature;
   }
 
-  toObject(): Record<string, any> {
+  toObject() {
     return {
+      constructorName: this.constructor.name,
       name: this.name,
       args: this.args,
       returnType: this.returnType.toObject(),
