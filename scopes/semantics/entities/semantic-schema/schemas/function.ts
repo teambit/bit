@@ -13,7 +13,7 @@ export class FunctionSchema implements SchemaNode {
   constructor(
     readonly name: string,
     // readonly doc: any,
-    readonly args: Parameter[],
+    readonly params: Parameter[],
 
     readonly returnType: TypeRefSchema,
     private signature: string
@@ -31,14 +31,14 @@ export class FunctionSchema implements SchemaNode {
     return {
       constructorName: this.constructor.name,
       name: this.name,
-      args: this.args,
+      params: this.params,
       returnType: this.returnType.toObject(),
       signature: this.signature,
     };
   }
 
   toString() {
-    const argsStr = this.args.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
-    return `${chalk.bold(this.name)}(${argsStr}): ${this.returnType.toString()}`;
+    const paramsStr = this.params.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
+    return `${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
   }
 }

@@ -11,3 +11,5 @@ export { TypeUnionSchema } from './type-union';
 export { TypeLiteralSchema } from './type-literal';
 export { IndexSignatureSchema } from './index-signature';
 export { InterfaceSchema } from './interface';
+export { GetAccessorSchema } from './get-accessor';
+export { SetAccessorSchema } from './set-accessor';

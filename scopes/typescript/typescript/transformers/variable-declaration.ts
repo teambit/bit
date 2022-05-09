@@ -21,8 +21,7 @@ export class VariableDeclaration implements SchemaTransformer {
 
   async transform(varDec: VariableDeclarationNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const name = this.getName(varDec);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(varDec.name!);
+    const info = await context.getQuickInfo(varDec.name);
     const displaySig = info?.body?.displayString || '';
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);

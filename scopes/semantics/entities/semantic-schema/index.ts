@@ -16,5 +16,7 @@ export {
   TypeLiteralSchema,
   IndexSignatureSchema,
   InterfaceSchema,
+  GetAccessorSchema,
+  SetAccessorSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';
