@@ -42,9 +42,9 @@ export class Importer {
     if (!importOptions.ids.length) {
       importOptions.objectsOnly = true;
     }
-    const currentRemoteLane = await this.workspace.getCurrentRemoteLaneId();
+    const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
     if (currentRemoteLane) {
-      importOptions.lanes = { laneIds: [currentRemoteLane.laneId], lanes: [currentRemoteLane.lane] };
+      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
     }
   }
 }

@@ -18,6 +18,7 @@ describe('import lanes', function () {
   });
   describe('importing lanes', () => {
     let appOutput: string;
+    let laneHash: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -25,6 +26,9 @@ describe('import lanes', function () {
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
       helper.command.exportLane();
+
+      const laneObj = helper.command.catLane('dev');
+      laneHash = laneObj.hash;
     });
     describe('fetching lanes objects', () => {
       before(() => {
@@ -76,7 +80,7 @@ describe('import lanes', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanes();
+        const lanes = helper.command.listLanes();
         expect(lanes).to.have.string('current lane - dev');
       });
       it('.bitmap should save the component as belong to the lane', () => {
@@ -84,19 +88,23 @@ describe('import lanes', function () {
         expect(bitMap.comp1.onLanesOnly).to.be.true;
         expect(bitMap.comp2.onLanesOnly).to.be.true;
       });
+      it('should save the lane object with the same hash as the original lane', () => {
+        const laneObj = helper.command.catLane('dev');
+        expect(laneObj.hash).to.eq(laneHash);
+      });
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.switchRemoteLane('dev', '--as my-new-lane');
+        helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lane = helper.command.showOneLaneParsed('my-new-lane');
         expect(lane.components).to.have.lengthOf(3);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         expect(lanes.currentLane).to.equal('my-new-lane');
       });
       it('should write the components to the filesystem', () => {

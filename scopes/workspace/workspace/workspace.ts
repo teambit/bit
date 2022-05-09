@@ -52,7 +52,7 @@ import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/impor
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
-import { LocalLaneId, RemoteLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -616,7 +616,7 @@ export class Workspace implements ComponentFactory {
     return this.scope.getSnap(id, hash);
   }
 
-  getCurrentLaneId(): LocalLaneId {
+  getCurrentLaneId(): LaneId {
     return this.consumer.getCurrentLaneId();
   }
 
@@ -624,7 +624,7 @@ export class Workspace implements ComponentFactory {
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane id (name+scope). otherwise, return null.
    */
-  async getCurrentRemoteLaneId(): Promise<{ laneId: RemoteLaneId; lane: Lane } | null> {
+  async getCurrentRemoteLane(): Promise<Lane | null> {
     const currentLane = this.getCurrentLaneId();
     if (currentLane.isDefault()) {
       return null;
@@ -634,16 +634,13 @@ export class Workspace implements ComponentFactory {
       return null;
     }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-    const laneId = RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope);
+    const laneId = LaneId.from(trackData.remoteLane, trackData.remoteScope);
     try {
       const lanes = await scopeComponentImporter.importLanes([laneId]);
 
       if (!lanes || lanes.length === 0) return null;
 
-      return {
-        laneId,
-        lane: lanes[0],
-      };
+      return lanes[0];
     } catch (err) {
       if (
         err instanceof InvalidScopeName ||
@@ -1445,13 +1442,15 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
     const ids = idsToResolve.map((idStr) => ComponentID.fromString(idStr).toStringWithoutVersion());
-    const afterExclusion = excludeCore ? allDefs.filter((def) => {
-      const isCore = coreAspectDefs.find(coreId => def.getId === coreId.getId);
-      const id = ComponentID.fromString(def.getId || '');
-      const isTarget = ids.includes(id.toStringWithoutVersion());
-      if (isTarget) return true;
-      return (isCore && isTarget);
-    }) : allDefs;
+    const afterExclusion = excludeCore
+      ? allDefs.filter((def) => {
+          const isCore = coreAspectDefs.find((coreId) => def.getId === coreId.getId);
+          const id = ComponentID.fromString(def.getId || '');
+          const isTarget = ids.includes(id.toStringWithoutVersion());
+          if (isTarget) return true;
+          return isCore && isTarget;
+        })
+      : allDefs;
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;

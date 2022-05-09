@@ -2,6 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { uniqBy } from 'lodash';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
@@ -47,6 +48,7 @@ export class ForkingMain {
    * if refactor option is enable, change the source-code to update all dependencies with the new name.
    */
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
     const exists = this.workspace.exists(sourceCompId);
     if (exists) {
@@ -145,6 +147,15 @@ the reason is that the refactor changes the components using ${sourceId.toString
     const targetName = targetId || sourceId.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     const component = await this.workspace.scope.getRemoteComponent(sourceId);
+    await this.refactoring.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: sourceId.toStringWithoutVersion(),
+          newStr: targetCompId.toStringWithoutVersion(),
+        },
+      ]
+    );
     const config = await this.getConfig(component);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
 

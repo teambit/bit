@@ -69,7 +69,7 @@ export class LanesUI {
       },
       {
         path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
-        children: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} />,
+        children: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost}/>,
       },
       {
         exact: true,
