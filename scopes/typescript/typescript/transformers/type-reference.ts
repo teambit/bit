@@ -1,16 +1,13 @@
-import ts, { Node, TypeReference, TypeReferenceNode } from 'typescript';
-import pMapSeries from 'p-map-series';
-import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import ts, { Node, TypeReferenceNode } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
 
 export class TypeReferenceTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.TypeReference;
   }
 
-  async getIdentifiers(node: TypeReferenceNode) {
+  async getIdentifiers() {
     return [];
   }
 

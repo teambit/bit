@@ -13,7 +13,7 @@ export class PropertySignature implements SchemaTransformer {
     return node.name.getText();
   }
 
-  async getIdentifiers(node: PropertySignatureNode) {
+  async getIdentifiers() {
     return [];
   }
 
