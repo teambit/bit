@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component';
+import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
 
 export type PlainTypeRefSchema = {
@@ -42,7 +43,7 @@ export class TypeRefSchema implements SchemaNode {
       return `${this.componentId}/${this.name}`;
     }
     if (this.packageName) {
-      return `${this.packageName}/${this.name}`;
+      return `${chalk.dim(this.packageName)}/${this.name}`;
     }
     return this.name;
   }

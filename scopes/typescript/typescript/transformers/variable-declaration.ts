@@ -4,7 +4,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { getParams } from './utils/get-params';
-import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
 export class VariableDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -24,13 +24,14 @@ export class VariableDeclaration implements SchemaTransformer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const info = await context.getQuickInfo(varDec.name!);
     const displaySig = info?.body?.displayString || '';
-    const typeStr = parseTypeFromQuickInfo(displaySig);
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
-      const returnType = await context.resolveType(varDec.initializer, typeStr);
+      const typeStr = parseReturnTypeFromQuickInfo(displaySig);
+      const returnType = await context.resolveType(varDec, typeStr, false);
       return new FunctionSchema(name, args, returnType, displaySig);
     }
-    const type = await context.resolveType(varDec, typeStr, false);
-    return new VariableSchema(name || '', displaySig, type);
+    const typeStr = parseTypeFromQuickInfo(displaySig);
+    const type = await context.resolveType(varDec.type || varDec, typeStr, Boolean(varDec.type));
+    return new VariableSchema(name, displaySig, type);
   }
 }

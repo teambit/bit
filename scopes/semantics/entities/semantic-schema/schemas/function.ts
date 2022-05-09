@@ -33,6 +33,7 @@ export class FunctionSchema implements SchemaNode {
       name: this.name,
       args: this.args,
       returnType: this.returnType.toObject(),
+      signature: this.signature,
     };
   }
 

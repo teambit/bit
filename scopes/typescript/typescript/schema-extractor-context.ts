@@ -4,7 +4,7 @@ import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { resolve } from 'path';
+import { resolve, sep } from 'path';
 import { Component } from '@teambit/component';
 import { TypeRefSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -93,6 +93,18 @@ export class SchemaExtractorContext {
 
       return false;
     });
+  }
+
+  private parsePackageNameFromPath(path: string) {
+    const parts = path.split('node_modules');
+    if (parts.length === 1) return '';
+    const lastPart = parts[parts.length - 1].replace(sep, '');
+    const pkgParts = lastPart.split('/');
+    if (lastPart.startsWith('@')) {
+      // scoped package
+      return `${pkgParts[0]}/${pkgParts[1]}`;
+    }
+    return pkgParts[0];
   }
 
   /**
@@ -214,16 +226,17 @@ export class SchemaExtractorContext {
     const def = await Promise.all(
       typeDef?.body?.map(async (definition) => {
         const file = this.findFileInComponent(definition.file);
-        if (!file) {
-          // TODO: find component id is exists, otherwise add the package name.
-          return new TypeRefSchema(typeStr, undefined, '');
+        if (file) {
+          return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
         }
-        return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
+        const pkgName = this.parsePackageNameFromPath(definition.file);
+        // TODO: find component id is exists, otherwise add the package name.
+        return new TypeRefSchema(typeStr, undefined, pkgName);
       }) || []
     );
 
     const headDef = head(def);
     if (headDef) return headDef;
-    return new TypeRefSchema('any');
+    return new TypeRefSchema(typeStr);
   }
 }
