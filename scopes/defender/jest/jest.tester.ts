@@ -42,14 +42,6 @@ export class JestTester implements Tester {
     return this.jestModule.getVersion();
   }
 
-  // private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
-  //   return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {
-  //     const file = specs.find((spec) => spec.path === path);
-  //     if (file) acc = file;
-  //     return acc;
-  //   }, undefined);
-  // }
-
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
       const componentSpecFiles = testerContext.patterns.get(component);
@@ -135,8 +127,20 @@ export class JestTester implements Tester {
   }
 
   async test(context: TesterContext): Promise<Tests> {
+    const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+
     const config: any = {
-      rootDir: context.rootPath,
+      // Setting the rootDir to the env root dir to make sure we can resolve all the jest presets/plugins
+      // from the env context
+      rootDir: envRootDir,
+      // Setting the roots (where to search for spec files) to the root path (either workspace or capsule root)
+      // TODO: consider change this to be an array of the components running dir.
+      // TODO: aka: in the workspace it will be something like <ws>/node_modules/<comp-package-name>/node_modules/<comp-package-name>
+      // TODO: see dependencyResolver.getRuntimeModulePath (this will make sure the peer deps resolved correctly)
+      // TODO: (@GiladShoham - when trying to set it to this paths, jest ignores it probably because the paths contains "node_modules"
+      // TODO: trying to set the https://jestjs.io/docs/27.x/configuration#testpathignorepatterns-arraystring to something else (as it contain node_modules by default)
+      // TODO: didn't help)
+      roots: [context.rootPath],
     };
 
     // eslint-disable-next-line no-console
@@ -144,7 +148,10 @@ export class JestTester implements Tester {
       this.logger.warn(message);
     };
 
-    if (context.debug) config.runInBand = true;
+    if (context.debug) {
+      config.debug = true;
+      config.runInBand = true;
+    }
     if (context.coverage) config.coverage = true;
     config.runInBand = true;
 
@@ -182,6 +189,8 @@ export class JestTester implements Tester {
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
+      const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: this.patternsToArray(context.patterns),
       });
@@ -209,7 +218,8 @@ export class JestTester implements Tester {
           this.jestConfig,
           this.patternsToArray(context.patterns),
           context.rootPath,
-          this.jestModulePath
+          this.jestModulePath,
+          envRootDir
         );
       } catch (err: any) {
         this.logger.error('jest.tester.watch() caught an error', err);
