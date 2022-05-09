@@ -20,12 +20,11 @@ export class MethodSignatureTransformer implements SchemaTransformer {
 
   async transform(methodSig: MethodSignatureNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const name = this.getName(methodSig);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(methodSig.name!);
+    const info = await context.getQuickInfo(methodSig.name);
     const displaySig = info?.body?.displayString;
     const returnTypeStr = parseTypeFromQuickInfo(displaySig);
     const args = await getParams(methodSig.parameters, context);
-    const returnType = await context.resolveType(methodSig, returnTypeStr, Boolean(methodSig.type));
-    return new FunctionSchema(name || '', args, returnType, displaySig || '');
+    const returnType = await context.resolveType(methodSig.type || methodSig, returnTypeStr, Boolean(methodSig.type));
+    return new FunctionSchema(name, args, returnType, displaySig || '');
   }
 }

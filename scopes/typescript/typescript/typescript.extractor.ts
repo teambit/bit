@@ -76,7 +76,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const transformer = this.getTransformer(node, context.component);
-    // if (!transformer) return undefined;
+    // leave the next line commented out, it is used for debugging
+    // console.log('transformer', transformer.constructor.name, node.getText());
     return transformer.transform(node, context);
   }
 
