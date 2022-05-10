@@ -1,13 +1,15 @@
-import ts, { TypeNode, SyntaxKind, KeywordTypeNode } from 'typescript';
+import ts, { TypeNode, SyntaxKind, KeywordTypeNode, FunctionTypeNode } from 'typescript';
 import {
   TypeRefSchema,
   SchemaNode,
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
+  FunctionSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
+import { getParams } from './get-params';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -45,8 +47,10 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     }
     case SyntaxKind.LiteralType:
       return new TypeRefSchema(node.getText());
+    case SyntaxKind.FunctionType: {
+      return functionType(node as FunctionTypeNode, context);
+    }
     case SyntaxKind.TypePredicate:
-    case SyntaxKind.FunctionType:
     case SyntaxKind.ConstructorType:
     case SyntaxKind.TypeQuery:
     case SyntaxKind.ArrayType:
@@ -105,4 +109,11 @@ function isKeywordType(node: TypeNode): node is KeywordTypeNode {
     default:
       return false;
   }
+}
+
+async function functionType(node: FunctionTypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
+  const name = node.name?.getText() || '';
+  const params = await getParams(node.parameters, context);
+  const returnType = await typeNodeToSchema(node.type, context);
+  return new FunctionSchema(name, params, returnType, '');
 }

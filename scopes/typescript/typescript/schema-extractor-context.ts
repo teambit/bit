@@ -1,5 +1,5 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, LiteralTypeNode, TypeNode } from 'typescript';
+import ts, { ExportDeclaration, Node, TypeNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
@@ -218,7 +218,7 @@ export class SchemaExtractorContext {
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(node: Node & { type: TypeNode }, typeStr: string): Promise<SchemaNode> {
+  async resolveType(node: Node & { type?: TypeNode }, typeStr: string): Promise<SchemaNode> {
     if (node.type && ts.isTypeNode(node.type)) {
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
