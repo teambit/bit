@@ -2,7 +2,7 @@ import R from 'ramda';
 
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { RemoteLaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
@@ -48,14 +48,14 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   await consumer.onDestroy();
   return { dependencies, envComponents, importDetails };
 
-  async function getLanes(): Promise<{ laneIds: RemoteLaneId[]; lanes: Lane[] }> {
-    const result: { laneIds: RemoteLaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
-    let remoteLaneIds: RemoteLaneId[] = [];
+  async function getLanes(): Promise<{ laneIds: LaneId[]; lanes: Lane[] }> {
+    const result: { laneIds: LaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
+    let remoteLaneIds: LaneId[] = [];
     if (ids.length) {
       remoteLaneIds = ids.map((id) => {
         const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
-        if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
-        return RemoteLaneId.parse(id);
+        if (trackLane) return LaneId.from(trackLane.remoteLane, trackLane.remoteScope);
+        return LaneId.parse(id);
       });
     } else {
       remoteLaneIds = await consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();

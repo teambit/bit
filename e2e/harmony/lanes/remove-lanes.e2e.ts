@@ -61,7 +61,7 @@ describe('remove lanes', function () {
           expect(output).to.have.string('successfully removed the following lane(s)');
         });
         it('bit lane should not show the lane anymore', () => {
-          const lanes = helper.command.showLanes();
+          const lanes = helper.command.listLanes();
           expect(lanes).not.to.have.string('dev');
         });
       });
@@ -88,7 +88,7 @@ describe('remove lanes', function () {
       helper.command.export();
     });
     it('as an intermediate step, make sure the lane is on the remote', () => {
-      const lanes = helper.command.showRemoteLanesParsed();
+      const lanes = helper.command.listRemoteLanesParsed();
       expect(lanes.lanes).to.have.lengthOf(1);
     });
     it('should not remove without --force flag as the lane is not merged', () => {
@@ -104,7 +104,7 @@ describe('remove lanes', function () {
         expect(output).to.have.string('successfully removed');
       });
       it('the remote should not have the lane anymore', () => {
-        const lanes = helper.command.showRemoteLanesParsed();
+        const lanes = helper.command.listRemoteLanesParsed();
         expect(lanes.lanes).to.have.lengthOf(0);
       });
       it('the remote should not have the components anymore as they dont belong to any lane', () => {

@@ -57,7 +57,7 @@ describe('bit lane command', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         expect(lanes.currentLane).to.equal('dev');
       });
       describe('changing the component and running bit diff', () => {
@@ -92,15 +92,15 @@ describe('bit lane command', function () {
       describe('switching with a different lane name', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
-          helper.command.switchRemoteLane('dev', '--as my-new-lane');
+          helper.command.switchRemoteLane('dev', '--alias my-new-lane');
         });
         it('should save the remote-lane data into a local with the specified name', () => {
           const lanes = helper.command.showOneLaneParsed('my-new-lane');
           expect(lanes.components).to.have.lengthOf(1);
         });
-        it('should not create a lane with the same name as the remote', () => {
-          const output = helper.general.runWithTryCatch('bit lane show dev');
-          expect(output).to.have.string('not found');
+        it('should be able to retrieve the lane using the remote-name', () => {
+          const lanes = helper.command.showOneLaneParsed('dev');
+          expect(lanes.components).to.have.lengthOf(1);
         });
       });
       describe('switching to a local lane', () => {

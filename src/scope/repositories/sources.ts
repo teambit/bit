@@ -1,6 +1,6 @@
 import R from 'ramda';
 import pMap from 'p-map';
-// import { BitError } from '@teambit/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
@@ -716,12 +716,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
     logger.debug(`sources.mergeLane, lane: ${lane.toLaneId()}`);
     const repo = this.objects();
-    const existingLane = await this.scope.loadLane(lane.toLaneId());
-    if (existingLane && !existingLane.hash().isEqual(lane.hash())) {
-      // @todo: uncomment this to activate the error. It's going to be a breaking change.
-      //       throw new BitError(`unable to merge "${lane.toLaneId()}" lane. a lane with the same id already exists with a different hash.
-      // you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.
-      // otherwise, to collaborate on the same lane as the remote, you'll need to remove the local lane and import the remote lane (bit lane import)`);
+    const existingLaneWithSameId = await this.scope.loadLane(lane.toLaneId());
+    const hasSameHash = existingLaneWithSameId && existingLaneWithSameId.hash().isEqual(lane.hash());
+    if (existingLaneWithSameId && !hasSameHash) {
+      throw new BitError(`unable to merge "${lane.toLaneId()}" lane. a lane with the same id already exists with a different hash.
+you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.
+otherwise, to collaborate on the same lane as the remote, you'll need to remove the local lane and import the remote lane (bit lane import)`);
+    }
+
+    const existingLane = hasSameHash ? existingLaneWithSameId : await this.scope.loadLaneByHash(lane.hash());
+
+    if (existingLane && !existingLaneWithSameId) {
+      // the lane id has changed
+      existingLane.scope = lane.scope;
+      existingLane.name = lane.name;
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
