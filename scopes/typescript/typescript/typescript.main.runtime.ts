@@ -23,8 +23,22 @@ import {
   ExportDeclaration,
   TypeAliasTransformer,
   FunctionDeclaration,
+  MethodDeclaration,
+  PropertyDeclaration,
   VariableStatementTransformer,
+  VariableDeclaration,
   SourceFileTransformer,
+  ClassDecelerationTransformer,
+  TypeIntersectionTransformer,
+  TypeReferenceTransformer,
+  Constructor,
+  TypeLiteralTransformer,
+  PropertySignature,
+  TypeUnionTransformer,
+  LiteralTypeTransformer,
+  IndexSignature,
+  InterfaceDeclarationTransformer,
+  MethodSignatureTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -227,9 +241,23 @@ export class TypescriptMain {
     schemaTransformerSlot.register([
       new ExportDeclaration(),
       new FunctionDeclaration(),
+      new MethodDeclaration(),
+      new PropertyDeclaration(),
       new VariableStatementTransformer(),
+      new VariableDeclaration(),
+      new Constructor(),
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
+      new ClassDecelerationTransformer(),
+      new TypeIntersectionTransformer(),
+      new TypeReferenceTransformer(),
+      new TypeLiteralTransformer(),
+      new PropertySignature(),
+      new TypeUnionTransformer(),
+      new LiteralTypeTransformer(),
+      new IndexSignature(),
+      new InterfaceDeclarationTransformer(),
+      new MethodSignatureTransformer(),
     ]);
 
     if (workspace) {
