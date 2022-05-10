@@ -13,7 +13,7 @@ export class TypeReferenceTransformer implements SchemaTransformer {
 
   async transform(typeReference: TypeReferenceNode, context: SchemaExtractorContext) {
     const name = typeReference.typeName.getText();
-    const type = await context.resolveType(typeReference, name, true);
+    const type = await context.resolveType(typeReference, name);
     return type;
   }
 }

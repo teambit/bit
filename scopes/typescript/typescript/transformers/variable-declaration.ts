@@ -26,11 +26,11 @@ export class VariableDeclaration implements SchemaTransformer {
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
       const typeStr = parseReturnTypeFromQuickInfo(displaySig);
-      const returnType = await context.resolveType(varDec, typeStr, false);
+      const returnType = await context.resolveType(varDec, typeStr);
       return new FunctionSchema(name, args, returnType, displaySig);
     }
     const typeStr = parseTypeFromQuickInfo(displaySig);
-    const type = await context.resolveType(varDec.type || varDec, typeStr, Boolean(varDec.type));
+    const type = await context.resolveType(varDec, typeStr);
     return new VariableSchema(name, displaySig, type);
   }
 }

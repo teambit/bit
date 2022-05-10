@@ -212,31 +212,59 @@ export class SchemaExtractorContext {
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(node: Node | LiteralTypeNode, typeStr: string, type = true): Promise<TypeRefSchema> {
+  async resolveType(node: Node, typeStr: string): Promise<TypeRefSchema> {
+    // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
+    // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
+    // @ts-ignore
+    node = node.type || node;
     if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
     if (node.kind === ts.SyntaxKind.LiteralType) {
       return new TypeRefSchema((node as LiteralTypeNode).literal.getText());
     }
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
 
-    const typeDef = type
-      ? await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node))
-      : await this.typeDefinition(node);
+    /**
+     * tsserver has two different calls: "definition" and "typeDefinition".
+     * normally, we need the "typeDefinition" to get the type data of a node.
+     * sometimes, it has no data, for example when the node is of type TypeReference, and then using "definition" is
+     * helpful. (couldn't find a rule when to use each one. e.g. "VariableDeclaration" sometimes has data only in
+     * "definition" but it's not clear when/why).
+     */
+    const getDef = async () => {
+      const typeDefinition = await this.typeDefinition(node);
+      const headTypeDefinition = head(typeDefinition?.body);
+      if (headTypeDefinition) {
+        return headTypeDefinition;
+      }
+      const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
+      return head(definition?.body);
+    };
+    const definition = await getDef();
 
-    const def = await Promise.all(
-      typeDef?.body?.map(async (definition) => {
-        const file = this.findFileInComponent(definition.file);
-        if (file) {
-          return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
-        }
-        const pkgName = this.parsePackageNameFromPath(definition.file);
-        // TODO: find component id is exists, otherwise add the package name.
-        return new TypeRefSchema(typeStr, undefined, pkgName);
-      }) || []
-    );
+    // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
+    const unknownExactType = new TypeRefSchema(typeStr);
+    if (!definition) {
+      return unknownExactType;
+    }
 
-    const headDef = head(def);
-    if (headDef) return headDef;
-    return new TypeRefSchema(typeStr);
+    // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
+    const isDefInSameLocation = () => {
+      if (definition.file !== node.getSourceFile().fileName) {
+        return false;
+      }
+      const loc = this.getLocation(node);
+      return loc.line === definition.start.line && loc.character === definition.start.offset;
+    };
+
+    const file = this.findFileInComponent(definition.file);
+    if (file) {
+      if (isDefInSameLocation()) {
+        return unknownExactType;
+      }
+      return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
+    }
+    const pkgName = this.parsePackageNameFromPath(definition.file);
+    // TODO: find component id is exists, otherwise add the package name.
+    return new TypeRefSchema(typeStr, undefined, pkgName);
   }
 }

@@ -26,7 +26,7 @@ export class MethodDeclaration implements SchemaTransformer {
     const displaySig = info?.body?.displayString;
     const returnTypeStr = parseTypeFromQuickInfo(displaySig);
     const args = await getParams(methodDec.parameters, context);
-    const returnType = await context.resolveType(methodDec, returnTypeStr, Boolean(methodDec.type));
+    const returnType = await context.resolveType(methodDec, returnTypeStr);
     return new FunctionSchema(name || '', args, returnType, displaySig || '');
   }
 }

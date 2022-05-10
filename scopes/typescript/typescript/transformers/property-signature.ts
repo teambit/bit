@@ -28,11 +28,11 @@ export class PropertySignature implements SchemaTransformer {
       const propType = prop.type as FunctionTypeNode;
       const args = await getParams(propType.parameters, context);
       const typeStr = parseReturnTypeFromQuickInfo(displaySig);
-      const returnType = await context.resolveType(propType, typeStr, false);
+      const returnType = await context.resolveType(propType, typeStr);
       return new FunctionSchema(name, args, returnType, displaySig);
     }
     const typeStr = parseTypeFromQuickInfo(displaySig);
-    const type = await context.resolveType(prop.type || prop, typeStr, Boolean(prop.type));
+    const type = await context.resolveType(prop, typeStr);
     return new VariableSchema(name, displaySig, type);
   }
 }
