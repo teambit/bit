@@ -361,10 +361,10 @@ export class ReactEnv
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
-   * returns a paths to a function which mounts a given component to DOM
+   * returns the path to the compositions template
    */
   getMounter() {
-    return require.resolve('./mount');
+    return require.resolve('@teambit/react.ui.compositions-app');
   }
 
   getPreviewConfig() {
