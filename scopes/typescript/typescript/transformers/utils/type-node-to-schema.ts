@@ -1,0 +1,108 @@
+import ts, { TypeNode, SyntaxKind, KeywordTypeNode } from 'typescript';
+import {
+  TypeRefSchema,
+  SchemaNode,
+  TypeIntersectionSchema,
+  TypeUnionSchema,
+  TypeLiteralSchema,
+} from '@teambit/semantics.entities.semantic-schema';
+import pMapSeries from 'p-map-series';
+import { SchemaExtractorContext } from '../../schema-extractor-context';
+
+// eslint-disable-next-line complexity
+export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
+  if (isKeywordType(node)) {
+    return new TypeRefSchema(node.getText());
+  }
+  switch (node.kind) {
+    case SyntaxKind.IntersectionType: {
+      const types = await pMapSeries((node as ts.IntersectionTypeNode).types, async (type) => {
+        const typeSchema = await typeNodeToSchema(type, context);
+        return typeSchema;
+      });
+      return new TypeIntersectionSchema(types);
+    }
+    case SyntaxKind.UnionType: {
+      const types = await pMapSeries((node as ts.UnionTypeNode).types, async (type) => {
+        const typeSchema = await typeNodeToSchema(type, context);
+        return typeSchema;
+      });
+      return new TypeUnionSchema(types);
+    }
+    case SyntaxKind.TypeReference: {
+      const name = (node as ts.TypeReferenceNode).typeName.getText();
+      const type = await context.resolveType(node, name);
+      return type;
+    }
+    case SyntaxKind.TypeLiteral: {
+      // not to be confused with "LiteralType", which is string/boolean/null.
+      // this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
+      const members = await pMapSeries((node as ts.TypeLiteralNode).members, async (member) => {
+        const typeSchema = await context.computeSchema(member);
+        return typeSchema;
+      });
+      return new TypeLiteralSchema(members);
+    }
+    case SyntaxKind.LiteralType:
+      return new TypeRefSchema(node.getText());
+    case SyntaxKind.TypePredicate:
+    case SyntaxKind.FunctionType:
+    case SyntaxKind.ConstructorType:
+    case SyntaxKind.TypeQuery:
+    case SyntaxKind.ArrayType:
+    case SyntaxKind.TupleType:
+    case SyntaxKind.NamedTupleMember:
+    case SyntaxKind.OptionalType:
+    case SyntaxKind.RestType:
+    case SyntaxKind.ConditionalType:
+    case SyntaxKind.InferType:
+    case SyntaxKind.ParenthesizedType:
+    case SyntaxKind.ThisType:
+    case SyntaxKind.TypeOperator:
+    case SyntaxKind.IndexedAccessType:
+    case SyntaxKind.MappedType:
+    case SyntaxKind.TemplateLiteralType:
+    case SyntaxKind.TemplateLiteralTypeSpan:
+    case SyntaxKind.ImportType:
+    case SyntaxKind.ExpressionWithTypeArguments:
+    case SyntaxKind.JSDocTypeExpression:
+    case SyntaxKind.JSDocAllType:
+    case SyntaxKind.JSDocUnknownType:
+    case SyntaxKind.JSDocNonNullableType:
+    case SyntaxKind.JSDocNullableType:
+    case SyntaxKind.JSDocOptionalType:
+    case SyntaxKind.JSDocFunctionType:
+    case SyntaxKind.JSDocVariadicType:
+    case SyntaxKind.JSDocNamepathType:
+    case SyntaxKind.JSDocSignature:
+    case SyntaxKind.JSDocTypeLiteral:
+      throw new Error(`TypeNode "${SyntaxKind[node.kind]}" was not implemented yet.
+context: ${node.getText()}`);
+    default:
+      throw new Error(`Node "${SyntaxKind[node.kind]}" is not a TypeNode.
+context: ${node.getText()}`);
+  }
+}
+
+/**
+ * whether it's kind of `ts.KeywordTypeSyntaxKind`
+ */
+function isKeywordType(node: TypeNode): node is KeywordTypeNode {
+  switch (node.kind) {
+    case SyntaxKind.AnyKeyword:
+    case SyntaxKind.BigIntKeyword:
+    case SyntaxKind.BooleanKeyword:
+    case SyntaxKind.IntrinsicKeyword:
+    case SyntaxKind.NeverKeyword:
+    case SyntaxKind.NumberKeyword:
+    case SyntaxKind.ObjectKeyword:
+    case SyntaxKind.StringKeyword:
+    case SyntaxKind.SymbolKeyword:
+    case SyntaxKind.UndefinedKeyword:
+    case SyntaxKind.UnknownKeyword:
+    case SyntaxKind.VoidKeyword:
+      return true;
+    default:
+      return false;
+  }
+}

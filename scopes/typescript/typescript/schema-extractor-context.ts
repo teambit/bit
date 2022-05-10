@@ -1,5 +1,5 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, LiteralTypeNode } from 'typescript';
+import ts, { ExportDeclaration, Node, LiteralTypeNode, TypeNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
@@ -9,6 +9,7 @@ import { Component } from '@teambit/component';
 import { TypeRefSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
+import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
 
 export class SchemaExtractorContext {
   constructor(
@@ -104,7 +105,12 @@ export class SchemaExtractorContext {
       // scoped package
       return `${pkgParts[0]}/${pkgParts[1]}`;
     }
-    return pkgParts[0];
+    const pkgName = pkgParts[0];
+    if (pkgName === 'typescript') {
+      // it's a built-in type, such as "string".
+      return '';
+    }
+    return pkgName;
   }
 
   /**
@@ -212,14 +218,11 @@ export class SchemaExtractorContext {
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(node: Node, typeStr: string): Promise<TypeRefSchema> {
-    // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
-    // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
-    // @ts-ignore
-    node = node.type || node;
-    if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
-    if (node.kind === ts.SyntaxKind.LiteralType) {
-      return new TypeRefSchema((node as LiteralTypeNode).literal.getText());
+  async resolveType(node: Node & { type: TypeNode }, typeStr: string): Promise<SchemaNode> {
+    if (node.type && ts.isTypeNode(node.type)) {
+      // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
+      // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
+      return typeNodeToSchema(node.type, this);
     }
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
 

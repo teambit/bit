@@ -1,10 +1,9 @@
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
-import { TypeRefSchema } from './type-ref';
 
 export type Parameter = {
   name: string;
-  type: TypeRefSchema;
+  type: SchemaNode;
   defaultValue?: any;
   description?: string;
 };
@@ -15,7 +14,7 @@ export class FunctionSchema implements SchemaNode {
     // readonly doc: any,
     readonly params: Parameter[],
 
-    readonly returnType: TypeRefSchema,
+    readonly returnType: SchemaNode,
     private signature: string
   ) {}
 

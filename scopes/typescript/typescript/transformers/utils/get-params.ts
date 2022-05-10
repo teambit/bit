@@ -1,4 +1,4 @@
-import { Parameter, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import { Parameter, SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { ParameterDeclaration, NodeArray } from 'typescript';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -17,7 +17,7 @@ export async function getParams(
   });
 }
 
-async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<TypeRefSchema> {
+async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
   if (param.type) {
     const type = param.type;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

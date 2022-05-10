@@ -29,6 +29,6 @@ export class FunctionDeclaration implements SchemaTransformer {
     const args = await getParams(funcDec.parameters, context);
     const returnType = await context.resolveType(funcDec, returnTypeStr);
 
-    return new FunctionSchema(name || '', args, returnType, displaySig || '');
+    return new FunctionSchema(name, args, returnType, displaySig || '');
   }
 }

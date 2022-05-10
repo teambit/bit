@@ -21,12 +21,11 @@ export class MethodDeclaration implements SchemaTransformer {
 
   async transform(methodDec: MethodDeclarationNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const name = this.getName(methodDec);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(methodDec.name!);
+    const info = await context.getQuickInfo(methodDec.name);
     const displaySig = info?.body?.displayString;
     const returnTypeStr = parseTypeFromQuickInfo(displaySig);
     const args = await getParams(methodDec.parameters, context);
     const returnType = await context.resolveType(methodDec, returnTypeStr);
-    return new FunctionSchema(name || '', args, returnType, displaySig || '');
+    return new FunctionSchema(name, args, returnType, displaySig || '');
   }
 }
