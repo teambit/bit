@@ -740,6 +740,8 @@ jobs:
   bundle_version_macos:
     <<: *mac_defaults
     steps:
+      - attach_workspace:
+            at: ./
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
