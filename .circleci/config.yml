@@ -742,6 +742,11 @@ jobs:
       - run: npm install --global yarn --force
       - run: yarn cache clean
       - run: yarn -v
+      - run: mkdir esbuild-arm
+      - restore_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+      - run: cd esbuild-arm && ls -la
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: set bit.dev registry
           command: npm config set @teambit:registry https://node.bit.dev
@@ -769,11 +774,6 @@ jobs:
       - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
-
-      - run: mkdir esbuild-arm
-      - restore_cache:
-          key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: create macos-arm64
           command: mkdir macos-arm64
@@ -1718,28 +1718,28 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-#   bvm_bundle_debug:
-#     jobs:
+  bvm_bundle_debug:
+    jobs:
 #       - checkout_code:
 #           filters:
 #             branches:
-#               only: fix-circle-cache
+#               only: circle-esbuild-cache
 #       - bundle_version_linux:
 #           filters:
 #             branches:
-#               only: fix-circle-cache
+#               only: circle-esbuild-cache
 #       - bundle_version_windows:
 #           filters:
 #             branches:
-#               only: fix-circle-cache
-#       - bundle_version_macos:
-#           filters:
-#             branches:
-#               only: fix-circle-cache
+#               only: circle-esbuild-cache
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: circle-esbuild-cache
 #       - harmony_publish_to_gcloud:
 #           filters:
 #             branches:
-#               only: fix-circle-cache
+#               only: circle-esbuild-cache
 #           requires:
 #             - bundle_version_macos
 #             - bundle_version_linux
