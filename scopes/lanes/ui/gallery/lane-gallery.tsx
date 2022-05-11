@@ -35,12 +35,7 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return (
-    <LaneGalleryWithPreview
-      host={host}
-      currentLane={currentLane}
-      overviewItems={overviewItems}
-      routeSlot={routeSlot}
-    />
+    <LaneGalleryWithPreview host={host} currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />
   );
 }
 
@@ -64,7 +59,12 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
             componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
           />
         )
-      : ({ component }) => <ScopeComponentCard component={component} />;
+      : ({ component }) => (
+          <ScopeComponentCard
+            component={component}
+            componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+          />
+        );
 
   return (
     <div className={styles.container}>
