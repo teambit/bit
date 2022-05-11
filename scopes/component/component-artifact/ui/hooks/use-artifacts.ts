@@ -1,0 +1,87 @@
+import {gql, QueryResult} from '@apollo/client';
+import {useDataQuery} from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import {useScopeQuery} from '@teambit/scope.ui.hooks.use-scope';
+
+const GET_BUILD_INFO = gql`
+  query Component($id: String!, $extensionId: String!)
+  {
+    getHost(id: $extensionId) {
+      get(id: $id) {
+        buidler: aspects(include: "teambit.pipelines/builder") {
+          id
+          data
+        }
+        buildStatus
+      }
+    }
+  }
+`;
+
+type Pipeline = {
+  taskId: string | undefined,
+  taskName: string | undefined,
+  taskDescription: string | undefined,
+  errors: Array<string> | undefined,
+  startTime: Date | undefined,
+  endTime: Date | undefined,
+}
+
+type Artifact = {
+  name: string,
+  generatedBy: string,
+  storage: string,
+  task: {
+    id: string,
+    name: string,
+  },
+  files: {
+    refs: Array<{
+      relativePath: string,
+      refs: Array<{
+        hash: string,
+      }>
+    }>
+  }
+}
+
+type ArtifactModel = {
+  buildStatus: string,
+  pipleline: Array<Pipeline>,
+  artifacts: Array<Artifact>,
+}
+
+export function useArtifacts(host: string, componentId: string): { data?: ArtifactModel } & Omit<QueryResult<ArtifactModel>, "data"> {
+  const { data, ...rest } = useDataQuery(GET_BUILD_INFO, {
+    variables: { id: componentId, extensionId: host }
+  });
+
+  let artifactData: ArtifactModel | undefined = undefined;
+
+  if (!!data) {
+    const { getHost: { get: { buildStatus, buidler: [builder] = [] } } } = data;
+    const { data: { pipeline, artifacts, aspectsData } } = builder;
+
+    artifactData = {
+      buildStatus,
+      pipleline: pipeline?.map(p => mapToPipeline(p)) ?? [],
+      artifacts: artifacts?.map(a => a as Artifact) ?? []
+    };
+  }
+
+  const { loading } = useScopeQuery();
+
+  return {
+    ...rest,
+    loading: rest.loading || !!loading,
+    data: artifactData,
+  };
+}
+
+function mapToPipeline(data): Pipeline {
+  const { startTime, endTime, ...rest } = data;
+  return {
+    ...rest,
+    startTime: !!startTime ? new Date(startTime) : undefined,
+    endTime: !!endTime ? new Date(endTime) : undefined,
+  }
+}

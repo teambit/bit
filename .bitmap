@@ -297,6 +297,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
+    "component-artifact": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-artifact"
+    },
     "component-descriptor": {
         "scope": "teambit.component",
         "version": "0.0.48",
