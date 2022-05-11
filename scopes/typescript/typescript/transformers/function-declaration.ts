@@ -24,8 +24,8 @@ export class FunctionDeclaration implements SchemaTransformer {
     const name = this.getName(funcDec);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const info = await context.getQuickInfo(funcDec.name!);
+    const returnTypeStr = parseTypeFromQuickInfo(info);
     const displaySig = info?.body?.displayString;
-    const returnTypeStr = parseTypeFromQuickInfo(displaySig);
     const args = await getParams(funcDec.parameters, context);
     const returnType = await context.resolveType(funcDec, returnTypeStr);
 

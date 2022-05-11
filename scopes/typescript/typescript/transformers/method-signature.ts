@@ -22,7 +22,7 @@ export class MethodSignatureTransformer implements SchemaTransformer {
     const name = this.getName(methodSig);
     const info = await context.getQuickInfo(methodSig.name);
     const displaySig = info?.body?.displayString;
-    const returnTypeStr = parseTypeFromQuickInfo(displaySig);
+    const returnTypeStr = parseTypeFromQuickInfo(info);
     const args = await getParams(methodSig.parameters, context);
     const returnType = await context.resolveType(methodSig, returnTypeStr);
     return new FunctionSchema(name, args, returnType, displaySig || '');

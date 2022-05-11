@@ -24,7 +24,6 @@ async function getParamType(param: ParameterDeclaration, context: SchemaExtracto
     return typeNodeToSchema(type, context);
   }
   const info = await context.getQuickInfo(param.name);
-  const displaySig = info?.body?.displayString;
-  const parsed = parseTypeFromQuickInfo(displaySig);
+  const parsed = parseTypeFromQuickInfo(info);
   return new TypeRefSchema(parsed || 'any');
 }

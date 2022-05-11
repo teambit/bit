@@ -22,7 +22,7 @@ export class PropertyDeclaration implements SchemaTransformer {
     const name = this.getName(propertyDec);
     const info = await context.getQuickInfo(propertyDec.name);
     const displaySig = info?.body?.displayString;
-    const typeStr = parseTypeFromQuickInfo(displaySig);
+    const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(propertyDec, typeStr);
 
     return new VariableSchema(name || '', displaySig || '', type);

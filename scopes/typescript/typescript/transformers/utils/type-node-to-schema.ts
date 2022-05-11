@@ -1,11 +1,20 @@
-import ts, { TypeNode, SyntaxKind, KeywordTypeNode, FunctionTypeNode } from 'typescript';
+import ts, {
+  TypeNode,
+  SyntaxKind,
+  KeywordTypeNode,
+  FunctionTypeNode,
+  TypeQueryNode,
+  TypeReferenceNode,
+} from 'typescript';
 import {
-  TypeRefSchema,
   SchemaNode,
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
   FunctionSchema,
+  TypeQuerySchema,
+  LiteralTypeSchema,
+  KeywordTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -14,7 +23,7 @@ import { getParams } from './get-params';
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
   if (isKeywordType(node)) {
-    return new TypeRefSchema(node.getText());
+    return new KeywordTypeSchema(node.getText());
   }
   switch (node.kind) {
     case SyntaxKind.IntersectionType: {
@@ -31,10 +40,9 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       });
       return new TypeUnionSchema(types);
     }
+
     case SyntaxKind.TypeReference: {
-      const name = (node as ts.TypeReferenceNode).typeName.getText();
-      const type = await context.resolveType(node, name);
-      return type;
+      return typeReference(node as TypeReferenceNode, context);
     }
     case SyntaxKind.TypeLiteral: {
       // not to be confused with "LiteralType", which is string/boolean/null.
@@ -45,14 +53,15 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       });
       return new TypeLiteralSchema(members);
     }
-    case SyntaxKind.LiteralType:
-      return new TypeRefSchema(node.getText());
+    case SyntaxKind.LiteralType: // e.g. string/boolean
+      return new LiteralTypeSchema(node.getText());
     case SyntaxKind.FunctionType: {
       return functionType(node as FunctionTypeNode, context);
     }
+    case SyntaxKind.TypeQuery:
+      return typeQuery(node as TypeQueryNode, context);
     case SyntaxKind.TypePredicate:
     case SyntaxKind.ConstructorType:
-    case SyntaxKind.TypeQuery:
     case SyntaxKind.ArrayType:
     case SyntaxKind.TupleType:
     case SyntaxKind.NamedTupleMember:
@@ -111,9 +120,31 @@ function isKeywordType(node: TypeNode): node is KeywordTypeNode {
   }
 }
 
+/**
+ * In the following example, `AriaButtonProps` is a type reference
+ * ```ts
+ * import type { AriaButtonProps } from '@react-types/button';
+ * export type ButtonProps = AriaButtonProps & { a: string };
+ * ```
+ */
+async function typeReference(node: TypeReferenceNode, context: SchemaExtractorContext) {
+  const name = node.typeName.getText();
+  const type = await context.resolveType(node, name, false);
+  return type;
+}
+
 async function functionType(node: FunctionTypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
   const name = node.name?.getText() || '';
   const params = await getParams(node.parameters, context);
   const returnType = await typeNodeToSchema(node.type, context);
   return new FunctionSchema(name, params, returnType, '');
+}
+
+/**
+ * e.g. `typeof Foo`
+ */
+async function typeQuery(node: TypeQueryNode, context: SchemaExtractorContext) {
+  const displaySig = await context.getQuickInfoDisplayString(node.exprName);
+  const type = await context.resolveType(node.exprName, node.exprName.getText(), false);
+  return new TypeQuerySchema(type, displaySig);
 }

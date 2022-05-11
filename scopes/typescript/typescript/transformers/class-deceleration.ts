@@ -29,15 +29,14 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
           const getter = member as ts.GetAccessorDeclaration;
           const info = await context.getQuickInfo(getter.name);
           const displaySig = info?.body?.displayString || '';
-          const typeStr = parseTypeFromQuickInfo(displaySig);
+          const typeStr = parseTypeFromQuickInfo(info);
           const type = await context.resolveType(getter, typeStr);
           return new GetAccessorSchema(getter.name.getText(), type, displaySig);
         }
         case ts.SyntaxKind.SetAccessor: {
           const setter = member as ts.SetAccessorDeclaration;
           const params = await getParams(setter.parameters, context);
-          const info = await context.getQuickInfo(setter.name);
-          const displaySig = info?.body?.displayString || '';
+          const displaySig = await context.getQuickInfoDisplayString(setter.name);
           return new SetAccessorSchema(setter.name.getText(), params[0], displaySig);
         }
         default:

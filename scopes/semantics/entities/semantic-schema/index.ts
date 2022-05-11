@@ -18,5 +18,9 @@ export {
   InterfaceSchema,
   GetAccessorSchema,
   SetAccessorSchema,
+  TypeQuerySchema,
+  InferenceTypeSchema,
+  LiteralTypeSchema,
+  KeywordTypeSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

@@ -13,3 +13,7 @@ export { IndexSignatureSchema } from './index-signature';
 export { InterfaceSchema } from './interface';
 export { GetAccessorSchema } from './get-accessor';
 export { SetAccessorSchema } from './set-accessor';
+export { TypeQuerySchema } from './type-query';
+export { InferenceTypeSchema } from './inference-type';
+export { LiteralTypeSchema } from './literal-type';
+export { KeywordTypeSchema } from './keyword-type';
