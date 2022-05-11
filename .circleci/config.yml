@@ -720,6 +720,19 @@ jobs:
       - store_artifacts:
           path: linux
 
+  set_esbuild_arm64_cache:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - run: mkdir esbuild-arm
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+      - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      - save_cache:
+          key: esbuild-0.14.29-darwin-arm64-v1
+          paths:
+            - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+
   bundle_version_macos:
     <<: *mac_defaults
     steps:
@@ -758,14 +771,6 @@ jobs:
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
 
       - run: mkdir esbuild-arm
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-#       - run: brew install wget
-#       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-#       - save_cache:
-#           key: esbuild-0.14.29-darwin-arm64-v1
-#           paths:
-#             - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
       - restore_cache:
           key: esbuild-0.14.29-darwin-arm64-v1
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
@@ -1564,6 +1569,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
+            # - set_esbuild_arm64_cache
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1675,6 +1681,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+            # - set_esbuild_arm64_cache
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1703,6 +1710,13 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+  # uncomment to update esbuild arm64 cache
+  set_esbuild_arm64_cache_workflow:
+    jobs:
+      - set_esbuild_arm64_cache:
+          filters:
+            branches:
+              only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
 #   bvm_bundle_debug:
 #     jobs:
