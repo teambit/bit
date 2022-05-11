@@ -1549,6 +1549,7 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
+      - set_esbuild_arm64_cache
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1644,6 +1645,10 @@ workflows:
           <<: *master_only_filter
           type: approval
       - checkout_code:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+      - set_esbuild_arm64_cache:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
