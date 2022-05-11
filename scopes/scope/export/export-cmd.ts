@@ -46,6 +46,7 @@ export class ExportCmd implements Command {
       'ignore-missing-artifacts',
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
+    ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -138,5 +139,47 @@ ${WILDCARD_HELP('export remote-scope')}`;
     };
 
     return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
+  }
+
+  async json(
+    [remote, ids = []]: [string, string[]],
+    {
+      eject = false,
+      includeDependencies = false,
+      setCurrentScope = false,
+      all = false,
+      allVersions = false,
+      originDirectly = false,
+      force = false,
+      rewire = false,
+      ignoreMissingArtifacts = false,
+      resume,
+    }: any
+  ) {
+    const currentScope = !remote || remote === CURRENT_UPSTREAM;
+    if (currentScope && remote) {
+      remote = '';
+    }
+    if (includeDependencies && !remote) {
+      throw new GeneralError(
+        'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
+      );
+    }
+    const results = await exportAction({
+      ids,
+      remote,
+      eject,
+      includeDependencies,
+      setCurrentScope,
+      includeNonStaged: all || allVersions,
+      allVersions: allVersions || all,
+      originDirectly,
+      codemod: rewire,
+      force,
+      resumeExportId: resume,
+      ignoreMissingArtifacts,
+    });
+
+    return results;
   }
 }
