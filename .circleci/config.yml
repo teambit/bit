@@ -751,7 +751,6 @@ jobs:
       # - run: mkdir esbuild-arm
       # - restore_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-arm && ls -la
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: set bit.dev registry
@@ -1729,48 +1728,48 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  bvm_bundle_debug:
-    jobs:
-      - checkout_code:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-      - bundle_version_linux:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-      - bundle_version_windows:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-      - get_esbuild_arm64:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-      - bundle_version_macos:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-          requires:
-            - get_esbuild_arm64
-      - harmony_publish_to_gcloud:
-          filters:
-            branches:
-              only: circle-esbuild-cache
-          requires:
-            - bundle_version_macos
-            - bundle_version_linux
-            - bundle_version_windows
-      - docker_build:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - docker_build
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #     - get_esbuild_arm64:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #         requires:
+  #           - get_esbuild_arm64
+  #     - harmony_publish_to_gcloud:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #         requires:
+  #           - bundle_version_macos
+  #           - bundle_version_linux
+  #           - bundle_version_windows
+  #     - docker_build:
+  #         requires:
+  #           - checkout_code
+  #           - harmony_publish_to_gcloud
+  #     - docker_non_root_build:
+  #         requires:
+  #           - checkout_code
+  #           - harmony_publish_to_gcloud
+  #     - server_docker_build:
+  #         requires:
+  #           - docker_build
 
 
