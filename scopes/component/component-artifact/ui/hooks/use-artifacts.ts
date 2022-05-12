@@ -3,7 +3,7 @@ import {useDataQuery} from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import {useScopeQuery} from '@teambit/scope.ui.hooks.use-scope';
 
 const GET_BUILD_INFO = gql`
-  query Component($id: String!, $extensionId: String!)
+  query ComponentArtifacts($id: String!, $extensionId: String!)
   {
     getHost(id: $extensionId) {
       get(id: $id) {
@@ -17,6 +17,7 @@ const GET_BUILD_INFO = gql`
   }
 `;
 
+// todo: move this to models
 type Pipeline = {
   taskId: string | undefined,
   taskName: string | undefined,
@@ -77,6 +78,7 @@ export function useArtifacts(host: string, componentId: string): { data?: Artifa
   };
 }
 
+//todo: move this to mappers
 function mapToPipeline(data): Pipeline {
   const { startTime, endTime, ...rest } = data;
   return {
