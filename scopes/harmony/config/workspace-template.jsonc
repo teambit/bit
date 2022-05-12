@@ -27,7 +27,7 @@
      * scope - scope name only, e.g. 'compilation'.
      * owner - owner name in bit.dev, e.g. 'teambit'.
      **/
-    "defaultDirectory": "{scope}/{name}",
+    "defaultDirectory": "src/{scope}/{name}",
 
     /**
      * default scope for all components in workspace.
