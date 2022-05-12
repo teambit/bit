@@ -26,6 +26,7 @@ import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -48,7 +49,8 @@ type ReactDeps = [
   ESLintMain,
   PrettierMain,
   ApplicationMain,
-  GeneratorMain
+  GeneratorMain,
+  LoggerMain
 ];
 
 export type ReactMainConfig = {
@@ -113,7 +115,7 @@ export class ReactMain {
   async registerApp(reactApp: ReactAppOptions) {
     return this.application.registerApp(await this.reactAppType.createApp(reactApp));
   }
- 
+
   /**
    * override the env's typescript config for both dev and build time.
    * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
@@ -391,6 +393,7 @@ export class ReactMain {
     PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
+    LoggerAspect,
   ];
 
   static async provider(
@@ -408,9 +411,11 @@ export class ReactMain {
       prettier,
       application,
       generator,
+      loggerMain,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
+    const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
       jestAspect,
       tsAspect,
@@ -422,6 +427,7 @@ export class ReactMain {
       config,
       eslint,
       prettier,
+      logger,
       CompilerAspect.id
     );
     const appType = new ReactAppType('react-app', reactEnv);
