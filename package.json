@@ -112,6 +112,7 @@
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
+    "@teambit/bvm.list": "0.0.33",
     "@teambit/network.agent": "0.0.1",
     "@vuedoc/parser": "2.4.0",
     "acorn": "6.4.2",
