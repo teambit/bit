@@ -1265,21 +1265,11 @@ Env2Aspect.addRuntime(EnvMain);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
-      // helper.extensions.addExtensionToVariant('custom-react/env', 'teambit.dependencies/dependency-resolver', {
-      // policy: {
-      // dependencies: {
-      // react: '16.14.0',
-      // },
-      // },
-      // });
       helper.bitJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           react: '17',
         },
       });
-      // helper.command.install();
-      // // Only after the second install is bit able to detect apps
-      // helper.command.compile();
       helper.command.install();
       helper.command.install();
     });
