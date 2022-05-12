@@ -4,10 +4,14 @@ import { Logger } from '@teambit/logger';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
   const peerAliases = peers.reduce((acc, peerName) => {
-    // Get the dir of the package, to support cases like import react-dom/test-utils
-    // in case we just do require.resolve('react=dom') here it wil be resolved to something like
-    // node_modules/react-dom/index.js/test-utils which won't work
-    // once resolve to the folder it will resolve correctly
+    // gets the correct module folder of the package.
+    // this allows us to resolve internal files, for example:
+    // node_modules/react-dom/test-utils
+    //
+    // we can't use require.resolve() because it resolves to a specific file.
+    // for example, if we used "react-dom": require.resolve("react-dom"),
+    // it would try to resolve "react-dom/test-utils" as:
+    // node_modules/react-dom/index.js/test-utils
     const resolved = getResolvedDirOrFile(peerName, logger);
     if (resolved) {
       acc[peerName] = resolved;
