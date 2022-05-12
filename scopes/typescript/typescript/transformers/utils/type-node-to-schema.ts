@@ -5,6 +5,8 @@ import ts, {
   FunctionTypeNode,
   TypeQueryNode,
   TypeReferenceNode,
+  ArrayTypeNode,
+  TypeOperatorNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -15,6 +17,8 @@ import {
   TypeQuerySchema,
   LiteralTypeSchema,
   KeywordTypeSchema,
+  TypeArraySchema,
+  TypeOperatorSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -60,9 +64,12 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     }
     case SyntaxKind.TypeQuery:
       return typeQuery(node as TypeQueryNode, context);
+    case SyntaxKind.ArrayType:
+      return arrayType(node as ArrayTypeNode, context);
+    case SyntaxKind.TypeOperator:
+      return typeOperator(node as TypeOperatorNode, context);
     case SyntaxKind.TypePredicate:
     case SyntaxKind.ConstructorType:
-    case SyntaxKind.ArrayType:
     case SyntaxKind.TupleType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
@@ -71,7 +78,6 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.InferType:
     case SyntaxKind.ParenthesizedType:
     case SyntaxKind.ThisType:
-    case SyntaxKind.TypeOperator:
     case SyntaxKind.IndexedAccessType:
     case SyntaxKind.MappedType:
     case SyntaxKind.TemplateLiteralType:
@@ -147,4 +153,31 @@ async function typeQuery(node: TypeQueryNode, context: SchemaExtractorContext) {
   const displaySig = await context.getQuickInfoDisplayString(node.exprName);
   const type = await context.resolveType(node.exprName, node.exprName.getText(), false);
   return new TypeQuerySchema(type, displaySig);
+}
+
+async function arrayType(node: ArrayTypeNode, context: SchemaExtractorContext) {
+  const type = await typeNodeToSchema(node.elementType, context);
+  return new TypeArraySchema(type);
+}
+
+/**
+ * e.g. keyof typeof Foo
+ */
+async function typeOperator(node: TypeOperatorNode, context: SchemaExtractorContext) {
+  const operatorName = getOperatorName(node.operator);
+  const type = await typeNodeToSchema(node.type, context);
+  return new TypeOperatorSchema(operatorName, type);
+}
+
+function getOperatorName(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword) {
+  switch (operator) {
+    case SyntaxKind.KeyOfKeyword:
+      return 'keyof';
+    case SyntaxKind.UniqueKeyword:
+      return 'unique';
+    case SyntaxKind.ReadonlyKeyword:
+      return 'readonly';
+    default:
+      throw new Error(`getOperatorName: unable to find operator name for ${operator}`);
+  }
 }

@@ -22,5 +22,7 @@ export {
   InferenceTypeSchema,
   LiteralTypeSchema,
   KeywordTypeSchema,
+  TypeArraySchema,
+  TypeOperatorSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';
