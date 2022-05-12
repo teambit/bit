@@ -174,7 +174,8 @@ export default class ImportComponents {
 
   /**
    * consider the following use cases:
-   * 1) no ids were provided. it should import all the lanes components objects.
+   * 1) no ids were provided. it should import all the lanes components objects AND main components objects
+   * (otherwise, if main components are not imported and are missing, then bit-status complains about it)
    * 2) ids are provided with wildcards. we assume the user wants only the ids that are available on the lane.
    * because a user may entered "bit import scope/*" and this scope has many component on the lane and many not on the lane.
    * we want to bring only the components on the lane.
@@ -189,6 +190,9 @@ export default class ImportComponents {
     const bitIdsFromLane = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
 
     if (!this.options.ids.length) {
+      const mainIds = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+      const mainIdsToImport = mainIds.filter((id) => id.hasScope() && !bitIdsFromLane.hasWithoutVersion(id));
+      bitIdsFromLane.push(...mainIdsToImport);
       return bitIdsFromLane;
     }
 
@@ -286,18 +290,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
 
   async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
-
-    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    // this is probably not needed anymore because the build-one-graph already imports all
-    // missing objects.
-    // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
-    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
-    const componentsIdsToImport = BitIds.fromArray([
-      ...authoredExportedComponents,
-      ...importedComponents,
-      // ...idsOfDepsInstalledAsPackages,
-    ]);
+    const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
     let compiler;
     let tester;
@@ -353,6 +346,13 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
 
     return { dependencies: componentsAndDependencies, importDetails };
+  }
+
+  private getIdsToImportFromBitmap() {
+    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
+    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
+    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
+    return BitIds.fromArray([...authoredExportedComponents, ...importedComponents]);
   }
 
   /**
