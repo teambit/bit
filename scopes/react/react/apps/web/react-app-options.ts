@@ -3,21 +3,33 @@ import { WebpackConfigTransformer } from '@teambit/webpack';
 
 import { ReactDeployContext } from './deploy-context';
 
+/** https://github.com/Tofandel/prerender-spa-plugin-next */
 export type ReactAppPrerenderOptions = {
+  /** The index file to fall back on for SPAs. */
+  indexPath?: string;
+
   /**
    * routes to prerender
    */
   routes: string[];
+  
   /**
    * the proxy server you want the prerender headless browser to run on
    */
-
-  server?: { proxy: { [key: string]: { target: 'http://localhost:8000/'; pathRewrite: { [key: string]: string } } } };
+  server?: { proxy: { [key: string]: { target?: string; pathRewrite: { [key: string]: string } } } };
 
   /**
    * Post processing of the prerendered html. This is useful for adding meta tags to the html or changing the file name.
    */
-  postProcess?: (prerenderRoute: string, staticDir: string) => string;
+  postProcess?: (prerenderRoute: string) => string;
+
+  /** The renderer you'd like to use to prerender the app.
+   * @default new require("@prerenderer/renderer-puppeteer").
+   */
+  renderer?: any;
+
+  /** options to pass to the renderer class's constructor */
+  rendererOptions?: any;
 };
 
 export type ReactAppOptions = {
