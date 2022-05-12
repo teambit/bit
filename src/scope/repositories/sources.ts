@@ -97,12 +97,12 @@ export default class SourceRepository {
    */
   async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
     const emptyComponent = ModelComponent.fromBitId(bitId);
-    const isInCache = this.objects().getCache(emptyComponent.hash());
     const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
     if (!component) return undefined;
-    if (!isInCache) {
+    if (!component.laneDataIsPopulated) {
       const currentLane = await this.scope.getCurrentLaneObject();
       await component.populateLocalAndRemoteHeads(this.objects(), currentLane);
+      component.laneDataIsPopulated = true;
     }
     if (!bitId.hasVersion()) return component;
 
