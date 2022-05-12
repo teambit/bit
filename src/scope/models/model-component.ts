@@ -110,6 +110,7 @@ export default class Component extends BitObject {
    */
   laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
 
