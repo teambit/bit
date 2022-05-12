@@ -392,8 +392,11 @@ export default class ComponentMap {
 
   addLane(remoteLaneId: LaneId, version: string) {
     const existing = this.lanes.find((l) => l.remoteLane.isEqual(remoteLaneId));
-    if (existing) existing.version = version;
-    this.lanes.push({ remoteLane: remoteLaneId, version });
+    if (existing) {
+      existing.version = version;
+    } else {
+      this.lanes.push({ remoteLane: remoteLaneId, version });
+    }
   }
 
   /**
