@@ -19,3 +19,4 @@ export { LiteralTypeSchema } from './literal-type';
 export { KeywordTypeSchema } from './keyword-type';
 export { TypeArraySchema } from './type-array';
 export { TypeOperatorSchema } from './type-operator';
+export { TupleTypeSchema } from './tuple-type';

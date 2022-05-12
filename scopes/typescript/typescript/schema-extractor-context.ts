@@ -211,10 +211,17 @@ export class SchemaExtractorContext {
     const pos = this.getPosition(sourceFile, start.line, start.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
     if (!nodeAtPos) return undefined;
-    if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
-      // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
-      return this.visitDefinition(nodeAtPos);
-    }
+
+    // this causes some infinite loops. it's helpful for getting more data from types that are not exported.
+    // e.g.
+    // ```ts
+    // class Bar {}
+    // export const getBar = () => new Bar();
+    // ```
+    // if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
+    //   // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
+    //   return this.visitDefinition(nodeAtPos);
+    // }
     try {
       return await this.visit(nodeAtPos);
     } catch (err) {

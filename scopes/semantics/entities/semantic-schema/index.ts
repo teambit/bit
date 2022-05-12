@@ -24,5 +24,6 @@ export {
   KeywordTypeSchema,
   TypeArraySchema,
   TypeOperatorSchema,
+  TupleTypeSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

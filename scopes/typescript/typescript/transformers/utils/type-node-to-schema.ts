@@ -7,6 +7,10 @@ import ts, {
   TypeReferenceNode,
   ArrayTypeNode,
   TypeOperatorNode,
+  TupleTypeNode,
+  IntersectionTypeNode,
+  UnionTypeNode,
+  TypeLiteralNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -19,6 +23,7 @@ import {
   KeywordTypeSchema,
   TypeArraySchema,
   TypeOperatorSchema,
+  TupleTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -30,47 +35,28 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     return new KeywordTypeSchema(node.getText());
   }
   switch (node.kind) {
-    case SyntaxKind.IntersectionType: {
-      const types = await pMapSeries((node as ts.IntersectionTypeNode).types, async (type) => {
-        const typeSchema = await typeNodeToSchema(type, context);
-        return typeSchema;
-      });
-      return new TypeIntersectionSchema(types);
-    }
-    case SyntaxKind.UnionType: {
-      const types = await pMapSeries((node as ts.UnionTypeNode).types, async (type) => {
-        const typeSchema = await typeNodeToSchema(type, context);
-        return typeSchema;
-      });
-      return new TypeUnionSchema(types);
-    }
-
-    case SyntaxKind.TypeReference: {
+    case SyntaxKind.IntersectionType:
+      return intersectionType(node as IntersectionTypeNode, context);
+    case SyntaxKind.UnionType:
+      return unionType(node as UnionTypeNode, context);
+    case SyntaxKind.TypeReference:
       return typeReference(node as TypeReferenceNode, context);
-    }
-    case SyntaxKind.TypeLiteral: {
-      // not to be confused with "LiteralType", which is string/boolean/null.
-      // this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
-      const members = await pMapSeries((node as ts.TypeLiteralNode).members, async (member) => {
-        const typeSchema = await context.computeSchema(member);
-        return typeSchema;
-      });
-      return new TypeLiteralSchema(members);
-    }
+    case SyntaxKind.TypeLiteral:
+      return typeLiteral(node as TypeLiteralNode, context);
     case SyntaxKind.LiteralType: // e.g. string/boolean
       return new LiteralTypeSchema(node.getText());
-    case SyntaxKind.FunctionType: {
+    case SyntaxKind.FunctionType:
       return functionType(node as FunctionTypeNode, context);
-    }
     case SyntaxKind.TypeQuery:
       return typeQuery(node as TypeQueryNode, context);
     case SyntaxKind.ArrayType:
       return arrayType(node as ArrayTypeNode, context);
     case SyntaxKind.TypeOperator:
       return typeOperator(node as TypeOperatorNode, context);
+    case SyntaxKind.TupleType:
+      return tupleType(node as TupleTypeNode, context);
     case SyntaxKind.TypePredicate:
     case SyntaxKind.ConstructorType:
-    case SyntaxKind.TupleType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
     case SyntaxKind.RestType:
@@ -124,6 +110,34 @@ function isKeywordType(node: TypeNode): node is KeywordTypeNode {
     default:
       return false;
   }
+}
+
+async function intersectionType(node: IntersectionTypeNode, context: SchemaExtractorContext) {
+  const types = await pMapSeries(node.types, async (type) => {
+    const typeSchema = await typeNodeToSchema(type, context);
+    return typeSchema;
+  });
+  return new TypeIntersectionSchema(types);
+}
+
+async function unionType(node: UnionTypeNode, context: SchemaExtractorContext) {
+  const types = await pMapSeries(node.types, async (type) => {
+    const typeSchema = await typeNodeToSchema(type, context);
+    return typeSchema;
+  });
+  return new TypeUnionSchema(types);
+}
+
+/**
+ * not to be confused with "LiteralType", which is string/boolean/null.
+ * this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
+ */
+async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContext) {
+  const members = await pMapSeries(node.members, async (member) => {
+    const typeSchema = await context.computeSchema(member);
+    return typeSchema;
+  });
+  return new TypeLiteralSchema(members);
 }
 
 /**
@@ -180,4 +194,12 @@ function getOperatorName(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKe
     default:
       throw new Error(`getOperatorName: unable to find operator name for ${operator}`);
   }
+}
+
+async function tupleType(node: TupleTypeNode, context: SchemaExtractorContext) {
+  const elements = await pMapSeries(node.elements, async (elem) => {
+    const typeSchema = await typeNodeToSchema(elem, context);
+    return typeSchema;
+  });
+  return new TupleTypeSchema(elements);
 }
