@@ -1,15 +1,15 @@
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
-import { LaneId, LocalLaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 import { BitId, BitIds } from '../../bit-id';
-import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Ref, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/components-index';
 import { ScopeJson, TrackLane } from '../scope-json';
+import { Log } from '../models/lane';
 
 export default class Lanes {
   objects: Repository;
@@ -20,6 +20,9 @@ export default class Lanes {
   }
 
   async listLanes(): Promise<Lane[]> {
+    return this.listLanesBackwardCompatible();
+
+    // @todo: remove the above after all the lanes are migrated to the new format (2022-06-01 will be a good time to do so)
     return (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
   }
 
@@ -43,13 +46,28 @@ export default class Lanes {
     return laneName;
   }
 
-  isOnDefaultLane(): boolean {
+  isOnMain(): boolean {
     const currentLane = this.getCurrentLaneName();
     return currentLane === DEFAULT_LANE;
   }
 
-  getCurrentLaneId(): LocalLaneId {
-    return LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE);
+  getCurrentLaneId(): LaneId {
+    const laneName = this.scopeJson.lanes.current;
+    // backward compatibility, in the past, the default lane was master
+    if (laneName === 'master' || laneName === DEFAULT_LANE) {
+      return this.getDefaultLaneId();
+    }
+    const trackData = this.getRemoteTrackedDataByLocalLane(laneName);
+    if (!trackData) throw new BitError(`unable to find the tracking data for the current lane "${laneName}"`);
+    return LaneId.from(trackData.remoteLane, trackData.remoteScope);
+  }
+
+  getAliasByLaneId(laneId: LaneId): string | null {
+    return this.getLocalTrackedLaneByRemoteName(laneId.name, laneId.scope);
+  }
+
+  getDefaultLaneId() {
+    return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -67,12 +85,20 @@ export default class Lanes {
     return trackedLane ? trackedLane.localLane : null;
   }
 
+  getRemoteScopeByLocalLane(localLane: string): string | null {
+    const trackedLane = this.scopeJson.lanes.tracking.find((t) => t.localLane === localLane);
+    return trackedLane ? trackedLane.remoteScope : null;
+  }
+
   getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
     return this.scopeJson.lanes.tracking.find((t) => t.localLane === localLane);
   }
 
   trackLane(trackLaneData: TrackLane) {
     this.scopeJson.trackLane(trackLaneData);
+  }
+  removeTrackLane(localLane: string) {
+    this.scopeJson.removeTrackLane(localLane);
   }
 
   async removeLanes(scope: Scope, lanes: string[], force: boolean): Promise<string[]> {
@@ -116,6 +142,35 @@ export default class Lanes {
     return lanes;
   }
 
+  /**
+   * the name can be a full lane-id or only the lane-name, which can be the alias (local-lane) or the remote-name.
+   */
+  async parseLaneIdFromString(name: string): Promise<LaneId> {
+    if (name.includes(LANE_REMOTE_DELIMITER)) {
+      return LaneId.parse(name);
+    }
+    // the name is only the lane-name without the scope. search for lanes with the same name
+    if (name === DEFAULT_LANE) {
+      return LaneId.from(DEFAULT_LANE, this.scopeJson.name);
+    }
+    const trackedData = this.getRemoteTrackedDataByLocalLane(name);
+    if (trackedData) {
+      return LaneId.from(trackedData.remoteLane, trackedData.remoteScope);
+    }
+
+    const allLanes = await this.listLanes();
+    const foundWithSameName = allLanes.filter((lane) => lane.name === name);
+    if (foundWithSameName.length === 0) {
+      throw new BitError(`unable to find a lane with the name "${name}"`);
+    }
+    if (foundWithSameName.length > 1) {
+      throw new BitError(
+        `found more than one lane with the name "${name}", please specify the scope in a form of "<scope>${LANE_REMOTE_DELIMITER}<name>"`
+      );
+    }
+    return foundWithSameName[0].toLaneId();
+  }
+
   async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {
     const getLaneDataOfLane = async (laneObject: Lane): Promise<LaneData> => {
       const laneName = laneObject.name;
@@ -124,6 +179,7 @@ export default class Lanes {
         name: laneName,
         remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
+        log: laneObject.log,
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
         readmeComponent: laneObject.readmeComponent && {
           id: laneObject.readmeComponent.id,
@@ -132,8 +188,9 @@ export default class Lanes {
       };
     };
     if (name) {
-      const laneObject = await this.loadLane(LaneId.from(name));
-      if (!laneObject) throw new GeneralError(`lane "${name}" was not found`);
+      const laneId = await this.parseLaneIdFromString(name);
+      const laneObject = await this.loadLane(laneId);
+      if (!laneObject) throw new BitError(`lane "${name}" was not found`);
       return [await getLaneDataOfLane(laneObject)];
     }
 
@@ -141,6 +198,27 @@ export default class Lanes {
     const lanes: LaneData[] = await Promise.all(lanesObjects.map((laneObject: Lane) => getLaneDataOfLane(laneObject)));
 
     return lanes;
+  }
+
+  private async listLanesBackwardCompatible(): Promise<Lane[]> {
+    const lanes = (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
+    const oldLanes = lanes.filter((lane) => !lane.scope);
+    if (oldLanes.length) await this.fixOldLanesToIncludeScope(oldLanes);
+    return lanes;
+  }
+
+  private async fixOldLanesToIncludeScope(lanes: Lane[]) {
+    logger.warn(`lanes, fixOldLanesToIncludeScope: ${lanes.map((l) => l.id.toString()).join(', ')}`);
+    lanes.forEach((lane) => {
+      const trackLaneData = this.getRemoteTrackedDataByLocalLane(lane.name);
+      if (trackLaneData) {
+        lane.scope = trackLaneData.remoteScope;
+      } else {
+        lane.scope = this.scopeJson.name;
+      }
+    });
+    await this.objects.deleteObjectsFromFS(lanes.map((l) => l.hash()));
+    await this.objects.writeObjectsToTheFS(lanes);
   }
 }
 
@@ -150,4 +228,5 @@ export type LaneData = {
   remote: string | null;
   isMerged: boolean | null;
   readmeComponent?: { id: BitId; head?: string };
+  log?: Log;
 };

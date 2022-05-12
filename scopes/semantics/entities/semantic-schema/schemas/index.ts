@@ -1,4 +1,15 @@
 export { Module } from './module';
 export { Export, StaticProperties } from './export';
-export { FunctionSchema } from './function';
+export { FunctionSchema, Parameter } from './function';
 export { TypeRefSchema } from './type-ref';
+export { VariableSchema } from './variable';
+export { ClassSchema } from './class';
+export { ConstructorSchema } from './constructor';
+export { TypeSchema } from './type';
+export { TypeIntersectionSchema } from './type-intersection';
+export { TypeUnionSchema } from './type-union';
+export { TypeLiteralSchema } from './type-literal';
+export { IndexSignatureSchema } from './index-signature';
+export { InterfaceSchema } from './interface';
+export { GetAccessorSchema } from './get-accessor';
+export { SetAccessorSchema } from './set-accessor';

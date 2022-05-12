@@ -117,7 +117,8 @@ export class CompositionsMain {
     pathArray[pathArray.length - 1] = 'js';
 
     const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
-    return module.exports.map((exportModel) => {
+    const exports = module.getExportSchemas();
+    return exports.map((exportModel) => {
       const displayName = exportModel.staticProperties?.get('compositionName');
 
       return new Composition(

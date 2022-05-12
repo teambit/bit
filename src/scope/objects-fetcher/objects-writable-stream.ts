@@ -1,5 +1,5 @@
 import { Writable } from 'stream';
-import { RemoteLaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitObject, Repository } from '../objects';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
@@ -67,9 +67,7 @@ export class ObjectsWritable extends Writable {
       return;
     }
     await this.repo.writeObjectsToTheFS([component]);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(RemoteLaneId.from(DEFAULT_LANE, this.remoteName), [
-      component,
-    ]);
+    await this.repo.remoteLanes.addEntriesFromModelComponents(LaneId.from(DEFAULT_LANE, this.remoteName), [component]);
   }
 
   /**

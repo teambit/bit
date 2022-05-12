@@ -29,7 +29,7 @@ import { HttpHelper } from '../http-helper';
       helper.command.exportLane();
     });
     it('lane list -r should show the remote lanes', () => {
-      const output = helper.command.showRemoteLanesParsed();
+      const output = helper.command.listRemoteLanesParsed();
       expect(output.lanes).to.have.lengthOf(1);
       expect(output.lanes[0].name).to.have.string('dev');
     });
@@ -46,7 +46,7 @@ import { HttpHelper } from '../http-helper';
     });
     it('bit lane remove -r -f should remove the remote lane', () => {
       helper.command.removeRemoteLane('dev', '--force');
-      const output = helper.command.showRemoteLanesParsed();
+      const output = helper.command.listRemoteLanesParsed();
       expect(output.lanes).to.have.lengthOf(0);
     });
     // previously it was throwing UnexpectedNetworkError without any message.

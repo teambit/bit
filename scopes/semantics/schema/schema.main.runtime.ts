@@ -3,7 +3,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Module, SemanticSchema } from '@teambit/semantics.entities.semantic-schema';
+import { Module, APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -59,20 +59,20 @@ export class SchemaMain {
     return parser.parseModule(path);
   }
 
-  private getSchemaExtractorContext() {}
-
   getSchemaExtractor(component: Component) {
     const env = this.envs.getEnv(component).env;
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
     }
+
+    return env.getSchemaExtractor();
   }
 
   /**
    * get a schema of a component.
    * @param component target component.
    */
-  async getSchema(component: Component): Promise<SemanticSchema> {
+  async getSchema(component: Component): Promise<APISchema> {
     const env = this.envs.getEnv(component).env;
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
