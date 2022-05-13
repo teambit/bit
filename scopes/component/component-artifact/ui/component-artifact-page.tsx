@@ -50,7 +50,7 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
         if (!nodes || nodes.length < 2) {
             return [];
         }
-        
+
         let edges: Array<Edge> = [];
         for (let i = 1; i < nodes.length; i++) {
             const edge: Edge = {
@@ -84,8 +84,16 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
 
     return <div className={styles.page}>
         <H2 size="xs">Component Artifacts</H2>
-        <h2>Status: {data?.buildStatus}</h2>
-        <h2>Duration: {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms</h2>
+        <div className={styles.statContainer}>
+            <div className={styles.statItem}>
+                <p className={styles.statTitle}>Duration</p>
+                <p>{calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms</p>
+            </div>
+            <div className={styles.statItem}>
+                <p className={styles.statTitle}>Status</p>
+                <p>{data?.buildStatus}</p>
+            </div>
+        </div>
         <ReactFlowProvider>
             <ReactFlow
                 draggable={false}
