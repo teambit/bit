@@ -14,23 +14,43 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     const component = useContext(ComponentContext);
     const { data, loading } = useArtifacts(host, component.id.toString());
 
+    function calcDuration(startTime?: Date, endTime?: Date): number {
+        return Math.abs((endTime?.getMilliseconds() ?? 0) - (startTime?.getMilliseconds() ?? 0));
+    }
+
+    function calcSeconds(duration: number): number {
+        return Math.floor(duration / 1000);
+    }
+
+    function calcMilliseconds(duration: number): number {
+        return duration % 1000;
+    }
+
     const nodes = useMemo(() => {
         if (!data) return [];
 
-        const { pipleline = [] } = data;
-        return pipleline.map((task, index) => ({
-            id: index.toString(),
-            type: "artifactNode",
-            data: { label: task.taskName },
-            position: { x: 100 + index * 300, y: 100 }
-        } as Node));
+        const { pipelines = [] } = data;
+        return pipelines.map((task, index) => {
+            const duration = calcDuration(task.startTime, task.endTime);
+            return {
+                id: index.toString(),
+                type: "artifactNode",
+                data: {
+                    taskId: task.taskId,
+                    taskName: task.taskName,
+                    durationSecs: calcSeconds(duration),
+                    durationMilliSecs: calcMilliseconds(duration),
+                },
+                position: { x: 100 + index * 300, y: 100 }
+            } as Node
+        });
     }, [data]);
 
     const edges = useMemo(() => {
         if (!nodes || nodes.length < 2) {
             return [];
         }
-
+        
         let edges: Array<Edge> = [];
         for (let i = 1; i < nodes.length; i++) {
             const edge: Edge = {
@@ -49,14 +69,23 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
         ...edges
     ];
 
+    const totalDurationSecs = useMemo(() => {
+        if (!data) return 0;
+
+        const { pipelines } = data;
+        return pipelines.reduce((agg, cur) => {
+            return agg + calcDuration(cur.startTime, cur.endTime);
+        }, 0);
+    }, [data]);
+
     const NodeTypes: NodeTypesType = {
         artifactNode: ArtifactNode,
     };
 
-
     return <div className={styles.page}>
         <H2 size="xs">Component Artifacts</H2>
-
+        <h2>Status: {data?.buildStatus}</h2>
+        <h2>Duration: {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms</h2>
         <ReactFlowProvider>
             <ReactFlow
                 draggable={false}

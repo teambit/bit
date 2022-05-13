@@ -10,7 +10,7 @@ export type ArtfactNodeProps = NodeProps & {
 }
 
 function ArtifactNode(props: ArtfactNodeProps) {
-    const { isConnectable, data } = props;
+    const { isConnectable, data: {taskName, taskId, durationSecs, durationMilliSecs} } = props;
     const icon = "https://static.bit.dev/extensions-icons/react.svg";
 
     return (
@@ -43,14 +43,14 @@ function ArtifactNode(props: ArtfactNodeProps) {
                         {<img src={icon} className={styles.envIcon} />}
                     </div>
                     <div style={{ marginLeft: 5 }}>
-                        <div className={classNames(styles.breadcrumbs, ellipsis)}>bit/agaga/awta</div>
+                        <div className={classNames(styles.breadcrumbs, ellipsis)}>{taskId}</div>
                     </div>
                 </div>
                 <div className={classNames(styles.componentName)} style={{justifyContent: "space-between"}}>
                     <div className={classNames(styles.name, ellipsis)}>
-                        {data.label}
+                        {taskName}
                     </div>
-                    <div className={classNames(styles.version, ellipsis)}> 4m 7s</div>
+                    <div className={classNames(styles.version, ellipsis)}>{durationSecs}s {durationMilliSecs}ms</div>
                 </div>
             </Card>
         </>

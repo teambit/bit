@@ -1,6 +1,6 @@
-import {gql, QueryResult} from '@apollo/client';
-import {useDataQuery} from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import {useScopeQuery} from '@teambit/scope.ui.hooks.use-scope';
+import { gql, QueryResult } from '@apollo/client';
+import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 
 const GET_BUILD_INFO = gql`
   query ComponentArtifacts($id: String!, $extensionId: String!)
@@ -47,7 +47,7 @@ type Artifact = {
 
 type ArtifactModel = {
   buildStatus: string,
-  pipleline: Array<Pipeline>,
+  pipelines: Array<Pipeline>,
   artifacts: Array<Artifact>,
 }
 
@@ -64,7 +64,7 @@ export function useArtifacts(host: string, componentId: string): { data?: Artifa
 
     artifactData = {
       buildStatus,
-      pipleline: pipeline?.map(p => mapToPipeline(p)) ?? [],
+      pipelines: pipeline?.map(p => mapToPipeline(p)) ?? [],
       artifacts: artifacts?.map(a => a as Artifact) ?? []
     };
   }
