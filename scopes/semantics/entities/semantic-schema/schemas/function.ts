@@ -1,18 +1,12 @@
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
-
-export type Parameter = {
-  name: string;
-  type: SchemaNode;
-  defaultValue?: any;
-  description?: string;
-};
+import { ParameterSchema } from './parameter';
 
 export class FunctionSchema implements SchemaNode {
   constructor(
     readonly name: string,
     // readonly doc: any,
-    readonly params: Parameter[],
+    readonly params: ParameterSchema[],
 
     readonly returnType: SchemaNode,
     private signature: string
@@ -37,7 +31,7 @@ export class FunctionSchema implements SchemaNode {
   }
 
   toString() {
-    const paramsStr = this.params.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
+    const paramsStr = this.params.map((param) => param.toString()).join(', ');
     return `${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
   }
 }

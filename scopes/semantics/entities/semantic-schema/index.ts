@@ -5,7 +5,6 @@ export {
   Module,
   StaticProperties,
   FunctionSchema,
-  Parameter,
   TypeRefSchema,
   VariableSchema,
   ClassSchema,
@@ -25,5 +24,6 @@ export {
   TypeArraySchema,
   TypeOperatorSchema,
   TupleTypeSchema,
+  ParameterSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import { Parameter } from '.';
 import { SchemaNode } from '../schema-node';
+import { ParameterSchema } from './parameter';
 
 export class SetAccessorSchema implements SchemaNode {
-  constructor(private name: string, private param: Parameter, private signature: string) {}
+  constructor(private name: string, private param: ParameterSchema, private signature: string) {}
   getSignature() {
     return this.signature;
   }
@@ -18,6 +18,6 @@ export class SetAccessorSchema implements SchemaNode {
   }
 
   toString() {
-    return `set ${chalk.bold(this.name)}(${this.param.name}: ${this.param.type})`;
+    return `set ${chalk.bold(this.name)}(${this.param.toString()})`;
   }
 }

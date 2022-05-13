@@ -1,6 +1,6 @@
 export { Module } from './module';
 export { Export, StaticProperties } from './export';
-export { FunctionSchema, Parameter } from './function';
+export { FunctionSchema } from './function';
 export { TypeRefSchema } from './type-ref';
 export { VariableSchema } from './variable';
 export { ClassSchema } from './class';
@@ -20,3 +20,4 @@ export { KeywordTypeSchema } from './keyword-type';
 export { TypeArraySchema } from './type-array';
 export { TypeOperatorSchema } from './type-operator';
 export { TupleTypeSchema } from './tuple-type';
+export { ParameterSchema } from './parameter';
