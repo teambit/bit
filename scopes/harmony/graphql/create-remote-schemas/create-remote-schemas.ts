@@ -3,20 +3,31 @@ import { setContext } from 'apollo-link-context';
 import { HttpLink } from 'apollo-link-http';
 import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
 import { WebSocketLink } from 'apollo-link-ws';
-import { split } from 'apollo-link';
+import { split, ApolloLink } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import ws from 'ws';
 import { GraphQLServer } from '../graphql-server';
 
 async function getRemoteSchema({ uri, subscriptionsUri }) {
+  const wrappingLink = new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+      const context = operation.getContext();
+      if (context?.response?.headers?.get('set-cookie')) {
+        context?.graphqlContext?.res?.setHeader('set-cookie', context?.response?.headers?.get('set-cookie'));
+      }
+      return response;
+    });
+  });
   // @ts-ignore
   const http = new HttpLink({ uri, fetch });
   const httpLink = setContext((request, previousContext) => {
     return {
       headers: previousContext?.graphqlContext?.headers,
     };
-  }).concat(http);
+  })
+    .concat(wrappingLink)
+    .concat(http);
 
   if (!subscriptionsUri) {
     return makeRemoteExecutableSchema({
