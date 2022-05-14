@@ -94,7 +94,10 @@ async function setFutureVersions(
           componentToTag.componentMap?.nextVersion?.preRelease
         );
       } else if (isAutoTag) {
-        componentToTag.version = modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease); // auto-tag always bumped as patch
+        // auto-tag always bumped as patch
+        componentToTag.version = soft
+          ? 'patch'
+          : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease);
       } else {
         const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
         componentToTag.version = soft
