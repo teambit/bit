@@ -6,7 +6,6 @@ export type PlainTypeRefSchema = {
   name: string;
   componentId?: string;
   packageName?: string;
-  node?: SchemaNode;
 };
 
 export class TypeRefSchema implements SchemaNode {
@@ -24,9 +23,7 @@ export class TypeRefSchema implements SchemaNode {
     /**
      * target package name. existing if type is defined in different package.
      */
-    readonly packageName?: string,
-
-    readonly node?: SchemaNode
+    readonly packageName?: string
   ) {}
 
   toObject() {
@@ -48,12 +45,18 @@ export class TypeRefSchema implements SchemaNode {
     return this.name;
   }
 
+  /**
+   * whether this type was already exported in this component
+   */
+  isFromThisComponent() {
+    return !this.componentId && !this.packageName;
+  }
+
   static from(plainSchema: PlainTypeRefSchema) {
     return new TypeRefSchema(
       plainSchema.name,
       plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
-      plainSchema.packageName,
-      plainSchema.node
+      plainSchema.packageName
     );
   }
 }
