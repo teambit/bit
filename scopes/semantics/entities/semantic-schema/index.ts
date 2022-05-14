@@ -5,6 +5,7 @@ export {
   Module,
   StaticProperties,
   FunctionSchema,
+  Modifier,
   TypeRefSchema,
   VariableSchema,
   ClassSchema,

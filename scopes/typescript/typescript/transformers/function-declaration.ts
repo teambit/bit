@@ -1,4 +1,4 @@
-import { SchemaNode, FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, FunctionSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
@@ -28,7 +28,8 @@ export class FunctionDeclaration implements SchemaTransformer {
     const displaySig = info?.body?.displayString;
     const args = await getParams(funcDec.parameters, context);
     const returnType = await context.resolveType(funcDec, returnTypeStr);
+    const modifiers = funcDec.modifiers?.map((modifier) => modifier.getText()) || [];
 
-    return new FunctionSchema(name, args, returnType, displaySig || '');
+    return new FunctionSchema(name, args, returnType, displaySig || '', modifiers as Modifier[]);
   }
 }

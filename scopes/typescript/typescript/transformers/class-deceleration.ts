@@ -1,4 +1,5 @@
 import pMapSeries from 'p-map-series';
+import { compact } from 'lodash';
 import { ClassSchema, GetAccessorSchema, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, ClassDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
@@ -24,6 +25,10 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
   async transform(node: ClassDeclaration, context: SchemaExtractorContext) {
     const className = this.getName(node);
     const members = await pMapSeries(node.members, async (member) => {
+      const isPrivate = member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword);
+      if (isPrivate) {
+        return null;
+      }
       switch (member.kind) {
         case ts.SyntaxKind.GetAccessor: {
           const getter = member as ts.GetAccessorDeclaration;
@@ -43,6 +48,6 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
           return context.computeSchema(member);
       }
     });
-    return new ClassSchema(className, members);
+    return new ClassSchema(className, compact(members));
   }
 }

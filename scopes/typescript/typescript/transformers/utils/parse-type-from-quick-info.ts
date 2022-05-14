@@ -39,17 +39,37 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
   const splitByColon = displayString.split(':');
   switch (quickInfo.body.kind) {
     case 'const':
+    case 'property':
     case 'let':
     case 'var': {
       const [, ...tail] = splitByColon;
       return tail.join(':').trim();
     }
+    case 'method':
     case 'function': {
       const split = displayString.split('): ');
       if (split.length !== 2) {
         throw new Error(`quickinfo of a function below was not implemented.\n${displayString}`);
       }
       return split[1].trim();
+    }
+    case 'alias': {
+      // e.g. (alias) class BuilderService\nimport BuilderService
+      // e.g. '(alias) type Serializable = {\n' +
+      // '    toString(): string;\n' +
+      // '}\n' +
+      // 'import Serializable'
+      const firstLine = displayString.split('\n')[0];
+      const splitBySpace = firstLine.trim().split(' ');
+      // first two are alias keyword and alias type
+      const [, , typeName] = splitBySpace;
+      return typeName;
+    }
+    case 'type': {
+      // e.g. `type TaskSlot = SlotRegistry<BuildTask[]>`
+      const splitByEqual = displayString.split('=');
+      const [, ...tail] = splitByEqual;
+      return tail.join('=').trim();
     }
     default:
       return splitByColon[splitByColon.length - 1].trim();
