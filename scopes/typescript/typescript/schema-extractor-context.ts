@@ -1,14 +1,17 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, LiteralTypeNode } from 'typescript';
+import ts, { ExportDeclaration, Node, TypeNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve, sep } from 'path';
 import { Component } from '@teambit/component';
-import { TypeRefSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { TypeRefSchema, SchemaNode, InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
+import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
+import { TransformerNotFound } from './exceptions';
+import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 
 export class SchemaExtractorContext {
   constructor(
@@ -70,6 +73,11 @@ export class SchemaExtractorContext {
     return this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
   }
 
+  async getQuickInfoDisplayString(node: Node): Promise<string> {
+    const quickInfo = await this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+    return quickInfo?.body?.displayString || '';
+  }
+
   /**
    * returns the type definition for a type.
    */
@@ -104,7 +112,12 @@ export class SchemaExtractorContext {
       // scoped package
       return `${pkgParts[0]}/${pkgParts[1]}`;
     }
-    return pkgParts[0];
+    const pkgName = pkgParts[0];
+    if (pkgName === 'typescript') {
+      // it's a built-in type, such as "string".
+      return '';
+    }
+    return pkgName;
   }
 
   /**
@@ -193,36 +206,46 @@ export class SchemaExtractorContext {
     return this.extractor.computeExportedIdentifiers(node, this);
   }
 
-  private isNative(typeName: string) {
-    return ['string', 'number', 'bool', 'boolean', 'object', 'any', 'void'].includes(typeName);
-  }
-
   async jump(file: AbstractVinyl, start: any): Promise<SchemaNode | undefined> {
     const sourceFile = this.extractor.parseSourceFile(file);
     const pos = this.getPosition(sourceFile, start.line, start.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
     if (!nodeAtPos) return undefined;
-    if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
-      // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
-      return this.visitDefinition(nodeAtPos);
+
+    // this causes some infinite loops. it's helpful for getting more data from types that are not exported.
+    // e.g.
+    // ```ts
+    // class Bar {}
+    // export const getBar = () => new Bar();
+    // ```
+    // if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
+    //   // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
+    //   return this.visitDefinition(nodeAtPos);
+    // }
+    try {
+      return await this.visit(nodeAtPos);
+    } catch (err) {
+      if (err instanceof TransformerNotFound) {
+        return undefined;
+      }
+      throw err;
     }
-    return this.visit(nodeAtPos);
   }
 
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(node: Node, typeStr: string): Promise<TypeRefSchema> {
-    // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
-    // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
-    // @ts-ignore
-    node = node.type || node;
-    if (this.isNative(typeStr)) return new TypeRefSchema(typeStr);
-    if (node.kind === ts.SyntaxKind.LiteralType) {
-      return new TypeRefSchema((node as LiteralTypeNode).literal.getText());
-    }
+  async resolveType(
+    node: Node & { type?: TypeNode },
+    typeStr: string,
+    isTypeStrFromQuickInfo = true
+  ): Promise<SchemaNode> {
     if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
-
+    if (node.type && ts.isTypeNode(node.type)) {
+      // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
+      // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
+      return typeNodeToSchema(node.type, this);
+    }
     /**
      * tsserver has two different calls: "definition" and "typeDefinition".
      * normally, we need the "typeDefinition" to get the type data of a node.
@@ -242,9 +265,16 @@ export class SchemaExtractorContext {
     const definition = await getDef();
 
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
-    const unknownExactType = new TypeRefSchema(typeStr);
+    const unknownExactType = async () => {
+      if (isTypeStrFromQuickInfo) {
+        return new InferenceTypeSchema(typeStr);
+      }
+      const info = await this.getQuickInfo(node);
+      const type = parseTypeFromQuickInfo(info);
+      return new InferenceTypeSchema(type);
+    };
     if (!definition) {
-      return unknownExactType;
+      return unknownExactType();
     }
 
     // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
@@ -259,9 +289,10 @@ export class SchemaExtractorContext {
     const file = this.findFileInComponent(definition.file);
     if (file) {
       if (isDefInSameLocation()) {
-        return unknownExactType;
+        return unknownExactType();
       }
-      return new TypeRefSchema(typeStr, undefined, undefined, await this.jump(file, definition.start));
+      const schemaNode = await this.jump(file, definition.start);
+      return schemaNode || unknownExactType();
     }
     const pkgName = this.parsePackageNameFromPath(definition.file);
     // TODO: find component id is exists, otherwise add the package name.

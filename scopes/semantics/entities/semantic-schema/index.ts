@@ -5,7 +5,7 @@ export {
   Module,
   StaticProperties,
   FunctionSchema,
-  Parameter,
+  Modifier,
   TypeRefSchema,
   VariableSchema,
   ClassSchema,
@@ -18,5 +18,13 @@ export {
   InterfaceSchema,
   GetAccessorSchema,
   SetAccessorSchema,
+  TypeQuerySchema,
+  InferenceTypeSchema,
+  LiteralTypeSchema,
+  KeywordTypeSchema,
+  TypeArraySchema,
+  TypeOperatorSchema,
+  TupleTypeSchema,
+  ParameterSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

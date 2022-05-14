@@ -1,22 +1,18 @@
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
-import { TypeRefSchema } from './type-ref';
+import { ParameterSchema } from './parameter';
 
-export type Parameter = {
-  name: string;
-  type: TypeRefSchema;
-  defaultValue?: any;
-  description?: string;
-};
+export type Modifier = 'static' | 'public' | 'private' | 'protected' | 'readonly' | 'abstract' | 'async' | 'override';
 
 export class FunctionSchema implements SchemaNode {
   constructor(
     readonly name: string,
     // readonly doc: any,
-    readonly params: Parameter[],
+    readonly params: ParameterSchema[],
 
-    readonly returnType: TypeRefSchema,
-    private signature: string
+    readonly returnType: SchemaNode,
+    readonly signature: string,
+    readonly modifiers: Modifier[] = []
   ) {}
 
   serialize() {}
@@ -34,11 +30,13 @@ export class FunctionSchema implements SchemaNode {
       params: this.params,
       returnType: this.returnType.toObject(),
       signature: this.signature,
+      modifiers: this.modifiers,
     };
   }
 
   toString() {
-    const paramsStr = this.params.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
-    return `${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+    const paramsStr = this.params.map((param) => param.toString()).join(', ');
+    const modifiersStr = this.modifiers.length ? `${this.modifiers.join(' ')} ` : '';
+    return `${modifiersStr}${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
   }
 }

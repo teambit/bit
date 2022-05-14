@@ -20,10 +20,9 @@ export class PropertyDeclaration implements SchemaTransformer {
 
   async transform(propertyDec: PropertyDeclarationNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const name = this.getName(propertyDec);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(propertyDec.name!);
+    const info = await context.getQuickInfo(propertyDec.name);
     const displaySig = info?.body?.displayString;
-    const typeStr = parseTypeFromQuickInfo(displaySig);
+    const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(propertyDec, typeStr);
 
     return new VariableSchema(name || '', displaySig || '', type);
