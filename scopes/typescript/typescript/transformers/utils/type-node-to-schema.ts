@@ -1,4 +1,4 @@
-import ts, {
+import {
   TypeNode,
   SyntaxKind,
   KeywordTypeNode,
