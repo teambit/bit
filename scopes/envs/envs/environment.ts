@@ -64,6 +64,16 @@ export interface DependenciesEnv extends Environment {
   getDependencies?: () => EnvPolicyConfigObject | Promise<EnvPolicyConfigObject>;
 
   /**
+   * Returns a list of additional test host dependencies
+   * this will be added to the tester context
+   * This can be used in cases when you want specific dependencies to be resolved from the env during testing
+   * but you don't want these dependencies as peer dependencies of the component (as they are not used during runtime)
+   * An example for this is @angular/compiler, which during running tests you want to resolve from the env, but you don't
+   * need it during component runtime.
+   */
+  getAdditionalTestHostDependencies?: () => string[] | Promise<string[]>;
+
+  /**
    * Returns a list of additional host dependencies
    * this list will be provided as globals on the window after bit preview bundle
    * by default bit will merge this list with the peers from the getDependencies function

@@ -88,6 +88,16 @@ export interface TesterContext extends ExecutionContext {
    * array of patterns to test.
    */
   patterns: ComponentPatternsMap;
+
+  /**
+   *
+   * additional test host dependencies
+   * This can be used in cases when you want specific dependencies to be resolved from the env during testing
+   * but you don't want these dependencies as peer dependencies of the component (as they are not used during runtime)
+   * An example for this is @angular/compiler, which during running tests you want to resolve from the env, but you don't
+   * need it during component runtime.
+   */
+  additionalHostDependencies?: string[];
 }
 
 /**
