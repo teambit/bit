@@ -1,4 +1,5 @@
 import { WebpackConfigTransformContext } from '@teambit/webpack';
+import { realpathSync } from 'fs';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import { getExposedRules } from './get-exposed-rules';
 
@@ -8,7 +9,8 @@ export function generateAddAliasesFromPeersTransformer(peers: string[]) {
     let options;
     if (hostRootDir) {
       options = {
-        paths: [hostRootDir, __dirname],
+        // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
+        paths: [realpathSync(hostRootDir), __dirname],
       };
     }
     const peerAliases = peers.reduce((acc, peerName) => {
