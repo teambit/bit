@@ -5,6 +5,12 @@ import { ReactDeployContext } from './deploy-context';
 
 /** https://github.com/Tofandel/prerender-spa-plugin-next */
 export type ReactAppPrerenderOptions = {
+  /**
+   * sub folder to output the prerender, inside the webpack output folder
+   * @default '/'
+   */
+  staticDir?: string;
+
   /** The index file to fall back on for SPAs. */
   indexPath?: string;
 
@@ -12,11 +18,20 @@ export type ReactAppPrerenderOptions = {
    * routes to prerender
    */
   routes: string[];
-  
+
   /**
    * the proxy server you want the prerender headless browser to run on
    */
-  server?: { proxy: { [key: string]: { target?: string; pathRewrite: { [key: string]: string } } } };
+  server?: {
+    proxy: {
+      [key: string]: {
+        /** required by HPM.
+         * @default 'http://localhost:8000/' */
+        target: string;
+        pathRewrite: { [key: string]: string };
+      };
+    };
+  };
 
   /**
    * Post processing of the prerendered html. This is useful for adding meta tags to the html or changing the file name.
