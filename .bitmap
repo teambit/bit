@@ -694,6 +694,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/modules/packages-excluder"
     },
+    "modules/prerenderer-puppeteer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/modules/prerenderer-puppeteer"
+    },
     "modules/render-template": {
         "scope": "teambit.html",
         "version": "0.0.96",
