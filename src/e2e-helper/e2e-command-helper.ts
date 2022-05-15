@@ -52,9 +52,11 @@ export default class CommandHelper {
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     const cmdWithFeatures = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
-    // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
+    // `spawnSync` gets the data from stderr, `shell: true` is needed for Windows to get the output.
     const cmdOutput = getStderrAsPartOfTheOutput
-      ? childProcess.spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio }).output.toString()
+      ? childProcess
+          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
+          .output.toString()
       : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
@@ -163,7 +165,7 @@ export default class CommandHelper {
     return this.runCmd(`bit envs replace ${oldEnv} ${newEnv}`);
   }
   setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
-    const configStr = config ? `'${JSON.stringify(config)}'` : '';
+    const configStr = config ? JSON.stringify(JSON.stringify(config)) : '';
     return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);
   }
   unsetAspect(pattern: string, aspectId: string, flags = '') {

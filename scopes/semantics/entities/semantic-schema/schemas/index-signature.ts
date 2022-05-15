@@ -1,22 +1,21 @@
 import { SchemaNode } from '../schema-node';
-import { Parameter } from './function';
-import { TypeRefSchema } from './type-ref';
+import { ParameterSchema } from './parameter';
 
 /**
  * e.g. `{ [key: string]: boolean };`
  * the "[key: string]" is the "parameter", and the "boolean" is the "type".
  */
 export class IndexSignatureSchema implements SchemaNode {
-  constructor(private parameters: Parameter[], private type: TypeRefSchema) {}
+  constructor(private params: ParameterSchema[], private type: SchemaNode) {}
   toObject() {
     return {
       constructorName: this.constructor.name,
-      parameters: this.parameters,
+      parameters: this.params,
       type: this.type.toObject(),
     };
   }
   toString() {
-    const parameters = this.parameters.map((arg) => `${arg.name}: ${arg.type.toString()}`).join(', ');
-    return `[${parameters}]: ${this.type.toString()}`;
+    const paramsStr = this.params.map((param) => param.toString()).join(', ');
+    return `[${paramsStr}]: ${this.type.toString()}`;
   }
 }

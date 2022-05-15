@@ -3,6 +3,7 @@ import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
+import { typeNodeToSchema } from './utils/type-node-to-schema';
 
 export class TypeAliasTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -18,10 +19,9 @@ export class TypeAliasTransformer implements SchemaTransformer {
   }
 
   async transform(typeAlias: TypeAliasDeclaration, context: SchemaExtractorContext) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(typeAlias.name!);
+    const type = await typeNodeToSchema(typeAlias.type, context);
+    const info = await context.getQuickInfo(typeAlias.name);
     const displaySig = info?.body?.displayString;
-    const type = await context.computeSchema(typeAlias.type);
     return new TypeSchema(this.getName(typeAlias), type, displaySig as string);
   }
 }

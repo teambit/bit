@@ -520,7 +520,9 @@ export default class Scope {
    * for each one of the given components, find its dependents
    */
   async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+    logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
+    logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
     const dependencyGraph = new DependencyGraph(idsGraph);
     const dependentsGraph = bitIds.reduce((acc, current) => {
       const dependents = dependencyGraph.getDependentsForAllVersions(current);
