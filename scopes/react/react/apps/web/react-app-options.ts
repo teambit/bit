@@ -3,6 +3,20 @@ import { WebpackConfigTransformer } from '@teambit/webpack';
 
 import { ReactDeployContext } from './deploy-context';
 
+type prerenderedRoute = {
+  /** The prerendered route, after following redirects */
+  route: string;
+  /** The original route passed, before redirects */
+  originalRoute: string;
+  /** The resulting HTML for the route */
+  html: string;
+  /**
+   * The path to write the rendered HTML to.
+   * This is null (automatically calculated after postProcess)
+   * unless explicitly set. */
+  outputPath?: string | null;
+};
+
 /** https://github.com/Tofandel/prerender-spa-plugin-next */
 export type ReactAppPrerenderOptions = {
   /**
@@ -36,7 +50,7 @@ export type ReactAppPrerenderOptions = {
   /**
    * Post processing of the prerendered html. This is useful for adding meta tags to the html or changing the file name.
    */
-  postProcess?: (prerenderRoute: string) => string;
+  postProcess?: (prerenderRoute: prerenderedRoute) => prerenderedRoute;
 
   /** The renderer you'd like to use to prerender the app.
    * @default new require("@prerenderer/renderer-puppeteer").

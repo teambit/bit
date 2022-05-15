@@ -19,6 +19,7 @@ export type PuppeteerRendererOptions = {
   skipThirdPartyRequests?: boolean;
   renderAfterDocumentEvent?: string;
   renderAfterElementExists?: string;
+  renderAfterTime?: number;
   consoleHandler?: (route: string, message: puppeteer.ConsoleMessage) => void;
   viewport?: puppeteer.Viewport;
   navigationOptions?: puppeteer.WaitForOptions;
