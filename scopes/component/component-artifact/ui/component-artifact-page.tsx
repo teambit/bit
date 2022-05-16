@@ -13,6 +13,7 @@ export type ComponentArtifactPageProps = {
 export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     const component = useContext(ComponentContext);
     const { data, loading } = useArtifacts(host, component.id.toString());
+    console.log(data);
 
     function calcDuration(startTime?: Date, endTime?: Date): number {
         return Math.abs((endTime?.getMilliseconds() ?? 0) - (startTime?.getMilliseconds() ?? 0));

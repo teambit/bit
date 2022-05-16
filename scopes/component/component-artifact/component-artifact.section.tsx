@@ -1,16 +1,17 @@
-import {Section} from '@teambit/component';
-import React from 'react';
-import {MenuWidgetIcon} from '@teambit/ui-foundation.ui.menu-widget-icon';
+import { Section } from '@teambit/component';
+import React from "react";
+import { ComponentArtifactPage } from './ui/component-artifact-page';
 
 export class ComponentArtifactSection implements Section {
+  constructor(private host: string) { }
+
   route = {
     path: '~component-artifact',
-    // children: <ComponentArtifactPage host={""} />,
+    children: <ComponentArtifactPage host={this.host} />
   };
   navigationLink = {
     href: '~component-artifact',
-    children: <MenuWidgetIcon icon="changelog" tooltipContent="Component Artifact" />, // todo: what's the icon?
-    displayName: 'Component Artifact',
+    children: 'Artifacts',
   };
-  order = 30;
+  order = 60;
 }
