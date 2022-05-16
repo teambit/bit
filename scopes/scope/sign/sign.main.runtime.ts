@@ -10,12 +10,14 @@ import {
   updateComponentsByTagResult,
 } from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { Http } from '@teambit/legacy/dist/scope/network/http';
+
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -108,24 +110,21 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   }
 
   private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus) {
-    const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
-    const objectListPerScope: { [scopeName: string]: ObjectList } = {};
-    await mapSeries(components, async (component) => {
+    const objectList = new ObjectList();
+    const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
       const objects = await this.scope.legacyScope.sources.getObjectsToEnrichSource(component);
       const scopeName = component.scope as string;
-      const objectList = await ObjectList.fromBitObjects(objects);
-      if (objectListPerScope[scopeName]) {
-        objectListPerScope[scopeName].mergeObjectList(objectList);
-      } else {
-        objectListPerScope[scopeName] = objectList;
-      }
+      const objectToMerge = await ObjectList.fromBitObjects(objects);
+      objectToMerge.addScopeName(scopeName);
+      objectList.mergeObjectList(objectToMerge);
+      return ComponentID.fromLegacy(component.id);
     });
-    await mapSeries(Object.keys(objectListPerScope), async (scopeName) => {
-      const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
-      const objectList = objectListPerScope[scopeName];
-      this.logger.setStatusLine(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
-      await remote.pushMany(objectList, { persist: true });
+    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
+    await http.pushToCentralHub(objectList, {
+      persist: true,
+      sign: true,
+      signComponents: signComponents.map((id) => id.toString()),
     });
   }
 
