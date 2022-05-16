@@ -41,6 +41,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       href={ComponentUrl.toUrl(envId, { includeVersion: true })}
       external={true}
       onClick={(event) => {
+        // do not trigger component selection
         event.stopPropagation();
       }}
     >
