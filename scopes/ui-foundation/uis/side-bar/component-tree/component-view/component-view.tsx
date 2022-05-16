@@ -3,9 +3,10 @@ import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import classNames from 'classnames';
+import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import React, { useCallback, useContext } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { ComponentModel } from '@teambit/component';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
@@ -32,11 +33,20 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
 
   if (!(component instanceof ComponentModel)) return null;
 
+  const envId = ComponentID.fromString(component.environment?.id as string);
+
   const envTooltip = (
-    <>
+    <NavLink
+      className={styles.envLink}
+      href={ComponentUrl.toUrl(envId, { includeVersion: true })}
+      external={true}
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+    >
       <div className={styles.componentEnvTitle}>Environment</div>
       <div>{component.environment?.id}</div>
-    </>
+    </NavLink>
   );
 
   return (
