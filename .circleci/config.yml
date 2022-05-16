@@ -180,6 +180,18 @@ jobs:
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit:latest
 
+  docker_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=14.19.1 -t bitcli/bit:`npm show @teambit/bit version`-node-14.19.1 .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=14.19.1 -t bitcli/bit:latest-node-14.19.1 .
+      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit:latest
+
   docker_non_root_build:
     machine:
       image: ubuntu-2004:202111-02
@@ -1728,12 +1740,12 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: docker-node-14
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1764,6 +1776,10 @@ workflows:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
+      - docker_build_node_14:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
   #     - docker_non_root_build:
   #         requires:
   #           - checkout_code
