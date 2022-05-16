@@ -628,7 +628,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
+        installOptions: {
+          copyPeerToRuntimeOnRoot: true,
+          dedupe: false,
+          useNesting: true,
+        },
         host: this,
       },
       this.legacyScope
