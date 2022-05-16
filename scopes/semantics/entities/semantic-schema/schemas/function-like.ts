@@ -1,10 +1,10 @@
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 
 export type Modifier = 'static' | 'public' | 'private' | 'protected' | 'readonly' | 'abstract' | 'async' | 'override';
 
-export class FunctionSchema implements SchemaNode {
+export class FunctionLikeSchema implements SchemaNode {
   constructor(
     readonly name: string,
     // readonly doc: any,
@@ -12,6 +12,7 @@ export class FunctionSchema implements SchemaNode {
 
     readonly returnType: SchemaNode,
     readonly signature: string,
+    readonly location: Location,
     readonly modifiers: Modifier[] = []
   ) {}
 

@@ -17,7 +17,6 @@ import {
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
-  FunctionSchema,
   TypeQuerySchema,
   LiteralTypeSchema,
   KeywordTypeSchema,
@@ -27,7 +26,7 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
-import { getParams } from './get-params';
+import { toFunctionLikeSchema } from './to-function-schema';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -154,10 +153,7 @@ async function typeReference(node: TypeReferenceNode, context: SchemaExtractorCo
 }
 
 async function functionType(node: FunctionTypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
-  const name = node.name?.getText() || '';
-  const params = await getParams(node.parameters, context);
-  const returnType = await typeNodeToSchema(node.type, context);
-  return new FunctionSchema(name, params, returnType, '');
+  return toFunctionLikeSchema(node, context);
 }
 
 /**
