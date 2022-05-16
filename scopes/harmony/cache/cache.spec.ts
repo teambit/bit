@@ -14,11 +14,11 @@ describe('Cache Aspect', () => {
   });
 
   // this test is flaky, it fails often on CircleCI.
-  it.skip('it should expire cache', async () => {
-    await cache.set('_foo', 'bar', 1);
-    const data = await cache.get('_foo');
-    expect(data).to.equal(null);
-  });
+  // it('it should expire cache', async () => {
+  //   await cache.set('_foo', 'bar', 1);
+  //   const data = await cache.get('_foo');
+  //   expect(data).to.equal(null);
+  // });
 
   it('it should set cache without expire ttl', async () => {
     await cache.set('_foo', 'bar');
