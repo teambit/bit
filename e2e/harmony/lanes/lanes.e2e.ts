@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import path from 'path';
-import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG } from '../../../src/constants';
+import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
@@ -1045,6 +1045,32 @@ describe('bit lane command', function () {
       const remoteLanes = helper.command.listRemoteLanesParsed();
       expect(remoteLanes.lanes).to.have.lengthOf(1);
       expect(remoteLanes.lanes[0].name).to.equal('new-lane');
+    });
+  });
+  describe('export on main then on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // simulate cloning the project and coping scope.json to be checked out to the lane
+      const scopeJson = helper.scopeJson.read();
+      helper.fs.deletePath('.bit');
+      helper.command.init();
+      helper.scopeJson.write(scopeJson);
+
+      helper.command.import();
+    });
+    it('bit status should not complain about outdated objects', () => {
+      const status = helper.command.status();
+      expect(status).to.not.have.string(IMPORT_PENDING_MSG);
     });
   });
 });

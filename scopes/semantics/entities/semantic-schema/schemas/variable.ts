@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
-import { TypeRefSchema } from './type-ref';
 
 export class VariableSchema implements SchemaNode {
-  constructor(readonly name: string, private signature: string, private type: TypeRefSchema) {}
+  constructor(readonly name: string, private signature: string, private type: SchemaNode) {}
   getSignature() {
     return this.signature;
   }

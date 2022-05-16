@@ -1,13 +1,14 @@
-import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap, AspectData } from '@teambit/component';
+import { AspectData, Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { PreviewAspect, PreviewMain } from '@teambit/preview';
-import { SchemaAspect, SchemaMain } from '@teambit/schema';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from '@teambit/legacy/dist/utils';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import { PreviewAspect, PreviewMain } from '@teambit/preview';
+import { SchemaAspect, SchemaMain } from '@teambit/schema';
+import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { join } from 'path';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
@@ -75,6 +76,14 @@ export class CompositionsMain {
 
       return files;
     });
+  }
+
+  /**
+   * checks if a file matches the composition file pattern.
+   */
+  isCompositionFile(filePath: string): boolean {
+    const { includePatterns, excludePatterns } = splitPatterns(this.compositionFilePattern);
+    return matchPatterns(filePath, includePatterns, excludePatterns);
   }
 
   /**
