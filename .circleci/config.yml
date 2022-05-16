@@ -204,6 +204,18 @@ jobs:
       - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit-non-root:latest
 
+  docker_non_root_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1 .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:latest-node-14.19.1 .
+      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1
+      - run: cd bit && docker push bitcli/bit-non-root:latest-node-14.19.1
+
   server_docker_build:
     machine:
       image: ubuntu-2004:202111-02
@@ -215,6 +227,18 @@ jobs:
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
       - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit-server:latest
+
+  server_docker_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1 --build-arg BIT_VERSION=`npm show @teambit/bit version`-node-14.19.1 .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest-node-14.19.1 --build-arg BIT_VERSION=latest-node-14.19.1 .
+      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1
+      - run: cd bit && docker push bitcli/bit-server:latest-node-14.19.1
 
   set_ssh_key:
     <<: *defaults
