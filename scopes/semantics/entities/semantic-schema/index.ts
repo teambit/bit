@@ -1,4 +1,30 @@
-export { SemanticSchema } from './semantic-schema';
+export { APISchema } from './api-schema';
 export type { SchemaNode } from './schema-node';
-export { Export, Module, StaticProperties, FunctionSchema, TypeRefSchema } from './schemas';
+export {
+  Export,
+  Module,
+  StaticProperties,
+  FunctionSchema,
+  Modifier,
+  TypeRefSchema,
+  VariableSchema,
+  ClassSchema,
+  ConstructorSchema,
+  TypeSchema,
+  TypeIntersectionSchema,
+  TypeUnionSchema,
+  TypeLiteralSchema,
+  IndexSignatureSchema,
+  InterfaceSchema,
+  GetAccessorSchema,
+  SetAccessorSchema,
+  TypeQuerySchema,
+  InferenceTypeSchema,
+  LiteralTypeSchema,
+  KeywordTypeSchema,
+  TypeArraySchema,
+  TypeOperatorSchema,
+  TupleTypeSchema,
+  ParameterSchema,
+} from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

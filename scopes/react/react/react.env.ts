@@ -34,12 +34,12 @@ import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-meta
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
+import { Logger } from '@teambit/logger';
 // Makes sure the @teambit/react.ui.docs-app is a dependency
 // TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
-
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
 import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
@@ -114,7 +114,9 @@ export class ReactEnv
 
     private prettier: PrettierMain,
 
-    private compilerAspectId: string,
+    private logger: Logger,
+
+    private compilerAspectId: string
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
@@ -281,7 +283,7 @@ export class ReactEnv
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
     const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
@@ -300,7 +302,7 @@ export class ReactEnv
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
     const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
@@ -318,7 +320,7 @@ export class ReactEnv
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
     const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
+    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
     const exposePeersTransformer = generateExposePeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
@@ -443,10 +445,7 @@ export class ReactEnv
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
     const transformers: TsConfigTransformer[] =
       (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
-    return [
-      this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts),
-      this.tester.task,
-    ];
+    return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
   /**

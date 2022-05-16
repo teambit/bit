@@ -59,7 +59,12 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
             componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
           />
         )
-      : ({ component }) => <ScopeComponentCard component={component} />;
+      : ({ component }) => (
+          <ScopeComponentCard
+            component={component}
+            componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+          />
+        );
 
   return (
     <div className={styles.container}>

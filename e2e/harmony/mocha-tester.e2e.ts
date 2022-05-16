@@ -38,11 +38,11 @@ describe('Mocha Tester', function () {
       });
       it('bit test should show the passing component via Mocha output', () => {
         const output = helper.command.test('', true);
-        expect(output).to.have.string('✔ should pass');
+        shouldOutputTestPassed(output);
       });
       it('bit build should show the passing component via Mocha output', () => {
         const output = helper.command.build('', true);
-        expect(output).to.have.string('✔ should pass');
+        shouldOutputTestPassed(output);
       });
     });
     describe('component with a failing test', () => {
@@ -79,6 +79,12 @@ describe('Mocha Tester', function () {
     });
   });
 });
+
+function shouldOutputTestPassed(output: string) {
+  expect(output).to.satisfy(
+    (str: string) => str.includes('✔ should pass') /** Linux */ || str.includes('√ should pass') /** Windows */
+  );
+}
 
 function specFilePassingFixture() {
   return `import { expect } from 'chai';
