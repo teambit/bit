@@ -189,8 +189,8 @@ jobs:
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:`npm show @teambit/bit version`-node-14.19.1 .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit:latest
+      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`-node-14.19.1
+      - run: cd bit && docker push bitcli/bit:latest-node-14.19.1
 
   docker_non_root_build:
     machine:
