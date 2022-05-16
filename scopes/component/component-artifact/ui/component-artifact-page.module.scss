@@ -34,6 +34,16 @@
   z-index: 8; // position above the abs positioned graph items
 }
 
+.graph {
+  flex-grow: 1;
+  height: 100%;
+  width: unset;
+
+  border-radius: 5px;
+  border: solid 1px var(--bit-border-color-lightest, #ededed);
+  background: var(--bit-bg-dent, #f6f6f6);
+}
+
 // stat container
 
 .statContainer {

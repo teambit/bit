@@ -106,6 +106,7 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
                 maxZoom={1}
                 elements={elements}
                 nodeTypes={NodeTypes}
+                className={styles.graph}
             >
                 <Background />
                 <Controls className={styles.controls} />
