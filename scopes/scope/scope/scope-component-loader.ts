@@ -45,7 +45,7 @@ export class ScopeComponentLoader {
     }
     if (!modelComponent) return undefined;
 
-    const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
+    const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latestVersion();
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
     const snap = await this.getHeadSnap(modelComponent);
