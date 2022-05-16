@@ -1,3 +1,4 @@
+import { realpathSync } from 'fs';
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
 
 const reactNativePackagesRule = {
@@ -21,7 +22,8 @@ function commonTransformation(config: WebpackConfigMutator, _context: WebpackCon
   let options;
   if (hostRootDir) {
     options = {
-      paths: [hostRootDir, __dirname],
+      // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
+      paths: [realpathSync(hostRootDir), __dirname],
     };
   }
   const peerAliases = {

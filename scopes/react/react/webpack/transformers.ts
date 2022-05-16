@@ -1,26 +1,28 @@
 import findRoot from 'find-root';
+import { realpathSync } from 'fs';
 import { WebpackConfigTransformContext } from '@teambit/webpack';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import { Logger } from '@teambit/logger';
 import { getExposedRules } from './get-exposed-rules';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
-  const peerAliases = peers.reduce((acc, peerName) => {
-    // gets the correct module folder of the package.
-    // this allows us to resolve internal files, for example:
-    // node_modules/react-dom/test-utils
-    //
-    // we can't use require.resolve() because it resolves to a specific file.
-    // for example, if we used "react-dom": require.resolve("react-dom"),
-    // it would try to resolve "react-dom/test-utils" as:
-    // node_modules/react-dom/index.js/test-utils
-    const resolved = getResolvedDirOrFile(peerName, logger);
-    if (resolved) {
-      acc[peerName] = resolved;
-    }
-    return acc;
-  }, {});
-  return (config: WebpackConfigMutator): WebpackConfigMutator => {
+  return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
+    const hostRootDir = context.target?.hostRootDir || context.hostRootDir;
+    const peerAliases = peers.reduce((acc, peerName) => {
+      // gets the correct module folder of the package.
+      // this allows us to resolve internal files, for example:
+      // node_modules/react-dom/test-utils
+      //
+      // we can't use require.resolve() because it resolves to a specific file.
+      // for example, if we used "react-dom": require.resolve("react-dom"),
+      // it would try to resolve "react-dom/test-utils" as:
+      // node_modules/react-dom/index.js/test-utils
+      const resolved = getResolvedDirOrFile(peerName, logger, hostRootDir);
+      if (resolved) {
+        acc[peerName] = resolved;
+      }
+      return acc;
+    }, {});
     config.addAliases(peerAliases);
     return config;
   };
@@ -31,10 +33,17 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
  * @param peerName
  * @returns
  */
-function getResolvedDirOrFile(peerName: string, logger: Logger): string | undefined {
+function getResolvedDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
   let resolved;
   try {
-    resolved = require.resolve(peerName);
+    let options;
+    if (hostRootDir) {
+      options = {
+        // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
+        paths: [realpathSync(hostRootDir), __dirname],
+      };
+    }
+    resolved = require.resolve(peerName, options);
     const folder = findRoot(resolved);
     return folder;
   } catch (e) {
