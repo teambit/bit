@@ -1,9 +1,8 @@
-import { FunctionLikeSchema, SchemaNode, VariableSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, VariableSchema } from '@teambit/semantics.entities.semantic-schema';
 import ts, { FunctionTypeNode, Node, PropertySignature as PropertySignatureNode } from 'typescript';
-import { getParams } from './utils/get-params';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 import { toFunctionLikeSchema } from './utils/to-function-schema';
 
 export class PropertySignature implements SchemaTransformer {

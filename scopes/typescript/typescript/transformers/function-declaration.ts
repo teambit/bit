@@ -1,10 +1,8 @@
-import { SchemaNode, FunctionLikeSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
-import { getParams } from './utils/get-params';
-import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 import { toFunctionLikeSchema } from './utils/to-function-schema';
 
 export class FunctionDeclaration implements SchemaTransformer {
