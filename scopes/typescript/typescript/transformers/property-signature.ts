@@ -1,9 +1,9 @@
-import { FunctionSchema, SchemaNode, VariableSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, VariableSchema } from '@teambit/semantics.entities.semantic-schema';
 import ts, { FunctionTypeNode, Node, PropertySignature as PropertySignatureNode } from 'typescript';
-import { getParams } from './utils/get-params';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { toFunctionLikeSchema } from './utils/to-function-schema';
 
 export class PropertySignature implements SchemaTransformer {
   predicate(node: Node) {
@@ -25,10 +25,7 @@ export class PropertySignature implements SchemaTransformer {
     if (prop.type?.kind === ts.SyntaxKind.FunctionType) {
       // e.g. `propertySig: () => void;` inside interface
       const propType = prop.type as FunctionTypeNode;
-      const args = await getParams(propType.parameters, context);
-      const typeStr = parseReturnTypeFromQuickInfo(info);
-      const returnType = await context.resolveType(propType, typeStr);
-      return new FunctionSchema(name, args, returnType, displaySig);
+      return toFunctionLikeSchema(propType, context);
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(prop, typeStr);

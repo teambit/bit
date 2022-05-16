@@ -48,6 +48,6 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
           return context.computeSchema(member);
       }
     });
-    return new ClassSchema(className, compact(members));
+    return new ClassSchema(className, compact(members), context.getLocation(node));
   }
 }
