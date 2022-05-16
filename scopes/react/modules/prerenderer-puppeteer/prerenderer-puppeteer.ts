@@ -9,7 +9,6 @@ import puppeteer from 'puppeteer';
  * with minor modifications:
  * - waituntil ~> `waitUntil` to support puppeteer v14
  * - added types
- * and added types
  */
 
 export type PuppeteerRendererOptions = {
