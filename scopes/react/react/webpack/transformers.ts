@@ -7,6 +7,14 @@ import { resolvePeerToDirOrFile } from './resolve-peer';
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
     const peerAliases = peers.reduce((acc, peerName) => {
+      // gets the correct module folder of the package.
+      // this allows us to resolve internal files, for example:
+      // node_modules/react-dom/test-utils
+      //
+      // we can't use require.resolve() because it resolves to a specific file.
+      // for example, if we used "react-dom": require.resolve("react-dom"),
+      // it would try to resolve "react-dom/test-utils" as:
+      // node_modules/react-dom/index.js/test-utils
       acc[peerName] = resolvePeerToDirOrFile(peerName, logger, context.target.hostRootDir);
       return acc;
     }, {});
