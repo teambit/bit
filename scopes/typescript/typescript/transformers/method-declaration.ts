@@ -1,10 +1,9 @@
-import { SchemaNode, FunctionSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, MethodDeclaration as MethodDeclarationNode } from 'typescript';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
-import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { getParams } from './utils/get-params';
+import { toFunctionLikeSchema } from './utils/to-function-schema';
 
 export class MethodDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -20,13 +19,6 @@ export class MethodDeclaration implements SchemaTransformer {
   }
 
   async transform(methodDec: MethodDeclarationNode, context: SchemaExtractorContext): Promise<SchemaNode> {
-    const name = this.getName(methodDec);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const info = await context.getQuickInfo(methodDec.name!);
-    const displaySig = info?.body?.displayString;
-    const returnTypeStr = parseTypeFromQuickInfo(displaySig);
-    const args = await getParams(methodDec.parameters, context);
-    const returnType = await context.resolveType(methodDec, returnTypeStr);
-    return new FunctionSchema(name || '', args, returnType, displaySig || '');
+    return toFunctionLikeSchema(methodDec, context);
   }
 }

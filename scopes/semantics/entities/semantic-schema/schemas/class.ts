@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 
 export class ClassSchema implements SchemaNode {
-  constructor(readonly className: string, readonly members: SchemaNode[]) {}
+  constructor(readonly className: string, readonly members: SchemaNode[], readonly location: Location) {}
 
   toObject() {
     return {

@@ -1,11 +1,11 @@
 export { APISchema } from './api-schema';
-export type { SchemaNode } from './schema-node';
+export type { SchemaNode, Location } from './schema-node';
 export {
   Export,
   Module,
   StaticProperties,
-  FunctionSchema,
-  Parameter,
+  FunctionLikeSchema,
+  Modifier,
   TypeRefSchema,
   VariableSchema,
   ClassSchema,
@@ -18,5 +18,13 @@ export {
   InterfaceSchema,
   GetAccessorSchema,
   SetAccessorSchema,
+  TypeQuerySchema,
+  InferenceTypeSchema,
+  LiteralTypeSchema,
+  KeywordTypeSchema,
+  TypeArraySchema,
+  TypeOperatorSchema,
+  TupleTypeSchema,
+  ParameterSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';
