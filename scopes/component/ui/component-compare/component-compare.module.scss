@@ -12,3 +12,19 @@
   height: 100%;
   width: 85%;
 }
+
+.navigation {
+  display: flex;
+  list-style: none;
+  height: 100%;
+  padding-left: 28px;
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
+}

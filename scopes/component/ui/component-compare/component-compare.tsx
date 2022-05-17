@@ -3,12 +3,17 @@ import flatten from 'lodash.flatten';
 import { ComponentContext, ComponentID, ComponentModel, useComponent } from '@teambit/component';
 import classNames from 'classnames';
 import { H2 } from '@teambit/documenter.ui.heading';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import { ComponentCompareNavSlot, ComponentCompareNav } from '@teambit/component-compare';
+import { useRouteMatch, useLocation } from 'react-router-dom';
+
 import styles from './component-compare.module.scss';
 import { useComponentCompareParams } from './use-component-compare-params';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
+import { ComponentCompareVersionPicker } from './component-compare-version-picker/component-compare-version-picker';
 
 export type ComponentCompareProps = {
   navSlot: ComponentCompareNavSlot;
@@ -22,13 +27,6 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const [currentVersionInfo, lastVersionInfo] = useMemo(() => {
     return component.logs?.slice().reverse() || [] || [];
   }, [component.logs]);
-
-  const compareRoutes = flatten(
-    navSlot.toArray().map(([id, values]) => {
-      const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
-      return flattenedValues;
-    })
-  ).sort(sortFn);
 
   const baseId =
     (baseVersion && component.id.changeVersion(baseVersion)) ||
@@ -50,16 +48,55 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={styles.componentCompareContainer}>
-        <div className={styles.componentCompareVersionsContainer}></div>
-        <div className={styles.componentCompareViewerContainer}></div>
+        <div className={styles.componentCompareVersionsContainer}>
+          <H2>Component Compare</H2>
+          <ComponentCompareVersionPicker />
+        </div>
+        <div className={styles.componentCompareViewerContainer}>
+          <CompareMenuNav navSlot={navSlot} />
+          <SlotRouter slot={routeSlot} />
+        </div>
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
+function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
+  const plugins = flatten(
+    navSlot.toArray().map(([id, values]) => {
+      const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
+      return flattenedValues;
+    })
+  ).sort(sortFn);
+
+  return (
+    <nav className={styles.navigation}>
+      {plugins.map((menuItem, index) => {
+        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
+      })}
+    </nav>
+  );
+}
+
+function TopBarNav(props: NavLinkProps) {
+  const { url } = useRouteMatch();
+  const { search, pathname } = useLocation();
+  const { href } = props;
+
+  const target = `${extendPath(url, href)}${search}`;
+
+  return (
+    <NavLink
+      {...props}
+      className={classNames(props.className, styles.topBarLink)}
+      activeClassName={classNames(props.activeClassName, target === pathname && styles.active)}
+      href={target}
+    >
+      <div>{props.children}</div>
+    </NavLink>
+  );
+}
+
 function sortFn({ order: first }: ComponentCompareNav, { order: second }: ComponentCompareNav) {
-  // 0  - equal
-  // <0 - first < second
-  // >0 - first > second
   return (first ?? 0) - (second ?? 0);
 }
