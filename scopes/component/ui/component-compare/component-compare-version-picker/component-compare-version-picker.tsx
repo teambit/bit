@@ -1,6 +1,7 @@
 import React, { HTMLAttributes, useContext } from 'react';
 import { DropdownComponentVersion } from '@teambit/component.ui.version-dropdown';
 import { ComponentContext, ComponentModel } from '@teambit/component';
+import {} from '@teambit/component';
 
 export type ComponentCompareVersionPickerProps = {
   base: DropdownComponentVersion;
@@ -10,4 +11,5 @@ export type ComponentCompareVersionPickerProps = {
 
 export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
+  const {} = useComponentCompareContext();
 }

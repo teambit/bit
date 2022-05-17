@@ -8,7 +8,7 @@ import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import WorkspaceAspect from '@teambit/workspace';
-import { ComponentCompare } from '@teambit/component';
+import { ComponentCompare } from '@teambit/component.ui.component-compare';
 
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
