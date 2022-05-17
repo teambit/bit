@@ -53,19 +53,19 @@ export class ComponentCompareUI {
   }
 
   getComponentCodeComparePage() {
-    return null;
+    return <span>Code</span>;
   }
 
   getComponentDependenciesComparePage() {
-    return null;
+    return <span>Dependnecies</span>;
   }
 
   getComponentCompositionComparePage() {
-    return null;
+    return <span>Compositions</span>;
   }
 
   getComponentAspectsComparePage() {
-    return null;
+    return <span>Aspects</span>;
   }
 
   private compareRoutes: RouteProps[] = [
