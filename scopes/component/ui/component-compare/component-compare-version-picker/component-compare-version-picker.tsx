@@ -4,8 +4,8 @@ import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
 import { ComponentContext } from '@teambit/component';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import styles from './component-compare-version-picker.module.scss';
-import { S } from 'memfs/lib/constants';
 
 export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
 
@@ -48,7 +48,13 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
         tags={tags}
         currentVersion={componentCompare?.base.id.version}
         loading={componentCompare?.loading}
-        overrideVersionHref={(version) => `?base=${version}`}
+        overrideVersionHref={(baseVersion) => {
+          const query = useQuery();
+          const version = query.get('version') || undefined;
+          if (version) return `?version=${version}&base=${baseVersion}`;
+          return `?base=${baseVersion}`;
+        }}
+        showVersionDetails={true}
       />
       <VersionDropdown
         className={styles.componentCompareVersionContainer}
@@ -58,6 +64,7 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
         tags={tags}
         loading={componentCompare?.loading}
         currentVersion={componentCompare?.compare.id.version}
+        showVersionDetails={true}
       />
     </div>
   );

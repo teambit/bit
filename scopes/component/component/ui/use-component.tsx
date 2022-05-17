@@ -23,7 +23,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
     params: { componentId },
   } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
-  const version = query.get('version') || undefined;
+  const version = id?.version || query.get('version') || undefined;
   const lanesContext = useLanesContext();
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;
   if (!targetId) throw new TypeError('useComponent received no component id');

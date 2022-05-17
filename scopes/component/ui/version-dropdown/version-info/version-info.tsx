@@ -12,6 +12,7 @@ export type VersionInfoProps = DropdownComponentVersion & {
   currentVersion?: string;
   latestVersion?: string;
   overrideVersionHref?: (version: string) => string;
+  showDetails?: boolean;
 };
 
 export function VersionInfo({
@@ -22,6 +23,8 @@ export function VersionInfo({
   username,
   email,
   overrideVersionHref,
+  showDetails,
+  message,
 }: VersionInfoProps) {
   const isCurrent = version === currentVersion;
   const author = useMemo(() => {
@@ -40,6 +43,7 @@ export function VersionInfo({
   }, [isCurrent]);
 
   const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
+
   return (
     <div ref={currentVersionRef}>
       <MenuLinkItem isActive={() => isCurrent} href={href} className={styles.versionRow}>
@@ -47,9 +51,15 @@ export function VersionInfo({
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={styles.versionName}>{version}</Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
+          {showDetails && commitMessage(message)}
         </div>
         <TimeAgo className={styles.versionTimestamp} date={timestamp} />
       </MenuLinkItem>
     </div>
   );
+}
+
+function commitMessage(message?: string) {
+  if (!message || message === '') return <div className={styles.emptyMessage}>No commit message</div>;
+  return <div className={styles.commitMessage}>{message}</div>;
 }
