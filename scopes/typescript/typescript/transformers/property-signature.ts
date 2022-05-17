@@ -3,7 +3,7 @@ import ts, { FunctionTypeNode, Node, PropertySignature as PropertySignatureNode 
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { toFunctionLikeSchema } from './utils/to-function-schema';
+import { typeNodeToSchema } from './utils/type-node-to-schema';
 
 export class PropertySignature implements SchemaTransformer {
   predicate(node: Node) {
@@ -25,7 +25,7 @@ export class PropertySignature implements SchemaTransformer {
     if (prop.type?.kind === ts.SyntaxKind.FunctionType) {
       // e.g. `propertySig: () => void;` inside interface
       const propType = prop.type as FunctionTypeNode;
-      return toFunctionLikeSchema(propType, context);
+      return typeNodeToSchema(propType, context);
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(prop, typeStr);
