@@ -9,6 +9,7 @@ import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import WorkspaceAspect from '@teambit/workspace';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
+import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
@@ -61,7 +62,7 @@ export class ComponentCompareUI {
   }
 
   getComponentCompositionComparePage() {
-    return <span>Compositions</span>;
+    return <ComponentCompareComposition />;
   }
 
   getComponentAspectsComparePage() {
