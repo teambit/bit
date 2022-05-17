@@ -5,6 +5,7 @@ import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
 import { ComponentContext } from '@teambit/component';
 import styles from './component-compare-version-picker.module.scss';
+import { S } from 'memfs/lib/constants';
 
 export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
 
@@ -40,13 +41,19 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
   return (
     <div className={styles.componentCompareVersionPicker}>
       <VersionDropdown
+        className={styles.componentCompareVersionContainer}
+        placeholderClassName={styles.componentCompareVersionPlaceholder}
+        menuClassName={styles.componentCompareVersionMenu}
         snaps={snaps}
         tags={tags}
         currentVersion={componentCompare?.base.id.version}
         loading={componentCompare?.loading}
-        overrideVersionHref={(version) => `&?base=${version}`}
+        overrideVersionHref={(version) => `?base=${version}`}
       />
       <VersionDropdown
+        className={styles.componentCompareVersionContainer}
+        placeholderClassName={styles.componentCompareVersionPlaceholder}
+        menuClassName={styles.componentCompareVersionMenu}
         snaps={snaps}
         tags={tags}
         loading={componentCompare?.loading}

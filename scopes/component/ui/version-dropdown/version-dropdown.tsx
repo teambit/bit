@@ -29,6 +29,9 @@ export type VersionDropdownProps = {
   latestVersion?: string;
   loading?: boolean;
   overrideVersionHref?: (version: string) => string;
+  placeholderClassName?: string;
+  dropdownClassName?: string;
+  menuClassName?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -41,6 +44,11 @@ export function VersionDropdown({
   loading,
   currentLane,
   overrideVersionHref,
+  className,
+  placeholderClassName,
+  dropdownClassName,
+  menuClassName,
+  ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
@@ -55,18 +63,24 @@ export function VersionDropdown({
   }
 
   return (
-    <div className={styles.versionDropdown}>
+    <div {...rest} className={classNames(styles.versionDropdown, className)}>
       <Dropdown
-        className={styles.dropdown}
+        className={classNames(styles.dropdown, dropdownClassName)}
         dropClass={styles.menu}
         clickToggles={false}
         clickPlaceholderToggles={true}
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
-        placeholder={<VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />}
+        placeholder={
+          <VersionPlaceholder
+            currentVersion={currentVersion}
+            className={classNames(styles.withVersions, placeholderClassName)}
+          />
+        }
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {loading || (
           <VersionMenu
+            className={menuClassName}
             key={key}
             tags={tags}
             snaps={snaps}

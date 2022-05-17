@@ -1,16 +1,16 @@
 .componentCompareContainer {
   width: 100%;
+  padding: 24px;
 }
-.componentCompareVersionSelector {
+.top {
   display: flex;
   flex-direction: column;
-  width: fit-content;
+  width: 100%;
 }
-.componentCompareViewerContainer {
+.bottom {
   display: flex;
   overflow-y: auto;
   height: 100%;
-  width: 85%;
 }
 
 .navigation {

@@ -46,11 +46,11 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={styles.componentCompareContainer}>
-        <div className={styles.componentCompareVersionsContainer}>
-          <H2>Component Compare</H2>
+        <div className={styles.top}>
+          <H2 size="xs">Component Compare</H2>
           <ComponentCompareVersionPicker />
         </div>
-        <div className={styles.componentCompareViewerContainer}>
+        <div className={styles.bottom}>
           <CompareMenuNav navSlot={navSlot} />
           <SlotSubRouter slot={routeSlot} />
         </div>

@@ -1,0 +1,19 @@
+.componentCompareVersionPicker {
+  display: flex;
+  flex-direction: row;
+  padding: 24px 0px;
+}
+
+.componentCompareVersionPlaceholder,
+.componentCompareVersionMenu {
+  max-width: 100%;
+  > div {
+    max-width: 100%;
+  }
+}
+.componentCompareVersionContainer {
+  display: flex;
+  flex: 1;
+  max-width: 100%;
+  margin-right: 32px;
+}
