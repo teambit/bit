@@ -1,8 +1,8 @@
-import findRoot from 'find-root';
 import { WebpackConfigTransformContext } from '@teambit/webpack';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import { Logger } from '@teambit/logger';
 import { getExposedRules } from './get-exposed-rules';
+import { getResolvedDirOrFile } from './resolve-peer';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
@@ -26,31 +26,4 @@ export function generateExposePeersTransformer(peers: string[]) {
     config.addModuleRules(exposedRules);
     return config;
   };
-}
-
-/**
- * Get the package folder, and in case it's not found get the require.resolve path
- * @param peerName
- * @returns
- */
-function getResolvedDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
-  let resolved;
-  try {
-    let options;
-    if (hostRootDir) {
-      options = {
-        paths: [hostRootDir, __dirname],
-      };
-    }
-    resolved = require.resolve(peerName, options);
-    const folder = findRoot(resolved);
-    return folder;
-  } catch (e) {
-    if (resolved) {
-      logger.warn(`Couldn't find root dir for "${peerName}" from path "${resolved}" to add it as webpack alias`);
-    } else {
-      logger.warn(`Couldn't resolve "${peerName}" to add it as webpack alias`);
-    }
-    return resolved;
-  }
 }
