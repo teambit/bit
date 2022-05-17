@@ -2,7 +2,7 @@ import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropd
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { flatten, groupBy, compact } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
@@ -102,7 +102,7 @@ function VersionRelatedDropdowns({
   const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =
-    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.version;
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
 
   const methods = useConsumeMethods(consumeMethods, component, currentLane);
   return (

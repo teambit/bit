@@ -2,8 +2,9 @@ import React, { useEffect, ReactNode } from 'react';
 import { BrowserRouter, StaticRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/base-ui.routing.routing-provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { NavigationProvider } from '@teambit/base-react.navigation.link';
+import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
 import { ReactRouterUI } from './react-router.ui.runtime';
-import { reactRouterRouting } from './react-router-routing';
 import { Routing } from './routing-method';
 
 export type History = ReturnType<typeof useHistory>;
@@ -30,10 +31,10 @@ export function RouteContext({ reactRouterUi, routing = Routing.url, children, l
       {/* injects History object back to reactRouterUi */}
       <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
       {/* injects react-router Link into context  */}
-      <RoutingProvider value={reactRouterRouting}>
+      <NavigationProvider implementation={reactRouterAdapter}>
         {/* route tree root: */}
         {children}
-      </RoutingProvider>
+      </NavigationProvider>
     </Router>
   );
 }

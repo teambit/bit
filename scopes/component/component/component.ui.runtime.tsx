@@ -3,7 +3,7 @@ import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
 
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { LinkProps } from '@teambit/base-react.navigation.link';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -195,7 +195,7 @@ export class ComponentUI {
     return this;
   }
 
-  registerNavigation(nav: NavLinkProps, order?: number) {
+  registerNavigation(nav: LinkProps, order?: number) {
     this.navSlot.register({
       props: nav,
       order,
@@ -206,7 +206,7 @@ export class ComponentUI {
     this.consumeMethodSlot.register(consumeMethods);
   }
 
-  registerWidget(widget: NavLinkProps, order?: number) {
+  registerWidget(widget: LinkProps, order?: number) {
     this.widgetSlot.register({ props: widget, order });
   }
 
