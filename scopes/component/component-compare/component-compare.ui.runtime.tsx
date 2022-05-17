@@ -70,23 +70,28 @@ export class ComponentCompareUI {
 
   private compareRoutes: RouteProps[] = [
     {
+      exact: true,
       path: '',
       children: () => this.getComponentCompositionComparePage(),
     },
     {
-      path: '/~compositions',
+      exact: true,
+      path: '~compositions',
       children: () => this.getComponentCompositionComparePage(),
     },
     {
-      path: '/~code',
+      exact: true,
+      path: '~code',
       children: () => this.getComponentCodeComparePage(),
     },
     {
-      path: '/~dependencies',
+      exact: true,
+      path: '~dependencies',
       children: () => this.getComponentDependenciesComparePage(),
     },
     {
-      path: '/~aspects',
+      exact: true,
+      path: '~aspects',
       children: () => this.getComponentAspectsComparePage(),
     },
   ];
@@ -94,28 +99,28 @@ export class ComponentCompareUI {
   private compareNavLinks: ComponentCompareNav[] = [
     {
       props: {
-        href: '~compare',
+        href: '~compositions',
         children: 'Compositions',
       },
       order: 0,
     },
     {
       props: {
-        href: '~compare/~code',
+        href: '~code',
         children: 'Code',
       },
       order: 1,
     },
     {
       props: {
-        href: '~compare/~dependencies',
+        href: '~dependencies',
         children: 'Dependencies',
       },
       order: 2,
     },
     {
       props: {
-        href: '~compare/~aspects',
+        href: '~aspects',
         children: 'Aspects',
       },
       order: 3,

@@ -1,19 +1,17 @@
-import React, { HTMLAttributes, useState, useContext, useMemo } from 'react';
-import flatten from 'lodash.flatten';
-import { ComponentContext, ComponentID, ComponentModel, useComponent } from '@teambit/component';
-import classNames from 'classnames';
-import { H2 } from '@teambit/documenter.ui.heading';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+import { ComponentContext, useComponent } from '@teambit/component';
+import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
+import { H2 } from '@teambit/documenter.ui.heading';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
-import { ComponentCompareNavSlot, ComponentCompareNav } from '@teambit/component-compare';
-import { useRouteMatch, useLocation } from 'react-router-dom';
-
-import styles from './component-compare.module.scss';
-import { useComponentCompareParams } from './use-component-compare-params';
+import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import classNames from 'classnames';
+import flatten from 'lodash.flatten';
+import React, { HTMLAttributes, useContext, useMemo } from 'react';
+import { useLocation, useRouteMatch } from 'react-router-dom';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './component-compare-version-picker/component-compare-version-picker';
+import styles from './component-compare.module.scss';
+import { useComponentCompareParams } from './use-component-compare-params';
 
 export type ComponentCompareProps = {
   navSlot: ComponentCompareNavSlot;
@@ -24,7 +22,7 @@ export type ComponentCompareProps = {
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const { baseVersion } = useComponentCompareParams();
   const component = useContext(ComponentContext);
-  const [currentVersionInfo, lastVersionInfo] = useMemo(() => {
+  const [, lastVersionInfo] = useMemo(() => {
     return component.logs?.slice().reverse() || [] || [];
   }, [component.logs]);
 
@@ -33,7 +31,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
 
-  const compareId = component.id;
+  // const compareId = component.id;
 
   const compare = component;
 
@@ -54,7 +52,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
         </div>
         <div className={styles.componentCompareViewerContainer}>
           <CompareMenuNav navSlot={navSlot} />
-          <SlotRouter slot={routeSlot} />
+          <SlotSubRouter slot={routeSlot} />
         </div>
       </div>
     </ComponentCompareContext.Provider>
