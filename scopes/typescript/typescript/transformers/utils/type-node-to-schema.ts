@@ -23,10 +23,11 @@ import {
   TypeArraySchema,
   TypeOperatorSchema,
   TupleTypeSchema,
+  FunctionLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
-import { toFunctionLikeSchema } from './to-function-schema';
+import { getParams } from './get-params';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -153,7 +154,11 @@ async function typeReference(node: TypeReferenceNode, context: SchemaExtractorCo
 }
 
 async function functionType(node: FunctionTypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
-  return toFunctionLikeSchema(node, context);
+  const name = node.name?.getText() || '';
+  const params = await getParams(node.parameters, context);
+  const returnType = await typeNodeToSchema(node.type, context);
+  const location = context.getLocation(node);
+  return new FunctionLikeSchema(name, params, returnType, '', location);
 }
 
 /**
