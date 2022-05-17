@@ -1,3 +1,5 @@
+import fs from 'fs';
+import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve';
 import findRoot from 'find-root';
 import { Logger } from '@teambit/logger';
 
@@ -6,7 +8,7 @@ import { Logger } from '@teambit/logger';
  * @param peerName
  * @returns
  */
-export function getResolvedDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
+export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
   let resolved;
   try {
     let options;
@@ -26,4 +28,32 @@ export function getResolvedDirOrFile(peerName: string, logger: Logger, hostRootD
     }
     return resolved;
   }
+}
+
+/**
+ * Make sure to resolve the peer path correctly
+ * we first resolve it to its dir (to be aligned with the aliases transformer)
+ * Then we resolve it to specific file, using enhanced resolve to make sure we resolve it using the correct main fields order
+ * @param peer
+ */
+export function resolvePeerToFile(peer: string, logger: Logger, hostRootDir?: string) {
+  const dirOrFile = resolvePeerToDirOrFile(peer, logger, hostRootDir);
+  const resolver = createResolver();
+  const resolvedFile = resolver.resolveSync({}, '', dirOrFile);
+  return resolvedFile;
+}
+
+/**
+ * Generate a resolver that will read first the module field then the main field
+ * to make it compatible with webpack behavior
+ * @returns
+ */
+function createResolver() {
+  // create a resolver
+  const myResolver = ResolverFactory.createResolver({
+    fileSystem: new CachedInputFileSystem(fs, 4000),
+    useSyncFileSystemCalls: true,
+    mainFields: ['module', 'main'],
+  });
+  return myResolver;
 }

@@ -321,7 +321,7 @@ export class ReactEnv
   ): Promise<Bundler> {
     const peers = this.getAllHostDependencies();
     const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
-    const exposePeersTransformer = generateExposePeersTransformer(peers);
+    const exposePeersTransformer = generateExposePeersTransformer(peers, this.logger);
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
 
