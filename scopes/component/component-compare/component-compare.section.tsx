@@ -17,5 +17,5 @@ export class ComponentCompareSection implements Section {
     children: this.componentCompare.getComponentComparePage(),
   };
 
-  order = 20;
+  order = 30;
 }

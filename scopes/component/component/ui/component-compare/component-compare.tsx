@@ -57,7 +57,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   );
 }
 
-function sortFn({ order: first }: ComponentCompareRoute, { order: second }: ComponentCompareRoute) {
+function sortFn({ order: first }: ComponentCompareNav, { order: second }: ComponentCompareNav) {
   // 0  - equal
   // <0 - first < second
   // >0 - first > second

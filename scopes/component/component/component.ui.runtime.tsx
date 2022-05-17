@@ -271,14 +271,14 @@ export class ComponentUI {
       commandBarUI,
       reactRouterUI
     );
-    const aspectSection = new AspectSection();
+    const section = new AspectSection();
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute([aspectSection.route]);
-    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
+    componentUI.registerRoute([section.route]);
+    componentUI.registerWidget(section.navigationLink, section.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

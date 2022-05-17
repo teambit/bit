@@ -27,7 +27,7 @@ export class CodeUI {
   getCodePage = () => {
     return <CodePage fileIconSlot={this.fileIconSlot} />;
   };
-  
+
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);
     return this;
@@ -40,13 +40,13 @@ export class CodeUI {
 
   static async provider([component]: [ComponentUI], config, [fileIconSlot]: [FileIconSlot]) {
     const ui = new CodeUI(fileIconSlot);
-    const codeSection = new CodeSection(ui);
+    const section = new CodeSection(ui);
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
-    component.registerRoute([codeSection.route]);
-    component.registerWidget(codeSection.navigationLink, codeSection.order);
+    component.registerRoute([section.route]);
+    component.registerWidget(section.navigationLink, section.order);
     return ui;
   }
 }
