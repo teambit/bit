@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
-
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
@@ -105,7 +104,7 @@ export class CommandBarUI {
   private search = (term: string, limit: number = RESULT_LIMIT) => {
     const searchers = flatten(this.searcherSlot.values());
 
-    const searcher = searchers.find((x) => x.test(term));
+    const searcher = searchers.find((x) => x && x.test(term));
     return searcher?.search(term, limit) || [];
   };
 
@@ -135,7 +134,7 @@ export class CommandBarUI {
   /**
    * generate the ui for command bar
    */
-  private CommandBar = () => {
+  CommandBar = () => {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 

@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { DEFAULT_LANE, statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 
@@ -15,7 +16,7 @@ describe('merge lanes', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('merging lanes', () => {
+  describe('export a local lane into a remote scope', () => {
     let authorScope;
     let importedScope;
     let appOutput: string;
@@ -45,7 +46,7 @@ describe('merge lanes', function () {
         expect(status.stagedComponents).to.have.lengthOf(3);
       });
       it('bit lane should show that all components are belong to main', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
@@ -90,7 +91,7 @@ describe('merge lanes', function () {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should not show the components as if they belong to main', () => {
-        const lanes = helper.command.showLanesParsed();
+        const lanes = helper.command.listLanesParsed();
         const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(0);
       });
@@ -135,80 +136,94 @@ describe('merge lanes', function () {
           expect(lane.components).to.have.lengthOf(3);
         });
         it('bit lane --merged should not show the lane as it was not merged into main yet', () => {
-          const merged = helper.command.showLanes('--merged');
+          const merged = helper.command.listLanes('--merged');
           expect(merged).to.not.have.string('dev');
           expect(merged).to.have.string('None of the lanes is merged');
         });
         it('bit lane --unmerged should show the lane', () => {
-          const merged = helper.command.showLanes('--not-merged');
+          const merged = helper.command.listLanes('--not-merged');
           expect(merged).to.have.string('dev');
           expect(merged).to.not.have.string('All lanes are merged');
         });
       });
     });
-    describe('merging main into local lane', () => {
-      let mergeOutput: string;
+    describe('creating a new lane with the same name on a different workspace', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
         helper.bitJsonc.setupDefault();
         helper.command.createLane('dev');
-        helper.fixtures.populateComponents(1);
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponentsWithoutBuild();
-        mergeOutput = helper.command.mergeLane('main');
       });
-      it("should not throw an error that main lane doesn't exist", () => {
-        expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
+      it('should not merge the two lanes on the remote, instead, it should throw', () => {
+        expect(() => helper.command.export()).to.throw('unable to merge');
       });
     });
-    describe('merging main into local lane when main has tagged versions', () => {
-      let mergeOutput: string;
-      before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.populateComponents(1);
-        helper.command.tagAllWithoutBuild();
-        helper.command.createLane('dev');
-        helper.fixtures.populateComponents(1, undefined, 'v2');
-        helper.command.snapAllComponentsWithoutBuild();
-        mergeOutput = helper.command.mergeLane('main');
-      });
-      it("should not throw an error that main lane doesn't exist", () => {
-        expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
-      });
+  });
+  describe('merging main into local lane', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      mergeOutput = helper.command.mergeLane('main');
     });
-    describe('merging main lane with no snapped components', () => {
-      let mergeOutput: string;
-      before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.populateComponents(1);
-        helper.command.createLane('dev');
-        mergeOutput = helper.command.mergeLane('main');
-      });
-      it('should not throw an error about missing objects', () => {
-        expect(mergeOutput).to.not.have.string(
-          'component comp1 is on the lane but its objects were not found, please re-import the lane'
-        );
-      });
+    it("should not throw an error that main lane doesn't exist", () => {
+      expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
     });
-    describe('merging a lane into main when main is empty', () => {
-      let mergeOutput: string;
-      before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.populateComponents(1);
-        helper.command.createLane('dev');
-        helper.command.snapAllComponentsWithoutBuild();
-        helper.command.switchLocalLane('main');
-        mergeOutput = helper.command.mergeLane('dev');
-      });
-      it('should not throw an error that head is empty', () => {
-        expect(mergeOutput).to.have.string('successfully merged');
-      });
-      it('the component should be available on main', () => {
-        const list = helper.command.listParsed();
-        expect(list).to.have.lengthOf(1);
-      });
+  });
+  describe('merging main into local lane when main has tagged versions', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      mergeOutput = helper.command.mergeLane('main');
+    });
+    it("should not throw an error that main lane doesn't exist", () => {
+      expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
+    });
+  });
+  describe('merging main lane with no snapped components', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane('dev');
+      mergeOutput = helper.command.mergeLane('main');
+    });
+    it('should not throw an error about missing objects', () => {
+      expect(mergeOutput).to.not.have.string(
+        'component comp1 is on the lane but its objects were not found, please re-import the lane'
+      );
+    });
+  });
+  describe('merging a lane into main when main is empty', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.switchLocalLane('main');
+      mergeOutput = helper.command.mergeLane('dev');
+    });
+    it('should not throw an error that head is empty', () => {
+      expect(mergeOutput).to.have.string('successfully merged');
+    });
+    it('the component should be available on main', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

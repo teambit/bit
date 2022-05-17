@@ -72,15 +72,6 @@ describe('component with package.json as a file of the component', function () {
         expect(output).to.have.string('no files to track');
       });
     });
-    describe('importing the component using isolated environment', () => {
-      let isolatePath;
-      before(() => {
-        isolatePath = helper.command.isolateComponent('foo/pkg', '-olw');
-      });
-      it('should create the package.json file in the wrap dir', () => {
-        expect(path.join(isolatePath, WRAPPER_DIR, 'package.json')).to.be.a.file();
-      });
-    });
   });
   // legacy test. (tracking package.json is deprecated)
   describe('a component with package.json in an shared directory with another file', () => {
@@ -113,15 +104,6 @@ describe('component with package.json as a file of the component', function () {
     });
     it('bit status should not show the component as modified', () => {
       helper.command.expectStatusToBeClean();
-    });
-    describe('importing the component using isolated environment', () => {
-      let isolatePath;
-      before(() => {
-        isolatePath = helper.command.isolateComponent('bar/foo', '-olw');
-      });
-      it('should keep the package.json file in the shared dir', () => {
-        expect(path.join(isolatePath, 'bar', 'package.json')).to.be.a.file();
-      });
     });
   });
   // legacy test. (tracking package.json is deprecated)

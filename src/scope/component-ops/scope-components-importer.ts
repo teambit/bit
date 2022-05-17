@@ -2,6 +2,7 @@ import { filter } from 'bluebird';
 import { Mutex } from 'async-mutex';
 import pMap from 'p-map';
 import mapSeries from 'p-map-series';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, intersection } from 'lodash';
@@ -13,7 +14,6 @@ import ConsumerComponent from '../../consumer/component';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
@@ -25,7 +25,6 @@ import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
-import { DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
@@ -245,7 +244,7 @@ export default class ScopeComponentsImporter {
         return id.changeVersion(undefined);
       }
       // @todo: fix to consider local lane
-      const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, id.scope as string);
+      const remoteLaneId = LaneId.from(DEFAULT_LANE, id.scope as string);
       const remoteHead = await this.repo.remoteLanes.getRef(remoteLaneId, id);
       if (!remoteHead) {
         return id.changeVersion(undefined);
@@ -279,7 +278,7 @@ export default class ScopeComponentsImporter {
     ).fetchFromRemoteAndWrite();
   }
 
-  async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
+  async importFromLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
     const lanes = await this.importLanes(remoteLaneIds);
     const ids = lanes.map((lane) => lane.toBitIds());
     const bitIds = BitIds.uniqFromArray(R.flatten(ids));
@@ -287,7 +286,7 @@ export default class ScopeComponentsImporter {
     return lanes;
   }
 
-  async importLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
+  async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
     const multipleStreams = Object.values(objectsStreamPerRemote);
@@ -690,7 +689,7 @@ please make sure that the scope-resolver points to the right scope.`);
   }
 }
 
-export function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
+export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: string]: string[] } {
   const grouped = groupArray(ids, 'scope');
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());

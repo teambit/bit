@@ -185,7 +185,11 @@ function EnvsDropdownItem({ displayName, icon, description, componentId, id }: E
     <Tooltip
       placement="right"
       content={
-        <NavLink className={styles.envLink} href={ComponentUrl.toUrl(componentId)} external={true}>
+        <NavLink
+          className={styles.envLink}
+          href={ComponentUrl.toUrl(componentId, { includeVersion: false })}
+          external={true}
+        >
           {id}
         </NavLink>
       }

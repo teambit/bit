@@ -33,7 +33,6 @@ import Graph from './commands/public-cmds/graph-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import Init from './commands/public-cmds/init-cmd';
 import InjectConf from './commands/public-cmds/inject-conf-cmd';
-import Isolate from './commands/public-cmds/isolate-cmd';
 import Link from './commands/public-cmds/link-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
@@ -59,8 +58,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
     [
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Init(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Isolate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Import(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

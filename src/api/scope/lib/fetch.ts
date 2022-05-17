@@ -1,8 +1,8 @@
 import { Readable } from 'stream';
+import { LaneId } from '@teambit/lane-id';
 import { BitIds } from '../../../bit-id';
 import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -109,7 +109,7 @@ export default async function fetch(
       break;
     }
     case 'lane': {
-      const laneIds: RemoteLaneId[] = ids.map((id) => RemoteLaneId.parse(id));
+      const laneIds: LaneId[] = ids.map((id) => LaneId.parse(id));
       const lanes = await scope.listLanes();
       const lanesToFetch = laneIds.map((laneId) => {
         const laneToFetch = lanes.find((lane) => lane.name === laneId.name);

@@ -2,6 +2,7 @@ import R from 'ramda';
 
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
@@ -9,7 +10,6 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { Lane } from '../../../scope/models';
 import { ScopeNotFoundOrDenied } from '../../../remotes/exceptions/scope-not-found-or-denied';
 import { LaneNotFound } from '../../scope/lib/exceptions/lane-not-found';
@@ -48,14 +48,14 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   await consumer.onDestroy();
   return { dependencies, envComponents, importDetails };
 
-  async function getLanes(): Promise<{ laneIds: RemoteLaneId[]; lanes: Lane[] }> {
-    const result: { laneIds: RemoteLaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
-    let remoteLaneIds: RemoteLaneId[] = [];
+  async function getLanes(): Promise<{ laneIds: LaneId[]; lanes: Lane[] }> {
+    const result: { laneIds: LaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
+    let remoteLaneIds: LaneId[] = [];
     if (ids.length) {
       remoteLaneIds = ids.map((id) => {
         const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
-        if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
-        return RemoteLaneId.parse(id);
+        if (trackLane) return LaneId.from(trackLane.remoteLane, trackLane.remoteScope);
+        return LaneId.parse(id);
       });
     } else {
       remoteLaneIds = await consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();

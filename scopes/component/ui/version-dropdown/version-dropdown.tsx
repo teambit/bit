@@ -115,13 +115,6 @@ function VersionMenu({
   overrideVersionHref,
   ...rest
 }: VersionMenuProps) {
-  const getActiveTabIndex = () => {
-    if (currentLane) return VERSION_TAB_NAMES.indexOf('LANE');
-    if ((snaps || []).some((snap) => snap.version === currentVersion)) return VERSION_TAB_NAMES.indexOf('SNAP');
-    return VERSION_TAB_NAMES.indexOf('TAG');
-  };
-  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
-
   const tabs = VERSION_TAB_NAMES.map((name) => {
     switch (name) {
       case 'SNAP':
@@ -132,6 +125,15 @@ function VersionMenu({
         return { name, payload: tags || [] };
     }
   }).filter((tab) => tab.payload.length > 0);
+
+  const getActiveTabIndex = () => {
+    if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'SNAP');
+    return tabs.findIndex((tab) => tab.name === 'TAG');
+  };
+
+  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
 
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs

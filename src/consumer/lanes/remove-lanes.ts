@@ -1,9 +1,8 @@
 import groupArray from 'group-array';
 import R from 'ramda';
-
+import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '..';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import { Remotes } from '../../remotes';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import WorkspaceLane from '../bit-map/workspace-lane';
@@ -15,7 +14,7 @@ export default async function removeLanes(
   force: boolean
 ) {
   if (remote) {
-    const remoteLaneIds = lanes.map((lane) => RemoteLaneId.parse(lane));
+    const remoteLaneIds = lanes.map((lane) => LaneId.parse(lane));
     const results = await removeRemoteLanes(consumer, remoteLaneIds, force);
     const laneResults = R.flatten(results.map((r) => r.removedLanes));
     return { laneResults };
@@ -28,7 +27,7 @@ export default async function removeLanes(
   return { laneResults: lanes };
 }
 
-async function removeRemoteLanes(consumer: Consumer | undefined, lanes: RemoteLaneId[], force: boolean) {
+async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[], force: boolean) {
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};

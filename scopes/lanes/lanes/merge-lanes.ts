@@ -1,9 +1,8 @@
 import { BitError } from '@teambit/bit-error';
 import { BitId } from '@teambit/legacy-bit-id';
-import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ApplyVersionResults, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import LaneId, { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { MergingMain } from '@teambit/merging';
@@ -36,9 +35,8 @@ export async function mergeLanes({
   if (!remoteName && laneName === currentLaneId.name) {
     throw new BitError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
   }
-  const localLaneId = consumer.getCurrentLaneId();
-  const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(localLaneId);
-  const laneId = new LaneId({ name: laneName });
+  const laneId = await consumer.getParsedLaneId(laneName);
+  const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
   let bitIds: BitId[];
   let otherLane: Lane | null | undefined;
   let remoteLane;
@@ -49,7 +47,7 @@ export async function mergeLanes({
     bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane().filter((id) => id.hasVersion());
     otherLaneName = DEFAULT_LANE;
   } else if (remoteName) {
-    const remoteLaneId = RemoteLaneId.from(laneId.name, remoteName);
+    const remoteLaneId = LaneId.from(laneId.name, remoteName);
     remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(remoteLaneId);
     if (!remoteLane.length) {
       throw new BitError(
@@ -99,9 +97,7 @@ export async function mergeLanes({
       track: false,
       deleteFiles: true,
     });
-  } else if (!otherLane) {
-    deleteResults = { readmeResult: `missing lane ${laneName}` };
-  } else if (!otherLane.readmeComponent) {
+  } else if (otherLane && !otherLane.readmeComponent) {
     deleteResults = { readmeResult: `lane ${otherLane.name} doesn't have a readme component` };
   }
 

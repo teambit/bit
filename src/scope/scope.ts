@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
+import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -30,7 +31,6 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
@@ -108,8 +108,8 @@ export type OnTagOpts = {
   isSnap?: boolean;
 };
 export type IsolateComponentsOptions = {
-  packageManagerConfigRootDir?: string
-}
+  packageManagerConfigRootDir?: string;
+};
 export type OnTagFunc = (
   components: Component[],
   options: OnTagOpts,
@@ -318,6 +318,7 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
+    // @todo: not sure this is needed anymore. probably the heads are populated when the component was loaded
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
@@ -332,11 +333,11 @@ export default class Scope {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    const lane = await this.lanes.loadLane(id);
-    const remoteTrackedData = this.lanes.getRemoteTrackedDataByLocalLane(id.name);
-    if (lane && remoteTrackedData?.remoteLane && remoteTrackedData.remoteScope) {
-      lane.remoteLaneId = RemoteLaneId.from(remoteTrackedData?.remoteLane, remoteTrackedData.remoteScope);
-    }
+    return this.lanes.loadLane(id);
+  }
+
+  async loadLaneByHash(ref: Ref): Promise<Lane | null> {
+    const lane = (await this.objects.load(ref)) as Lane | null;
     return lane;
   }
 
@@ -519,7 +520,9 @@ export default class Scope {
    * for each one of the given components, find its dependents
    */
   async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+    logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
+    logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
     const dependencyGraph = new DependencyGraph(idsGraph);
     const dependentsGraph = bitIds.reduce((acc, current) => {
       const dependents = dependencyGraph.getDependentsForAllVersions(current);

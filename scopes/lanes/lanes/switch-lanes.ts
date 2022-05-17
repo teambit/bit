@@ -1,13 +1,11 @@
 import mapSeries from 'p-map-series';
-import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { RemoteLaneId } from '@teambit/legacy/dist/lane-id/lane-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
-import { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import {
@@ -23,28 +21,26 @@ import {
   getMergeStrategyInteractive,
   ApplyVersionResults,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import createNewLane from '@teambit/legacy/dist/consumer/lanes/create-lane';
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
+import { BitError } from '@teambit/bit-error';
+import { createLane } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
-  remoteScope?: string;
   ids?: BitId[];
   existingOnWorkspaceOnly: boolean;
-  localLaneName?: string;
-  remoteLaneScope?: string;
-  remoteLaneName?: string;
-  remoteLaneComponents?: LaneComponent[];
+  remoteLane?: Lane;
   localTrackedLane?: string;
-  newLaneName?: string;
+  alias?: string;
 };
 
 export class LaneSwitcher {
   private consumer: Consumer;
+  private laneIdToSwitch: LaneId; // populated by `this.populateSwitchProps()`
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -109,80 +105,56 @@ export class LaneSwitcher {
   }
 
   private async populateSwitchProps() {
-    const lanes = await this.consumer.scope.listLanes();
-    const isDefaultLane = this.switchProps.laneName === DEFAULT_LANE;
+    const laneId = await this.consumer.scope.lanes.parseLaneIdFromString(this.switchProps.laneName);
 
-    const localLane = lanes.find((lane) => lane.name === this.switchProps.laneName);
-
-    if (isDefaultLane || localLane) {
+    const localLane = await this.consumer.scope.loadLane(laneId);
+    if (laneId.isDefault()) {
+      this.populatePropsAccordingToDefaultLane();
+    } else if (localLane) {
       this.populatePropsAccordingToLocalLane(localLane);
     } else {
-      await this.populatePropsAccordingToRemoteLane(lanes);
+      await this.populatePropsAccordingToRemoteLane(laneId);
     }
   }
 
-  private async populatePropsAccordingToRemoteLane(lanes: Lane[]) {
-    let remoteLaneId: RemoteLaneId;
-    try {
-      remoteLaneId = RemoteLaneId.parse(this.switchProps.laneName);
-    } catch (e) {
-      throw new GeneralError(
-        `invalid lane id "${this.switchProps.laneName}", the lane ${this.switchProps.laneName} doesn't exist.`
-      );
-    }
-    if (remoteLaneId.name === DEFAULT_LANE) {
-      throw new GeneralError(`invalid remote lane id "${this.switchProps.laneName}". to switch to the main lane on remote,
-      run "bit switch main" and then "bit import".`);
+  private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId) {
+    this.laneIdToSwitch = remoteLaneId;
+    this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
+    if (this.consumer.getCurrentLaneId().isEqual(remoteLaneId)) {
+      throw new BitError(`already checked out to "${remoteLaneId.toString()}"`);
     }
     // fetch the remote to update all heads
-    const localTrackedLane = this.consumer.scope.lanes.getLocalTrackedLaneByRemoteName(
-      remoteLaneId.name,
-      remoteLaneId.scope as string
-    );
-    this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
-    this.switchProps.localLaneName = this.switchProps.newLaneName || localTrackedLane || remoteLaneId.name;
-    if (this.consumer.getCurrentLaneId().name === this.switchProps.localLaneName) {
-      throw new GeneralError(`already checked out to "${this.switchProps.localLaneName}"`);
-    }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
     const remoteLaneObjects = await scopeComponentImporter.importFromLanes([remoteLaneId]);
     if (remoteLaneObjects.length === 0) {
-      throw new GeneralError(
-        `invalid lane id "${this.switchProps.laneName}", the lane ${this.switchProps.laneName} doesn't exist.`
-      );
+      throw new BitError(`error: the lane ${this.switchProps.laneName} doesn't exist.`);
     }
-    const remoteLaneComponents = remoteLaneObjects[0].components;
-    this.switchProps.remoteLaneName = remoteLaneId.name;
+    if (remoteLaneObjects.length > 1) {
+      const allLanes = remoteLaneObjects.map((l) => l.id()).join(', ');
+      throw new BitError(`switching to multiple lanes is not supported. got: ${allLanes}`);
+    }
+    const remoteLane = remoteLaneObjects[0];
     this.switchProps.laneName = remoteLaneId.name;
-    this.switchProps.remoteLaneScope = remoteLaneId.scope;
-    this.switchProps.remoteScope = remoteLaneId.scope;
-    this.switchProps.ids = remoteLaneComponents.map((l) => l.id.changeVersion(l.head.toString()));
-    this.switchProps.remoteLaneComponents = remoteLaneComponents;
-    this.switchProps.localTrackedLane = localTrackedLane || undefined;
-    const laneExistsLocally = lanes.find((l) => l.name === this.switchProps.localLaneName);
-    if (laneExistsLocally) {
-      throw new GeneralError(`unable to checkout to a remote lane ${this.switchProps.remoteScope}/${this.switchProps.laneName}.
-the local lane "${this.switchProps.localLaneName}" already exists, please switch to the local lane first by running "bit switch ${this.switchProps.localLaneName}"
-then, to merge the remote lane into the local lane, run "bit lane merge ${this.switchProps.localLaneName} --remote ${this.switchProps.remoteScope}"`);
-    }
+    this.switchProps.ids = remoteLane.components.map((l) => l.id.changeVersion(l.head.toString()));
+    this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
+    this.switchProps.remoteLane = remoteLane;
     this.logger.debug(`populatePropsAccordingToRemoteLane, completed`);
   }
 
-  private populatePropsAccordingToLocalLane(localLane: Lane | undefined) {
-    this.switchProps.localLaneName = this.switchProps.laneName;
+  private populatePropsAccordingToDefaultLane() {
+    if (!this.consumer.isOnLane()) {
+      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
+    }
+    this.switchProps.ids = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    this.laneIdToSwitch = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+  }
+
+  private populatePropsAccordingToLocalLane(localLane: Lane) {
     if (this.consumer.getCurrentLaneId().name === this.switchProps.laneName) {
-      throw new GeneralError(`already checked out to "${this.switchProps.laneName}"`);
-    }
-    if (this.switchProps.laneName === DEFAULT_LANE) {
-      this.switchProps.ids = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
-      return;
-    }
-    if (!localLane) {
-      throw new GeneralError(
-        `unable to find a local lane "${this.switchProps.laneName}", to create a new lane please run "bit lane create"`
-      );
+      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
     this.switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
+    this.laneIdToSwitch = localLane.toLaneId();
   }
 
   private async getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -199,59 +171,40 @@ then, to merge the remote lane into the local lane, run "bit lane merge ${this.s
       throw err;
     }
   }
+
   private async saveLanesData() {
-    await saveCheckedOutLaneInfo(this.consumer, {
-      remoteLaneScope: this.switchProps.remoteLaneScope,
-      remoteLaneName: this.switchProps.remoteLaneName,
-      localLaneName: this.switchProps.localLaneName,
-      addTrackingInfo: !this.switchProps.localTrackedLane,
-      laneComponents: this.switchProps.remoteLaneComponents,
-    });
-  }
-}
+    const saveRemoteLaneToBitmap = () => {
+      if (this.switchProps.remoteLane) {
+        this.consumer.bitMap.setRemoteLane(this.switchProps.remoteLane.toLaneId());
+      }
+    };
+    const throwIfLaneExists = async () => {
+      const allLanes = await this.consumer.scope.listLanes();
+      if (allLanes.find((l) => l.toLaneId().isEqual(this.laneIdToSwitch))) {
+        throw new BitError(`unable to checkout to lane "${this.laneIdToSwitch.toString()}".
+  the lane already exists. please switch to the lane and merge`);
+      }
+    };
 
-async function saveCheckedOutLaneInfo(
-  consumer: Consumer,
-  opts: {
-    remoteLaneScope?: string;
-    remoteLaneName?: string;
-    localLaneName?: string;
-    addTrackingInfo?: boolean;
-    laneComponents?: LaneComponent[];
-  }
-) {
-  const saveRemoteLaneToBitmap = () => {
-    if (opts.remoteLaneScope) {
-      consumer.bitMap.setRemoteLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
-      // add versions to lane
+    const localLaneName = this.switchProps.alias || this.laneIdToSwitch.name;
+    if (this.switchProps.remoteLane) {
+      await throwIfLaneExists();
+      await createLane(this.consumer, this.laneIdToSwitch.name, this.laneIdToSwitch.scope, this.switchProps.remoteLane);
+      if (!this.switchProps.localTrackedLane) {
+        this.consumer.scope.lanes.trackLane({
+          localLane: localLaneName,
+          remoteLane: this.laneIdToSwitch.name,
+          remoteScope: this.laneIdToSwitch.scope,
+        });
+      }
     }
-  };
-  const throwIfLaneExists = async () => {
-    const allLanes = await consumer.scope.listLanes();
-    if (allLanes.find((l) => l.name === opts.localLaneName)) {
-      throw new GeneralError(`unable to checkout to lane "${opts.localLaneName}".
-the lane already exists. please switch to the lane and merge`);
-    }
-  };
 
-  if (opts.remoteLaneScope) {
-    await throwIfLaneExists();
-    await createNewLane(consumer, opts.localLaneName as string, opts.laneComponents);
-    if (opts.addTrackingInfo) {
-      // otherwise, it is tracked already
-      consumer.scope.lanes.trackLane({
-        localLane: opts.localLaneName as string,
-        remoteLane: opts.remoteLaneName as string,
-        remoteScope: opts.remoteLaneScope as string,
-      });
-    }
+    saveRemoteLaneToBitmap();
+    this.consumer.scope.lanes.setCurrentLane(localLaneName);
+    const workspaceLane =
+      localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(localLaneName, this.consumer.scope.path);
+    this.consumer.bitMap.syncWithLanes(workspaceLane);
   }
-
-  saveRemoteLaneToBitmap();
-  consumer.scope.lanes.setCurrentLane(opts.localLaneName as string);
-  const workspaceLane =
-    opts.localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(opts.localLaneName as string, consumer.scope.path);
-  consumer.bitMap.syncWithLanes(workspaceLane);
 }
 
 async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: SwitchProps): Promise<ComponentStatus> {
@@ -295,7 +248,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const baseComponent: Version = await modelComponent.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const component = await consumer.loadComponent(existingBitMapId);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  // don't use `consumer.isModified` here. otherwise, if there are dependency changes, the user can't discard them
+  // and won't be able to switch lanes.
+  const isModified = await consumer.isComponentSourceCodeModified(baseComponent, component);
   let mergeResults: MergeResultsThreeWay | null | undefined;
   const isHeadSameAsMain = () => {
     const head = modelComponent.getHead();

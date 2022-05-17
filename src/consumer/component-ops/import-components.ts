@@ -2,17 +2,17 @@ import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
+import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
+import { Consumer } from '../../consumer';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
 import { ComponentWithDependencies, Scope } from '../../scope';
@@ -48,7 +48,7 @@ export type ImportOptions = {
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   skipLane?: boolean; // save on main instead of current lane
-  lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
+  lanes?: { laneIds: LaneId[]; lanes?: Lane[] };
   allHistory?: boolean;
 };
 type ComponentMergeStatus = {
@@ -174,7 +174,8 @@ export default class ImportComponents {
 
   /**
    * consider the following use cases:
-   * 1) no ids were provided. it should import all the lanes components objects.
+   * 1) no ids were provided. it should import all the lanes components objects AND main components objects
+   * (otherwise, if main components are not imported and are missing, then bit-status complains about it)
    * 2) ids are provided with wildcards. we assume the user wants only the ids that are available on the lane.
    * because a user may entered "bit import scope/*" and this scope has many component on the lane and many not on the lane.
    * we want to bring only the components on the lane.
@@ -189,6 +190,9 @@ export default class ImportComponents {
     const bitIdsFromLane = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
 
     if (!this.options.ids.length) {
+      const mainIds = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+      const mainIdsToImport = mainIds.filter((id) => id.hasScope() && !bitIdsFromLane.hasWithoutVersion(id));
+      bitIdsFromLane.push(...mainIdsToImport);
       return bitIdsFromLane;
     }
 
@@ -286,18 +290,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
 
   async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
-
-    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    // this is probably not needed anymore because the build-one-graph already imports all
-    // missing objects.
-    // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
-    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
-    const componentsIdsToImport = BitIds.fromArray([
-      ...authoredExportedComponents,
-      ...importedComponents,
-      // ...idsOfDepsInstalledAsPackages,
-    ]);
+    const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
     let compiler;
     let tester;
@@ -353,6 +346,13 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
 
     return { dependencies: componentsAndDependencies, importDetails };
+  }
+
+  private getIdsToImportFromBitmap() {
+    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
+    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
+    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
+    return BitIds.fromArray([...authoredExportedComponents, ...importedComponents]);
   }
 
   /**
@@ -607,8 +607,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (this.options.skipLane || this.options.objectsOnly) {
       return false;
     }
-    const currentLaneId = this.consumer.getCurrentLaneId();
-    return !currentLaneId.isDefault();
+    return this.consumer.isOnLane();
   }
 
   async _saveLaneDataIfNeeded(componentsWithDependencies: ComponentWithDependencies[]): Promise<void> {

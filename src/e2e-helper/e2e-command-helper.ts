@@ -5,10 +5,10 @@ import childProcess, { StdioOptions } from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
-
+import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER, NOTHING_TO_SNAP_MSG } from '../constants';
+import { CURRENT_UPSTREAM, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -52,9 +52,11 @@ export default class CommandHelper {
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     const cmdWithFeatures = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
-    // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
+    // `spawnSync` gets the data from stderr, `shell: true` is needed for Windows to get the output.
     const cmdOutput = getStderrAsPartOfTheOutput
-      ? childProcess.spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio }).output.toString()
+      ? childProcess
+          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
+          .output.toString()
       : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
@@ -163,7 +165,7 @@ export default class CommandHelper {
     return this.runCmd(`bit envs replace ${oldEnv} ${newEnv}`);
   }
   setAspect(pattern: string, aspectId: string, config?: Record<string, any>, flags = '') {
-    const configStr = config ? `'${JSON.stringify(config)}'` : '';
+    const configStr = config ? JSON.stringify(JSON.stringify(config)) : '';
     return this.runCmd(`bit aspect set ${pattern} ${aspectId} ${configStr} ${flags}`);
   }
   unsetAspect(pattern: string, aspectId: string, flags = '') {
@@ -259,9 +261,8 @@ export default class CommandHelper {
   createLane(laneName = 'dev') {
     return this.runCmd(`bit lane create ${laneName}`);
   }
-  trackLane(localName: string, remoteScope: string, remoteName = '') {
-    const results = this.runCmd(`bit lane track ${localName} ${remoteScope} ${remoteName}`);
-    return removeChalkCharacters(results) as string;
+  changeLaneScope(laneName: string, newScope: string) {
+    return this.runCmd(`bit lane change-scope ${laneName} ${newScope}`);
   }
   clearCache() {
     return this.runCmd('bit clear-cache');
@@ -272,10 +273,6 @@ export default class CommandHelper {
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
-  showLanes(options = '') {
-    const results = this.runCmd(`bit lane list ${options}`);
-    return removeChalkCharacters(results) as string;
-  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
@@ -284,11 +281,15 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed;
   }
-  showLanesParsed(options = '') {
+  listLanes(options = '') {
+    const results = this.runCmd(`bit lane list ${options}`);
+    return removeChalkCharacters(results) as string;
+  }
+  listLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
-  showRemoteLanesParsed(options = '') {
+  listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
   }
@@ -380,6 +381,9 @@ export default class CommandHelper {
   fetchAllLanes() {
     return this.runCmd(`bit fetch --lanes`);
   }
+  renameLane(oldName: string, newName: string) {
+    return this.runCmd(`bit lane rename ${oldName} ${newName}`);
+  }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);
     return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
@@ -394,16 +398,6 @@ export default class CommandHelper {
 
   importAllComponents(writeToFileSystem = false) {
     return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
-  }
-
-  isolateComponent(id: string, flags: string): string {
-    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.scopes.remote}/${id} ${this.scopes.remotePath} ${flags}`);
-    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter((str) => str);
-    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
-  }
-
-  isolateComponentWithCapsule(id: string, capsuleDir: string) {
-    return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
   /**

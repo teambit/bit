@@ -3,13 +3,12 @@ import { Workspace } from '@teambit/workspace';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import {
   diffBetweenVersionsObjects,
   DiffResults,
   DiffOptions,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import LaneId from '@teambit/legacy/dist/lane-id/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 
 type LaneData = {
   name: string;
@@ -40,8 +39,8 @@ export class LaneDiffGenerator {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
     }
     const legacyScope = this.scope.legacyScope;
-    const fromLaneId = fromLaneName ? new LaneId({ name: fromLaneName }) : null;
-    const toLaneId = toLaneName ? new LaneId({ name: toLaneName }) : null;
+    const fromLaneId = fromLaneName ? await legacyScope.lanes.parseLaneIdFromString(fromLaneName) : null;
+    const toLaneId = toLaneName ? await legacyScope.lanes.parseLaneIdFromString(toLaneName) : null;
     const isFromOrToDefault = fromLaneId?.isDefault() || toLaneId?.isDefault();
 
     if (!isFromOrToDefault && !toLaneId) {
@@ -158,7 +157,7 @@ export class LaneDiffGenerator {
   }
 
   private async mapToLaneData(lane: Lane): Promise<LaneData> {
-    const { name, components, remoteLaneId } = lane;
+    const { name, components } = lane;
     const isMerged = await lane.isFullyMerged(this.scope.legacyScope);
     return {
       name,
@@ -168,7 +167,7 @@ export class LaneDiffGenerator {
         head: lc.head,
         version: lc.id.version?.toString(),
       })),
-      remote: remoteLaneId?.toString() ?? null,
+      remote: lane.toLaneId().toString(),
     };
   }
 }
