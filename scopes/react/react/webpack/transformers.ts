@@ -15,7 +15,7 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
       // for example, if we used "react-dom": require.resolve("react-dom"),
       // it would try to resolve "react-dom/test-utils" as:
       // node_modules/react-dom/index.js/test-utils
-      acc[peerName] = resolvePeerToDirOrFile(peerName, logger, context.target.hostRootDir);
+      acc[peerName] = resolvePeerToDirOrFile(peerName, logger, context.target?.hostRootDir);
       return acc;
     }, {});
     config.addAliases(peerAliases);
@@ -30,7 +30,7 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
  */
 export function generateExposePeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
-    const exposedRules = getExposedRules(peers, logger, context.target.hostRootDir);
+    const exposedRules = getExposedRules(peers, logger, context.target?.hostRootDir);
     config.addModuleRules(exposedRules);
     return config;
   };
