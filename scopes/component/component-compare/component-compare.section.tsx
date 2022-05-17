@@ -1,10 +1,10 @@
-import { Section } from '@teambit/component';
-import { ComponentCompare } from '@teambit/component/ui/component-compare';
-import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import React from 'react';
+import { Section } from '@teambit/component';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
+import { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class ComponentCompareSection implements Section {
-  // constructor() {}
+  constructor(private componentCompare: ComponentCompareUI) {}
 
   navigationLink = {
     href: '~compare',
@@ -14,8 +14,8 @@ export class ComponentCompareSection implements Section {
 
   route = {
     path: '~compare',
-    children: <ComponentCompare />,
+    children: this.componentCompare.getComponentComparePage(),
   };
 
-  order = 35;
+  order = 20;
 }

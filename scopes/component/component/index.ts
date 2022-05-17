@@ -28,6 +28,8 @@ export { componentFields, componentIdFields, componentOverviewFields } from './u
 export { ConsumePlugin } from './ui/menu';
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export { ComponentCompare, ComponentCompareProps } from './ui/component-compare';
+
 export type { ShowFragment, ShowRow } from './show';
 export { default as Config } from './config';
 export { useComponent } from './ui';
