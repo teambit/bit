@@ -6,7 +6,7 @@ import { head } from 'lodash';
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve, sep } from 'path';
 import { Component } from '@teambit/component';
-import { TypeRefSchema, SchemaNode, InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
 import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
@@ -27,13 +27,14 @@ export class SchemaExtractorContext {
   /**
    * returns the location of a node in a source file.
    */
-  getLocation(node: Node, targetSourceFile?: ts.SourceFile) {
+  getLocation(node: Node, targetSourceFile?: ts.SourceFile): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
 
     return {
+      file: sourceFile.fileName,
       line,
       character,
     };

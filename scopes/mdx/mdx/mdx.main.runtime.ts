@@ -45,6 +45,7 @@ export class MDXMain {
   }
 
   static runtime = MainRuntime;
+
   static dependencies = [
     DocsAspect,
     DependencyResolverAspect,

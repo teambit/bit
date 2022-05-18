@@ -1,10 +1,10 @@
 export { APISchema } from './api-schema';
-export type { SchemaNode } from './schema-node';
+export type { SchemaNode, Location } from './schema-node';
 export {
   Export,
   Module,
   StaticProperties,
-  FunctionSchema,
+  FunctionLikeSchema,
   Modifier,
   TypeRefSchema,
   VariableSchema,
