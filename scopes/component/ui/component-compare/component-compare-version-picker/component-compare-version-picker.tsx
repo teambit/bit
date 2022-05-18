@@ -5,11 +5,10 @@ import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
 import { ComponentContext } from '@teambit/component';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import classNames from 'classnames';
 import styles from './component-compare-version-picker.module.scss';
 
-export type ComponentCompareVersionPickerProps = {
-  host: string;
-} & HTMLAttributes<HTMLDivElement>;
+export type ComponentCompareVersionPickerProps = { host: string } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
@@ -52,10 +51,10 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
   return (
     <div className={styles.componentCompareVersionPicker}>
       <VersionDropdown
-        className={styles.componentCompareVersionContainer}
+        className={classNames(styles.componentCompareVersionContainer, styles.left)}
         dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
-        menuClassName={styles.componentCompareVersionMenu}
+        menuClassName={classNames(styles.componentCompareVersionMenu, styles.showMenuOverNav)}
         snaps={snaps}
         tags={tags}
         currentVersion={baseVersion as string}
@@ -68,8 +67,11 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
         }}
         showVersionDetails={true}
       />
+      <div className={styles.arrowContainer}>
+        <img src="https://static.bit.dev/bit-icons/arrow-left.svg" />
+      </div>
       <VersionDropdown
-        className={styles.componentCompareVersionContainer}
+        className={classNames(styles.componentCompareVersionContainer, styles.right)}
         dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
         menuClassName={styles.componentCompareVersionMenu}
