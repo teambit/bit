@@ -1,11 +1,11 @@
 import { Transform } from 'class-transformer';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
 export class TypeIntersectionSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly types: SchemaNode[];
-  constructor(types: SchemaNode[]) {
+  constructor(readonly location: Location, types: SchemaNode[]) {
     super();
     this.types = types;
   }

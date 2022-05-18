@@ -4,7 +4,7 @@ import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { resolve, sep } from 'path';
+import { resolve, sep, relative } from 'path';
 import { Component } from '@teambit/component';
 import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -27,17 +27,22 @@ export class SchemaExtractorContext {
   /**
    * returns the location of a node in a source file.
    */
-  getLocation(node: Node, targetSourceFile?: ts.SourceFile): Location {
+  getLocation(node: Node, targetSourceFile?: ts.SourceFile, absolutePath = false): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
 
     return {
-      file: sourceFile.fileName,
+      file: absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName),
       line,
       character,
     };
+  }
+
+  getPathRelativeToComponent(filePath: string): string {
+    const basePath = this.component.filesystem.files[0].base;
+    return relative(basePath, filePath);
   }
 
   /**
@@ -271,11 +276,11 @@ export class SchemaExtractorContext {
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
     const unknownExactType = async () => {
       if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(typeStr);
+        return new InferenceTypeSchema(location, typeStr);
       }
       const info = await this.getQuickInfo(node);
       const type = parseTypeFromQuickInfo(info);
-      return new InferenceTypeSchema(type);
+      return new InferenceTypeSchema(location, type);
     };
     if (!definition) {
       return unknownExactType();

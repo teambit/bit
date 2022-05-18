@@ -31,8 +31,9 @@ import { getParams } from './get-params';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
+  const location = context.getLocation(node);
   if (isKeywordType(node)) {
-    return new KeywordTypeSchema(node.getText());
+    return new KeywordTypeSchema(location, node.getText());
   }
   switch (node.kind) {
     case SyntaxKind.IntersectionType:
@@ -44,7 +45,7 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.TypeLiteral:
       return typeLiteral(node as TypeLiteralNode, context);
     case SyntaxKind.LiteralType: // e.g. string/boolean
-      return new LiteralTypeSchema(node.getText());
+      return new LiteralTypeSchema(location, node.getText());
     case SyntaxKind.FunctionType:
       return functionType(node as FunctionTypeNode, context);
     case SyntaxKind.TypeQuery:
@@ -117,7 +118,8 @@ async function intersectionType(node: IntersectionTypeNode, context: SchemaExtra
     const typeSchema = await typeNodeToSchema(type, context);
     return typeSchema;
   });
-  return new TypeIntersectionSchema(types);
+  const location = context.getLocation(node);
+  return new TypeIntersectionSchema(location, types);
 }
 
 async function unionType(node: UnionTypeNode, context: SchemaExtractorContext) {
@@ -125,7 +127,8 @@ async function unionType(node: UnionTypeNode, context: SchemaExtractorContext) {
     const typeSchema = await typeNodeToSchema(type, context);
     return typeSchema;
   });
-  return new TypeUnionSchema(types);
+  const location = context.getLocation(node);
+  return new TypeUnionSchema(location, types);
 }
 
 /**
@@ -137,7 +140,8 @@ async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContex
     const typeSchema = await context.computeSchema(member);
     return typeSchema;
   });
-  return new TypeLiteralSchema(members);
+  const location = context.getLocation(node);
+  return new TypeLiteralSchema(location, members);
 }
 
 /**
@@ -167,12 +171,14 @@ async function functionType(node: FunctionTypeNode, context: SchemaExtractorCont
 async function typeQuery(node: TypeQueryNode, context: SchemaExtractorContext) {
   const displaySig = await context.getQuickInfoDisplayString(node.exprName);
   const type = await context.resolveType(node.exprName, node.exprName.getText(), false);
-  return new TypeQuerySchema(type, displaySig);
+  const location = context.getLocation(node);
+  return new TypeQuerySchema(location, type, displaySig);
 }
 
 async function arrayType(node: ArrayTypeNode, context: SchemaExtractorContext) {
   const type = await typeNodeToSchema(node.elementType, context);
-  return new TypeArraySchema(type);
+  const location = context.getLocation(node);
+  return new TypeArraySchema(location, type);
 }
 
 /**
@@ -181,7 +187,7 @@ async function arrayType(node: ArrayTypeNode, context: SchemaExtractorContext) {
 async function typeOperator(node: TypeOperatorNode, context: SchemaExtractorContext) {
   const operatorName = getOperatorName(node.operator);
   const type = await typeNodeToSchema(node.type, context);
-  return new TypeOperatorSchema(operatorName, type);
+  return new TypeOperatorSchema(context.getLocation(node), operatorName, type);
 }
 
 function getOperatorName(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword) {
@@ -202,5 +208,5 @@ async function tupleType(node: TupleTypeNode, context: SchemaExtractorContext) {
     const typeSchema = await typeNodeToSchema(elem, context);
     return typeSchema;
   });
-  return new TupleTypeSchema(elements);
+  return new TupleTypeSchema(context.getLocation(node), elements);
 }
