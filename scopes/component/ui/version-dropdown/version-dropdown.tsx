@@ -159,6 +159,7 @@ function VersionPlaceholder({
     <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
       {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
       <Ellipsis className={styles.versionName}>{currentVersion}</Ellipsis>
+      {showDetails && <div className={styles.author}>{author?.displayName}</div>}
       {showDetails && commitMessage(versionDetails?.message)}
       <Icon of="fat-arrow-down" />
     </div>

@@ -12,8 +12,15 @@
   overflow-y: auto;
   flex-direction: column;
   padding-top: 24px;
+  > *:nth-child(2) {
+    margin-top: 24px;
+  }
 }
-
+.navContainer {
+  display: flex;
+  align-items: center;
+  height: 56px;
+}
 .navigation {
   display: flex;
   list-style: none;
