@@ -54,8 +54,8 @@ export class TypeScriptParser implements Parser {
     const ast = ts.createSourceFile(modulePath, readFileSync(modulePath, 'utf8'), ts.ScriptTarget.Latest);
 
     const moduleExports = this.getExports(ast);
-
-    return new Module(moduleExports);
+    const location = { file: modulePath, line: 1, character: 1 };
+    return new Module(location, moduleExports);
   }
 
   parseStaticProperties(sourceFile: SourceFile) {

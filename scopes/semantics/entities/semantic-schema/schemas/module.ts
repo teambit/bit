@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Transform } from 'class-transformer';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 import { Export } from '../schemas';
 
@@ -8,7 +8,7 @@ export class Module extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   exports: SchemaNode[];
   namespace?: string;
-  constructor(exports: SchemaNode[]) {
+  constructor(readonly location: Location, exports: SchemaNode[]) {
     super();
     this.exports = exports;
   }

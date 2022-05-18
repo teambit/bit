@@ -158,7 +158,7 @@ async function functionType(node: FunctionTypeNode, context: SchemaExtractorCont
   const params = await getParams(node.parameters, context);
   const returnType = await typeNodeToSchema(node.type, context);
   const location = context.getLocation(node);
-  return new FunctionLikeSchema(name, params, returnType, '', location);
+  return new FunctionLikeSchema(location, name, params, returnType, '');
 }
 
 /**

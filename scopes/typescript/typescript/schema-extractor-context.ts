@@ -241,7 +241,10 @@ export class SchemaExtractorContext {
     typeStr: string,
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
-    if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
+    const location = this.getLocation(node);
+    if (this._exports?.includes(typeStr)) {
+      return new TypeRefSchema(location, typeStr);
+    }
     if (node.type && ts.isTypeNode(node.type)) {
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
@@ -297,6 +300,6 @@ export class SchemaExtractorContext {
     }
     const pkgName = this.parsePackageNameFromPath(definition.file);
     // TODO: find component id is exists, otherwise add the package name.
-    return new TypeRefSchema(typeStr, undefined, pkgName);
+    return new TypeRefSchema(location, typeStr, undefined, pkgName);
   }
 }

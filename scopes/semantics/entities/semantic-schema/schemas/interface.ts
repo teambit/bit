@@ -1,12 +1,12 @@
 import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
 export class InterfaceSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly members: SchemaNode[];
-  constructor(private name: string, members: SchemaNode[]) {
+  constructor(readonly location: Location, readonly name: string, members: SchemaNode[]) {
     super();
     this.members = members;
   }

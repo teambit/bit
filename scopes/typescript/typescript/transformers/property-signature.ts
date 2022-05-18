@@ -29,6 +29,6 @@ export class PropertySignature implements SchemaTransformer {
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(prop, typeStr);
-    return new VariableSchema(name, displaySig, type);
+    return new VariableSchema(context.getLocation(prop), name, displaySig, type);
   }
 }

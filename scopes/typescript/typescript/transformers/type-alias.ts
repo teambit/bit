@@ -22,6 +22,6 @@ export class TypeAliasTransformer implements SchemaTransformer {
     const type = await typeNodeToSchema(typeAlias.type, context);
     const info = await context.getQuickInfo(typeAlias.name);
     const displaySig = info?.body?.displayString;
-    return new TypeSchema(this.getName(typeAlias), type, displaySig as string);
+    return new TypeSchema(context.getLocation(typeAlias), this.getName(typeAlias), type, displaySig || '');
   }
 }
