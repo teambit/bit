@@ -30,11 +30,10 @@ export function ComponentCompareComposition() {
     //     return <div>Loading...</div>
     // }
 
-    // todo: fix height of containers
     return (
         <div className={styles.mainContainer}>
-            <div className={styles.subContainer}>
-                <div className={classNames([styles.subView, styles.leftView])}>
+            <div className={styles.subContainerLeft}>
+                <div className={styles.subView}>
                     <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
                         <CompositionContent
                             emptyState={undefined} // todo: has to come from emptyStateSlot
@@ -45,8 +44,8 @@ export function ComponentCompareComposition() {
                     </CompositionContextProvider>
                 </div>
             </div>
-            <div className={styles.subContainer}>
-                <div className={classNames([styles.subView, styles.rightView])}>
+            <div className={styles.subContainerRight}>
+                <div className={styles.subView}>
                     <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={setCompareCompositionParams}>
                         <CompositionContent
                             emptyState={undefined} // todo: has to come from emptyStateSlot

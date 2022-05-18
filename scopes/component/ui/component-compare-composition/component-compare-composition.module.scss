@@ -1,27 +1,21 @@
 .mainContainer {
     display: flex;
-    margin-top: 16px;
-    margin-right: 48px; // todo: review
-    height: 600px; // review - should not be fixed
+    height: 100%;
 }
 
-.subContainer {
+.subContainerLeft {
     flex: 1;
     background-color: #ededed;
+    padding: 16px;
+}
+
+.subContainerRight {
+    flex: 1;
+    background-color: #ededed;
+    padding: 16px 16px 16px 0px;
 }
 
 .subView {
-    margin: 16px;
-    height: calc(600px - (2 * 16px)); // review - should not be fixed
+    height: 100%;
     background-color: white;
 }
-
-.leftView {
-    margin-right: 8px;
-}
-
-.rightView {
-    margin-left: 8px;
-}
-
-
