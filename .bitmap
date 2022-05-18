@@ -1020,12 +1020,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
-    "ui/avatar": {
-        "scope": "teambit.design",
-        "version": "0.1.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/Avatar"
-    },
     "ui/badges/component-count": {
         "scope": "teambit.component",
         "version": "0.0.1",
@@ -1433,12 +1427,6 @@
         "version": "0.0.486",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-store"
-    },
-    "ui/owner-avatar": {
-        "scope": "teambit.design",
-        "version": "0.1.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/owner-avatar"
     },
     "ui/pages/not-found": {
         "scope": "teambit.design",
