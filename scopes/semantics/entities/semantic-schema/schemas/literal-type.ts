@@ -3,8 +3,10 @@ import { SchemaNode } from '../schema-node';
 /**
  * e.g. const a: 'a';
  */
-export class LiteralTypeSchema implements SchemaNode {
-  constructor(private name: string) {}
+export class LiteralTypeSchema extends SchemaNode {
+  constructor(private name: string) {
+    super();
+  }
 
   toObject() {
     return {

@@ -1,10 +1,17 @@
 import chalk from 'chalk';
+import { Transform } from 'class-transformer';
 import { SchemaNode } from '../schema-node';
+import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 import { Export } from '../schemas';
 
-export class Module implements SchemaNode {
+export class Module extends SchemaNode {
+  @Transform(schemaObjArrayToInstances)
+  exports: SchemaNode[];
   namespace?: string;
-  constructor(public exports: SchemaNode[]) {}
+  constructor(exports: SchemaNode[]) {
+    super();
+    this.exports = exports;
+  }
 
   getExportSchemas(): Export[] {
     return this.exports.filter((e) => e instanceof Export) as Export[];

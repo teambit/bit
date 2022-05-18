@@ -1,19 +1,14 @@
+import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
+import { schemaObjToInstance } from '../schema-obj-to-class';
 
-export class VariableSchema implements SchemaNode {
-  constructor(readonly name: string, private signature: string, private type: SchemaNode) {}
-  getSignature() {
-    return this.signature;
-  }
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      signature: this.signature,
-      type: this.type.toObject(),
-    };
+export class VariableSchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  type: SchemaNode;
+  constructor(readonly name: string, readonly signature: string, type: SchemaNode) {
+    super();
+    this.type = type;
   }
 
   toString() {
