@@ -3,35 +3,36 @@
   justify-content: space-between;
   align-items: center;
   height: 40px;
-  padding: 0 24px;
-
-  .versionTimestamp {
-    margin-right: 2px;
-  }
-  .versionUserAvatar {
-    padding: 0px 8px;
-  }
-  .laneIcon {
-    padding: 0px 4px;
-  }
-  .version {
-    min-width: 30%;
-    display: flex;
-    flex-direction: row;
-    align-content: space-between;
-    align-items: center;
-  }
-  .versionName {
-    padding: 0px 8px;
-  }
-  .commitMessage {
-    min-width: 40%;
-    font-size: 15px;
-  }
-  .emptyMessage {
-    min-width: 20%;
-    font-size: 15px;
-    font-style: italic;
-    color: var(--bit-text-color-light, #6c707c);
-  }
+  padding: 0 16px;
+}
+.versionTimestamp {
+  min-width: 30%;
+  margin-right: 2px;
+  text-align: right;
+}
+.versionUserAvatar {
+  padding: 0px 8px;
+}
+.laneIcon {
+  padding: 0px 4px;
+}
+.version {
+  max-width: 70%;
+  display: flex;
+  flex-direction: row;
+  align-content: space-between;
+  align-items: center;
+}
+.versionName {
+  padding: 0px 8px;
+  min-width: 20%;
+}
+.commitMessage,
+.emptyMessage {
+  min-width: 60%;
+  padding: 0px 8px;
+}
+.emptyMessage {
+  font-style: italic;
+  color: var(--bit-text-color-light, #6c707c);
 }

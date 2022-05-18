@@ -53,13 +53,15 @@ export function VersionInfo({
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
           {showDetails && commitMessage(message)}
         </div>
-        <TimeAgo className={styles.versionTimestamp} date={timestamp} />
+        <Ellipsis className={styles.versionTimestamp}>
+          <TimeAgo date={timestamp} />
+        </Ellipsis>
       </MenuLinkItem>
     </div>
   );
 }
 
 function commitMessage(message?: string) {
-  if (!message || message === '') return <div className={styles.emptyMessage}>No commit message</div>;
-  return <div className={styles.commitMessage}>{message}</div>;
+  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
 }

@@ -6,7 +6,6 @@
     align-items: center;
   }
   .menu {
-    width: 350px;
     padding: 0;
     right: 0;
     // top: 43px;
@@ -107,6 +106,8 @@
   line-height: 14px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   overflow-x: auto;
+  margin-top: 8px;
+
   .tab {
     font-weight: bold;
     padding-top: 4px;

@@ -68,7 +68,7 @@ export function VersionDropdown({
     <div {...rest} className={classNames(styles.versionDropdown, className)}>
       <Dropdown
         className={classNames(styles.dropdown, dropdownClassName)}
-        dropClass={styles.menu}
+        dropClass={classNames(styles.menu, menuClassName)}
         clickToggles={false}
         clickPlaceholderToggles={true}
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling

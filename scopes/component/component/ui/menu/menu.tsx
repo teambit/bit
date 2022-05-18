@@ -122,6 +122,7 @@ function VersionRelatedDropdowns({
         currentVersion={currentVersion}
         latestVersion={component.latest}
         currentLane={currentLane}
+        menuClassName={styles.componentVersionMenu}
       />
     </>
   );
