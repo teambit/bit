@@ -11,6 +11,7 @@ export async function getParams(
 ): Promise<ParameterSchema[]> {
   return pMapSeries(parameterNodes, async (param) => {
     return new ParameterSchema(
+      context.getLocation(param),
       param.name.getText(),
       await getParamType(param, context),
       param.initializer ? param.initializer.getText() : undefined
