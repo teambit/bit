@@ -81,6 +81,19 @@
   &.disabled {
     background-color: #ededed;
   }
+  .versionName {
+    padding: 0px 8px;
+    min-width: 20%;
+  }
+  .commitMessage,
+  .emptyMessage {
+    min-width: 60%;
+    padding: 0px 8px;
+  }
+  .emptyMessage {
+    font-style: italic;
+    color: var(--bit-text-color-light, #6c707c);
+  }
 }
 
 .withVersions {

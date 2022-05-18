@@ -55,7 +55,6 @@ export function VersionDropdown({
   ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
-  // const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
 
@@ -151,10 +150,16 @@ function VersionPlaceholder({
     };
   }, [versionDetails]);
 
+  function commitMessage(message?: string) {
+    if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+    return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
+  }
+
   return (
     <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
       {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
-      <Ellipsis>{currentVersion}</Ellipsis>
+      <Ellipsis className={styles.versionName}>{currentVersion}</Ellipsis>
+      {showDetails && commitMessage(versionDetails?.message)}
       <Icon of="fat-arrow-down" />
     </div>
   );
