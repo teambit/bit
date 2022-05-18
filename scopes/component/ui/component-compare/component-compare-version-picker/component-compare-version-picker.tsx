@@ -51,6 +51,11 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
   return (
     <div className={styles.componentCompareVersionPicker}>
       <VersionDropdown
+        key={`base-compare-version-dropdown-${
+          componentCompare && !componentCompare.loading
+            ? componentCompare.compare.id.toString()
+            : componentCompare?.loading
+        }`}
         className={classNames(styles.componentCompareVersionContainer, styles.left)}
         dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
