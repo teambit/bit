@@ -1,3 +1,4 @@
+import React, { useState, HTMLAttributes, useMemo } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
@@ -9,7 +10,6 @@ import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import classNames from 'classnames';
-import React, { useState } from 'react';
 
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
@@ -33,6 +33,7 @@ export type VersionDropdownProps = {
   dropdownClassName?: string;
   menuClassName?: string;
   showVersionDetails?: boolean;
+  readonly?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -50,16 +51,23 @@ export function VersionDropdown({
   dropdownClassName,
   menuClassName,
   showVersionDetails,
+  readonly,
   ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
 
-  if (singleVersion && !loading) {
+  if (readonly || (singleVersion && !loading)) {
     return (
       <div className={classNames(styles.noVersions, className)}>
-        <VersionPlaceholder className={placeholderClassName} currentVersion={currentVersion} />
+        <VersionPlaceholder
+          snaps={snaps}
+          tags={tags}
+          showDetails={showVersionDetails}
+          className={placeholderClassName}
+          currentVersion={currentVersion}
+        />
       </div>
     );
   }
@@ -74,7 +82,10 @@ export function VersionDropdown({
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
         placeholder={
           <VersionPlaceholder
+            snaps={snaps}
+            tags={tags}
             currentVersion={currentVersion}
+            showDetails={showVersionDetails}
             className={classNames(styles.withVersions, placeholderClassName)}
           />
         }
@@ -100,9 +111,34 @@ export function VersionDropdown({
   );
 }
 
-function VersionPlaceholder({ currentVersion, className }: { currentVersion?: string; className?: string }) {
+type VersionPlaceholderProps = {
+  showDetails?: boolean;
+  currentVersion: string;
+  tags: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+} & HTMLAttributes<HTMLDivElement>;
+
+function VersionPlaceholder({ currentVersion, className, showDetails, tags, snaps }: VersionPlaceholderProps) {
+  const getVersionDetailFromTags = (version) => tags.find((tag) => tag.tag === version);
+  const getVersionDetailFromSnaps = (version) => (snaps || []).find((snap) => snap.hash === version);
+  const getVersionDetails = (version?: string) => {
+    if (!showDetails || !version) return undefined;
+    if (version === 'workspace' || version === 'new') return { version };
+    return getVersionDetailFromTags(currentVersion) || getVersionDetailFromSnaps(currentVersion);
+  };
+
+  const versionDetails = getVersionDetails(currentVersion);
+
+  const author = useMemo(() => {
+    return {
+      displayName: versionDetails?.username,
+      email: versionDetails?.email,
+    };
+  }, [versionDetails]);
+
   return (
     <div className={classNames(styles.placeholder, className)}>
+      {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
       <Ellipsis>{currentVersion}</Ellipsis>
       <Icon of="fat-arrow-down" />
     </div>
