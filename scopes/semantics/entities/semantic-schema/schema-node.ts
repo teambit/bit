@@ -1,13 +1,20 @@
+import { instanceToPlain } from 'class-transformer';
+
 /**
- * an interface for implementing a new schema node.
+ * a convenient abstract class for all schema to extend.
+ * the reason for having it as an abstract class and not an interface, for now, is mostly for the `__schema` prop.
+ * this way it won't need to be implemented in each one of the subclasses.
  */
-export interface SchemaNode {
+export abstract class SchemaNode {
+  readonly __schema = this.constructor.name;
   readonly location?: Location;
-  getSignature?(): string;
+  readonly signature?: string;
 
-  toString(): string;
+  abstract toString(): string;
 
-  toObject(): Record<string, any> & { constructorName: string };
+  toObject() {
+    return instanceToPlain(this);
+  }
 }
 
 export type Location = { file: string; line: number; character: number };

@@ -1,3 +1,4 @@
+import { Transform, plainToInstance } from 'class-transformer';
 import chalk from 'chalk';
 import {
   ClassSchema,
@@ -9,13 +10,20 @@ import {
   VariableSchema,
 } from './schemas';
 import { SchemaNode } from './schema-node';
+import { schemaObjToInstance } from './schema-obj-to-class';
 
 export type PlainSemanticSchema = {
   exports?: Export[];
 };
 
-export class APISchema implements SchemaNode {
-  constructor(readonly module: Module) {}
+export class APISchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  readonly module: Module;
+
+  constructor(module: Module) {
+    super();
+    this.module = module;
+  }
 
   toString() {
     return JSON.stringify(
@@ -25,20 +33,13 @@ export class APISchema implements SchemaNode {
     );
   }
 
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      module: this.module.toObject(),
-      filename: '',
-    };
-  }
-
   toStringPerType() {
     const getSection = (ClassObj, sectionName: string) => {
       const objects = this.module.exports.filter((exp) => exp instanceof ClassObj);
       if (!objects.length) {
         return '';
       }
+
       return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
     };
 
@@ -53,12 +54,10 @@ export class APISchema implements SchemaNode {
   }
 
   listSignatures() {
-    return this.module.exports.map((exp) => exp.getSignature?.());
+    return this.module.exports.map((exp) => exp.signature);
   }
 
-  static fromSchema() {}
-
-  // static from(plainSchema: PlainSemanticSchema) {
-  //   return new APISchema(plainSchema.exports);
-  // }
+  static fromSchema(obj: Record<string, any>): APISchema {
+    return plainToInstance(APISchema, obj);
+  }
 }
