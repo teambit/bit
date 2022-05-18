@@ -116,3 +116,5 @@ export class SchemaMain {
 }
 
 SchemaAspect.addRuntime(SchemaMain);
+
+export default SchemaMain;
