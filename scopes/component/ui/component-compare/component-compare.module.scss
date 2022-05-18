@@ -10,14 +10,15 @@
 .bottom {
   display: flex;
   overflow-y: auto;
-  height: 100%;
+  flex-direction: column;
+  padding-top: 24px;
 }
 
 .navigation {
   display: flex;
   list-style: none;
   height: 100%;
-  padding-left: 28px;
+
   @media screen and (max-width: 768px) {
     padding-left: 6px;
   }
