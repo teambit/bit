@@ -1,19 +1,17 @@
+import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 import { SchemaNode } from '../schema-node';
+import { schemaObjToInstance } from '../schema-obj-to-class';
 
-export class GetAccessorSchema implements SchemaNode {
-  constructor(private name: string, private type: SchemaNode, private signature: string) {}
+export class GetAccessorSchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  readonly type: SchemaNode;
+  constructor(readonly name: string, type: SchemaNode, readonly signature: string) {
+    super();
+    this.type = type;
+  }
   getSignature() {
     return this.signature;
-  }
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      type: this.type.toObject(),
-      signature: this.signature,
-    };
   }
 
   toString() {

@@ -1,20 +1,19 @@
+import { Transform } from 'class-transformer';
 import { SchemaNode } from '../schema-node';
+import { schemaObjToInstance } from '../schema-obj-to-class';
 
 /**
  * e.g. `typeof Foo`
  */
-export class TypeQuerySchema implements SchemaNode {
-  constructor(private type: SchemaNode, private signature: string) {}
+export class TypeQuerySchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  readonly type: SchemaNode;
+  constructor(type: SchemaNode, readonly signature: string) {
+    super();
+    this.type = type;
+  }
   getSignature() {
     return this.signature;
-  }
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      type: this.type,
-      signature: this.signature,
-    };
   }
 
   toString() {
