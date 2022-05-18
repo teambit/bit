@@ -1,3 +1,5 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .componentCompareVersionPicker {
   display: flex;
   flex-direction: row;
@@ -8,6 +10,7 @@
 .componentCompareVersionMenu {
   max-width: 100%;
   width: 100%;
+  z-index: $nav-z-index + 1;
 }
 
 .componentCompareVersionPlaceholder {
