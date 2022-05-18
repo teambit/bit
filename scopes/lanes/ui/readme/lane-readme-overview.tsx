@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactRouter } from '@teambit/react-router';
+import { Navigate } from 'react-router-dom';
 import { LaneReadme, useLanesContext, LanesModel, LaneOverviewLineSlot } from '@teambit/lanes.ui.lanes';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 
@@ -19,7 +19,7 @@ export function LaneReadmeOverview({ host, overviewSlot, routeSlot }: LaneReadme
   }
 
   if (viewedLane) {
-    return <ReactRouter.Redirect to={`${LanesModel.getLaneUrl(viewedLane.id)}/~gallery`} />;
+    return <Navigate to={`${LanesModel.getLaneUrl(viewedLane.id)}/~gallery`} />;
   }
 
   // throw 404

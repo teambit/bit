@@ -141,7 +141,6 @@ export class ScopeUI {
         children: this.componentUi.getMenu(ScopeAspect.id),
       },
       {
-        exact: true,
         path: '/',
         children: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
       },

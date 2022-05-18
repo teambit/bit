@@ -1,4 +1,3 @@
-import { useRouteMatch } from 'react-router-dom';
 import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
@@ -13,15 +12,9 @@ export type Component = {
   componentDescriptor?: ComponentDescriptor;
 };
 
-type ComponentRoute = {
-  componentId?: string;
-};
-
 export function useComponent(host: string, id?: ComponentID): Component {
-  const {
-    params: { componentId },
-  } = useRouteMatch<ComponentRoute>();
   const query = useQuery();
+  const componentId = query.get('componentId') || undefined;
   const version = query.get('version') || undefined;
   const lanesContext = useLanesContext();
   const targetId = id?.toString({ ignoreVersion: true }) || componentId;

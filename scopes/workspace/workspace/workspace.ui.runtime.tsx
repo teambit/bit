@@ -226,7 +226,6 @@ export class WorkspaceUI {
 
     workspaceUI.registerMenuRoutes([
       {
-        exact: true,
         path: '/',
         children: <Menu menuItemSlot={workspaceUI.menuItemSlot} />,
       },

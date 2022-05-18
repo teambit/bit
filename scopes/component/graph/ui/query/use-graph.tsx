@@ -1,12 +1,8 @@
-import { useRouteMatch } from 'react-router-dom';
-
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useGraphQuery } from './use-graph-query';
 
 export function useGraph() {
-  const {
-    // @ts-ignore
-    params: { componentId },
-  } = useRouteMatch();
+  const componentId = useQuery().get('componentId') as string;
 
   return useGraphQuery([componentId]);
 }
