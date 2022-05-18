@@ -1,26 +1,14 @@
 import { Transform, plainToInstance } from 'class-transformer';
 import chalk from 'chalk';
-import {
-  ClassSchema,
-  Export,
-  FunctionLikeSchema,
-  InterfaceSchema,
-  Module,
-  TypeSchema,
-  VariableSchema,
-} from './schemas';
-import { SchemaNode } from './schema-node';
+import { ClassSchema, FunctionLikeSchema, InterfaceSchema, Module, TypeSchema, VariableSchema } from './schemas';
+import { Location, SchemaNode } from './schema-node';
 import { schemaObjToInstance } from './schema-obj-to-class';
-
-export type PlainSemanticSchema = {
-  exports?: Export[];
-};
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly module: Module;
 
-  constructor(module: Module) {
+  constructor(readonly location: Location, module: Module) {
     super();
     this.module = module;
   }
