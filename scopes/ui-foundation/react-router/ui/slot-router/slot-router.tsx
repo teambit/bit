@@ -1,12 +1,11 @@
 import { SlotRegistry } from '@teambit/harmony';
 import React from 'react';
-import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
+import { Routes, Route, RouteProps } from 'react-router-dom';
 import { flatten } from 'lodash';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { LinkProps } from '@teambit/base-react.navigation.link';
 
 export type RouteSlot = SlotRegistry<RouteProps | RouteProps[]>;
-export type NavigationSlot = SlotRegistry<NavLinkProps>;
+export type NavigationSlot = SlotRegistry<LinkProps>;
 
 export type SlotRouterProps = {
   slot: RouteSlot;
@@ -19,24 +18,10 @@ export function SlotRouter({ slot, rootRoutes }: SlotRouterProps) {
   const withRoot = routes.concat(rootRoutes || []);
 
   return (
-    <Switch>
+    <Routes>
       {withRoot.map((route, idx) => (
         <Route key={idx} {...route} />
       ))}
-    </Switch>
-  );
-}
-
-export function SlotSubRouter({ slot, basePath }: { slot: RouteSlot; basePath?: string }) {
-  const routes = flatten(slot.values());
-  const { path: contextPath } = useRouteMatch();
-  // TODO - generate key as part of the slot.
-
-  return (
-    <Switch>
-      {routes.map((route, idx) => (
-        <Route key={idx} {...route} path={extendPath(basePath || contextPath, route.path as any)} />
-      ))}
-    </Switch>
+    </Routes>
   );
 }

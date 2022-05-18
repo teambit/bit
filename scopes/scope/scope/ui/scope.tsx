@@ -80,7 +80,7 @@ export function Scope({
             </HoverSplitter>
             <Pane>
               <SlotRouter slot={routeSlot} />
-              <Route exact path="/">
+              <Route path="/">
                 <ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />
               </Route>
             </Pane>

@@ -1,6 +1,6 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
-import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
 
 import styles from './component.module.scss';
@@ -42,7 +42,7 @@ export function Component({ routeSlot, containerSlot, host, onComponentChange }:
     <ComponentDescriptorProvider componentDescriptor={componentDescriptor}>
       <ComponentProvider component={component}>
         {before}
-        <div className={styles.container}>{routeSlot && <SlotSubRouter slot={routeSlot} />}</div>
+        <div className={styles.container}>{routeSlot && <SlotRouter slot={routeSlot} />}</div>
         {after}
       </ComponentProvider>
     </ComponentDescriptorProvider>
