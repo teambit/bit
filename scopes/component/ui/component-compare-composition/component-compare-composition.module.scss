@@ -1,0 +1,27 @@
+.mainContainer {
+    display: flex;
+    margin-top: 16px;
+    margin-right: 48px;
+    height: 600px; // review - should not be fixed
+}
+
+.subContainer {
+    flex: 1;
+    background-color: #ededed;
+}
+
+.subView {
+    margin: 16px;
+    height: calc(600px - (2 * 16px)); // review - should not be fixed
+    background-color: white;
+}
+
+.leftView {
+    margin-right: 8px;
+}
+
+.rightView {
+    margin-left: 8px;
+}
+
+
