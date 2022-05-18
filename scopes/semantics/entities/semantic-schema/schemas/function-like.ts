@@ -1,38 +1,35 @@
+import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
+import { schemaObjArrayToInstances, schemaObjToInstance } from '../schema-obj-to-class';
 import { ParameterSchema } from './parameter';
 
 export type Modifier = 'static' | 'public' | 'private' | 'protected' | 'readonly' | 'abstract' | 'async' | 'override';
 
-export class FunctionLikeSchema implements SchemaNode {
+export class FunctionLikeSchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  readonly returnType: SchemaNode;
+
+  @Transform(schemaObjArrayToInstances)
+  readonly params: ParameterSchema[];
+
   constructor(
+    readonly location: Location,
     readonly name: string,
     // readonly doc: any,
-    readonly params: ParameterSchema[],
+    params: ParameterSchema[],
 
-    readonly returnType: SchemaNode,
+    returnType: SchemaNode,
     readonly signature: string,
-    readonly location: Location,
     readonly modifiers: Modifier[] = []
-  ) {}
-
-  serialize() {}
-
-  toJsonSchema() {}
+  ) {
+    super();
+    this.params = params;
+    this.returnType = returnType;
+  }
 
   getSignature() {
     return this.signature;
-  }
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      params: this.params,
-      returnType: this.returnType.toObject(),
-      signature: this.signature,
-      modifiers: this.modifiers,
-    };
   }
 
   toString() {

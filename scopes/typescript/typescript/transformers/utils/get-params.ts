@@ -11,6 +11,7 @@ export async function getParams(
 ): Promise<ParameterSchema[]> {
   return pMapSeries(parameterNodes, async (param) => {
     return new ParameterSchema(
+      context.getLocation(param),
       param.name.getText(),
       await getParamType(param, context),
       param.initializer ? param.initializer.getText() : undefined
@@ -18,6 +19,9 @@ export async function getParams(
   });
 }
 
+/**
+ * @todo: probably not needed. just call context.resolveType instead.
+ */
 async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
   if (param.type) {
     const type = param.type;
@@ -25,5 +29,5 @@ async function getParamType(param: ParameterDeclaration, context: SchemaExtracto
   }
   const info = await context.getQuickInfo(param.name);
   const parsed = parseTypeFromQuickInfo(info);
-  return new TypeRefSchema(parsed || 'any');
+  return new TypeRefSchema(context.getLocation(param), parsed || 'any');
 }

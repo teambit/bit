@@ -36,13 +36,13 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
           const displaySig = info?.body?.displayString || '';
           const typeStr = parseTypeFromQuickInfo(info);
           const type = await context.resolveType(getter, typeStr);
-          return new GetAccessorSchema(getter.name.getText(), type, displaySig);
+          return new GetAccessorSchema(context.getLocation(getter), getter.name.getText(), type, displaySig);
         }
         case ts.SyntaxKind.SetAccessor: {
           const setter = member as ts.SetAccessorDeclaration;
           const params = await getParams(setter.parameters, context);
           const displaySig = await context.getQuickInfoDisplayString(setter.name);
-          return new SetAccessorSchema(setter.name.getText(), params[0], displaySig);
+          return new SetAccessorSchema(context.getLocation(setter), setter.name.getText(), params[0], displaySig);
         }
         default:
           return context.computeSchema(member);
