@@ -58,6 +58,7 @@
   }
   .versionName {
     padding: 0px 8px;
+    min-width: fit-content;
   }
 }
 
@@ -76,6 +77,9 @@
   }
   > div {
     max-width: 80px;
+  }
+  &.disabled {
+    background-color: #ededed;
   }
 }
 

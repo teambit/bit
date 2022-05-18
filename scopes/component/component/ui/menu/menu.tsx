@@ -70,7 +70,6 @@ function VersionRelatedDropdowns({
   host: string;
 }) {
   const location = useLocation();
-  const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.viewedLane;
   const { logs } = component;
@@ -97,6 +96,8 @@ function VersionRelatedDropdowns({
         .map((tag) => tagLookup.get(tag.version.version))
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [logs]);
+
+  const isNew = snaps.length === 0 && tags.length === 0;
 
   const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;

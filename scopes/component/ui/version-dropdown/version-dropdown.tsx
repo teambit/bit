@@ -24,7 +24,7 @@ export type VersionDropdownProps = {
   snaps?: DropdownComponentVersion[];
   lanes?: LaneModel[];
   localVersion?: boolean;
-  currentVersion?: string;
+  currentVersion: string;
   currentLane?: LaneModel;
   latestVersion?: string;
   loading?: boolean;
@@ -33,7 +33,7 @@ export type VersionDropdownProps = {
   dropdownClassName?: string;
   menuClassName?: string;
   showVersionDetails?: boolean;
-  readonly?: boolean;
+  disabled?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -51,17 +51,19 @@ export function VersionDropdown({
   dropdownClassName,
   menuClassName,
   showVersionDetails,
-  readonly,
+  disabled,
   ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
+  // const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
 
-  if (readonly || (singleVersion && !loading)) {
+  if (disabled || (singleVersion && !loading)) {
     return (
       <div className={classNames(styles.noVersions, className)}>
         <VersionPlaceholder
+          disabled={disabled}
           snaps={snaps}
           tags={tags}
           showDetails={showVersionDetails}
@@ -80,6 +82,11 @@ export function VersionDropdown({
         clickToggles={false}
         clickPlaceholderToggles={true}
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+        PlaceholderComponent={({ children, ...other }) => (
+          <div {...other} className={classNames(placeholderClassName)}>
+            {children}
+          </div>
+        )}
         placeholder={
           <VersionPlaceholder
             snaps={snaps}
@@ -116,9 +123,17 @@ type VersionPlaceholderProps = {
   currentVersion: string;
   tags: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
+  disabled?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
-function VersionPlaceholder({ currentVersion, className, showDetails, tags, snaps }: VersionPlaceholderProps) {
+function VersionPlaceholder({
+  currentVersion,
+  className,
+  showDetails,
+  tags,
+  snaps,
+  disabled,
+}: VersionPlaceholderProps) {
   const getVersionDetailFromTags = (version) => tags.find((tag) => tag.tag === version);
   const getVersionDetailFromSnaps = (version) => (snaps || []).find((snap) => snap.hash === version);
   const getVersionDetails = (version?: string) => {
@@ -137,7 +152,7 @@ function VersionPlaceholder({ currentVersion, className, showDetails, tags, snap
   }, [versionDetails]);
 
   return (
-    <div className={classNames(styles.placeholder, className)}>
+    <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
       {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
       <Ellipsis>{currentVersion}</Ellipsis>
       <Icon of="fat-arrow-down" />

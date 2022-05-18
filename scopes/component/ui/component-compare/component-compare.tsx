@@ -22,7 +22,8 @@ export type ComponentCompareProps = {
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const { baseVersion } = useComponentCompareParams();
   const component = useContext(ComponentContext);
-  const [, lastVersionInfo] = useMemo(() => {
+
+  const [lastVersionInfo] = useMemo(() => {
     return component.logs?.slice().reverse() || [] || [];
   }, [component.logs]);
 
@@ -30,8 +31,6 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     (baseVersion && component.id.changeVersion(baseVersion)) ||
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
-
-  // const compareId = component.id;
 
   const compare = component;
 
@@ -48,7 +47,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
       <div className={styles.componentCompareContainer}>
         <div className={styles.top}>
           <H2 size="xs">Component Compare</H2>
-          <ComponentCompareVersionPicker />
+          <ComponentCompareVersionPicker host={host} />
         </div>
         <div className={styles.bottom}>
           <CompareMenuNav navSlot={navSlot} />
