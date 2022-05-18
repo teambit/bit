@@ -19,6 +19,12 @@ export const MDXComponent: ComponentTemplate = {
 
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context)];
   },
+  config: {
+    'teambit.mdx/mdx': {},
+    'teambit.envs/envs': {
+      env: 'teambit.mdx/mdx',
+    },
+  },
 };
 
 export const deprecatedMDXComponent: ComponentTemplate = {
@@ -35,5 +41,11 @@ export const deprecatedMDXComponent: ComponentTemplate = {
     };
 
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context)];
+  },
+  config: {
+    'teambit.mdx/mdx': {},
+    'teambit.envs/envs': {
+      env: 'teambit.mdx/mdx',
+    },
   },
 };

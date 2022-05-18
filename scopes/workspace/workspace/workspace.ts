@@ -1160,6 +1160,26 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     });
   }
 
+  /**
+   * filter the given component-ids and set default-scope only to the new ones.
+   * returns the affected components.
+   */
+  async setDefaultScopeToComponents(componentIds: ComponentID[], scopeName: string): Promise<ComponentID[]> {
+    if (!isValidScopeName(scopeName)) {
+      throw new InvalidScopeName(scopeName);
+    }
+    const newComponentIds = componentIds.filter((id) => !id.hasVersion());
+    if (!newComponentIds.length) {
+      const compIdsStr = componentIds.map((compId) => compId.toString()).join(', ');
+      throw new BitError(
+        `unable to set default-scope for the following components, as they are not new:\n${compIdsStr}`
+      );
+    }
+    newComponentIds.map((comp) => this.bitMap.setDefaultScope(comp, scopeName));
+    await this.bitMap.write();
+    return newComponentIds;
+  }
+
   async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {

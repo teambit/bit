@@ -17,13 +17,13 @@ import {
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
-  FunctionSchema,
   TypeQuerySchema,
   LiteralTypeSchema,
   KeywordTypeSchema,
   TypeArraySchema,
   TypeOperatorSchema,
   TupleTypeSchema,
+  FunctionLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -157,7 +157,8 @@ async function functionType(node: FunctionTypeNode, context: SchemaExtractorCont
   const name = node.name?.getText() || '';
   const params = await getParams(node.parameters, context);
   const returnType = await typeNodeToSchema(node.type, context);
-  return new FunctionSchema(name, params, returnType, '');
+  const location = context.getLocation(node);
+  return new FunctionLikeSchema(name, params, returnType, '', location);
 }
 
 /**

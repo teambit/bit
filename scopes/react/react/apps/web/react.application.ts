@@ -6,7 +6,7 @@ import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
-import { prerenderSPAPlugin } from './plugins';
+import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
@@ -106,7 +106,7 @@ export class ReactApp implements Application {
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
-      if (this.prerender) config.addPlugin(prerenderSPAPlugin(this.prerender, staticDir));
+      if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
       if (config.raw.optimization?.minimizer) {
         remove(config.raw.optimization?.minimizer, (minimizer) => {
           return minimizer.constructor.name === 'TerserPlugin';
