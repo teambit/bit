@@ -60,8 +60,7 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
         className={styles.componentCompareVersionContainer}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
         menuClassName={styles.componentCompareVersionMenu}
-        snaps={snaps}
-        tags={tags}
+        tags={[]}
         loading={componentCompare?.loading}
         currentVersion={componentCompare?.compare.id.version}
         showVersionDetails={true}

@@ -58,8 +58,8 @@ export function VersionDropdown({
 
   if (singleVersion && !loading) {
     return (
-      <div className={styles.noVersions}>
-        <VersionPlaceholder currentVersion={currentVersion} />
+      <div className={classNames(styles.noVersions, className)}>
+        <VersionPlaceholder className={placeholderClassName} currentVersion={currentVersion} />
       </div>
     );
   }
