@@ -8,7 +8,7 @@ export type PlainTypeRefSchema = {
   packageName?: string;
 };
 
-export class TypeRefSchema implements SchemaNode {
+export class TypeRefSchema extends SchemaNode {
   constructor(
     /**
      * name of the reference to type.
@@ -24,7 +24,9 @@ export class TypeRefSchema implements SchemaNode {
      * target package name. existing if type is defined in different package.
      */
     readonly packageName?: string
-  ) {}
+  ) {
+    super();
+  }
 
   toObject() {
     return {
