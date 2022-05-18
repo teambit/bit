@@ -1,10 +1,11 @@
-import React, { ReactNode } from 'react';
-import { RouteProps } from 'react-router-dom';
-import { History, UnregisterCallback, LocationListener, LocationDescriptor, Action } from 'history';
+import React, { ReactNode, useEffect } from 'react';
+import { RouteProps, useNavigate, NavigateFunction } from 'react-router-dom';
+import { History, UnregisterCallback, LocationListener, Action, LocationDescriptor } from 'history';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RenderPlugins, UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
+import { useLocation, Navigator } from '@teambit/base-react.navigation.link';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
@@ -14,7 +15,7 @@ type RouteChangeSlot = SlotRegistry<LocationListener>;
 type RenderContext = { initialLocation?: string };
 
 export class ReactRouterUI {
-  private routerHistory?: History;
+  // private routerHistory?: History;
   private routingMode = isBrowser ? Routing.url : Routing.static;
 
   constructor(
@@ -38,7 +39,7 @@ export class ReactRouterUI {
   private unregisterListener?: UnregisterCallback = undefined;
   /** (internal method) sets the routing engine for navigation methods */
   setRouter = (routerHistory: History) => {
-    this.routerHistory = routerHistory;
+    // this.routerHistory = routerHistory;
 
     this.unregisterListener?.();
     this.unregisterListener = routerHistory.listen((...args) => {
@@ -76,22 +77,48 @@ export class ReactRouterUI {
     /** history action to execute (pop / push / replace) */
     action?: Action
   ) => {
+    const state = typeof path !== 'string' ? path.state : undefined;
+
     switch (action) {
       case 'POP':
         return; // TBD;
       case 'REPLACE':
-        this.routerHistory?.replace(path);
+        // TODO
+        this.navigate?.(path, { replace: true, state });
+        // this.routerHistory?.replace(path);
         return;
       case 'PUSH':
       default:
-        this.routerHistory?.push(path);
+        this.navigate?.(path, { state });
+      // this.routerHistory?.push(path);
     }
   };
+
+  private navigate?: NavigateFunction = undefined;
+  private LocationHooks() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      this.routeChangeListener.values().forEach((listener) =>
+        // TODO!
+        // @ts-ignore
+        listener(location, 'PUSH')
+      );
+    }, [location]);
+
+    useEffect(() => {
+      this.navigate = navigate;
+    }, [navigate]);
+
+    return null;
+  }
 
   private AppRoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
     return (
       <RouteContext reactRouterUi={this} routing={this.routingMode} location={renderCtx?.initialLocation}>
         {children}
+        <this.LocationHooks />
       </RouteContext>
     );
   };
