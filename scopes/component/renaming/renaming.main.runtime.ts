@@ -91,12 +91,7 @@ because these components were tagged, the objects have the dependencies data of 
 to be able to rename the scope, please untag the components first (using "bit untag" command)`);
     }
     if (this.workspace.defaultScope === oldScope) {
-      this.config.workspaceConfig?.setExtension(
-        WorkspaceAspect.id,
-        { defaultScope: newScope },
-        { mergeIntoExisting: true, ignoreVersion: true }
-      );
-      await this.config.workspaceConfig?.write({ dir: path.dirname(this.config.workspaceConfig.path) });
+      await this.workspace.setDefaultScope(newScope);
       componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
     } else {
       componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
