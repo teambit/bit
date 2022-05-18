@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { schemaObjArrayToInstances, schemaObjToInstance } from '../schema-obj-to-class';
 
@@ -12,7 +12,7 @@ export class IndexSignatureSchema extends SchemaNode {
   readonly params: ParameterSchema[];
   @Transform(schemaObjToInstance)
   readonly type: SchemaNode;
-  constructor(params: ParameterSchema[], type: SchemaNode) {
+  constructor(readonly location: Location, params: ParameterSchema[], type: SchemaNode) {
     super();
     this.params = params;
     this.type = type;

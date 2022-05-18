@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
 /**
@@ -8,7 +8,7 @@ import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 export class TypeLiteralSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly members: SchemaNode[];
-  constructor(members: SchemaNode[]) {
+  constructor(readonly location: Location, members: SchemaNode[]) {
     super();
     this.members = members;
   }

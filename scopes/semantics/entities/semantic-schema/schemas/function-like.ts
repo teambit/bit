@@ -14,13 +14,13 @@ export class FunctionLikeSchema extends SchemaNode {
   readonly params: ParameterSchema[];
 
   constructor(
+    readonly location: Location,
     readonly name: string,
     // readonly doc: any,
     params: ParameterSchema[],
 
     returnType: SchemaNode,
     readonly signature: string,
-    readonly location: Location,
     readonly modifiers: Modifier[] = []
   ) {
     super();

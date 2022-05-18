@@ -19,6 +19,6 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
       const typeSchema = await context.computeSchema(member);
       return typeSchema;
     });
-    return new InterfaceSchema(interfaceDec.name.getText(), members);
+    return new InterfaceSchema(context.getLocation(interfaceDec), interfaceDec.name.getText(), members);
   }
 }

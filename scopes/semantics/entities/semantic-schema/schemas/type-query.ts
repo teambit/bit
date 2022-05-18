@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 import { schemaObjToInstance } from '../schema-obj-to-class';
 
 /**
@@ -8,7 +8,7 @@ import { schemaObjToInstance } from '../schema-obj-to-class';
 export class TypeQuerySchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly type: SchemaNode;
-  constructor(type: SchemaNode, readonly signature: string) {
+  constructor(readonly location: Location, type: SchemaNode, readonly signature: string) {
     super();
     this.type = type;
   }

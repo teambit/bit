@@ -1,10 +1,10 @@
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 
 /**
  * e.g. const a: 'a';
  */
 export class LiteralTypeSchema extends SchemaNode {
-  constructor(private name: string) {
+  constructor(readonly location: Location, readonly name: string) {
     super();
   }
 

@@ -7,7 +7,7 @@ import { instanceToPlain } from 'class-transformer';
  */
 export abstract class SchemaNode {
   readonly __schema = this.constructor.name;
-  readonly location?: Location;
+  abstract readonly location: Location;
   readonly signature?: string;
 
   abstract toString(): string;
