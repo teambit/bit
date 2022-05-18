@@ -1,4 +1,3 @@
-import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -8,7 +7,6 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
@@ -21,8 +19,7 @@ export class RenamingMain {
     private workspace: Workspace,
     private newComponentHelper: NewComponentHelperMain,
     private deprecation: DeprecationMain,
-    private refactoring: RefactoringMain,
-    private config: ConfigMain
+    private refactoring: RefactoringMain
   ) {}
 
   async rename(sourceIdStr: string, targetIdStr: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -138,29 +135,18 @@ to be able to rename the scope, please untag the components first (using "bit un
     ComponentAspect,
     GraphqlAspect,
     RefactoringAspect,
-    ConfigAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([
-    cli,
-    workspace,
-    deprecation,
-    newComponentHelper,
-    componentMain,
-    graphql,
-    refactoring,
-    config,
-  ]: [
+  static async provider([cli, workspace, deprecation, newComponentHelper, componentMain, graphql, refactoring]: [
     CLIMain,
     Workspace,
     DeprecationMain,
     NewComponentHelperMain,
     ComponentMain,
     GraphqlMain,
-    RefactoringMain,
-    ConfigMain
+    RefactoringMain
   ]) {
-    const renaming = new RenamingMain(workspace, newComponentHelper, deprecation, refactoring, config);
+    const renaming = new RenamingMain(workspace, newComponentHelper, deprecation, refactoring);
     cli.register(new RenameCmd(renaming));
 
     const scopeCommand = cli.getCommand('scope');

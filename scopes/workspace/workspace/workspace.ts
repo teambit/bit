@@ -106,7 +106,7 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
-import WorkspaceAspect from './workspace.aspect';
+import { WorkspaceAspect } from './workspace.aspect';
 
 export type EjectConfResult = {
   configPath: string;
