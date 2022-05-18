@@ -1,3 +1,5 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .componentCompareVersionPicker {
   display: flex;
   flex-direction: row;
@@ -8,9 +10,13 @@
 .componentCompareVersionMenu {
   max-width: 100%;
   width: 100%;
-  > div {
-    max-width: 100%;
-  }
+  z-index: $nav-z-index + 1;
+}
+
+.componentCompareVersionPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .componentCompareVersionContainer {
@@ -18,4 +24,8 @@
   flex: 1;
   max-width: 100%;
   margin-right: 32px;
+}
+
+.componentCompareDropdown {
+  width: 100%;
 }

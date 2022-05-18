@@ -7,9 +7,11 @@ import { ComponentContext } from '@teambit/component';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import styles from './component-compare-version-picker.module.scss';
 
-export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
+export type ComponentCompareVersionPickerProps = {
+  host: string;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerProps) {
+export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
   const componentCompare = useComponentCompareContext();
 
@@ -38,15 +40,25 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
+  const isNew = snaps.length === 0 && tags.length === 0;
+
+  const isWorkspace = host === 'teambit.workspace/workspace';
+
+  const compareVersion =
+    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : componentCompare?.compare.version;
+
+  const baseVersion = componentCompare?.base.version;
+
   return (
     <div className={styles.componentCompareVersionPicker}>
       <VersionDropdown
         className={styles.componentCompareVersionContainer}
+        dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
         menuClassName={styles.componentCompareVersionMenu}
         snaps={snaps}
         tags={tags}
-        currentVersion={componentCompare?.base.id.version}
+        currentVersion={baseVersion as string}
         loading={componentCompare?.loading}
         overrideVersionHref={(baseVersion) => {
           const query = useQuery();
@@ -58,13 +70,14 @@ export function ComponentCompareVersionPicker({}: ComponentCompareVersionPickerP
       />
       <VersionDropdown
         className={styles.componentCompareVersionContainer}
+        dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
         menuClassName={styles.componentCompareVersionMenu}
         snaps={snaps}
         tags={tags}
-        readonly={true}
+        disabled={true}
         loading={componentCompare?.loading}
-        currentVersion={componentCompare?.compare.id.version}
+        currentVersion={compareVersion as string}
         showVersionDetails={true}
       />
     </div>

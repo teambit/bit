@@ -1,5 +1,5 @@
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { ComponentContext, useComponent } from '@teambit/component';
+import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
 import { H2 } from '@teambit/documenter.ui.heading';
 import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
@@ -22,7 +22,8 @@ export type ComponentCompareProps = {
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const { baseVersion } = useComponentCompareParams();
   const component = useContext(ComponentContext);
-  const [, lastVersionInfo] = useMemo(() => {
+
+  const [lastVersionInfo] = useMemo(() => {
     return component.logs?.slice().reverse() || [] || [];
   }, [component.logs]);
 
@@ -30,8 +31,6 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     (baseVersion && component.id.changeVersion(baseVersion)) ||
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
-
-  // const compareId = component.id;
 
   const compare = component;
 
@@ -48,7 +47,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
       <div className={styles.componentCompareContainer}>
         <div className={styles.top}>
           <H2 size="xs">Component Compare</H2>
-          <ComponentCompareVersionPicker />
+          <ComponentCompareVersionPicker host={host} />
         </div>
         <div className={styles.bottom}>
           <CompareMenuNav navSlot={navSlot} />
@@ -68,30 +67,13 @@ function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
   ).sort(sortFn);
 
   return (
-    <nav className={styles.navigation}>
-      {plugins.map((menuItem, index) => {
-        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
-      })}
-    </nav>
-  );
-}
-
-function TopBarNav(props: NavLinkProps) {
-  const { url } = useRouteMatch();
-  const { search, pathname } = useLocation();
-  const { href } = props;
-
-  const target = `${extendPath(url, href)}${search}`;
-
-  return (
-    <NavLink
-      {...props}
-      className={classNames(props.className, styles.topBarLink)}
-      activeClassName={classNames(props.activeClassName, target === pathname && styles.active)}
-      href={target}
-    >
-      <div>{props.children}</div>
-    </NavLink>
+    <div className={styles.navContainer}>
+      <nav className={styles.navigation}>
+        {plugins.map((menuItem, index) => {
+          return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
+        })}
+      </nav>
+    </div>
   );
 }
 
