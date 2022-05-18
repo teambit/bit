@@ -2,7 +2,7 @@ import React, { useState, HTMLAttributes, useMemo } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-
+import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
@@ -142,6 +142,10 @@ function VersionPlaceholder({
   };
 
   const versionDetails = getVersionDetails(currentVersion);
+  const timestamp = useMemo(
+    () => (versionDetails?.date ? new Date(parseInt(versionDetails.date)).toString() : new Date().toString()),
+    [versionDetails?.date]
+  );
 
   const author = useMemo(() => {
     return {
@@ -161,6 +165,11 @@ function VersionPlaceholder({
       <Ellipsis className={styles.versionName}>{currentVersion}</Ellipsis>
       {showDetails && <div className={styles.author}>{author?.displayName}</div>}
       {showDetails && commitMessage(versionDetails?.message)}
+      {showDetails && (
+        <Ellipsis className={styles.versionTimestamp}>
+          <TimeAgo date={timestamp} />
+        </Ellipsis>
+      )}
       <Icon of="fat-arrow-down" />
     </div>
   );

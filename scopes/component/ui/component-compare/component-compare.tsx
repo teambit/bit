@@ -1,13 +1,9 @@
-import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
 import { H2 } from '@teambit/documenter.ui.heading';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import classNames from 'classnames';
 import flatten from 'lodash.flatten';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
-import { useLocation, useRouteMatch } from 'react-router-dom';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './component-compare-version-picker/component-compare-version-picker';
 import styles from './component-compare.module.scss';

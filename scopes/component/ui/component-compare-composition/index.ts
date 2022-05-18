@@ -1,1 +1,1 @@
-export {ComponentCompareComposition} from "./component-compare-composition";
+export { ComponentCompareComposition } from './component-compare-composition';
