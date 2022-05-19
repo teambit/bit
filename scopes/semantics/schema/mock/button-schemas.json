@@ -79,7 +79,7 @@
         "__schema": "TypeSchema",
         "location": {
           "file": "button.tsx",
-          "line": 9,
+          "line": 7,
           "character": 1
         },
         "name": "ButtonElementType",
@@ -88,7 +88,7 @@
           "__schema": "TypeUnionSchema",
           "location": {
             "file": "button.tsx",
-            "line": 9,
+            "line": 7,
             "character": 33
           },
           "types": [
@@ -96,7 +96,7 @@
               "__schema": "LiteralTypeSchema",
               "location": {
                 "file": "button.tsx",
-                "line": 9,
+                "line": 7,
                 "character": 33
               },
               "name": "'a'"
@@ -105,7 +105,7 @@
               "__schema": "LiteralTypeSchema",
               "location": {
                 "file": "button.tsx",
-                "line": 9,
+                "line": 7,
                 "character": 39
               },
               "name": "'button'"
@@ -117,7 +117,7 @@
         "__schema": "TypeSchema",
         "location": {
           "file": "button.tsx",
-          "line": 11,
+          "line": 9,
           "character": 1
         },
         "name": "ButtonProps",
@@ -126,31 +126,23 @@
           "__schema": "TypeIntersectionSchema",
           "location": {
             "file": "button.tsx",
-            "line": 11,
+            "line": 9,
             "character": 27
           },
           "types": [
             {
-              "__schema": "InferenceTypeSchema",
-              "location": {
-                "file": "button.tsx",
-                "line": 11,
-                "character": 27
-              }
-            },
-            {
               "__schema": "TypeLiteralSchema",
               "location": {
                 "file": "button.tsx",
-                "line": 11,
-                "character": 45
+                "line": 9,
+                "character": 27
               },
               "members": [
                 {
                   "__schema": "VariableSchema",
                   "location": {
                     "file": "button.tsx",
-                    "line": 15,
+                    "line": 13,
                     "character": 3
                   },
                   "name": "children",
@@ -159,7 +151,7 @@
                     "__schema": "InferenceTypeSchema",
                     "location": {
                       "file": "button.tsx",
-                      "line": 15,
+                      "line": 13,
                       "character": 13
                     }
                   }
@@ -168,7 +160,7 @@
                   "__schema": "VariableSchema",
                   "location": {
                     "file": "button.tsx",
-                    "line": 20,
+                    "line": 18,
                     "character": 3
                   },
                   "name": "href",
@@ -177,7 +169,7 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "file": "button.tsx",
-                      "line": 20,
+                      "line": 18,
                       "character": 10
                     },
                     "name": "string"
@@ -187,7 +179,7 @@
                   "__schema": "VariableSchema",
                   "location": {
                     "file": "button.tsx",
-                    "line": 25,
+                    "line": 23,
                     "character": 3
                   },
                   "name": "className",
@@ -196,7 +188,7 @@
                     "__schema": "KeywordTypeSchema",
                     "location": {
                       "file": "button.tsx",
-                      "line": 25,
+                      "line": 23,
                       "character": 15
                     },
                     "name": "string"
@@ -208,7 +200,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.tsx",
-                "line": 26,
+                "line": 24,
                 "character": 5
               }
             }
@@ -219,7 +211,7 @@
         "__schema": "FunctionLikeSchema",
         "location": {
           "file": "button.tsx",
-          "line": 28,
+          "line": 26,
           "character": 1
         },
         "name": "Button",
@@ -232,7 +224,7 @@
             "__schema": "ParameterSchema",
             "location": {
               "file": "button.tsx",
-              "line": 28,
+              "line": 26,
               "character": 24
             },
             "name": "props",
@@ -240,7 +232,7 @@
               "__schema": "TypeRefSchema",
               "location": {
                 "file": "button.tsx",
-                "line": 28,
+                "line": 26,
                 "character": 31
               },
               "name": "ButtonProps"
@@ -251,7 +243,7 @@
           "__schema": "InferenceTypeSchema",
           "location": {
             "file": "button.tsx",
-            "line": 28,
+            "line": 26,
             "character": 1
           },
           "type": "any"

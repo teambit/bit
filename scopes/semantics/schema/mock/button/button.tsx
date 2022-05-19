@@ -1,14 +1,12 @@
 /* eslint-disable import/no-unresolved */
 import React, { ReactNode, useRef } from 'react';
 // @ts-ignore
-import { useButton } from '@react-aria/button';
+// import { useButton } from '@react-aria/button';
 import { Link } from '@teambit/base-react.navigation.link';
-// @ts-ignore
-import type { AriaButtonProps } from '@react-types/button';
 
 export type ButtonElementType = 'a' | 'button';
 
-export type ButtonProps = AriaButtonProps & {
+export type ButtonProps = {
   /**
    * children of the Button.
    */
@@ -28,17 +26,17 @@ export type ButtonProps = AriaButtonProps & {
 export function Button(props: ButtonProps) {
   const ref = useRef();
 
-  const { buttonProps } = useButton(
-    {
-      ...props,
-      elementType: props.href ? 'a' : undefined,
-    },
-    // @ts-ignore figure this out.
-    ref
-  );
+  // const { buttonProps } = useButton(
+  //   {
+  //     ...props,
+  //     elementType: props.href ? 'a' : undefined,
+  //   },
+  //   // @ts-ignore figure this out.
+  //   ref
+  // );
 
   const allProps = {
-    ...buttonProps,
+    // ...buttonProps,
     ...props,
   };
   const external = props.href?.startsWith('http:') || props.href?.startsWith('https:');
@@ -46,10 +44,12 @@ export function Button(props: ButtonProps) {
   return (
     <>
       {!props.href ? (
+        // @ts-ignore
         <button className={props.className} ref={ref} {...allProps}>
           {props.children}
         </button>
       ) : (
+        // @ts-ignore
         <Link external={external} ref={ref} className={props.className} {...allProps}>
           {props.children}
         </Link>
