@@ -45,13 +45,14 @@ export function getCurrentComponentCompareUrl(queryParams: ComponentCompareQuery
   const getQueryVariableStr = (prop: string) => `${queryParams[prop] ? `${prop}=${queryParams[prop]}` : ''}`;
 
   let path = location.pathname;
-  const atleastOneParam = false;
+  let atleastOneParam = false;
   for (const prop of Object.keys(queryParams).filter((queryParamProp) => getQueryVariableStr(queryParamProp) !== '')) {
     const queryVariableStr = getQueryVariableStr(prop);
 
     if (!atleastOneParam) {
       path = `${path}?${queryVariableStr}`;
     } else {
+      atleastOneParam = true;
       path = `${path}&${queryVariableStr}`;
     }
   }
