@@ -4,6 +4,9 @@
   overflow: hidden;
   height: 100%;
   width: 100%;
+  color: var(--on-background-color, #f6f6f6);
+  font-size: 14px;
+  background-color: var(--surface-neutral-color, #161616);
 }
 
 .componentCompareCodeTabDrawer {

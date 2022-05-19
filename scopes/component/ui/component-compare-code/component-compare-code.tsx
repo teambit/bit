@@ -36,7 +36,7 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
     <SplitPane
       layout={sidebarOpenness}
       size="85%"
-      className={classNames(styles.componentCompareCodeContainer, className)}
+      className={classNames(styles.componentCompareCodeContainer, styles.dark, className)}
     >
       <Pane className={styles.left}>
         <ComponentCompareCodeView base={base} compare={compare} fileName={selectedFile} />
