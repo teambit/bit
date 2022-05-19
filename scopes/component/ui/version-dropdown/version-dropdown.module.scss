@@ -97,6 +97,11 @@
     text-transform: capitalize;
     min-width: fit-content;
   }
+  .versionTimestamp {
+    min-width: fit-content;
+    margin-right: 2px;
+    text-align: right;
+  }
 }
 
 .withVersions {

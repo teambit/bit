@@ -100,11 +100,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         isMerged: (lane: LaneData) => lane.isMerged,
         remote: (lane: LaneData) => lane.remote,
         components: async (lane: LaneData) => {
-          const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane.name);
+          const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;
         },
         readmeComponent: async (lane: LaneData) => {
-          const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane.name);
+          const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane);
           return laneReadmeComponent;
         },
       },

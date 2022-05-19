@@ -13,11 +13,8 @@
   display: flex;
   overflow-y: auto;
   flex-direction: column;
-  padding-top: 24px;
+  padding-top: 8px;
   height: 100%;
-  > *:nth-child(2) {
-    margin-top: 24px;
-  }
 }
 .navContainer {
   display: flex;

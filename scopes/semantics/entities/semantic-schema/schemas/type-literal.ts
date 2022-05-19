@@ -1,16 +1,18 @@
-import { SchemaNode } from '../schema-node';
+import { Transform } from 'class-transformer';
+import { Location, SchemaNode } from '../schema-node';
+import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
 /**
  * e.g. `{ a: string; b: number }`
  */
-export class TypeLiteralSchema implements SchemaNode {
-  constructor(private members: SchemaNode[]) {}
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      types: this.members.map((type) => type.toObject()),
-    };
+export class TypeLiteralSchema extends SchemaNode {
+  @Transform(schemaObjArrayToInstances)
+  readonly members: SchemaNode[];
+  constructor(readonly location: Location, members: SchemaNode[]) {
+    super();
+    this.members = members;
   }
+
   toString() {
     return `{ ${this.members.map((type) => type.toString()).join('; ')} }`;
   }

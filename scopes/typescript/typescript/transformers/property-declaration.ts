@@ -25,6 +25,6 @@ export class PropertyDeclaration implements SchemaTransformer {
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(propertyDec, typeStr);
 
-    return new VariableSchema(name || '', displaySig || '', type);
+    return new VariableSchema(context.getLocation(propertyDec), name, displaySig || '', type);
   }
 }

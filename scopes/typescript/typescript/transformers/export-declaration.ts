@@ -47,7 +47,7 @@ export class ExportDeclaration implements SchemaTransformer {
         })
       );
 
-      return new Module(compact(schemas));
+      return new Module(context.getLocation(node), compact(schemas));
     }
     // e.g. `export * as Composition from './button';
     if (exportClause?.kind === SyntaxKind.NamespaceExport) {
