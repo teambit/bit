@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { ComponentCompareUI } from './component-compare.ui.runtime';
+import { ComponentCompareMenuWidget } from './component-compare-widget';
 
 export class ComponentCompareSection implements Section {
   constructor(private componentCompare: ComponentCompareUI) {}
@@ -9,7 +9,7 @@ export class ComponentCompareSection implements Section {
   navigationLink = {
     href: '~compare/~compositions',
     displayName: 'Compare',
-    children: <MenuWidgetIcon icon="team-avatar" tooltipContent="Compare" />,
+    children: <ComponentCompareMenuWidget />,
   };
 
   route = {

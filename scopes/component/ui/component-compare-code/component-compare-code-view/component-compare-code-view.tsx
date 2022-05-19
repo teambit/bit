@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { H4 } from '@teambit/documenter.ui.heading';
-import { DiffEditor, DiffEditorProps } from '@monaco-editor/react';
+import { DiffEditor, DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
 import { ComponentModel } from '@teambit/component';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 
@@ -36,33 +36,33 @@ export function ComponentCompareCodeView({ className, base, compare, fileName }:
 
   if (originalLoading || modifiedLoading) return null;
 
+  // this disables ts errors in editor
+  const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: true,
+    });
+  };
+
   const diffEditorProps: DiffEditorProps = {
     modified: modifiedFileContent || undefined,
     original: originalFileContent,
     language,
-    height: '90vh',
+    height: '100%',
     onMount: handleEditorDidMount,
     className: styles.diffEditor,
   };
 
   return (
-    <div className={classNames(styles.codeDiffView, className)}>
+    <div className={classNames(styles.componentCompareCodeViewContainer, className)}>
       <div className={styles.fileName}>
         <H4 size="xs" className={styles.fileName}>
           <span>{title}</span>
         </H4>
       </div>
-      <div>
+      <div className={styles.componentCompareCodeDiffEditorContainer}>
         <DiffEditor {...diffEditorProps} />
       </div>
     </div>
   );
-}
-
-// this disables ts errors in editor
-function handleEditorDidMount(editor, monaco) {
-  monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-    noSemanticValidation: true,
-    noSyntaxValidation: true,
-  });
 }

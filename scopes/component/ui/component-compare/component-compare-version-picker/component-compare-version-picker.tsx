@@ -8,7 +8,7 @@ import {
   getComponentCompareUrl,
 } from '@teambit/component.ui.component-compare';
 import { ComponentContext } from '@teambit/component';
-import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import classNames from 'classnames';
 import styles from './component-compare-version-picker.module.scss';
 
@@ -17,6 +17,7 @@ export type ComponentCompareVersionPickerProps = { host: string } & HTMLAttribut
 export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
   const componentCompare = useComponentCompareContext();
+  const location = useLocation();
 
   const snaps: DropdownComponentVersion[] = useMemo(() => {
     const logs = component?.logs;
@@ -67,9 +68,9 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
         tags={tags}
         currentVersion={baseVersion as string}
         loading={componentCompare?.loading}
-        overrideVersionHref={(baseVersion) => {
+        overrideVersionHref={(_baseVersion) => {
           const compareQueryParams = useComponentCompareParams();
-          return getComponentCompareUrl({ ...compareQueryParams, baseVersion });
+          return getComponentCompareUrl({ ...compareQueryParams, baseVersion: _baseVersion });
         }}
         showVersionDetails={true}
       />
