@@ -48,8 +48,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
-    const transformer = this.getTransformer(node, context.component);
-    if (!transformer || !transformer.getIdentifiers) throw new TransformerNotFound(node, context.component);
+    const transformer = this.getTransformer(node, context);
+    if (!transformer || !transformer.getIdentifiers) {
+      throw new TransformerNotFound(node, context.component, context.getLocation(node));
+    }
     return transformer.getIdentifiers(node, context);
   }
 
@@ -75,7 +77,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
-    const transformer = this.getTransformer(node, context.component);
+    const transformer = this.getTransformer(node, context);
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     return transformer.transform(node, context);
@@ -84,11 +86,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * select the correct transformer for a node.
    */
-  private getTransformer(node: Node, component: Component) {
+  private getTransformer(node: Node, context: SchemaExtractorContext) {
     const transformers = flatten(this.schemaTransformerSlot.values());
     const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
 
-    if (!transformer) throw new TransformerNotFound(node, component);
+    if (!transformer) throw new TransformerNotFound(node, context.component, context.getLocation(node));
 
     return transformer;
   }
