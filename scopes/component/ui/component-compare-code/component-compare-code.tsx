@@ -44,7 +44,7 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
         />
       </HoverSplitter>
       <Pane className={styles.right}>
-        <ComponentCompareTree fileIconSlot={fileIconSlot} base={base} compare={compare} />
+        <ComponentCompareTree fileIconSlot={fileIconSlot} base={base} compare={compare} currentFile={selectedFile} />
       </Pane>
     </SplitPane>
   );

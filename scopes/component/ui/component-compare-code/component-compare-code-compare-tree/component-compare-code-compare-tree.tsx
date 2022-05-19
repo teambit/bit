@@ -9,7 +9,7 @@ import flatten from 'lodash.flatten';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
-import { useComponentCompareParams } from '@teambit/component.ui.component-compare';
+import { useComponentCompareParams, getComponentCompareUrl } from '@teambit/component.ui.component-compare';
 import styles from './component-compare-code-compare-tree.module.scss';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
@@ -39,15 +39,9 @@ export function ComponentCompareTree({
     function TreeNode(props: any) {
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-      const lanesContext = useLanesContext();
-      const { componentId } = useComponentCompareParams();
+      const compareQueryParams = useComponentCompareParams();
 
-      const currentLaneUrl = lanesContext?.viewedLane
-        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
-        : '';
-
-      // TODO: fix this to route correctly
-      const href = `${currentLaneUrl}/${componentId}/~compare/~code/?selected=${props.node.id}/`;
+      const href = getComponentCompareUrl({ ...compareQueryParams, selectedFile: props.node.id });
       const icon = getFileIcon(fileIconMatchers, props.node.id);
 
       if (!children) {
