@@ -1,11 +1,10 @@
 import {
+  getComponentCompareUrl,
   useComponentCompareContext,
   useComponentCompareParams,
-  getComponentCompareUrl,
 } from '@teambit/component.ui.component-compare';
-import { Composition, CompositionContent } from '@teambit/compositions';
+import { CompositionContent } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
-import classNames from 'classnames';
 import queryString from 'query-string';
 import React, { useMemo, useState } from 'react';
 import styles from './component-compare-composition.module.scss';
@@ -23,18 +22,14 @@ export function ComponentCompareComposition() {
   const compareCompositions = compare.compositions;
   const { componentId, ...params } = useComponentCompareParams();
 
-  // compositionBase -> filename
-
-  const [selectedBaseComp, setSelectedBaseComp] = useState<Composition>(
+  const selectedBaseComp =
     (params.selectedCompositionBaseFile &&
       baseCompositions.find((c) => c.identifier === params.selectedCompositionBaseFile)) ||
-      baseCompositions[0]
-  );
-  const [selectedCompareComp, setSelectedCompareComp] = useState<Composition>(
+    baseCompositions[0];
+  const selectedCompareComp =
     (params.selectedCompositionCompareFile &&
       compareCompositions.find((c) => c.identifier === params.selectedCompositionCompareFile)) ||
-      compareCompositions[0]
-  );
+    compareCompositions[0];
 
   const baseCompositionDropdownSource = baseCompositions.map((c) => {
     const { componentId, ...rest } = useComponentCompareParams();
@@ -76,10 +71,16 @@ export function ComponentCompareComposition() {
     <>
       <div className={styles.dropdownContainer}>
         <div className={styles.leftDropdown}>
-          <CompositionDropdown dropdownItems={baseCompositionDropdownSource} />
+          <CompositionDropdown
+            dropdownItems={baseCompositionDropdownSource}
+            selected={{ label: selectedBaseComp.displayName, value: selectedBaseComp.identifier }}
+          />
         </div>
         <div className={styles.rightDropdown}>
-          <CompositionDropdown dropdownItems={compareCompositionDropdownSource} />
+          <CompositionDropdown
+            dropdownItems={compareCompositionDropdownSource}
+            selected={{ label: selectedCompareComp.displayName, value: selectedCompareComp.identifier }}
+          />
         </div>
       </div>
       <div className={styles.mainContainer}>
