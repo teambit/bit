@@ -29,18 +29,17 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
   const { fileTree: baseFileTree = [], mainFile } = useCode(base?.id);
   const { fileTree: compareFileTree = [] } = useCode(compare?.id);
   const fileTree = baseFileTree.concat(compareFileTree);
-  const { selectedFile } = useComponentCompareParams();
+  const params = useComponentCompareParams();
+  const selectedFile = params?.selectedFile || mainFile || DEFAULT_FILE;
 
   return (
     <SplitPane
       layout={sidebarOpenness}
       size="85%"
-      className={classNames(styles.componentCompareCodeContainer, className)}
+      className={classNames(styles.componentCompareCodeContainer, styles.dark, className)}
     >
       <Pane className={styles.left}>
-        {/* {fileTree.map((fileName) => ( */}
-        <ComponentCompareCodeView base={base} compare={compare} fileName={selectedFile || mainFile || DEFAULT_FILE} />
-        {/* ))} */}
+        <ComponentCompareCodeView base={base} compare={compare} fileName={selectedFile} />
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
