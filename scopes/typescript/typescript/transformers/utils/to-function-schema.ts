@@ -9,11 +9,11 @@ export async function toFunctionLikeSchema(node: SignatureDeclaration, context: 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const info = await context.getQuickInfo(node.name!);
   const returnTypeStr = parseTypeFromQuickInfo(info);
-  const displaySig = info?.body?.displayString;
+  const displaySig = info?.body?.displayString || '';
   const args = await getParams(node.parameters, context);
   const returnType = await context.resolveType(node, returnTypeStr);
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
   const location = context.getLocation(node);
 
-  return new FunctionLikeSchema(name, args, returnType, displaySig || '', location, modifiers as Modifier[]);
+  return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[]);
 }

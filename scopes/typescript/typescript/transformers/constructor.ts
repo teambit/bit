@@ -17,6 +17,6 @@ export class Constructor implements SchemaTransformer {
   async transform(constructorDec: ConstructorDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
     const args = await getParams(constructorDec.parameters, context);
 
-    return new ConstructorSchema(args);
+    return new ConstructorSchema(context.getLocation(constructorDec), args);
   }
 }

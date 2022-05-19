@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 
 export type PlainTypeRefSchema = {
   name: string;
@@ -8,8 +8,9 @@ export type PlainTypeRefSchema = {
   packageName?: string;
 };
 
-export class TypeRefSchema implements SchemaNode {
+export class TypeRefSchema extends SchemaNode {
   constructor(
+    readonly location: Location,
     /**
      * name of the reference to type.
      */
@@ -24,15 +25,8 @@ export class TypeRefSchema implements SchemaNode {
      * target package name. existing if type is defined in different package.
      */
     readonly packageName?: string
-  ) {}
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      componentId: this.componentId,
-      packageName: this.packageName,
-    };
+  ) {
+    super();
   }
 
   toString() {
@@ -52,11 +46,11 @@ export class TypeRefSchema implements SchemaNode {
     return !this.componentId && !this.packageName;
   }
 
-  static from(plainSchema: PlainTypeRefSchema) {
-    return new TypeRefSchema(
-      plainSchema.name,
-      plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
-      plainSchema.packageName
-    );
-  }
+  // static from(plainSchema: PlainTypeRefSchema) {
+  //   return new TypeRefSchema(
+  //     plainSchema.name,
+  //     plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
+  //     plainSchema.packageName
+  //   );
+  // }
 }

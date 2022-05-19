@@ -1,22 +1,21 @@
-import { SchemaNode } from '../schema-node';
+import { Transform } from 'class-transformer';
+import { Location, SchemaNode } from '../schema-node';
+import { schemaObjToInstance } from '../schema-obj-to-class';
 
-export class ParameterSchema implements SchemaNode {
+export class ParameterSchema extends SchemaNode {
+  @Transform(schemaObjToInstance)
+  readonly type: SchemaNode;
   constructor(
+    readonly location: Location,
     readonly name: string,
-    readonly type: SchemaNode,
+    type: SchemaNode,
     readonly defaultValue?: any,
     readonly description?: string
-  ) {}
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      type: this.type.toObject(),
-      defaultValue: this.defaultValue,
-      description: this.description,
-    };
+  ) {
+    super();
+    this.type = type;
   }
+
   toString() {
     return `${this.name}: ${this.type.toString()}`;
   }

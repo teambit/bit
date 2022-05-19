@@ -106,6 +106,7 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
+import { WorkspaceAspect } from './workspace.aspect';
 
 export type EjectConfResult = {
   configPath: string;
@@ -1158,6 +1159,39 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await mapSeries(preWatchFunctions, async (func) => {
       await func(components, watchOpts);
     });
+  }
+
+  /**
+   * filter the given component-ids and set default-scope only to the new ones.
+   * returns the affected components.
+   */
+  async setDefaultScopeToComponents(componentIds: ComponentID[], scopeName: string): Promise<ComponentID[]> {
+    if (!isValidScopeName(scopeName)) {
+      throw new InvalidScopeName(scopeName);
+    }
+    const newComponentIds = componentIds.filter((id) => !id.hasVersion());
+    if (!newComponentIds.length) {
+      const compIdsStr = componentIds.map((compId) => compId.toString()).join(', ');
+      throw new BitError(
+        `unable to set default-scope for the following components, as they are not new:\n${compIdsStr}`
+      );
+    }
+    newComponentIds.map((comp) => this.bitMap.setDefaultScope(comp, scopeName));
+    await this.bitMap.write();
+    return newComponentIds;
+  }
+
+  async setDefaultScope(scopeName: string) {
+    if (this.defaultScope === scopeName) {
+      throw new Error(`the default-scope is already set as "${scopeName}", nothing to change`);
+    }
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+    config.workspaceConfig?.setExtension(
+      WorkspaceAspect.id,
+      { defaultScope: scopeName },
+      { mergeIntoExisting: true, ignoreVersion: true }
+    );
+    await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
   }
 
   async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
