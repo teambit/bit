@@ -1,7 +1,9 @@
 /* eslint-disable import/no-unresolved */
 import React, { ReactNode, useRef } from 'react';
+// @ts-ignore
 import { useButton } from '@react-aria/button';
 import { Link } from '@teambit/base-react.navigation.link';
+// @ts-ignore
 import type { AriaButtonProps } from '@react-types/button';
 
 export type ButtonElementType = 'a' | 'button';

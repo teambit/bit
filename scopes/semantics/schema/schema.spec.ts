@@ -40,6 +40,7 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new schema changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(results, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
+      // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(results).toMatchObject(expectedJson);
     });
   });
