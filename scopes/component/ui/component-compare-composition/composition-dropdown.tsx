@@ -1,13 +1,13 @@
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './composition-dropdown.module.scss';
 
-export type DropdownItem = { label: string; value: string };
+export type DropdownItem = { id: string; label: string; value: string };
 
 export type CompositionDropdownProps = {
-  selected: DropdownItem,
+  selected: Omit<DropdownItem, 'value'>;
   dropdownItems: Array<DropdownItem>;
 };
 
@@ -24,15 +24,34 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
         </div>
       }
     >
-      <div>
-        {data.map((item, index) => {
-          return (
-            <MenuLinkItem key={index} isActive={() => false} href={item.value}>
-              <div>{item.label}</div>
-            </MenuLinkItem>
-          );
-        })}
-      </div>
+      {data.map((item) => {
+        return <MenuItem key={item.id} current={item} selected={selected} />;
+      })}
     </Dropdown>
+  );
+}
+
+type MenuItemProps = {
+  selected: Omit<DropdownItem, 'value'>;
+  current: DropdownItem;
+};
+
+function MenuItem(props: MenuItemProps) {
+  const { selected, current } = props;
+
+  const isCurrent = selected === current;
+  const currentVersionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isCurrent) {
+      currentVersionRef.current?.scrollIntoView();
+    }
+  }, [isCurrent]);
+
+  return (
+    <div ref={currentVersionRef}>
+      <MenuLinkItem isActive={() => current.id === selected.id} href={current.value}>
+        <div>{current.label}</div>
+      </MenuLinkItem>
+    </div>
   );
 }

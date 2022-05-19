@@ -45,7 +45,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
       selectedCompositionCompareFile: selectedCompareComp.identifier,
     });
 
-    return { label: c.displayName, value: href };
+    return { id: c.identifier, label: c.displayName, value: href };
   });
   const compareCompositionDropdownSource = compareCompositions.map((c) => {
     const { ...rest } = useComponentCompareParams();
@@ -56,7 +56,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
       selectedCompositionCompareFile: c.identifier,
     });
 
-    return { label: c.displayName, value: href };
+    return { id: c.identifier, label: c.displayName, value: href };
   });
 
   const [baseCompositionParams, setBaseCompositionParams] = useState<Record<string, any>>({});
@@ -74,13 +74,13 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
         <div className={styles.leftDropdown}>
           <CompositionDropdown
             dropdownItems={baseCompositionDropdownSource}
-            selected={{ label: selectedBaseComp.displayName, value: selectedBaseComp.identifier }}
+            selected={{ id: selectedBaseComp.identifier, label: selectedBaseComp.displayName }}
           />
         </div>
         <div className={styles.rightDropdown}>
           <CompositionDropdown
             dropdownItems={compareCompositionDropdownSource}
-            selected={{ label: selectedCompareComp.displayName, value: selectedCompareComp.identifier }}
+            selected={{ id: selectedCompareComp.identifier, label: selectedCompareComp.displayName }}
           />
         </div>
       </div>

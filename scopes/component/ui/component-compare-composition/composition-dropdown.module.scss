@@ -16,11 +16,10 @@
 .menu {
   font-size: var(--bit-p-xs);
   border-radius: 6px;
-
   max-height: 240px;
   overflow-y: scroll;
   max-width: 100%;
   width: 100%;
-  padding: 8px 0px;
+  padding: 0px;
   z-index: $nav-z-index + 1;
 }
