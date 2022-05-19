@@ -50,9 +50,9 @@ export function getComponentCompareUrl(queryParams: ComponentCompareQueryParams)
     const queryVariableStr = getQueryVariableStr(prop);
 
     if (!atleastOneParam) {
+      atleastOneParam = true;
       path = `${path}?${queryVariableStr}`;
     } else {
-      atleastOneParam = true;
       path = `${path}&${queryVariableStr}`;
     }
   }

@@ -21,7 +21,7 @@ export function ComponentCompareComposition() {
   const { loading, base, compare } = component;
   const baseCompositions = base.compositions;
   const compareCompositions = compare.compositions;
-  const { componentId, ...params } = useComponentCompareParams();
+  const { _, ...params } = useComponentCompareParams();
 
   // compositionBase -> filename
 
@@ -36,13 +36,28 @@ export function ComponentCompareComposition() {
       compareCompositions[0]
   );
 
-  const href = getComponentCompareUrl({
-    ...params,
-    selectedCompositionBaseFile: selectedBaseComp.identifier,
-    selectedCompositionCompareFile: selectedBaseComp.identifier,
+  const baseCompositionDropdownSource = baseCompositions.map((c) => {
+    const { componentId, ...rest } = useComponentCompareParams();
+
+    const href = getComponentCompareUrl({
+      ...rest,
+      selectedCompositionBaseFile: c.identifier,
+      selectedCompositionCompareFile: selectedCompareComp.identifier,
+    });
+
+    return { label: c.displayName, value: href };
   });
-  const baseCompositionDropdownSource = baseCompositions.map((c) => ({ label: c.displayName, value: href }));
-  const compareCompositionDropdownSource = compareCompositions.map((c) => ({ label: c.displayName, value: href }));
+  const compareCompositionDropdownSource = compareCompositions.map((c) => {
+    const { componentId, ...rest } = useComponentCompareParams();
+
+    const href = getComponentCompareUrl({
+      ...rest,
+      selectedCompositionBaseFile: selectedBaseComp.identifier,
+      selectedCompositionCompareFile: c.identifier,
+    });
+
+    return { label: c.displayName, value: href };
+  });
 
   const [baseCompositionParams, setBaseCompositionParams] = useState<Record<string, any>>({});
   const baseCompQueryParams = useMemo(() => queryString.stringify(baseCompositionParams), [baseCompositionParams]);
