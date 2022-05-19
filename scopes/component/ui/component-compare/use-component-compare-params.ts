@@ -9,11 +9,11 @@ export type ComponentCompareQueryParams = {
   selectedCompositionBaseFile?: string;
   selectedCompositionCompareFile?: string;
 };
-export type ComponentCompareRouteProps = ComponentCompareQueryParams & ComponentCompareRouteParams;
+export type ComponentCompareRouteProps = ComponentCompareQueryParams;
 
-export type ComponentCompareRouteParams = {
-  componentId: string;
-};
+// export type ComponentCompareRouteParams = {
+//   componentId: string;
+// };
 
 /**
  * path = /<org>/<scope>/<componentId>/~compare/<~compositions | ~dependencies | ~code | ~aspects>/
@@ -28,11 +28,11 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
   const selectedCompositionBaseFile = query.get('selectedCompositionBaseFile') || undefined;
   const selectedCompositionCompareFile = query.get('selectedCompositionCompareFile') || undefined;
 
-  const { componentId } = useParams<ComponentCompareRouteParams>();
+  // const { componentId } = useParams<ComponentCompareRouteParams>();
 
   return {
     baseVersion,
-    componentId,
+    // componentId,
     selectedFile,
     selectedCompositionBaseFile,
     selectedCompositionCompareFile,
