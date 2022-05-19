@@ -45,7 +45,7 @@ export class APISchema extends SchemaNode {
     return this.module.exports.map((exp) => exp.signature);
   }
 
-  static fromSchema(obj: Record<string, any>): APISchema {
+  static fromObject(obj: Record<string, any>): APISchema {
     return plainToInstance(APISchema, obj);
   }
 }

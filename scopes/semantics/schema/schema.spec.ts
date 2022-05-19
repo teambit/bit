@@ -44,4 +44,14 @@ describe('SchemaAspect', function () {
       expect(results).toMatchObject(expectedJson);
     });
   });
+  describe('getSchemaFromObject', () => {
+    it('should be able to deserialize an JSON object to SchemaNode instances', () => {
+      const jsonPath = path.join(__dirname, 'mock', 'button-schemas.json');
+      const json = fs.readJsonSync(jsonPath);
+      const apiSchema = schema.getSchemaFromObject(json);
+      expect(apiSchema instanceof APISchema).toBeTruthy();
+      // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
+      expect(apiSchema.toObject()).toMatchObject(json);
+    });
+  });
 });
