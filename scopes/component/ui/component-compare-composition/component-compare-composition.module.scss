@@ -1,3 +1,17 @@
+.dropdownContainer {
+    display: flex;
+}
+
+.leftDropdown {
+    flex: 1;
+    padding: 16px;
+}
+
+.rightDropdown {
+    flex: 1;
+    padding: 16px 16px 16px 0px;
+}
+
 .mainContainer {
     display: flex;
     height: 100%;
