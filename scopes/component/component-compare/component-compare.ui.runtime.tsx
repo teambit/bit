@@ -2,6 +2,7 @@ import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import ComponentAspect from '@teambit/component/component.aspect';
 import ComponentUI from '@teambit/component/component.ui.runtime';
+import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import ScopeAspect from '@teambit/scope';
 import { UIRuntime } from '@teambit/ui';
@@ -10,7 +11,9 @@ import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import WorkspaceAspect from '@teambit/workspace';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
-
+import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
+import { FileIconSlot } from '@teambit/code';
+import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 
@@ -20,13 +23,19 @@ export type ComponentCompareNav = {
 };
 
 export type ComponentCompareNavSlot = SlotRegistry<Array<ComponentCompareNav>>;
+const isTsx = /\.tsx$/;
 
 export class ComponentCompareUI {
-  constructor(private host: string, private navSlot: ComponentCompareNavSlot, private routeSlot: RouteSlot) {}
+  constructor(
+    private host: string,
+    private navSlot: ComponentCompareNavSlot,
+    private routeSlot: RouteSlot,
+    private fileIconSlot?: FileIconSlot
+  ) {}
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<ComponentCompareNavSlot>(), Slot.withType<RouteSlot>()];
+  static slots = [Slot.withType<ComponentCompareNavSlot>(), Slot.withType<RouteSlot>(), Slot.withType<string>()];
 
   static dependencies = [ComponentAspect, WorkspaceAspect, ScopeAspect];
 
@@ -53,8 +62,13 @@ export class ComponentCompareUI {
     return this;
   }
 
+  registerEnvFileIcon(icons: FileIconMatch[]) {
+    this.fileIconSlot?.register(icons);
+    return this;
+  }
+
   getComponentCodeComparePage() {
-    return <span>Code</span>;
+    return <ComponentCompareCode fileIconSlot={this.fileIconSlot} />;
   }
 
   getComponentDependenciesComparePage() {
@@ -131,13 +145,17 @@ export class ComponentCompareUI {
   static async provider(
     [componentUi]: [ComponentUI],
     _,
-    [navSlot, routeSlot]: [ComponentCompareNavSlot, RouteSlot],
+    [navSlot, routeSlot, fileIconSlot]: [ComponentCompareNavSlot, RouteSlot, FileIconSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot);
+    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, fileIconSlot);
     componentCompareUI.registerInternalRoutes();
+    // overrides the default tsx react icon with the typescript icon
+    componentCompareUI.registerEnvFileIcon([
+      (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
+    ]);
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);

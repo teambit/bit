@@ -66,7 +66,7 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
         overrideVersionHref={(baseVersion) => {
           const query = useQuery();
           const version = query.get('version') || undefined;
-          if (version) return `?version=${version}&base=${baseVersion}`;
+          if (version) return `?version=${version}&baseVersion=${baseVersion}`;
           return `?base=${baseVersion}`;
         }}
         showVersionDetails={true}

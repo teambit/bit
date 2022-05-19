@@ -69,7 +69,19 @@
 //     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.componentCompareContainer, className)}>
 //       <Pane className={classNames(styles.left)}>
 //         <H2>{component.id.fullName}</H2>
-//         <div className={styles.componentCompareVersionSelector}>
+//         <div className={styles.componentCompareVersionSelector}>import { ComponentContext, ComponentID } from '@teambit/component';
+// import classNames from 'classnames';
+// import React, { useContext, useState, HTMLAttributes } from 'react';
+// import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+// import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
+// import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
+// import { useCode } from '@teambit/code.ui.queries.get-component-code';
+// import type { FileIconSlot } from '@teambit/code';
+// import { CodeDiffView } from '@teambit/code.ui.code-diff-view';
+// import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+// import { useCodeDiffParams } from '@teambit/code.ui.hooks.use-code-diff-params';
+// import styles from './code-diff-tab-page.module.scss';
+
 //           <ComponentCompareVersionInfo versionInfo={currentVersionInfo} />
 //           <div className={styles.toVersionContainer}>
 //             <ComponentCompareVersion component={component} selected={toComponentId.version} />
@@ -174,91 +186,3 @@
 //     </div>
 //   );
 // }
-
-// export type ComponentCompareTreeProps = {
-//   currentFile?: string;
-//   fileIconSlot?: FileIconSlot;
-//   fromComponentId: ComponentID;
-//   toComponentId: ComponentID;
-// } & HTMLAttributes<HTMLDivElement>;
-
-// export function ComponentCompareTree({
-//   currentFile,
-//   fromComponentId,
-//   toComponentId,
-//   fileIconSlot,
-//   className,
-// }: ComponentCompareTreeProps) {
-//   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-//   const icon = getFileIcon(fileIconMatchers, currentFile);
-//   const { mainFile: fromMainFile, fileTree: fromFileTree = [], devFiles: fromDevFiles = [] } = useCode(fromComponentId);
-//   const { fileTree: toFileTree = [], devFiles: toDevFiles = [] } = useCode(toComponentId);
-//   const fileTree = fromFileTree.concat(toFileTree);
-//   const devFiles = fromDevFiles?.concat(toDevFiles);
-
-//   const treeNodeRenderer = useCallback(
-//     function TreeNode(props: any) {
-//       const children = props.node.children;
-//       const { selected } = useContext(TreeContext);
-//       const lanesContext = useLanesContext();
-//       const { componentId } = useComponentCompareParams();
-
-//       const currentLaneUrl = lanesContext?.viewedLane
-//         ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
-//         : '';
-//       const toVersionUrl = `${(toComponentId?.version && '&to='.concat(toComponentId.version)) || ''}`;
-//       const fromVersionUrl = `from=${fromComponentId.version}`;
-//       const href = `${currentLaneUrl}/${componentId}/~compare/${props.node.id}/?${fromVersionUrl}${toVersionUrl}`;
-
-//       if (!children) {
-//         return <Node href={href} {...props} isActive={props.node.id === selected} icon={icon} />;
-//       }
-//       return <FolderTreeNode {...props} />;
-//     },
-//     [fileIconMatchers, devFiles]
-//   );
-
-//   const [openDrawerList, onToggleDrawer] = useState(['FILES']);
-
-//   const handleDrawerToggle = (id: string) => {
-//     const isDrawerOpen = openDrawerList.includes(id);
-//     if (isDrawerOpen) {
-//       onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
-//       return;
-//     }
-//     onToggleDrawer((list) => list.concat(id));
-//   };
-
-//   return (
-//     <div className={classNames(styles.codeTabTree, className)}>
-//       <DrawerUI
-//         isOpen={openDrawerList.includes('FILES')}
-//         onToggle={() => handleDrawerToggle('FILES')}
-//         name="FILES"
-//         contentClass={styles.codeDrawerContent}
-//         className={classNames(styles.codeTabDrawer)}
-//       >
-//         <FileTree TreeNode={treeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
-//       </DrawerUI>
-//       <DrawerUI
-//         isOpen={openDrawerList.includes('DEPENDENCIES')}
-//         onToggle={() => handleDrawerToggle('DEPENDENCIES')}
-//         className={classNames(styles.codeTabDrawer)}
-//         contentClass={styles.codeDrawerContent}
-//         name="DEPENDENCIES"
-//       >
-//         {/* <DependencyTree dependenciesArray={dependencies} /> */}
-//       </DrawerUI>
-//     </div>
-//   );
-// }
-
-// // return (
-// //   <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
-// //     <TreeNodeContext.Provider value={TreeNode}>
-// //       <TreeContextProvider onSelect={onSelect} selected={selected}>
-// //         <RootNode node={rootNode} depth={1} />
-// //       </TreeContextProvider>
-// //     </TreeNodeContext.Provider>
-// //   </div>
-// // );

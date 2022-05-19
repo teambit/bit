@@ -1074,6 +1074,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-compare"
     },
+    "ui/component-compare-code": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-compare-code"
+    },
     "ui/component-compare-composition": {
         "scope": "",
         "version": "",
