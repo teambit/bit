@@ -1,4 +1,4 @@
-import React, { ReactNode, HTMLAttributes } from 'react';
+import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import styles from './component-compare-widget.module.scss';
