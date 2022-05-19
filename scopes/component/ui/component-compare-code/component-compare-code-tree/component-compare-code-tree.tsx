@@ -4,36 +4,26 @@ import { FileIconSlot } from '@teambit/code';
 import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import { ComponentModel } from '@teambit/component';
 import flatten from 'lodash.flatten';
-import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
-import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { useComponentCompareParams, getComponentCompareUrl } from '@teambit/component.ui.component-compare';
-import styles from './component-compare-code-compare-tree.module.scss';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import styles from './component-compare-code-tree.module.scss';
 
-export type ComponentCompareTreeProps = {
+export type ComponentCompareCodeTreeProps = {
   currentFile?: string;
   fileIconSlot?: FileIconSlot;
-  base: ComponentModel;
-  compare: ComponentModel;
+  fileTree: string[];
 } & HTMLAttributes<HTMLDivElement>;
 
-export function ComponentCompareTree({
+export function ComponentCompareCodeTree({
   currentFile,
   fileIconSlot,
   className,
-  base,
-  compare,
-}: ComponentCompareTreeProps) {
+  fileTree,
+}: ComponentCompareCodeTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-
-  const { mainFile: baseMainFile, fileTree: baseFileTree = [], devFiles: baseDevFiles = [] } = useCode(base.id);
-  const { fileTree: compareFileTree = [], devFiles: compareDevFiles = [] } = useCode(compare.id);
-  const fileTree = baseFileTree.concat(compareFileTree);
-  const devFiles = baseDevFiles?.concat(baseDevFiles);
 
   const treeNodeRenderer = useCallback(
     function TreeNode(props: any) {
@@ -49,7 +39,7 @@ export function ComponentCompareTree({
       }
       return <FolderTreeNode {...props} />;
     },
-    [fileIconMatchers, devFiles]
+    [fileIconMatchers]
   );
 
   const [openDrawerList, onToggleDrawer] = useState(['FILES']);
@@ -78,16 +68,16 @@ export function ComponentCompareTree({
   );
 }
 
-function getWidgets(fileName: string, mainFile?: string, devFiles?: string[]) {
-  if (fileName === mainFile) {
-    return [() => createLabel('main')];
-  }
-  if (devFiles?.includes(fileName)) {
-    return [() => createLabel('dev')];
-  }
-  return null;
-}
+// function getWidgets(fileName: string, mainFile?: string, devFiles?: string[]) {
+//   if (fileName === mainFile) {
+//     return [() => createLabel('main')];
+//   }
+//   if (devFiles?.includes(fileName)) {
+//     return [() => createLabel('dev')];
+//   }
+//   return null;
+// }
 
-function createLabel(str: string) {
-  return <Label className={styles.label}>{str}</Label>;
-}
+// function createLabel(str: string) {
+//   return <Label className={styles.label}>{str}</Label>;
+// }
