@@ -5,6 +5,7 @@ import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
 import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
+import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
 import ComponentAspect from '@teambit/component/component.aspect';
 import ComponentUI from '@teambit/component/component.ui.runtime';
 import { EmptyStateSlot } from '@teambit/compositions';
@@ -33,7 +34,7 @@ export class ComponentCompareUI {
     private navSlot: ComponentCompareNavSlot,
     private routeSlot: RouteSlot,
     private emptyStateSlot: EmptyStateSlot,
-    private fileIconSlot?: FileIconSlot,
+    private fileIconSlot?: FileIconSlot
   ) {}
 
   static runtime = UIRuntime;
@@ -83,7 +84,7 @@ export class ComponentCompareUI {
   }
 
   getComponentDependenciesComparePage() {
-    return <span>Dependnecies</span>;
+    return <ComponentCompareDependencies />;
   }
 
   getComponentCompositionComparePage() {
@@ -156,7 +157,12 @@ export class ComponentCompareUI {
   static async provider(
     [componentUi]: [ComponentUI],
     _,
-    [navSlot, routeSlot, emptyStateSlot, fileIconSlot]: [ComponentCompareNavSlot, RouteSlot, EmptyStateSlot, FileIconSlot],
+    [navSlot, routeSlot, emptyStateSlot, fileIconSlot]: [
+      ComponentCompareNavSlot,
+      RouteSlot,
+      EmptyStateSlot,
+      FileIconSlot
+    ],
     harmony: Harmony
   ) {
     const { config } = harmony;
@@ -168,7 +174,7 @@ export class ComponentCompareUI {
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     componentCompareUI.registerEmptyState(() => {
-      return <AddingCompositions />
+      return <AddingCompositions />;
     });
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
