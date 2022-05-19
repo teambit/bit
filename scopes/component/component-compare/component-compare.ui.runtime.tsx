@@ -1,19 +1,21 @@
-import React from 'react';
-import { RouteProps } from 'react-router-dom';
+import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
+import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import { FileIconSlot } from '@teambit/code';
+import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import { ComponentCompare } from '@teambit/component.ui.component-compare';
+import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
+import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 import ComponentAspect from '@teambit/component/component.aspect';
 import ComponentUI from '@teambit/component/component.ui.runtime';
-import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
+import { EmptyStateSlot } from '@teambit/compositions';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
 import ScopeAspect from '@teambit/scope';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import WorkspaceAspect from '@teambit/workspace';
-import { ComponentCompare } from '@teambit/component.ui.component-compare';
-import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
-import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
-import { FileIconSlot } from '@teambit/code';
-import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
+import React, { ComponentType } from 'react';
+import { RouteProps } from 'react-router-dom';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 
@@ -30,7 +32,8 @@ export class ComponentCompareUI {
     private host: string,
     private navSlot: ComponentCompareNavSlot,
     private routeSlot: RouteSlot,
-    private fileIconSlot?: FileIconSlot
+    private emptyStateSlot: EmptyStateSlot,
+    private fileIconSlot?: FileIconSlot,
   ) {}
 
   static runtime = UIRuntime;
@@ -67,6 +70,14 @@ export class ComponentCompareUI {
     return this;
   }
 
+  /**
+   * register a new tester empty state. this allows to register a different empty state from each environment for example.
+   */
+  registerEmptyState(emptyStateComponent: ComponentType) {
+    this.emptyStateSlot.register(emptyStateComponent);
+    return this;
+  }
+
   getComponentCodeComparePage() {
     return <ComponentCompareCode fileIconSlot={this.fileIconSlot} />;
   }
@@ -76,7 +87,7 @@ export class ComponentCompareUI {
   }
 
   getComponentCompositionComparePage() {
-    return <ComponentCompareComposition />;
+    return <ComponentCompareComposition emptyState={this.emptyStateSlot} />;
   }
 
   getComponentAspectsComparePage() {
@@ -145,17 +156,20 @@ export class ComponentCompareUI {
   static async provider(
     [componentUi]: [ComponentUI],
     _,
-    [navSlot, routeSlot, fileIconSlot]: [ComponentCompareNavSlot, RouteSlot, FileIconSlot],
+    [navSlot, routeSlot, emptyStateSlot, fileIconSlot]: [ComponentCompareNavSlot, RouteSlot, EmptyStateSlot, FileIconSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, fileIconSlot);
+    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, emptyStateSlot, fileIconSlot);
     componentCompareUI.registerInternalRoutes();
     // overrides the default tsx react icon with the typescript icon
     componentCompareUI.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
+    componentCompareUI.registerEmptyState(() => {
+      return <AddingCompositions />
+    });
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);

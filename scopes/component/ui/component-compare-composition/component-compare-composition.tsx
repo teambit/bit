@@ -3,21 +3,26 @@ import {
   useComponentCompareContext,
   useComponentCompareParams,
 } from '@teambit/component.ui.component-compare';
-import { CompositionContent } from '@teambit/compositions';
+import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
 import queryString from 'query-string';
 import React, { useMemo, useState } from 'react';
 import styles from './component-compare-composition.module.scss';
 import { CompositionDropdown } from './composition-dropdown';
 
-export function ComponentCompareComposition() {
-  const component = useComponentCompareContext();
+export type ComponentCompareCompositionProps = {
+  emptyState?: EmptyStateSlot;
+}
 
-  if (component === undefined) {
+export function ComponentCompareComposition(props: ComponentCompareCompositionProps) {
+  const {emptyState} = props;
+  const component = useComponentCompareContext();
+  
+  if (component === undefined || component.loading === undefined) {
     return <></>;
   }
 
-  const { loading, base, compare } = component;
+  const { base, compare } = component;
   const baseCompositions = base.compositions;
   const compareCompositions = compare.compositions;
   const { componentId, ...params } = useComponentCompareParams();
@@ -63,10 +68,6 @@ export function ComponentCompareComposition() {
     [compareCompositionParams]
   );
 
-  // if (loading) {
-  //     return <div>Loading...</div>
-  // }
-
   return (
     <>
       <div className={styles.dropdownContainer}>
@@ -88,7 +89,7 @@ export function ComponentCompareComposition() {
           <div className={styles.subView}>
             <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
               <CompositionContent
-                emptyState={undefined} // todo: has to come from emptyStateSlot
+                emptyState={emptyState}
                 component={base}
                 selected={selectedBaseComp}
                 queryParams={baseCompQueryParams}
@@ -103,7 +104,7 @@ export function ComponentCompareComposition() {
               setQueryParams={setCompareCompositionParams}
             >
               <CompositionContent
-                emptyState={undefined} // todo: has to come from emptyStateSlot
+                emptyState={emptyState}
                 component={compare}
                 selected={selectedCompareComp}
                 queryParams={compareCompQueryParams}
