@@ -5,6 +5,7 @@ import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
 import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
+import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
 import ComponentAspect from '@teambit/component/component.aspect';
 import ComponentUI from '@teambit/component/component.ui.runtime';
 import { EmptyStateSlot } from '@teambit/compositions';
@@ -83,7 +84,7 @@ export class ComponentCompareUI {
   }
 
   getComponentDependenciesComparePage() {
-    return <span>Dependnecies</span>;
+    return <ComponentCompareDependencies />;
   }
 
   getComponentCompositionComparePage() {
