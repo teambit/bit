@@ -21,7 +21,7 @@ export function ComponentCompareComposition() {
   const { loading, base, compare } = component;
   const baseCompositions = base.compositions;
   const compareCompositions = compare.compositions;
-  const { _, ...params } = useComponentCompareParams();
+  const { componentId, ...params } = useComponentCompareParams();
 
   // compositionBase -> filename
 
