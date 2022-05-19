@@ -61,29 +61,29 @@ export class LanesUI {
     this.hostAspect.registerRoutes([
       {
         path: LanesModel.laneComponentUrlRegex,
-        children: this.componentUi.getComponentUI(this.host),
+        element: this.componentUi.getComponentUI(this.host),
       },
       {
         path: `${LanesModel.laneRouteUrlRegex}/~readme`,
-        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
+        element: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
       },
       {
         path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
-        children: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />,
+        element: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />,
       },
       {
         path: `${LanesModel.laneRouteUrlRegex}`,
-        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
+        element: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
       },
     ]);
     this.hostAspect.registerMenuRoutes([
       {
         path: LanesModel.laneComponentUrlRegex,
-        children: this.componentUi.getMenu(this.host),
+        element: this.componentUi.getMenu(this.host),
       },
       {
         path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />,
+        element: <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />,
       },
     ]);
   }

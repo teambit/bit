@@ -7,7 +7,7 @@ export class CodeSection implements Section {
   constructor(private codeUI: CodeUI) {}
   route = {
     path: '~code/:file*',
-    children: this.codeUI.getCodePage(),
+    element: this.codeUI.getCodePage(),
   };
   navigationLink = {
     href: '~code',

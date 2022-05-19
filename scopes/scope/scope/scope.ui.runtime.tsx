@@ -138,17 +138,17 @@ export class ScopeUI {
     this.registerMenuRoutes([
       {
         path: this.componentUi.routePath,
-        children: this.componentUi.getMenu(ScopeAspect.id),
+        element: this.componentUi.getMenu(ScopeAspect.id),
       },
       {
         path: '/',
-        children: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
+        element: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
       },
     ]);
     this.registerRoutes([
       {
         path: this.componentUi.routePath,
-        children: this.componentUi.getComponentUI(ScopeAspect.id),
+        element: this.componentUi.getComponentUI(ScopeAspect.id),
       },
     ]);
   }
@@ -255,8 +255,8 @@ export class ScopeUI {
     return {
       routes: [
         {
-          path: '/',
-          children: (
+          path: '/*',
+          element: (
             <Scope
               routeSlot={this.routeSlot}
               menuSlot={this.menuSlot}

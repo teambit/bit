@@ -9,7 +9,7 @@ export class GraphSection implements Section {
 
   route = {
     path: '~dependencies',
-    children: <GraphPage componentWidgets={this.componentWidgetSlot} />,
+    element: <GraphPage componentWidgets={this.componentWidgetSlot} />,
   };
   navigationLink = {
     href: '~dependencies',

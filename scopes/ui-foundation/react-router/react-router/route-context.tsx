@@ -6,6 +6,7 @@ import { NavigationProvider } from '@teambit/base-react.navigation.link';
 import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
 import { ReactRouterUI } from './react-router.ui.runtime';
 import { Routing } from './routing-method';
+import { LegacyNavProvider } from './legacy-routing';
 
 // export type History = ReturnType<typeof useHistory>;
 
@@ -32,15 +33,15 @@ export function RouteContext({ routing = Routing.url, children, location }: Rout
       {/* <HistoryGetter onRouterChange={reactRouterUi.setRouter} /> */}
       {/* injects react-router Link into context  */}
       <NavigationProvider implementation={reactRouterAdapter}>
-        {/* route tree root: */}
-        {children}
+        <LegacyNavProvider>
+          {/* route tree root: */}
+          {children}
+        </LegacyNavProvider>
       </NavigationProvider>
     </Router>
   );
 }
 
-// {/* </RoutingProvider> */}
-// {/* <RoutingProvider value={reactRouterRouting}> */}
 export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
   return <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />;
 }
