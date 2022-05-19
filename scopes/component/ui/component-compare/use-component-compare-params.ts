@@ -1,5 +1,4 @@
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { useParams } from 'react-router-dom';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 
 export type ComponentCompareQueryParams = {
@@ -28,11 +27,8 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
   const selectedCompositionBaseFile = query.get('selectedCompositionBaseFile') || undefined;
   const selectedCompositionCompareFile = query.get('selectedCompositionCompareFile') || undefined;
 
-  // const { componentId } = useParams<ComponentCompareRouteParams>();
-
   return {
     baseVersion,
-    // componentId,
     selectedFile,
     selectedCompositionBaseFile,
     selectedCompositionCompareFile,
