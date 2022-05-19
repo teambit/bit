@@ -1,4 +1,4 @@
-import { useComponentCompareContext, useComponentCompareParams } from "@teambit/component.ui.component-compare";
+import { useComponentCompareContext, useComponentCompareParams, getComponentCompareUrl } from "@teambit/component.ui.component-compare";
 import { Composition, CompositionContent } from "@teambit/compositions";
 import { CompositionContextProvider } from "@teambit/compositions.ui.hooks.use-composition";
 import classNames from "classnames";
@@ -17,14 +17,18 @@ export function ComponentCompareComposition() {
     const { loading, base, compare } = component;
     const baseCompositions = base.compositions;
     const compareCompositions = compare.compositions;
-    const baseCompositionDropdownSource = baseCompositions.map(c => ({ label: c.displayName, value: c.identifier }));
-    const compareCompositionDropdownSource = compareCompositions.map(c => ({ label: c.displayName, value: c.identifier }));
+    const { componentId, ...params } = useComponentCompareParams();
 
-    const { compositionBase, compositionCompare } = useComponentCompareParams();
     // compositionBase -> filename
 
-    const [selectedBaseComp, setSelectedBaseComp] = useState<Composition>(baseCompositions[0]);
-    const [selectedCompareComp, setSelectedCompareComp] = useState<Composition>(compareCompositions[0]);
+    const [selectedBaseComp, setSelectedBaseComp] = useState<Composition>(
+        params.selectedCompositionBaseFile && baseCompositions.find(c => c.identifier === params.selectedCompositionBaseFile) || baseCompositions[0]);
+    const [selectedCompareComp, setSelectedCompareComp] = useState<Composition>(
+        params.selectedCompositionCompareFile && compareCompositions.find(c => c.identifier === params.selectedCompositionCompareFile) || compareCompositions[0]);
+
+    const href = getComponentCompareUrl({ ...params, selectedCompositionBaseFile: selectedBaseComp.identifier, selectedCompositionCompareFile: selectedBaseComp.identifier });
+    const baseCompositionDropdownSource = baseCompositions.map(c => ({ label: c.displayName, value: href }));
+    const compareCompositionDropdownSource = compareCompositions.map(c => ({ label: c.displayName, value: href }));
 
     const [baseCompositionParams, setBaseCompositionParams] = useState<Record<string, any>>({});
     const baseCompQueryParams = useMemo(() => queryString.stringify(baseCompositionParams), [baseCompositionParams]);
@@ -40,10 +44,10 @@ export function ComponentCompareComposition() {
         <>
             <div className={styles.dropdownContainer}>
                 <div className={styles.leftDropdown}>
-                    <CompositionDropdown dropdownItems={baseCompositionDropdownSource} side="base" />
+                    <CompositionDropdown dropdownItems={baseCompositionDropdownSource} />
                 </div>
                 <div className={styles.rightDropdown}>
-                    <CompositionDropdown dropdownItems={compareCompositionDropdownSource} side="compare" />
+                    <CompositionDropdown dropdownItems={compareCompositionDropdownSource} />
                 </div>
             </div>
             <div className={styles.mainContainer}>

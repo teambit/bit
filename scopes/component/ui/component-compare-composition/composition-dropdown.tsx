@@ -1,3 +1,4 @@
+import { useComponentCompareParams, getComponentCompareUrl } from '@teambit/component.ui.component-compare';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
@@ -7,24 +8,22 @@ import styles from "./composition-dropdown.module.scss";
 
 export type CompositionDropdownProps = {
     dropdownItems: Array<{ label: string, value: string }>,
-    side: "base" | "compare"
 }
 
 const baseCompQueryParam = "compositionBase";
 const compareCompQueryParam = "compositionCompare";
 
 export function CompositionDropdown(props: CompositionDropdownProps) {
-    const { dropdownItems: data, side } = props;
+    const { dropdownItems: data } = props;
     const query = useQuery();
 
-    const href = (link: string) => {
-        if (side === "base") {
-            return `~compositions/~compare/${baseCompQueryParam}=${link}`;
-        }
-        if (side === "compare") {
-            return `~compositions/~compare/${compareCompQueryParam}=${link}`;
-        }
-    }
+    // const href = (link: string) => {
+    //     const { componentId, ...params } = useComponentCompareParams();
+    //     params.selectedCompositionBaseFile = link;
+    //     params.selectedCompositionCompareFile = link;
+    //     const result = getComponentCompareUrl(params);
+    //     return result;
+    // }
 
     return (
         <Dropdown
@@ -41,7 +40,7 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
                     data.map((item, index) => {
 
                         return (
-                            <MenuLinkItem key={index} isActive={() => false} href={href(item.value)}>
+                            <MenuLinkItem key={index} isActive={() => false} href={item.value}>
                                 <div>{item.label}</div>
                             </MenuLinkItem>
                         );
