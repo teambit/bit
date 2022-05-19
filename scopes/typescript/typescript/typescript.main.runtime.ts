@@ -35,6 +35,7 @@ import {
   IndexSignature,
   InterfaceDeclarationTransformer,
   MethodSignatureTransformer,
+  EnumDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -250,6 +251,7 @@ export class TypescriptMain {
       new IndexSignature(),
       new InterfaceDeclarationTransformer(),
       new MethodSignatureTransformer(),
+      new EnumDeclarationTransformer(),
     ]);
 
     if (workspace) {

@@ -20,3 +20,4 @@ export { TypeArraySchema } from './type-array';
 export { TypeOperatorSchema } from './type-operator';
 export { TupleTypeSchema } from './tuple-type';
 export { ParameterSchema } from './parameter';
+export { EnumSchema } from './enum';
