@@ -14,6 +14,7 @@ import {
 } from 'typescript';
 import {
   SchemaNode,
+  TypeRefSchema,
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
@@ -154,6 +155,10 @@ async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContex
 async function typeReference(node: TypeReferenceNode, context: SchemaExtractorContext) {
   const name = node.typeName.getText();
   const type = await context.resolveType(node, name, false);
+  if (node.typeArguments && type instanceof TypeRefSchema) {
+    const args = await pMapSeries(node.typeArguments, (arg) => typeNodeToSchema(arg, context));
+    type.typeArgs = args;
+  }
   return type;
 }
 
