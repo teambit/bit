@@ -37,7 +37,8 @@ export type ComponentMeta = {
 export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
-  readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+  // readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+  readonly routePath = `/*`;
   private componentSearcher: ComponentSearcher;
 
   constructor(

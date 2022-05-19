@@ -12,12 +12,13 @@ export type Component = {
   componentDescriptor?: ComponentDescriptor;
 };
 
-export function useComponent(host: string, id?: ComponentID): Component {
+export function useComponent(host: string, id?: string | ComponentID): Component {
   const query = useQuery();
-  const componentId = query.get('componentId') || undefined;
   const version = query.get('version') || undefined;
   const lanesContext = useLanesContext();
-  const targetId = id?.toString({ ignoreVersion: true }) || componentId;
+
+  const targetId =
+    (typeof id === 'string' && id) || (typeof id !== 'undefined' && id.toString({ ignoreVersion: true }));
   if (!targetId) throw new TypeError('useComponent received no component id');
   const currentLane = lanesContext?.viewedLane;
   // when on a lane, always fetch all the logs starting from the 'head' version

@@ -1,3 +1,4 @@
+import { Routes, Route } from 'react-router-dom';
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
@@ -16,6 +17,7 @@ import { MenuNav } from './menu-nav';
 import { MobileMenuNav } from './mobile-menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
+import { useIdFromLocation } from '../use-component-from-location';
 
 export type MenuProps = {
   className?: string;
@@ -40,23 +42,31 @@ export type MenuProps = {
  * top bar menu.
  */
 export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot, consumeMethodSlot }: MenuProps) {
-  const { component } = useComponent(host);
+  const componentId = useIdFromLocation();
+  const { component } = useComponent(host, componentId);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
-    <div className={classnames(styles.topBar, className)}>
-      <div className={styles.leftSide}>
-        <MenuNav navigationSlot={navigationSlot} />
-        <MobileMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
-      </div>
-      <div className={styles.rightSide}>
-        <div className={styles.widgets}>
-          <MenuNav navigationSlot={widgetSlot} />
-        </div>
-        <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
-        <MainDropdown menuItems={mainMenuItems} />
-      </div>
-    </div>
+    <Routes>
+      <Route
+        path={`${componentId}/*`}
+        element={
+          <div className={classnames(styles.topBar, className)}>
+            <div className={styles.leftSide}>
+              <MenuNav navigationSlot={navigationSlot} />
+              <MobileMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
+            </div>
+            <div className={styles.rightSide}>
+              <div className={styles.widgets}>
+                <MenuNav navigationSlot={widgetSlot} />
+              </div>
+              <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+              <MainDropdown menuItems={mainMenuItems} />
+            </div>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
 
