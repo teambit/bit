@@ -12,12 +12,12 @@ import { CompositionDropdown } from './composition-dropdown';
 
 export type ComponentCompareCompositionProps = {
   emptyState?: EmptyStateSlot;
-}
+};
 
 export function ComponentCompareComposition(props: ComponentCompareCompositionProps) {
-  const {emptyState} = props;
+  const { emptyState } = props;
   const component = useComponentCompareContext();
-  
+
   if (component === undefined || component.loading === undefined) {
     return <></>;
   }
@@ -25,7 +25,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
   const { base, compare } = component;
   const baseCompositions = base.compositions;
   const compareCompositions = compare.compositions;
-  const { componentId, ...params } = useComponentCompareParams();
+  const { ...params } = useComponentCompareParams();
 
   const selectedBaseComp =
     (params.selectedCompositionBaseFile &&
@@ -37,7 +37,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     compareCompositions[0];
 
   const baseCompositionDropdownSource = baseCompositions.map((c) => {
-    const { componentId, ...rest } = useComponentCompareParams();
+    const { ...rest } = useComponentCompareParams();
 
     const href = getComponentCompareUrl({
       ...rest,
@@ -48,7 +48,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     return { label: c.displayName, value: href };
   });
   const compareCompositionDropdownSource = compareCompositions.map((c) => {
-    const { componentId, ...rest } = useComponentCompareParams();
+    const { ...rest } = useComponentCompareParams();
 
     const href = getComponentCompareUrl({
       ...rest,
