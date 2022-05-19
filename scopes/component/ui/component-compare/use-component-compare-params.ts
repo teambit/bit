@@ -40,13 +40,13 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
   };
 }
 
-export function getCurrentComponentCompareUrl(queryParams: ComponentCompareQueryParams): string {
+export function getComponentCompareUrl(queryParams: ComponentCompareQueryParams): string {
   const location = useLocation();
   const getQueryVariableStr = (prop: string) => `${queryParams[prop] ? `${prop}=${queryParams[prop]}` : ''}`;
 
   let path = location.pathname;
   let atleastOneParam = false;
-  for (const prop of Object.keys(queryParams).filter((queryParamProp) => getQueryVariableStr(queryParamProp) !== '')) {
+  for (const prop of Object.keys(queryParams).filter((queryParamProp) => queryParams[queryParamProp])) {
     const queryVariableStr = getQueryVariableStr(prop);
 
     if (!atleastOneParam) {
