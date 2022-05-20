@@ -8,7 +8,6 @@ export const BasicButton = () => {
 };
 
 export const ButtonWithAlert = (a, b: () => {}) => {
-  // @ts-ignore
   return <Button onPress={() => alert('hello there!')}>click me</Button>;
 };
 
