@@ -54,10 +54,12 @@ export class TypeRefSchema extends SchemaNode {
 
   private nameToString() {
     if (this.componentId) {
-      return `${this.componentId}/${this.name}`;
+      const compStr = chalk.dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
+      return `${compStr} ${this.name}`;
     }
     if (this.packageName) {
-      return `${chalk.dim(this.packageName)}/${this.name}`;
+      const pkgStr = chalk.dim(`(package: ${this.packageName})`);
+      return `${pkgStr} ${this.name}`;
     }
     return this.name;
   }

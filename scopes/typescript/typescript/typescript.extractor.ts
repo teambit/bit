@@ -1,6 +1,7 @@
 import ts, { Node } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
+import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 // @ts-ignore david what to do?
@@ -16,7 +17,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
     private tsMain: TypescriptMain,
-    private rootPath: string
+    private rootPath: string,
+    private depResolver: DependencyResolverMain
   ) {}
 
   parseSourceFile(file: AbstractVinyl) {
@@ -36,7 +38,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const mainAst = this.parseSourceFile(mainFile);
-    const context = this.createContext(tsserver, component);
+    const context = await this.createContext(tsserver, component);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
     const moduleSchema = (await this.computeSchema(mainAst, context)) as Module;
@@ -55,8 +57,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return transformer.getIdentifiers(node, context);
   }
 
-  private createContext(tsserver: TsserverClient, component: Component): SchemaExtractorContext {
-    return new SchemaExtractorContext(tsserver, component, this);
+  private async createContext(tsserver: TsserverClient, component: Component): Promise<SchemaExtractorContext> {
+    const componentDeps = await this.getComponentDeps(component);
+    return new SchemaExtractorContext(tsserver, component, this, componentDeps);
+  }
+
+  private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {
+    const deps = await this.depResolver.getDependencies(component);
+    const componentDeps = deps.getComponentDependencies();
+    return componentDeps;
   }
 
   private tsserver: TsserverClient | undefined = undefined;

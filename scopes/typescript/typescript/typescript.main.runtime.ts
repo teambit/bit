@@ -8,6 +8,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { WatchOptions, Workspace } from '@teambit/workspace';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -56,7 +57,8 @@ export class TypescriptMain {
   constructor(
     private logger: Logger,
     private schemaTransformerSlot: SchemaTransformerSlot,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private depResolver: DependencyResolverMain
   ) {}
 
   private tsServer: TsserverClient;
@@ -164,7 +166,13 @@ export class TypescriptMain {
    * create an instance of a typescript semantic schema extractor.
    */
   createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
-    return new TypeScriptExtractor(tsconfig, this.schemaTransformerSlot, this, path || this.workspace.path);
+    return new TypeScriptExtractor(
+      tsconfig,
+      this.schemaTransformerSlot,
+      this,
+      path || this.workspace.path,
+      this.depResolver
+    );
   }
 
   /**
@@ -223,18 +231,32 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect, WorkspaceAspect, CLIAspect];
+  static dependencies = [
+    SchemaAspect,
+    LoggerAspect,
+    AspectLoaderAspect,
+    WorkspaceAspect,
+    CLIAspect,
+    DependencyResolverAspect,
+  ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli]: [SchemaMain, LoggerMain, AspectLoaderMain, Workspace, CLIMain],
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver]: [
+      SchemaMain,
+      LoggerMain,
+      AspectLoaderMain,
+      Workspace,
+      CLIMain,
+      DependencyResolverMain
+    ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace);
+    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver);
     schemaTransformerSlot.register([
       new ExportDeclaration(),
       new FunctionDeclaration(),
