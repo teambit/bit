@@ -7,9 +7,8 @@ import { ComponentCompareAspects } from '@teambit/component.ui.component-compare
 import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
-import ComponentAspect from '@teambit/component/component.aspect';
-import ComponentUI from '@teambit/component/component.ui.runtime';
 import { EmptyStateSlot } from '@teambit/compositions';
+import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
 import ScopeAspect from '@teambit/scope';
