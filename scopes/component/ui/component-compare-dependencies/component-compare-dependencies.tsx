@@ -48,22 +48,22 @@ export function ComponentCompareDependencies() {
   const { graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
   const { graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
 
-  if (baseGraph === undefined || compareGraph === undefined) {
+  if (!baseGraph || !compareGraph) {
     return <></>;
   }
 
-  function buildGraph(baseGraph: GraphModel, compareGraph: GraphModel) {
-    const baseNodes = baseGraph.nodes;
-    const compareNodes = compareGraph.nodes;
+  function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
+    const baseNodes = _baseGraph.nodes;
+    const compareNodes = _compareGraph.nodes;
     const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
     const compareNodesMap = new Map<string, NodeModel>(
       compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
     );
 
     const allNodes: Array<CompareNodeModel> = [];
-    for (let baseNode of baseNodes) {
+    for (const baseNode of baseNodes) {
       const compareNode = compareNodesMap.get(baseNode.component.id.toStringWithoutVersion());
-      if (!!compareNode) {
+      if (compareNode) {
         allNodes.push({
           ...baseNode,
           compareVersion: compareNode.component.version,
@@ -79,7 +79,7 @@ export function ComponentCompareDependencies() {
     }
 
     const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.component.id.toStringWithoutVersion()));
-    for (let node of newNodes) {
+    for (const node of newNodes) {
       allNodes.push({
         ...node,
         compareVersion: node.component.version,
@@ -88,12 +88,12 @@ export function ComponentCompareDependencies() {
     }
 
     const baseEdgesMap = new Map<string, EdgeModel>(
-      baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
+      _baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
     );
-    const edgesOnlyInCompare = compareGraph.edges.filter(
+    const edgesOnlyInCompare = _compareGraph.edges.filter(
       (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
     );
-    const allEdges = [...baseGraph.edges, ...edgesOnlyInCompare];
+    const allEdges = [..._baseGraph.edges, ...edgesOnlyInCompare];
 
     return new CompareGraphModel(allNodes, allEdges);
   }
