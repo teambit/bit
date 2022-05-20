@@ -4,7 +4,16 @@ import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances, schemaObjToInstance } from '../schema-obj-to-class';
 import { ParameterSchema } from './parameter';
 
-export type Modifier = 'static' | 'public' | 'private' | 'protected' | 'readonly' | 'abstract' | 'async' | 'override';
+export type Modifier =
+  | 'static'
+  | 'public'
+  | 'private'
+  | 'protected'
+  | 'readonly'
+  | 'abstract'
+  | 'async'
+  | 'override'
+  | 'export';
 
 /**
  * function-like can be a function, method, arrow-function, variable-function, etc.
@@ -37,7 +46,11 @@ export class FunctionLikeSchema extends SchemaNode {
 
   toString() {
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
-    const modifiersStr = this.modifiers.length ? `${this.modifiers.join(' ')} ` : '';
-    return `${modifiersStr}${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+    return `${this.modifiersToString()}${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+  }
+
+  private modifiersToString() {
+    const modifiersToPrint = this.modifiers.filter((modifier) => modifier !== 'export');
+    return modifiersToPrint.length ? `${modifiersToPrint.join(' ')} ` : '';
   }
 }
