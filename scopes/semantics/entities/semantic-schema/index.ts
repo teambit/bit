@@ -27,5 +27,6 @@ export {
   ParameterSchema,
   EnumSchema,
   ParenthesizedTypeSchema,
+  TypePredicateSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

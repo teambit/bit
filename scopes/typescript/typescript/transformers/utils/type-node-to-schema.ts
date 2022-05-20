@@ -12,6 +12,8 @@ import {
   UnionTypeNode,
   TypeLiteralNode,
   ParenthesizedTypeNode,
+  TypePredicateNode,
+  isIdentifier,
 } from 'typescript';
 import {
   SchemaNode,
@@ -27,6 +29,7 @@ import {
   TupleTypeSchema,
   FunctionLikeSchema,
   ParenthesizedTypeSchema,
+  TypePredicateSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -62,6 +65,7 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.ParenthesizedType:
       return parenthesizedType(node as ParenthesizedTypeNode, context);
     case SyntaxKind.TypePredicate:
+      return typePredicate(node as TypePredicateNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
@@ -86,10 +90,10 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.JSDocNamepathType:
     case SyntaxKind.JSDocSignature:
     case SyntaxKind.JSDocTypeLiteral:
-      throw new Error(`TypeNode "${SyntaxKind[node.kind]}" was not implemented yet.
+      throw new Error(`TypeNode ${node.kind} (probably ${SyntaxKind[node.kind]}) was not implemented yet.
 context: ${node.getText()}`);
     default:
-      throw new Error(`Node "${SyntaxKind[node.kind]}" is not a TypeNode.
+      throw new Error(`Node ${node.kind} (probably ${SyntaxKind[node.kind]}) is not a TypeNode.
 context: ${node.getText()}`);
   }
 }
@@ -222,4 +226,11 @@ async function tupleType(node: TupleTypeNode, context: SchemaExtractorContext) {
 async function parenthesizedType(node: ParenthesizedTypeNode, context: SchemaExtractorContext) {
   const type = await typeNodeToSchema(node.type, context);
   return new ParenthesizedTypeSchema(context.getLocation(node), type);
+}
+
+async function typePredicate(node: TypePredicateNode, context: SchemaExtractorContext) {
+  const parameterName = isIdentifier(node.parameterName) ? node.parameterName.getText() : 'this';
+  const type = node.type ? await typeNodeToSchema(node.type, context) : undefined;
+  const hasAssertsModifier = Boolean(node.assertsModifier);
+  return new TypePredicateSchema(context.getLocation(node), parameterName, type, hasAssertsModifier);
 }
