@@ -8,7 +8,7 @@ import ReactFlow, {
   Background,
   Controls,
   Edge,
-  Handle, MiniMap, Node,
+  Handle, Node,
   NodeProps,
   NodeTypesType,
   Position,
@@ -52,15 +52,16 @@ export function ComponentCompareDependencies() {
   }
 
   function buildGraph(baseGraph: GraphModel, compareGraph: GraphModel) {
-    console.log(baseGraph);
     const baseNodes = baseGraph.nodes;
     const compareNodes = compareGraph.nodes;
-    const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.id, n]));
-    const compareNodesMap = new Map<string, NodeModel>(compareNodes.map((n) => [n.id, n]));
+    const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
+    const compareNodesMap = new Map<string, NodeModel>(
+      compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
+    );
 
     const allNodes: Array<CompareNodeModel> = [];
     for (let baseNode of baseNodes) {
-      const compareNode = compareNodesMap.get(baseNode.id);
+      const compareNode = compareNodesMap.get(baseNode.component.id.toStringWithoutVersion());
       if (!!compareNode) {
         allNodes.push({
           ...baseNode,
@@ -76,7 +77,7 @@ export function ComponentCompareDependencies() {
       }
     }
 
-    const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.id));
+    const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.component.id.toStringWithoutVersion()));
     for (let node of newNodes) {
       allNodes.push({
         ...node,
@@ -85,8 +86,12 @@ export function ComponentCompareDependencies() {
       });
     }
 
-    const baseEdgesMap = new Map<string, EdgeModel>(baseGraph.edges.map((e) => [`${e.sourceId} | ${e.targetId}`, e]));
-    const edgesOnlyInCompare = compareGraph.edges.filter((e) => !baseEdgesMap.has(`${e.sourceId} | ${e.targetId}`));
+    const baseEdgesMap = new Map<string, EdgeModel>(
+      baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
+    );
+    const edgesOnlyInCompare = compareGraph.edges.filter(
+      (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
+    );
     const allEdges = [...baseGraph.edges, ...edgesOnlyInCompare];
 
     return new CompareGraphModel(allNodes, allEdges);
@@ -97,27 +102,24 @@ export function ComponentCompareDependencies() {
   const elements = calcElements(graph, baseId.toString(), compareId.toString());
 
   return (
-    <>
-      <ReactFlowProvider>
-        <ReactFlow
-          draggable={false}
-          nodesDraggable={true}
-          selectNodesOnDrag={false}
-          nodesConnectable={false}
-          zoomOnDoubleClick={false}
-          elementsSelectable={false}
-          maxZoom={1}
-          className={styles.graph}
-          elements={elements}
-          nodeTypes={NodeTypes}
-        >
-          <Background />
-          <Controls className={styles.controls} />
-          {/* <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} /> */}
-        </ReactFlow>
-      </ReactFlowProvider>
-      {/* <ComponentCompareDependencyNode /> */}
-    </>
+    <ReactFlowProvider>
+      <ReactFlow
+        draggable={false}
+        nodesDraggable={true}
+        selectNodesOnDrag={false}
+        nodesConnectable={false}
+        zoomOnDoubleClick={false}
+        elementsSelectable={false}
+        maxZoom={1}
+        className={styles.graph}
+        elements={elements}
+        nodeTypes={NodeTypes}
+      >
+        <Background />
+        <Controls className={styles.controls} />
+        {/* <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} /> */}
+      </ReactFlow>
+    </ReactFlowProvider>
   );
 }
 

@@ -46,7 +46,7 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
           className={classnames([styles.arrowIcon, styles.versionUp])}
           src="https://static.bit.dev/bit-icons/arrow-right-bold.svg"
         />
-        {compareVersion && <span className={classnames(styles.version, ellipsis)}>{compareVersion}</span>}
+        {compareVersion && <span className={classnames(styles.version, ellipsis, versionDiff === -1 ? styles.versionUp : versionDiff === 1 ? styles.versionDown : "")}>{compareVersion}</span>}
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
