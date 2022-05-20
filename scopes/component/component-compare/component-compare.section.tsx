@@ -7,7 +7,7 @@ export class ComponentCompareSection implements Section {
   constructor(private componentCompare: ComponentCompareUI) {}
 
   navigationLink = {
-    href: '~compare/~compositions',
+    href: '~compare/compositions',
     displayName: 'Compare',
     children: <ComponentCompareMenuWidget />,
   };
@@ -17,5 +17,5 @@ export class ComponentCompareSection implements Section {
     children: this.componentCompare.getComponentComparePage(),
   };
 
-  order = 30;
+  order = 35;
 }

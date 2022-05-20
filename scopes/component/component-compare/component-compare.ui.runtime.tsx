@@ -1,5 +1,6 @@
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { FileIconSlot } from '@teambit/code';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
@@ -103,22 +104,22 @@ export class ComponentCompareUI {
     },
     {
       exact: true,
-      path: '~compositions',
+      path: '/compositions',
       children: () => this.getComponentCompositionComparePage(),
     },
     {
       exact: true,
-      path: '~code',
+      path: '/code',
       children: () => this.getComponentCodeComparePage(),
     },
     {
       exact: true,
-      path: '~dependencies',
+      path: '/dependencies',
       children: () => this.getComponentDependenciesComparePage(),
     },
     {
       exact: true,
-      path: '~aspects',
+      path: '/aspects',
       children: () => this.getComponentAspectsComparePage(),
     },
   ];
@@ -126,28 +127,28 @@ export class ComponentCompareUI {
   private compareNavLinks: ComponentCompareNav[] = [
     {
       props: {
-        href: '~compositions',
+        href: '/compositions',
         children: 'Compositions',
       },
       order: 0,
     },
     {
       props: {
-        href: '~code',
+        href: '/code',
         children: 'Code',
       },
       order: 1,
     },
     {
       props: {
-        href: '~dependencies',
+        href: '/dependencies',
         children: 'Dependencies',
       },
       order: 2,
     },
     {
       props: {
-        href: '~aspects',
+        href: '/aspects',
         children: 'Aspects',
       },
       order: 3,
