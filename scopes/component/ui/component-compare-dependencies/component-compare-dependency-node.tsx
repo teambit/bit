@@ -10,23 +10,20 @@ import React, { useState, useEffect } from 'react';
 import styles from './component-compare-dependency-node.module.scss';
 import variants from './component-compare-dependency-variants.module.scss';
 import { valid, compare } from 'semver';
+import { CompareNodeModel } from './compare-node-model';
 
 export type ComponentCompareDependencyNodeProps = {
+  node: CompareNodeModel,
   type?: string; // todo: review
 };
 
 export function ComponentCompareDependencyNode(props: ComponentCompareDependencyNodeProps) {
-  const { type = 'defaultNode' } = props;
-  const componentCompare = useComponentCompareContext();
+  const { node, type = 'defaultNode' } = props;
   const [versionDiff, setVersionDiff] = useState(0);
 
-  if (componentCompare === undefined) {
-    return <></>;
-  }
-
-  const { base: baseComponent, compare: compareComponent } = componentCompare;
-  const { id: baseId, version: baseVersion } = baseComponent;
-  const { id: compareId, version: compareVersion } = compareComponent;
+  const { id: baseIdStr, component: baseComponent, compareVersion } = node;
+  const {version: baseVersion} = baseComponent;
+  const baseId = ComponentID.fromString(baseIdStr);
 
   useEffect(() => {
     if (valid(baseVersion) && valid(compareVersion)) {
@@ -49,7 +46,7 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
           className={classnames([styles.arrowIcon, styles.versionUp])}
           src="https://static.bit.dev/bit-icons/arrow-right-bold.svg"
         />
-        {compareId.version && <span className={classnames(styles.version, ellipsis)}>{compareId.version}</span>}
+        {compareVersion && <span className={classnames(styles.version, ellipsis)}>{compareVersion}</span>}
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
