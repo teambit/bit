@@ -1,9 +1,9 @@
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { FileIconSlot } from '@teambit/code';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { ComponentCompare } from '@teambit/component.ui.component-compare';
+import { ComponentCompareAspects } from '@teambit/component.ui.component-compare-aspects';
 import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
@@ -93,7 +93,7 @@ export class ComponentCompareUI {
   }
 
   getComponentAspectsComparePage() {
-    return <span>Aspects</span>;
+    return <ComponentCompareAspects />;
   }
 
   private compareRoutes: RouteProps[] = [

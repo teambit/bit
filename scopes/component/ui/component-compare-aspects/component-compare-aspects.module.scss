@@ -1,10 +1,10 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 $panelBg: #fafafa;
 
-.componentCompareCodeContainer {
-  display: flex;
+.componentCompareAspectContainer {
   height: 100%;
   width: 100%;
+  display: flex;
 }
 
 .left {

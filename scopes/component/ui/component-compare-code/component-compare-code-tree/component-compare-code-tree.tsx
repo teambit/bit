@@ -15,6 +15,8 @@ export type ComponentCompareCodeTreeProps = {
   currentFile?: string;
   fileIconSlot?: FileIconSlot;
   fileTree: string[];
+  drawerName: string;
+  queryParam: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareCodeTree({
@@ -22,6 +24,8 @@ export function ComponentCompareCodeTree({
   fileIconSlot,
   className,
   fileTree,
+  drawerName,
+  queryParam,
 }: ComponentCompareCodeTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
 
@@ -31,7 +35,7 @@ export function ComponentCompareCodeTree({
       const { selected } = useContext(TreeContext);
       const compareQueryParams = useComponentCompareParams();
 
-      const href = getComponentCompareUrl({ ...compareQueryParams, selectedFile: props.node.id });
+      const href = getComponentCompareUrl({ ...compareQueryParams, [queryParam]: props.node.id });
       const icon = getFileIcon(fileIconMatchers, props.node.id);
 
       if (!children) {
@@ -42,7 +46,7 @@ export function ComponentCompareCodeTree({
     [fileIconMatchers]
   );
 
-  const [openDrawerList, onToggleDrawer] = useState(['FILES']);
+  const [openDrawerList, onToggleDrawer] = useState([drawerName]);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -56,9 +60,9 @@ export function ComponentCompareCodeTree({
   return (
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
       <DrawerUI
-        isOpen={openDrawerList.includes('FILES')}
-        onToggle={() => handleDrawerToggle('FILES')}
-        name="FILES"
+        isOpen={openDrawerList.includes(drawerName)}
+        onToggle={() => handleDrawerToggle(drawerName)}
+        name={drawerName}
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}
       >

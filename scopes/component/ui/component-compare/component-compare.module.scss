@@ -3,6 +3,7 @@
   flex-direction: column;
   padding: 24px;
   height: 100%;
+  overflow: hidden;
 }
 .top {
   display: flex;
@@ -11,7 +12,7 @@
 }
 .bottom {
   display: flex;
-  overflow-y: auto;
+  overflow-y: hidden;
   flex-direction: column;
   padding-top: 8px;
   height: 100%;
@@ -19,7 +20,7 @@
 .navContainer {
   display: flex;
   align-items: center;
-  height: 56px;
+  min-height: 56px;
 }
 .navigation {
   display: flex;

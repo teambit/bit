@@ -1,7 +1,7 @@
 .componentCompareCodeTreeContainer {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   height: 100%;
   width: 100%;
   color: var(--on-background-color, #f6f6f6);

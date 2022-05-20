@@ -40,7 +40,7 @@ export function ComponentCompareCodeView({ className, base, compare, fileName }:
   if (originalLoading || modifiedLoading) return null;
 
   // this disables ts errors in editor
-  const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
+  const handleEditorDidMount: DiffOnMount = (_, monaco) => {
     monacoRef.current = monaco;
     if (monacoRef.current) {
       monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -51,7 +51,7 @@ export function ComponentCompareCodeView({ className, base, compare, fileName }:
   };
 
   const diffEditorProps: DiffEditorProps = {
-    modified: modifiedFileContent || undefined,
+    modified: modifiedFileContent,
     original: originalFileContent,
     language,
     height: '100%',
