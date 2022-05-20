@@ -11,6 +11,7 @@ import {
   IntersectionTypeNode,
   UnionTypeNode,
   TypeLiteralNode,
+  ParenthesizedTypeNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -25,6 +26,7 @@ import {
   TypeOperatorSchema,
   TupleTypeSchema,
   FunctionLikeSchema,
+  ParenthesizedTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -57,6 +59,8 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return typeOperator(node as TypeOperatorNode, context);
     case SyntaxKind.TupleType:
       return tupleType(node as TupleTypeNode, context);
+    case SyntaxKind.ParenthesizedType:
+      return parenthesizedType(node as ParenthesizedTypeNode, context);
     case SyntaxKind.TypePredicate:
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
@@ -64,7 +68,6 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.RestType:
     case SyntaxKind.ConditionalType:
     case SyntaxKind.InferType:
-    case SyntaxKind.ParenthesizedType:
     case SyntaxKind.ThisType:
     case SyntaxKind.IndexedAccessType:
     case SyntaxKind.MappedType:
@@ -214,4 +217,9 @@ async function tupleType(node: TupleTypeNode, context: SchemaExtractorContext) {
     return typeSchema;
   });
   return new TupleTypeSchema(context.getLocation(node), elements);
+}
+
+async function parenthesizedType(node: ParenthesizedTypeNode, context: SchemaExtractorContext) {
+  const type = await typeNodeToSchema(node.type, context);
+  return new ParenthesizedTypeSchema(context.getLocation(node), type);
 }
