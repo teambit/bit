@@ -7,6 +7,7 @@ export type ComponentCompareQueryParams = {
   selectedFile?: string;
   selectedCompositionBaseFile?: string;
   selectedCompositionCompareFile?: string;
+  selectedAspect?: string;
 };
 export type ComponentCompareRouteProps = ComponentCompareQueryParams;
 
@@ -24,6 +25,7 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
   const baseVersion = query.get('baseVersion') || undefined;
   const version = query.get('version') || undefined;
   const selectedFile = query.get('selectedFile') || undefined;
+  const selectedAspect = query.get('selectedAspect') || undefined;
   const selectedCompositionBaseFile = query.get('selectedCompositionBaseFile') || undefined;
   const selectedCompositionCompareFile = query.get('selectedCompositionCompareFile') || undefined;
 
@@ -32,6 +34,7 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
     selectedFile,
     selectedCompositionBaseFile,
     selectedCompositionCompareFile,
+    selectedAspect,
     version,
   };
 }
