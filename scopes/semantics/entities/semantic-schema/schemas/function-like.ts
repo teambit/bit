@@ -6,6 +6,9 @@ import { ParameterSchema } from './parameter';
 
 export type Modifier = 'static' | 'public' | 'private' | 'protected' | 'readonly' | 'abstract' | 'async' | 'override';
 
+/**
+ * function-like can be a function, method, arrow-function, variable-function, etc.
+ */
 export class FunctionLikeSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly returnType: SchemaNode;

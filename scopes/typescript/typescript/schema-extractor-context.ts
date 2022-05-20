@@ -305,10 +305,14 @@ export class SchemaExtractorContext {
       const schemaNode = await this.jump(file, definition.start);
       return schemaNode || unknownExactType();
     }
+    const compIdByPath = await this.extractor.getComponentIDByPath(definition.file);
+    if (compIdByPath) {
+      return new TypeRefSchema(location, typeStr, compIdByPath);
+    }
     const pkgName = this.parsePackageNameFromPath(definition.file);
-    const compId = this.getCompIdByPkgName(pkgName);
-    if (compId) {
-      return new TypeRefSchema(location, typeStr, compId);
+    const compIdByPkg = this.getCompIdByPkgName(pkgName);
+    if (compIdByPkg) {
+      return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
   }

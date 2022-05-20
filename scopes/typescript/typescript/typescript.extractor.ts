@@ -1,10 +1,10 @@
 import ts, { Node } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
+import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
-// @ts-ignore david what to do?
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
@@ -18,7 +18,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private schemaTransformerSlot: SchemaTransformerSlot,
     private tsMain: TypescriptMain,
     private rootPath: string,
-    private depResolver: DependencyResolverMain
+    private depResolver: DependencyResolverMain,
+    private workspace: Workspace | undefined
   ) {}
 
   parseSourceFile(file: AbstractVinyl) {
@@ -90,6 +91,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     return transformer.transform(node, context);
+  }
+
+  async getComponentIDByPath(file: string) {
+    if (!this.workspace) {
+      return null;
+    }
+    return this.workspace.getComponentIdByPath(file);
   }
 
   /**

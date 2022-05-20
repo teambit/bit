@@ -171,7 +171,8 @@ export class TypescriptMain {
       this.schemaTransformerSlot,
       this,
       path || this.workspace.path,
-      this.depResolver
+      this.depResolver,
+      this.workspace
     );
   }
 
