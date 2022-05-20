@@ -36,7 +36,7 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
     <SplitPane
       layout={sidebarOpenness}
       size="85%"
-      className={classNames(styles.componentCompareCodeContainer, styles.dark, className)}
+      className={classNames(styles.componentCompareCodeContainer, className)}
     >
       <Pane className={styles.left}>
         <ComponentCompareCodeView base={base} compare={compare} fileName={selectedFile} />
@@ -51,7 +51,7 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
           className={styles.collapser}
         />
       </HoverSplitter>
-      <Pane className={styles.right}>
+      <Pane className={classNames(styles.right, styles.dark)}>
         <ComponentCompareCodeTree fileIconSlot={fileIconSlot} fileTree={fileTree} currentFile={selectedFile} />
       </Pane>
     </SplitPane>
