@@ -8,16 +8,17 @@ import ReactFlow, {
   Background,
   Controls,
   Edge,
-  Handle, Node,
+  Handle,
+  Node,
   NodeProps,
   NodeTypesType,
   Position,
-  ReactFlowProvider
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import { ComponentCompareDependencyNode } from './component-compare-dependency-node';
-import styles from './component-compare-dependency-node.module.scss';
+import styles from './component-compare-dependencies.module.scss';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
@@ -102,24 +103,26 @@ export function ComponentCompareDependencies() {
   const elements = calcElements(graph, baseId.toString(), compareId.toString());
 
   return (
-    <ReactFlowProvider>
-      <ReactFlow
-        draggable={false}
-        nodesDraggable={true}
-        selectNodesOnDrag={false}
-        nodesConnectable={false}
-        zoomOnDoubleClick={false}
-        elementsSelectable={false}
-        maxZoom={1}
-        className={styles.graph}
-        elements={elements}
-        nodeTypes={NodeTypes}
-      >
-        <Background />
-        <Controls className={styles.controls} />
-        {/* <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} /> */}
-      </ReactFlow>
-    </ReactFlowProvider>
+    <div className={styles.page}>
+      <ReactFlowProvider>
+        <ReactFlow
+          draggable={false}
+          nodesDraggable={true}
+          selectNodesOnDrag={false}
+          nodesConnectable={false}
+          zoomOnDoubleClick={false}
+          elementsSelectable={false}
+          maxZoom={1}
+          className={styles.graph}
+          elements={elements}
+          nodeTypes={NodeTypes}
+        >
+          <Background />
+          <Controls className={styles.controls} />
+          {/* <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} /> */}
+        </ReactFlow>
+      </ReactFlowProvider>
+    </div>
   );
 }
 
