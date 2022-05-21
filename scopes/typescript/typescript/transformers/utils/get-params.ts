@@ -12,8 +12,6 @@ import {
   NodeArray,
   isIdentifier,
   BindingElement,
-  ObjectBindingPattern,
-  BindingPattern,
   ArrayBindingElement,
 } from 'typescript';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
