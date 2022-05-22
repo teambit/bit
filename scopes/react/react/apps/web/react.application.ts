@@ -11,6 +11,7 @@ import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
+import { computeResults } from './compute-results';
 
 export class ReactApp implements Application {
   constructor(
@@ -70,8 +71,9 @@ export class ReactApp implements Application {
       html: htmlConfig,
     });
     const bundler = await this.getBundler(context);
-    await bundler.run();
-    return { publicDir: `${this.getPublicDir()}/${this.dir}` };
+    const bundleResult = await bundler.run();
+
+    return computeResults(bundleResult, { publicDir: `${this.getPublicDir()}/${this.dir}` });
   }
 
   private getBundler(context: AppBuildContext) {
