@@ -1,5 +1,5 @@
 import { Parser } from '@teambit/schema';
-import { Export, Module, StaticProperties } from '@teambit/semantics.entities.semantic-schema';
+import { Export, StaticProperties } from '@teambit/semantics.entities.semantic-schema';
 import { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
 import ts, {
@@ -28,19 +28,19 @@ export class TypeScriptParser implements Parser {
       if (isVariableStatement(statement)) {
         const child = (statement as VariableStatement).declarationList.declarations[0];
         const name = (child as any).name.text;
-        return new Export(name, undefined, staticProperties.get(name));
+        return new Export(name, staticProperties.get(name));
       }
 
       if (isFunctionDeclaration(statement)) {
         if (!statement.name) return undefined;
         const name = statement.name.text;
-        return new Export(name, undefined, staticProperties.get(name));
+        return new Export(name, staticProperties.get(name));
       }
 
       if (isClassDeclaration(statement)) {
         if (!statement.name) return undefined;
         const name = statement.name.text;
-        return new Export(name, undefined, staticProperties.get(name));
+        return new Export(name, staticProperties.get(name));
       }
 
       return undefined;
@@ -54,8 +54,7 @@ export class TypeScriptParser implements Parser {
     const ast = ts.createSourceFile(modulePath, readFileSync(modulePath, 'utf8'), ts.ScriptTarget.Latest);
 
     const moduleExports = this.getExports(ast);
-
-    return new Module(moduleExports);
+    return moduleExports;
   }
 
   parseStaticProperties(sourceFile: SourceFile) {

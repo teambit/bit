@@ -1,5 +1,4 @@
 export { Module } from './module';
-export { Export, StaticProperties } from './export';
 export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
 export { VariableSchema } from './variable';

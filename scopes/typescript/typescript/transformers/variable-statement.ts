@@ -27,7 +27,6 @@ export class VariableStatementTransformer implements SchemaTransformer {
       const schema = await context.visitDefinition(dec.name);
       return schema;
     });
-    // @todo: find a better way to return an array of SchemaNode. this is not really a module
-    return new Module(compact(schemas));
+    return new Module(context.getLocation(node), compact(schemas));
   }
 }

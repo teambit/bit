@@ -3,7 +3,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Module, APISchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -44,7 +44,7 @@ export class SchemaMain {
   /**
    * parse a module into a component schema.
    */
-  parseModule(path: string): Module {
+  parseModule(path: string): Export[] {
     const parsers = this.parserSlot.toArray();
     let maybeParser = parsers.find(([, parser]) => {
       const match = path.match(parser.extension);
