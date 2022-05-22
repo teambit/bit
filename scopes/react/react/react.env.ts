@@ -27,6 +27,7 @@ import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -112,6 +113,8 @@ export class ReactEnv
     private eslint: ESLintMain,
 
     private prettier: PrettierMain,
+
+    private dependencyResolver: DependencyResolverMain,
 
     private logger: Logger,
 
@@ -335,11 +338,8 @@ export class ReactEnv
   /**
    * Get the peers configured by the env on the components + the host deps configured by the env
    */
-  getAllHostDependencies() {
-    const envComponentPeers = Object.keys(this.getDependencies().peerDependencies || {}) || [];
-    const additionalHostDeps = this.getAdditionalHostDependencies() || [];
-    const peers = envComponentPeers.concat(additionalHostDeps);
-    return peers;
+  getPeerDependenciesList() {
+    return this.dependencyResolver.getPeerDependenciesListFromEnv(this);
   }
 
   getAdditionalHostDependencies(): string[] {
