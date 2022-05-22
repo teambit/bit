@@ -39,8 +39,9 @@ export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRoo
  * Then we resolve it to specific file, using enhanced resolve to make sure we resolve it using the correct main fields order
  * @param peer
  */
-export function resolvePeerToFile(peer: string, logger: Logger, hostRootDir?: string) {
+export function resolvePeerToFile(peer: string, logger: Logger, hostRootDir?: string): string | undefined {
   const dirOrFile = resolvePeerToDirOrFile(peer, logger, hostRootDir);
+  if (!dirOrFile) return undefined;
   const resolver = createResolver();
   const resolvedFile = resolver.resolveSync({}, '', dirOrFile);
   return resolvedFile;
