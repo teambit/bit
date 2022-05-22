@@ -13,10 +13,10 @@ import { get, set } from 'lodash';
 export function removeExposedReactNative(config: WebpackConfigMutator) {
   if (config?.raw?.module?.rules) {
     config.raw.module.rules = config.raw.module.rules.filter((rule) => {
+      // prettier-ignore
+
       return !(
-        // @ts-ignore
         (
-          rule.loader &&
           // @ts-ignore
           rule.loader?.includes('expose-loader') &&
           // @ts-ignore
