@@ -51,7 +51,6 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
-import { generateAddAliasesFromPeersTransformer, generateExposePeersTransformer } from './webpack/transformers';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -282,15 +281,13 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
@@ -301,17 +298,15 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers];
     return this.createWebpackBundler(context, mergedTransformers);
   }
 
@@ -319,17 +314,14 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers, this.logger);
-    const exposePeersTransformer = generateExposePeersTransformer(peers, this.logger);
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(context.development);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, exposePeersTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers];
     return this.createWebpackBundler(context, mergedTransformers);
   }
 
@@ -351,7 +343,7 @@ export class ReactEnv
   }
 
   getAdditionalHostDependencies(): string[] {
-    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react'];
   }
 
   /**
