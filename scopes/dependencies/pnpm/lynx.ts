@@ -34,6 +34,7 @@ import pkgsGraph from 'pkgs-graph';
 import { readConfig } from './read-config';
 
 const link = promisify(fs.link);
+const installsRunning: Record<string, Promise<any>> = {}
 
 type RegistriesMap = {
   default: string;
@@ -235,7 +236,10 @@ export async function install(
     streamParser,
   });
   try {
-    await mutateModules(packagesToBuild, opts);
+    await installsRunning[rootManifest.rootDir]
+    installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts)
+    await installsRunning[rootManifest.rootDir]
+    delete installsRunning[rootManifest.rootDir]
   } finally {
     stopReporting();
   }

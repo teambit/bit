@@ -103,7 +103,7 @@ export class DependencyInstaller {
       });
     }
 
-    if (!packageManagerOptions.rootComponents) {
+    if (!packageManagerOptions.rootComponents && !packageManagerOptions.keepExistingModulesDir) {
       // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
       //
       // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules

@@ -327,6 +327,7 @@ export class IsolatorMain {
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
       rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
       useNesting: isolateInstallOptions.useNesting,
+      keepExistingModulesDir: this.dependencyResolver.hasRootComponents(),
     };
     await installer.install(
       capsulesDir,
