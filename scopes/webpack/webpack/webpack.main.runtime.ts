@@ -143,7 +143,6 @@ export class WebpackMain {
     const transformers: WebpackConfigTransformer[] = [];
     // TODO: handle dev server
     const hostDeps = target?.hostDependencies || devServerContext?.hostDependencies;
-    console.log('hostDeps', hostDeps);
     if (hostDeps) {
       if (target?.aliasHostDependencies || devServerContext?.aliasHostDependencies) {
         const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(hostDeps, this.logger);
@@ -158,7 +157,6 @@ export class WebpackMain {
         transformers.push(externalsTransformer);
       }
     }
-    console.log('transformers', transformers.length);
     return transformers;
   }
 

@@ -1,4 +1,5 @@
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
+import { get, set } from 'lodash';
 
 const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
@@ -17,14 +18,39 @@ const reactNativePackagesRule = {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function commonTransformation(config: WebpackConfigMutator, _context: WebpackConfigTransformContext) {
-  config
-    .addAliases({
-      react: require.resolve('react'),
-      'react-dom/server': require.resolve('react-dom/server'),
-      'react-native$': require.resolve('react-native-web'),
-    })
-    .addModuleRule(reactNativePackagesRule);
+  reactNativeAlias(config);
+  reactNativeExternal(config);
+  config.addModuleRule(reactNativePackagesRule);
 
+  return config;
+}
+
+/**
+ * expect the react-native to be on the global object with the same name of react-native-web
+ * @param config
+ * @returns
+ */
+function reactNativeExternal(config: WebpackConfigMutator) {
+  const reactNativeExternalVal = get(config.raw, 'externals.react-native');
+  const reactNativeWebExternalVal = get(config.raw, 'externals.react-native-web');
+  if (config?.raw?.externals && reactNativeExternalVal && reactNativeWebExternalVal) {
+    set(config.raw, 'externals.react-native', reactNativeWebExternalVal);
+  }
+  return config;
+}
+
+/**
+ * set the alias of react-native$ to point to the react-native-web
+ * @param config
+ * @returns
+ */
+function reactNativeAlias(config: WebpackConfigMutator) {
+  const reactNativeWebPath = get(config.raw, 'resolve.alias.react-native-web', require.resolve('react-native-web'));
+  const newAliases = {
+    'react-native$': reactNativeWebPath,
+  };
+  config.removeAliases(['react-native']);
+  config.addAliases(newAliases);
   return config;
 }
 

@@ -19,7 +19,6 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
       acc[peerName] = resolvePeerToDirOrFile(peerName, logger, context.target?.hostRootDir);
       return acc;
     }, {});
-    console.log('peerAliases', peerAliases);
 
     config.addAliases(peerAliases);
     return config;
@@ -34,7 +33,6 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
 export function generateExposePeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
     const exposedRules = getExposedRules(peers, logger, context.target?.hostRootDir);
-    console.log('exposedRules', exposedRules);
     config.addModuleRules(exposedRules);
     return config;
   };
@@ -48,7 +46,6 @@ export function generateExposePeersTransformer(peers: string[], logger: Logger) 
 export function generateExternalsTransformer(depes: string[]) {
   return (config: WebpackConfigMutator): WebpackConfigMutator => {
     const externals = getExternals(depes);
-    console.log('externals', externals);
     config.addExternals(externals);
     return config;
   };

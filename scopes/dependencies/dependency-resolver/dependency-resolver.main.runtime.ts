@@ -871,8 +871,7 @@ export class DependencyResolverMain {
    * This will merge different peers list like:
    * 1. peerDependencies from the getDependencies
    * 2. peers from getDependencies
-   * 3. getHostDependencies
-   * 4. getAdditionalHostDependencies
+   * 3. getAdditionalHostDependencies
    * @param env
    */
   async getPeerDependenciesListFromEnv(env: DependenciesEnv): Promise<string[]> {
