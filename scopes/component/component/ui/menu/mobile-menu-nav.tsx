@@ -70,7 +70,6 @@ function Placeholder({ slots, ...rest }: PlaceholderProps) {
             key={id}
             path={menuItem?.props?.href}
             element={
-              // TODO
               typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName
             }
           />
