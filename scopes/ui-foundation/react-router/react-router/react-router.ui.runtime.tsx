@@ -38,7 +38,7 @@ export class ReactRouterUI {
 
   private unregisterListener?: UnregisterCallback = undefined;
   /** (internal method) sets the routing engine for navigation methods */
-  setRouter = (routerHistory: History) => {
+  setRouter = (/* routerHistory: History */) => {
     // this.routerHistory = routerHistory;
 
     this.unregisterListener?.();
