@@ -125,8 +125,7 @@ export class CompositionsMain {
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
-    const exports = module.getExportSchemas();
+    const exports = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
     return exports.map((exportModel) => {
       const displayName = exportModel.staticProperties?.get('compositionName');
 
