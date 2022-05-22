@@ -21,7 +21,7 @@ import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
-import { ConsumeMethodSlot, ConsumePlugin, Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import { ConsumeMethodSlot, ConsumePlugin, ComponentMenu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
@@ -34,10 +34,7 @@ export type ComponentMeta = {
   id: string;
 };
 
-export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-
 export class ComponentUI {
-  // readonly routePath = `/:componentId(${componentIdUrlRegex})`;
   readonly routePath = `/*`;
   private componentSearcher: ComponentSearcher;
 
@@ -181,7 +178,7 @@ export class ComponentUI {
 
   getMenu(host: string) {
     return (
-      <Menu
+      <ComponentMenu
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
         widgetSlot={this.widgetSlot}
@@ -272,15 +269,16 @@ export class ComponentUI {
       commandBarUI,
       reactRouterUI
     );
-    const section = new AspectSection();
+    const aspectSection = new AspectSection();
 
+    // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute(section.route);
-    componentUI.registerWidget(section.navigationLink, section.order);
+    componentUI.registerRoute(aspectSection.route);
+    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

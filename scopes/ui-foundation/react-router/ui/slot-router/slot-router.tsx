@@ -16,6 +16,7 @@ export type SlotRouterProps = PropsWithChildren<{
 export function SlotRouter({ slot, rootRoutes, children, parentPath }: SlotRouterProps) {
   const routes = flatten(slot.values());
   const withRoot = routes.concat(rootRoutes || []);
+
   const jsxRoutes = withRoot.map((route) => <Route key={route.path} {...route} />);
 
   if (parentPath) {

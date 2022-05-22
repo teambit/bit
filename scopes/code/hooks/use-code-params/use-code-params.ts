@@ -13,5 +13,7 @@ export function useCodeParams(): CodeRouteParams {
   const query = useQuery();
   const version = query.get('version') || undefined;
   const codeRouteParams = useParams<CodeRouteParams>();
-  return { ...codeRouteParams, version };
+  const file = codeRouteParams['*'];
+
+  return { version, file };
 }

@@ -41,7 +41,14 @@ export type MenuProps = {
 /**
  * top bar menu.
  */
-export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot, consumeMethodSlot }: MenuProps) {
+export function ComponentMenu({
+  navigationSlot,
+  widgetSlot,
+  className,
+  host,
+  menuItemSlot,
+  consumeMethodSlot,
+}: MenuProps) {
   const componentId = useIdFromLocation();
   const { component } = useComponent(host, componentId);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
