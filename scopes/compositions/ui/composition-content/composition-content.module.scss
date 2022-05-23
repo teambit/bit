@@ -1,0 +1,19 @@
+.noCompositionsPage {
+  padding: 50px 40px 100px 40px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 1440px;
+  margin: 0 auto;
+
+  .title {
+    margin-bottom: 24px;
+    font-size: var(--bit-h-xs, 26px);
+  }
+  .separator {
+    margin-bottom: 41px;
+  }
+}
+
+.buildStatusMessage {
+  margin: auto;
+}
