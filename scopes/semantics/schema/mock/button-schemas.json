@@ -378,59 +378,10 @@
               "line": 10,
               "character": 14
             },
-            "name": "ButtonWithAlert",
-            "signature": "const ButtonWithAlert: (a: any, b: () => {}) => any",
+            "name": "ButtonWithCustomStyles",
+            "signature": "const ButtonWithCustomStyles: () => any",
             "modifiers": [],
-            "params": [
-              {
-                "__schema": "ParameterSchema",
-                "location": {
-                  "file": "button.composition.tsx",
-                  "line": 10,
-                  "character": 33
-                },
-                "name": "a",
-                "type": {
-                  "__schema": "TypeRefSchema",
-                  "location": {
-                    "file": "button.composition.tsx",
-                    "line": 10,
-                    "character": 33
-                  },
-                  "name": "any"
-                }
-              },
-              {
-                "__schema": "ParameterSchema",
-                "location": {
-                  "file": "button.composition.tsx",
-                  "line": 10,
-                  "character": 36
-                },
-                "name": "b",
-                "type": {
-                  "__schema": "FunctionLikeSchema",
-                  "location": {
-                    "file": "button.composition.tsx",
-                    "line": 10,
-                    "character": 39
-                  },
-                  "name": "",
-                  "signature": "",
-                  "modifiers": [],
-                  "params": [],
-                  "returnType": {
-                    "__schema": "TypeLiteralSchema",
-                    "location": {
-                      "file": "button.composition.tsx",
-                      "line": 10,
-                      "character": 45
-                    },
-                    "members": []
-                  }
-                }
-              }
-            ],
+            "params": [],
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
@@ -448,8 +399,8 @@
               "line": 14,
               "character": 14
             },
-            "name": "ButtonWithCustomStyles",
-            "signature": "const ButtonWithCustomStyles: () => any",
+            "name": "ButtonWithIcon",
+            "signature": "const ButtonWithIcon: () => any",
             "modifiers": [],
             "params": [],
             "returnType": {
@@ -466,28 +417,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 18,
-              "character": 14
-            },
-            "name": "ButtonWithIcon",
-            "signature": "const ButtonWithIcon: () => any",
-            "modifiers": [],
-            "params": [],
-            "returnType": {
-              "__schema": "InferenceTypeSchema",
-              "location": {
-                "file": "button.composition.tsx",
-                "line": 18,
-                "character": 14
-              },
-              "type": "any"
-            }
-          },
-          {
-            "__schema": "FunctionLikeSchema",
-            "location": {
-              "file": "button.composition.tsx",
-              "line": 27,
+              "line": 23,
               "character": 14
             },
             "name": "ButtonAsALink",
@@ -498,7 +428,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.composition.tsx",
-                "line": 27,
+                "line": 23,
                 "character": 14
               },
               "type": "any"
