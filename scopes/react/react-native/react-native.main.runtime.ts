@@ -6,6 +6,7 @@ import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
+import AspectAspect, { AspectMain } from '@teambit/aspect';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';
@@ -109,16 +110,16 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
-  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect];
+  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect, AspectAspect];
   static runtime = MainRuntime;
-  static async provider([react, envs, generator]: [ReactMain, EnvsMain, GeneratorMain]) {
+  static async provider([react, envs, generator, aspect]: [ReactMain, EnvsMain, GeneratorMain, AspectMain]) {
     const webpackModifiers: UseWebpackModifiers = {
       previewConfig: [previewConfigTransformer],
       devServerConfig: [devServerConfigTransformer],
     };
 
     const reactNativeComposedEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
-      new ReactNativeEnv(react),
+      new ReactNativeEnv(react, aspect),
       react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
     );
     envs.registerEnv(reactNativeComposedEnv);
