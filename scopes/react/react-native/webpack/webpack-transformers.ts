@@ -1,5 +1,6 @@
-import { realpathSync } from 'fs';
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
+import { get, set } from 'lodash';
+import { reactNativeAlias } from './react-native-alias';
 
 const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
@@ -18,22 +19,24 @@ const reactNativePackagesRule = {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function commonTransformation(config: WebpackConfigMutator, _context: WebpackConfigTransformContext) {
-  const hostRootDir = _context.target?.hostRootDir || _context.hostRootDir;
-  let options;
-  if (hostRootDir) {
-    options = {
-      // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
-      paths: [realpathSync(hostRootDir), __dirname],
-    };
+  reactNativeAlias(config);
+  reactNativeExternal(config);
+  config.addModuleRule(reactNativePackagesRule);
+
+  return config;
+}
+
+/**
+ * expect the react-native to be on the global object with the same name of react-native-web
+ * @param config
+ * @returns
+ */
+function reactNativeExternal(config: WebpackConfigMutator) {
+  const reactNativeExternalVal = get(config.raw, 'externals.react-native');
+  const reactNativeWebExternalVal = get(config.raw, 'externals.react-native-web');
+  if (config?.raw?.externals && reactNativeExternalVal && reactNativeWebExternalVal) {
+    set(config.raw, 'externals.react-native', reactNativeWebExternalVal);
   }
-  const peerAliases = {
-    react: require.resolve('react', options),
-    'react-dom/server': require.resolve('react-dom/server', options),
-    'react-native$': require.resolve('react-native-web', options),
-  };
-
-  config.addAliases(peerAliases).addModuleRule(reactNativePackagesRule);
-
   return config;
 }
 

@@ -404,6 +404,20 @@ An example of the `"overrides"` field:
 
 You may specify the package the overriden dependency belongs to by separating the package selector from the dependency selector with a `">"`, for example `qar@1>zoo` will only override the `zoo` dependency of `qar@1`, not for any other dependencies.
 
+## Side-Effects cache
+
+By default, when pnpm is set as the package manager, build artifacts are cached. So when installing a package with pre/postinstall hooks, it is only built the first time it is installed on a computer.
+
+Side-effects cache can be turned off by setting the `sideEffectsCache` field to `false`:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "sideEffectsCache": false
+  }
+}
+```
+
 ## CLI reference
 
 ### install

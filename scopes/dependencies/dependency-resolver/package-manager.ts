@@ -38,7 +38,9 @@ export type PackageManagerInstallOptions = {
 
   useNesting?: boolean;
 
-  keepExistingModulesDir?: boolean
+  keepExistingModulesDir?: boolean;
+
+  sideEffectsCache?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

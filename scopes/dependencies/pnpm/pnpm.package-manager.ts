@@ -136,6 +136,8 @@ export class PnpmPackageManager implements PackageManager {
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
+        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
       },
       this.logger
     );
