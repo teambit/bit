@@ -74,6 +74,7 @@ export class ExpressMain {
         namespace: ExpressAspect.id,
         method: 'get',
         path: '/_health',
+        disableNamespace: false,
         middlewares: [async (req: Request, res: Response) => res.send('ok')],
       },
     ];
