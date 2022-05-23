@@ -11,13 +11,15 @@ import { Logger } from '@teambit/logger';
 export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
   let resolved;
   try {
-    let options;
+    const options = {
+      // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
+      paths: [process.cwd(), __dirname],
+    };
     if (hostRootDir) {
-      options = {
-        // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
-        paths: [realpathSync(hostRootDir), __dirname],
-      };
+      // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
+      options.paths.unshift(realpathSync(hostRootDir));
     }
+
     resolved = require.resolve(peerName, options);
     const folder = findRoot(resolved);
     return folder;
@@ -37,8 +39,9 @@ export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRoo
  * Then we resolve it to specific file, using enhanced resolve to make sure we resolve it using the correct main fields order
  * @param peer
  */
-export function resolvePeerToFile(peer: string, logger: Logger, hostRootDir?: string) {
+export function resolvePeerToFile(peer: string, logger: Logger, hostRootDir?: string): string | undefined {
   const dirOrFile = resolvePeerToDirOrFile(peer, logger, hostRootDir);
+  if (!dirOrFile) return undefined;
   const resolver = createResolver();
   const resolvedFile = resolver.resolveSync({}, '', dirOrFile);
   return resolvedFile;

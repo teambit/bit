@@ -74,6 +74,7 @@ export class ExpressMain {
         namespace: ExpressAspect.id,
         method: 'get',
         path: '/_health',
+        disableNamespace: false,
         middlewares: [async (req: Request, res: Response) => res.send('ok')],
       },
     ];
@@ -97,9 +98,10 @@ export class ExpressMain {
         middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
       );
     allRoutes.forEach((routeInfo) => {
-      const { method, path, middlewares } = routeInfo;
+      const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
-      app[method](`/${this.config.namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
+      const namespace = disableNamespace ? '' : `/${this.config.namespace}`;
+      app[method](`${namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
     });
 
     return app;
@@ -113,6 +115,7 @@ export class ExpressMain {
         return {
           method: lowerCase(route.method),
           path: route.route,
+          disableNamespace: route.disableNamespace,
           middlewares,
         };
       });
