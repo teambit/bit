@@ -1,5 +1,6 @@
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
 import { get, set } from 'lodash';
+import { reactNativeAlias } from './react-native-alias';
 
 const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
@@ -36,21 +37,6 @@ function reactNativeExternal(config: WebpackConfigMutator) {
   if (config?.raw?.externals && reactNativeExternalVal && reactNativeWebExternalVal) {
     set(config.raw, 'externals.react-native', reactNativeWebExternalVal);
   }
-  return config;
-}
-
-/**
- * set the alias of react-native$ to point to the react-native-web
- * @param config
- * @returns
- */
-function reactNativeAlias(config: WebpackConfigMutator) {
-  const reactNativeWebPath = get(config.raw, 'resolve.alias.react-native-web', require.resolve('react-native-web'));
-  const newAliases = {
-    'react-native$': reactNativeWebPath,
-  };
-  config.removeAliases(['react-native']);
-  config.addAliases(newAliases);
   return config;
 }
 

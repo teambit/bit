@@ -4,6 +4,7 @@ import { Environment, DependenciesEnv, PreviewEnv } from '@teambit/envs';
 import type { ReactMain } from '@teambit/react';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { uniq } from 'lodash';
+import { reactNativeAlias } from './webpack/react-native-alias';
 
 import { removeExposedReactNative, removeReactNativePeerEntry } from './webpack/webpack-template-transformers';
 
@@ -30,6 +31,7 @@ export class ReactNativeEnv implements Environment, DependenciesEnv, PreviewEnv 
     return this.aspect.aspectEnv.createTemplateWebpackBundler(context, [
       removeExposedReactNative,
       removeReactNativePeerEntry,
+      reactNativeAlias,
       ...transformers,
     ]);
   }
