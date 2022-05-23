@@ -1,0 +1,80 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+$panelBg: #fafafa;
+
+.compositionsPage {
+  height: 100%;
+  width: 100%;
+}
+
+.compositionPreview {
+  padding-top: 20px;
+  width: 100%;
+}
+
+.left {
+  min-width: 200px;
+
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+}
+
+.right {
+  background: $panelBg;
+  overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+}
+
+.menuBar {
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}
+
+.splitter {
+  position: relative;
+
+  > :first-child {
+    z-index: $nav-z-index + 1;
+    position: absolute;
+  }
+}
+
+.collapser {
+  right: 0;
+}
+
+.tabsContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabs {
+  flex: none;
+}
+
+.tabContent {
+  flex: 1 1;
+  overflow: auto;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.compositions {
+  padding: 16px 8px 0 8px;
+}
+
+.openInNewTab {
+  text-decoration: none;
+  color: inherit;
+
+  &:active {
+    color: inherit;
+  }
+}

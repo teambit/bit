@@ -3,7 +3,7 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 
 import { Composition } from '../composition';
 
-interface ComponentCompositionProps extends ComponentPreviewProps {
+export interface ComponentCompositionProps extends ComponentPreviewProps {
   /**
    * composition to use for component rendering.
    */
