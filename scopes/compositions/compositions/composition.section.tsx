@@ -1,6 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { Compositions } from './compositions';
+import { CompositionsViewer, CompositionSlots } from '@teambit/compositions.ui.compositions-viewer';
 import type { CompositionsUI, CompositionsMenuSlot, EmptyStateSlot } from './compositions.ui.runtime';
 
 type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
@@ -20,9 +20,13 @@ export class CompositionsSection implements Section {
     children: 'Compositions',
   };
 
+  private slots: CompositionSlots = {
+    menuItems: this.options.menuBarWidgetSlot
+  }
+
   route = {
     path: '~compositions',
-    children: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
+    children: <CompositionsViewer slots={this.slots} emptyState={this.emptyStateSlot} />,
   };
 
   order = 20;
