@@ -5,8 +5,9 @@ import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { resolve, sep, relative } from 'path';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
+import { ComponentDependency } from '@teambit/dependency-resolver';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
 import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
@@ -17,7 +18,8 @@ export class SchemaExtractorContext {
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
-    readonly extractor: TypeScriptExtractor
+    readonly extractor: TypeScriptExtractor,
+    readonly componentDeps: ComponentDependency[]
   ) {}
 
   computeSchema(node: Node) {
@@ -303,8 +305,19 @@ export class SchemaExtractorContext {
       const schemaNode = await this.jump(file, definition.start);
       return schemaNode || unknownExactType();
     }
+    const compIdByPath = await this.extractor.getComponentIDByPath(definition.file);
+    if (compIdByPath) {
+      return new TypeRefSchema(location, typeStr, compIdByPath);
+    }
     const pkgName = this.parsePackageNameFromPath(definition.file);
-    // TODO: find component id is exists, otherwise add the package name.
+    const compIdByPkg = this.getCompIdByPkgName(pkgName);
+    if (compIdByPkg) {
+      return new TypeRefSchema(location, typeStr, compIdByPkg);
+    }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
+  }
+
+  private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
+    return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
   }
 }

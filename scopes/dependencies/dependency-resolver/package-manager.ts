@@ -31,6 +31,8 @@ export type PackageManagerInstallOptions = {
   packageManagerConfigRootDir?: string;
 
   packageImportMethod?: PackageImportMethod;
+
+  sideEffectsCache?: boolean
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

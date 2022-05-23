@@ -40,6 +40,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return this._policiesEntries;
   }
 
+  get names(): string[] {
+    return this.entries.map((e) => e.dependencyId);
+  }
+
   get length(): number {
     return this.entries.length;
   }
@@ -56,6 +60,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   filter(predicate: (dep: VariantPolicyEntry, index?: number) => boolean): VariantPolicy {
     const filtered = this.entries.filter(predicate);
     return new VariantPolicy(filtered);
+  }
+
+  byLifecycleType(lifecycleType?: DependencyLifecycleType): VariantPolicy {
+    return this.filter((entry) => entry.lifecycleType === lifecycleType);
   }
 
   /**
