@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import { ComponentType } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
+import { MenuBarWidget } from '@teambit/compositions.ui.compositions-viewer';
 import { UIRuntime } from '@teambit/ui';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
-import { MenuBarWidget } from './compositions';
 
 export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
