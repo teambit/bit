@@ -17,7 +17,7 @@ export function SlotRouter({ slot, rootRoutes, children, parentPath }: SlotRoute
   const routes = flatten(slot.values());
   const withRoot = routes.concat(rootRoutes || []);
 
-  const jsxRoutes = withRoot.map((route) => <Route key={route.path} {...route} />);
+  const jsxRoutes = withRoot.map((route) => <Route key={toKey(route)} {...route} />);
 
   if (parentPath) {
     return (
@@ -38,4 +38,10 @@ export function SlotRouter({ slot, rootRoutes, children, parentPath }: SlotRoute
       </Route>
     </Routes>
   );
+}
+
+function toKey(route: RouteProps) {
+  if (route.path) return route.path;
+  if (route.index) return '/';
+  return '.';
 }
