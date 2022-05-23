@@ -1104,6 +1104,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
+    "ui/composition-content": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/composition-content"
+    },
+    "ui/compositions-viewer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/compositions-viewer"
+    },
     "ui/compositions-menu-bar": {
         "scope": "teambit.compositions",
         "version": "0.0.163",
