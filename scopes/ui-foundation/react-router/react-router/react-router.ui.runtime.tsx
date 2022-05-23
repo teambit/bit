@@ -1,16 +1,17 @@
-import React, { ReactNode, useEffect } from 'react';
-import { RouteProps, useNavigate, NavigateFunction } from 'react-router-dom';
-import { History, UnregisterCallback, LocationListener, Action, LocationDescriptor } from 'history';
+import React, { ReactNode } from 'react';
+import { NavigateFunction } from 'react-router-dom';
+import type { Location, NavigationType, RouteProps } from 'react-router-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RenderPlugins, UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import { useLocation, Navigator } from '@teambit/base-react.navigation.link';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
 import { Routing } from './routing-method';
+import { LocationHooks } from './LocationHooks';
 
+export type LocationListener = (location: Location, action: NavigationType) => void;
 type RouteChangeSlot = SlotRegistry<LocationListener>;
 type RenderContext = { initialLocation?: string };
 
@@ -35,17 +36,6 @@ export class ReactRouterUI {
   renderRoutes(routes: RouteProps[]) {
     return <RootRoute routeSlot={this.routeSlot} rootRoutes={routes} />;
   }
-
-  private unregisterListener?: UnregisterCallback = undefined;
-  /** (internal method) sets the routing engine for navigation methods */
-  setRouter = (/* routerHistory: History */) => {
-    // this.routerHistory = routerHistory;
-
-    this.unregisterListener?.();
-    this.unregisterListener = routerHistory.listen((...args) => {
-      this.routeChangeListener.values().forEach((listener) => listener(...args));
-    });
-  };
 
   /** decides how navigation is stored and applied.
    * Url - updates the `window.location.pathname`.
@@ -73,9 +63,9 @@ export class ReactRouterUI {
    */
   navigateTo = (
     /** destination */
-    path: LocationDescriptor,
+    path: Location,
     /** history action to execute (pop / push / replace) */
-    action?: Action
+    action?: NavigationType
   ) => {
     const state = typeof path !== 'string' ? path.state : undefined;
 
@@ -83,42 +73,29 @@ export class ReactRouterUI {
       case 'POP':
         return; // TBD;
       case 'REPLACE':
-        // TODO
         this.navigate?.(path, { replace: true, state });
-        // this.routerHistory?.replace(path);
         return;
       case 'PUSH':
       default:
         this.navigate?.(path, { state });
-      // this.routerHistory?.push(path);
     }
   };
 
   private navigate?: NavigateFunction = undefined;
-  private LocationHooks() {
-    const location = useLocation();
-    const navigate = useNavigate();
 
-    useEffect(() => {
-      this.routeChangeListener.values().forEach((listener) =>
-        // TODO!
-        // @ts-ignore
-        listener(location, 'PUSH')
-      );
-    }, [location]);
-
-    useEffect(() => {
-      this.navigate = navigate;
-    }, [navigate]);
-
-    return null;
-  }
+  private handleLocationChange = (location: Location, action: NavigationType) => {
+    const listeners = this.routeChangeListener.values();
+    listeners.forEach((listener) => listener(location, action));
+  };
 
   private AppRoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
     return (
       <RouteContext reactRouterUi={this} routing={this.routingMode} location={renderCtx?.initialLocation}>
         {children}
-        <this.LocationHooks />
+        <LocationHooks
+          onLocationChange={this.handleLocationChange}
+          onNavigatorChange={(nav) => (this.navigate = nav)}
+        />
       </RouteContext>
     );
   };

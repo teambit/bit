@@ -8,8 +8,6 @@ import { ReactRouterUI } from './react-router.ui.runtime';
 import { Routing } from './routing-method';
 import { LegacyNavProvider } from './legacy-routing';
 
-// export type History = ReturnType<typeof useHistory>;
-
 type RouterContextProps = {
   reactRouterUi: ReactRouterUI;
   routing?: Routing;
@@ -27,11 +25,7 @@ type RootRouteProps = {
  */
 export function RouteContext({ routing = Routing.url, children, location }: RouterContextProps) {
   return (
-    // {/* set up the virtual router (browser, inMemory, etc) */}
     <Router type={routing} location={location}>
-      {/* injects History object back to reactRouterUi */}
-      {/* <HistoryGetter onRouterChange={reactRouterUi.setRouter} /> */}
-      {/* injects react-router Link into context  */}
       <NavigationProvider implementation={reactRouterAdapter}>
         <LegacyNavProvider>
           {/* route tree root: */}
@@ -66,16 +60,3 @@ function Router({ type, children, location }: { type: Routing; children: ReactNo
       return <BrowserRouter>{children}</BrowserRouter>;
   }
 }
-
-// /**
-//  * Calls onRouterChange when routing History object changes.
-//  * Used to inject history back into reactRouterUi
-//  * (needs to be rendered inside of <BrowserRouter/>)
-//  */
-// function HistoryGetter({ onRouterChange }: { onRouterChange: (routerHistory: History) => void }) {
-//   // TODO
-//   // const history = useHistory();
-//   // useEffect(() => onRouterChange(history), [history]);
-
-//   return null;
-// }
