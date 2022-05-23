@@ -220,6 +220,11 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the way packages are imported from the store.
    */
   packageImportMethod?: PackageImportMethod;
+
+  /*
+   * Use and cache the results of (pre/post)install hooks.
+   */
+  sideEffectsCache?: boolean
 }
 
 export interface DependencyResolverVariantConfig {
