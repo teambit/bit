@@ -9,6 +9,9 @@ const reactNativePackagesRule = {
   options: {
     cacheDirectory: false,
     presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+    plugins: [
+      "@babel/plugin-proposal-class-properties"
+    ]
   },
 };
 
