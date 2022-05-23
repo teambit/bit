@@ -36,7 +36,7 @@ export class ReactApp implements Application {
       await this.devServer.listen(port);
       return port;
     }
-    const devServerContext = this.getDevServerContext(context);
+    const devServerContext = await this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) =>
         configMutator.addTopLevel('devServer', {
@@ -95,6 +95,8 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
         },
       ],
       entry: [],
@@ -179,13 +181,19 @@ export class ReactApp implements Application {
     return join(this.applicationType, this.name);
   }
 
-  private getDevServerContext(context: AppContext): DevServerContext {
+  private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
     return Object.assign(context, {
       entry: this.entry,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
+      hostDependencies: await this.getPeers(),
+      aliasHostDependencies: true,
     });
+  }
+
+  private getPeers(): Promise<string[]> {
+    return this.reactEnv.getPeerDependenciesList();
   }
 }

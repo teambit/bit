@@ -67,26 +67,8 @@ export interface DependenciesEnv extends Environment {
    * Returns a list of additional host dependencies
    * this list will be provided as globals on the window after bit preview bundle
    * by default bit will merge this list with the peers from the getDependencies function
-   * If you want full control use the getHostDependencies function
    */
   getAdditionalHostDependencies?: () => string[] | Promise<string[]>;
-
-  /**
-   * Returns a list of host dependencies
-   * this list will be provided as globals on the window after bit preview bundle
-   * If this is provided, bit won't merge getAdditionalHostDependencies and the peers from getDependencies
-   * but give you full control over the list
-   *
-   * The reason we provided both options is the following:
-   * in most cases when you override the deps from you env, you want bit to take your peers
-   * however, if we only provide the getHostDependencies, during the env composition, you will get the peers of the
-   * original env. which doesn't contain your peers.
-   * In that case you might think that we only need the first option of getAdditionalHostDependencies + getDependencies peers
-   * but there are cases when you want a peer to your component, but you don't want it as part of the bundle.
-   * such an example is react-native env which adds react-native as peer, but you don't want it in the bundle as it's not web compatible
-   * so you want full control over it
-   */
-  getHostDependencies?: () => string[] | Promise<string[]>;
 }
 
 export type GetNpmIgnoreContext = {

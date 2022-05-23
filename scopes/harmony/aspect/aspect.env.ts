@@ -1,5 +1,5 @@
 import { Compiler } from '@teambit/compiler';
-import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext } from '@teambit/envs';
+import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext, PreviewEnv } from '@teambit/envs';
 import { merge } from 'lodash';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
@@ -17,7 +17,7 @@ export const AspectEnvType = 'aspect';
 /**
  * a component environment built for Aspects .
  */
-export class AspectEnv implements DependenciesEnv, PackageEnv {
+export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
   constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
@@ -48,6 +48,13 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    return this.createTemplateWebpackBundler(context, transformers);
+  }
+
+  async createTemplateWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
     return this.reactEnv.createTemplateWebpackBundler(context, transformers);
   }
 
