@@ -15,5 +15,8 @@
   },
   "exclude": [
     "dist"
+  ],
+  "include": [
+    "**/*.json"
   ]
 }
