@@ -24,7 +24,7 @@ describe('SchemaAspect', function () {
       // eslint-disable-next-line no-console
       console.log('workspace created at ', workspacePath);
       const compDir = path.join(workspacePath, 'button');
-      const src = path.join(__dirname, 'mock', 'button');
+      const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
       await workspace.track({ rootDir: compDir });
@@ -36,7 +36,7 @@ describe('SchemaAspect', function () {
     });
     it('should be able to generate JSON object with all schemas', async () => {
       const results = apiSchema.toObject();
-      const expectedJsonPath = path.join(__dirname, 'mock', 'button-schemas.json');
+      const expectedJsonPath = path.join(getMockDir(), 'button-schemas.json');
       // uncomment the next line temporarily to sync the expected json with new schema changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(results, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
@@ -46,7 +46,7 @@ describe('SchemaAspect', function () {
   });
   describe('getSchemaFromObject', () => {
     it('should be able to deserialize an JSON object to SchemaNode instances', () => {
-      const jsonPath = path.join(__dirname, 'mock', 'button-schemas.json');
+      const jsonPath = path.join(getMockDir(), 'button-schemas.json');
       const json = fs.readJsonSync(jsonPath);
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).toBeTruthy();
@@ -55,3 +55,13 @@ describe('SchemaAspect', function () {
     });
   });
 });
+
+function getCurrentDir() {
+  const currentDir = __dirname;
+  if (currentDir.endsWith(`${path.sep}dist`)) return currentDir.slice(0, -5);
+  return currentDir;
+}
+
+function getMockDir() {
+  return path.join(getCurrentDir(), 'mock');
+}

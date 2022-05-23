@@ -74,3 +74,38 @@ class Bar {
 export const getBar = (bar: Bar) => new Bar();
 
 export const tuple = ([a, b, c]: [string, Function, Record<string, any>]) => {};
+
+export enum Food {
+  Falafel,
+  Hummus,
+  Tahini,
+}
+
+export async function getPromise(): Promise<string> {
+  return 'promise';
+}
+
+class T1 {}
+class T2 {}
+class T3<T, K> {}
+export type TypeRefWithArgs = T3<T1, T2>;
+
+export type ParenthesizedType = (T1 | T2)[];
+
+export function typePredicateFn(str: any): str is string {
+  return str;
+}
+
+export function typePredicateNoTypeFn(condition: any, msg?: string): asserts condition {}
+
+export async function objectBindingElements({ prop = 1 }) {
+  return prop;
+}
+export async function arrayBindingElements([prop]: [string]) {
+  return prop;
+}
+
+interface config {
+  someField: { a: string; b: boolean };
+}
+export type IndexedAccessType = config['someField'];

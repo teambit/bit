@@ -36,13 +36,13 @@
             "name": "a",
             "defaultValue": "4",
             "type": {
-              "__schema": "TypeRefSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "index.ts",
                 "line": 13,
                 "character": 24
               },
-              "name": "number"
+              "type": "number"
             }
           },
           {
@@ -55,13 +55,13 @@
             "name": "b",
             "defaultValue": "5",
             "type": {
-              "__schema": "TypeRefSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "index.ts",
                 "line": 13,
                 "character": 31
               },
-              "name": "number"
+              "type": "number"
             }
           }
         ],
@@ -856,7 +856,7 @@
               "line": 76,
               "character": 23
             },
-            "name": "[a, b, c]",
+            "name": "[ a, b, c ]",
             "type": {
               "__schema": "TupleTypeSchema",
               "location": {
@@ -891,7 +891,27 @@
                     "character": 53
                   },
                   "name": "Record",
-                  "packageName": ""
+                  "packageName": "",
+                  "typeArgs": [
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "file": "index.ts",
+                        "line": 76,
+                        "character": 60
+                      },
+                      "name": "string"
+                    },
+                    {
+                      "__schema": "KeywordTypeSchema",
+                      "location": {
+                        "file": "index.ts",
+                        "line": 76,
+                        "character": 68
+                      },
+                      "name": "any"
+                    }
+                  ]
                 }
               ]
             }
@@ -905,6 +925,385 @@
             "character": 14
           },
           "type": "void"
+        }
+      },
+      {
+        "__schema": "EnumSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 78,
+          "character": 1
+        },
+        "name": "Food",
+        "members": [
+          "Falafel",
+          "Hummus",
+          "Tahini"
+        ]
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 84,
+          "character": 1
+        },
+        "name": "getPromise",
+        "signature": "function getPromise(): Promise<string>",
+        "modifiers": [
+          "export",
+          "async"
+        ],
+        "params": [],
+        "returnType": {
+          "__schema": "TypeRefSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 84,
+            "character": 37
+          },
+          "name": "Promise",
+          "packageName": "",
+          "typeArgs": [
+            {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 84,
+                "character": 45
+              },
+              "name": "string"
+            }
+          ]
+        }
+      },
+      {
+        "__schema": "TypeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 89,
+          "character": 1
+        },
+        "name": "TypeRefWithArgs",
+        "signature": "type TypeRefWithArgs = T3<T1, T2>",
+        "type": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 89,
+            "character": 31
+          },
+          "type": "class T3<T, K>"
+        }
+      },
+      {
+        "__schema": "TypeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 91,
+          "character": 1
+        },
+        "name": "ParenthesizedType",
+        "signature": "type ParenthesizedType = (T1 | T2)[]",
+        "type": {
+          "__schema": "TypeArraySchema",
+          "location": {
+            "file": "index.ts",
+            "line": 91,
+            "character": 33
+          },
+          "type": {
+            "__schema": "ParenthesizedTypeSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 91,
+              "character": 33
+            },
+            "type": {
+              "__schema": "TypeUnionSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 91,
+                "character": 34
+              },
+              "types": [
+                {
+                  "__schema": "InferenceTypeSchema",
+                  "location": {
+                    "file": "index.ts",
+                    "line": 91,
+                    "character": 34
+                  },
+                  "type": "class T1"
+                },
+                {
+                  "__schema": "InferenceTypeSchema",
+                  "location": {
+                    "file": "index.ts",
+                    "line": 91,
+                    "character": 39
+                  },
+                  "type": "class T2"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 93,
+          "character": 1
+        },
+        "name": "typePredicateFn",
+        "signature": "function typePredicateFn(str: any): str is string",
+        "modifiers": [
+          "export"
+        ],
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 93,
+              "character": 33
+            },
+            "name": "str",
+            "type": {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 93,
+                "character": 38
+              },
+              "name": "any"
+            }
+          }
+        ],
+        "returnType": {
+          "__schema": "TypePredicateSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 93,
+            "character": 44
+          },
+          "parameterName": "str",
+          "hasAssertsModifier": false,
+          "type": {
+            "__schema": "KeywordTypeSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 93,
+              "character": 51
+            },
+            "name": "string"
+          }
+        }
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 95,
+          "character": 1
+        },
+        "name": "typePredicateNoTypeFn",
+        "signature": "function typePredicateNoTypeFn(condition: any, msg?: string): asserts condition",
+        "modifiers": [
+          "export"
+        ],
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 95,
+              "character": 39
+            },
+            "name": "condition",
+            "type": {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 95,
+                "character": 50
+              },
+              "name": "any"
+            }
+          },
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 95,
+              "character": 55
+            },
+            "name": "msg",
+            "type": {
+              "__schema": "KeywordTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 95,
+                "character": 61
+              },
+              "name": "string"
+            }
+          }
+        ],
+        "returnType": {
+          "__schema": "TypePredicateSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 95,
+            "character": 70
+          },
+          "parameterName": "condition",
+          "hasAssertsModifier": true
+        }
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 97,
+          "character": 1
+        },
+        "name": "objectBindingElements",
+        "signature": "function objectBindingElements({ prop }: {\n    prop?: number;\n}): Promise<number>",
+        "modifiers": [
+          "export",
+          "async"
+        ],
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 97,
+              "character": 45
+            },
+            "name": "{ prop = 1 }",
+            "type": {
+              "__schema": "TypeLiteralSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 97,
+                "character": 45
+              },
+              "members": [
+                {
+                  "__schema": "InferenceTypeSchema",
+                  "location": {
+                    "file": "index.ts",
+                    "line": 97,
+                    "character": 45
+                  },
+                  "type": "number",
+                  "name": "prop"
+                }
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 97,
+            "character": 1
+          },
+          "type": "Promise<number>"
+        }
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 98,
+          "character": 1
+        },
+        "name": "arrayBindingElements",
+        "signature": "function arrayBindingElements([prop]: [string]): Promise<string>",
+        "modifiers": [
+          "export",
+          "async"
+        ],
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 98,
+              "character": 44
+            },
+            "name": "[ prop ]",
+            "type": {
+              "__schema": "TupleTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 98,
+                "character": 52
+              },
+              "elements": [
+                {
+                  "__schema": "KeywordTypeSchema",
+                  "location": {
+                    "file": "index.ts",
+                    "line": 98,
+                    "character": 53
+                  },
+                  "name": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 98,
+            "character": 1
+          },
+          "type": "Promise<string>"
+        }
+      },
+      {
+        "__schema": "TypeSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 101,
+          "character": 1
+        },
+        "name": "IndexedAccessType",
+        "signature": "type IndexedAccessType = {\n    a: string;\n    b: boolean;\n}",
+        "type": {
+          "__schema": "IndexedAccessSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 101,
+            "character": 33
+          },
+          "objectType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 101,
+              "character": 33
+            },
+            "type": "interface config"
+          },
+          "indexType": {
+            "__schema": "LiteralTypeSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 101,
+              "character": 40
+            },
+            "name": "'someField'"
+          }
         }
       }
     ]
