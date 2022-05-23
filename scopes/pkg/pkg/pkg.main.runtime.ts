@@ -76,7 +76,7 @@ export type ComponentPkgExtensionData = {
   checksum?: string;
 };
 
-type ComponentPackageManifest = {
+export type ComponentPackageManifest = {
   name: string;
   distTags: Record<string, string>;
   externalRegistry: boolean;

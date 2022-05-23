@@ -100,8 +100,8 @@ export class ExpressMain {
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
-      const namespace = disableNamespace ? '' : this.config.namespace;
-      app[method](`/${namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
+      const namespace = disableNamespace ? '' : `/${this.config.namespace}`;
+      app[method](`${namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
     });
 
     return app;
