@@ -14,6 +14,7 @@ import {
   ParenthesizedTypeNode,
   TypePredicateNode,
   isIdentifier,
+  IndexedAccessTypeNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -30,6 +31,7 @@ import {
   FunctionLikeSchema,
   ParenthesizedTypeSchema,
   TypePredicateSchema,
+  IndexedAccessSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -66,6 +68,8 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return parenthesizedType(node as ParenthesizedTypeNode, context);
     case SyntaxKind.TypePredicate:
       return typePredicate(node as TypePredicateNode, context);
+    case SyntaxKind.IndexedAccessType:
+      return indexedAccessType(node as IndexedAccessTypeNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
@@ -73,7 +77,6 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.ConditionalType:
     case SyntaxKind.InferType:
     case SyntaxKind.ThisType:
-    case SyntaxKind.IndexedAccessType:
     case SyntaxKind.MappedType:
     case SyntaxKind.TemplateLiteralType:
     case SyntaxKind.TemplateLiteralTypeSpan:
@@ -233,4 +236,10 @@ async function typePredicate(node: TypePredicateNode, context: SchemaExtractorCo
   const type = node.type ? await typeNodeToSchema(node.type, context) : undefined;
   const hasAssertsModifier = Boolean(node.assertsModifier);
   return new TypePredicateSchema(context.getLocation(node), parameterName, type, hasAssertsModifier);
+}
+
+async function indexedAccessType(node: IndexedAccessTypeNode, context: SchemaExtractorContext) {
+  const objectType = await typeNodeToSchema(node.objectType, context);
+  const indexType = await typeNodeToSchema(node.indexType, context);
+  return new IndexedAccessSchema(context.getLocation(node), objectType, indexType);
 }
