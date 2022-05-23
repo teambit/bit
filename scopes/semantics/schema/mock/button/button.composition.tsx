@@ -7,11 +7,6 @@ export const BasicButton = () => {
   return <Button>click me</Button>;
 };
 
-export const ButtonWithAlert = (a, b: () => {}) => {
-  // @ts-ignore
-  return <Button onPress={() => alert('hello there!')}>click me</Button>;
-};
-
 export const ButtonWithCustomStyles = () => {
   return <Button style={{ background: 'red' }}>click me</Button>;
 };
