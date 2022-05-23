@@ -124,7 +124,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private shouldUseDefaultBundler(envDef: EnvDefinition): boolean {
-    if (this.aspectLoader.isCoreEnv(envDef.id)) return true;
+    if (this.aspectLoader.isCoreEnv(envDef.id) && envDef.id !== 'teambit.react/react-native') return true;
     const env = envDef.env;
     if (env.getTemplateBundler && typeof env.getTemplateBundler === 'function') return false;
     return true;
